@@ -1,28 +1,5 @@
 package v2
 
-// ============================================================================
-// IMPORTANT: TESTS TEMPORARILY DISABLED - RE-ENABLE IN PHASE 7
-// ============================================================================
-//
-// These tests are commented out because they need migration to NEW pattern.
-// They test CRITICAL business logic (IP range identification for PSA) and
-// MUST be re-enabled in Phase 7.
-//
-// WHY DISABLED:
-// - Tests use OLD compute.v1.AddressList with .Items field
-// - NEW pattern returns []*computepb.Address slice directly (no .Items)
-// - Mock HTTP server needs updating to return computepb types
-//
-// TO RE-ENABLE (Phase 7 Task 7.1):
-// 1. Remove the /* */ comment blocks wrapping this file
-// 2. Update test HTTP server mocks to return computepb.Address types
-// 3. Update assertions: change addressList.Items[i] to addressSlice[i]
-// 4. Verify all test cases pass with NEW types
-//
-// See: IPRANGE_REFACTORING_PLAN.md Phase 7 Task 7.1
-// ============================================================================
-
-/*
 import (
 	"context"
 	"encoding/json"
@@ -40,10 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
-
-// ============================================================================
-// END OF DISABLED TESTS - Remove this closing comment in Phase 7
-// ============================================================================
 
 type identifyPeeringIpRangesSuite struct {
 	suite.Suite
@@ -343,4 +316,3 @@ func (s *identifyPeeringIpRangesSuite) TestWhenDeleting() {
 func TestIdentifyPeeringIpRanges(t *testing.T) {
 	suite.Run(t, new(identifyPeeringIpRangesSuite))
 }
-*/
