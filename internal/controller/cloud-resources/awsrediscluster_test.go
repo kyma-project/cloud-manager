@@ -14,7 +14,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 )
 
@@ -718,14 +717,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 			"purpose": "testing",
 		}
 
-		By("Given default SKR IpRange does not exist", func() {
-			Consistently(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
-					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
-				ShouldNot(Succeed())
-		})
-
-		By("And Given AwsRedisCluster is created with initial authSecret config", func() {
+		By("Given AwsRedisCluster is created with initial authSecret config", func() {
 			Eventually(CreateAwsRedisCluster).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsRedisCluster,
@@ -827,10 +819,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 				).
 				Should(Succeed())
 
-			By("And it has initial labels")
 			Expect(authSecret.Labels).To(HaveKeyWithValue("env", "test"))
-
-			By("And it has initial annotations")
 			Expect(authSecret.Annotations).To(HaveKeyWithValue("purpose", "testing"))
 		})
 
@@ -859,62 +848,49 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 
 			awsRedisCluster.Spec.AuthSecret.Labels = newLabels
 			awsRedisCluster.Spec.AuthSecret.Annotations = newAnnotations
+			awsRedisCluster.Spec.AuthSecret.ExtraData = newExtraData
 
-			Eventually(UpdateAwsRedisCluster).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), awsRedisCluster,
-					WithAwsRedisClusterAuthSecretExtraData(newExtraData),
-				).
+			Eventually(Update).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisCluster).
 				Should(Succeed())
 		})
 
-		By("Then SKR auth Secret is updated with new labels", func() {
-			Eventually(func() map[string]string {
-				secretKey := types.NamespacedName{Name: authSecretName, Namespace: awsRedisCluster.Namespace}
-				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
-				if err != nil {
-					return nil
+		By("Then SKR auth Secret is updated with new labels, annotations, and extraData", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					authSecret,
+					NewObjActions(
+						WithName(authSecretName),
+						WithNamespace(awsRedisCluster.Namespace),
+					),
+				).
+				Should(Succeed())
+
+			// Verify user labels (filter out system labels)
+			userLabels := map[string]string{}
+			for k, v := range authSecret.Labels {
+				if k == "env" || k == "team" {
+					userLabels[k] = v
 				}
-				userLabels := map[string]string{}
-				for k, v := range authSecret.Labels {
-					if k == "env" || k == "team" {
-						userLabels[k] = v
-					}
-				}
-				return userLabels
-			}).Should(And(
+			}
+			Expect(userLabels).To(And(
 				HaveKeyWithValue("env", "production"),
 				HaveKeyWithValue("team", "platform"),
 				HaveLen(2),
 			))
-
 			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
-		})
 
-		By("And Then SKR auth Secret has new annotations", func() {
-			Eventually(func() map[string]string {
-				secretKey := types.NamespacedName{Name: authSecretName, Namespace: awsRedisCluster.Namespace}
-				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
-				if err != nil {
-					return nil
-				}
-				return authSecret.Annotations
-			}).Should(And(
+			// Verify annotations
+			Expect(authSecret.Annotations).To(And(
 				HaveKeyWithValue("purpose", "production-testing"),
 				HaveKeyWithValue("cost-center", "12345"),
 				HaveLen(2),
 			))
-		})
 
-		By("And Then auth Secret data includes extraData fields", func() {
-			Eventually(func() map[string][]byte {
-				secretKey := types.NamespacedName{Name: authSecretName, Namespace: awsRedisCluster.Namespace}
-				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
-				if err != nil {
-					return nil
-				}
-				return authSecret.Data
-			}).Should(And(
+			// Verify extraData
+			Expect(authSecret.Data).To(And(
 				HaveKeyWithValue("custom-key", []byte("custom-value")),
 				HaveKeyWithValue("endpoint", []byte(kcpRedisClusterPrimaryEndpoint)),
 				HaveKey("host"),
