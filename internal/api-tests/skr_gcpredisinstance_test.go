@@ -20,7 +20,7 @@ func newTestGcpRedisInstanceBuilder() *testGcpRedisInstanceBuilder {
 }
 
 func (b *testGcpRedisInstanceBuilder) Build() *cloudresourcesv1beta1.GcpRedisInstance {
-	return &b.GcpRedisInstanceBuilder.GcpRedisInstance
+	return &b.GcpRedisInstance
 }
 
 func (b *testGcpRedisInstanceBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.GcpRedisTier) *testGcpRedisInstanceBuilder {
