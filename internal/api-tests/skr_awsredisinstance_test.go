@@ -20,7 +20,7 @@ func newTestAwsRedisInstanceBuilder() *testAwsRedisInstanceBuilder {
 }
 
 func (b *testAwsRedisInstanceBuilder) Build() *cloudresourcesv1beta1.AwsRedisInstance {
-	return &b.AwsRedisInstanceBuilder.AwsRedisInstance
+	return &b.AwsRedisInstance
 }
 
 func (b *testAwsRedisInstanceBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.AwsRedisTier) *testAwsRedisInstanceBuilder {

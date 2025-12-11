@@ -18,7 +18,7 @@ func newTestAwsRedisClusterBuilder() *testAwsRedisClusterBuilder {
 }
 
 func (b *testAwsRedisClusterBuilder) Build() *cloudresourcesv1beta1.AwsRedisCluster {
-	return &b.AwsRedisClusterBuilder.AwsRedisCluster
+	return &b.AwsRedisCluster
 }
 
 func (b *testAwsRedisClusterBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.AwsRedisClusterTier) *testAwsRedisClusterBuilder {
