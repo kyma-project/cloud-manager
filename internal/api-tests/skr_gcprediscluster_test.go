@@ -9,74 +9,52 @@ import (
 )
 
 type testGcpRedisClusterBuilder struct {
-	instance cloudresourcesv1beta1.GcpRedisCluster
+	*cloudresourcesv1beta1.GcpRedisClusterBuilder
 }
 
 func newTestGcpRedisClusterBuilder() *testGcpRedisClusterBuilder {
 	return &testGcpRedisClusterBuilder{
-		instance: cloudresourcesv1beta1.GcpRedisCluster{
-			Spec: cloudresourcesv1beta1.GcpRedisClusterSpec{
-				Subnet: cloudresourcesv1beta1.GcpSubnetRef{
-					Name: uuid.NewString(),
-				},
-				RedisTier: cloudresourcesv1beta1.GcpRedisClusterTierC1,
-				RedisConfigs: map[string]string{
-					"maxmemory-policy": "allkeys-lru",
-				},
-				ShardCount:       2,
-				ReplicasPerShard: 1,
-			},
-		},
+		GcpRedisClusterBuilder: cloudresourcesv1beta1.NewGcpRedisClusterBuilder().
+			WithSubnet(uuid.NewString()),
 	}
 }
 
 func (b *testGcpRedisClusterBuilder) Build() *cloudresourcesv1beta1.GcpRedisCluster {
-	return &b.instance
+	return &b.GcpRedisClusterBuilder.GcpRedisCluster
 }
 
 func (b *testGcpRedisClusterBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.GcpRedisClusterTier) *testGcpRedisClusterBuilder {
-	b.instance.Spec.RedisTier = redisTier
+	b.GcpRedisClusterBuilder.WithRedisTier(redisTier)
 	return b
 }
 
 func (b *testGcpRedisClusterBuilder) WithShardCount(shardCount int32) *testGcpRedisClusterBuilder {
-	b.instance.Spec.ShardCount = shardCount
+	b.GcpRedisClusterBuilder.WithShardCount(shardCount)
 	return b
 }
+
 func (b *testGcpRedisClusterBuilder) WithReplicasPerShard(replicasPerShard int32) *testGcpRedisClusterBuilder {
-	b.instance.Spec.ReplicasPerShard = replicasPerShard
+	b.GcpRedisClusterBuilder.WithReplicasPerShard(replicasPerShard)
 	return b
 }
 
 func (b *testGcpRedisClusterBuilder) WithAuthSecretName(name string) *testGcpRedisClusterBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Name = name
+	b.GcpRedisClusterBuilder.WithAuthSecretName(name)
 	return b
 }
 
 func (b *testGcpRedisClusterBuilder) WithAuthSecretLabels(labels map[string]string) *testGcpRedisClusterBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Labels = labels
+	b.GcpRedisClusterBuilder.WithAuthSecretLabels(labels)
 	return b
 }
 
 func (b *testGcpRedisClusterBuilder) WithAuthSecretAnnotations(annotations map[string]string) *testGcpRedisClusterBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Annotations = annotations
+	b.GcpRedisClusterBuilder.WithAuthSecretAnnotations(annotations)
 	return b
 }
 
 func (b *testGcpRedisClusterBuilder) WithAuthSecretExtraData(extraData map[string]string) *testGcpRedisClusterBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.ExtraData = extraData
+	b.GcpRedisClusterBuilder.WithAuthSecretExtraData(extraData)
 	return b
 }
 

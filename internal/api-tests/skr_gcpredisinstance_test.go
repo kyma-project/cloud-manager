@@ -9,79 +9,47 @@ import (
 )
 
 type testGcpRedisInstanceBuilder struct {
-	instance cloudresourcesv1beta1.GcpRedisInstance
+	*cloudresourcesv1beta1.GcpRedisInstanceBuilder
 }
 
 func newTestGcpRedisInstanceBuilder() *testGcpRedisInstanceBuilder {
 	return &testGcpRedisInstanceBuilder{
-		instance: cloudresourcesv1beta1.GcpRedisInstance{
-			Spec: cloudresourcesv1beta1.GcpRedisInstanceSpec{
-				IpRange: cloudresourcesv1beta1.IpRangeRef{
-					Name: uuid.NewString(),
-				},
-				RedisTier:    "S1",
-				RedisVersion: "REDIS_7_0",
-				AuthEnabled:  true,
-				RedisConfigs: map[string]string{
-					"maxmemory-policy": "allkeys-lru",
-				},
-				MaintenancePolicy: &cloudresourcesv1beta1.MaintenancePolicy{
-					DayOfWeek: &cloudresourcesv1beta1.DayOfWeekPolicy{
-						Day: "MONDAY",
-						StartTime: cloudresourcesv1beta1.TimeOfDay{
-							Hours:   11,
-							Minutes: 0,
-						},
-					},
-				},
-			},
-		},
+		GcpRedisInstanceBuilder: cloudresourcesv1beta1.NewGcpRedisInstanceBuilder().
+			WithIpRange(uuid.NewString()),
 	}
 }
 
 func (b *testGcpRedisInstanceBuilder) Build() *cloudresourcesv1beta1.GcpRedisInstance {
-	return &b.instance
+	return &b.GcpRedisInstanceBuilder.GcpRedisInstance
 }
 
 func (b *testGcpRedisInstanceBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.GcpRedisTier) *testGcpRedisInstanceBuilder {
-	b.instance.Spec.RedisTier = redisTier
+	b.GcpRedisInstanceBuilder.WithRedisTier(redisTier)
 	return b
 }
 
 func (b *testGcpRedisInstanceBuilder) WithRedisVersion(redisVersion string) *testGcpRedisInstanceBuilder {
-	b.instance.Spec.RedisVersion = redisVersion
+	b.GcpRedisInstanceBuilder.WithRedisVersion(redisVersion)
 	return b
 }
 
 func (b *testGcpRedisInstanceBuilder) WithAuthSecretName(name string) *testGcpRedisInstanceBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Name = name
+	b.GcpRedisInstanceBuilder.WithAuthSecretName(name)
 	return b
 }
 
 func (b *testGcpRedisInstanceBuilder) WithAuthSecretLabels(labels map[string]string) *testGcpRedisInstanceBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Labels = labels
+	b.GcpRedisInstanceBuilder.WithAuthSecretLabels(labels)
 	return b
 }
 
 func (b *testGcpRedisInstanceBuilder) WithAuthSecretAnnotations(annotations map[string]string) *testGcpRedisInstanceBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Annotations = annotations
+	b.GcpRedisInstanceBuilder.WithAuthSecretAnnotations(annotations)
 	return b
 }
 
 func (b *testGcpRedisInstanceBuilder) WithAuthSecretExtraData(extraData map[string]string) *testGcpRedisInstanceBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.ExtraData = extraData
+	b.GcpRedisInstanceBuilder.WithAuthSecretExtraData(extraData)
 	return b
 }
 
