@@ -141,7 +141,24 @@ func newV2StateAdapter(state *State) *v2.State {
 
 // NewAllocateIpRangeAction returns an action suitable for allocation flow.
 // This only provisions the GCP Address without PSA connection.
+// Routes to either refactored or legacy implementation based on feature flag.
 func NewAllocateIpRangeAction(stateFactory StateFactory) composed.Action {
+	return func(ctx context.Context, st composed.State) (error, context.Context) {
+		logger := composed.LoggerFromCtx(ctx)
+
+		// Check feature flag to determine which implementation to use
+		if feature.IpRangeRefactored.Value(ctx) {
+			logger.Info("Using refactored IpRange allocation (new)")
+			return newAllocateRefactored(stateFactory)(ctx, st)
+		}
+
+		logger.Info("Using legacy IpRange allocation (v2)")
+		return newAllocateLegacy(stateFactory)(ctx, st)
+	}
+}
+
+// newAllocateRefactored is the new allocation implementation.
+func newAllocateRefactored(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
 
@@ -207,5 +224,14 @@ func NewAllocateIpRangeAction(stateFactory StateFactory) composed.Action {
 			),
 			composed.StopAndForgetAction,
 		)(ctx, state)
+	}
+}
+
+// newAllocateLegacy wraps the v2 allocation implementation for backward compatibility.
+func newAllocateLegacy(stateFactory StateFactory) composed.Action {
+	return func(ctx context.Context, st composed.State) (error, context.Context) {
+		// Convert to v2 state factory and use v2 allocation action
+		v2Factory := newV2StateFactoryAdapter(stateFactory)
+		return v2.NewAllocateIpRangeAction(v2Factory)(ctx, st)
 	}
 }

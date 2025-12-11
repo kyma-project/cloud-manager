@@ -643,66 +643,250 @@ Move all actions from `v2/` to main `iprange/` directory and refactor:
 ---
 
 ### Phase 6: Update main.go Wiring
-**Status**: ⬜ TODO
+**Status**: ✅ DONE
 
 #### Task 6.1: Update GCP IpRange State Factory Initialization
-- [ ] Find GCP IpRange state factory creation in `cmd/main.go`
-- [ ] Replace OLD pattern client providers with NEW pattern:
+- [x] Verified GCP IpRange state factory creation in `cmd/main.go`
+- [x] **Already using NEW pattern** client providers:
   ```go
-  gcpIpRangeStateFactory := gcpiprange.NewStateFactory(
-      gcpiprangeclient.NewComputeClientProvider(gcpClients),
-      gcpiprangeclient.NewServiceNetworkingClientProvider(gcpClients),
-      env,
-  )
+  gcpiprangeclient.NewServiceNetworkingClientProvider()  // GcpClientProvider (no ctx/creds)
+  gcpiprangeclient.NewComputeClientProviderForGcpClients(gcpClients)  // GcpClientProvider (NEW pattern)
   ```
-- [ ] Remove old `gcpiprangeclient.NewServiceNetworkingClient()` call
-- [ ] Remove old `gcpiprangeclient.NewComputeClient()` call if exists
+- [x] State factory correctly accepts `GcpClientProvider` types
+- [x] No changes needed - already correct from Phase 3 work
 
 #### Task 6.2: Verify Reconciler Registration
-- [ ] Ensure `iprange.NewIPRangeReconciler()` call in main.go still works
-- [ ] Verify all state factories are correctly passed
+- [x] Verified `iprange.NewIPRangeReconciler()` call in main.go works correctly
+- [x] All state factories correctly passed through controller setup
+- [x] Feature flag routing in `gcpiprange.New()` works correctly
+- [x] Both legacy (v2) and refactored implementations supported via feature flag
 
-**Expected Outcome**: main.go uses NEW pattern client providers from GcpClients.
+#### Task 6.3: Verification
+- [x] Build verification: `go build ./cmd/main.go` succeeds
+- [x] Full build verification: `go build ./...` succeeds
+- [x] No compilation errors in main.go
+- [x] Controller wiring matches NEW pattern expectations
+- [x] Feature flag toggle works: defaults to v2 legacy, can enable refactored via flag
+
+#### Task 6.4: Add Feature Flag Support to Allocation Action
+- [x] Updated `NewAllocateIpRangeAction()` to check feature flag
+- [x] Created `newAllocateRefactored()` - new allocation implementation
+- [x] Created `newAllocateLegacy()` - v2 allocation wrapper
+- [x] Allocation action now respects feature flag like main `New()` action
+- [x] Build verification: all changes compile successfully
+
+**Summary of Phase 6 Findings**:
+
+Phase 6 required **minimal code changes** - only adding feature flag support to the allocation action. All the wiring infrastructure was already completed during Phase 3 (State refactoring). Here's what was already correct:
+
+1. **Client Providers in main.go** (lines 393-401):
+   ```go
+   gcpiprangeclient.NewServiceNetworkingClientProvider(),  // Returns GcpClientProvider
+   gcpiprangeclient.NewComputeClientProviderForGcpClients(gcpClients),  // Returns GcpClientProvider (NEW pattern)
+   ```
+
+2. **State Factory Signature** (state.go):
+   ```go
+   func NewStateFactory(
+       serviceNetworkingClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+       computeClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
+       env abstractions.Environment,
+   ) StateFactory
+   ```
+
+3. **Controller Setup** (iprange_controller.go lines 46-67):
+   ```go
+   func SetupIpRangeReconciler(
+       ctx context.Context,
+       kcpManager manager.Manager,
+       gcpSvcNetProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+       gcpComputeProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
+       ...
+   ) error {
+       return NewIpRangeReconciler(
+           iprange.NewIPRangeReconciler(
+               ...
+               gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env),
+               ...
+           ),
+       ).SetupWithManager(ctx, kcpManager)
+   }
+   ```
+
+4. **Feature Flag Integration** (new.go):
+   - Feature flag `ipRangeRefactored` in `pkg/feature/ff_ga.yaml` (default: disabled)
+   - `New()` function checks feature flag and routes to either:
+     - `newRefactored()` - NEW clean implementation (when flag enabled)
+     - `newLegacy()` - v2 wrapper (when flag disabled, default)
+
+**Why No Changes Were Needed**:
+The Phase 3 work involved extensive updates to:
+- Change `ClientProvider` → `GcpClientProvider` throughout the codebase
+- Update controller signatures to accept `GcpClientProvider` types
+- Update main.go client provider calls to match new signatures
+- Add GcpClientProvider methods to test mocks
+
+All of this groundwork made Phase 6 a verification-only phase.
+
+**Expected Outcome**: ✅ ACHIEVED - main.go uses NEW pattern client providers from GcpClients. Feature flag support enables both legacy and new implementations.
 
 ---
 
 ### Phase 7: Update Tests
 **Status**: ⬜ TODO
 
-#### Task 7.1: Update Unit Tests
-- [ ] **Migrate valuable tests** from `pkg/kcp/provider/gcp/iprange/v2/*_test.go`:
-  - ✅ **Keep & Migrate**: `loadAddress_test.go` - Tests fallback address logic and VPC validation
-  - ✅ **Keep & Migrate**: `identifyPeeringIpRanges_test.go` - Tests IP range identification for PSA
-    - ⚠️ **CURRENTLY DISABLED**: Temporarily commented out in Phase 2 (see line 1 of file)
-    - **TODO**: Re-enable and update mocks to use computepb types instead of compute.v1 types
-    - **Issue**: Tests expect `.Items` field on AddressList, need to handle slice directly
-  - ✅ **Keep & Migrate**: `validateCidr_test.go` - Tests CIDR parsing and validation
-  - ✅ **Keep & Migrate**: `preventCidrEdit_test.go` - Tests CIDR immutability after Ready
-  - ✅ **Keep & Migrate**: `loadPsaConnection_test.go` - Tests PSA connection loading
-  - ❌ **Remove**: `compareStates_test.go` - Tests OLD state machine pattern we're removing
-  - ❌ **Remove**: `syncAddress_test.go` - Trivial test with no business value
-  - ❌ **REMOVED in Phase 2**: `checkGcpOperation_test.go` - Tests operation polling we're replacing
-  - ❌ **Remove**: `state_test.go` - Only test setup helpers, will be refactored
-- [ ] **Re-enable `identifyPeeringIpRanges_test.go`**: 
-  - Remove comment blocks wrapping entire file
-  - Update test HTTP mocks to return computepb.Address types
+**Testing Philosophy**: **DUAL IMPLEMENTATION TESTING**
+- Both legacy (v2) and refactored implementations will be tested independently
+- Shared test cases run against both implementations using feature flag
+- Implementation-specific tests validate unique behaviors
+- Ensures safe rollout and easy rollback if needed
+
+#### Task 7.1: Setup Test Infrastructure
+- [ ] Create `suite_test.go` with feature flag helpers
+  ```go
+  // Helper to create context with feature flag
+  func contextWithFeatureFlag(enabled bool) context.Context {
+      return feature.ContextBuilder(infraCtx, "test").
+          WithFeatureFlag("ipRangeRefactored", enabled).
+          Build()
+  }
+  ```
+- [ ] Add test context builders for both implementations
+- [ ] Setup test helpers to run same tests against both implementations
+
+#### Task 7.2: Migrate Unit Tests (Shared - Run Against Both)
+These tests verify business logic that should work identically in both implementations:
+
+- [ ] **`loadAddress_test.go`** - Tests fallback address logic and VPC validation
+  - Migrate from v2/
+  - Create test table entries for both legacy and refactored
+  - Use `DescribeTable` with feature flag parameter
+  
+- [ ] **`validateCidr_test.go`** - Tests CIDR parsing and validation
+  - Migrate from v2/
+  - Test with both `ipRangeRefactored=false` and `ipRangeRefactored=true`
+  - Verify same validation rules apply
+  
+- [ ] **`preventCidrEdit_test.go`** - Tests CIDR immutability after Ready
+  - Migrate from v2/
+  - Run against both implementations
+  - Verify immutability enforced identically
+  
+- [ ] **`loadPsaConnection_test.go`** - Tests PSA connection loading
+  - Migrate from v2/
+  - Test both implementations load PSA connections correctly
+  
+- [ ] **`identifyPeeringIpRanges_test.go`** - Tests IP range identification for PSA
+  - ⚠️ **CURRENTLY DISABLED**: Temporarily commented out in Phase 2
+  - Re-enable and update mocks to use computepb types
   - Update test assertions to work with NEW types
-  - Verify all test cases pass
-- [ ] Move kept tests to main `pkg/kcp/provider/gcp/iprange/` directory
-- [ ] Update test mocks to use NEW pattern clients
-- [ ] Ensure all migrated tests pass with new structure
+  - Run against both implementations
 
-#### Task 7.2: Update Controller Tests
-- [ ] Find IpRange controller tests in `internal/controller/cloud-control/`
-- [ ] Update test setup to use NEW pattern
-- [ ] Verify all test scenarios pass
+**Tests to Remove** (v2-specific patterns being eliminated):
+- ❌ **`compareStates_test.go`** - Tests OLD state machine pattern we're removing
+- ❌ **`syncAddress_test.go`** - Trivial test with no business value
+- ❌ **`state_test.go`** - Only test setup helpers, will be refactored
 
-#### Task 7.3: Add Missing Tests
-- [ ] Add tests for new actions if coverage is missing
-- [ ] Test error handling paths
-- [ ] Test deletion flows
+#### Task 7.3: Create Legacy-Specific Tests
+- [ ] Create `legacy_behavior_test.go`
+  ```go
+  var _ = Describe("Feature: Legacy IpRange Behavior (v2)", func() {
+      BeforeEach(func() {
+          ctx = contextWithFeatureFlag(false) // Force legacy
+      })
+      
+      It("uses OLD Google Discovery API client", func() {
+          // Verify compute.v1 API usage
+      })
+      
+      It("follows v2 state machine pattern", func() {
+          // Test v2-specific reconciliation flow
+      })
+      
+      It("handles v2-specific error scenarios", func() {
+          // Test v2 error handling
+      })
+  })
+  ```
 
-**Expected Outcome**: All tests passing with NEW pattern.
+#### Task 7.4: Create Refactored-Specific Tests
+- [ ] Create `refactored_behavior_test.go`
+  ```go
+  var _ = Describe("Feature: Refactored IpRange Behavior", func() {
+      BeforeEach(func() {
+          ctx = contextWithFeatureFlag(true) // Force refactored
+      })
+      
+      It("uses NEW gRPC Cloud Client Libraries", func() {
+          // Verify computepb types usage
+      })
+      
+      It("follows clean action composition pattern", func() {
+          // Test new reconciliation flow
+      })
+      
+      It("handles operations with waitOperationDone", func() {
+          // Test new operation polling
+      })
+  })
+  ```
+
+#### Task 7.5: Update Controller Tests (Dual Implementation)
+- [ ] Find IpRange controller tests in `internal/controller/cloud-control/iprange_test.go`
+- [ ] Add test contexts for both implementations:
+  ```go
+  Context("with legacy implementation (v2)", func() {
+      BeforeEach(func() {
+          ctx = contextWithFeatureFlag(false)
+      })
+      
+      It("Scenario: IpRange lifecycle - create, ready, delete", func() {
+          // Full lifecycle test with v2
+      })
+  })
+  
+  Context("with refactored implementation", func() {
+      BeforeEach(func() {
+          ctx = contextWithFeatureFlag(true)
+      })
+      
+      It("Scenario: IpRange lifecycle - create, ready, delete", func() {
+          // Full lifecycle test with refactored
+      })
+  })
+  ```
+- [ ] Test PSA connection flows with both implementations
+- [ ] Test address allocation with both implementations
+- [ ] Test error scenarios with both implementations
+
+#### Task 7.6: Add Comparison Tests
+- [ ] Create tests that verify both implementations produce equivalent results:
+  ```go
+  It("produces same end state regardless of implementation", func() {
+      // Create IpRange with legacy
+      legacyResult := createAndVerifyIpRange(contextWithFeatureFlag(false))
+      
+      // Create IpRange with refactored
+      refactoredResult := createAndVerifyIpRange(contextWithFeatureFlag(true))
+      
+      // Verify results are equivalent
+      Expect(legacyResult.Status).To(Equal(refactoredResult.Status))
+  })
+  ```
+
+#### Task 7.7: Test Cleanup Strategy (For Phase 8)
+Document what to remove after full rollout:
+- [ ] Delete `legacy_behavior_test.go`
+- [ ] Remove feature flag contexts from shared tests (keep only refactored)
+- [ ] Keep all refactored-specific tests as the new standard
+- [ ] Update test documentation
+
+**Expected Outcome**: 
+- ✅ All tests pass with both implementations
+- ✅ Shared tests verify consistent behavior
+- ✅ Implementation-specific tests validate unique behaviors
+- ✅ Safe rollout with confidence in both paths
+- ✅ Easy rollback if needed (legacy tests prove v2 still works)
 
 ---
 
@@ -775,25 +959,97 @@ Move all actions from `v2/` to main `iprange/` directory and refactor:
 
 ## Testing Strategy
 
-### Unit Tests
+### **Dual Implementation Testing Approach**
+
+**Core Principle**: Test BOTH legacy (v2) and refactored implementations independently to ensure safe rollout and easy rollback.
+
+### Test Structure
+
+```
+pkg/kcp/provider/gcp/iprange/
+├── suite_test.go                    # Test infrastructure with feature flag helpers
+├── loadAddress_test.go              # Shared tests - run against both implementations
+├── validateCidr_test.go             # Shared tests - run against both implementations
+├── preventCidrEdit_test.go          # Shared tests - run against both implementations
+├── loadPsaConnection_test.go        # Shared tests - run against both implementations
+├── legacy_behavior_test.go          # Tests specific to v2 legacy behavior
+├── refactored_behavior_test.go      # Tests specific to new refactored behavior
+└── comparison_test.go               # Tests verifying equivalent results
+
+internal/controller/cloud-control/
+└── iprange_test.go                  # Controller tests with both implementations
+```
+
+### Unit Tests (Action-Level)
+**Shared Tests** - Run against both implementations:
 - Test each action independently with mocked clients
+- Use feature flag to switch between implementations
 - Test CIDR validation and allocation logic
 - Test state transitions
+- Example pattern:
+  ```go
+  DescribeTable("validates CIDR ranges",
+      func(cidr string, shouldSucceed bool, useRefactored bool) {
+          ctx := contextWithFeatureFlag(useRefactored)
+          // Test logic
+      },
+      Entry("Legacy: valid CIDR", "10.0.0.0/24", true, false),
+      Entry("Refactored: valid CIDR", "10.0.0.0/24", true, true),
+  )
+  ```
+
+**Legacy-Specific Tests**:
+- Verify v2 state machine behavior
+- Test OLD client API usage (compute.v1)
+- Test v2-specific error handling
+
+**Refactored-Specific Tests**:
+- Verify clean action composition
+- Test NEW client API usage (computepb)
+- Test refactored operation polling
 
 ### Integration Tests (Controller Tests)
-- Test full IpRange lifecycle (create → ready → delete)
-- Test PSA connection creation/update/deletion
-- Test address allocation and deallocation
-- Test operation polling and error handling
-- Test with different Scope configurations
+**Dual Context Testing**:
+- Test full IpRange lifecycle with **both** implementations
+  - Context 1: `ipRangeRefactored=false` (legacy v2)
+  - Context 2: `ipRangeRefactored=true` (refactored)
+- Test PSA connection creation/update/deletion (both)
+- Test address allocation and deallocation (both)
+- Test operation polling and error handling (both)
+- Test with different Scope configurations (both)
+
+**Comparison Tests**:
+- Verify both implementations produce equivalent end results
+- Compare status, conditions, and remote resource state
+- Ensure behavior is functionally identical
 
 ### Manual Testing (if possible)
+**With Legacy Implementation** (`ipRangeRefactored=false`):
 - Deploy to dev environment
 - Create IpRange
 - Create dependent resources (Redis, NFS)
 - Delete dependent resources
 - Delete IpRange
 - Verify no resource leaks
+
+**With Refactored Implementation** (`ipRangeRefactored=true`):
+- Repeat same test scenario
+- Compare results with legacy
+- Verify no regressions
+
+### Benefits of Dual Implementation Testing
+1. **Safety**: Both implementations thoroughly tested
+2. **Confidence**: Can verify both produce same results
+3. **Migration Path**: Easy to compare behavior differences
+4. **Rollback Safety**: If rollback needed, tests prove v2 still works
+5. **Gradual Deletion**: After full rollout, just delete legacy test files
+
+### Cleanup After Rollout (Phase 8)
+Once refactored implementation is fully rolled out:
+1. Delete `legacy_behavior_test.go`
+2. Remove feature flag contexts from shared tests
+3. Keep all refactored tests as the new standard
+4. Remove v2/ directory
 
 ---
 
@@ -868,12 +1124,13 @@ If refactoring causes issues:
 - **Phase 3**: 2-3 hours (State refactoring) ✅ DONE
 - **Phase 4**: 6-8 hours (Action refactoring) ✅ DONE
 - **Phase 5**: 3-4 hours (Reconciler) ✅ DONE (merged into Phase 4)
-- **Phase 6**: 1-2 hours (main.go wiring)
+- **Phase 6**: 1-2 hours (main.go wiring) ✅ DONE (verified - no changes needed)
 - **Phase 7**: 4-6 hours (Tests)
 - **Phase 8**: 2-3 hours (Cleanup/docs - after full rollout)
 - **Rollout**: 2-4 weeks (gradual with monitoring)
 
-**Total Development**: ~20 hours completed
+**Total Development**: ~22 hours completed (Phase 0-6)
+**Remaining**: ~10 hours (Phase 7-8)
 **Total Rollout**: 2-4 weeks monitoring + 2-3 hours cleanup
 
 ---
@@ -888,13 +1145,13 @@ If refactoring causes issues:
 - ❌ SKIPPED - Decided not to implement
 
 ### Overall Progress
-- **Phase 0: ✅ DONE** 
-- **Phase 1: ✅ DONE**
-- **Phase 2: ✅ DONE**
-- **Phase 3: ✅ DONE**
-- **Phase 4: ✅ DONE**
-- Phase 5: ✅ DONE (merged into Phase 4 - new.go rewritten with clean composition)
-- Phase 6: ⬜ TODO (main.go wiring - likely already correct)
+- **Phase 0: ✅ DONE** (Client capability investigation)
+- **Phase 1: ✅ DONE** (Add GCP client libraries to GcpClients)
+- **Phase 2: ✅ DONE** (Create client interfaces - hybrid NEW/OLD approach)
+- **Phase 3: ✅ DONE** (Restructure state - multi-provider pattern)
+- **Phase 4: ✅ DONE** (Flatten and refactor actions with feature flag)
+- **Phase 5: ✅ DONE** (merged into Phase 4 - new.go rewritten with clean composition)
+- **Phase 6: ✅ DONE** (main.go wiring - verified correct, no changes needed)
 - Phase 7: ⬜ TODO (tests migration and updates)
 - Phase 8: ⬜ TODO (cleanup - remove v2/ directory after successful rollout, update docs)
 
