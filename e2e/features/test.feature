@@ -1,13 +1,25 @@
 Feature: AWS NfsVolume feature
 
   @test @skr
-  Scenario: Cloud API
+  Scenario: Test scenario
 
-    Given AWS VPC network is created:
-      | Name         | some-name     |
-      | CIDR         | 10.250.0.0/16 |
+    Given there is shared SKR with "AWS" provider
 
-    Given AWS subnet is created:
-      | Name                 | some-subnet        |
-      | VPC                  | some-name          |
-      | CIDR                 | 10.250.0.0/16      |
+    Given resource declaration:
+      | Alias  | Kind            | ApiVersion                              | Name                         | Namespace |
+      | cm     | ConfigMap       | v1                                      | e2e-${id()}                  |           |
+
+    Given tf module "tf" is applied:
+      | source             | ./noop  |
+
+    When resource "cm" is created:
+        """
+        apiVersion: v1
+        kind: ConfigMap
+        data:
+          noop: ${tf.noop}
+        """
+    
+    Then debug wait "mt-test"
+    
+    Then tf module "tf" is destroyed

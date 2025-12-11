@@ -20,7 +20,7 @@ func Apply(ctx context.Context, clnt client.Client, objects []*unstructured.Unst
 			// does not exist, should be created
 			err = clnt.Create(ctx, desiredObj)
 			if err != nil {
-				return fmt.Errorf("error creating crd %s: %w", key, err)
+				return fmt.Errorf("error creating %s %s: %w", desiredObj.GetKind(), key, err)
 			}
 		} else {
 			// exists, should be updated

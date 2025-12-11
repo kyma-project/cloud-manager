@@ -11,7 +11,7 @@ import (
 var opts *godog.Options
 
 func init() {
-	opts = tests.BuildOptions(tests.WithTags("@skr && @aws && ~@peering"))
+	opts = tests.BuildOptions(tests.WithTags("@skr && @aws && ~@peering && ~@skip"))
 	godog.BindFlags("godog.", flag.CommandLine, opts)
 }
 

@@ -52,7 +52,7 @@ func LoadGardenerCloudProviderCredentials(ctx context.Context, in LoadGardenerCl
 
 	credentialBinding := &gardenerapisecurity.CredentialsBinding{}
 	err := in.Client.Get(ctx, types.NamespacedName{Namespace: in.Namespace, Name: in.BindingName}, credentialBinding)
-	if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
+	if util.IgnoreForbidden(util.IgnoreNoMatch(client.IgnoreNotFound(err))) != nil {
 		return nil, fmt.Errorf("error loading credential binding: %w", err)
 	}
 	if err == nil {

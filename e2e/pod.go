@@ -132,6 +132,14 @@ func (b *podBuilder) WithAnnotation(key, value string) PodBuilder {
 		b.pod.Annotations = make(map[string]string)
 	}
 	b.pod.Annotations[key] = value
+
+	for _, o := range b.extraResources {
+		if o.GetAnnotations() == nil {
+			o.SetAnnotations(make(map[string]string))
+		}
+		o.GetAnnotations()[key] = value
+	}
+
 	return b
 }
 

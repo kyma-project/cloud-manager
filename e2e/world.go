@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/kyma-project/cloud-manager/e2e/cloud"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -22,6 +23,7 @@ type WorldIntf interface {
 	Kcp() Cluster
 	Garden() Cluster
 	Keb() e2ekeb.Keb
+	Cloud() cloud.Cloud
 }
 
 type defaultWorld struct {
@@ -38,6 +40,8 @@ type defaultWorld struct {
 	garden Cluster
 
 	kebi e2ekeb.Keb
+
+	cloud cloud.Cloud
 }
 
 func (w *defaultWorld) Config() *e2econfig.ConfigType {
@@ -78,4 +82,8 @@ func (w *defaultWorld) Garden() Cluster {
 
 func (w *defaultWorld) Keb() e2ekeb.Keb {
 	return w.kebi
+}
+
+func (w *defaultWorld) Cloud() cloud.Cloud {
+	return w.cloud
 }
