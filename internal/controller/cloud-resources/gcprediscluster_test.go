@@ -890,6 +890,56 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 			))
 		})
 
+		oldAuthSecret := authSecret.DeepCopy()
+		newAuthSecretName := "gcp-cluster-auth-secret-renamed"
+
+		By("When GcpRedisCluster authSecret name is changed", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					gcpRedisCluster,
+					NewObjActions(),
+				).
+				Should(Succeed())
+
+			gcpRedisCluster.Spec.AuthSecret.Name = newAuthSecretName
+
+			Eventually(Update).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisCluster).
+				Should(Succeed())
+		})
+
+		newAuthSecret := &corev1.Secret{}
+		By("Then new SKR auth Secret is created with the new name", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					newAuthSecret,
+					NewObjActions(
+						WithName(newAuthSecretName),
+						WithNamespace(gcpRedisCluster.Namespace),
+					),
+				).
+				Should(Succeed())
+
+			Expect(newAuthSecret.Data).To(And(
+				HaveKey("primaryEndpoint"),
+				HaveKey("authString"),
+			))
+		})
+
+		By("And Then old SKR auth Secret is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					oldAuthSecret,
+				).
+				Should(Succeed())
+		})
+
 		Eventually(Delete).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisCluster).
 			Should(Succeed())
