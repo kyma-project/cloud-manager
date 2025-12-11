@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	v2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -106,36 +107,16 @@ func newRefactored(stateFactory StateFactory) composed.Action {
 
 // newLegacy wraps the v2 implementation for backward compatibility.
 // This is used when the ipRangeRefactored feature flag is disabled.
+// Creates a proper v2.StateFactory with OLD-style ClientProviders.
 func newLegacy(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
-		v2Factory := newV2StateFactoryAdapter(stateFactory)
+		// Create v2.StateFactory with OLD-style ClientProviders directly
+		v2Factory := v2.NewStateFactory(
+			gcpiprangeclient.NewServiceNetworkingClient(),  // OLD ClientProvider
+			gcpiprangeclient.NewOldComputeClientProvider(), // OLD ClientProvider
+			stateFactory.(envGetter).getEnv(),              // Get env from wrapped factory
+		)
 		return v2.New(v2Factory)(ctx, st)
-	}
-}
-
-// v2StateFactoryAdapter adapts the new StateFactory to v2.StateFactory interface.
-type v2StateFactoryAdapter struct {
-	stateFactory StateFactory
-}
-
-func newV2StateFactoryAdapter(stateFactory StateFactory) v2.StateFactory {
-	return &v2StateFactoryAdapter{stateFactory: stateFactory}
-}
-
-func (a *v2StateFactoryAdapter) NewState(ctx context.Context, ipRangeState iprangetypes.State) (*v2.State, error) {
-	state, err := a.stateFactory.NewState(ctx, ipRangeState)
-	if err != nil {
-		return nil, err
-	}
-	return newV2StateAdapter(state), nil
-}
-
-func newV2StateAdapter(state *State) *v2.State {
-	// Create a v2.State that wraps our new state
-	// The v2.State has its own fields and will be populated by v2 actions
-	return &v2.State{
-		State: state.State, // Pass through the iprangetypes.State (embedded)
-		// computeClient and serviceNetworkingClient will be set by v2.stateFactory.NewState
 	}
 }
 
@@ -230,8 +211,12 @@ func newAllocateRefactored(stateFactory StateFactory) composed.Action {
 // newAllocateLegacy wraps the v2 allocation implementation for backward compatibility.
 func newAllocateLegacy(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
-		// Convert to v2 state factory and use v2 allocation action
-		v2Factory := newV2StateFactoryAdapter(stateFactory)
+		// Create v2.StateFactory with OLD-style ClientProviders directly
+		v2Factory := v2.NewStateFactory(
+			gcpiprangeclient.NewServiceNetworkingClient(),  // OLD ClientProvider
+			gcpiprangeclient.NewOldComputeClientProvider(), // OLD ClientProvider
+			stateFactory.(envGetter).getEnv(),              // Get env from wrapped factory
+		)
 		return v2.NewAllocateIpRangeAction(v2Factory)(ctx, st)
 	}
 }

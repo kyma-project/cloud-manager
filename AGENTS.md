@@ -958,6 +958,95 @@ If you need to modernize an OLD pattern client to NEW pattern:
 
 **Use NEW pattern for all new GCP resources.**
 
+### IpRange-Specific Pattern: Hybrid Client Approach
+
+The **IpRange** reconciler uses a **hybrid approach** combining both NEW and OLD client patterns due to GCP API limitations:
+
+**Why Hybrid?**
+- **Service Networking API**: No modern Cloud Client Library exists (`cloud.google.com/go/servicenetworking` does not exist)
+- **Compute API**: Modern Cloud Client Library available (`cloud.google.com/go/compute/apiv1`)
+- **Decision**: Use best available client for each API
+
+**IpRange Client Structure** (`pkg/kcp/provider/gcp/iprange/client/`):
+
+```go
+// computeClient.go - Uses NEW pattern (gRPC)
+type ComputeClient interface {
+    CreatePscIpRange(ctx, project, vpc, name, desc, ipAddress string, prefix int64) (string, error)
+    GetIpRange(ctx, project, name string) (*computepb.Address, error)
+    DeleteGlobalAddress(ctx, project, name string) (string, error)
+    GetComputeOperation(ctx, project, operation string) (*computepb.Operation, error)
+}
+
+func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
+    return func() ComputeClient {
+        return NewComputeClient(gcpClients)  // Uses GcpClients.ComputeGlobalAddresses
+    }
+}
+
+// serviceNetworkingClient.go - Uses OLD pattern (REST)
+type ServiceNetworkingClient interface {
+    CreateServiceConnection(ctx, project, vpc string, reservedIpRanges []string) (*servicenetworking.Operation, error)
+    ListServiceConnections(ctx, project, vpc string) ([]*servicenetworking.Connection, error)
+    PatchServiceConnection(ctx, project, vpc string, reservedIpRanges []string, force bool) (*servicenetworking.Operation, error)
+    DeleteServiceConnection(ctx, project, vpc string) (*servicenetworking.Operation, error)
+    GetServiceNetworkingOperation(ctx, operation string) (*servicenetworking.Operation, error)
+}
+
+func NewServiceNetworkingClientProvider() gcpclient.GcpClientProvider[ServiceNetworkingClient] {
+    // Uses OLD pattern with google.golang.org/api/servicenetworking/v1
+    // No alternative available - keep until GCP provides modern SDK
+}
+```
+
+**Key Characteristics**:
+- ✅ Hybrid approach is acceptable and common when cloud provider doesn't offer modern SDK
+- ✅ Both clients implement clean interfaces for testing
+- ✅ Compute client follows NEW pattern (GlobalAddresses, GlobalOperations)
+- ✅ Service Networking client follows OLD pattern (cached HTTP client)
+- ✅ State factory accepts both `GcpClientProvider` types consistently
+
+**IpRange State Structure**:
+```go
+// pkg/kcp/provider/gcp/iprange/state.go
+type State struct {
+    types.State  // Extends shared iprange state (multi-provider pattern)
+    
+    computeClient            client.ComputeClient           // NEW pattern (gRPC)
+    serviceNetworkingClient  client.ServiceNetworkingClient // OLD pattern (REST)
+    
+    address        *computepb.Address               // Remote GCP address
+    psaConnection  *servicenetworking.Connection    // Remote PSA connection
+}
+```
+
+**When to Use Each Client**:
+- **ComputeClient**: Address create/get/delete operations (uses NEW pattern gRPC)
+- **ServiceNetworkingClient**: PSA connection create/update/delete (uses OLD pattern REST)
+
+**IpRange-Specific Actions**:
+- `loadAddress.go` - Load global address (backward compatible with old name format)
+- `createAddress.go` - Create PSC (Private Service Connect) global address
+- `deleteAddress.go` - Delete global address
+- `loadPsaConnection.go` - Load PSA (Private Service Access) connection
+- `createPsaConnection.go` - Create PSA connection for services
+- `updatePsaConnection.go` - Update PSA connection reserved IP ranges
+- `deletePsaConnection.go` - Delete PSA connection
+- `waitOperationDone.go` - Poll both compute and servicenetworking operations
+- `identifyPeeringIpRanges.go` - Extract IP ranges from VPC peering
+
+**Multi-Provider Pattern**:
+IpRange follows the **OLD Pattern (RedisInstance)** for multi-provider support:
+- Shared state in `pkg/kcp/iprange/types/` (extends focal.State)
+- GCP-specific state in `pkg/kcp/provider/gcp/iprange/` (extends shared state)
+- Provider switching in `pkg/kcp/iprange/reconciler.go`
+
+**Feature Flag Support**:
+IpRange has dual implementation controlled by `ipRangeRefactored` feature flag:
+- **Legacy (v2)**: Original implementation (default)
+- **Refactored**: NEW pattern with clean action composition
+- Both implementations coexist for safe rollout
+
 ## Common Development Tasks
 
 ### Important Note: Kubebuilder Usage
