@@ -9,70 +9,47 @@ import (
 )
 
 type testAwsRedisInstanceBuilder struct {
-	instance cloudresourcesv1beta1.AwsRedisInstance
+	*cloudresourcesv1beta1.AwsRedisInstanceBuilder
 }
 
 func newTestAwsRedisInstanceBuilder() *testAwsRedisInstanceBuilder {
 	return &testAwsRedisInstanceBuilder{
-		instance: cloudresourcesv1beta1.AwsRedisInstance{
-			Spec: cloudresourcesv1beta1.AwsRedisInstanceSpec{
-				IpRange: cloudresourcesv1beta1.IpRangeRef{
-					Name: uuid.NewString(),
-				},
-				RedisTier:     "S1",
-				EngineVersion: "7.0",
-				AuthEnabled:   true,
-				Parameters: map[string]string{
-					"maxmemory-policy": "allkeys-lru",
-				},
-			},
-		},
+		AwsRedisInstanceBuilder: cloudresourcesv1beta1.NewAwsRedisInstanceBuilder().
+			WithIpRange(uuid.NewString()),
 	}
 }
 
 func (b *testAwsRedisInstanceBuilder) Build() *cloudresourcesv1beta1.AwsRedisInstance {
-	return &b.instance
+	return &b.AwsRedisInstanceBuilder.AwsRedisInstance
 }
 
 func (b *testAwsRedisInstanceBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.AwsRedisTier) *testAwsRedisInstanceBuilder {
-	b.instance.Spec.RedisTier = redisTier
+	b.AwsRedisInstanceBuilder.WithRedisTier(redisTier)
 	return b
 }
 
 func (b *testAwsRedisInstanceBuilder) WithEngineVersion(engineVersion string) *testAwsRedisInstanceBuilder {
-	b.instance.Spec.EngineVersion = engineVersion
+	b.AwsRedisInstanceBuilder.WithEngineVersion(engineVersion)
 	return b
 }
 
 func (b *testAwsRedisInstanceBuilder) WithAuthSecretName(name string) *testAwsRedisInstanceBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Name = name
+	b.AwsRedisInstanceBuilder.WithAuthSecretName(name)
 	return b
 }
 
 func (b *testAwsRedisInstanceBuilder) WithAuthSecretLabels(labels map[string]string) *testAwsRedisInstanceBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Labels = labels
+	b.AwsRedisInstanceBuilder.WithAuthSecretLabels(labels)
 	return b
 }
 
 func (b *testAwsRedisInstanceBuilder) WithAuthSecretAnnotations(annotations map[string]string) *testAwsRedisInstanceBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Annotations = annotations
+	b.AwsRedisInstanceBuilder.WithAuthSecretAnnotations(annotations)
 	return b
 }
 
 func (b *testAwsRedisInstanceBuilder) WithAuthSecretExtraData(extraData map[string]string) *testAwsRedisInstanceBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.ExtraData = extraData
+	b.AwsRedisInstanceBuilder.WithAuthSecretExtraData(extraData)
 	return b
 }
 

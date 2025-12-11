@@ -7,79 +7,57 @@ import (
 )
 
 type testAwsRedisClusterBuilder struct {
-	instance cloudresourcesv1beta1.AwsRedisCluster
+	*cloudresourcesv1beta1.AwsRedisClusterBuilder
 }
 
 func newTestAwsRedisClusterBuilder() *testAwsRedisClusterBuilder {
 	return &testAwsRedisClusterBuilder{
-		instance: cloudresourcesv1beta1.AwsRedisCluster{
-			Spec: cloudresourcesv1beta1.AwsRedisClusterSpec{
-				IpRange: cloudresourcesv1beta1.IpRangeRef{
-					Name: uuid.NewString(),
-				},
-				RedisTier:        cloudresourcesv1beta1.AwsRedisTierC1,
-				EngineVersion:    "7.0",
-				AuthEnabled:      true,
-				ShardCount:       2,
-				ReplicasPerShard: 1,
-			},
-		},
+		AwsRedisClusterBuilder: cloudresourcesv1beta1.NewAwsRedisClusterBuilder().
+			WithIpRange(uuid.NewString()),
 	}
 }
 
 func (b *testAwsRedisClusterBuilder) Build() *cloudresourcesv1beta1.AwsRedisCluster {
-	return &b.instance
+	return &b.AwsRedisClusterBuilder.AwsRedisCluster
 }
 
 func (b *testAwsRedisClusterBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.AwsRedisClusterTier) *testAwsRedisClusterBuilder {
-	b.instance.Spec.RedisTier = redisTier
+	b.AwsRedisClusterBuilder.WithRedisTier(redisTier)
 	return b
 }
 
 func (b *testAwsRedisClusterBuilder) WithEngineVersion(engineVersion string) *testAwsRedisClusterBuilder {
-	b.instance.Spec.EngineVersion = engineVersion
+	b.AwsRedisClusterBuilder.WithEngineVersion(engineVersion)
 	return b
 }
 
 func (b *testAwsRedisClusterBuilder) WithShardCount(shardCount int32) *testAwsRedisClusterBuilder {
-	b.instance.Spec.ShardCount = shardCount
+	b.AwsRedisClusterBuilder.WithShardCount(shardCount)
 	return b
 }
 
 func (b *testAwsRedisClusterBuilder) WithReplicasPerShard(replicasPerShard int32) *testAwsRedisClusterBuilder {
-	b.instance.Spec.ReplicasPerShard = replicasPerShard
+	b.AwsRedisClusterBuilder.WithReplicasPerShard(replicasPerShard)
 	return b
 }
 
 func (b *testAwsRedisClusterBuilder) WithAuthSecretName(name string) *testAwsRedisClusterBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Name = name
+	b.AwsRedisClusterBuilder.WithAuthSecretName(name)
 	return b
 }
 
 func (b *testAwsRedisClusterBuilder) WithAuthSecretLabels(labels map[string]string) *testAwsRedisClusterBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Labels = labels
+	b.AwsRedisClusterBuilder.WithAuthSecretLabels(labels)
 	return b
 }
 
 func (b *testAwsRedisClusterBuilder) WithAuthSecretAnnotations(annotations map[string]string) *testAwsRedisClusterBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Annotations = annotations
+	b.AwsRedisClusterBuilder.WithAuthSecretAnnotations(annotations)
 	return b
 }
 
 func (b *testAwsRedisClusterBuilder) WithAuthSecretExtraData(extraData map[string]string) *testAwsRedisClusterBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.ExtraData = extraData
+	b.AwsRedisClusterBuilder.WithAuthSecretExtraData(extraData)
 	return b
 }
 
