@@ -14,7 +14,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR GcpRedisInstance", func() {
@@ -833,10 +832,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				).
 				Should(Succeed())
 
-			By("And it has initial labels")
 			Expect(authSecret.Labels).To(HaveKeyWithValue("env", "test"))
-
-			By("And it has initial annotations")
 			Expect(authSecret.Annotations).To(HaveKeyWithValue("purpose", "testing"))
 		})
 
@@ -865,69 +861,56 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 			gcpRedisInstance.Spec.AuthSecret.Labels = newLabels
 			gcpRedisInstance.Spec.AuthSecret.Annotations = newAnnotations
+			gcpRedisInstance.Spec.AuthSecret.ExtraData = newExtraData
 
-			Eventually(UpdateGcpRedisInstance).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), gcpRedisInstance,
-					WithGcpRedisInstanceAuthSecretExtraData(newExtraData),
-				).
+			Eventually(Update).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisInstance).
 				Should(Succeed())
 		})
 
-		By("Then SKR auth Secret is updated with new labels (REPLACEMENT semantics)", func() {
-			Eventually(func() map[string]string {
-				secretKey := types.NamespacedName{Name: authSecretName, Namespace: gcpRedisInstance.Namespace}
-				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
-				if err != nil {
-					return nil
+		By("Then SKR auth Secret is updated with new labels, annotations, and extraData", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					authSecret,
+					NewObjActions(
+						WithName(authSecretName),
+						WithNamespace(gcpRedisInstance.Namespace),
+					),
+				).
+				Should(Succeed())
+
+			// Verify user labels (filter out system labels)
+			userLabels := map[string]string{}
+			for k, v := range authSecret.Labels {
+				if k == "env" || k == "team" {
+					userLabels[k] = v
 				}
-				userLabels := map[string]string{}
-				for k, v := range authSecret.Labels {
-					if k == "env" || k == "team" {
-						userLabels[k] = v
-					}
-				}
-				return userLabels
-			}).Should(And(
+			}
+			Expect(userLabels).To(And(
 				HaveKeyWithValue("env", "production"),
 				HaveKeyWithValue("team", "platform"),
 				HaveLen(2),
-			), "expected auth Secret to have updated labels with replacement semantics")
-
+			))
 			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelRedisInstanceStatusId))
 			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
-		})
 
-		By("And Then SKR auth Secret has new annotations (REPLACEMENT semantics)", func() {
-			Eventually(func() map[string]string {
-				secretKey := types.NamespacedName{Name: authSecretName, Namespace: gcpRedisInstance.Namespace}
-				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
-				if err != nil {
-					return nil
-				}
-				return authSecret.Annotations
-			}).Should(And(
+			// Verify annotations
+			Expect(authSecret.Annotations).To(And(
 				HaveKeyWithValue("purpose", "production-testing"),
 				HaveKeyWithValue("cost-center", "12345"),
 				HaveLen(2),
-			), "expected auth Secret to have updated annotations with replacement semantics")
-		})
+			))
 
-		By("And Then auth Secret data includes extraData fields with proper templating", func() {
-			Eventually(func() map[string][]byte {
-				secretKey := types.NamespacedName{Name: authSecretName, Namespace: gcpRedisInstance.Namespace}
-				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
-				if err != nil {
-					return nil
-				}
-				return authSecret.Data
-			}).Should(And(
+			// Verify extraData
+			Expect(authSecret.Data).To(And(
 				HaveKeyWithValue("custom-key", []byte("custom-value")),
 				HaveKeyWithValue("endpoint", []byte(kcpRedisInstancePrimaryEndpoint)),
 				HaveKey("host"),
 				HaveKey("port"),
 				HaveKey("authString"),
-			), "expected auth Secret to have extraData fields with proper Go templating")
+			))
 		})
 
 		// CleanUp
