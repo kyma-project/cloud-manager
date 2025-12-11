@@ -1,10 +1,11 @@
 package config
 
 import (
+	"testing"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
-	"testing"
 )
 
 type jsonAssertion struct {
@@ -182,5 +183,5 @@ func TestRawConfigInRootFromScalarFile(t *testing.T) {
 
 	res := gjson.Get(cfg.Json(), "aaa.bbb")
 	assert.Equal(t, gjson.String, res.Type)
-	assert.Equal(t, "some value", res.String())
+	assert.Equal(t, "some value\n", res.String())
 }
