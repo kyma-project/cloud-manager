@@ -237,7 +237,14 @@ spec:
                 x-kubernetes-list-type: map
               id:
                 type: string
+              operation:
+                description: |-
+                  GCP creates operations when creating peerings, since we are creating two peerings (one in each direction), we store the operation names here to track them if needed
+                  One example is the quota exceeded error that can happen on either side if one of the vpcs is close to the quota limit
+                type: string
               remoteId:
+                type: string
+              remoteOperation:
                 type: string
               state:
                 type: string
