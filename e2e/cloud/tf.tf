@@ -14,6 +14,9 @@ terraform {
 {{- range $key := .Providers }}
 
 provider "{{ $key.Name }}" {
+{{- if eq $key.Name "azurerm" }}
+  features {}
+{{- end }}
 }
 {{- end }}
 
