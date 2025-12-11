@@ -61,7 +61,7 @@ data:
           required: true
           disableOnEdit: true
           description: Immutable once set.
-  general: |-
+  general: |
     resource:
         kind: GcpNfsVolumeRestore
         group: cloud-resources.kyma-project.io
@@ -73,7 +73,7 @@ data:
     icon: shelf
     description: >-
         GcpNfsVolumeRestore describes a request to restore a GCP NFS volume.
-  list: |-
+  list: |
     - source: spec.destination.volume.name
       name: spec.destination.volume.name
       sort: true

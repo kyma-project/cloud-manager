@@ -52,7 +52,7 @@ data:
           required: false
           widget: Text
           disableOnEdit: true
-  general: |-
+  general: |
     resource:
         kind: GcpNfsVolumeBackup
         group: cloud-resources.kyma-project.io
@@ -64,7 +64,7 @@ data:
     icon: shelf
     description: >-
         GcpNfsVolumeBackup is the Schema for the gcpnfsvolumebackups API
-  list: |-
+  list: |
     - source: status.location
       name: status.location
       sort: true
@@ -77,7 +77,7 @@ data:
     - source: status.state
       name: status.state
       sort: true
-  translations: |-
+  translations: |
     en:
       spec.location: Requested Location
       status.location: Allocated Location

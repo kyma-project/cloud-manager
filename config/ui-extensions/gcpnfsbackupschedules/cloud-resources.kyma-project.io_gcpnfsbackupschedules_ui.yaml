@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  details: |-
+  details: |
     body:
       - name: configuration
         widget: Panel
@@ -111,7 +111,7 @@ data:
     - path: spec.suspend
       name: spec.suspend
       required: false
-  general: |-
+  general: |
     resource:
         kind: GcpNfsBackupSchedule
         group: cloud-resources.kyma-project.io
@@ -123,7 +123,7 @@ data:
     icon: shelf
     description: >-
         GcpNfsBackupSchedules is the Schema for the gcpnfsbackupschedules API
-  list: |-
+  list: |
     - source: spec.schedule
       name: spec.schedule
       sort: true
@@ -133,7 +133,7 @@ data:
     - source: status.state
       name: status.state
       sort: true
-  translations: |-
+  translations: |
     en:
       configuration: Configuration
       nfsVolumeRef: NFS Volume Reference

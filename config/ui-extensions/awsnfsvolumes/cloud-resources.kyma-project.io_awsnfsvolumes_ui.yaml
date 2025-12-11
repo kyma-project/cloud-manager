@@ -121,7 +121,7 @@ data:
           name: spec.volumeClaim.annotations
           required: false
           widget: KeyValuePair
-  general: |-
+  general: |
     resource:
         kind: AwsNfsVolume
         group: cloud-resources.kyma-project.io
@@ -133,7 +133,7 @@ data:
     icon: shelf
     description: >-
         AWS NFS Volume description here
-  list: |-
+  list: |
     - source: spec.capacity
       name: spec.capacity
       sort: true

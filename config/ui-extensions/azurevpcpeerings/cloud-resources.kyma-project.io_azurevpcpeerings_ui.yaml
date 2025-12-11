@@ -48,7 +48,7 @@ data:
       widget: Text
       disableOnEdit: true
       description: Immutable once set.
-  general: |-
+  general: |
     resource:
         kind: AzureVpcPeering
         group: cloud-resources.kyma-project.io

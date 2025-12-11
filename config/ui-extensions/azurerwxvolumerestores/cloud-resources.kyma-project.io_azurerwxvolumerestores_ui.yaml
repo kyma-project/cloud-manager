@@ -57,7 +57,7 @@ data:
         - path: namespace
           name: spec.destination.pvc.namespace
           required: false
-  general: |-
+  general: |
     resource:
         kind: AzureRwxVolumeRestore
         group: cloud-resources.kyma-project.io
@@ -69,7 +69,7 @@ data:
     icon: shelf
     description: >-
         AzureRwxVolumeRestore description here
-  list: |-
+  list: |
     - source: spec.source.backup
       name: spec.source.backup
       sort: true

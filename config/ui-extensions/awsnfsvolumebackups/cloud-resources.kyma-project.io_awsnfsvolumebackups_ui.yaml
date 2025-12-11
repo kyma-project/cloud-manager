@@ -11,8 +11,8 @@ data:
     Labels\n  - name: status\n    widget: Panel\n    source: status\n    children:\n
     \     - widget: Labels\n        source: state\n        name: status.state\n      -
     widget: Labels\n        source: locations\n        name: status.locations\n      -
-    widget: Labels\n        source: capacity\n        name: status.capacity"
-  form: |-
+    widget: Labels\n        source: capacity\n        name: status.capacity\n"
+  form: |
     - path: spec.lifecycle
       name: spec.lifecycle
       widget: FormGroup
@@ -47,7 +47,7 @@ data:
           name: spec.location
           required: false
           widget: Text
-  general: |-
+  general: |
     resource:
         kind: AwsNfsVolumeBackup
         group: cloud-resources.kyma-project.io
@@ -59,7 +59,7 @@ data:
     icon: shelf
     description: >-
         AWS NFS Volume Backup description here
-  list: |-
+  list: |
     - source: status.locations
       name: status.locations
       sort: true

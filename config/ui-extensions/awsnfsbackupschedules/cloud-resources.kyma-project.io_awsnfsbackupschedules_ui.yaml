@@ -112,7 +112,7 @@ data:
     - path: spec.suspend
       name: spec.suspend
       required: false
-  general: |-
+  general: |
     resource:
         kind: AwsNfsBackupSchedule
         group: cloud-resources.kyma-project.io
@@ -124,7 +124,7 @@ data:
     icon: shelf
     description: >-
         AWS NFS Backup Schedules description here
-  list: |-
+  list: |
     - source: spec.schedule
       name: spec.schedule
       sort: true
@@ -137,7 +137,7 @@ data:
     - source: status.state
       name: status.state
       sort: true
-  translations: |-
+  translations: |
     en:
       configuration: Configuration
       status: Status

@@ -154,7 +154,7 @@ data:
     icon: shelf
     description: >-
         AWS Redis Cluster description here
-  list: |-
+  list: |
     - source: status.state
       name: status.state
       sort: true
