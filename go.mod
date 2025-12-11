@@ -5,7 +5,7 @@ go 1.25.4
 require (
 	cloud.google.com/go/auth v0.17.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/compute v1.49.1
+	cloud.google.com/go/compute v1.50.0
 	cloud.google.com/go/networkconnectivity v1.19.1
 	cloud.google.com/go/redis v1.18.3
 	cloud.google.com/go/resourcemanager v1.10.7
@@ -64,7 +64,7 @@ require (
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.1
-	google.golang.org/api v0.256.0
+	google.golang.org/api v0.257.0
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822
 	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.10
@@ -80,7 +80,7 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.121.6 // indirect
+	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/iam v1.5.2 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect
@@ -176,8 +176,8 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.39.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251022142026-3a174f9686a8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251111163417-95abcf5c77ba // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251124214823-79d6a2a48846 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/component-base v0.34.2 // indirect
