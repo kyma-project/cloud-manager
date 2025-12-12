@@ -8,7 +8,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Setup Go ${{ matrix.go-version }}
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
@@ -30,8 +30,8 @@ jobs:
               provider: aws
               isDefault: true
           networkOwner: gardener
-          oidcClientId: ${{ vars.OIDC_CLIENT_ID }}
-          oidcIssuerUrl: ${{ vars.OIDC_ISSUER_URL }}
+          oidcClientId: "${{ vars.OIDC_CLIENT_ID }}"
+          oidcIssuerUrl: "${{ vars.OIDC_ISSUER_URL }}"
           administrators:
               - vladimir.andjelkoski@sap.com
               - dl_623b719a6a0d2d029907bee0@global.corp.sap
