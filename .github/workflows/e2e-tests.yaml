@@ -18,6 +18,9 @@ jobs:
         run: |
           printf '%s' "${{ secrets.GARDENER }}" > kubeconfig-garden.yaml
       - name: Write e2e config file
+        env:
+          OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
+          OIDC_ISSUER_URL: ${{ vars.OIDC_ISSUER_URL }}
         run: |
           cat << EOF > e2e-config.yaml
           gardenKubeconfig: kubeconfig-garden.yaml
@@ -30,8 +33,8 @@ jobs:
               provider: aws
               isDefault: true
           networkOwner: gardener
-          oidcClientId: "${{ vars.OIDC_CLIENT_ID }}"
-          oidcIssuerUrl: "${{ vars.OIDC_ISSUER_URL }}"
+          oidcClientId: $OIDC_CLIENT_ID
+          oidcIssuerUrl: $OIDC_ISSUER_URL
           administrators:
               - vladimir.andjelkoski@sap.com
               - dl_623b719a6a0d2d029907bee0@global.corp.sap
