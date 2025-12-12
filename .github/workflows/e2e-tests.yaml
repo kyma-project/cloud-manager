@@ -31,8 +31,15 @@ jobs:
           gardenNamespace: garden-spm-test01
           skrNamespace: default
           subscriptions:
-            - name: spm-aws-subscription
+            # name is SecretBinding name in garden
+            - name: my-aws-secret
               provider: aws
+              isDefault: true
+            - name: svc-btp-kyma-phoenix-dev
+              provider: azure
+              isDefault: true
+            - name: gardener-sc-learn
+              provider: gcp
               isDefault: true
           networkOwner: gardener
           oidcClientId: $OIDC_CLIENT_ID
@@ -46,4 +53,8 @@ jobs:
       - name: Create tmp directory
         run: mkdir ./tmp
       - name: List directory
+        run: ls -la
+      - name: Download credentials
+        run:  go run ./e2e/cmd credentials download
+      - name: List tmp directory
         run: ls -la
