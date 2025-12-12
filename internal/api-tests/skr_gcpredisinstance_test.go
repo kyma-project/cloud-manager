@@ -154,12 +154,13 @@ var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 
 	Context("Scenario: authSecret mutability", func() {
 
-		canChangeSkr(
-			"GcpRedisInstance authSecret.name can be changed",
+		canNotChangeSkr(
+			"GcpRedisInstance authSecret.name cannot be changed",
 			newTestGcpRedisInstanceBuilder().WithAuthSecretName("original-name"),
 			func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
 				b.(*testGcpRedisInstanceBuilder).WithAuthSecretName("new-name")
 			},
+			"name is immutable",
 		)
 
 		canChangeSkr(
