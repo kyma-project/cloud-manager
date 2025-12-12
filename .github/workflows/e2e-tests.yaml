@@ -15,8 +15,10 @@ jobs:
       - name: Display Go version
         run: go version
       - name: Write KUBECONFIG to file
+        env:
+          GARDENER_KUBECONFIG: ${{ secrets.GARDENER_KUBECONFIG }}
         run: |
-          printf '%s' "${{ secrets.GARDENER }}" > kubeconfig-garden.yaml
+          echo $GARDENER_KUBECONFIG > kubeconfig-garden.yaml
       - name: Write e2e config file
         env:
           OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
