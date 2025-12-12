@@ -5,6 +5,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -14,6 +15,7 @@ import (
 // - PSA connection is created/updated (if PSA purpose)
 // - All async operations have completed
 // - Status fields (id, cidr) are populated
+// This action is idempotent - it only updates when status is not already Ready.
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
@@ -22,6 +24,13 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Skip if marked for deletion
 	if composed.MarkedForDeletionPredicate(ctx, st) {
+		return nil, nil
+	}
+
+	// Check if already Ready (idempotency)
+	readyCondition := meta.FindStatusCondition(ipRange.Status.Conditions, v1beta1.ConditionTypeReady)
+	if readyCondition != nil && readyCondition.Status == metav1.ConditionTrue {
+		logger.Info("IpRange already has Ready status, skipping update")
 		return nil, nil
 	}
 

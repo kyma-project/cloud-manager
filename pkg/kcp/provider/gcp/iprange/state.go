@@ -130,6 +130,34 @@ func (s *State) DoesConnectionIncludeRange() int {
 	return -1
 }
 
+// DoesConnectionMatchPeeringRanges checks if the PSA connection's reserved ranges
+// match the desired peering IP ranges. Returns true if they match (no update needed).
+func (s *State) DoesConnectionMatchPeeringRanges() bool {
+	if s.serviceConnection == nil {
+		return false
+	}
+
+	// Check if lengths match
+	if len(s.serviceConnection.ReservedPeeringRanges) != len(s.peeringIpRanges) {
+		return false
+	}
+
+	// Create a map of existing ranges for quick lookup
+	existingRanges := make(map[string]bool)
+	for _, name := range s.serviceConnection.ReservedPeeringRanges {
+		existingRanges[name] = true
+	}
+
+	// Check if all desired ranges are in the connection
+	for _, name := range s.peeringIpRanges {
+		if !existingRanges[name] {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Getters and setters for GCP-specific fields
 
 func (s *State) InSync() bool {

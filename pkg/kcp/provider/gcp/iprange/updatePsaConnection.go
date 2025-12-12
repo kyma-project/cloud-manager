@@ -15,6 +15,7 @@ import (
 // updatePsaConnection updates an existing Private Service Access (PSA) connection.
 // This is called when the list of reserved IP ranges changes (adding/removing IpRanges).
 // GCP uses PATCH operation to update the connection with the new list of ranges.
+// This action is idempotent - it only updates when the ranges actually differ.
 func updatePsaConnection(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
@@ -22,6 +23,12 @@ func updatePsaConnection(ctx context.Context, st composed.State) (error, context
 	// Skip if no PSA connection exists
 	if state.serviceConnection == nil {
 		logger.Info("No PSA connection to update")
+		return nil, ctx
+	}
+
+	// Check if the connection already has the desired IP ranges (idempotency)
+	if state.DoesConnectionMatchPeeringRanges() {
+		logger.Info("PSA connection already has correct IP ranges, skipping update")
 		return nil, ctx
 	}
 
@@ -35,6 +42,7 @@ func updatePsaConnection(ctx context.Context, st composed.State) (error, context
 		"project", project,
 		"vpc", vpc,
 		"ipRanges", state.peeringIpRanges,
+		"existingRanges", state.serviceConnection.ReservedPeeringRanges,
 	)
 
 	logger.Info("Updating GCP PSA Connection")

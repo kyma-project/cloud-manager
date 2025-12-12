@@ -964,6 +964,89 @@ Once the refactored implementation is fully rolled out and ipRangeRefactored fea
 
 ---
 
+### Phase 8.5: Post-Implementation Fixes
+**Status**: ✅ DONE
+
+#### Task 8.5.1: Fix updatePsaConnection Idempotency
+**Problem Discovered**: The refactored `updatePsaConnection` was NOT idempotent - it would call `PatchServiceConnection` on every reconciliation loop even when the IP ranges hadn't changed.
+
+**Root Cause**: Missing check to compare current connection ranges with desired ranges before updating.
+
+**V2 Behavior** (for comparison):
+- V2 uses `compareStates.go` to set `state.connectionOp = client.MODIFY` only when:
+  - Creating/Updating: Service connection exists but current IP range is NOT in the connection
+  - Deleting: Service connection exists with current IP range and has multiple ranges
+- Only calls `PatchServiceConnection` when `connectionOp == MODIFY`
+
+**Refactored Issue**:
+- `createOrUpdatePsaConnection` always routes to `updatePsaConnection` when `serviceConnection != nil`
+- `updatePsaConnection` blindly calls `PatchServiceConnection` without checking if ranges changed
+
+**Fix Applied**:
+- [x] Added `DoesConnectionMatchPeeringRanges()` helper method to `state.go`
+  - Checks if connection's reserved ranges match desired peering IP ranges
+  - Uses length check + map-based lookup for order-independent comparison
+  - Returns true if ranges match (no update needed)
+  
+- [x] Added idempotency check to `updatePsaConnection.go`
+  - Early return if `DoesConnectionMatchPeeringRanges()` returns true
+  - Logs "PSA connection already has correct IP ranges, skipping update"
+  - Only proceeds with `PatchServiceConnection` when ranges differ
+
+- [x] Created comprehensive test: `updatePsaConnection_test.go`
+  - Tests `DoesConnectionMatchPeeringRanges()` with 9 scenarios
+  - Tests idempotency behavior with 5 scenarios
+  - Verifies order-independent matching
+  - Verifies correct detection of add/remove/delete cases
+
+**Benefits**:
+- ✅ Consistent with v2 behavior (only updates when needed)
+- ✅ Avoids unnecessary GCP API calls on every reconcile
+- ✅ Prevents potential rate limiting issues
+- ✅ True idempotency - safe to run repeatedly
+
+**Verification**:
+- [x] All code compiles successfully
+- [x] Tests pass for range matching logic
+- [x] Build verification: `go build ./pkg/kcp/provider/gcp/iprange` succeeds
+
+**Files Modified**:
+- `pkg/kcp/provider/gcp/iprange/state.go` - Added `DoesConnectionMatchPeeringRanges()` method
+- `pkg/kcp/provider/gcp/iprange/updatePsaConnection.go` - Added idempotency check
+- `pkg/kcp/provider/gcp/iprange/updatePsaConnection_test.go` - Added comprehensive tests
+
+**Expected Outcome**: ✅ ACHIEVED - updatePsaConnection is now idempotent and consistent with v2 behavior.
+
+#### Task 8.5.2: Fix updateStatus Idempotency
+**Problem Discovered**: The refactored `updateStatus` would execute on every reconciliation loop even when the status was already Ready, causing unnecessary status patch operations.
+
+**Root Cause**: Missing check to verify if Ready condition is already set before attempting to update.
+
+**Fix Applied**:
+- [x] Added idempotency check to `updateStatus.go`
+  - Checks if Ready condition already exists with status True
+  - Early return with log message if already Ready
+  - Only proceeds with status patch when not already Ready
+  
+- [x] Added `k8s.io/apimachinery/pkg/api/meta` import for `FindStatusCondition`
+
+**Benefits**:
+- ✅ Avoids unnecessary status patch operations on every reconcile
+- ✅ True idempotency - safe to run repeatedly without side effects
+- ✅ Reduces K8s API server load
+- ✅ Cleaner reconciliation logs
+
+**Verification**:
+- [x] Code compiles successfully
+- [x] Build verification: `go build ./pkg/kcp/provider/gcp/iprange` succeeds
+
+**Files Modified**:
+- `pkg/kcp/provider/gcp/iprange/updateStatus.go` - Added Ready condition check
+
+**Expected Outcome**: ✅ ACHIEVED - updateStatus is now idempotent and only updates when necessary.
+
+---
+
 ## Success Criteria
 
 ### Must Have
