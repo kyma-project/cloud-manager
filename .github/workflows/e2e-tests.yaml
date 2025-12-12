@@ -19,7 +19,7 @@ jobs:
           printf '%s' "${{ secrets.GARDENER }}" > kubeconfig-garden.yaml
       - name: Write e2e config file
         run: |
-          cat <<EOF > e2e-config.yaml
+          cat << EOF > e2e-config.yaml
           gardenKubeconfig: kubeconfig-garden.yaml
           shootPrefix: pp
           kcpNamespace: kcp-system
@@ -36,5 +36,5 @@ jobs:
               - vladimir.andjelkoski@sap.com
               - dl_623b719a6a0d2d029907bee0@global.corp.sap
           EOF
-          
-          cat e2e-config.yaml
+      - name: Display e2e config file
+        run: cat e2e-config.yaml
