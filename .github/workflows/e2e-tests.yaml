@@ -1,28 +1,34 @@
 name: E2E tests
 on:
-  pull_request:
   workflow_dispatch:
-    inputs:
-      provider:
-        type: choice
-        required: true
-        options:
-          - aws
-          - gcp
-          - azure
-        description: Choose the cloud provider for the shared instance
-        default: azure
 jobs:
-  test:
+  init:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set provider env var
-        run: |
-          PROVIDER=${{ inputs.provider }}
-          PROVIDER=${PROVIDER:-"azure"}
-          echo "PROVIDER=$PROVIDER" >> $GITHUB_ENV
-      - name: Break if provider is empty
-        if: ${{ env.PROVIDER == '' }}
-        run: echo "PROVIDER is missing or empty!" && exit 1
+    - name: Write KUBECONFIG to file
+      run: |
+        printf '%s' "${{ secrets.GARDENER }}" > kubeconfig-garden.yaml
+    - name: List secrets in garden namespace
+      run: |
+       KUBECONFIG=kubeconfig-garden.yaml kubectl get secrets -n garden-spm-test01
+    - name: Write e2e config file
+      run: |
+        cat <<EOF > e2e-config.yaml
+        gardenKubeconfig: kubeconfig-garden.yaml
+        shootPrefix: pp
+        kcpNamespace: kcp-system
+        gardenNamespace: garden-spm-test01
+        skrNamespace: default
+        subscriptions:
+          - name: spm-aws-subscription
+            provider: aws
+            isDefault: true
+        networkOwner: gardener
+        oidcClientId: ${{ vars.OIDC_CLIENT_ID }}
+        oidcIssuerUrl: ${{ vars.OIDC_ISSUER_URL }}
+        administrators:
+            - vladimir.andjelkoski@sap.com
+            - dl_623b719a6a0d2d029907bee0@global.corp.sap
+        EOF
+        
+        cat e2e-config.yaml
