@@ -42,7 +42,6 @@ type AwsRedisClusterSpec struct {
 	IpRange IpRangeRef `json:"ipRange"`
 
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="AuthSecret is immutable."
 	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`
 
 	// +kubebuilder:validation:Required

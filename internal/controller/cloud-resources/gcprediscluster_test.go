@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/kyma-project/cloud-manager/api"
 
@@ -14,6 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR GcpRedisCluster", func() {
@@ -671,6 +673,249 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet, NewObjActions()).
 				Should(Succeed())
 		})
+
+		By("// cleanup: delete default SKR GcpSubnet", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: SKR GcpRedisCluster authSecret is modified", func() {
+		gcpRedisClusterName := "auth-secret-modified-cluster"
+		skrGcpSubnetId := "89ef2464-afa9-457a-a09e-8aac592cb7ff"
+		gcpRedisCluster := &cloudresourcesv1beta1.GcpRedisCluster{}
+		tier := cloudresourcesv1beta1.GcpRedisClusterTierC1
+		skrGcpSubnet := &cloudresourcesv1beta1.GcpSubnet{}
+
+		skrgcpsubnet.Ignore.AddName("default")
+
+		const (
+			authSecretName = "gcp-cluster-auth-secret-test"
+		)
+		authSecretLabels := map[string]string{
+			"env": "test",
+		}
+		authSecretAnnotations := map[string]string{
+			"purpose": "testing",
+		}
+
+		By("Given default SKR GcpSubnet does not exist", func() {
+			Consistently(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				ShouldNot(Succeed())
+		})
+
+		By("And Given GcpRedisCluster is created with initial authSecret config", func() {
+			Eventually(CreateSkrGcpRedisCluster).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), gcpRedisCluster,
+					WithName(gcpRedisClusterName),
+					WithSkrGcpRedisClusterRedisTier(tier),
+					WithSkrGcpRedisClusterShardCount(2),
+					WithSkrGcpRedisClusterReplicasPerShard(1),
+					WithSkrGcpRedisClusterAuthSecretName(authSecretName),
+					WithSkrGcpRedisClusterAuthSecretLabels(authSecretLabels),
+					WithSkrGcpRedisClusterAuthSecretAnnotations(authSecretAnnotations),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given default SKR GcpSubnet is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrGcpSubnet,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
+		})
+
+		By("And Given default SKR GcpSubnet has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrGcpSubnet,
+					WithSkrGcpSubnetStatusId(skrGcpSubnetId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		kcpRedisCluster := &cloudcontrolv1beta1.GcpRedisCluster{}
+
+		By("And Given KCP RedisCluster is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					gcpRedisCluster,
+					NewObjActions(),
+					HavingSkrGcpRedisClusterStatusId(),
+					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+				).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpRedisCluster,
+					NewObjActions(
+						WithName(gcpRedisCluster.Status.Id),
+					),
+				).
+				Should(Succeed())
+		})
+
+		kcpRedisClusterPrimaryEndpoint := "10.0.0.2:6379"
+		kcpRedisClusterAuthString := "cluster-auth-string-67890"
+
+		By("And Given KCP GcpRedisCluster has Ready condition", func() {
+			// Manually set authString since there's no DSL helper
+			kcpRedisCluster.Status.AuthString = kcpRedisClusterAuthString
+
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpRedisCluster,
+					WithKcpGcpRedisClusterDiscoveryEndpoint(kcpRedisClusterPrimaryEndpoint),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given SKR GcpRedisCluster has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					gcpRedisCluster,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+				).
+				Should(Succeed())
+		})
+
+		authSecret := &corev1.Secret{}
+		By("And Given SKR auth Secret is created with initial values", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					authSecret,
+					NewObjActions(
+						WithName(authSecretName),
+						WithNamespace(gcpRedisCluster.Namespace),
+					),
+				).
+				Should(Succeed())
+
+			Expect(authSecret.Labels).To(HaveKeyWithValue("env", "test"))
+			Expect(authSecret.Annotations).To(HaveKeyWithValue("purpose", "testing"))
+		})
+
+		newLabels := map[string]string{
+			"env":  "production",
+			"team": "platform",
+		}
+		newAnnotations := map[string]string{
+			"purpose":     "production-testing",
+			"cost-center": "12345",
+		}
+		newExtraData := map[string]string{
+			"custom-key":        "custom-value",
+			"connection-string": "{{.discoveryEndpoint}}",
+		}
+
+		By("When GcpRedisCluster authSecret config is modified with new labels, annotations, and extraData", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					gcpRedisCluster,
+					NewObjActions(),
+				).
+				Should(Succeed())
+
+			gcpRedisCluster.Spec.AuthSecret.Labels = newLabels
+			gcpRedisCluster.Spec.AuthSecret.Annotations = newAnnotations
+			gcpRedisCluster.Spec.AuthSecret.ExtraData = newExtraData
+
+			Eventually(func() error {
+				return infra.SKR().Client().Update(infra.Ctx(), gcpRedisCluster)
+			}).Should(Succeed())
+		})
+
+		By("Then SKR auth Secret is updated with new labels, annotations, and extraData", func() {
+			// Wait for the controller to reconcile and update the secret
+			Eventually(func() map[string]string {
+				_ = infra.SKR().Client().Get(infra.Ctx(), types.NamespacedName{
+					Name:      authSecretName,
+					Namespace: gcpRedisCluster.Namespace,
+				}, authSecret)
+				// Filter out system labels
+				userLabels := map[string]string{}
+				for k, v := range authSecret.Labels {
+					if k == "env" || k == "team" {
+						userLabels[k] = v
+					}
+				}
+				return userLabels
+			}).WithTimeout(20 * time.Second).WithPolling(200 * time.Millisecond).Should(And(
+				HaveKeyWithValue("env", "production"),
+				HaveKeyWithValue("team", "platform"),
+				HaveLen(2),
+			))
+
+			// Verify the secret is loaded with latest data
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					authSecret,
+					NewObjActions(
+						WithName(authSecretName),
+						WithNamespace(gcpRedisCluster.Namespace),
+					),
+				).
+				Should(Succeed())
+
+			// Verify user labels (filter out system labels)
+			userLabels := map[string]string{}
+			for k, v := range authSecret.Labels {
+				if k == "env" || k == "team" {
+					userLabels[k] = v
+				}
+			}
+			Expect(userLabels).To(And(
+				HaveKeyWithValue("env", "production"),
+				HaveKeyWithValue("team", "platform"),
+				HaveLen(2),
+			))
+			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
+
+			// Verify annotations
+			Expect(authSecret.Annotations).To(And(
+				HaveKeyWithValue("purpose", "production-testing"),
+				HaveKeyWithValue("cost-center", "12345"),
+				HaveLen(2),
+			))
+
+			// Verify extraData
+			Expect(authSecret.Data).To(And(
+				HaveKeyWithValue("custom-key", []byte("custom-value")),
+				HaveKeyWithValue("connection-string", []byte(kcpRedisClusterPrimaryEndpoint)),
+				HaveKey("discoveryEndpoint"),
+				HaveKey("authString"),
+			))
+		})
+
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisCluster).
+			Should(Succeed())
 
 		By("// cleanup: delete default SKR GcpSubnet", func() {
 			Eventually(Delete).

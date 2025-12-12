@@ -2,6 +2,7 @@ package awsredisinstance
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -66,6 +67,7 @@ func (r *reconciler) newAction() composed.Action {
 				waitSkrStatusReady,
 				modifyKcpRedisInstance,
 				createAuthSecret,
+				loadAuthSecret,
 				modifyAuthSecret,
 			),
 			composed.ComposeActions(
