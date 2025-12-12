@@ -64,6 +64,7 @@ func (r *reconciler) newAction() composed.Action {
 				updateStatus,
 				waitSkrStatusReady,
 				createAuthSecret,
+				loadAuthSecret,
 				modifyAuthSecret,
 			),
 			composed.ComposeActions(
