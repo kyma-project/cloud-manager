@@ -1,0 +1,13 @@
+name: E2E tests
+on:
+  workflow_dispatch:
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Write KUBECONFIG to file
+      run: |
+        printf '%s' "${{ secrets.GARDENER }}" > kubeconfig-garden.yaml
+    - name: List secrets in garden namespace
+      run: |
+       KUBECONFIG=kubeconfig-garden.yaml kubectl get secrets -n garden-spm-test01
