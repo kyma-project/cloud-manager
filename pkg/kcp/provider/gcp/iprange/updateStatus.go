@@ -22,11 +22,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	ipRange := state.ObjAsIpRange()
 
-	// Skip if marked for deletion
-	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
-	}
-
 	// Check if already Ready (idempotency)
 	readyCondition := meta.FindStatusCondition(ipRange.Status.Conditions, v1beta1.ConditionTypeReady)
 	if readyCondition != nil && readyCondition.Status == metav1.ConditionTrue {
