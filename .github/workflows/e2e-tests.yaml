@@ -43,3 +43,7 @@ jobs:
           EOF
       - name: Display e2e config file
         run: cat e2e-config.yaml
+      - name: Create tmp directory
+        run: mkdir ./tmp
+      - name: List directory
+        run: ls -la
