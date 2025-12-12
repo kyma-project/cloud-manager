@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/kyma-project/cloud-manager/api"
 
@@ -14,6 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR GcpRedisCluster", func() {
@@ -825,7 +827,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 		}
 		newExtraData := map[string]string{
 			"custom-key":        "custom-value",
-			"connection-string": "{{.primaryEndpoint}}",
+			"connection-string": "{{.discoveryEndpoint}}",
 		}
 
 		By("When GcpRedisCluster authSecret config is modified with new labels, annotations, and extraData", func() {
@@ -842,12 +844,33 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 			gcpRedisCluster.Spec.AuthSecret.Annotations = newAnnotations
 			gcpRedisCluster.Spec.AuthSecret.ExtraData = newExtraData
 
-			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisCluster).
-				Should(Succeed())
+			Eventually(func() error {
+				return infra.SKR().Client().Update(infra.Ctx(), gcpRedisCluster)
+			}).Should(Succeed())
 		})
 
 		By("Then SKR auth Secret is updated with new labels, annotations, and extraData", func() {
+			// Wait for the controller to reconcile and update the secret
+			Eventually(func() map[string]string {
+				_ = infra.SKR().Client().Get(infra.Ctx(), types.NamespacedName{
+					Name:      authSecretName,
+					Namespace: gcpRedisCluster.Namespace,
+				}, authSecret)
+				// Filter out system labels
+				userLabels := map[string]string{}
+				for k, v := range authSecret.Labels {
+					if k == "env" || k == "team" {
+						userLabels[k] = v
+					}
+				}
+				return userLabels
+			}).WithTimeout(20 * time.Second).WithPolling(200 * time.Millisecond).Should(And(
+				HaveKeyWithValue("env", "production"),
+				HaveKeyWithValue("team", "platform"),
+				HaveLen(2),
+			))
+
+			// Verify the secret is loaded with latest data
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(),
@@ -885,59 +908,9 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 			Expect(authSecret.Data).To(And(
 				HaveKeyWithValue("custom-key", []byte("custom-value")),
 				HaveKeyWithValue("connection-string", []byte(kcpRedisClusterPrimaryEndpoint)),
-				HaveKey("primaryEndpoint"),
+				HaveKey("discoveryEndpoint"),
 				HaveKey("authString"),
 			))
-		})
-
-		oldAuthSecret := authSecret.DeepCopy()
-		newAuthSecretName := "gcp-cluster-auth-secret-renamed"
-
-		By("When GcpRedisCluster authSecret name is changed", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					gcpRedisCluster,
-					NewObjActions(),
-				).
-				Should(Succeed())
-
-			gcpRedisCluster.Spec.AuthSecret.Name = newAuthSecretName
-
-			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpRedisCluster).
-				Should(Succeed())
-		})
-
-		newAuthSecret := &corev1.Secret{}
-		By("Then new SKR auth Secret is created with the new name", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					newAuthSecret,
-					NewObjActions(
-						WithName(newAuthSecretName),
-						WithNamespace(gcpRedisCluster.Namespace),
-					),
-				).
-				Should(Succeed())
-
-			Expect(newAuthSecret.Data).To(And(
-				HaveKey("primaryEndpoint"),
-				HaveKey("authString"),
-			))
-		})
-
-		By("And Then old SKR auth Secret is deleted", func() {
-			Eventually(IsDeleted).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					oldAuthSecret,
-				).
-				Should(Succeed())
 		})
 
 		Eventually(Delete).

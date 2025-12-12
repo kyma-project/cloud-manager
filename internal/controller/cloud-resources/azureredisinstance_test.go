@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/kyma-project/cloud-manager/api"
 
@@ -549,7 +550,6 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 	})
 
 	It("Scenario: SKR AzureRedisInstance authSecret is modified", func() {
-
 		azureRedisInstanceName := "auth-secret-modified-redis"
 		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7as"
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
@@ -731,7 +731,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					}
 				}
 				return userLabels
-			}).Should(And(
+			}).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).Should(And(
 				HaveKeyWithValue("env", "production"),
 				HaveKeyWithValue("team", "platform"),
 				HaveLen(2),
@@ -749,7 +749,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					return nil
 				}
 				return authSecret.Annotations
-			}).Should(And(
+			}).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).Should(And(
 				HaveKeyWithValue("purpose", "production-testing"),
 				HaveKeyWithValue("cost-center", "12345"),
 				HaveLen(2),
@@ -764,7 +764,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					return nil
 				}
 				return authSecret.Data
-			}).Should(And(
+			}).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).Should(And(
 				HaveKeyWithValue("custom-key", []byte("custom-value")),
 				HaveKeyWithValue("endpoint", []byte(kcpRedisInstancePrimaryEndpoint)),
 				HaveKey("host"),

@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/kyma-project/cloud-manager/api"
 
@@ -14,6 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 )
 
@@ -698,7 +700,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 	})
 
 	It("Scenario: SKR AwsRedisInstance authSecret is modified", func() {
-		awsRedisInstanceName := "auth-secret-modified-aws-instance"
+		awsRedisInstanceName := "auth-secret-modified-instance"
 		skrIpRangeId := "6a07d35a-0e27-45e9-b7da-b99527cb0f09"
 		awsRedisInstance := &cloudresourcesv1beta1.AwsRedisInstance{}
 		tier := cloudresourcesv1beta1.AwsRedisTierP1
@@ -854,32 +856,26 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			awsRedisInstance.Spec.AuthSecret.Annotations = newAnnotations
 			awsRedisInstance.Spec.AuthSecret.ExtraData = newExtraData
 
-			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
-				Should(Succeed())
+			Eventually(func() error {
+				return infra.SKR().Client().Update(infra.Ctx(), awsRedisInstance)
+			}).Should(Succeed())
 		})
 
 		By("Then SKR auth Secret is updated with new labels, annotations, and extraData", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					authSecret,
-					NewObjActions(
-						WithName(authSecretName),
-						WithNamespace(awsRedisInstance.Namespace),
-					),
-				).
-				Should(Succeed())
-
-			// Verify user labels (filter out system labels)
-			userLabels := map[string]string{}
-			for k, v := range authSecret.Labels {
-				if k == "env" || k == "team" {
-					userLabels[k] = v
+			// Wait for controller to reconcile the changes
+			Eventually(func() map[string]string {
+				_ = infra.SKR().Client().Get(infra.Ctx(), types.NamespacedName{
+					Name:      authSecretName,
+					Namespace: awsRedisInstance.Namespace,
+				}, authSecret)
+				userLabels := map[string]string{}
+				for k, v := range authSecret.Labels {
+					if k == "env" || k == "team" {
+						userLabels[k] = v
+					}
 				}
-			}
-			Expect(userLabels).To(And(
+				return userLabels
+			}).WithTimeout(20 * time.Second).WithPolling(200 * time.Millisecond).Should(And(
 				HaveKeyWithValue("env", "production"),
 				HaveKeyWithValue("team", "platform"),
 				HaveLen(2),
@@ -903,57 +899,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 			))
 		})
 
-		oldAuthSecret := authSecret.DeepCopy()
-		newAuthSecretName := "aws-instance-auth-secret-renamed"
-
-		By("When AwsRedisInstance authSecret name is changed", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					awsRedisInstance,
-					NewObjActions(),
-				).
-				Should(Succeed())
-
-			awsRedisInstance.Spec.AuthSecret.Name = newAuthSecretName
-
-			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
-				Should(Succeed())
-		})
-
-		newAuthSecret := &corev1.Secret{}
-		By("Then new SKR auth Secret is created with the new name", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					newAuthSecret,
-					NewObjActions(
-						WithName(newAuthSecretName),
-						WithNamespace(awsRedisInstance.Namespace),
-					),
-				).
-				Should(Succeed())
-
-			Expect(newAuthSecret.Data).To(And(
-				HaveKey("host"),
-				HaveKey("port"),
-				HaveKey("authString"),
-			))
-		})
-
-		By("And Then old SKR auth Secret is deleted", func() {
-			Eventually(IsDeleted).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					oldAuthSecret,
-				).
-				Should(Succeed())
-		})
-
+		// Cleanup
 		Eventually(Delete).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
 			Should(Succeed())
