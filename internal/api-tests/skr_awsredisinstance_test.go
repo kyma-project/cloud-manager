@@ -130,12 +130,13 @@ var _ = Describe("Feature: SKR AwsRedisInstance", Ordered, func() {
 
 	Context("Scenario: authSecret mutability", func() {
 
-		canChangeSkr(
-			"AwsRedisInstance authSecret.name can be changed",
+		canNotChangeSkr(
+			"AwsRedisInstance authSecret.name cannot be changed",
 			newTestAwsRedisInstanceBuilder().WithAuthSecretName("original-name"),
 			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
 				b.(*testAwsRedisInstanceBuilder).WithAuthSecretName("new-name")
 			},
+			"name is immutable",
 		)
 
 		canChangeSkr(
