@@ -16,11 +16,9 @@ jobs:
         run: go version
       - name: Write KUBECONFIG to file
         env:
-          GARDENER_KUBECONFIG: ${{ vars.GARDENER_KUBECONFIG }}
+          GARDENER_KUBECONFIG: ${{ secrets.GARDENER_KUBECONFIG }}
         run: |
           echo "$GARDENER_KUBECONFIG" > kubeconfig-garden.yaml
-      - name: Display server
-        run: cat kubeconfig-garden.yaml
       - name: Write e2e config file
         env:
           OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
@@ -58,4 +56,4 @@ jobs:
       - name: Download credentials
         run:  go run ./e2e/cmd credentials download
       - name: List tmp directory
-        run: ls -la
+        run: ls -la ./tmp
