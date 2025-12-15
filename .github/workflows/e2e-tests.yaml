@@ -74,3 +74,18 @@ jobs:
         run:  go run ./e2e/cmd credentials download
       - name: List tmp directory
         run: ls -la ./tmp
+      - name: Run K8S
+        run: |
+          $(go run ./e2e/cmd envtest run -v 1.33.0 -o ./tmp/kubeconfig-kcp.yaml) &
+          ENVTEST_PID=$!
+          echo "ENVTEST_PID=$ENVTEST_PID" >> "$GITHUB_ENV"
+      - name: Wait for K8S to be ready
+        run: |
+          sleep 60
+      - name: List tmp directory after K8S start
+        run: ls -la ./tmp
+      - name: Kill K8S
+        if: always()
+        run: |
+          echo "Killing K8S with PID $ENVTEST_PID"
+          kill $ENVTEST_PID
