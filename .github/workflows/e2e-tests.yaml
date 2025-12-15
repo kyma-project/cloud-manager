@@ -74,9 +74,17 @@ jobs:
         run:  go run ./e2e/cmd credentials download
       - name: List tmp directory
         run: ls -la ./tmp
+      - name: Download envtest
+        run: make envtest
+      - name: GET envtest version
+        run: |
+          ENVTEST_K8S_VERSION=$(grep "ENVTEST_K8S_VERSION = " Makefile | awk -F '[[:space:]]*=[[:space:]]*' '{print $2}')
+          echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
+          echo "ENVTEST_K8S_VERSION=$ENVTEST_K8S_VERSION" >> $GITHUB_ENV
       - name: Run K8S
         run: |
-          $(go run ./e2e/cmd envtest run -v 1.33.0 -o ./tmp/kubeconfig-kcp.yaml) &
+          echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
+          $(go run ./e2e/cmd envtest run -v $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml) &
           ENVTEST_PID=$!
           echo "ENVTEST_PID=$ENVTEST_PID" >> "$GITHUB_ENV"
       - name: Wait for K8S to be ready
@@ -84,6 +92,21 @@ jobs:
           sleep 60
       - name: List tmp directory after K8S start
         run: ls -la ./tmp
+      - name: Run sim
+        run: |
+          $(go run ./e2e/cmd sim run) &
+          SIM_PID=$!
+          echo "SIM_PID=$SIM_PID" >> "$GITHUB_ENV"
+      - name: Wait for sim to be ready
+        run: |
+          sleep 30
+      - name: run e2e tests
+        run: echo "run e2e tests"
+      - name: Kill sim
+        if: always()
+        run: |
+          echo "Killing sim with PID $SIM_PID"
+          kill $SIM_PID
       - name: Kill K8S
         if: always()
         run: |
