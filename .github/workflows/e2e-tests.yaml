@@ -16,11 +16,11 @@ jobs:
         run: go version
       - name: Write KUBECONFIG to file
         env:
-          GARDENER_KUBECONFIG: ${{ secrets.GARDENER_KUBECONFIG }}
+          GARDENER_KUBECONFIG: ${{ vars.GARDENER_KUBECONFIG }}
         run: |
           echo $GARDENER_KUBECONFIG > kubeconfig-garden.yaml
       - name: Display server
-        run: cat kubeconfig-garden.yaml | grep server
+        run: cat kubeconfig-garden.yaml
       - name: Write e2e config file
         env:
           OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
@@ -33,7 +33,6 @@ jobs:
           gardenNamespace: garden-spm-test01
           skrNamespace: default
           subscriptions:
-            # name is SecretBinding name in garden
             - name: my-aws-secret
               provider: aws
               isDefault: true
@@ -47,8 +46,8 @@ jobs:
           oidcClientId: $OIDC_CLIENT_ID
           oidcIssuerUrl: $OIDC_ISSUER_URL
           administrators:
-              - vladimir.andjelkoski@sap.com
-              - dl_623b719a6a0d2d029907bee0@global.corp.sap
+            - vladimir.andjelkoski@sap.com
+            - dl_623b719a6a0d2d029907bee0@global.corp.sap
           EOF
       - name: Display e2e config file
         run: cat e2e-config.yaml
