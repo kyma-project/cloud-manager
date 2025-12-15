@@ -26,7 +26,7 @@ jobs:
           OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
           OIDC_ISSUER_URL: ${{ vars.OIDC_ISSUER_URL }}
         run: |
-          cat << EOF > e2e-config.yaml
+          cat <<EOF > e2e-config.yaml
           gardenKubeconfig: kubeconfig-garden.yaml
           shootPrefix: pp
           kcpNamespace: kcp-system
