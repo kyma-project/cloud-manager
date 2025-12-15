@@ -46,6 +46,23 @@ jobs:
           administrators:
             - vladimir.andjelkoski@sap.com
             - dl_623b719a6a0d2d029907bee0@global.corp.sap
+          downloadGardenSecrets:
+            cm-e2e-default-aws:
+              AWS_ACCESS_KEY_ID: accessKeyID
+              AWS_SECRET_ACCESS_KEY: secretAccessKey
+            cm-e2e-peering-aws:
+              AWS_PEERING_ACCESS_KEY_ID: accessKeyID
+              AWS_PEERING_SECRET_ACCESS_KEY: secretAccessKey
+            cm-e2e-default-gcp:
+              "gcp-default.json": serviceaccount.json
+            cm-e2e-peering-gcp:
+              "gcp-peering.json": serviceaccount.json
+            svc-btp-kyma-phoenix-dev:
+              AZURE_CLIENT_ID: clientID
+              AZURE_CLIENT_SECRET: clientSecret
+              AZURE_PEERING_CLIENT_ID: clientID
+              AZURE_PEERING_CLIENT_SECRET: clientSecret
+                      
           EOF
       - name: Display e2e config file
         run: cat e2e-config.yaml
