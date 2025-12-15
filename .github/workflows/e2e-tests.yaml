@@ -18,7 +18,7 @@ jobs:
         env:
           GARDENER_KUBECONFIG: ${{ vars.GARDENER_KUBECONFIG }}
         run: |
-          echo $GARDENER_KUBECONFIG > kubeconfig-garden.yaml
+          echo "$GARDENER_KUBECONFIG" > kubeconfig-garden.yaml
       - name: Display server
         run: cat kubeconfig-garden.yaml
       - name: Write e2e config file
