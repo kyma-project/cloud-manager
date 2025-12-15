@@ -1,9 +1,9 @@
 Feature: GcpNfsVolume feature
 
   @skr @gcp @nfs
-  Scenario: GcpNfsVolume/Backup/Restore scenario
+  Scenario: GcpNfsVolume Backup and Restore scenario
 
-    Given there is SKR with "GCP" provider and default IpRange
+    Given there is shared SKR with "GCP" provider
 
     And resource declaration:
       | Alias     | Kind                  | ApiVersion                              | Name                                            | Namespace |
@@ -35,6 +35,7 @@ Feature: GcpNfsVolume feature
     And PVC "pvc" file operations succeed:
       | Operation | Path     | Content     |
       | Create    | test.txt | first value |
+      | Contains  | test.txt | first value |
 
     When resource "backup" is created:
       """
@@ -52,6 +53,7 @@ Feature: GcpNfsVolume feature
     When PVC "pvc" file operations succeed:
       | Operation | Path     | Content      |
       | Create    | test.txt | second value |
+      | Contains  | test.txt | second value |
 
     When resource "restore" is created:
       """
@@ -71,13 +73,13 @@ Feature: GcpNfsVolume feature
 
     # check file content matches the original restored value
     And PVC "pvc" file operations succeed:
-      | Operation | Path     | Content     |
-      | Contains  | test.txt | first value |
+      | Operation | Path       | Content     |
+      | Contains  | test.txt   | first value |
 
     When resource "restore" is deleted
-    Then eventually resource "restore" does not exist
-
     When resource "vol" is deleted
+
+    Then eventually resource "restore" does not exist
     Then eventually resource "pvc" does not exist
     And eventually resource "pv" does not exist
     And eventually resource "vol" does not exist
@@ -123,13 +125,14 @@ Feature: GcpNfsVolume feature
     And eventually "schBackup.status.state == 'Ready'" is ok
 
     When resource "schedule" is deleted
+    When resource "vol2" is deleted
+    When resource "backup" is deleted
+
     Then eventually resource "schBackup" does not exist
     And eventually resource "schedule" does not exist
 
-    When resource "vol2" is deleted
     Then eventually resource "pvc2" does not exist
     And eventually resource "pv2" does not exist
     And eventually resource "vol2" does not exist
 
-    When resource "backup" is deleted
     Then eventually resource "backup" does not exist

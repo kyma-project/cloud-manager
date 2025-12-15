@@ -20,7 +20,6 @@ This tutorial explains how to use Network File System (NFS) to create ReadWriteM
    metadata:
      name: my-vol
    spec:
-     location: us-west1-a
      capacityGb: 1024
    EOF
    ```

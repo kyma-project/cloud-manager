@@ -26,6 +26,7 @@ type PodBuilder interface {
 	WithPodDetails(arr ...PodDetailFunc) PodBuilder
 
 	DumpYaml(scheme *runtime.Scheme) ([]byte, error)
+	DumpYamlText(scheme *runtime.Scheme) string
 }
 
 type podBuilder struct {
@@ -131,7 +132,20 @@ func (b *podBuilder) WithAnnotation(key, value string) PodBuilder {
 		b.pod.Annotations = make(map[string]string)
 	}
 	b.pod.Annotations[key] = value
+
+	for _, o := range b.extraResources {
+		if o.GetAnnotations() == nil {
+			o.SetAnnotations(make(map[string]string))
+		}
+		o.GetAnnotations()[key] = value
+	}
+
 	return b
+}
+
+func (b *podBuilder) DumpYamlText(scheme *runtime.Scheme) string {
+	yamlDumpTxt, yamlDumpErr := b.DumpYaml(scheme)
+	return fmt.Sprintf("\n%v\n%v", string(yamlDumpTxt), yamlDumpErr)
 }
 
 func (b *podBuilder) DumpYaml(scheme *runtime.Scheme) ([]byte, error) {

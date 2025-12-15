@@ -8,8 +8,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/elliotchance/pie/v2"
+	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
+	"github.com/kyma-project/cloud-manager/e2e/cloud"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -36,12 +40,26 @@ type ScenarioSession interface {
 
 	SetCurrentCluster(alias string)
 
+	// AliasInfo returns alias registration if it's defined, ie *ResourceInfo or cloud.TFWorkspace
+	// If alias is not defined, it returns nil
+	AliasInfo(alias string) AliasInfo
+
 	Eval(ctx context.Context) (Evaluator, error)
 
-	Timing() Timing
+	Timing() *Timing
 
 	EventuallyValueIsOK(ctx context.Context, expression string, arrUnless ...string) error
 	EventuallyResourceDoesNotExist(ctx context.Context, alias string) error
+
+	SetStepName(string)
+	GetStepName() string
+	GetScenarioName() string
+
+	DebugLog(bool)
+	Logger(context.Context) logr.Logger
+
+	AddTfWorkspace(ws cloud.TFWorkspace) error
+	GetWorkspace(alias string) cloud.TFWorkspace
 
 	Terminate(ctx context.Context) error
 }
@@ -117,11 +135,9 @@ func (c *defaultClusterInSession) KubernetesClientset() (*kubernetes.Clientset, 
 }
 
 func (c *defaultClusterInSession) AddResources(ctx context.Context, arr ...*ResourceDeclaration) error {
-	for _, clstr := range c.session.AllClusters() {
-		for _, rd := range arr {
-			if clstr.GetResource(rd.Alias) != nil {
-				return fmt.Errorf("resource %q already defined", rd.Alias)
-			}
+	for _, rd := range arr {
+		if ai := c.session.AliasInfo(rd.Alias); ai != nil {
+			return fmt.Errorf("resource %q already defined as type %T", rd.Alias, ai)
 		}
 	}
 	return c.Cluster.AddResources(ctx, arr...)
@@ -157,14 +173,20 @@ type scenarioSessionKeyType struct{}
 
 var scenarioSessionKey = &scenarioSessionKeyType{}
 
-func NewScenarioSession(world WorldIntf) ScenarioSession {
+func NewScenarioSession(world WorldIntf, scenarioName string) ScenarioSession {
 	return &scenarioSession{
-		world: world,
+		world:        world,
+		scenarioName: scenarioName,
+		timing: &Timing{
+			EventuallyTimeout:  1 * time.Hour,
+			EventuallyInterval: 2 * time.Second,
+		},
+		tfWorkspaces: map[string]cloud.TFWorkspace{},
 	}
 }
 
-func StartNewScenarioSession(ctx context.Context) context.Context {
-	return context.WithValue(ctx, scenarioSessionKey, NewScenarioSession(GetWorld()))
+func StartNewScenarioSession(ctx context.Context, scenarioName string) context.Context {
+	return context.WithValue(ctx, scenarioSessionKey, NewScenarioSession(GetWorld(), scenarioName))
 }
 
 func GetCurrentScenarioSession(ctx context.Context) ScenarioSession {
@@ -189,10 +211,45 @@ type scenarioSession struct {
 	cancel context.CancelFunc
 	runErr error
 
-	world    WorldIntf
-	clusters []*defaultClusterInSession
+	world          WorldIntf
+	scenarioName   string
+	stepName       string
+	clusters       []*defaultClusterInSession
+	loggingEnabled bool
+
+	tfWorkspaces map[string]cloud.TFWorkspace
 
 	terminated bool
+
+	timing *Timing
+}
+
+func (s *scenarioSession) SetStepName(v string) {
+	s.stepName = v
+}
+
+func (s *scenarioSession) GetStepName() string {
+	return s.stepName
+}
+
+func (s *scenarioSession) GetScenarioName() string {
+	return s.scenarioName
+}
+
+func (s *scenarioSession) DebugLog(v bool) {
+	s.loggingEnabled = v
+}
+
+func (s *scenarioSession) Logger(ctx context.Context) logr.Logger {
+	if s.loggingEnabled {
+		return composed.LoggerFromCtx(ctx).
+			WithValues(
+				"scenario", s.scenarioName,
+				"step", s.stepName,
+			)
+	} else {
+		return logr.Discard()
+	}
 }
 
 func (s *scenarioSession) EventuallyResourceDoesNotExist(ctx context.Context, alias string) error {
@@ -340,7 +397,7 @@ func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...e2eke
 }
 
 func (s *scenarioSession) createManagerAndStartIt(ctx context.Context, id *e2ekeb.InstanceDetails, isCreatedInSession bool) (ClusterInSession, error) {
-	clstr, err := s.world.Keb().CreateSkrManager(ctx, id.RuntimeID)
+	clstr, err := s.world.Keb().CreateSkrManager(ctx, id.RuntimeID, e2ekeb.WithLogger(logr.Discard()))
 	if err != nil {
 		return nil, fmt.Errorf("error creating client cluster for runtime: %w", err)
 	}
@@ -394,17 +451,46 @@ func (s *scenarioSession) SetCurrentCluster(alias string) {
 
 func (s *scenarioSession) Eval(ctx context.Context) (Evaluator, error) {
 	b := NewEvaluatorBuilder(s.world.Config().SkrNamespace)
+	for _, ws := range s.tfWorkspaces {
+		b.Set(ws.GetAlias(), ws.Outputs())
+	}
 	for _, c := range s.clusters {
 		b.Add(c)
 	}
 	return b.Build(ctx)
 }
 
-func (s *scenarioSession) Timing() Timing {
-	return Timing{
-		EventuallyTimeout:  1 * time.Hour,
-		EventuallyInterval: 2 * time.Second,
+func (s *scenarioSession) Timing() *Timing {
+	return s.timing
+}
+
+func (s *scenarioSession) AliasInfo(alias string) AliasInfo {
+	for _, clstr := range s.clusters {
+		if ri := clstr.GetResource(alias); ri != nil {
+			return ri
+		}
 	}
+
+	ws, ok := s.tfWorkspaces[alias]
+	if ok {
+		return ws
+	}
+
+	return nil
+}
+
+func (s *scenarioSession) AddTfWorkspace(ws cloud.TFWorkspace) error {
+	if ai := s.AliasInfo(ws.GetAlias()); ai != nil {
+		return fmt.Errorf("resource %q already defined as type %T", ws.GetAlias(), ai)
+	}
+
+	s.tfWorkspaces[ws.GetAlias()] = ws
+	ws.SetMeta(fmt.Sprintf("Scenario: %s\nStep: %s", s.scenarioName, s.stepName))
+	return nil
+}
+
+func (s *scenarioSession) GetWorkspace(alias string) cloud.TFWorkspace {
+	return s.tfWorkspaces[alias]
 }
 
 func (s *scenarioSession) Terminate(ctx context.Context) error {
@@ -443,6 +529,13 @@ func (s *scenarioSession) Terminate(ctx context.Context) error {
 				s.runErr = multierror.Append(s.runErr, fmt.Errorf("error deleting cluster %q: %w", c.ClusterAlias(), err))
 			}
 		}
+	}
+
+	for _, ws := range pie.Values(s.tfWorkspaces) {
+		if err := ws.Destroy(); err != nil {
+			s.runErr = multierror.Append(s.runErr, fmt.Errorf("error destroying tf workspace %q: %w", ws.GetAlias(), err))
+		}
+		delete(s.tfWorkspaces, ws.GetAlias())
 	}
 
 	return s.runErr

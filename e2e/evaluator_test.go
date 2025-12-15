@@ -67,7 +67,8 @@ func TestEvaluator(t *testing.T) {
 		var v interface{}
 
 		s, err = evaluator.EvalTemplate("${cmOne.metadata.name}")
-		assert.NoError(t, err)
+		assert.Error(t, err)
+		assert.True(t, IsTypeError(err))
 		assert.Equal(t, "", s)
 
 		v, err = evaluator.Eval("cmOne.metadata.name")

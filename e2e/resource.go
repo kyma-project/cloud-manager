@@ -42,6 +42,8 @@ func ParseResourceDeclarations(tbl *godog.Table) ([]*ResourceDeclaration, error)
 	return arr.([]*ResourceDeclaration), nil
 }
 
+var _ AliasInfo = &ResourceInfo{}
+
 type ResourceInfo struct {
 	ResourceDeclaration
 	//Evaluated    bool
@@ -49,4 +51,12 @@ type ResourceInfo struct {
 	GVK          schema.GroupVersionKind
 	IsNamespaced bool
 	Source       source.Source
+}
+
+func (ri *ResourceInfo) GetAlias() string {
+	return ri.Alias
+}
+
+type AliasInfo interface {
+	GetAlias() string
 }

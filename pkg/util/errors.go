@@ -4,8 +4,16 @@ import (
 	"context"
 	"errors"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 )
+
+func IgnoreForbidden(err error) error {
+	if apierrors.IsForbidden(err) {
+		return nil
+	}
+	return err
+}
 
 func IgnoreNoMatch(err error) error {
 	if meta.IsNoMatchError(err) {

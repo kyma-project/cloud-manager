@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,7 +12,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
 func checkRestoreOperation(ctx context.Context, st composed.State) (error, context.Context) {
@@ -55,7 +55,7 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 	//Operation not completed yet.. requeue again.
 	if op != nil && !op.Done {
 
-		return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), nil
+		return composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), nil
 	}
 
 	//If not able to find the operation or it is completed, reset OpIdentifier.

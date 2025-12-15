@@ -3,7 +3,7 @@ Feature: AwsRedisCluster feature
   @skr @aws @rediscluster
   Scenario: AwsRedisCluster scenario
 
-    Given there is SKR with "AWS" provider and default IpRange
+    Given there is shared SKR with "AWS" provider
 
     And resource declaration:
       | Alias  | Kind            | ApiVersion                              | Name                         | Namespace |

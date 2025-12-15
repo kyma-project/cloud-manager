@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/servicenetworking/v1"
@@ -53,14 +54,14 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 
 	snc, err := f.serviceNetworkingClientProvider(
 		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+		config.GcpConfig.CredentialsFile,
 	)
 	if err != nil {
 		return nil, err
 	}
 	cc, err := f.computeClientProvider(
 		ctx,
-		f.env.Get("GCP_SA_JSON_KEY_PATH"),
+		config.GcpConfig.CredentialsFile,
 	)
 	if err != nil {
 		return nil, err

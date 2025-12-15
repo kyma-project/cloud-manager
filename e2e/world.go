@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
+	"github.com/kyma-project/cloud-manager/e2e/cloud"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
-	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -22,8 +22,8 @@ type WorldIntf interface {
 
 	Kcp() Cluster
 	Garden() Cluster
-	Sim() sim.Sim
 	Keb() e2ekeb.Keb
+	Cloud() cloud.Cloud
 }
 
 type defaultWorld struct {
@@ -40,7 +40,8 @@ type defaultWorld struct {
 	garden Cluster
 
 	kebi e2ekeb.Keb
-	simu sim.Sim
+
+	cloud cloud.Cloud
 }
 
 func (w *defaultWorld) Config() *e2econfig.ConfigType {
@@ -79,10 +80,10 @@ func (w *defaultWorld) Garden() Cluster {
 	return w.garden
 }
 
-func (w *defaultWorld) Sim() sim.Sim {
-	return w.simu
-}
-
 func (w *defaultWorld) Keb() e2ekeb.Keb {
 	return w.kebi
+}
+
+func (w *defaultWorld) Cloud() cloud.Cloud {
+	return w.cloud
 }

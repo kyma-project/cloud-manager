@@ -5,7 +5,7 @@ import (
 	_ "embed"
 )
 
-//go:embed default.yaml
+//go:embed ff_ga.yaml
 var embeddedConfig []byte
 
 type EmbeddedRetriever struct {

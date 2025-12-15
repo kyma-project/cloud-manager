@@ -10,6 +10,9 @@ body:
         source: remotePrivateDnsZone
         name: spec.remotePrivateDnsZone
       - widget: Labels
+        source: remoteDnsResolverRuleset
+        name: spec.remoteDnsResolverRuleset
+      - widget: Labels
         source: remoteTenant
         name: spec.remoteTenant
   

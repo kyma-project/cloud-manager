@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
-	"github.com/hashicorp/go-multierror"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -25,13 +24,14 @@ func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
 
 		f := NewWorldFactory()
 		w, err := f.Create(ctx, WorldCreateOptions{
-			Config: config,
+			Config:      config,
+			CreateCloud: true,
 		})
 		if err != nil {
 			panic(err)
 		}
 		world = w
-		time.Sleep(10 * time.Second)
+		time.Sleep(1 * time.Second)
 	})
 
 	gdCtx.AfterSuite(func() {
@@ -52,30 +52,35 @@ func GetWorld() WorldIntf {
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
+	ctx.StepContext().Before(func(ctx context.Context, st *godog.Step) (context.Context, error) {
+		GetCurrentScenarioSession(ctx).SetStepName(st.Text)
+		return ctx, nil
+	})
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		if GetWorld() == nil {
 			return ctx, fmt.Errorf("world does not exist")
 		}
 
-		ctx = StartNewScenarioSession(ctx)
+		ctx = StartNewScenarioSession(ctx, sc.Name)
 
 		return ctx, nil
 	})
 
 	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-		var result error
-		if err != nil {
-			result = multierror.Append(result, err)
-		}
 		session := GetCurrentScenarioSession(ctx)
 		if session != nil {
 			if err := session.Terminate(ctx); err != nil {
-				result = multierror.Append(result, fmt.Errorf("failed to terminate session: %w", err))
+				return ctx, fmt.Errorf("failed to terminate session: %w", err)
 			}
 		}
 
-		return ctx, result
+		return ctx, nil
 	})
+
+	ctx.Step(`^debug wait "([^"]*)"$`, debugWait)
+	ctx.Step(`^debug log (true|false)$`, debugLog)
+
+	ctx.Step(`^eventually timeout is "([^"]*)"$`, eventuallyTimeoutIs)
 
 	ctx.Step(`^there is shared SKR with "(AWS|Azure|GCP|OpenStack")" provider$`, thereIsSharedSKRWithProvider)
 
@@ -97,4 +102,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^logs of container "([^"]*)" in pod "([^"]*)" contain "([^"]*)"$`, logsOfContainerInPodContain)
 	ctx.Step(`^HTTP operation succeeds:$`, httpOperationSucceeds)
 	ctx.Step(`^Redis "([^"]*)" gives "([^"]*)" with:$`, redisGivesWith)
+	ctx.Step(`^tf module "([^"]*)" is applied:$`, tfModuleIsApplied)
+	ctx.Step(`^tf module "([^"]*)" is destroyed$`, tfModuleIsDestroyed)
 }

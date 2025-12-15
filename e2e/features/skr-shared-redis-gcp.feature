@@ -3,7 +3,7 @@ Feature: GcpRedisInstance feature
   @skr @gcp @redis
   Scenario: GcpRedisInstance scenario
 
-    Given there is SKR with "GCP" provider and default IpRange
+    Given there is shared SKR with "GCP" provider
 
     And resource declaration:
       | Alias  | Kind             | ApiVersion                              | Name                         | Namespace |

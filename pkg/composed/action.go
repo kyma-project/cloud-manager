@@ -3,14 +3,7 @@ package composed
 import (
 	"context"
 	"errors"
-	"reflect"
-	"runtime"
 )
-
-func findActionName(a Action) string {
-	fullName := runtime.FuncForPC(reflect.ValueOf(a).Pointer()).Name()
-	return fullName
-}
 
 type Action func(ctx context.Context, state State) (error, context.Context)
 

@@ -1,37 +1,25 @@
 Feature: AWS NfsVolume feature
 
   @test @skr
-  Scenario: AwsNfsVolume scenario
+  Scenario: Test scenario
 
     Given there is shared SKR with "AWS" provider
 
     Given resource declaration:
-      | Alias     | Kind                  | ApiVersion                              | Name                                            | Namespace |
-      | vol       | AwsNfsVolume          | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                                     |           |
-      | pv        | PersistentVolume      | v1                                      | ${vol.status.id ?? ''}                          |           |
-      | pvc       | PersistentVolumeClaim | v1                                      | ${vol.metadata.name ?? ''}                      |           |
+      | Alias  | Kind            | ApiVersion                              | Name                         | Namespace |
+      | cm     | ConfigMap       | v1                                      | e2e-${id()}                  |           |
 
-    When resource "vol" is created:
-      """
-      apiVersion: cloud-resources.kyma-project.io/v1beta1
-      kind: AwsNfsVolume
-      spec:
-        capacity: 10G
-      """
+    Given tf module "tf" is applied:
+      | source             | ./noop  |
 
-    Then eventually "findConditionTrue(vol, 'Ready')" is ok, unless:
-      | findConditionTrue(vol, 'Error') |
-
-    And "vol.status.state == 'Ready'" is ok
-    And eventually "pv.status.phase == 'Bound'" is ok
-    And eventually "pvc.status.phase == 'Bound'" is ok
-
-    # write initial content to the file, one that will be backed up
-    And PVC "pvc" file operations succeed:
-      | Operation | Path     | Content     |
-      | Create    | test.txt | first value |
-
-    When resource "vol" is deleted
-    Then eventually resource "pvc" does not exist
-    And eventually resource "pv" does not exist
-    And eventually resource "vol" does not exist
+    When resource "cm" is created:
+        """
+        apiVersion: v1
+        kind: ConfigMap
+        data:
+          noop: ${tf.noop}
+        """
+    
+    Then debug wait "mt-test"
+    
+    Then tf module "tf" is destroyed

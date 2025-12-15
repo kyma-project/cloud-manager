@@ -36,19 +36,19 @@ type VpcPeeringClients struct {
 	ResourceManagerTagBindings *resourcemanager.TagBindingsClient
 }
 
-func NewGcpClients(ctx context.Context, saJsonKeyPath string, vpcPeeringSaJsonKeyPath string, logger logr.Logger) (*GcpClients, error) {
-	if saJsonKeyPath == "" || saJsonKeyPath == "none" || vpcPeeringSaJsonKeyPath == "" || vpcPeeringSaJsonKeyPath == "none" {
+func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentialsFile string, logger logr.Logger) (*GcpClients, error) {
+	if credentialsFile == "" || credentialsFile == "none" || peeringCredentialsFile == "" || peeringCredentialsFile == "none" {
 		logger.Info("Creating GCP clients stub since no GCP credentials provided")
 		return &GcpClients{}, nil
 	}
 
 	logger.
-		WithValues("saJsonKeyPath", saJsonKeyPath).
-		WithValues("vpcPeeringSaJsonKeyPath", vpcPeeringSaJsonKeyPath).
+		WithValues("credentialsFile", credentialsFile).
+		WithValues("peeringCredentialsFile", peeringCredentialsFile).
 		Info("Creating GCP clients")
 
-	b := NewReloadingSaKeyTokenProviderOptionsBuilder(saJsonKeyPath, logger)
-	vpcPeeringClientBuilder := NewReloadingSaKeyTokenProviderOptionsBuilder(vpcPeeringSaJsonKeyPath, logger)
+	b := NewReloadingSaKeyTokenProviderOptionsBuilder(credentialsFile, logger)
+	vpcPeeringClientBuilder := NewReloadingSaKeyTokenProviderOptionsBuilder(peeringCredentialsFile, logger)
 
 	// compute --------------
 

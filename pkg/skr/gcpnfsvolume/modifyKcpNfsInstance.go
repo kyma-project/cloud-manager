@@ -88,11 +88,7 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 	logger.
 		WithValues("kcpNfsInstanceName", state.KcpNfsInstance.Name).
 		Info("KCP NFS instance created")
-	// Update the object with the location passed to KCP NfsInstance
-	state.ObjAsGcpNfsVolume().Status.Location = location
 
-	// Update the object with the ID of the KCP NfsInstance
-	state.ObjAsGcpNfsVolume().Status.Id = state.KcpNfsInstance.Name
 	state.ObjAsGcpNfsVolume().Status.State = cloudresourcesv1beta1.GcpNfsVolumeProcessing
 	err, ctx = composed.UpdateStatus(state.ObjAsGcpNfsVolume()).
 		SuccessError(composed.StopWithRequeue).
@@ -124,11 +120,6 @@ func updateKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 }
 
 func getLocation(state *State, logger logr.Logger) (string, error) {
-	location := state.ObjAsGcpNfsVolume().Spec.Location
-	// location is optional. So if empty, using region from scope.
-	if len(location) != 0 {
-		return location, nil
-	}
 	switch state.ObjAsGcpNfsVolume().Spec.Tier {
 	case cloudresourcesv1beta1.REGIONAL:
 		return state.Scope.Spec.Region, nil

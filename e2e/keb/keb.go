@@ -643,6 +643,9 @@ func (k *defaultKeb) GetInstance(ctx context.Context, runtimeID string) (*Instan
 }
 
 func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (InstanceDetails, error) {
+	if k.config.ShootPrefix == "" {
+		return InstanceDetails{}, fmt.Errorf("required config shootPrefix not set")
+	}
 	options := &createOptions{}
 	for _, o := range append(append([]CreateOption{}, defaultCreateOptions()...), opts...) {
 		o.ApplyOnCreate(options)

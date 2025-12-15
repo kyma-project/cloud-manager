@@ -3,13 +3,13 @@ package gcpnfsvolumebackup
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -93,7 +93,7 @@ func (s *loadGcpNfsVolumeBackupSuite) TestVolumeBackupOtherError() {
 	err, _ctx := loadNfsBackup(ctx, state)
 
 	//validate expected return values
-	s.Equal(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	s.Equal(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 	s.Equal(ctx, _ctx)
 }
 

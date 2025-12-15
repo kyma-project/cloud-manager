@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,7 +13,6 @@ import (
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/api/file/v1"
@@ -60,7 +60,7 @@ func (s *addLabelsToNfsBackupSuite) TestAddLabelsToNfsBackup() {
 	assert.Nil(s.T(), err)
 	state.fileBackup = &file.Backup{}
 	err, _ = addLabelsToNfsBackup(ctx, state)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime), err)
 }
 
 func (s *addLabelsToNfsBackupSuite) TestDoNotAddLabelsToNfsBackupOnDeletingObject() {

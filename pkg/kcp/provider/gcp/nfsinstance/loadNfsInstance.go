@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/googleapi"
 )
 
@@ -44,7 +44,7 @@ func loadNfsInstance(ctx context.Context, st composed.State) (error, context.Con
 				Reason:  v1beta1.ReasonGcpError,
 				Message: "Error getting Filestore Instance from GCP",
 			}).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 			Run(ctx, state)
 	}
 

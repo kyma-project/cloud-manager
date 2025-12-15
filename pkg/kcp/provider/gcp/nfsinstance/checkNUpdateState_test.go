@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -256,7 +257,7 @@ func (s *checkNUpdateStateSuite) TestCheckNUpdateStateError() {
 	defer testState.FakeHttpServer.Close()
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 	assert.Equal(s.T(), v1beta1.StateError, testState.curState)
 	assert.Equal(s.T(), v1beta1.StateError, testState.ObjAsNfsInstance().Status.State)
 
@@ -303,7 +304,7 @@ func (s *checkNUpdateStateSuite) TestCheckNUpdateFilestoreStateTransient() {
 	defer testState.FakeHttpServer.Close()
 	err, _ = checkNUpdateState(ctx, testState.State)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(client.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 	assert.Equal(s.T(), gcpNfsInstance.Status.State, testState.curState)
 	assert.Equal(s.T(), client.NONE, testState.operation)
 }
