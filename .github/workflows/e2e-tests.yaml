@@ -19,6 +19,8 @@ jobs:
           GARDENER_KUBECONFIG: ${{ secrets.GARDENER_KUBECONFIG }}
         run: |
           echo $GARDENER_KUBECONFIG > kubeconfig-garden.yaml
+      - name: Display server
+        run: cat kubeconfig-garden.yaml | grep server
       - name: Write e2e config file
         env:
           OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
