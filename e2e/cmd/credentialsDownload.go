@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -21,15 +20,16 @@ var cmdCredentialsDownload = &cobra.Command{
 		if err := os.MkdirAll(config.CredentialsDir, 0755); err != nil {
 			return fmt.Errorf("failed to create credentials dir: %w", err)
 		}
-		keb, err := e2ekeb.Create(rootCtx, config)
+
+		gardenClient, err := config.CreateGardenClient()
 		if err != nil {
-			return fmt.Errorf("failed to create keb: %w", err)
+			return fmt.Errorf("failed to create garden client: %w", err)
 		}
 
 		for secretName, mapping := range config.DownloadGardenSecrets {
 			fmt.Printf("Downloading secret %s\n", secretName)
 			secret := &corev1.Secret{}
-			err = keb.GardenClient().Get(rootCtx, types.NamespacedName{
+			err = gardenClient.Get(rootCtx, types.NamespacedName{
 				Namespace: config.GardenNamespace,
 				Name:      secretName,
 			}, secret)
