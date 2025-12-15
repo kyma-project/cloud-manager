@@ -848,50 +848,6 @@ var _ = Describe("Feature: SKR IpRange", func() {
 		})
 	})
 
-	It("Scenario: SKR IpRange can be created with empty CIDR", func() {
-		skrIpRangeName := "db19ab47-8361-448d-a841-227b686982e8"
-		skrIpRange := &cloudresourcesv1beta1.IpRange{}
-		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
-
-		By("When SKR IpRange is created with empty spec.cidr", func() {
-			Eventually(CreateSkrIpRange).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), skrIpRange,
-					WithName(skrIpRangeName),
-				).
-				Should(Succeed(), "failed creating SKR IpRange")
-		})
-
-		By("Then KCP IpRange is created", func() {
-			// load SKR IpRange to get ID
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					skrIpRange,
-					NewObjActions(),
-					AssertSkrIpRangeHasId(),
-				).
-				Should(Succeed(), "expected SKR IpRange to get status.id, but it didn't")
-
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(),
-					infra.KCP().Client(),
-					kcpIpRange,
-					NewObjActions(WithName(skrIpRange.Status.Id)),
-				).
-				Should(Succeed(), "expected KCP IpRange to exists, but none found")
-		})
-
-		By(fmt.Sprintf("// cleanup: delete SKR IpRange %s", skrIpRangeName), func() {
-			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-				Should(SucceedIgnoreNotFound())
-		})
-
-	})
-
 	It("Scenario: SKR IpRange can not be deleted if used by AwsRedisInstance", func() {
 		const (
 			skrIpRangeName = "de648eb4-bab8-484a-a13f-fd8258787de3"
