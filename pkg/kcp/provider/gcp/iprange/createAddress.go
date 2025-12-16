@@ -24,6 +24,22 @@ func createAddress(ctx context.Context, st composed.State) (error, context.Conte
 	}
 
 	ipRange := state.ObjAsIpRange()
+
+	// Validate that CIDR has been parsed (defensive programming)
+	if state.ipAddress == "" || state.prefix == 0 {
+		logger.Error(fmt.Errorf("missing CIDR data"), "Cannot create address without valid CIDR")
+		return composed.PatchStatus(ipRange).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonInvalidCidr,
+				Message: "CIDR must be validated before creating address",
+			}).
+			SuccessError(composed.StopAndForget).
+			SuccessLogMsg("Error: CIDR not validated before address creation").
+			Run(ctx, state)
+	}
+
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	project := gcpScope.Project
 	vpc := gcpScope.VpcNetwork

@@ -67,8 +67,11 @@ func NewServiceNetworkingClientProvider() client.GcpClientProvider[ServiceNetwor
 		credentialsFile := config.GcpConfig.CredentialsFile
 		client, err := oldProvider(context.Background(), credentialsFile)
 		if err != nil {
-			// This should rarely happen since we cache the client
-			// If it does, return a nil client (caller will handle error)
+			// This should rarely happen since we cache the client.
+			// The panic is acceptable here because:
+			// 1. Client is cached after first successful creation
+			// 2. If credentials are invalid, we want to fail fast at startup
+			// 3. This prevents silent failures that would be harder to debug
 			panic(fmt.Sprintf("failed to create ServiceNetworking client: %v", err))
 		}
 		return client

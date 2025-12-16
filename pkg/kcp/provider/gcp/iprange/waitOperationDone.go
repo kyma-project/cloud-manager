@@ -43,7 +43,8 @@ func waitOperationDone(ctx context.Context, st composed.State) (error, context.C
 	case gcpclient.SyncAddress, gcpclient.DeleteAddress:
 		return checkComputeOperation(ctx, state, opName)
 	default:
-		// Unknown state, clear operation identifier
+		// Unknown state, clear operation identifier and log warning
+		logger.Info("Unknown state, clearing operation identifier", "state", ipRange.Status.State, "operation", opName)
 		ipRange.Status.OpIdentifier = ""
 		return nil, nil
 	}
