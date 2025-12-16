@@ -85,10 +85,10 @@ jobs:
         run: |
           echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
           ./bin/setup-envtest use $ENVTEST_K8S_VERSION --bin-dir $PWD/bin -p path
-      - name: Run K8S
+      - name: Run envtest
         run: |
           echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
-          go run ./e2e/cmd envtest run -v $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml &
+          go run ./e2e/cmd envtest run -v $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml > ./tmp/envtest.log 2>&1 &
           ENVTEST_PID=$!
           echo "ENVTEST_PID=$ENVTEST_PID" >> "$GITHUB_ENV"
       - name: Wait for K8S to be ready
@@ -100,7 +100,7 @@ jobs:
         env:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
-          go run ./e2e/cmd sim run &
+          go run ./e2e/cmd sim run  > ./tmp/sim.log 2>&1 &
           SIM_PID=$!
           echo "SIM_PID=$SIM_PID" >> "$GITHUB_ENV"
       - name: Wait for sim to be ready
@@ -118,3 +118,10 @@ jobs:
         run: |
           echo "Killing K8S with PID $ENVTEST_PID"
           kill $ENVTEST_PID
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: envtest-log
+          path: |
+            tmp/envtest.log
+            tmp/sim.log
