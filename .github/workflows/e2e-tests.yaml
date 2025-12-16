@@ -74,20 +74,18 @@ jobs:
         run:  go run ./e2e/cmd credentials download
       - name: List tmp directory
         run: ls -la ./tmp
-      - name: Download envtest
+      - name: Download setup-envtest
         run: make envtest
-      - name: GET envtest version
+      - name: Get ENVTEST_K8S_VERSION from Makefile
         run: |
           ENVTEST_K8S_VERSION=$(grep "ENVTEST_K8S_VERSION = " Makefile | awk -F '[[:space:]]*=[[:space:]]*' '{print $2}')
           echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
           echo "ENVTEST_K8S_VERSION=$ENVTEST_K8S_VERSION" >> $GITHUB_ENV
       - name: Setup envtest
         run: |
-          echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
           ./bin/setup-envtest use $ENVTEST_K8S_VERSION --bin-dir $PWD/bin -p path
       - name: Run envtest
         run: |
-          echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
           go run ./e2e/cmd envtest run -v $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml > ./tmp/envtest.log 2>&1 &
           ENVTEST_PID=$!
           echo "ENVTEST_PID=$ENVTEST_PID" >> "$GITHUB_ENV"
@@ -113,15 +111,15 @@ jobs:
         run: |
           echo "Killing sim with PID $SIM_PID"
           kill $SIM_PID
-      - name: Kill K8S
+      - name: Kill envtest
         if: always()
         run: |
-          echo "Killing K8S with PID $ENVTEST_PID"
+          echo "Killing envtest with PID $ENVTEST_PID"
           kill $ENVTEST_PID
       - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
-          name: envtest-log
+          name: logs
           path: |
             tmp/envtest.log
             tmp/sim.log
