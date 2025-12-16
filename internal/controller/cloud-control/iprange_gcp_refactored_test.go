@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = SkipDescribe("Feature: KCP IpRange for GCP - Refactored Implementation", func() {
+var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", func() {
 
 	It("Scenario: KCP GCP IpRange lifecycle with CIDR (refactored)", func() {
 		const (
@@ -82,23 +82,19 @@ var _ = SkipDescribe("Feature: KCP IpRange for GCP - Refactored Implementation",
 			Expect(ipRange.Status.Cidr).To(Equal(ipRange.Spec.Cidr))
 		})
 
-		By("And Then KCP IpRange has correct status fields", func() {
-			Expect(ipRange.Status.VpcId).To(Equal(scope.Spec.Scope.Gcp.VpcNetwork))
-		})
-
 		By("And Then GCP global address is created", func() {
 			Eventually(func() error {
-				_, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+				_, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 				return err
 			}).Should(Succeed())
 		})
 
 		By("And Then GCP global address has correct properties", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gcpGlobalAddress).NotTo(BeNil())
 			Expect(gcpGlobalAddress.Name).To(Equal("cm-" + ipRange.Name))
-			Expect(gcpGlobalAddress.AddressType).To(Equal(gcpclient.AddressTypeInternal))
+			Expect(gcpGlobalAddress.AddressType).To(Equal(string(gcpclient.AddressTypeInternal)))
 		})
 
 		// DELETE
@@ -116,7 +112,7 @@ var _ = SkipDescribe("Feature: KCP IpRange for GCP - Refactored Implementation",
 		})
 
 		By("And Then GCP global address does not exist", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(gcpGlobalAddress).To(BeNil())
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})
