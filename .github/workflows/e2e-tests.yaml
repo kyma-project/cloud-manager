@@ -84,7 +84,7 @@ jobs:
       - name: Run K8S
         run: |
           echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
-          $(go run ./e2e/cmd envtest run -v $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml) &
+          go run ./e2e/cmd envtest run -v $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml &
           ENVTEST_PID=$!
           echo "ENVTEST_PID=$ENVTEST_PID" >> "$GITHUB_ENV"
       - name: Wait for K8S to be ready
@@ -93,8 +93,10 @@ jobs:
       - name: List tmp directory after K8S start
         run: ls -la ./tmp
       - name: Run sim
+        env:
+          KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
-          $(go run ./e2e/cmd sim run) &
+          go run ./e2e/cmd sim run &
           SIM_PID=$!
           echo "SIM_PID=$SIM_PID" >> "$GITHUB_ENV"
       - name: Wait for sim to be ready
