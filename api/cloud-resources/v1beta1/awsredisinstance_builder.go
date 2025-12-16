@@ -3,14 +3,7 @@ package v1beta1
 func NewAwsRedisInstanceBuilder() *AwsRedisInstanceBuilder {
 	return &AwsRedisInstanceBuilder{
 		AwsRedisInstance: AwsRedisInstance{
-			Spec: AwsRedisInstanceSpec{
-				RedisTier:     "S1",
-				EngineVersion: "7.0",
-				AuthEnabled:   true,
-				Parameters: map[string]string{
-					"maxmemory-policy": "allkeys-lru",
-				},
-			},
+			Spec: AwsRedisInstanceSpec{},
 		},
 	}
 }

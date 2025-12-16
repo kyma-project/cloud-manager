@@ -15,7 +15,9 @@ type testGcpRedisClusterBuilder struct {
 func newTestGcpRedisClusterBuilder() *testGcpRedisClusterBuilder {
 	return &testGcpRedisClusterBuilder{
 		GcpRedisClusterBuilder: cloudresourcesv1beta1.NewGcpRedisClusterBuilder().
-			WithSubnet(uuid.NewString()),
+			WithSubnet(uuid.NewString()).
+			WithRedisTier(cloudresourcesv1beta1.GcpRedisClusterTierC1).
+			WithShardCount(2),
 	}
 }
 

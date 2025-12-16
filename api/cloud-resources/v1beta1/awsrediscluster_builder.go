@@ -3,13 +3,7 @@ package v1beta1
 func NewAwsRedisClusterBuilder() *AwsRedisClusterBuilder {
 	return &AwsRedisClusterBuilder{
 		AwsRedisCluster: AwsRedisCluster{
-			Spec: AwsRedisClusterSpec{
-				RedisTier:        AwsRedisTierC1,
-				EngineVersion:    "7.0",
-				AuthEnabled:      true,
-				ShardCount:       2,
-				ReplicasPerShard: 1,
-			},
+			Spec: AwsRedisClusterSpec{},
 		},
 	}
 }

@@ -13,7 +13,10 @@ type testAwsRedisClusterBuilder struct {
 func newTestAwsRedisClusterBuilder() *testAwsRedisClusterBuilder {
 	return &testAwsRedisClusterBuilder{
 		AwsRedisClusterBuilder: cloudresourcesv1beta1.NewAwsRedisClusterBuilder().
-			WithIpRange(uuid.NewString()),
+			WithIpRange(uuid.NewString()).
+			WithRedisTier(cloudresourcesv1beta1.AwsRedisTierC1).
+			WithShardCount(2).
+			WithEngineVersion("7.0"),
 	}
 }
 

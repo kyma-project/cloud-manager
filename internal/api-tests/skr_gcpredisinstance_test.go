@@ -15,7 +15,9 @@ type testGcpRedisInstanceBuilder struct {
 func newTestGcpRedisInstanceBuilder() *testGcpRedisInstanceBuilder {
 	return &testGcpRedisInstanceBuilder{
 		GcpRedisInstanceBuilder: cloudresourcesv1beta1.NewGcpRedisInstanceBuilder().
-			WithIpRange(uuid.NewString()),
+			WithIpRange(uuid.NewString()).
+			WithRedisTier(cloudresourcesv1beta1.GcpRedisTierS1).
+			WithRedisVersion("REDIS_7_0"),
 	}
 }
 

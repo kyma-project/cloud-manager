@@ -3,23 +3,7 @@ package v1beta1
 func NewGcpRedisInstanceBuilder() *GcpRedisInstanceBuilder {
 	return &GcpRedisInstanceBuilder{
 		GcpRedisInstance: GcpRedisInstance{
-			Spec: GcpRedisInstanceSpec{
-				RedisTier:    "S1",
-				RedisVersion: "REDIS_7_0",
-				AuthEnabled:  true,
-				RedisConfigs: map[string]string{
-					"maxmemory-policy": "allkeys-lru",
-				},
-				MaintenancePolicy: &MaintenancePolicy{
-					DayOfWeek: &DayOfWeekPolicy{
-						Day: "MONDAY",
-						StartTime: TimeOfDay{
-							Hours:   11,
-							Minutes: 0,
-						},
-					},
-				},
-			},
+			Spec: GcpRedisInstanceSpec{},
 		},
 	}
 }

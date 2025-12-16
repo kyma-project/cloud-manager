@@ -15,7 +15,9 @@ type testAwsRedisInstanceBuilder struct {
 func newTestAwsRedisInstanceBuilder() *testAwsRedisInstanceBuilder {
 	return &testAwsRedisInstanceBuilder{
 		AwsRedisInstanceBuilder: cloudresourcesv1beta1.NewAwsRedisInstanceBuilder().
-			WithIpRange(uuid.NewString()),
+			WithIpRange(uuid.NewString()).
+			WithRedisTier(cloudresourcesv1beta1.AwsRedisTierS2).
+			WithEngineVersion("7.0"),
 	}
 }
 

@@ -3,14 +3,7 @@ package v1beta1
 func NewGcpRedisClusterBuilder() *GcpRedisClusterBuilder {
 	return &GcpRedisClusterBuilder{
 		GcpRedisCluster: GcpRedisCluster{
-			Spec: GcpRedisClusterSpec{
-				RedisTier: GcpRedisClusterTierC1,
-				RedisConfigs: map[string]string{
-					"maxmemory-policy": "allkeys-lru",
-				},
-				ShardCount:       2,
-				ReplicasPerShard: 1,
-			},
+			Spec: GcpRedisClusterSpec{},
 		},
 	}
 }
