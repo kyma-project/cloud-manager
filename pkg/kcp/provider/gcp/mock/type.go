@@ -37,6 +37,7 @@ type Providers interface {
 	ServiceNetworkingClientProviderGcp() client.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient]
 	ComputeClientProviderGcp() client.GcpClientProvider[gcpiprangeclient.ComputeClient]
 	ComputeClientProvider() client.ClientProvider[gcpiprangeclient.ComputeClient]
+	OldComputeClientProvider() client.ClientProvider[gcpiprangeclient.OldComputeClient] // For v2 legacy
 	SubnetComputeClientProvider() client.GcpClientProvider[gcpsubnetclient.ComputeClient]
 	SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient]
 	SubnetRegionOperationsClientProvider() client.GcpClientProvider[gcpsubnetclient.RegionOperationsClient]
@@ -65,6 +66,8 @@ type Server interface {
 	Providers
 
 	ClientErrors
+
+	IpRangeClientUtils
 
 	MemoryStoreClientFakeUtils
 	MemoryStoreClusterClientFakeUtils

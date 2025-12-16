@@ -21,7 +21,9 @@ import (
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
+	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
+	"google.golang.org/api/servicenetworking/v1"
 )
 
 var _ Server = &server{}
@@ -32,8 +34,28 @@ func New() Server {
 		mutex:      sync.Mutex{},
 		operations: map[string]*computepb.Operation{},
 	}
+
+	// Create shared address storage that both iprangeStore and iprangeStoreLegacy can use
+	sharedAddresses := &sharedAddressStore{
+		mutex:     sync.Mutex{},
+		addresses: []*computepb.Address{},
+	}
+
+	// Create shared connection storage that both iprangeStore and iprangeStoreLegacy can use
+	sharedConnections := &sharedConnectionStore{
+		mutex:       sync.Mutex{},
+		connections: []*servicenetworking.Connection{},
+	}
+
 	return &server{
-		iprangeStore: &iprangeStore{},
+		iprangeStore: &iprangeStore{
+			addressStore:    sharedAddresses,
+			connectionStore: sharedConnections,
+		},
+		iprangeStoreLegacy: &iprangeStoreLegacy{
+			addressStore:    sharedAddresses,
+			connectionStore: sharedConnections,
+		},
 		computeClientFake: &computeClientFake{
 			mutex:                 sync.Mutex{},
 			subnets:               map[string]*computepb.Subnetwork{},
@@ -64,7 +86,8 @@ func New() Server {
 }
 
 type server struct {
-	*iprangeStore
+	iprangeStore       *iprangeStore
+	iprangeStoreLegacy *iprangeStoreLegacy
 	*computeClientFake
 	*networkConnectivityClientFake
 	*nfsStore
@@ -118,14 +141,16 @@ func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[gcpipra
 	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ServiceNetworkingClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP ServiceNetworkingClientProvider mock...")
-		return s, nil
+		// Return the legacy store for v2 - it implements ServiceNetworkingClient with Discovery API types
+		return s.iprangeStoreLegacy, nil
 	}
 }
 
 // ServiceNetworkingClientProviderGcp returns a GcpClientProvider (NEW pattern)
 func (s *server) ServiceNetworkingClientProviderGcp() client.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient] {
 	return func() gcpiprangeclient.ServiceNetworkingClient {
-		return s
+		// For NEW pattern (refactored), return the new gRPC-based store
+		return s.iprangeStore
 	}
 }
 
@@ -133,14 +158,27 @@ func (s *server) ComputeClientProvider() client.ClientProvider[gcpiprangeclient.
 	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ComputeClient, error) {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP ComputeClientProvider mock...")
-		return s, nil
+		// For NEW pattern (refactored), return the new gRPC-based store
+		return s.iprangeStore, nil
 	}
 }
 
 // ComputeClientProviderGcp returns a GcpClientProvider (NEW pattern)
 func (s *server) ComputeClientProviderGcp() client.GcpClientProvider[gcpiprangeclient.ComputeClient] {
 	return func() gcpiprangeclient.ComputeClient {
-		return s
+		// For NEW pattern (refactored), return the new gRPC-based store
+		return s.iprangeStore
+	}
+}
+
+// OldComputeClientProvider returns OLD-style ClientProvider for v2 legacy tests
+// Returns an adapter that converts between gRPC types (mock) and Discovery API types (v2)
+func (s *server) OldComputeClientProvider() client.ClientProvider[gcpiprangeclient.OldComputeClient] {
+	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.OldComputeClient, error) {
+		logger := composed.LoggerFromCtx(ctx)
+		logger.Info("Inside the GCP OldComputeClientProvider mock...")
+		// Return the legacy store directly - it already implements OldComputeClient interface with Discovery API types
+		return s.iprangeStoreLegacy, nil
 	}
 }
 
@@ -216,4 +254,65 @@ func (s *server) ExposedDataProvider() client.GcpClientProvider[gcpexposeddatacl
 	return func() gcpexposeddataclient.Client {
 		return s
 	}
+}
+
+// Delegation methods for IpRangeClient interface (NEW pattern - refactored)
+// These delegate to iprangeStore which uses gRPC types
+
+func (s *server) CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (string, error) {
+	return s.iprangeStore.CreatePscIpRange(ctx, projectId, vpcName, name, description, address, prefixLength)
+}
+
+func (s *server) DeleteIpRange(ctx context.Context, projectId, name string) (string, error) {
+	return s.iprangeStore.DeleteIpRange(ctx, projectId, name)
+}
+
+func (s *server) GetIpRange(ctx context.Context, projectId, name string) (*computepb.Address, error) {
+	return s.iprangeStore.GetIpRange(ctx, projectId, name)
+}
+
+func (s *server) ListGlobalAddresses(ctx context.Context, projectId, vpc string) ([]*computepb.Address, error) {
+	return s.iprangeStore.ListGlobalAddresses(ctx, projectId, vpc)
+}
+
+func (s *server) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*computepb.Operation, error) {
+	return s.iprangeStore.GetGlobalOperation(ctx, projectId, operationName)
+}
+
+func (s *server) WaitGlobalOperation(ctx context.Context, projectId, operationName string) error {
+	return s.iprangeStore.WaitGlobalOperation(ctx, projectId, operationName)
+}
+
+func (s *server) CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
+	return s.iprangeStore.CreateServiceConnection(ctx, projectId, vpcId, reservedIpRanges)
+}
+
+func (s *server) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
+	return s.iprangeStore.DeleteServiceConnection(ctx, projectId, vpcId)
+}
+
+func (s *server) PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
+	return s.iprangeStore.PatchServiceConnection(ctx, projectId, vpcId, reservedIpRanges)
+}
+
+func (s *server) ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error) {
+	return s.iprangeStore.ListServiceConnections(ctx, projectId, vpcId)
+}
+
+func (s *server) GetServiceNetworkingOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error) {
+	return s.iprangeStore.GetServiceNetworkingOperation(ctx, operationName)
+}
+
+// IpRangeClientUtils implementation - for test assertions with Discovery API format
+
+func (s *server) GetIpRangeDiscovery(ctx context.Context, projectId, name string) (*compute.Address, error) {
+	return s.iprangeStoreLegacy.GetIpRange(ctx, projectId, name)
+}
+
+func (s *server) ListGlobalAddressesDiscovery(ctx context.Context, projectId, vpc string) ([]*compute.Address, error) {
+	list, err := s.iprangeStoreLegacy.ListGlobalAddresses(ctx, projectId, vpc)
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, nil
 }

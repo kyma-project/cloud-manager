@@ -4,30 +4,45 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	v2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// V2StateFactory is an alias for v2.StateFactory to be used by the reconciler.
+type V2StateFactory = v2.StateFactory
+
+// NewV2StateFactory is a wrapper for v2.NewStateFactory to be called from controller setup.
+func NewV2StateFactory(
+	serviceNetworkingClientProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	oldComputeClientProvider gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient],
+	env abstractions.Environment,
+) V2StateFactory {
+	return v2.NewStateFactory(serviceNetworkingClientProvider, oldComputeClientProvider, env)
+}
+
 // New returns the action for GCP IpRange provisioning.
 // It routes to either the refactored implementation or the legacy v2 implementation
 // based on the ipRangeRefactored feature flag.
-func New(stateFactory StateFactory) composed.Action {
+// Both state factories are passed from main.go to ensure proper provider wiring.
+func New(refactoredStateFactory StateFactory, v2StateFactory v2.StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
 
 		// Check feature flag to determine which implementation to use
 		if feature.IpRangeRefactored.Value(ctx) {
 			logger.Info("Using refactored IpRange implementation (new)")
-			return newRefactored(stateFactory)(ctx, st)
+			return newRefactored(refactoredStateFactory)(ctx, st)
 		}
 
 		logger.Info("Using legacy IpRange implementation (v2)")
-		return newLegacy(stateFactory)(ctx, st)
+		return newLegacy(v2StateFactory)(ctx, st)
 	}
 }
 
@@ -107,15 +122,9 @@ func newRefactored(stateFactory StateFactory) composed.Action {
 
 // newLegacy wraps the v2 implementation for backward compatibility.
 // This is used when the ipRangeRefactored feature flag is disabled.
-// Creates a proper v2.StateFactory with OLD-style ClientProviders.
-func newLegacy(stateFactory StateFactory) composed.Action {
+// Note: v2 StateFactory should be passed from main.go with proper provider wiring.
+func newLegacy(v2Factory v2.StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
-		// Create v2.StateFactory with OLD-style ClientProviders directly
-		v2Factory := v2.NewStateFactory(
-			gcpiprangeclient.NewServiceNetworkingClient(),  // OLD ClientProvider
-			gcpiprangeclient.NewOldComputeClientProvider(), // OLD ClientProvider
-			stateFactory.(envGetter).getEnv(),              // Get env from wrapped factory
-		)
 		return v2.New(v2Factory)(ctx, st)
 	}
 }
@@ -123,18 +132,19 @@ func newLegacy(stateFactory StateFactory) composed.Action {
 // NewAllocateIpRangeAction returns an action suitable for allocation flow.
 // This only provisions the GCP Address without PSA connection.
 // Routes to either refactored or legacy implementation based on feature flag.
-func NewAllocateIpRangeAction(stateFactory StateFactory) composed.Action {
+// Both state factories are passed from main.go to ensure proper provider wiring.
+func NewAllocateIpRangeAction(refactoredStateFactory StateFactory, v2StateFactory v2.StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
 
 		// Check feature flag to determine which implementation to use
 		if feature.IpRangeRefactored.Value(ctx) {
 			logger.Info("Using refactored IpRange allocation (new)")
-			return newAllocateRefactored(stateFactory)(ctx, st)
+			return newAllocateRefactored(refactoredStateFactory)(ctx, st)
 		}
 
 		logger.Info("Using legacy IpRange allocation (v2)")
-		return newAllocateLegacy(stateFactory)(ctx, st)
+		return newAllocateLegacy(v2StateFactory)(ctx, st)
 	}
 }
 
@@ -209,14 +219,9 @@ func newAllocateRefactored(stateFactory StateFactory) composed.Action {
 }
 
 // newAllocateLegacy wraps the v2 allocation implementation for backward compatibility.
-func newAllocateLegacy(stateFactory StateFactory) composed.Action {
+// Note: v2 StateFactory should be passed from main.go with proper provider wiring.
+func newAllocateLegacy(v2Factory v2.StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
-		// Create v2.StateFactory with OLD-style ClientProviders directly
-		v2Factory := v2.NewStateFactory(
-			gcpiprangeclient.NewServiceNetworkingClient(),  // OLD ClientProvider
-			gcpiprangeclient.NewOldComputeClientProvider(), // OLD ClientProvider
-			stateFactory.(envGetter).getEnv(),              // Get env from wrapped factory
-		)
 		return v2.NewAllocateIpRangeAction(v2Factory)(ctx, st)
 	}
 }

@@ -1,6 +1,9 @@
 package cloudcontrol
 
 import (
+	"strconv"
+	"strings"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -9,8 +12,6 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"strconv"
-	"strings"
 )
 
 var _ = Describe("Feature: KCP IpRange for GCP", func() {
@@ -78,7 +79,7 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 		})
 
 		By("And Then GCP global address is created", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gcpGlobalAddress).NotTo(BeNil())
 			chunks := strings.Split(ipRange.Status.Cidr, "/")
@@ -119,7 +120,7 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 		})
 
 		By("And Then GCP global address does not exist", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(gcpGlobalAddress).To(BeNil())
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})
@@ -188,7 +189,7 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 		})
 
 		By("And Then GCP global address is created", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gcpGlobalAddress).NotTo(BeNil())
 			chunks := strings.Split(ipRange.Status.Cidr, "/")
@@ -229,7 +230,7 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 		})
 
 		By("And Then GCP global address does not exist", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(gcpGlobalAddress).To(BeNil())
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})

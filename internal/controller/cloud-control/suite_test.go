@@ -100,10 +100,12 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().IpRangeSkrProvider(),
 		infra.AzureMock().IpRangeProvider(),
-		infra.GcpMock().ServiceNetworkingClientProviderGcp(),
+		infra.GcpMock().ServiceNetworkingClientProviderGcp(), // NEW pattern for refactored
 		infra.GcpMock().ComputeClientProviderGcp(),
 		infra.SapMock().IpRangeProvider(),
 		env,
+		infra.GcpMock().OldComputeClientProvider(),        // v2: OldComputeClient mock
+		infra.GcpMock().ServiceNetworkingClientProvider(), // v2: ServiceNetworkingClient mock (Discovery API)
 	)).NotTo(HaveOccurred())
 	// NfsInstance
 	Expect(SetupNfsInstanceReconciler(

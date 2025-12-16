@@ -52,17 +52,47 @@ func SetupIpRangeReconciler(
 	gcpComputeProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
 	sapProvider sapclient.SapClientProvider[sapiprangeclient.Client],
 	env abstractions.Environment,
+	gcpOldProviders ...interface{}, // Optional for testing: [0] = OldComputeClient, [1] = ServiceNetworkingClient (v2)
 ) error {
 	if env == nil {
 		env = abstractions.NewOSEnvironment()
 	}
+
+	// Create refactored GCP state factory (NEW pattern)
+	gcpRefactoredStateFactory := gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env)
+
+	// For v2 ServiceNetworking, use provided mock or production provider
+	var gcpV2SvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]
+	if len(gcpOldProviders) > 1 {
+		if provider, ok := gcpOldProviders[1].(gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]); ok {
+			gcpV2SvcNetProvider = provider // Use provided mock
+		}
+	}
+	if gcpV2SvcNetProvider == nil {
+		gcpV2SvcNetProvider = gcpiprangeclient.NewServiceNetworkingClient() // Use production (deprecated but correct for v2)
+	}
+
+	// For OldComputeClient, use provided mock or production provider
+	var gcpV2ComputeProvider gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient]
+	if len(gcpOldProviders) > 0 {
+		if provider, ok := gcpOldProviders[0].(gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient]); ok {
+			gcpV2ComputeProvider = provider // Use provided mock
+		}
+	}
+	if gcpV2ComputeProvider == nil {
+		gcpV2ComputeProvider = gcpiprangeclient.NewOldComputeClientProvider() // Use production
+	}
+
+	gcpV2StateFactory := gcpiprange.NewV2StateFactory(gcpV2SvcNetProvider, gcpV2ComputeProvider, env)
+
 	return NewIpRangeReconciler(
 		iprange.NewIPRangeReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
 			awsiprange.NewStateFactory(awsProvider),
 			azureiprange.NewStateFactory(azureProvider),
-			gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env),
+			gcpRefactoredStateFactory,
+			gcpV2StateFactory,
 			sapiprange.NewStateFactory(sapProvider),
 		),
 	).SetupWithManager(ctx, kcpManager)
