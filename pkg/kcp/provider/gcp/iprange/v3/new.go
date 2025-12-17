@@ -36,16 +36,16 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpIpRange",
 			// Validation and setup
-			PreventCidrEdit,
-			CopyCidrToStatus,
-			ValidateCidr,
+			preventCidrEdit,
+			copyCidrToStatus,
+			validateCidr,
 
 			// Load remote resources
-			LoadAddress,
-			LoadPsaConnection,
+			loadAddress,
+			loadPsaConnection,
 
 			// Wait for any pending operations
-			WaitOperationDone,
+			waitOperationDone,
 
 			// Branch based on deletion
 			composed.IfElse(
@@ -53,27 +53,27 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"create-update",
 					actions.AddCommonFinalizer(),
-					UpdateStatusId,
+					updateStatusId,
 
 					// Create address if needed
-					CreateAddress,
+					createAddress,
 
 					// Identify peering IP ranges
-					IdentifyPeeringIpRanges,
+					identifyPeeringIpRanges,
 
 					// PSA connection management
-					CreateOrUpdatePsaConnection,
+					createOrUpdatePsaConnection,
 
 					// Final status update
-					UpdateStatus,
+					updateStatus,
 				),
 				composed.ComposeActions(
 					"delete",
 					// Delete PSA connection first (if exists)
-					DeletePsaConnection,
+					deletePsaConnection,
 
 					// Then delete address
-					DeleteAddress,
+					deleteAddress,
 
 					// Remove finalizer and stop
 					actions.RemoveCommonFinalizer(),
@@ -111,18 +111,18 @@ func NewAllocateIpRangeAction(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpIpRangeAllocation",
 			// Validation and setup
-			PreventCidrEdit,
-			CopyCidrToStatus,
-			ValidateCidr,
+			preventCidrEdit,
+			copyCidrToStatus,
+			validateCidr,
 
 			// Prepare allocation-specific state
-			PrepareAllocateIpRange,
+			prepareAllocateIpRange,
 
 			// Load remote resources
-			LoadAddress,
+			loadAddress,
 
 			// Wait for any pending operations
-			WaitOperationDone,
+			waitOperationDone,
 
 			// Branch based on deletion
 			composed.IfElse(
@@ -130,21 +130,21 @@ func NewAllocateIpRangeAction(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"allocate",
 					actions.AddCommonFinalizer(),
-					UpdateStatusId,
+					updateStatusId,
 
 					// Identify peering IP ranges for allocation
-					IdentifyPeeringIpRanges,
+					identifyPeeringIpRanges,
 
 					// Create address if needed (no PSA connection in allocation flow)
-					CreateAddress,
+					createAddress,
 
 					// Final status update
-					UpdateStatus,
+					updateStatus,
 				),
 				composed.ComposeActions(
 					"deallocate",
 					// Delete address
-					DeleteAddress,
+					deleteAddress,
 
 					// Remove finalizer and stop
 					actions.RemoveCommonFinalizer(),
