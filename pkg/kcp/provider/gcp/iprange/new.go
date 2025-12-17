@@ -29,9 +29,9 @@ func New(v3StateFactory v3.StateFactory, v2StateFactory v2.StateFactory) compose
 }
 
 // NewAllocateIpRangeAction returns an action suitable for allocation flow.
-// This only provisions the GCP Address without PSA connection.
-// Routes to either v3 refactored or v2 legacy implementation based on feature flag.
-// Both state factories are passed from main.go to ensure proper provider wiring.
+// This populates ExistingCidrRanges with occupied CIDR ranges so the allocation
+// can pick a free slot. Routes to either v3 refactored or v2 legacy implementation
+// based on feature flag. Note: State factories not needed for allocation action.
 func NewAllocateIpRangeAction(v3StateFactory v3.StateFactory, v2StateFactory v2.StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)

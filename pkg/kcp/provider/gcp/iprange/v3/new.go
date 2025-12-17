@@ -84,70 +84,35 @@ func New(stateFactory StateFactory) composed.Action {
 }
 
 // NewAllocateIpRangeAction returns an action suitable for allocation flow.
-// This only provisions the GCP Address without PSA connection.
-func NewAllocateIpRangeAction(stateFactory StateFactory) composed.Action {
+// This populates ExistingCidrRanges with occupied CIDR ranges so the allocation
+// can pick a free slot. This is called before the main provisioning flow.
+func NewAllocateIpRangeAction(_ StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
-		logger := composed.LoggerFromCtx(ctx)
+		// Similar to v2/AWS/Azure implementations: just prepare state for CIDR allocation
+		// The actual address creation happens in the main New() flow later
 
-		// Convert shared iprange state to GCP-specific state
-		state, err := stateFactory.NewState(ctx, st.(iprangetypes.State))
-		if err != nil {
-			logger.Error(err, "Failed to bootstrap GCP IpRange state for allocation")
-			ipRange := st.Obj().(*v1beta1.IpRange)
-			return composed.PatchStatus(ipRange).
+		state := st.(iprangetypes.State)
+
+		if len(state.Scope().Spec.Scope.Gcp.Network.Nodes) == 0 {
+			state.ObjAsIpRange().Status.State = v1beta1.StateError
+			return composed.PatchStatus(state.ObjAsIpRange()).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    v1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
-					Reason:  v1beta1.ReasonGcpError,
-					Message: "Failed to create GCP IpRange state",
+					Reason:  v1beta1.ReasonCidrAllocationFailed,
+					Message: "Error due to unknown SKR nodes range",
 				}).
-				SuccessError(composed.StopAndForget).
-				SuccessLogMsg("Error creating new GCP IpRange state for allocation").
+				ErrorLogMessage("Failed patching KCP IpRange status with error due to unknown SKR nodes range").
+				SuccessLogMsg("Forgetting KCP IpRange in error state due to unknown SKR nodes range").
 				Run(ctx, st)
 		}
 
-		return composed.ComposeActions(
-			"gcpIpRangeAllocation",
-			// Validation and setup
-			copyCidrToStatus,
-			validateCidr,
+		state.SetExistingCidrRanges([]string{
+			state.Scope().Spec.Scope.Gcp.Network.Nodes,
+			state.Scope().Spec.Scope.Gcp.Network.Pods,
+			state.Scope().Spec.Scope.Gcp.Network.Services,
+		})
 
-			// Prepare allocation-specific state
-			prepareAllocateIpRange,
-
-			// Load remote resources
-			loadAddress,
-
-			// Wait for any pending operations
-			waitOperationDone,
-
-			// Branch based on deletion
-			composed.IfElse(
-				composed.Not(composed.MarkedForDeletionPredicate),
-				composed.ComposeActions(
-					"allocate",
-					actions.AddCommonFinalizer(),
-					updateStatusId,
-
-					// Identify peering IP ranges for allocation
-					identifyPeeringIpRanges,
-
-					// Create address if needed (no PSA connection in allocation flow)
-					createAddress,
-
-					// Final status update
-					updateStatus,
-				),
-				composed.ComposeActions(
-					"deallocate",
-					// Delete address
-					deleteAddress,
-
-					// Remove finalizer
-					actions.RemoveCommonFinalizer(),
-				),
-			),
-			composed.StopAndForgetAction,
-		)(ctx, state)
+		return nil, ctx
 	}
 }
