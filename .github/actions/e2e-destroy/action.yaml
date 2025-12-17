@@ -4,16 +4,19 @@ runs:
   using: composite
   steps:
     - name: Kill Cloud Manager
+      shell: bash
       if: always()
       run: |
         echo "Killing Cloud Manager with PID $CLOUD_MANAGER_PID"
         kill $CLOUD_MANAGER_PID
     - name: Kill sim
+      shell: bash
       if: always()
       run: |
         echo "Killing sim with PID $SIM_PID"
         kill $SIM_PID
     - name: Kill envtest
+      shell: bash
       if: always()
       run: |
         echo "Killing envtest with PID $ENVTEST_PID"
@@ -26,4 +29,3 @@ runs:
           tmp/envtest.log
           tmp/sim.log
           tmp/cloud-manager.log
-  image:
