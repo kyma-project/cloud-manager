@@ -12,14 +12,11 @@ import (
 // identifyPeeringIpRanges builds the list of IP ranges to include in PSA peering.
 // When creating/updating PSA connection, we need to include all PSA-purpose IP ranges
 // that exist in the VPC, not just the current one.
-// When deleting, we exclude the current IP range from the list.
+// Note: This action is only called in the create-update branch, never during deletion.
 func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 	ipRange := state.ObjAsIpRange()
-
-	// Check whether the object is being deleted
-	deleting := composed.IsMarkedForDeletion(ipRange)
 
 	// If the address object doesn't exist in GCP, continue
 	if state.address == nil {
@@ -29,11 +26,8 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 	// If Service Connection doesn't exist in GCP
 	if state.serviceConnection == nil {
 		// Add this IP address to be included while creating Service Connection
-		if !deleting {
-			// Handle pointer field
-			if state.address.Name != nil {
-				state.peeringIpRanges = []string{*state.address.Name}
-			}
+		if state.address.Name != nil {
+			state.peeringIpRanges = []string{*state.address.Name}
 		}
 		return nil, nil
 	}
@@ -75,7 +69,7 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 
 	// Iterate over the list of peering ranges, and include required ones
 	for _, name := range state.serviceConnection.ReservedPeeringRanges {
-		// If it is the name of current IP range, skip it (we'll add it later if not deleting)
+		// If it is the name of current IP range, skip it (we'll add it at the end)
 		if state.address.Name != nil && name == *state.address.Name {
 			continue
 		}
@@ -86,8 +80,8 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 		}
 	}
 
-	// If not deleting, add the name of this IpRange
-	if !deleting && state.address.Name != nil {
+	// Add the name of this IpRange (we're always in create-update branch)
+	if state.address.Name != nil {
 		state.peeringIpRanges = append(state.peeringIpRanges, *state.address.Name)
 	}
 

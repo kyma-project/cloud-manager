@@ -9,16 +9,12 @@ import (
 // updateStatusId updates the status.id field with the GCP address name.
 // This happens after the address is successfully created in GCP.
 // The ID is used to track the GCP resource and for reference by other resources.
+// Note: This action is only called in the create-update branch, never during deletion.
 func updateStatusId(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	ipRange := state.ObjAsIpRange()
 	logger := composed.LoggerFromCtx(ctx).WithValues("ipRange", ipRange.Name)
-
-	// Skip if marked for deletion
-	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
-	}
 
 	// Skip if address not yet created
 	if state.address == nil {
