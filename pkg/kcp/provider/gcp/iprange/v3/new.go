@@ -61,7 +61,14 @@ func New(stateFactory StateFactory) composed.Action {
 					identifyPeeringIpRanges,
 
 					// PSA connection management
-					createOrUpdatePsaConnection,
+					composed.If(
+						needsPsaConnection,
+						composed.IfElse(
+							composed.Not(psaConnectionExists),
+							createPsaConnection,
+							updatePsaConnection,
+						),
+					),
 
 					// Final status update
 					updateStatus,

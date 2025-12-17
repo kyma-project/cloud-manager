@@ -28,3 +28,9 @@ func needsPsaConnection(ctx context.Context, st composed.State) bool {
 
 	return gcpOptions.Purpose == v1beta1.GcpPurposePSA
 }
+
+// psaConnectionExists checks if a PSA connection already exists.
+func psaConnectionExists(ctx context.Context, st composed.State) bool {
+	state := st.(*State)
+	return state.serviceConnection != nil
+}
