@@ -12,8 +12,21 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	v2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
+	v3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+// V3StateFactory is an alias for v3.StateFactory to be used by the reconciler.
+type V3StateFactory = v3.StateFactory
+
+// NewV3StateFactory is a wrapper for v3.NewStateFactory to be called from controller setup.
+func NewV3StateFactory(
+	serviceNetworkingClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	computeClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
+	env abstractions.Environment,
+) V3StateFactory {
+	return v3.NewStateFactory(serviceNetworkingClientProvider, computeClientProvider, env)
+}
 
 // V2StateFactory is an alias for v2.StateFactory to be used by the reconciler.
 type V2StateFactory = v2.StateFactory
@@ -31,23 +44,23 @@ func NewV2StateFactory(
 // It routes to either the refactored implementation or the legacy v2 implementation
 // based on the ipRangeRefactored feature flag.
 // Both state factories are passed from main.go to ensure proper provider wiring.
-func New(refactoredStateFactory StateFactory, v2StateFactory v2.StateFactory) composed.Action {
+func New(v3StateFactory v3.StateFactory, v2StateFactory v2.StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
 
 		// Check feature flag to determine which implementation to use
 		if feature.IpRangeRefactored.Value(ctx) {
-			logger.Info("Using refactored IpRange implementation (new)")
-			return newRefactored(refactoredStateFactory)(ctx, st)
+			logger.Info("Using v3 refactored IpRange implementation")
+			return newRefactored(v3StateFactory)(ctx, st)
 		}
 
-		logger.Info("Using legacy IpRange implementation (v2)")
+		logger.Info("Using v2 legacy IpRange implementation")
 		return newLegacy(v2StateFactory)(ctx, st)
 	}
 }
 
-// newRefactored is the new implementation following GcpSubnet pattern with clean action composition.
-func newRefactored(stateFactory StateFactory) composed.Action {
+// newRefactored is the v3 refactored implementation following GcpSubnet pattern with clean action composition.
+func newRefactored(stateFactory v3.StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
 
@@ -71,16 +84,16 @@ func newRefactored(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpIpRange",
 			// Validation and setup
-			preventCidrEdit,
-			copyCidrToStatus,
-			validateCidr,
+			v3.PreventCidrEdit,
+			v3.CopyCidrToStatus,
+			v3.ValidateCidr,
 
 			// Load remote resources
-			loadAddress,
-			loadPsaConnection,
+			v3.LoadAddress,
+			v3.LoadPsaConnection,
 
 			// Wait for any pending operations
-			waitOperationDone,
+			v3.WaitOperationDone,
 
 			// Branch based on deletion
 			composed.IfElse(
@@ -88,27 +101,27 @@ func newRefactored(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"create-update",
 					actions.AddCommonFinalizer(),
-					updateStatusId,
+					v3.UpdateStatusId,
 
 					// Create address if needed
-					createAddress,
+					v3.CreateAddress,
 
 					// Identify peering IP ranges
-					identifyPeeringIpRanges,
+					v3.IdentifyPeeringIpRanges,
 
 					// PSA connection management
-					createOrUpdatePsaConnection,
+					v3.CreateOrUpdatePsaConnection,
 
 					// Final status update
-					updateStatus,
+					v3.UpdateStatus,
 				),
 				composed.ComposeActions(
 					"delete",
 					// Delete PSA connection first (if exists)
-					deletePsaConnection,
+					v3.DeletePsaConnection,
 
 					// Then delete address
-					deleteAddress,
+					v3.DeleteAddress,
 
 					// Remove finalizer and stop
 					actions.RemoveCommonFinalizer(),
@@ -133,23 +146,23 @@ func newLegacy(v2Factory v2.StateFactory) composed.Action {
 // This only provisions the GCP Address without PSA connection.
 // Routes to either refactored or legacy implementation based on feature flag.
 // Both state factories are passed from main.go to ensure proper provider wiring.
-func NewAllocateIpRangeAction(refactoredStateFactory StateFactory, v2StateFactory v2.StateFactory) composed.Action {
+func NewAllocateIpRangeAction(v3StateFactory v3.StateFactory, v2StateFactory v2.StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
 
 		// Check feature flag to determine which implementation to use
 		if feature.IpRangeRefactored.Value(ctx) {
-			logger.Info("Using refactored IpRange allocation (new)")
-			return newAllocateRefactored(refactoredStateFactory)(ctx, st)
+			logger.Info("Using v3 refactored IpRange allocation")
+			return newAllocateRefactored(v3StateFactory)(ctx, st)
 		}
 
-		logger.Info("Using legacy IpRange allocation (v2)")
+		logger.Info("Using v2 legacy IpRange allocation")
 		return newAllocateLegacy(v2StateFactory)(ctx, st)
 	}
 }
 
-// newAllocateRefactored is the new allocation implementation.
-func newAllocateRefactored(stateFactory StateFactory) composed.Action {
+// newAllocateRefactored is the v3 refactored allocation implementation.
+func newAllocateRefactored(stateFactory v3.StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
 
@@ -173,18 +186,18 @@ func newAllocateRefactored(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpIpRangeAllocation",
 			// Validation and setup
-			preventCidrEdit,
-			copyCidrToStatus,
-			validateCidr,
+			v3.PreventCidrEdit,
+			v3.CopyCidrToStatus,
+			v3.ValidateCidr,
 
 			// Prepare allocation-specific state
-			prepareAllocateIpRange,
+			v3.PrepareAllocateIpRange,
 
 			// Load remote resources
-			loadAddress,
+			v3.LoadAddress,
 
 			// Wait for any pending operations
-			waitOperationDone,
+			v3.WaitOperationDone,
 
 			// Branch based on deletion
 			composed.IfElse(
@@ -192,21 +205,21 @@ func newAllocateRefactored(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"allocate",
 					actions.AddCommonFinalizer(),
-					updateStatusId,
+					v3.UpdateStatusId,
 
 					// Identify peering IP ranges for allocation
-					identifyPeeringIpRanges,
+					v3.IdentifyPeeringIpRanges,
 
 					// Create address if needed (no PSA connection in allocation flow)
-					createAddress,
+					v3.CreateAddress,
 
 					// Final status update
-					updateStatus,
+					v3.UpdateStatus,
 				),
 				composed.ComposeActions(
 					"deallocate",
 					// Delete address
-					deleteAddress,
+					v3.DeleteAddress,
 
 					// Remove finalizer and stop
 					actions.RemoveCommonFinalizer(),

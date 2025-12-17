@@ -1,4 +1,4 @@
-package iprange
+package v3
 
 import (
 	"testing"

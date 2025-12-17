@@ -58,8 +58,8 @@ func SetupIpRangeReconciler(
 		env = abstractions.NewOSEnvironment()
 	}
 
-	// Create refactored GCP state factory (NEW pattern)
-	gcpRefactoredStateFactory := gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env)
+	// Create v3 GCP state factory (NEW pattern with clean actions)
+	gcpV3StateFactory := gcpiprange.NewV3StateFactory(gcpSvcNetProvider, gcpComputeProvider, env)
 
 	// For v2 ServiceNetworking, use provided mock or production provider
 	var gcpV2SvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]
@@ -91,7 +91,7 @@ func SetupIpRangeReconciler(
 			focal.NewStateFactory(),
 			awsiprange.NewStateFactory(awsProvider),
 			azureiprange.NewStateFactory(azureProvider),
-			gcpRefactoredStateFactory,
+			gcpV3StateFactory,
 			gcpV2StateFactory,
 			sapiprange.NewStateFactory(sapProvider),
 		),
