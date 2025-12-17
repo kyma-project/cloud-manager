@@ -36,7 +36,6 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpIpRange",
 			// Validation and setup
-			preventCidrEdit,
 			copyCidrToStatus,
 			validateCidr,
 
@@ -110,7 +109,6 @@ func NewAllocateIpRangeAction(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpIpRangeAllocation",
 			// Validation and setup
-			preventCidrEdit,
 			copyCidrToStatus,
 			validateCidr,
 
