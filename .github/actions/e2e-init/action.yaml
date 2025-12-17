@@ -3,8 +3,6 @@ description: Initializes the environment for E2E tests
 runs:
   using: composite
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
     - name: Setup Go
       uses: actions/setup-go@v5
       with:
