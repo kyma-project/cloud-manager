@@ -11,6 +11,8 @@ jobs:
       - name: Initialize E2E environment
         uses: ./.github/actions/e2e-init
         id: e2e-init
+        env:
+          GARDENER_KUBECONFIG: ${{ secrets.GARDENER_KUBECONFIG }}
       - name: run e2e tests
         run: echo "run e2e tests"
       - name: Destroy E2E environment
