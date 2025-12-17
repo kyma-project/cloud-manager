@@ -97,6 +97,26 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 			Expect(gcpGlobalAddress.AddressType).To(Equal(string(gcpclient.AddressTypeInternal)))
 		})
 
+		By("And Then GCP PSA connection is created", func() {
+			Eventually(func() error {
+				connections, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+				if err != nil {
+					return err
+				}
+				if len(connections) == 0 {
+					return nil
+				}
+				return nil
+			}).Should(Succeed())
+		})
+
+		By("And Then GCP PSA connection includes the IP range", func() {
+			connections, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(connections).NotTo(BeEmpty())
+			Expect(connections[0].ReservedPeeringRanges).To(ContainElement("cm-" + ipRange.Name))
+		})
+
 		// DELETE
 
 		By("When KCP IpRange is deleted", func() {
@@ -115,6 +135,14 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(gcpGlobalAddress).To(BeNil())
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
+		})
+
+		By("And Then GCP PSA connection no longer includes the IP range", func() {
+			connections, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			Expect(err).NotTo(HaveOccurred())
+			if len(connections) > 0 {
+				Expect(connections[0].ReservedPeeringRanges).NotTo(ContainElement("cm-" + ipRange.Name))
+			}
 		})
 	})
 })
