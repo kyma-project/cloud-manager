@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/api"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -15,7 +17,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 )
 
@@ -701,7 +702,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 	})
 
 	It("Scenario: SKR AwsRedisCluster authSecret is modified", func() {
-		awsRedisClusterName := "auth-secret-modified-cluster"
+		awsRedisClusterName := "auth-secret-modified-cluster-" + uuid.NewString()[:8]
 		skrIpRangeId := "7b18f46c-1f38-4fe0-b8ea-c10638d81f20"
 		awsRedisCluster := &cloudresourcesv1beta1.AwsRedisCluster{}
 		tier := cloudresourcesv1beta1.AwsRedisTierC1
@@ -709,9 +710,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 
 		skriprange.Ignore.AddName("default")
 
-		const (
-			authSecretName = "aws-cluster-auth-secret-test"
-		)
+		authSecretName := "aws-cluster-auth-secret-" + uuid.NewString()[:8]
 		authSecretLabels := map[string]string{
 			"env": "test",
 		}
@@ -724,10 +723,8 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsRedisCluster,
 					WithName(awsRedisClusterName),
+					WithAwsRedisClusterDefautSpecs(),
 					WithAwsRedisClusterRedisTier(tier),
-					WithAwsRedisClusterShardCount(2),
-					WithAwsRedisClusterReplicasPerShard(1),
-					WithAwsRedisClusterEngineVersion("7.0"),
 					WithAwsRedisClusterAuthSecretName(authSecretName),
 					WithAwsRedisClusterAuthSecretLabels(authSecretLabels),
 					WithAwsRedisClusterAuthSecretAnnotations(authSecretAnnotations),
@@ -859,26 +856,31 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 
 		By("Then SKR auth Secret is updated with new labels, annotations, and extraData", func() {
 			// Wait for controller to reconcile the changes
-			Eventually(func() map[string]string {
-				_ = infra.SKR().Client().Get(infra.Ctx(), types.NamespacedName{
-					Name:      authSecretName,
-					Namespace: awsRedisCluster.Namespace,
-				}, authSecret)
-				userLabels := map[string]string{}
-				for k, v := range authSecret.Labels {
-					if k == "env" || k == "team" {
-						userLabels[k] = v
-					}
-				}
-				return userLabels
-			}).WithTimeout(20 * time.Second).WithPolling(200 * time.Millisecond).Should(And(
-				HaveKeyWithValue("env", "production"),
-				HaveKeyWithValue("team", "platform"),
-				HaveLen(2),
-			))
-			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), authSecret,
+					NewObjActions(WithName(authSecretName), WithNamespace(awsRedisCluster.Namespace)),
+					func(obj client.Object) error {
+						secret := obj.(*corev1.Secret)
 
-			// Verify annotations
+						if secret.Labels["env"] != "production" {
+							return fmt.Errorf("expected label env=production, got %s", secret.Labels["env"])
+						}
+						if secret.Labels["team"] != "platform" {
+							return fmt.Errorf("expected label team=platform, got %s", secret.Labels["team"])
+						}
+						if _, exists := secret.Labels["environment"]; exists {
+							return fmt.Errorf("expected label 'environment' to be removed, but it still exists")
+						}
+						if _, exists := secret.Labels[cloudresourcesv1beta1.LabelCloudManaged]; !exists {
+							return fmt.Errorf("expected label %s to exist", cloudresourcesv1beta1.LabelCloudManaged)
+						}
+						return nil
+					},
+				).
+				WithTimeout(20 * time.Second).
+				WithPolling(200 * time.Millisecond).
+				Should(Succeed())
 			Expect(authSecret.Annotations).To(And(
 				HaveKeyWithValue("purpose", "production-testing"),
 				HaveKeyWithValue("cost-center", "12345"),

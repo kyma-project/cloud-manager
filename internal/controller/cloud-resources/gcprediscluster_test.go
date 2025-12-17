@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -685,7 +686,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 	})
 
 	It("Scenario: SKR GcpRedisCluster authSecret is modified", func() {
-		gcpRedisClusterName := "auth-secret-modified-cluster"
+		gcpRedisClusterName := "auth-secret-modified-cluster-" + uuid.NewString()[:8]
 		skrGcpSubnetId := "89ef2464-afa9-457a-a09e-8aac592cb7ff"
 		gcpRedisCluster := &cloudresourcesv1beta1.GcpRedisCluster{}
 		tier := cloudresourcesv1beta1.GcpRedisClusterTierC1
@@ -693,9 +694,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 
 		skrgcpsubnet.Ignore.AddName("default")
 
-		const (
-			authSecretName = "gcp-cluster-auth-secret-test"
-		)
+		authSecretName := "gcp-cluster-auth-secret-" + uuid.NewString()[:8]
 		authSecretLabels := map[string]string{
 			"env": "test",
 		}

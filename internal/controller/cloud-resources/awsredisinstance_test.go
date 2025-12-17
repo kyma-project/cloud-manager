@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -700,7 +701,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 	})
 
 	It("Scenario: SKR AwsRedisInstance authSecret is modified", func() {
-		awsRedisInstanceName := "auth-secret-modified-instance"
+		awsRedisInstanceName := "auth-secret-modified-instance-" + uuid.NewString()[:8]
 		skrIpRangeId := "6a07d35a-0e27-45e9-b7da-b99527cb0f09"
 		awsRedisInstance := &cloudresourcesv1beta1.AwsRedisInstance{}
 		tier := cloudresourcesv1beta1.AwsRedisTierP1
@@ -708,9 +709,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 
 		skriprange.Ignore.AddName("default")
 
-		const (
-			authSecretName = "aws-instance-auth-secret-test"
-		)
+		authSecretName := "aws-instance-auth-secret-" + uuid.NewString()[:8]
 		authSecretLabels := map[string]string{
 			"env": "test",
 		}

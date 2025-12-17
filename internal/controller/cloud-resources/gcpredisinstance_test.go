@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -708,7 +709,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 	It("Scenario: SKR GcpRedisInstance authSecret is modified", func() {
 
-		gcpRedisInstanceName := "auth-secret-modified-redis"
+		gcpRedisInstanceName := "auth-secret-modified-redis-" + uuid.NewString()[:8]
 		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7ag"
 		gcpRedisInstance := &cloudresourcesv1beta1.GcpRedisInstance{}
 		redisVersion := "REDIS_7_0"
@@ -717,9 +718,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 		skriprange.Ignore.AddName("default")
 
-		const (
-			authSecretName = "gcp-auth-secret-test"
-		)
+		authSecretName := "gcp-auth-secret-" + uuid.NewString()[:8]
 		authSecretLabels := map[string]string{
 			"env": "test",
 		}
