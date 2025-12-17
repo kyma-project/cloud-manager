@@ -8,6 +8,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 )
 
@@ -38,6 +39,9 @@ func createPsaConnection(ctx context.Context, st composed.State) (error, context
 
 	logger.Info("Creating GCP PSA Connection")
 
+	// Set state to indicate PSA connection sync in progress
+	ipRange.Status.State = gcpclient.SyncPsaConnection
+
 	// Create the PSA connection with the reserved IP ranges
 	operation, err := state.serviceNetworkingClient.CreateServiceConnection(
 		ctx,
@@ -67,6 +71,6 @@ func createPsaConnection(ctx context.Context, st composed.State) (error, context
 	}
 
 	return composed.UpdateStatus(ipRange).
-		SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
+		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)
 }

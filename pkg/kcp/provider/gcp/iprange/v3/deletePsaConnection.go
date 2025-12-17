@@ -5,6 +5,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -36,6 +37,9 @@ func deletePsaConnection(ctx context.Context, st composed.State) (error, context
 
 	logger.Info("Deleting GCP PSA Connection")
 
+	// Set state to indicate PSA connection deletion in progress
+	ipRange.Status.State = gcpclient.DeletePsaConnection
+
 	// Delete the PSA connection
 	operation, err := state.serviceNetworkingClient.DeleteServiceConnection(ctx, project, vpc)
 
@@ -60,6 +64,6 @@ func deletePsaConnection(ctx context.Context, st composed.State) (error, context
 	}
 
 	return composed.UpdateStatus(ipRange).
-		SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
+		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 )
 
@@ -54,6 +55,9 @@ func createAddress(ctx context.Context, st composed.State) (error, context.Conte
 
 	logger.Info("Creating GCP Address")
 
+	// Set state to indicate address sync in progress
+	ipRange.Status.State = gcpclient.SyncAddress
+
 	// Create the global address with PSC configuration
 	operationName, err := state.computeClient.CreatePscIpRange(
 		ctx,
@@ -85,6 +89,6 @@ func createAddress(ctx context.Context, st composed.State) (error, context.Conte
 	logger.Info("Address creation initiated", "operation", operationName)
 
 	return composed.UpdateStatus(ipRange).
-		SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
+		SuccessError(composed.StopWithRequeue).
 		Run(ctx, state)
 }
