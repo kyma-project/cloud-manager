@@ -75,9 +75,8 @@ func New(stateFactory StateFactory) composed.Action {
 					// Then delete address
 					deleteAddress,
 
-					// Remove finalizer and stop
+					// Remove finalizer
 					actions.RemoveCommonFinalizer(),
-					composed.StopAndForgetAction,
 				),
 			),
 			composed.StopAndForgetAction,
@@ -146,9 +145,8 @@ func NewAllocateIpRangeAction(stateFactory StateFactory) composed.Action {
 					// Delete address
 					deleteAddress,
 
-					// Remove finalizer and stop
+					// Remove finalizer
 					actions.RemoveCommonFinalizer(),
-					composed.StopAndForgetAction,
 				),
 			),
 			composed.StopAndForgetAction,
