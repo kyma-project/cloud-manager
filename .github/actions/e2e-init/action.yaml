@@ -16,9 +16,6 @@ runs:
         echo "$GARDENER_KUBECONFIG" > kubeconfig-garden.yaml
     - name: Write e2e config file
       shell: bash
-      env:
-        OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
-        OIDC_ISSUER_URL: ${{ vars.OIDC_ISSUER_URL }}
       run: |
         cat <<EOF > e2e-config.yaml
         gardenKubeconfig: kubeconfig-garden.yaml
