@@ -35,6 +35,7 @@ const (
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
 	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="CIDR is immutable"
 	Cidr string `json:"cidr"`
 }
 
