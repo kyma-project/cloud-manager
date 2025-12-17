@@ -13,6 +13,8 @@ jobs:
         id: e2e-init
         env:
           GARDENER_KUBECONFIG: ${{ secrets.GARDENER_KUBECONFIG }}
+          OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
+          OIDC_ISSUER_URL: ${{ vars.OIDC_ISSUER_URL }}
       - name: run e2e tests
         run: echo "run e2e tests"
       - name: Destroy E2E environment
