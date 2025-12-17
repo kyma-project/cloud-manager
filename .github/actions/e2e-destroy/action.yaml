@@ -1,0 +1,29 @@
+name: E2E Destroy Action
+description: Destroys the environment after E2E tests
+runs:
+  using: composite
+  steps:
+    - name: Kill Cloud Manager
+      if: always()
+      run: |
+        echo "Killing Cloud Manager with PID $CLOUD_MANAGER_PID"
+        kill $CLOUD_MANAGER_PID
+    - name: Kill sim
+      if: always()
+      run: |
+        echo "Killing sim with PID $SIM_PID"
+        kill $SIM_PID
+    - name: Kill envtest
+      if: always()
+      run: |
+        echo "Killing envtest with PID $ENVTEST_PID"
+        kill $ENVTEST_PID
+    - name: Upload logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: logs
+        path: |
+          tmp/envtest.log
+          tmp/sim.log
+          tmp/cloud-manager.log
+  image:
