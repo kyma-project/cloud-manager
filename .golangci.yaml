@@ -97,6 +97,10 @@ linters:
           alias: gcpclient
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client
           alias: gcpiprangeclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2
+          alias: gcpiprangev2
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3
+          alias: gcpiprangev3
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3/client
           alias: gcpiprangev3client
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client

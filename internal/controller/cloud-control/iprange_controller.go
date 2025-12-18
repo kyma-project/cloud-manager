@@ -59,7 +59,7 @@ func SetupIpRangeReconciler(
 	}
 
 	// Create v3 GCP state factory (NEW pattern with clean actions)
-	gcpV3StateFactory := gcpiprange.NewV3StateFactory(gcpSvcNetProvider, gcpComputeProvider, env)
+	gcpV3StateFactory := gcpiprange.NewV3StateFactory(gcpSvcNetProvider, gcpComputeProvider)
 
 	// For v2 ServiceNetworking, use provided mock or production provider
 	var gcpV2SvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]

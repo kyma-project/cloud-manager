@@ -6,7 +6,6 @@ import (
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
@@ -25,7 +24,6 @@ type State struct {
 	// GCP API clients
 	serviceNetworkingClient gcpiprangeclient.ServiceNetworkingClient
 	computeClient           gcpiprangeclient.ComputeClient
-	env                     abstractions.Environment
 
 	// GCP-specific remote resources
 	address           *computepb.Address            // Global address resource
@@ -53,12 +51,6 @@ type StateFactory interface {
 type stateFactory struct {
 	serviceNetworkingClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient]
 	computeClientProvider           gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient]
-	env                             abstractions.Environment
-}
-
-// getEnv implements envGetter interface
-func (f *stateFactory) getEnv() abstractions.Environment {
-	return f.env
 }
 
 // NewStateFactory creates a new GCP IpRange state factory.
@@ -66,12 +58,10 @@ func (f *stateFactory) getEnv() abstractions.Environment {
 func NewStateFactory(
 	serviceNetworkingClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient],
 	computeClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
-	env abstractions.Environment,
 ) StateFactory {
 	return &stateFactory{
 		serviceNetworkingClientProvider: serviceNetworkingClientProvider,
 		computeClientProvider:           computeClientProvider,
-		env:                             env,
 	}
 }
 
@@ -86,7 +76,6 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 		State:                   ipRangeState,
 		serviceNetworkingClient: serviceNetworkingClient,
 		computeClient:           computeClient,
-		env:                     f.env,
 	}, nil
 }
 
@@ -240,8 +229,4 @@ func (s *State) ComputeClient() gcpiprangeclient.ComputeClient {
 
 func (s *State) ServiceNetworkingClient() gcpiprangeclient.ServiceNetworkingClient {
 	return s.serviceNetworkingClient
-}
-
-func (s *State) Env() abstractions.Environment {
-	return s.env
 }
