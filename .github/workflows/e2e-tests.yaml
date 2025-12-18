@@ -29,7 +29,7 @@ jobs:
         run: |
           PROVIDER=${{ inputs.provider }}
           PROVIDER=${PROVIDER:-"azure"}
-          e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -w
+          go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -w
       - name: run e2e tests
         run: echo "run e2e tests"
       - name: Delete shared instance
@@ -37,7 +37,7 @@ jobs:
         run: |
           PROVIDER=${{ inputs.provider }}
           PROVIDER=${PROVIDER:-"azure"}
-          e2e/cmd instance delete -a shared-$PROVIDER -w
+          go run ./e2e/cmd instance delete -a shared-$PROVIDER -w
       - name: Destroy E2E environment
         if: always()
         uses: ./.github/actions/e2e-destroy
