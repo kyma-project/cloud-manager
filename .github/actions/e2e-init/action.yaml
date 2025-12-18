@@ -39,6 +39,7 @@ runs:
         administrators:
           - vladimir.andjelkoski@sap.com
           - dl_623b719a6a0d2d029907bee0@global.corp.sap
+        overwriteGardenerCredentials: true
         downloadGardenSecrets:
           cm-e2e-default-aws:
             AWS_ACCESS_KEY_ID: accessKeyID
