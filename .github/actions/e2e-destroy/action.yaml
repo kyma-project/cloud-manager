@@ -29,3 +29,7 @@ runs:
           tmp/envtest.log
           tmp/sim.log
           tmp/cloud-manager.log
+    - name: Delete tmp directory
+      shell: bash
+      if: always()
+      run: rm -rf ./tmp
