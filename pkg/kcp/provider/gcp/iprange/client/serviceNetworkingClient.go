@@ -65,7 +65,7 @@ func NewServiceNetworkingClientProvider() client.GcpClientProvider[ServiceNetwor
 	return func() ServiceNetworkingClient {
 		// Get credentials from GCP config
 		credentialsFile := config.GcpConfig.CredentialsFile
-		client, err := oldProvider(context.Background(), credentialsFile)
+		svcNetClient, err := oldProvider(context.Background(), credentialsFile)
 		if err != nil {
 			// This should rarely happen since we cache the client.
 			// The panic is acceptable here because:
@@ -74,7 +74,7 @@ func NewServiceNetworkingClientProvider() client.GcpClientProvider[ServiceNetwor
 			// 3. This prevents silent failures that would be harder to debug
 			panic(fmt.Sprintf("failed to create ServiceNetworking client: %v", err))
 		}
-		return client
+		return svcNetClient
 	}
 }
 

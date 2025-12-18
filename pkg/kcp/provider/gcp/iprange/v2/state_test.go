@@ -9,7 +9,6 @@ import (
 
 	"net/http/httptest"
 
-	"cloud.google.com/go/compute/apiv1/computepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
@@ -27,33 +26,6 @@ import (
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
-
-// testComputeClientStub implements the NEW ComputeClient interface for testing
-type testComputeClientStub struct{}
-
-func (t *testComputeClientStub) ListGlobalAddresses(ctx context.Context, projectId, vpc string) ([]*computepb.Address, error) {
-	return nil, nil
-}
-
-func (t *testComputeClientStub) CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (string, error) {
-	return "", nil
-}
-
-func (t *testComputeClientStub) DeleteIpRange(ctx context.Context, projectId, name string) (string, error) {
-	return "", nil
-}
-
-func (t *testComputeClientStub) GetIpRange(ctx context.Context, projectId, name string) (*computepb.Address, error) {
-	return nil, nil
-}
-
-func (t *testComputeClientStub) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*computepb.Operation, error) {
-	return nil, nil
-}
-
-func (t *testComputeClientStub) WaitGlobalOperation(ctx context.Context, projectId, operationName string) error {
-	return nil
-}
 
 func newFakeOldComputeClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpiprangeclient.OldComputeClient] {
 	return func(ctx context.Context, saJsonKeyPath string) (gcpiprangeclient.OldComputeClient, error) {
@@ -95,16 +67,6 @@ func (c *oldComputeClientForTest) ListGlobalAddresses(ctx context.Context, proje
 
 func (c *oldComputeClientForTest) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*compute.Operation, error) {
 	return c.computeService.GlobalOperations.Get(projectId, operationName).Context(ctx).Do()
-}
-
-func newFakeComputeClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpiprangeclient.ComputeClient] {
-	return client.NewCachedClientProvider(
-		func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ComputeClient, error) {
-			// Return a stub for testing - actual implementation would use NewComputeClient with GcpClients
-			// For v2 tests, we just need a stub that returns the old types
-			return &testComputeClientStub{}, nil
-		},
-	)
 }
 
 func newFakeServiceNetworkingProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient] {

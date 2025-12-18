@@ -69,7 +69,8 @@ func SetupIpRangeReconciler(
 		}
 	}
 	if gcpV2SvcNetProvider == nil {
-		gcpV2SvcNetProvider = gcpiprangeclient.NewServiceNetworkingClient() // Use production (deprecated but correct for v2)
+		//nolint:staticcheck // SA1019: Using deprecated function intentionally for v2 legacy implementation
+		gcpV2SvcNetProvider = gcpiprangeclient.NewServiceNetworkingClient() // Use production (ClientProvider) for v2
 	}
 
 	// For OldComputeClient, use provided mock or production provider

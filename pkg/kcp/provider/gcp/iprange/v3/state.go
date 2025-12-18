@@ -50,12 +50,6 @@ type StateFactory interface {
 	NewState(ctx context.Context, ipRangeState iprangetypes.State) (*State, error)
 }
 
-// envGetter is a helper interface to access the environment from StateFactory
-// Used by legacy v2 implementation wiring
-type envGetter interface {
-	getEnv() abstractions.Environment
-}
-
 type stateFactory struct {
 	serviceNetworkingClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient]
 	computeClientProvider           gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient]
