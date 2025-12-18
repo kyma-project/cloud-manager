@@ -1,8 +1,6 @@
 package cloudresources
 
 import (
-	"time"
-
 	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -713,7 +711,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					}
 				}
 				return userLabels
-			}).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).Should(And(
+			}).Should(And(
 				HaveKeyWithValue("env", "production"),
 				HaveKeyWithValue("team", "platform"),
 				HaveLen(2),
@@ -731,7 +729,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					return nil
 				}
 				return authSecret.Annotations
-			}).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).Should(And(
+			}).Should(And(
 				HaveKeyWithValue("purpose", "production-testing"),
 				HaveKeyWithValue("cost-center", "12345"),
 				HaveLen(2),
@@ -746,7 +744,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					return nil
 				}
 				return authSecret.Data
-			}).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).Should(And(
+			}).Should(And(
 				HaveKeyWithValue("custom-key", []byte("custom-value")),
 				HaveKeyWithValue("endpoint", []byte(kcpRedisInstancePrimaryEndpoint)),
 				HaveKey("host"),
