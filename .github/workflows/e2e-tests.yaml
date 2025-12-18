@@ -1,5 +1,6 @@
 name: E2E tests
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       provider:
@@ -9,6 +10,8 @@ on:
           - aws
           - gcp
           - azure
+        description: Choose the cloud provider for the shared instance
+        default: azure
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -24,13 +27,17 @@ jobs:
           OIDC_ISSUER_URL: ${{ vars.OIDC_ISSUER_URL }}
       - name: Create shared instance
         run: |
-          e2e/cmd instance create -a shared-${{ inputs.provider }} -p ${{ inputs.provider }} -w
+          PROVIDER=${{ inputs.provider }}
+          PROVIDER=${PROVIDER:-"azure"}
+          e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -w
       - name: run e2e tests
         run: echo "run e2e tests"
       - name: Delete shared instance
         if: always()
         run: |
-          e2e/cmd instance delete -a shared-${{ inputs.provider }} -w
+          PROVIDER=${{ inputs.provider }}
+          PROVIDER=${PROVIDER:-"azure"}
+          e2e/cmd instance delete -a shared-$PROVIDER -w
       - name: Destroy E2E environment
         if: always()
         uses: ./.github/actions/e2e-destroy
