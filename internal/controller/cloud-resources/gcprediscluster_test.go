@@ -1,7 +1,6 @@
 package cloudresources
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,7 +15,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR GcpRedisCluster", func() {
@@ -185,25 +183,16 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 						WithName(authSecretName),
 						WithNamespace(gcpRedisCluster.Namespace),
 					),
+					HavingLabelKeys(
+						util.WellKnownK8sLabelComponent,
+						util.WellKnownK8sLabelPartOf,
+						util.WellKnownK8sLabelManagedBy,
+					),
+					HavingLabel(cloudresourcesv1beta1.LabelRedisClusterStatusId, gcpRedisCluster.Status.Id),
+					HavingLabels(authSecretLabels),
+					HavingAnnotations(authSecretAnnotations),
 				).
 				Should(Succeed())
-
-			By("And it has defined cloud-manager default labels")
-			Expect(authSecret.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
-			Expect(authSecret.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
-			Expect(authSecret.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
-
-			By("And it has defined ownmership label")
-			Expect(authSecret.Labels[cloudresourcesv1beta1.LabelRedisClusterStatusId]).To(Equal(gcpRedisCluster.Status.Id))
-
-			By("And it has user defined custom labels")
-			for k, v := range authSecretLabels {
-				Expect(authSecret.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected auth Secret to have label %s=%s", k, v))
-			}
-			By("And it has user defined custom annotations")
-			for k, v := range authSecretAnnotations {
-				Expect(authSecret.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected auth Secret to have annotation %s=%s", k, v))
-			}
 
 			By("And it has user defined custom extraData")
 			Expect(authSecret.Data).To(HaveKeyWithValue("foo", []byte("bar")), "expected auth secret data to have foo=bar")
@@ -809,11 +798,10 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 						WithName(authSecretName),
 						WithNamespace(gcpRedisCluster.Namespace),
 					),
+					HavingLabel("env", "test"),
+					HavingAnnotation("purpose", "testing"),
 				).
 				Should(Succeed())
-
-			Expect(authSecret.Labels).To(HaveKeyWithValue("env", "test"))
-			Expect(authSecret.Annotations).To(HaveKeyWithValue("purpose", "testing"))
 		})
 
 		newLabels := map[string]string{
@@ -850,58 +838,25 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 
 		By("Then SKR auth Secret is updated with new labels, annotations, and extraData", func() {
 			// Wait for the controller to reconcile and update the secret
-			Eventually(func() map[string]string {
-				_ = infra.SKR().Client().Get(infra.Ctx(), types.NamespacedName{
-					Name:      authSecretName,
-					Namespace: gcpRedisCluster.Namespace,
-				}, authSecret)
-				// Filter out system labels
-				userLabels := map[string]string{}
-				for k, v := range authSecret.Labels {
-					if k == "env" || k == "team" {
-						userLabels[k] = v
-					}
-				}
-				return userLabels
-			}).WithTimeout(20 * time.Second).WithPolling(200 * time.Millisecond).Should(And(
-				HaveKeyWithValue("env", "production"),
-				HaveKeyWithValue("team", "platform"),
-				HaveLen(2),
-			))
-
-			// Verify the secret is loaded with latest data
+			// Wait for controller to reconcile the changes
 			Eventually(LoadAndCheck).
 				WithArguments(
-					infra.Ctx(),
-					infra.SKR().Client(),
-					authSecret,
-					NewObjActions(
-						WithName(authSecretName),
-						WithNamespace(gcpRedisCluster.Namespace),
-					),
+					infra.Ctx(), infra.SKR().Client(), authSecret,
+					NewObjActions(WithName(authSecretName), WithNamespace(gcpRedisCluster.Namespace)),
+					HavingLabels(map[string]string{
+						"env":  "production",
+						"team": "platform",
+					}),
+					HavingLabelKeys(cloudresourcesv1beta1.LabelCloudManaged),
+					NotHavingLabels("environment"),
+					HavingAnnotations(map[string]string{
+						"purpose":     "production-testing",
+						"cost-center": "12345",
+					}),
 				).
+				WithTimeout(20 * time.Second).
+				WithPolling(200 * time.Millisecond).
 				Should(Succeed())
-
-			// Verify user labels (filter out system labels)
-			userLabels := map[string]string{}
-			for k, v := range authSecret.Labels {
-				if k == "env" || k == "team" {
-					userLabels[k] = v
-				}
-			}
-			Expect(userLabels).To(And(
-				HaveKeyWithValue("env", "production"),
-				HaveKeyWithValue("team", "platform"),
-				HaveLen(2),
-			))
-			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
-
-			// Verify annotations
-			Expect(authSecret.Annotations).To(And(
-				HaveKeyWithValue("purpose", "production-testing"),
-				HaveKeyWithValue("cost-center", "12345"),
-				HaveLen(2),
-			))
 
 			// Verify extraData
 			Expect(authSecret.Data).To(And(

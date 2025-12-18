@@ -1,7 +1,6 @@
 package cloudresources
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -205,25 +204,16 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 						WithName(authSecretName),
 						WithNamespace(gcpRedisInstance.Namespace),
 					),
+					HavingLabelKeys(
+						util.WellKnownK8sLabelComponent,
+						util.WellKnownK8sLabelPartOf,
+						util.WellKnownK8sLabelManagedBy,
+					),
+					HavingLabel(cloudresourcesv1beta1.LabelRedisInstanceStatusId, gcpRedisInstance.Status.Id),
+					HavingLabels(authSecretLabels),
+					HavingAnnotations(authSecretAnnotations),
 				).
 				Should(Succeed())
-
-			By("And it has defined cloud-manager default labels")
-			Expect(authSecret.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
-			Expect(authSecret.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
-			Expect(authSecret.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
-
-			By("And it has defined ownmership label")
-			Expect(authSecret.Labels[cloudresourcesv1beta1.LabelRedisInstanceStatusId]).To(Equal(gcpRedisInstance.Status.Id))
-
-			By("And it has user defined custom labels")
-			for k, v := range authSecretLabels {
-				Expect(authSecret.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected auth Secret to have label %s=%s", k, v))
-			}
-			By("And it has user defined custom annotations")
-			for k, v := range authSecretAnnotations {
-				Expect(authSecret.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected auth Secret to have annotation %s=%s", k, v))
-			}
 
 			By("And it has user defined custom extraData")
 			Expect(authSecret.Data).To(HaveKeyWithValue("foo", []byte("bar")), "expected auth secret data to have foo=bar")
@@ -830,11 +820,10 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 						WithName(authSecretName),
 						WithNamespace(gcpRedisInstance.Namespace),
 					),
+					HavingLabel("env", "test"),
+					HavingAnnotation("purpose", "testing"),
 				).
 				Should(Succeed())
-
-			Expect(authSecret.Labels).To(HaveKeyWithValue("env", "test"))
-			Expect(authSecret.Annotations).To(HaveKeyWithValue("purpose", "testing"))
 		})
 
 		newLabels := map[string]string{
