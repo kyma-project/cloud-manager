@@ -24,10 +24,15 @@ type oldComputeClient struct {
 	computeService *compute.Service
 }
 
-// NewOldComputeClientProvider returns a provider for the OLD Google Discovery API client.
-func NewOldComputeClientProvider() gcpclient.ClientProvider[OldComputeClient] {
+// NewOldComputeClientProviderV2 creates a ClientProvider for OldComputeClient (v2 legacy).
+// For v2 legacy code, we need the Discovery API compute.Service. Since GcpClients only has
+// modern gRPC clients, we create a Discovery API service but wrap the existing clients
+// from GcpClients to avoid creating separate auth infrastructure.
+func NewOldComputeClientProviderV2(gcpClients *gcpclient.GcpClients) gcpclient.ClientProvider[OldComputeClient] {
 	return gcpclient.NewCachedClientProvider(
 		func(ctx context.Context, credentialsFile string) (OldComputeClient, error) {
+			// For Discovery API, we need to create compute.Service with HTTP client
+			// Reuse the same credentials/auth that GcpClients uses
 			httpClient, err := gcpclient.GetCachedGcpClient(ctx, credentialsFile)
 			if err != nil {
 				return nil, fmt.Errorf("error obtaining GCP HTTP Client: %w", err)

@@ -50,9 +50,10 @@ func SetupIpRangeReconciler(
 	azureProvider azureclient.ClientProvider[azureiprangeclient.Client],
 	gcpSvcNetProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient],
 	gcpComputeProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
+	gcpV2SvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	gcpV2ComputeProvider gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient],
 	sapProvider sapclient.SapClientProvider[sapiprangeclient.Client],
 	env abstractions.Environment,
-	gcpOldProviders ...interface{}, // Optional for testing: [0] = OldComputeClient, [1] = ServiceNetworkingClient (v2)
 ) error {
 	if env == nil {
 		env = abstractions.NewOSEnvironment()
@@ -61,29 +62,7 @@ func SetupIpRangeReconciler(
 	// Create v3 GCP state factory (NEW pattern with clean actions)
 	gcpV3StateFactory := gcpiprange.NewV3StateFactory(gcpSvcNetProvider, gcpComputeProvider)
 
-	// For v2 ServiceNetworking, use provided mock or production provider
-	var gcpV2SvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]
-	if len(gcpOldProviders) > 1 {
-		if provider, ok := gcpOldProviders[1].(gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient]); ok {
-			gcpV2SvcNetProvider = provider // Use provided mock
-		}
-	}
-	if gcpV2SvcNetProvider == nil {
-		//nolint:staticcheck // SA1019: Using deprecated function intentionally for v2 legacy implementation
-		gcpV2SvcNetProvider = gcpiprangeclient.NewServiceNetworkingClient() // Use production (ClientProvider) for v2
-	}
-
-	// For OldComputeClient, use provided mock or production provider
-	var gcpV2ComputeProvider gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient]
-	if len(gcpOldProviders) > 0 {
-		if provider, ok := gcpOldProviders[0].(gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient]); ok {
-			gcpV2ComputeProvider = provider // Use provided mock
-		}
-	}
-	if gcpV2ComputeProvider == nil {
-		gcpV2ComputeProvider = gcpiprangeclient.NewOldComputeClientProvider() // Use production
-	}
-
+	// Create v2 GCP state factory (legacy implementation)
 	gcpV2StateFactory := gcpiprange.NewV2StateFactory(gcpV2SvcNetProvider, gcpV2ComputeProvider, env)
 
 	return NewIpRangeReconciler(

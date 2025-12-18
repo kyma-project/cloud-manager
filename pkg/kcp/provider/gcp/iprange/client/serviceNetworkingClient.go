@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"google.golang.org/api/cloudresourcemanager/v1"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -19,13 +18,16 @@ import (
 //
 // HYBRID APPROACH NOTE:
 // - ComputeClient: Uses NEW pattern (cloud.google.com/go/compute/apiv1)
-// - ServiceNetworkingClient: Uses OLD pattern (google.golang.org/api/servicenetworking/v1)
+// - ServiceNetworkingClient: Uses OLD pattern API (google.golang.org/api/servicenetworking/v1)
 //
-// ServiceNetworkingClient uses the OLD pattern because Google does not provide
+// ServiceNetworkingClient uses the OLD pattern API because Google does not provide
 // a modern Cloud Client Library for Service Networking API as of December 2024.
-// The interface remains clean and testable regardless of underlying implementation.
+// However, it follows the NEW pattern for dependency injection - clients are initialized
+// in GcpClients and injected via main.go, consistent with other GCP controllers.
 //
-// If cloud.google.com/go/servicenetworking becomes available, migrate to NEW pattern.
+// The interface remains clean and testable regardless of underlying implementation.
+// If cloud.google.com/go/servicenetworking becomes available, only the initialization
+// in gcpClients.go needs to change; the provider pattern remains the same.
 
 type ServiceNetworkingClient interface {
 	ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error)
@@ -38,47 +40,30 @@ type ServiceNetworkingClient interface {
 }
 
 // NewServiceNetworkingClientProvider creates a GcpClientProvider for ServiceNetworkingClient.
-// ServiceNetworking uses OLD pattern (ClientProvider) because Google does not provide
-// a modern Cloud Client Library for Service Networking API.
-// This wrapper converts OLD pattern to GcpClientProvider interface for consistency.
-func NewServiceNetworkingClientProvider() client.GcpClientProvider[ServiceNetworkingClient] {
-	// Create the OLD pattern provider
-	oldProvider := client.NewCachedClientProvider(
-		func(ctx context.Context, credentialsFile string) (ServiceNetworkingClient, error) {
-			httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
-			if err != nil {
-				return nil, err
-			}
-			svcNetClient, err := servicenetworking.NewService(ctx, option.WithHTTPClient(httpClient))
-			if err != nil {
-				return nil, fmt.Errorf("error obtaining GCP ServiceNetworking Client: [%w]", err)
-			}
-			crmService, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(httpClient))
-			if err != nil {
-				return nil, fmt.Errorf("error obtaining GCP CloudResourceManager Service: [%w]", err)
-			}
-			return NewServiceNetworkingClientForService(svcNetClient, crmService), nil
-		},
-	)
-
-	// Wrap as GcpClientProvider (just calls oldProvider with hardcoded credentials path)
+// ServiceNetworking uses OLD pattern API (google.golang.org/api/servicenetworking/v1)
+// because Google does not provide a modern Cloud Client Library for Service Networking API.
+// The clients are initialized in GcpClients and injected here for consistency with other providers.
+func NewServiceNetworkingClientProvider(gcpClients *client.GcpClients) client.GcpClientProvider[ServiceNetworkingClient] {
 	return func() ServiceNetworkingClient {
-		// Get credentials from GCP config
-		credentialsFile := config.GcpConfig.CredentialsFile
-		svcNetClient, err := oldProvider(context.Background(), credentialsFile)
-		if err != nil {
-			// This should rarely happen since we cache the client.
-			// The panic is acceptable here because:
-			// 1. Client is cached after first successful creation
-			// 2. If credentials are invalid, we want to fail fast at startup
-			// 3. This prevents silent failures that would be harder to debug
-			panic(fmt.Sprintf("failed to create ServiceNetworking client: %v", err))
-		}
-		return svcNetClient
+		return NewServiceNetworkingClientForService(
+			gcpClients.ServiceNetworking,
+			gcpClients.CloudResourceManager,
+		)
 	}
 }
 
-// Deprecated: Use NewServiceNetworkingClientProvider instead.
+// NewServiceNetworkingClientProviderV2 creates a ClientProvider (OLD pattern) for v2 legacy code.
+// This wraps the clients from GcpClients to avoid duplicate client creation.
+func NewServiceNetworkingClientProviderV2(gcpClients *client.GcpClients) client.ClientProvider[ServiceNetworkingClient] {
+	return func(ctx context.Context, credentialsFile string) (ServiceNetworkingClient, error) {
+		return NewServiceNetworkingClientForService(
+			gcpClients.ServiceNetworking,
+			gcpClients.CloudResourceManager,
+		), nil
+	}
+}
+
+// Deprecated: Use NewServiceNetworkingClientProviderV2 instead.
 func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient] {
 	return client.NewCachedClientProvider(
 		func(ctx context.Context, credentialsFile string) (ServiceNetworkingClient, error) {

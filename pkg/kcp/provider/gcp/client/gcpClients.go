@@ -15,7 +15,9 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
+	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
+	servicenetworking "google.golang.org/api/servicenetworking/v1"
 )
 
 type GcpClients struct {
@@ -29,6 +31,8 @@ type GcpClients struct {
 	NetworkConnectivityCrossNetworkAutomation *networkconnectivity.CrossNetworkAutomationClient
 	RedisCluster                              *rediscluster.CloudRedisClusterClient
 	RedisInstance                             *redisinstance.CloudRedisClient
+	ServiceNetworking                         *servicenetworking.APIService // For IpRange PSA connections (OLD pattern API)
+	CloudResourceManager                      *cloudresourcemanager.Service // For IpRange project number lookup (OLD pattern API)
 	VpcPeeringClients                         *VpcPeeringClients
 }
 
@@ -125,6 +129,27 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		return nil, fmt.Errorf("create redis instance client: %w", err)
 	}
 
+	// service networking and cloud resource manager ----------------
+	// ServiceNetworking uses OLD pattern API (google.golang.org/api/servicenetworking/v1)
+	// because Google does not provide a modern Cloud Client Library for Service Networking API
+	serviceNetworkingTokenProvider, err := b.WithScopes([]string{
+		"https://www.googleapis.com/auth/cloud-platform",
+		"https://www.googleapis.com/auth/service.management",
+	}).BuildTokenProvider()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build service networking token provider: %w", err)
+	}
+	serviceNetworkingTokenSource := oauth2adapt.TokenSourceFromTokenProvider(serviceNetworkingTokenProvider)
+
+	serviceNetworking, err := servicenetworking.NewService(ctx, option.WithTokenSource(serviceNetworkingTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("create service networking client: %w", err)
+	}
+	cloudResourceManager, err := cloudresourcemanager.NewService(ctx, option.WithTokenSource(serviceNetworkingTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("create cloud resource manager client: %w", err)
+	}
+
 	// vpc peering clients ----------------
 	// Compute networks client for VPC peering, uses a different service account
 	vpcPeeringComputeNetworksTokenProvider, err := vpcPeeringClientBuilder.WithScopes(compute.DefaultAuthScopes()).BuildTokenProvider()
@@ -159,6 +184,8 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		NetworkConnectivityCrossNetworkAutomation: ncCrossNetworkAutomation,
 		RedisCluster:                              redisCluster,
 		RedisInstance:                             redisInstance,
+		ServiceNetworking:                         serviceNetworking,
+		CloudResourceManager:                      cloudResourceManager,
 		VpcPeeringClients: &VpcPeeringClients{
 			ComputeNetworks:            vpcPeeringComputeNetworks,
 			ResourceManagerTagBindings: vpcPeeringresourceManagerTagBindings,

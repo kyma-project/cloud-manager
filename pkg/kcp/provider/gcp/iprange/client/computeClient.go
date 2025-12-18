@@ -170,11 +170,3 @@ func (c *computeClient) WaitGlobalOperation(ctx context.Context, projectId, oper
 	}
 	return nil
 }
-
-// NewComputeClientProviderForGcpClients creates a GcpClientProvider from GcpClients.
-// This follows the NEW pattern where clients are accessed via simple provider functions.
-func NewComputeClientProviderForGcpClients(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
-	return func() ComputeClient {
-		return NewComputeClient(gcpClients)
-	}
-}
