@@ -2,8 +2,9 @@ package client
 
 import (
 	"context"
-
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 )
 
@@ -37,72 +38,38 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (Client, error) {
 		var c Client
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptions())
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptions().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		vc, err := NewVaultClient(subscriptionId, cred)
+		recoveryServicesFactory, err := armrecoveryservices.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptions().Build())
+
 		if err != nil {
 			return nil, err
 		}
 
-		bc, err := NewBackupClient(subscriptionId, cred)
-		if err != nil {
-			return nil, err
-		}
+		recoveryServicesBackupFactory, err := armrecoveryservicesbackup.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptions().Build())
 
-		ppc, err := NewProtectionPoliciesClient(subscriptionId, cred)
-		if err != nil {
-			return nil, err
-		}
-
-		rpc, err := NewRecoveryPointClient(subscriptionId, cred)
-		if err != nil {
-			return nil, err
-		}
-
-		jc, err := NewJobsClient(subscriptionId, cred)
-		if err != nil {
-			return nil, err
-		}
-
-		rc, err := NewRestoreClient(subscriptionId, cred)
-		if err != nil {
-			return nil, err
-		}
-
-		bpic, err := NewBackupProtectableItemsClient(subscriptionId, cred)
-		if err != nil {
-			return nil, err
-		}
-
-		pic, err := NewProtectedItemsClient(subscriptionId, cred)
-		if err != nil {
-			return nil, err
-		}
-
-		bprotectedic, err := NewBackupProtectedItemsClient(subscriptionId, cred)
-		if err != nil {
-			return nil, err
-		}
-
-		vcc, err := NewVaultConfigClient(subscriptionId, cred)
 		if err != nil {
 			return nil, err
 		}
 
 		c = client{
-			vc,
-			bc,
-			ppc,
-			rpc,
-			jc,
-			rc,
-			bpic,
-			pic,
-			bprotectedic,
-			vcc,
+			NewVaultClient(recoveryServicesFactory.NewVaultsClient()),
+			NewBackupClient(recoveryServicesBackupFactory.NewBackupsClient()),
+			NewProtectionPoliciesClient(recoveryServicesBackupFactory.NewProtectionPoliciesClient()),
+			NewRecoveryPointClient(recoveryServicesBackupFactory.NewRecoveryPointsClient()),
+			NewJobsClient(recoveryServicesBackupFactory.NewBackupJobsClient(), recoveryServicesBackupFactory.NewJobDetailsClient()),
+			NewRestoreClient(recoveryServicesBackupFactory.NewRestoresClient()),
+			NewBackupProtectableItemsClient(recoveryServicesBackupFactory.NewBackupProtectableItemsClient()),
+			NewProtectedItemsClient(recoveryServicesBackupFactory.NewProtectedItemsClient()),
+			NewBackupProtectedItemsClient(recoveryServicesBackupFactory.NewBackupProtectedItemsClient()),
+			NewVaultConfigClient(
+				recoveryServicesBackupFactory.NewBackupResourceVaultConfigsClient(),
+				recoveryServicesBackupFactory.NewBackupProtectionContainersClient(),
+				recoveryServicesBackupFactory.NewProtectionContainersClient(),
+			),
 		}
 
 		return c, nil

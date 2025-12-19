@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 )
 
@@ -20,13 +19,8 @@ type protectedItemsClient struct {
 	azureClient *armrecoveryservicesbackup.ProtectedItemsClient
 }
 
-func NewProtectedItemsClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (ProtectedItemsClient, error) {
-
-	pic, err := armrecoveryservicesbackup.NewProtectedItemsClient(subscriptionId, cred, nil)
-	if err != nil {
-		return nil, err
-	}
-	return protectedItemsClient{pic}, nil
+func NewProtectedItemsClient(pic *armrecoveryservicesbackup.ProtectedItemsClient) ProtectedItemsClient {
+	return protectedItemsClient{pic}
 
 }
 

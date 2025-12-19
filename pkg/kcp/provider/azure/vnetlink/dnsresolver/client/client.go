@@ -17,19 +17,13 @@ type Client interface {
 func NewClientProvider() azureclient.ClientProvider[Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (Client, error) {
 
-		credentialOptions := azureclient.NewCredentialOptions()
-		credentialOptions.AdditionallyAllowedTenants = []string{"*"}
-
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, credentialOptions)
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptions().WithAnyTenant().Build())
 
 		if err != nil {
 			return nil, err
 		}
 
-		options := azureclient.NewClientOptions()
-		options.AuxiliaryTenants = auxiliaryTenants
-
-		dnsResolverClientFactory, err := armdnsresolver.NewClientFactory(subscriptionId, cred, options)
+		dnsResolverClientFactory, err := armdnsresolver.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptions().WithAuxiliaryTenants(auxiliaryTenants).Build())
 
 		if err != nil {
 			return nil, err

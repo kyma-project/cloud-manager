@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 )
 
@@ -22,28 +21,16 @@ type vaultConfigClient struct {
 	protectionContainersClient       *armrecoveryservicesbackup.ProtectionContainersClient
 }
 
-func NewVaultConfigClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (VaultConfigClient, error) {
-
-	vc, err := armrecoveryservicesbackup.NewBackupResourceVaultConfigsClient(subscriptionId, cred, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	bpcc, err := armrecoveryservicesbackup.NewBackupProtectionContainersClient(subscriptionId, cred, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	pcc, err := armrecoveryservicesbackup.NewProtectionContainersClient(subscriptionId, cred, nil)
-	if err != nil {
-		return nil, err
-	}
+func NewVaultConfigClient(
+	vc *armrecoveryservicesbackup.BackupResourceVaultConfigsClient,
+	bpcc *armrecoveryservicesbackup.BackupProtectionContainersClient,
+	pcc *armrecoveryservicesbackup.ProtectionContainersClient) VaultConfigClient {
 
 	return vaultConfigClient{
 		configClient:                     vc,
 		backupProtectionContainersClient: bpcc,
 		protectionContainersClient:       pcc,
-	}, nil
+	}
 }
 
 func (c vaultConfigClient) GetVaultConfig(ctx context.Context, resourceGroupName, vaultName string) (*armrecoveryservicesbackup.BackupResourceVaultConfigResource, error) {
