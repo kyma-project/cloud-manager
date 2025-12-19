@@ -201,8 +201,3 @@ func HavingGcpRedisInstanceStatusState(state string) ObjAssertion {
 		return nil
 	}
 }
-
-func UpdateGcpRedisInstance(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.GcpRedisInstance, opts ...ObjAction) error {
-	NewObjActions(opts...).ApplyOnObject(obj)
-	return clnt.Update(ctx, obj)
-}
