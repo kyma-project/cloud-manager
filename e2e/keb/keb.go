@@ -630,7 +630,7 @@ func (k *defaultKeb) WaitDeleted(ctx context.Context, opts ...WaitOption) error 
 	})
 
 	if err != nil {
-		return fmt.Errorf("error waiting for instance(s) to become provisioned: %w", err)
+		return fmt.Errorf("error waiting for instance(s) to be deleted: %w; timeout: %s", err, options.timeout)
 	}
 
 	return nil
