@@ -10,10 +10,16 @@ type AzureCreds struct {
 	ClientId     string `json:"clientId,omitempty" yaml:"clientId,omitempty"`
 	ClientSecret string `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
 }
+
+type ClientOptions struct {
+	Cloud string `json:"cloud,omitempty" yaml:"cloud,omitempty"`
+}
+
 type AzureConfigStruct struct {
-	DefaultCreds          AzureCreds `json:"defaultCreds" yaml:"defaultCreds"`
-	PeeringCreds          AzureCreds `json:"peeringCreds" yaml:"peeringCreds"`
-	FileShareDeletionWait string     `json:"fileShareDeletionWait" yaml:"fileShareDeletionWait"`
+	DefaultCreds          AzureCreds    `json:"defaultCreds" yaml:"defaultCreds"`
+	PeeringCreds          AzureCreds    `json:"peeringCreds" yaml:"peeringCreds"`
+	FileShareDeletionWait string        `json:"fileShareDeletionWait" yaml:"fileShareDeletionWait"`
+	ClientOptions         ClientOptions `json:"clientOptions" yaml:"clientOptions"`
 
 	AzureFileShareDeletionWaitDuration time.Duration
 }
@@ -24,6 +30,7 @@ func InitConfig(cfg config.Config) {
 	cfg.Path(
 		"azure.config",
 		config.Bind(AzureConfig),
+		config.SourceFile("azure.yaml"),
 		config.Path(
 			"defaultCreds.clientId",
 			config.Sensitive(),
@@ -55,6 +62,11 @@ func InitConfig(cfg config.Config) {
 			config.DefaultScalar("60s"),
 			config.SourceEnv("AZURE_FILE_SHARE_DELETION_WAIT"),
 		),
+		config.Path(
+			"clientOptions.cloud",
+			config.DefaultScalar("AzurePublic"),
+			config.SourceEnv("AZURE_CLIENT_CLOUD"),
+			config.SourceFile("AZURE_CLIENT_CLOUD")),
 	)
 }
 

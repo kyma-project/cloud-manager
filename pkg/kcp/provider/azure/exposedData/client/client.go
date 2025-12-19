@@ -16,12 +16,12 @@ type Client interface {
 
 func NewClientProvider() azureclient.ClientProvider[Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, _ ...string) (Client, error) {
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{})
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptions())
 		if err != nil {
 			return nil, err
 		}
 
-		networkClientFactory, err := armnetwork.NewClientFactory(subscriptionId, cred, nil)
+		networkClientFactory, err := armnetwork.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptions())
 		if err != nil {
 			return nil, err
 		}
