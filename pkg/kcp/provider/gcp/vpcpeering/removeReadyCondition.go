@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
@@ -27,5 +28,5 @@ func removeReadyCondition(ctx context.Context, st composed.State) (error, contex
 		return composed.LogErrorAndReturn(err, "Error updating KCP VpcPeering status after removing Ready condition", composed.StopWithRequeue, ctx)
 	}
 
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeue, ctx
 }
