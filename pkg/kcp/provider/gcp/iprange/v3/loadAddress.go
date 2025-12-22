@@ -66,6 +66,21 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 				Run(ctx, state)
 		}
 
+		// Defensive nil check
+		if fallbackAddr == nil {
+			logger.Error(errors.New("unexpected nil fallback address"), "Fallback address is nil despite no error")
+			return composed.PatchStatus(ipRange).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    v1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  v1beta1.ReasonGcpError,
+					Message: "Unexpected nil fallback address from GCP",
+				}).
+				SuccessError(composed.StopWithRequeue).
+				SuccessLogMsg("Updated condition for unexpected nil fallback address").
+				Run(ctx, state)
+		}
+
 		// Validate fallback address belongs to correct VPC
 		if fallbackAddr.Network == nil || !strings.HasSuffix(*fallbackAddr.Network, fmt.Sprintf("/%s", vpcName)) {
 			logger.Info("Fallback IpRange doesn't belong to this VPC, skipping")
@@ -87,6 +102,21 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 			}).
 			SuccessError(composed.StopWithRequeue).
 			SuccessLogMsg("Updated condition for failed IpRange fetching").
+			Run(ctx, state)
+	}
+
+	// Defensive nil check
+	if addr == nil {
+		logger.Error(errors.New("unexpected nil address"), "Address is nil despite no error")
+		return composed.PatchStatus(ipRange).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    v1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  v1beta1.ReasonGcpError,
+				Message: "Unexpected nil address from GCP",
+			}).
+			SuccessError(composed.StopWithRequeue).
+			SuccessLogMsg("Updated condition for unexpected nil address").
 			Run(ctx, state)
 	}
 
