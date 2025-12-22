@@ -90,6 +90,8 @@ func checkServiceNetworkingOperation(ctx context.Context, state *State, opName s
 
 	// If the operation failed, update the error status
 	if op != nil && op.Error != nil {
+		// Clear OpIdentifier before returning error so operation can be retried
+		ipRange.Status.OpIdentifier = ""
 		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -102,7 +104,10 @@ func checkServiceNetworkingOperation(ctx context.Context, state *State, opName s
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	// Operation succeeded, persist the cleared OpIdentifier
+	return composed.UpdateStatus(ipRange).
+		SuccessError(composed.StopWithRequeue).
+		Run(ctx, state)
 }
 
 // checkComputeOperation checks the status of a Compute operation.
@@ -138,6 +143,8 @@ func checkComputeOperation(ctx context.Context, state *State, opName string) (er
 
 	// If the operation failed, update the error status
 	if op != nil && op.Error != nil {
+		// Clear OpIdentifier before returning error so operation can be retried
+		ipRange.Status.OpIdentifier = ""
 		msg := ""
 		if op.StatusMessage != nil {
 			msg = *op.StatusMessage
@@ -161,5 +168,6 @@ func checkComputeOperation(ctx context.Context, state *State, opName string) (er
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	// Operation succeeded, persist the cleared OpIdentifier
+	return composed.UpdateStatus(ipRange).SuccessError(composed.StopWithRequeue).Run(ctx, state)
 }
