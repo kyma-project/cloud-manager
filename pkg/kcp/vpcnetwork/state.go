@@ -1,32 +1,27 @@
 package vpcnetwork
 
 import (
-	"github.com/kyma-project/cloud-manager/pkg/composed"
-	ctrl "sigs.k8s.io/controller-runtime"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
+	vpcnetworktypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork/types"
 )
 
-type StateFactory interface {
-	NewState(req ctrl.Request) *State
-}
-
-func NewStateFactory(
-	baseStateFactory composed.StateFactory,
-) StateFactory {
-	return &stateFactory{
-		baseStateFactory: baseStateFactory,
-	}
-}
-
-type stateFactory struct {
-	baseStateFactory composed.StateFactory
-}
-
-func (s *stateFactory) NewState(req ctrl.Request) *State {
+func newState(kcpCommonState kcpcommonaction.State) *State {
 	return &State{}
 }
 
-// State ==================================
+var _ vpcnetworktypes.State = (*State)(nil)
 
 type State struct {
-	composed.State
+	kcpcommonaction.State
+
+	normalizedSpecCidrs []string
+}
+
+func (s *State) ObjAsVpcNetwork() *cloudcontrolv1beta1.VpcNetwork {
+	return s.Obj().(*cloudcontrolv1beta1.VpcNetwork)
+}
+
+func (s *State) NormalizedSpecCidrs() []string {
+	return s.normalizedSpecCidrs
 }

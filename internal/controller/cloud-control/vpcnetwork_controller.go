@@ -19,18 +19,37 @@ package cloudcontrol
 import (
 	"context"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
+	kcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
 
+func SetupVpcNetworkReconciler(
+	kcpManager manager.Manager,
+) error {
+	return NewVpcNetworkReconciler(
+		kcpvpcnetwork.New(
+			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
+			kcpcommonaction.NewStateFactory(),
+		),
+	).SetupWithManager(kcpManager)
+}
+
+func NewVpcNetworkReconciler(r kcpvpcnetwork.VpcNetworkReconciler) *VpcNetworkReconciler {
+	return &VpcNetworkReconciler{
+		Reconciler: r,
+	}
+}
+
 // VpcNetworkReconciler reconciles a VpcNetwork object
 type VpcNetworkReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	Reconciler kcpvpcnetwork.VpcNetworkReconciler
 }
 
 // +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=vpcnetworks,verbs=get;list;watch;create;update;patch;delete
@@ -58,6 +77,9 @@ func (r *VpcNetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 func (r *VpcNetworkReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cloudcontrolv1beta1.VpcNetwork{}).
+		WithOptions(controller.Options{
+			MaxConcurrentReconciles: 10,
+		}).
 		Named("cloud-control-vpcnetwork").
 		Complete(r)
 }

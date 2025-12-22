@@ -14,7 +14,7 @@ func gardenerCredentialsRead(ctx context.Context, st composed.State) (error, con
 	out, err := commongardener.LoadGardenerCloudProviderCredentials(ctx, commongardener.LoadGardenerCloudProviderCredentialsInput{
 		Client:      state.gardenerClient,
 		Namespace:   state.gardenNamespace,
-		BindingName: state.ObjAsSubscription().Spec.SecretBindingName,
+		BindingName: state.ObjAsSubscription().Spec.Details.Garden.BindingName,
 	})
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error reading garden credentials for Subscription", composed.StopWithRequeue, ctx)

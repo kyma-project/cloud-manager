@@ -59,6 +59,7 @@ func (r *subscriptionReconciler) newAction() composed.Action {
 		composed.If(
 			composed.MarkedForDeletionPredicate,
 			// being deleted
+			statusDeleting,
 			resourcesLoad,
 			statusSaveOnDelete,
 			actions.PatchRemoveCommonFinalizer(),
@@ -71,17 +72,33 @@ func (r *subscriptionReconciler) newAction() composed.Action {
 				if composed.IsMarkedForDeletion(state.Obj()) {
 					return false
 				}
-				if meta.IsStatusConditionTrue(state.ObjAsSubscription().Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) {
+				if meta.IsStatusConditionTrue(state.ObjAsSubscription().Status.Conditions, cloudcontrolv1beta1.ConditionTypeSubscription) {
 					return false
 				}
 				return true
 			},
 			// create
 			actions.PatchAddCommonFinalizer(),
-			gardenerClientCreate,
-			gardenerCredentialsRead,
-			statusSaveOnCreate,
-			composed.StopAndForgetAction,
+			statusInitial,
+			composed.IfElse(
+				isGardenerSubscription,
+				composed.ComposeActionsNoName(
+					checkIfGardenSubscriptionType,
+					gardenerClientCreate,
+					gardenerCredentialsRead,
+					statusSaveOnCreate,
+					composed.StopAndForgetAction,
+				),
+				composed.ComposeActionsNoName(
+					handleNonGardenerSubscriptionType,
+					composed.StopAndForgetAction,
+				),
+			),
 		),
 	)
+}
+
+func isGardenerSubscription(ctx context.Context, st composed.State) bool {
+	state := st.(*State)
+	return state.ObjAsSubscription().Spec.Details.Garden != nil
 }
