@@ -33,7 +33,7 @@ import (
 func SetupVpcNetworkReconciler(
 	kcpManager manager.Manager,
 ) error {
-	return NewSubscriptionReconciler(
+	return NewVpcNetworkReconciler(
 		kcpvpcnetwork.New(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			kcpcommonaction.NewStateFactory(),
