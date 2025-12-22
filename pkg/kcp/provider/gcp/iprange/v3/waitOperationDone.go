@@ -92,12 +92,13 @@ func checkServiceNetworkingOperation(ctx context.Context, state *State, opName s
 	if op != nil && op.Error != nil {
 		// Clear OpIdentifier before returning error so operation can be retried
 		ipRange.Status.OpIdentifier = ""
+		logger.Info("Service Networking Operation failed", "errorMessage", op.Error.Message)
 		return composed.PatchStatus(ipRange).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  v1beta1.ReasonGcpError,
-				Message: op.Error.Message,
+				Message: "Service Networking operation failed",
 			}).
 			SuccessError(composed.StopWithRequeue).
 			SuccessLogMsg(fmt.Sprintf("Service Networking Operation error: %s", op.Error.Message)).
