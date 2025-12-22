@@ -9,38 +9,49 @@ import (
 )
 
 type testAwsRedisInstanceBuilder struct {
-	instance cloudresourcesv1beta1.AwsRedisInstance
+	*cloudresourcesv1beta1.AwsRedisInstanceBuilder
 }
 
 func newTestAwsRedisInstanceBuilder() *testAwsRedisInstanceBuilder {
 	return &testAwsRedisInstanceBuilder{
-		instance: cloudresourcesv1beta1.AwsRedisInstance{
-			Spec: cloudresourcesv1beta1.AwsRedisInstanceSpec{
-				IpRange: cloudresourcesv1beta1.IpRangeRef{
-					Name: uuid.NewString(),
-				},
-				RedisTier:     "S1",
-				EngineVersion: "7.0",
-				AuthEnabled:   true,
-				Parameters: map[string]string{
-					"maxmemory-policy": "allkeys-lru",
-				},
-			},
-		},
+		AwsRedisInstanceBuilder: cloudresourcesv1beta1.NewAwsRedisInstanceBuilder().
+			WithIpRange(uuid.NewString()).
+			WithRedisTier(cloudresourcesv1beta1.AwsRedisTierS2).
+			WithEngineVersion("7.0"),
 	}
 }
 
 func (b *testAwsRedisInstanceBuilder) Build() *cloudresourcesv1beta1.AwsRedisInstance {
-	return &b.instance
+	return &b.AwsRedisInstance
 }
 
 func (b *testAwsRedisInstanceBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.AwsRedisTier) *testAwsRedisInstanceBuilder {
-	b.instance.Spec.RedisTier = redisTier
+	b.AwsRedisInstanceBuilder.WithRedisTier(redisTier)
 	return b
 }
 
 func (b *testAwsRedisInstanceBuilder) WithEngineVersion(engineVersion string) *testAwsRedisInstanceBuilder {
-	b.instance.Spec.EngineVersion = engineVersion
+	b.AwsRedisInstanceBuilder.WithEngineVersion(engineVersion)
+	return b
+}
+
+func (b *testAwsRedisInstanceBuilder) WithAuthSecretName(name string) *testAwsRedisInstanceBuilder {
+	b.AwsRedisInstanceBuilder.WithAuthSecretName(name)
+	return b
+}
+
+func (b *testAwsRedisInstanceBuilder) WithAuthSecretLabels(labels map[string]string) *testAwsRedisInstanceBuilder {
+	b.AwsRedisInstanceBuilder.WithAuthSecretLabels(labels)
+	return b
+}
+
+func (b *testAwsRedisInstanceBuilder) WithAuthSecretAnnotations(annotations map[string]string) *testAwsRedisInstanceBuilder {
+	b.AwsRedisInstanceBuilder.WithAuthSecretAnnotations(annotations)
+	return b
+}
+
+func (b *testAwsRedisInstanceBuilder) WithAuthSecretExtraData(extraData map[string]string) *testAwsRedisInstanceBuilder {
+	b.AwsRedisInstanceBuilder.WithAuthSecretExtraData(extraData)
 	return b
 }
 
@@ -118,4 +129,48 @@ var _ = Describe("Feature: SKR AwsRedisInstance", Ordered, func() {
 			"engineVersion cannot be downgraded",
 		)
 	}
+
+	Context("Scenario: authSecret mutability", func() {
+
+		canNotChangeSkr(
+			"AwsRedisInstance authSecret.name cannot be changed",
+			newTestAwsRedisInstanceBuilder().WithAuthSecretName("original-name"),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithAuthSecretName("new-name")
+			},
+			"name is immutable",
+		)
+
+		canChangeSkr(
+			"AwsRedisInstance authSecret.labels can be changed",
+			newTestAwsRedisInstanceBuilder().WithAuthSecretLabels(map[string]string{"env": "dev"}),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithAuthSecretLabels(map[string]string{"env": "prod", "team": "platform"})
+			},
+		)
+
+		canChangeSkr(
+			"AwsRedisInstance authSecret.annotations can be changed",
+			newTestAwsRedisInstanceBuilder().WithAuthSecretAnnotations(map[string]string{"owner": "team-a"}),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithAuthSecretAnnotations(map[string]string{"owner": "team-b", "cost-center": "1234"})
+			},
+		)
+
+		canChangeSkr(
+			"AwsRedisInstance authSecret.extraData can be changed",
+			newTestAwsRedisInstanceBuilder().WithAuthSecretExtraData(map[string]string{"key1": "value1"}),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithAuthSecretExtraData(map[string]string{"key1": "new-value", "key2": "value2"})
+			},
+		)
+
+		canChangeSkr(
+			"AwsRedisInstance authSecret can be added",
+			newTestAwsRedisInstanceBuilder(),
+			func(b Builder[*cloudresourcesv1beta1.AwsRedisInstance]) {
+				b.(*testAwsRedisInstanceBuilder).WithAuthSecretName("added-secret")
+			},
+		)
+	})
 })

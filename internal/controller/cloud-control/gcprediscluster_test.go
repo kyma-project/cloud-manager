@@ -52,7 +52,7 @@ var _ = Describe("Feature: KCP GcpRedisCluster", func() {
 					infra.Ctx(), infra.KCP().Client(), kcpGcpSubnet,
 					WithKcpGcpSubnetStatusCidr(kcpGcpSubnet.Spec.Cidr),
 					WithConditions(KcpReadyCondition()),
-				).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).
+				).
 				Should(Succeed(), "Expected KCP GcpSubnet to become ready")
 		})
 
