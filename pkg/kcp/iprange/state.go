@@ -37,6 +37,7 @@ func (s *State) ExistingCidrRanges() []string {
 func (s *State) SetExistingCidrRanges(v []string) {
 	s.existingCidrRanges = v
 }
+
 func newState(focalState focal.State) types.State {
 	return &State{State: focalState}
 }

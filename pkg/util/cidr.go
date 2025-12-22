@@ -7,6 +7,24 @@ import (
 	"net"
 )
 
+func IpCompare(a, b net.IP) int {
+	if len(a) < len(b) {
+		return -1
+	}
+	if len(a) > len(b) {
+		return 1
+	}
+	for i := 0; i < len(a); i++ {
+		if a[i] < b[i] {
+			return -1
+		}
+		if a[i] > b[i] {
+			return 1
+		}
+	}
+	return 0
+}
+
 func CidrEquals(n1, n2 *net.IPNet) bool {
 	return n1.IP.Equal(n2.IP) &&
 		bytes.Equal(n1.Mask, n2.Mask)
