@@ -64,25 +64,11 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 		}
 	}
 
-	// Reset the peeringIpRanges slice
-	state.peeringIpRanges = []string{}
-
-	// Iterate over the list of peering ranges, and include required ones
-	for _, name := range state.serviceConnection.ReservedPeeringRanges {
-		// If it is the name of current IP range, skip it (we'll add it at the end)
-		if state.address.Name != nil && name == *state.address.Name {
-			continue
-		}
-
-		// If the IP range exists in GCP, include it
-		if _, ok := tmpMap[name]; ok {
-			state.peeringIpRanges = append(state.peeringIpRanges, name)
-		}
-	}
-
-	// Add the name of this IpRange (we're always in create-update branch)
-	if state.address.Name != nil {
-		state.peeringIpRanges = append(state.peeringIpRanges, *state.address.Name)
+	// Build peeringIpRanges directly from all PSA addresses that exist in GCP
+	// Order doesn't matter for GCP PSA connection validation
+	state.peeringIpRanges = make([]string, 0, len(tmpMap))
+	for name := range tmpMap {
+		state.peeringIpRanges = append(state.peeringIpRanges, name)
 	}
 
 	return nil, nil
