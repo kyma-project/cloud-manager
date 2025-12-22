@@ -11,7 +11,7 @@ type CredentialOptionsBuilder struct {
 	options *azidentity.ClientSecretCredentialOptions
 }
 
-func NewCredentialOptions() *CredentialOptionsBuilder {
+func NewCredentialOptionsBuilder() *CredentialOptionsBuilder {
 	b := &CredentialOptionsBuilder{}
 	if config.AzureConfig.ClientOptions.Cloud == "AzureChina" {
 		b.options = &azidentity.ClientSecretCredentialOptions{}
@@ -35,7 +35,7 @@ type OptionsBuilder struct {
 	options *arm.ClientOptions
 }
 
-func NewClientOptions() *OptionsBuilder {
+func NewClientOptionsBuilder() *OptionsBuilder {
 	b := &OptionsBuilder{}
 	if config.AzureConfig.ClientOptions.Cloud == "AzureChina" {
 		b.options = &arm.ClientOptions{}

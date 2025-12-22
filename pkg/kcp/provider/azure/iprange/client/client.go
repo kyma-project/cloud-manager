@@ -18,27 +18,27 @@ type Client interface {
 
 func NewClientProvider() azureclient.ClientProvider[Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, _ ...string) (Client, error) {
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptions().Build())
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		resourcesClientFactory, err := armresources.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptions().Build())
+		resourcesClientFactory, err := armresources.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		networkClientFactory, err := armnetwork.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptions().Build())
+		networkClientFactory, err := armnetwork.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		privateDnsZoneClientFactory, err := armprivatedns.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptions().Build())
+		privateDnsZoneClientFactory, err := armprivatedns.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		virtualNetworkLinkClientFactory, err := armprivatedns.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptions().Build())
+		virtualNetworkLinkClientFactory, err := armprivatedns.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}

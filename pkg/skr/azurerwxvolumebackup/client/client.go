@@ -38,18 +38,18 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (Client, error) {
 		var c Client
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptions().Build())
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		recoveryServicesFactory, err := armrecoveryservices.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptions().Build())
+		recoveryServicesFactory, err := armrecoveryservices.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 
 		if err != nil {
 			return nil, err
 		}
 
-		recoveryServicesBackupFactory, err := armrecoveryservicesbackup.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptions().Build())
+		recoveryServicesBackupFactory, err := armrecoveryservicesbackup.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 
 		if err != nil {
 			return nil, err

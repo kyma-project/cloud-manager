@@ -25,12 +25,12 @@ func NewFileShareClientProvider() azureclient.ClientProvider[FileShareClient] {
 func FileShareClientProvider(backupClientProvider azureclient.ClientProvider[Client]) azureclient.ClientProvider[FileShareClient] {
 
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (FileShareClient, error) {
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptions().Build())
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		fsc, err := armstorage.NewFileSharesClient(subscriptionId, cred, azureclient.NewClientOptions().Build())
+		fsc, err := armstorage.NewFileSharesClient(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}

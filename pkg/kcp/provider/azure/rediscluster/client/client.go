@@ -17,23 +17,23 @@ type Client interface {
 func NewClientProvider() azureclient.ClientProvider[Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (Client, error) {
 
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptions().Build())
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptionsBuilder().Build())
 
 		if err != nil {
 			return nil, err
 		}
 
-		armRedisClientInstance, err := armredis.NewClient(subscriptionId, cred, azureclient.NewClientOptions().Build())
+		armRedisClientInstance, err := armredis.NewClient(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		privateEndPointsClient, err := armnetwork.NewPrivateEndpointsClient(subscriptionId, cred, azureclient.NewClientOptions().Build())
+		privateEndPointsClient, err := armnetwork.NewPrivateEndpointsClient(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		privateDnsZoneGroupClient, err := armnetwork.NewPrivateDNSZoneGroupsClient(subscriptionId, cred, azureclient.NewClientOptions().Build())
+		privateDnsZoneGroupClient, err := armnetwork.NewPrivateDNSZoneGroupsClient(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
