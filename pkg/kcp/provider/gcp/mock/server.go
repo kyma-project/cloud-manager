@@ -36,12 +36,19 @@ func New() Server {
 	}
 
 	// Create shared address storage that both iprangeStore and iprangeStoreLegacy can use
+	// Thread-safety: sharedAddressStore has its own mutex and protects all access to addresses.
+	// Both iprangeStore and iprangeStoreLegacy share the same instance, ensuring consistent state
+	// across legacy (v2) and refactored code paths. Concurrent access is safe because the shared
+	// store's mutex serializes all operations.
 	sharedAddresses := &sharedAddressStore{
 		mutex:     sync.Mutex{},
 		addresses: []*computepb.Address{},
 	}
 
 	// Create shared connection storage that both iprangeStore and iprangeStoreLegacy can use
+	// Thread-safety: sharedConnectionStore has its own mutex and protects all access to connections.
+	// Both iprangeStore and iprangeStoreLegacy share the same instance for consistent PSA connection state.
+	// Concurrent access is safe because the shared store's mutex serializes all operations.
 	sharedConnections := &sharedConnectionStore{
 		mutex:       sync.Mutex{},
 		connections: []*servicenetworking.Connection{},
