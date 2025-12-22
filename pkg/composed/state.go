@@ -65,21 +65,6 @@ type State interface {
 	// Cluster returns the used cluster
 	Cluster() StateCluster
 
-	// K8sClient returns the client to the cluster
-	//
-	// Deprecated: Use Cluster().K8sClient() instead
-	K8sClient() client.Client
-
-	// EventRecorder returns the event recorder of the connected cluster
-	//
-	// Deprecated: Use Cluster().EventRecorder() instead
-	EventRecorder() record.EventRecorder
-
-	// Scheme returns the Scheme
-	//
-	// Deprecated: Use Cluster().Scheme() instead
-	Scheme() *runtime.Scheme
-
 	Name() types.NamespacedName
 	Obj() client.Object
 	SetObj(client.Object)
@@ -127,18 +112,6 @@ type baseState struct {
 
 func (s *baseState) Cluster() StateCluster {
 	return s.cluster
-}
-
-func (s *baseState) K8sClient() client.Client {
-	return s.cluster.K8sClient()
-}
-
-func (s *baseState) EventRecorder() record.EventRecorder {
-	return s.cluster.EventRecorder()
-}
-
-func (s *baseState) Scheme() *runtime.Scheme {
-	return s.cluster.Scheme()
 }
 
 func (s *baseState) Name() types.NamespacedName {

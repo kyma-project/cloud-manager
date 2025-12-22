@@ -152,8 +152,8 @@ var cmdInstanceModulesList = &cobra.Command{
 
 func init() {
 	cmdInstanceModules.AddCommand(cmdInstanceModulesList)
-	cmdInstanceModulesList.Flags().StringSliceVarP(&runtimes, "runtime-id", "r", nil, "The runtime ID")
-	cmdInstanceModulesList.Flags().StringSliceVarP(&aliases, "alias", "a", nil, "The runtime alias")
-	cmdInstanceModulesList.Flags().StringSliceVarP(&modules, "module-name", "m", nil, "The module name")
+	cmdInstanceModulesList.Flags().StringArrayVarP(&runtimes, "runtime-id", "r", nil, "The runtime ID")
+	cmdInstanceModulesList.Flags().StringArrayVarP(&aliases, "alias", "a", nil, "The runtime alias")
+	cmdInstanceModulesList.Flags().StringArrayVarP(&modules, "module-name", "m", nil, "The module name")
 	cmdInstanceModulesList.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 }

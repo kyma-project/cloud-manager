@@ -106,12 +106,13 @@ var _ = Describe("Feature: SKR AzureRedisCluster", Ordered, func() {
 				WithAuthSecretExtraData(map[string]string{"endpoint": "redis://{{.host}}:{{.port}}"}),
 		)
 
-		canChangeSkr(
-			"AzureRedisCluster authSecret.name can be changed",
+		canNotChangeSkr(
+			"AzureRedisCluster authSecret.name cannot be changed",
 			newTestAzureRedisClusterBuilder().WithAuthSecretName("cluster-original"),
 			func(b Builder[*cloudresourcesv1beta1.AzureRedisCluster]) {
 				b.(*testAzureRedisClusterBuilder).WithAuthSecretName("cluster-new")
 			},
+			"name is immutable",
 		)
 
 		canChangeSkr(

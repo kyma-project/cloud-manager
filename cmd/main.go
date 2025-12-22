@@ -471,10 +471,9 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureVNetLink")
 		os.Exit(1)
 	}
-	if err = (&cloudcontrolcontroller.VpcNetworkReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	if err = cloudcontrolcontroller.SetupVpcNetworkReconciler(
+		mgr,
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcNetwork")
 		os.Exit(1)
 	}

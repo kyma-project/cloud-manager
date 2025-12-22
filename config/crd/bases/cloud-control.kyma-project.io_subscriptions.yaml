@@ -14,7 +14,14 @@ spec:
     singular: subscription
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.status.provider
+      name: Provider
+      type: string
+    - jsonPath: .status.conditions[?(@.type=="Subscription")].reason
+      name: State
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: Subscription is the Schema for the subscriptions API.
@@ -39,18 +46,83 @@ spec:
           spec:
             description: SubscriptionSpec defines the desired state of Subscription.
             properties:
-              secretBindingName:
-                description: SecretBindingName specified the SecretBindingName in
-                  the Garden
-                type: string
+              details:
+                properties:
+                  aws:
+                    properties:
+                      account:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: account is required
+                          rule: (size(self) > 0)
+                    required:
+                    - account
+                    type: object
+                  azure:
+                    properties:
+                      subscriptionId:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: SubscriptionId is required
+                          rule: (size(self) > 0)
+                      tenantId:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: tenantId is required
+                          rule: (size(self) > 0)
+                    required:
+                    - subscriptionId
+                    - tenantId
+                    type: object
+                  garden:
+                    properties:
+                      bindingName:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: BindingName is immutable
+                          rule: self == oldSelf
+                    required:
+                    - bindingName
+                    type: object
+                  gcp:
+                    properties:
+                      project:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: Project is required
+                          rule: (size(self) > 0)
+                    required:
+                    - project
+                    type: object
+                  openstack:
+                    properties:
+                      domainName:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: DomainName is required
+                          rule: (size(self) > 0)
+                      tenantName:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: TenantName is required
+                          rule: (size(self) > 0)
+                    required:
+                    - domainName
+                    - tenantName
+                    type: object
+                type: object
                 x-kubernetes-validations:
-                - message: SecretBindingName is immutable.
-                  rule: (self == oldSelf)
-                - message: SecretBindingName is required.
-                  rule: (size(self) > 0)
+                - message: Exactly one of garden, aws, azure, gcp or openstack must
+                    be specified
+                  rule: '((has(self.garden) ? 1 : 0) + (has(self.aws) ? 1 : 0) + (has(self.gcp)
+                    ? 1 : 0) + (has(self.azure) ? 1 : 0) + (has(self.openstack) ?
+                    1 : 0)) == 1'
             required:
-            - secretBindingName
+            - details
             type: object
+            x-kubernetes-validations:
+            - message: Subscription spec is immutable
+              rule: (self == oldSelf)
           status:
             description: SubscriptionStatus defines the observed state of Subscription.
             properties:
@@ -115,6 +187,9 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              observedGeneration:
+                format: int64
+                type: integer
               provider:
                 type: string
               state:
@@ -129,6 +204,9 @@ spec:
                     properties:
                       account:
                         type: string
+                        x-kubernetes-validations:
+                        - message: account is required
+                          rule: (size(self) > 0)
                     required:
                     - account
                     type: object
@@ -136,8 +214,14 @@ spec:
                     properties:
                       subscriptionId:
                         type: string
+                        x-kubernetes-validations:
+                        - message: SubscriptionId is required
+                          rule: (size(self) > 0)
                       tenantId:
                         type: string
+                        x-kubernetes-validations:
+                        - message: tenantId is required
+                          rule: (size(self) > 0)
                     required:
                     - subscriptionId
                     - tenantId
@@ -146,6 +230,9 @@ spec:
                     properties:
                       project:
                         type: string
+                        x-kubernetes-validations:
+                        - message: Project is required
+                          rule: (size(self) > 0)
                     required:
                     - project
                     type: object
@@ -153,15 +240,19 @@ spec:
                     properties:
                       domainName:
                         type: string
+                        x-kubernetes-validations:
+                        - message: DomainName is required
+                          rule: (size(self) > 0)
                       tenantName:
                         type: string
+                        x-kubernetes-validations:
+                        - message: TenantName is required
+                          rule: (size(self) > 0)
                     required:
                     - domainName
                     - tenantName
                     type: object
                 type: object
-            required:
-            - provider
             type: object
         type: object
     served: true

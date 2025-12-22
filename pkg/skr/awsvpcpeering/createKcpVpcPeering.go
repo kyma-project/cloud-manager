@@ -2,6 +2,7 @@ package awsvpcpeering
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -27,6 +28,9 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      obj.Status.Id,
 			Namespace: state.KymaRef.Namespace,
+			Labels: map[string]string{
+				common.LabelKymaModule: common.FieldOwner,
+			},
 			Annotations: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName:      obj.Name,

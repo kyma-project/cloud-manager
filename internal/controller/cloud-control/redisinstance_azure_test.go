@@ -2,7 +2,6 @@ package cloudcontrol
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
@@ -56,7 +55,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
 					WithConditions(KcpReadyCondition()),
-				).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).
+				).
 				Should(Succeed(), "Expected KCP IpRange to become ready")
 		})
 

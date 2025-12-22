@@ -6,7 +6,7 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
-func restConfigToKubeconfig(restConfig *rest.Config) *clientcmdapi.Config {
+func RestConfigToKubeconfig(restConfig *rest.Config) *clientcmdapi.Config {
 	clusters := make(map[string]*clientcmdapi.Cluster)
 	clusters["default-cluster"] = &clientcmdapi.Cluster{
 		Server:                   restConfig.Host,
@@ -37,6 +37,6 @@ func restConfigToKubeconfig(restConfig *rest.Config) *clientcmdapi.Config {
 	return clientConfig
 }
 
-func kubeconfigToBytes(clientConfig *clientcmdapi.Config) ([]byte, error) {
+func KubeconfigToBytes(clientConfig *clientcmdapi.Config) ([]byte, error) {
 	return clientcmd.Write(*clientConfig)
 }

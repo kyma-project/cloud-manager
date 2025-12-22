@@ -9,47 +9,49 @@ import (
 )
 
 type testGcpRedisInstanceBuilder struct {
-	instance cloudresourcesv1beta1.GcpRedisInstance
+	*cloudresourcesv1beta1.GcpRedisInstanceBuilder
 }
 
 func newTestGcpRedisInstanceBuilder() *testGcpRedisInstanceBuilder {
 	return &testGcpRedisInstanceBuilder{
-		instance: cloudresourcesv1beta1.GcpRedisInstance{
-			Spec: cloudresourcesv1beta1.GcpRedisInstanceSpec{
-				IpRange: cloudresourcesv1beta1.IpRangeRef{
-					Name: uuid.NewString(),
-				},
-				RedisTier:    "S1",
-				RedisVersion: "REDIS_7_0",
-				AuthEnabled:  true,
-				RedisConfigs: map[string]string{
-					"maxmemory-policy": "allkeys-lru",
-				},
-				MaintenancePolicy: &cloudresourcesv1beta1.MaintenancePolicy{
-					DayOfWeek: &cloudresourcesv1beta1.DayOfWeekPolicy{
-						Day: "MONDAY",
-						StartTime: cloudresourcesv1beta1.TimeOfDay{
-							Hours:   11,
-							Minutes: 0,
-						},
-					},
-				},
-			},
-		},
+		GcpRedisInstanceBuilder: cloudresourcesv1beta1.NewGcpRedisInstanceBuilder().
+			WithIpRange(uuid.NewString()).
+			WithRedisTier(cloudresourcesv1beta1.GcpRedisTierS1).
+			WithRedisVersion("REDIS_7_0"),
 	}
 }
 
 func (b *testGcpRedisInstanceBuilder) Build() *cloudresourcesv1beta1.GcpRedisInstance {
-	return &b.instance
+	return &b.GcpRedisInstance
 }
 
 func (b *testGcpRedisInstanceBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.GcpRedisTier) *testGcpRedisInstanceBuilder {
-	b.instance.Spec.RedisTier = redisTier
+	b.GcpRedisInstanceBuilder.WithRedisTier(redisTier)
 	return b
 }
 
 func (b *testGcpRedisInstanceBuilder) WithRedisVersion(redisVersion string) *testGcpRedisInstanceBuilder {
-	b.instance.Spec.RedisVersion = redisVersion
+	b.GcpRedisInstanceBuilder.WithRedisVersion(redisVersion)
+	return b
+}
+
+func (b *testGcpRedisInstanceBuilder) WithAuthSecretName(name string) *testGcpRedisInstanceBuilder {
+	b.GcpRedisInstanceBuilder.WithAuthSecretName(name)
+	return b
+}
+
+func (b *testGcpRedisInstanceBuilder) WithAuthSecretLabels(labels map[string]string) *testGcpRedisInstanceBuilder {
+	b.GcpRedisInstanceBuilder.WithAuthSecretLabels(labels)
+	return b
+}
+
+func (b *testGcpRedisInstanceBuilder) WithAuthSecretAnnotations(annotations map[string]string) *testGcpRedisInstanceBuilder {
+	b.GcpRedisInstanceBuilder.WithAuthSecretAnnotations(annotations)
+	return b
+}
+
+func (b *testGcpRedisInstanceBuilder) WithAuthSecretExtraData(extraData map[string]string) *testGcpRedisInstanceBuilder {
+	b.GcpRedisInstanceBuilder.WithAuthSecretExtraData(extraData)
 	return b
 }
 
@@ -151,4 +153,48 @@ var _ = Describe("Feature: SKR GcpRedisInstance", Ordered, func() {
 			"redisVersion cannot be downgraded",
 		)
 	}
+
+	Context("Scenario: authSecret mutability", func() {
+
+		canNotChangeSkr(
+			"GcpRedisInstance authSecret.name cannot be changed",
+			newTestGcpRedisInstanceBuilder().WithAuthSecretName("original-name"),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
+				b.(*testGcpRedisInstanceBuilder).WithAuthSecretName("new-name")
+			},
+			"name is immutable",
+		)
+
+		canChangeSkr(
+			"GcpRedisInstance authSecret.labels can be changed",
+			newTestGcpRedisInstanceBuilder().WithAuthSecretLabels(map[string]string{"env": "dev"}),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
+				b.(*testGcpRedisInstanceBuilder).WithAuthSecretLabels(map[string]string{"env": "prod", "team": "platform"})
+			},
+		)
+
+		canChangeSkr(
+			"GcpRedisInstance authSecret.annotations can be changed",
+			newTestGcpRedisInstanceBuilder().WithAuthSecretAnnotations(map[string]string{"owner": "team-a"}),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
+				b.(*testGcpRedisInstanceBuilder).WithAuthSecretAnnotations(map[string]string{"owner": "team-b", "cost-center": "1234"})
+			},
+		)
+
+		canChangeSkr(
+			"GcpRedisInstance authSecret.extraData can be changed",
+			newTestGcpRedisInstanceBuilder().WithAuthSecretExtraData(map[string]string{"key1": "value1"}),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
+				b.(*testGcpRedisInstanceBuilder).WithAuthSecretExtraData(map[string]string{"key1": "new-value", "key2": "value2"})
+			},
+		)
+
+		canChangeSkr(
+			"GcpRedisInstance authSecret can be added",
+			newTestGcpRedisInstanceBuilder(),
+			func(b Builder[*cloudresourcesv1beta1.GcpRedisInstance]) {
+				b.(*testGcpRedisInstanceBuilder).WithAuthSecretName("added-secret")
+			},
+		)
+	})
 })

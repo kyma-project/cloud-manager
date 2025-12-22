@@ -3,9 +3,10 @@ package testinfra
 import (
 	"bytes"
 	"fmt"
+	"sort"
+
 	dto "github.com/prometheus/client_model/go"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
-	"sort"
 )
 
 type metricControllerNameKey struct {
@@ -95,6 +96,13 @@ func (d *reconcileMetricRaw) Key() string {
 // =======================================================
 
 func PrintMetrics() error {
+	// there's no much use of metrics as printed now
+	// they should be collected after each scenario, remember first occurrence and reported how much it increases at the end
+	// that would expose which resources were reconciled after the test that created them
+	if true {
+		return nil
+	}
+
 	fmt.Println("")
 	fmt.Println("Controller metrics")
 	fmt.Println("")

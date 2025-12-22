@@ -15,6 +15,7 @@ import (
 type EvaluatorBuilder struct {
 	evaluator *defaultEvaluatorImpl
 	evalData  evalData
+	fixedData map[string]interface{}
 }
 
 func NewEvaluatorBuilder(skrNamespace string) *EvaluatorBuilder {
@@ -51,6 +52,7 @@ function findConditionTrue(obj, tp) {
 			loaded:       map[string]struct{}{},
 			evaluated:    map[string]struct{}{},
 		},
+		fixedData: map[string]interface{}{},
 	}
 }
 
@@ -83,6 +85,10 @@ type evalObjMetadata struct {
 	Evaluated  bool   `json:"evaluated"`
 }
 
+func (b *EvaluatorBuilder) Set(name string, value interface{}) {
+	b.fixedData[name] = value
+}
+
 func (b *EvaluatorBuilder) Add(c ClusterEvaluationHandle) *EvaluatorBuilder {
 	for _, ri := range c.AllResources() {
 		b.evalData = append(b.evalData, &evalObj{
@@ -96,15 +102,20 @@ func (b *EvaluatorBuilder) Add(c ClusterEvaluationHandle) *EvaluatorBuilder {
 }
 
 func (b *EvaluatorBuilder) setToVm() error {
+	for k, v := range b.fixedData {
+		if err := b.evaluator.vm.GlobalObject().Set(k, v); err != nil {
+			return fmt.Errorf("error setting fixed value %q to vm: %w", k, err)
+		}
+	}
 	metadata := map[string]*evalObjMetadata{}
 	for _, obj := range b.evalData {
 		metadata[obj.ri.Alias] = obj.toEvalMetadata()
 		if err := b.evaluator.vm.GlobalObject().Set(obj.ri.Alias, obj.data); err != nil {
-			return err
+			return fmt.Errorf("error setting resource %q to vm: %w", obj.ri.Alias, err)
 		}
 	}
 	if err := b.evaluator.vm.GlobalObject().Set("_", metadata); err != nil {
-		return err
+		return fmt.Errorf("error setting metadata to vm: %w", err)
 	}
 	return nil
 }
@@ -260,7 +271,7 @@ func (e *defaultEvaluatorImpl) EvalTruthy(txt string) (bool, error) {
 func (e *defaultEvaluatorImpl) EvalTemplate(txt string) (string, error) {
 	v, err := e.Eval(fmt.Sprintf("`%s`", txt))
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	if v == nil {
 		return "", nil
@@ -271,7 +282,7 @@ func (e *defaultEvaluatorImpl) EvalTemplate(txt string) (string, error) {
 func (e *defaultEvaluatorImpl) evalResource(ri *ResourceInfo) (bool, error) {
 	if ri.Namespace != "" {
 		namespace, err := e.EvalTemplate(ri.Namespace)
-		if err != nil {
+		if IgnoreReferenceAndTypeError(err) != nil {
 			return false, fmt.Errorf("error evaluating %q namespace %q: %w", ri.Alias, ri.Namespace, err)
 		}
 		ri.Namespace = namespace
@@ -282,7 +293,7 @@ func (e *defaultEvaluatorImpl) evalResource(ri *ResourceInfo) (bool, error) {
 	}
 
 	name, err := e.EvalTemplate(ri.Name)
-	if err != nil {
+	if IgnoreReferenceAndTypeError(err) != nil {
 		return false, fmt.Errorf("error evaluating %q name %q: %w", ri.Alias, ri.Name, err)
 	}
 
@@ -336,4 +347,14 @@ func IsTypeError(err error) bool {
 func IsSyntaxError(err error) bool {
 	name, ok := GojaErrorName(err)
 	return ok && name == "SyntaxError"
+}
+
+func IgnoreReferenceAndTypeError(err error) error {
+	if IsReferenceError(err) {
+		return nil
+	}
+	if IsTypeError(err) {
+		return nil
+	}
+	return err
 }

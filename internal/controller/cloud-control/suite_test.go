@@ -173,6 +173,10 @@ var _ = BeforeSuite(func() {
 		infra.AzureMock().DnsZoneVNetLinkProvider(),
 		infra.AzureMock().DnsResolverVNetLinkProvider(),
 	)).NotTo(HaveOccurred())
+	// VpcNetwork
+	Expect(SetupVpcNetworkReconciler(
+		infra.KcpManager(),
+	)).To(Succeed())
 	// Subscription
 	Expect(SetupSubscriptionReconciler(
 		infra.KcpManager(),

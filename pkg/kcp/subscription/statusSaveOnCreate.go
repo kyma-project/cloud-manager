@@ -8,12 +8,13 @@ import (
 	"github.com/hashicorp/go-multierror"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
 
 func statusSaveOnCreate(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+
+	sp := composed.NewStatusPatcherComposed(state.ObjAsSubscription())
 
 	state.ObjAsSubscription().Status.Provider = state.provider
 
@@ -113,31 +114,17 @@ func statusSaveOnCreate(ctx context.Context, st composed.State) (error, context.
 	if theErr != nil {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Error(theErr, "error processing gardener cloud credentials")
-		state.ObjAsSubscription().Status.State = cloudcontrolv1beta1.StateError
 
-		return composed.PatchStatus(state.ObjAsSubscription()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:               cloudcontrolv1beta1.ConditionTypeError,
-				Status:             metav1.ConditionTrue,
-				ObservedGeneration: state.ObjAsSubscription().Generation,
-				Reason:             cloudcontrolv1beta1.ReasonGcpError,
-				Message:            theErr.Error(),
-			}).
-			ErrorLogMessage("Error patching status for Subscription with error processing credentials").
-			SuccessError(composed.StopWithRequeue).
-			Run(ctx, state)
+		state.ObjAsSubscription().SetStatusInvalidBinding(theErr.Error())
+
+		return sp.
+			OnFailure(composed.Log("Error patching status for Subscription with error processing credentials")).
+			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	state.ObjAsSubscription().Status.State = cloudcontrolv1beta1.StateReady
-	return composed.PatchStatus(state.ObjAsSubscription()).
-		SetExclusiveConditions(metav1.Condition{
-			Type:               cloudcontrolv1beta1.ConditionTypeReady,
-			Status:             metav1.ConditionTrue,
-			ObservedGeneration: state.ObjAsSubscription().Generation,
-			Reason:             cloudcontrolv1beta1.ConditionTypeReady,
-			Message:            "Ready",
-		}).
-		ErrorLogMessage("Error patching status for Subscription with error processing credentials").
-		SuccessErrorNil().
-		Run(ctx, state)
+	state.ObjAsSubscription().SetStatusReady()
+
+	return sp.
+		OnFailure(composed.Log("Error patching status for Subscription with ready status")).
+		Run(ctx, state.Cluster().K8sClient())
 }

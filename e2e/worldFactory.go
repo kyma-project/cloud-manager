@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/kyma-project/cloud-manager/e2e/cloud"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
@@ -30,6 +31,7 @@ type WorldCreateOptions struct {
 	CloudProfileLoader    e2elib.CloudProfileLoader
 	SkrKubeconfigProvider e2elib.SkrKubeconfigProvider
 	SkrManagerFactory     e2ekeb.SkrManagerFactory
+	CreateCloud           bool
 }
 
 func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) (WorldIntf, error) {
@@ -139,6 +141,16 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	result.kebi = kebi
 	result.kcp = NewCluster(ctx, "kcp", kcpManager)
 	result.garden = NewCluster(ctx, "garden", gardenManager)
+
+	// Cloud -------------------------------
+
+	if opts.CreateCloud {
+		cl, err := cloud.Create(ctx, gardenManager.GetClient(), opts.Config)
+		if err != nil {
+			return nil, fmt.Errorf("error creating cloud: %w", err)
+		}
+		result.cloud = cl
+	}
 
 	return result, nil
 }

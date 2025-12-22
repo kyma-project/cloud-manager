@@ -79,6 +79,7 @@ var _ = BeforeSuite(func() {
 		KcpRestConfig:         infra.KCP().Cfg(),
 		CloudProfileLoader:    cpl,
 		SkrKubeconfigProvider: skrKubeConfigProvider,
+		CreateCloud:           false,
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating the world")
 

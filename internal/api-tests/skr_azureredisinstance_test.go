@@ -103,12 +103,13 @@ var _ = Describe("Feature: SKR AzureRedisInstance", Ordered, func() {
 				WithAuthSecretExtraData(map[string]string{"url": "redis://{{.host}}:{{.port}}"}),
 		)
 
-		canChangeSkr(
-			"AzureRedisInstance authSecret.name can be changed",
+		canNotChangeSkr(
+			"AzureRedisInstance authSecret.name cannot be changed",
 			newTestAzureRedisInstanceBuilder().WithAuthSecretName("original-name"),
 			func(b Builder[*cloudresourcesv1beta1.AzureRedisInstance]) {
 				b.(*testAzureRedisInstanceBuilder).WithAuthSecretName("new-name")
 			},
+			"name is immutable",
 		)
 
 		canChangeSkr(

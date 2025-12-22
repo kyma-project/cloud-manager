@@ -5,6 +5,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -47,6 +48,9 @@ func createKcpGcpRedisCluster(ctx context.Context, st composed.State) (error, co
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      gcpRedisCluster.Status.Id,
 			Namespace: state.KymaRef.Namespace,
+			Labels: map[string]string{
+				common.LabelKymaModule: common.FieldOwner,
+			},
 			Annotations: map[string]string{
 				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
 				cloudcontrolv1beta1.LabelRemoteName:      gcpRedisCluster.Name,

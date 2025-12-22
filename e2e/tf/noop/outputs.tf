@@ -1,0 +1,4 @@
+
+output "noop" {
+  value = "noop"
+}

@@ -13,6 +13,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// resourcesLoad loads all resources having label cloudcontrolv1beta1.SubscriptionLabel matching
+// this subscription. This is probably a tmp workaround or a final fallback. Known resources like VpcNetwork
+// and Runtime rather can be loaded and their fields inspected
 func resourcesLoad(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
