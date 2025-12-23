@@ -426,12 +426,16 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 				Should(Succeed())
 		})
 
-		By("And Then default SKR IpRange has label app.kubernetes.io/managed-by: cloud-manager", func() {
-			Expect(skrIpRange.Labels[util.WellKnownK8sLabelManagedBy]).To(Equal("cloud-manager"))
-		})
-
-		By("And Then default SKR IpRange has label app.kubernetes.io/part-of: kyma", func() {
-			Expect(skrIpRange.Labels[util.WellKnownK8sLabelPartOf]).To(Equal("kyma"))
+		By("And Then default SKR IpRange has cloud-manager labels", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(),
+					HavingLabels(map[string]string{
+						util.WellKnownK8sLabelManagedBy: "cloud-manager",
+						util.WellKnownK8sLabelPartOf:    "kyma",
+					}),
+				).Should(Succeed())
 		})
 
 		By("And Then GcpRedisInstance is not ready", func() {

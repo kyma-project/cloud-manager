@@ -408,12 +408,16 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 				Should(Succeed())
 		})
 
-		By("And Then default SKR GcpSubnet has label app.kubernetes.io/managed-by: cloud-manager", func() {
-			Expect(skrGcpSubnet.Labels[util.WellKnownK8sLabelManagedBy]).To(Equal("cloud-manager"))
-		})
-
-		By("And Then default SKR GcpSubnet has label app.kubernetes.io/part-of: kyma", func() {
-			Expect(skrGcpSubnet.Labels[util.WellKnownK8sLabelPartOf]).To(Equal("kyma"))
+		By("And Then default SKR GcpSubnet has cloud-manager labels", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrGcpSubnet,
+					NewObjActions(),
+					HavingLabels(map[string]string{
+						util.WellKnownK8sLabelManagedBy: "cloud-manager",
+						util.WellKnownK8sLabelPartOf:    "kyma",
+					}),
+				).Should(Succeed())
 		})
 
 		By("And Then GcpRedisCluster is not ready", func() {
