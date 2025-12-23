@@ -4,21 +4,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
-	"net/http"
-	"os"
-	"os/signal"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sync"
-	"syscall"
-	"time"
 )
 
 type ClientProvider[T any] func(ctx context.Context, credentialsFile string) (T, error)
@@ -108,7 +110,15 @@ func renewCachedHttpClientPeriodically(ctx context.Context, credentialsFile stri
 }
 
 func newHttpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
-	client, _, err := transport.NewHTTPClient(ctx, option.WithCredentialsFile(credentialsFile), option.WithScopes("https://www.googleapis.com/auth/compute", "https://www.googleapis.com/auth/cloud-platform"))
+	credentialsData, err := os.ReadFile(credentialsFile)
+	if err != nil {
+		return nil, fmt.Errorf("error reading credentials file: [%w]", err)
+	}
+	credentials, err := google.CredentialsFromJSON(ctx, credentialsData, "https://www.googleapis.com/auth/compute", "https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		return nil, fmt.Errorf("error loading credentials: [%w]", err)
+	}
+	client, _, err := transport.NewHTTPClient(ctx, option.WithTokenSource(credentials.TokenSource))
 	if err != nil {
 		return nil, fmt.Errorf("error obtaining GCP HTTP client: [%w]", err)
 	}
@@ -120,7 +130,21 @@ func newHttpClient(ctx context.Context, credentialsFile string) (*http.Client, e
 func CheckGcpAuthentication(ctx context.Context, credentialsFile string) {
 	logger := composed.LoggerFromCtx(ctx)
 
-	svc, err := oauth2.NewService(ctx, option.WithCredentialsFile(credentialsFile))
+	credentialsData, err := os.ReadFile(credentialsFile)
+	if err != nil {
+		IncrementCallCounter("Authentication", "Check", "", err)
+		logger.Error(err, "GCP Authentication Check - error reading credentials file")
+		return
+	}
+
+	credentials, err := google.CredentialsFromJSON(ctx, credentialsData, oauth2.UserinfoEmailScope)
+	if err != nil {
+		IncrementCallCounter("Authentication", "Check", "", err)
+		logger.Error(err, "GCP Authentication Check - error loading credentials")
+		return
+	}
+
+	svc, err := oauth2.NewService(ctx, option.WithTokenSource(credentials.TokenSource))
 	if err != nil {
 		IncrementCallCounter("Authentication", "Check", "", err)
 		logger.Error(err, "GCP Authentication Check - error creating new oauth2.Service")
