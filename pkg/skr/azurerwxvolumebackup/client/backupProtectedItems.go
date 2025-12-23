@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 )
 
@@ -14,13 +13,8 @@ type backupProtectedItemsClient struct {
 	azureClient *armrecoveryservicesbackup.BackupProtectedItemsClient
 }
 
-func NewBackupProtectedItemsClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (BackupProtectedItemsClient, error) {
-
-	c, err := armrecoveryservicesbackup.NewBackupProtectedItemsClient(subscriptionId, cred, nil)
-	if err != nil {
-		return nil, err
-	}
-	return backupProtectedItemsClient{c}, nil
+func NewBackupProtectedItemsClient(c *armrecoveryservicesbackup.BackupProtectedItemsClient) BackupProtectedItemsClient {
+	return backupProtectedItemsClient{c}
 
 }
 

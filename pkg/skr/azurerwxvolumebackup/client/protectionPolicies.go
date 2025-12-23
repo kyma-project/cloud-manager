@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"time"
 )
@@ -17,15 +16,8 @@ type protectionPoliciesClient struct {
 	azureClient *armrecoveryservicesbackup.ProtectionPoliciesClient
 }
 
-func NewProtectionPoliciesClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (ProtectionPoliciesClient, error) {
-
-	ppc, err := armrecoveryservicesbackup.NewProtectionPoliciesClient(subscriptionId, cred, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return protectionPoliciesClient{ppc}, nil
+func NewProtectionPoliciesClient(ppc *armrecoveryservicesbackup.ProtectionPoliciesClient) ProtectionPoliciesClient {
+	return protectionPoliciesClient{ppc}
 }
 
 func (c protectionPoliciesClient) CreateBackupPolicy(ctx context.Context, vaultName string, resourceGroupName string, policyName string) error {

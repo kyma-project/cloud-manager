@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"strings"
 	"time"
@@ -22,16 +21,8 @@ type jobsClient struct {
 	*armrecoveryservicesbackup.JobDetailsClient
 }
 
-func NewJobsClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (JobsClient, error) {
-	bjc, err := armrecoveryservicesbackup.NewBackupJobsClient(subscriptionId, cred, nil)
-	if err != nil {
-		return nil, err
-	}
-	jdc, err := armrecoveryservicesbackup.NewJobDetailsClient(subscriptionId, cred, nil)
-	if err != nil {
-		return nil, err
-	}
-	return jobsClient{bjc, jdc}, nil
+func NewJobsClient(bjc *armrecoveryservicesbackup.BackupJobsClient, jdc *armrecoveryservicesbackup.JobDetailsClient) JobsClient {
+	return jobsClient{bjc, jdc}
 }
 
 // FindRestoreJobId finds the restore job for the given vault, resource group, start filter and restore folder path

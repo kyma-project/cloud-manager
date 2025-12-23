@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"io"
@@ -22,15 +21,8 @@ type restoreClient struct {
 	*armrecoveryservicesbackup.RestoresClient
 }
 
-func NewRestoreClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (RestoreClient, error) {
-
-	rc, err := armrecoveryservicesbackup.NewRestoresClient(subscriptionId, cred, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return restoreClient{rc}, nil
+func NewRestoreClient(rc *armrecoveryservicesbackup.RestoresClient) RestoreClient {
+	return restoreClient{rc}
 }
 
 type TriggerResponse struct {

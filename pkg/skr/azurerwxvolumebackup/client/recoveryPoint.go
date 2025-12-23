@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 )
 
@@ -15,14 +14,8 @@ type recoveryPointClient struct {
 	azureClient *armrecoveryservicesbackup.RecoveryPointsClient
 }
 
-func NewRecoveryPointClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (RecoveryPointClient, error) {
-
-	rpc, err := armrecoveryservicesbackup.NewRecoveryPointsClient(subscriptionId, cred, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return recoveryPointClient{rpc}, nil
+func NewRecoveryPointClient(rpc *armrecoveryservicesbackup.RecoveryPointsClient) RecoveryPointClient {
+	return recoveryPointClient{rpc}
 }
 
 func (c recoveryPointClient) GetRecoveryPoint(ctx context.Context, vaultName string, resourceGroupName string, fabricName string, containerName string, protectedItemName string, recoveryPointId string) (*armrecoveryservicesbackup.RecoveryPointResource, error) {
