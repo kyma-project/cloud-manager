@@ -859,7 +859,10 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 						"env":  "production",
 						"team": "platform",
 					}),
-					HavingLabelKeys(cloudresourcesv1beta1.LabelCloudManaged),
+					HavingLabelKeys(
+						cloudresourcesv1beta1.LabelRedisInstanceStatusId,
+						cloudresourcesv1beta1.LabelCloudManaged,
+					),
 					HavingAnnotations(map[string]string{
 						"purpose":     "production-testing",
 						"cost-center": "12345",
