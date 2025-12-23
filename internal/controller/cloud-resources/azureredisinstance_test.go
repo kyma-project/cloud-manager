@@ -698,42 +698,24 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		})
 
 		By("Then SKR auth Secret is updated with new labels (REPLACEMENT semantics)", func() {
-			Eventually(func() map[string]string {
-				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisInstance.Namespace}
-				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
-				if err != nil {
-					return nil
-				}
-				userLabels := map[string]string{}
-				for k, v := range authSecret.Labels {
-					if k == "env" || k == "team" {
-						userLabels[k] = v
-					}
-				}
-				return userLabels
-			}).Should(And(
-				HaveKeyWithValue("env", "production"),
-				HaveKeyWithValue("team", "platform"),
-				HaveLen(2),
-			), "expected auth Secret to have updated labels with replacement semantics")
-
-			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelRedisInstanceStatusId))
-			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
-		})
-
-		By("And Then SKR auth Secret has new annotations (REPLACEMENT semantics)", func() {
-			Eventually(func() map[string]string {
-				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisInstance.Namespace}
-				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
-				if err != nil {
-					return nil
-				}
-				return authSecret.Annotations
-			}).Should(And(
-				HaveKeyWithValue("purpose", "production-testing"),
-				HaveKeyWithValue("cost-center", "12345"),
-				HaveLen(2),
-			), "expected auth Secret to have updated annotations with replacement semantics")
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), authSecret,
+					NewObjActions(WithName(authSecretName), WithNamespace(azureRedisInstance.Namespace)),
+					HavingLabels(map[string]string{
+						"env":  "production",
+						"team": "platform",
+					}),
+					HavingLabelKeys(
+						cloudresourcesv1beta1.LabelRedisInstanceStatusId,
+						cloudresourcesv1beta1.LabelCloudManaged,
+					),
+					HavingAnnotations(map[string]string{
+						"purpose":     "production-testing",
+						"cost-center": "12345",
+					}),
+				).
+				Should(Succeed(), "expected auth Secret to have updated labels, annotations with replacement semantics")
 		})
 
 		By("And Then auth Secret data includes extraData fields with proper templating", func() {

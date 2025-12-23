@@ -1,8 +1,6 @@
 package cloudresources
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/api"
 
@@ -15,7 +13,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR GcpRedisInstance", func() {
@@ -860,32 +857,24 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 
 		By("Then SKR auth Secret is updated with new labels, annotations, and extraData", func() {
 			// Wait for controller to reconcile the changes
-			Eventually(func() map[string]string {
-				_ = infra.SKR().Client().Get(infra.Ctx(), types.NamespacedName{
-					Name:      authSecretName,
-					Namespace: gcpRedisInstance.Namespace,
-				}, authSecret)
-				userLabels := map[string]string{}
-				for k, v := range authSecret.Labels {
-					if k == "env" || k == "team" {
-						userLabels[k] = v
-					}
-				}
-				return userLabels
-			}).WithTimeout(20 * time.Second).WithPolling(200 * time.Millisecond).Should(And(
-				HaveKeyWithValue("env", "production"),
-				HaveKeyWithValue("team", "platform"),
-				HaveLen(2),
-			))
-			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelRedisInstanceStatusId))
-			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
-
-			// Verify annotations
-			Expect(authSecret.Annotations).To(And(
-				HaveKeyWithValue("purpose", "production-testing"),
-				HaveKeyWithValue("cost-center", "12345"),
-				HaveLen(2),
-			))
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), authSecret,
+					NewObjActions(WithName(authSecretName), WithNamespace(gcpRedisInstance.Namespace)),
+					HavingLabels(map[string]string{
+						"env":  "production",
+						"team": "platform",
+					}),
+					HavingLabelKeys(
+						cloudresourcesv1beta1.LabelRedisInstanceStatusId,
+						cloudresourcesv1beta1.LabelCloudManaged,
+					),
+					HavingAnnotations(map[string]string{
+						"purpose":     "production-testing",
+						"cost-center": "12345",
+					}),
+				).
+				Should(Succeed())
 
 			// Verify extraData
 			Expect(authSecret.Data).To(And(

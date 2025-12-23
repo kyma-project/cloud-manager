@@ -707,43 +707,25 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 				Should(Succeed())
 		})
 
-		By("Then SKR auth Secret is updated with new labels", func() {
-			Eventually(func() map[string]string {
-				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisCluster.Namespace}
-				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
-				if err != nil {
-					return nil
-				}
-				userLabels := map[string]string{}
-				for k, v := range authSecret.Labels {
-					if k == "env" || k == "team" {
-						userLabels[k] = v
-					}
-				}
-				return userLabels
-			}).WithTimeout(20 * time.Second).WithPolling(200 * time.Millisecond).Should(And(
-				HaveKeyWithValue("env", "production"),
-				HaveKeyWithValue("team", "platform"),
-				HaveLen(2),
-			))
-
-			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelRedisClusterStatusId))
-			Expect(authSecret.Labels).To(HaveKey(cloudresourcesv1beta1.LabelCloudManaged))
-		})
-
-		By("And Then SKR auth Secret has new annotations", func() {
-			Eventually(func() map[string]string {
-				secretKey := types.NamespacedName{Name: authSecretName, Namespace: azureRedisCluster.Namespace}
-				err := infra.SKR().Client().Get(infra.Ctx(), secretKey, authSecret)
-				if err != nil {
-					return nil
-				}
-				return authSecret.Annotations
-			}).WithTimeout(20 * time.Second).WithPolling(200 * time.Millisecond).Should(And(
-				HaveKeyWithValue("purpose", "production-testing"),
-				HaveKeyWithValue("cost-center", "12345"),
-				HaveLen(2),
-			))
+		By("Then SKR auth Secret is updated with new labels, annotations, and extraData", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), authSecret,
+					NewObjActions(WithName(authSecretName), WithNamespace(azureRedisCluster.Namespace)),
+					HavingLabels(map[string]string{
+						"env":  "production",
+						"team": "platform",
+					}),
+					HavingLabelKeys(
+						cloudresourcesv1beta1.LabelRedisClusterStatusId,
+						cloudresourcesv1beta1.LabelCloudManaged,
+					),
+					HavingAnnotations(map[string]string{
+						"purpose":     "production-testing",
+						"cost-center": "12345",
+					}),
+				).
+				Should(Succeed())
 		})
 
 		By("And Then auth Secret data includes extraData fields", func() {
