@@ -395,8 +395,10 @@ func main() {
 		mgr,
 		awsiprangeclient.NewClientProvider(),
 		azureiprangeclient.NewClientProvider(),
-		gcpiprangeclient.NewServiceNetworkingClient(),
-		gcpiprangeclient.NewComputeClient(),
+		gcpiprangeclient.NewServiceNetworkingClientProvider(gcpClients),
+		gcpiprangeclient.NewComputeClientProvider(gcpClients),
+		gcpiprangeclient.NewServiceNetworkingClientProviderV2(gcpClients),
+		gcpiprangeclient.NewOldComputeClientProviderV2(gcpClients),
 		sapiprangeclient.NewClientProvider(),
 		env,
 	); err != nil {

@@ -54,6 +54,9 @@ spec:
             properties:
               cidr:
                 type: string
+                x-kubernetes-validations:
+                - message: CIDR is immutable
+                  rule: (self == oldSelf)
               network:
                 description: |-
                   Network is a reference to the network where this IpRange belongs and where it creates subnets.

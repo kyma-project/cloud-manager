@@ -3,11 +3,12 @@ package v2
 import (
 	"context"
 	"encoding/json"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/composed"

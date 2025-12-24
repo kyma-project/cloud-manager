@@ -7,7 +7,7 @@ rm -f $SCRIPT_DIR/crd/bases/_.yaml
 
 echo "Patching CRDs..."
 
-yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.1.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml
+yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.1.2"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.4"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsnfsvolumes.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.6"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsnfsvolumebackups.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.20"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsredisinstances.yaml

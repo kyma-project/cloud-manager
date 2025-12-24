@@ -46,6 +46,7 @@ type IpRangeSpec struct {
 	// +kubebuilder:validation:Required
 	Scope ScopeRef `json:"scope"`
 
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="CIDR is immutable"
 	// +optional
 	Cidr string `json:"cidr"`
 

@@ -1,4 +1,4 @@
-package v2
+package v3
 
 import (
 	"context"
@@ -7,21 +7,19 @@ import (
 	"sync"
 	"testing"
 
-	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
-	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
-
+	"cloud.google.com/go/compute/apiv1/computepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -78,17 +76,17 @@ func (s *testState) ExistingCidrRanges() []string {
 func (s *testState) SetExistingCidrRanges(v []string) {}
 
 type computeClientStubUtils interface {
-	ReturnOnFirstCall(address *compute.Address, err error)
-	ReturnOnSecondCall(address *compute.Address, err error)
+	ReturnOnFirstCall(address *computepb.Address, err error)
+	ReturnOnSecondCall(address *computepb.Address, err error)
 	GetFirstCallName() string
 	GetSecondCallName() string
 	GetCallCount() int
 }
 
 type computeClientStub struct {
-	firstCallAddress  *compute.Address
+	firstCallAddress  *computepb.Address
 	firstCallErr      error
-	secondCallAddress *compute.Address
+	secondCallAddress *computepb.Address
 	secondCallErr     error
 	callCount         int
 	mutex             *sync.Mutex
@@ -96,12 +94,12 @@ type computeClientStub struct {
 	secondCallName    string
 }
 
-func (c *computeClientStub) ReturnOnFirstCall(address *compute.Address, err error) {
+func (c *computeClientStub) ReturnOnFirstCall(address *computepb.Address, err error) {
 	c.firstCallAddress = address
 	c.firstCallErr = err
 }
 
-func (c *computeClientStub) ReturnOnSecondCall(address *compute.Address, err error) {
+func (c *computeClientStub) ReturnOnSecondCall(address *computepb.Address, err error) {
 	c.secondCallAddress = address
 	c.secondCallErr = err
 }
@@ -118,19 +116,23 @@ func (c *computeClientStub) GetCallCount() int {
 	return c.callCount
 }
 
-func (c *computeClientStub) CreatePscIpRange(ctx context.Context, projectId string, vpcName string, name string, description string, address string, prefixLength int64) (*compute.Operation, error) {
+func (c *computeClientStub) CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (string, error) {
 	panic("unimplemented")
 }
 
-func (c *computeClientStub) DeleteIpRange(ctx context.Context, projectId string, name string) (*compute.Operation, error) {
+func (c *computeClientStub) DeleteIpRange(ctx context.Context, projectId, name string) (string, error) {
 	panic("unimplemented")
 }
 
-func (c *computeClientStub) GetGlobalOperation(ctx context.Context, projectId string, operationName string) (*compute.Operation, error) {
+func (c *computeClientStub) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*computepb.Operation, error) {
 	panic("unimplemented")
 }
 
-func (c *computeClientStub) GetIpRange(ctx context.Context, projectId string, name string) (*compute.Address, error) {
+func (c *computeClientStub) WaitGlobalOperation(ctx context.Context, projectId, operationName string) error {
+	panic("unimplemented")
+}
+
+func (c *computeClientStub) GetIpRange(ctx context.Context, projectId, name string) (*computepb.Address, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -147,11 +149,11 @@ func (c *computeClientStub) GetIpRange(ctx context.Context, projectId string, na
 	panic("unexpected call")
 }
 
-func (c *computeClientStub) ListGlobalAddresses(ctx context.Context, projectId string, vpc string) (*compute.AddressList, error) {
+func (c *computeClientStub) ListGlobalAddresses(ctx context.Context, projectId, vpc string) ([]*computepb.Address, error) {
 	panic("unimplemented")
 }
 
-func newComputeClientStub() gcpiprangeclient.OldComputeClient {
+func newComputeClientStub() gcpiprangeclient.ComputeClient {
 	return &computeClientStub{
 		callCount: 0,
 		mutex:     &sync.Mutex{},
@@ -167,14 +169,14 @@ func TestLoadAddress(t *testing.T) {
 		var state *State
 		var scope *cloudcontrolv1beta1.Scope
 		var k8sClient client.WithWatch
-		var address *compute.Address
-		var computeClient gcpiprangeclient.OldComputeClient
+		var address *computepb.Address
+		var computeClient gcpiprangeclient.ComputeClient
 
-		createEmptyGcpIpRangeState := func(k8sClient client.WithWatch, gcpNfsVolume *cloudcontrolv1beta1.IpRange) *State {
+		createEmptyGcpIpRangeState := func(k8sClient client.WithWatch, gcpIpRange *cloudcontrolv1beta1.IpRange) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
 
 			focalState := focal.NewStateFactory().NewState(
-				composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, gcpNfsVolume),
+				composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, gcpIpRange),
 			)
 			focalState.SetScope(scope)
 
@@ -234,8 +236,10 @@ func TestLoadAddress(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			address = &compute.Address{
-				Network: fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork),
+
+			networkUrl := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			address = &computepb.Address{
+				Network: &networkUrl,
 			}
 			computeClient.(computeClientStubUtils).ReturnOnFirstCall(address, nil)
 
@@ -252,8 +256,10 @@ func TestLoadAddress(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			address = &compute.Address{
-				Network: fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork),
+
+			networkUrl := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			address = &computepb.Address{
+				Network: &networkUrl,
 			}
 			computeClient.(computeClientStubUtils).ReturnOnFirstCall(nil, notFoundError)
 			computeClient.(computeClientStubUtils).ReturnOnSecondCall(address, nil)
@@ -272,8 +278,10 @@ func TestLoadAddress(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			address = &compute.Address{
-				Network: "some-other-network",
+
+			otherNetwork := "some-other-network"
+			address = &computepb.Address{
+				Network: &otherNetwork,
 			}
 			computeClient.(computeClientStubUtils).ReturnOnFirstCall(nil, notFoundError)
 			computeClient.(computeClientStubUtils).ReturnOnSecondCall(address, nil)
@@ -309,8 +317,11 @@ func TestLoadAddress(t *testing.T) {
 			setupTest()
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			address = &compute.Address{
-				Network: fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/another-%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork), // note: VPC name is different, but has same suffix
+
+			// VPC name is different but has same suffix
+			networkUrl := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/another-%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			address = &computepb.Address{
+				Network: &networkUrl,
 			}
 			computeClient.(computeClientStubUtils).ReturnOnFirstCall(address, nil)
 

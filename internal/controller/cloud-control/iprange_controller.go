@@ -48,21 +48,31 @@ func SetupIpRangeReconciler(
 	kcpManager manager.Manager,
 	awsProvider awsclient.SkrClientProvider[awsiprangeclient.Client],
 	azureProvider azureclient.ClientProvider[azureiprangeclient.Client],
-	gcpSvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
-	gcpComputeProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient],
+	gcpSvcNetProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	gcpComputeProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
+	gcpV2SvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	gcpV2ComputeProvider gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient],
 	sapProvider sapclient.SapClientProvider[sapiprangeclient.Client],
 	env abstractions.Environment,
 ) error {
 	if env == nil {
 		env = abstractions.NewOSEnvironment()
 	}
+
+	// Create v3 GCP state factory (NEW pattern with clean actions)
+	gcpV3StateFactory := gcpiprange.NewV3StateFactory(gcpSvcNetProvider, gcpComputeProvider)
+
+	// Create v2 GCP state factory (legacy implementation)
+	gcpV2StateFactory := gcpiprange.NewV2StateFactory(gcpV2SvcNetProvider, gcpV2ComputeProvider, env)
+
 	return NewIpRangeReconciler(
 		iprange.NewIPRangeReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			focal.NewStateFactory(),
 			awsiprange.NewStateFactory(awsProvider),
 			azureiprange.NewStateFactory(azureProvider),
-			gcpiprange.NewStateFactory(gcpSvcNetProvider, gcpComputeProvider, env),
+			gcpV3StateFactory,
+			gcpV2StateFactory,
 			sapiprange.NewStateFactory(sapProvider),
 		),
 	).SetupWithManager(ctx, kcpManager)
