@@ -32,7 +32,7 @@ This table lists the parameters of the given resource together with their descri
 
 | Parameter | Type   | Description                                                                          |
 |-----------|--------|--------------------------------------------------------------------------------------|
-| **cidr**  | string | Specifies the CIDR of the IP range that will be allocated. For example, 10.250.4.0/22. This field is **immutable** and cannot be changed after the IpRange is created. |
+| **cidr**  | string | Specifies the CIDR of the IP range that will be allocated. For example, 10.250.4.0/22. |
 
 **Status:**
 
