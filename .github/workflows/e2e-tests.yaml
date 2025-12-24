@@ -33,7 +33,7 @@ jobs:
           PROVIDER=${PROVIDER:-"azure"}
           go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -w
       - name: run e2e tests
-        run: echo "run e2e tests"
+        run: RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test -timeout 0 -v -godog.tags "@skr && @azure" ./e2e/tests/skr/azure/...
       - name: Delete shared instance
         if: always()
         env:
