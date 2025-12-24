@@ -1805,6 +1805,544 @@ infra.AzureMock().SetRedisEnterpriseState(id, "Succeeded")
 infra.AzureMock().DeleteRedisEnterprise(id)
 ```
 
+---
+
+#### Creating Cloud Provider Mocks
+
+Cloud Manager uses a **dual-interface pattern** for mocking cloud provider APIs. Each mock client implements:
+1. **Client Interface** - The actual API operations (matches the real client interface)
+2. **Utils Interface** - Test utilities for manipulating mock state
+
+**Location**: `pkg/kcp/provider/<provider>/mock/`
+
+##### Mock Architecture Overview
+
+**Key Files**:
+- `type.go` - Defines the `Server` interface that aggregates all mocks
+- `server.go` - Implements the `Server` interface, instantiates and composes all mock clients
+- `<service>ClientFake.go` - Individual mock implementations (e.g., `memoryStoreClientFake.go`)
+
+**The Server Interface Pattern** (`type.go`):
+```go
+// Server aggregates all mock functionality
+type Server interface {
+    Clients        // Implements all client interfaces
+    Providers      // Provides client provider functions
+    ClientErrors   // Error injection for testing error scenarios
+    
+    // Utils interfaces for each service (test helpers)
+    MemoryStoreClientFakeUtils
+    MemoryStoreClusterClientFakeUtils
+    RegionalOperationsClientFakeUtils
+    // ... more utils
+}
+```
+
+**Server Implementation Pattern** (`server.go`):
+```go
+func New() Server {
+    regionalOperationsClientfake := &regionalOperationsClientFake{
+        mutex:      sync.Mutex{},
+        operations: map[string]*computepb.Operation{},
+    }
+    
+    return &server{
+        memoryStoreClientFake: &memoryStoreClientFake{
+            mutex:          sync.Mutex{},
+            redisInstances: map[string]*redispb.Instance{},
+        },
+        regionalOperationsClientFake: regionalOperationsClientfake,
+        // ... other mock clients
+    }
+}
+
+// server struct embeds all mock clients
+type server struct {
+    *memoryStoreClientFake
+    *regionalOperationsClientFake
+    // ... other mock clients
+}
+
+// Provider methods return functions that access embedded mocks
+func (s *server) MemoryStoreProviderFake() client.GcpClientProvider[MemorystoreClient] {
+    return func() MemorystoreClient {
+        return s  // Returns server which embeds memoryStoreClientFake
+    }
+}
+```
+
+##### Creating a New Mock Client
+
+**Step 1: Define the Utils Interface**
+
+In your `<service>ClientFake.go` file, define test utilities:
+
+```go
+// memoryStoreClientFake.go
+package mock
+
+import (
+    "context"
+    "sync"
+    "cloud.google.com/go/redis/apiv1/redispb"
+    gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+    "google.golang.org/api/googleapi"
+)
+
+// Utils interface for test manipulation
+type MemoryStoreClientFakeUtils interface {
+    // Get methods - retrieve mock resources by identifier
+    GetMemoryStoreRedisByName(name string) *redispb.Instance
+    
+    // Set methods - modify mock resource state
+    SetMemoryStoreRedisLifeCycleState(name string, state redispb.Instance_State)
+    
+    // Delete methods - remove mock resources
+    DeleteMemorStoreRedisByName(name string)
+}
+```
+
+**Step 2: Implement the Mock Client Struct**
+
+Create a struct with:
+- Thread-safe storage (use `sync.Mutex`)
+- In-memory map to store mock resources
+- References to other mocks if needed (e.g., operations client)
+
+```go
+type memoryStoreClientFake struct {
+    mutex          sync.Mutex
+    redisInstances map[string]*redispb.Instance  // In-memory storage
+}
+```
+
+**Step 3: Implement Utils Interface Methods**
+
+These are **test-only** methods for manipulating mock state:
+
+```go
+func (m *memoryStoreClientFake) GetMemoryStoreRedisByName(name string) *redispb.Instance {
+    m.mutex.Lock()
+    defer m.mutex.Unlock()
+    return m.redisInstances[name]
+}
+
+func (m *memoryStoreClientFake) SetMemoryStoreRedisLifeCycleState(name string, state redispb.Instance_State) {
+    m.mutex.Lock()
+    defer m.mutex.Unlock()
+    if instance, ok := m.redisInstances[name]; ok {
+        instance.State = state
+    }
+}
+
+func (m *memoryStoreClientFake) DeleteMemorStoreRedisByName(name string) {
+    m.mutex.Lock()
+    defer m.mutex.Unlock()
+    delete(m.redisInstances, name)
+}
+```
+
+**Step 4: Implement Client Interface Methods**
+
+These methods **simulate the real cloud provider API**:
+
+```go
+func (m *memoryStoreClientFake) CreateRedisInstance(
+    ctx context.Context, 
+    projectId string, 
+    locationId string, 
+    instanceId string, 
+    options gcpredisinstanceclient.CreateRedisInstanceOptions,
+) error {
+    // Always check for context cancellation first
+    if isContextCanceled(ctx) {
+        return context.Canceled
+    }
+
+    m.mutex.Lock()
+    defer m.mutex.Unlock()
+
+    // Build resource identifier (match real API naming)
+    name := gcpredisinstanceclient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
+    
+    // Create mock resource with initial state
+    redisInstance := &redispb.Instance{
+        Name:              name,
+        State:             redispb.Instance_CREATING,  // Initial state
+        Host:              "192.168.0.1",              // Mock endpoint
+        Port:              6093,
+        ReadEndpoint:      "192.168.24.1",
+        ReadEndpointPort:  5093,
+        MemorySizeGb:      options.MemorySizeGb,
+        RedisConfigs:      options.RedisConfigs,
+        MaintenancePolicy: gcpredisinstanceclient.ToMaintenancePolicy(options.MaintenancePolicy),
+        AuthEnabled:       options.AuthEnabled,
+        RedisVersion:      options.RedisVersion,
+    }
+    
+    m.redisInstances[name] = redisInstance
+    return nil
+}
+
+func (m *memoryStoreClientFake) GetRedisInstance(
+    ctx context.Context, 
+    projectId string, 
+    locationId string, 
+    instanceId string,
+) (*redispb.Instance, *redispb.InstanceAuthString, error) {
+    if isContextCanceled(ctx) {
+        return nil, nil, context.Canceled
+    }
+
+    m.mutex.Lock()
+    defer m.mutex.Unlock()
+
+    name := gcpredisinstanceclient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
+
+    // Return 404 if not found (match real API behavior)
+    instance, ok := m.redisInstances[name]
+    if !ok {
+        return nil, nil, &googleapi.Error{
+            Code:    404,
+            Message: "Not Found",
+        }
+    }
+
+    // Return mock auth string
+    return instance, &redispb.InstanceAuthString{
+        AuthString: "0df0aea4-2cd6-4b9a-900f-a650661e1740",
+    }, nil
+}
+
+func (m *memoryStoreClientFake) UpdateRedisInstance(
+    ctx context.Context, 
+    redisInstance *redispb.Instance, 
+    updateMask []string,
+) error {
+    if isContextCanceled(ctx) {
+        return context.Canceled
+    }
+
+    m.mutex.Lock()
+    defer m.mutex.Unlock()
+
+    // Update only if exists
+    if instance, ok := m.redisInstances[redisInstance.Name]; ok {
+        instance.State = redispb.Instance_UPDATING  // Set updating state
+        
+        // Apply updates based on updateMask (simplified here)
+        instance.MemorySizeGb = redisInstance.MemorySizeGb
+        instance.RedisConfigs = redisInstance.RedisConfigs
+        instance.MaintenancePolicy = redisInstance.MaintenancePolicy
+        instance.AuthEnabled = redisInstance.AuthEnabled
+    }
+
+    return nil
+}
+
+func (m *memoryStoreClientFake) DeleteRedisInstance(
+    ctx context.Context, 
+    projectId string, 
+    locationId string, 
+    instanceId string,
+) error {
+    if isContextCanceled(ctx) {
+        return context.Canceled
+    }
+
+    m.mutex.Lock()
+    defer m.mutex.Unlock()
+
+    name := gcpredisinstanceclient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
+
+    // Set deleting state instead of immediately removing
+    if instance, ok := m.redisInstances[name]; ok {
+        instance.State = redispb.Instance_DELETING
+        return nil
+    }
+
+    return &googleapi.Error{
+        Code:    404,
+        Message: "Not Found",
+    }
+}
+```
+
+**Step 5: Add to Server Interface** (`type.go`)
+
+```go
+type Server interface {
+    Clients
+    Providers
+    ClientErrors
+    
+    MemoryStoreClientFakeUtils  // Add your utils interface
+    // ... other utils
+}
+```
+
+**Step 6: Integrate into Server** (`server.go`)
+
+```go
+func New() Server {
+    return &server{
+        memoryStoreClientFake: &memoryStoreClientFake{
+            mutex:          sync.Mutex{},
+            redisInstances: map[string]*redispb.Instance{},
+        },
+        // ... other mocks
+    }
+}
+
+type server struct {
+    *memoryStoreClientFake  // Embed the mock
+    // ... other mocks
+}
+
+// Add provider method
+func (s *server) MemoryStoreProviderFake() client.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient] {
+    return func() gcpredisinstanceclient.MemorystoreClient {
+        return s  // Server embeds memoryStoreClientFake
+    }
+}
+```
+
+##### Mocking Asynchronous Operations
+
+Many cloud APIs are asynchronous (return operation IDs). Mock these with a separate operations client:
+
+**Example: Regional Operations Mock** (`regionOperationsClientFake.go`):
+
+```go
+type RegionalOperationsClientFakeUtils interface {
+    AddRegionOperation(name string) string
+    GetRegionOperationById(operationId string) *computepb.Operation
+    SetRegionOperationDone(operationId string)
+    SetRegionOperationError(operationId string)
+}
+
+type regionalOperationsClientFake struct {
+    mutex      sync.Mutex
+    operations map[string]*computepb.Operation
+}
+
+func (c *regionalOperationsClientFake) AddRegionOperation(name string) string {
+    c.mutex.Lock()
+    defer c.mutex.Unlock()
+
+    key := name
+    c.operations[key] = &computepb.Operation{
+        Status: computepb.Operation_PENDING.Enum(),
+        Name:   &key,
+    }
+    return name
+}
+
+func (c *regionalOperationsClientFake) GetRegionOperation(
+    ctx context.Context, 
+    request client.GetRegionOperationRequest,
+) (*computepb.Operation, error) {
+    if isContextCanceled(ctx) {
+        return nil, context.Canceled
+    }
+
+    c.mutex.Lock()
+    defer c.mutex.Unlock()
+
+    op, ok := c.operations[request.Name]
+    if !ok {
+        return nil, &googleapi.Error{Code: 404, Message: "Not Found"}
+    }
+
+    return op, nil
+}
+
+func (c *regionalOperationsClientFake) SetRegionOperationDone(operationId string) {
+    c.mutex.Lock()
+    defer c.mutex.Unlock()
+    
+    if op := c.operations[operationId]; op != nil {
+        op.Status = computepb.Operation_DONE.Enum()
+    }
+}
+```
+
+**Using Operations Mock in Resource Mock**:
+
+```go
+type computeClientFake struct {
+    mutex   sync.Mutex
+    subnets map[string]*computepb.Subnetwork
+
+    operationsClientUtils RegionalOperationsClientFakeUtils  // Reference to operations mock
+}
+
+func (c *computeClientFake) CreateSubnet(
+    ctx context.Context, 
+    request client.CreateSubnetRequest,
+) (string, error) {
+    c.mutex.Lock()
+    defer c.mutex.Unlock()
+
+    name := subnet.GetSubnetFullName(request.ProjectId, request.Region, request.Name)
+
+    // Create subnet
+    c.subnets[name] = &computepb.Subnetwork{
+        Name:        &name,
+        Region:      &request.Region,
+        IpCidrRange: &request.Cidr,
+    }
+
+    // Create async operation
+    opKey := c.operationsClientUtils.AddRegionOperation(request.Name)
+    return opKey, nil
+}
+```
+
+##### Using Mocks in Tests
+
+**Example Test Flow**:
+
+```go
+var _ = Describe("Feature: KCP RedisInstance", func() {
+    It("Scenario: KCP GCP RedisInstance is created and deleted", func() {
+        redisInstance := &cloudcontrolv1beta1.RedisInstance{}
+
+        By("When RedisInstance is created", func() {
+            Eventually(CreateRedisInstance).
+                WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
+                    WithName(name),
+                    WithKcpGcpRedisInstanceMemorySizeGb(5),
+                ).Should(Succeed())
+        })
+
+        var memorystoreRedisInstance *redispb.Instance
+        
+        By("Then GCP Redis is created", func() {
+            Eventually(LoadAndCheck).
+                WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
+                    NewObjActions(),
+                    HavingRedisInstanceStatusId()).
+                Should(Succeed())
+            
+            // Use Utils interface to get mock resource
+            memorystoreRedisInstance = infra.GcpMock().GetMemoryStoreRedisByName(
+                redisInstance.Status.Id,
+            )
+            Expect(memorystoreRedisInstance).NotTo(BeNil())
+        })
+
+        By("When GCP Redis becomes Available", func() {
+            // Use Utils interface to modify mock state
+            infra.GcpMock().SetMemoryStoreRedisLifeCycleState(
+                memorystoreRedisInstance.Name, 
+                redispb.Instance_READY,
+            )
+        })
+
+        By("Then RedisInstance has Ready condition", func() {
+            Eventually(LoadAndCheck).
+                WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
+                    NewObjActions(),
+                    HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+                ).Should(Succeed())
+        })
+
+        // DELETE
+
+        By("When RedisInstance is deleted", func() {
+            Eventually(Delete).
+                WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance).
+                Should(Succeed())
+        })
+
+        By("And When GCP Redis is deleted", func() {
+            // Use Utils interface to remove mock resource
+            infra.GcpMock().DeleteMemorStoreRedisByName(memorystoreRedisInstance.Name)
+        })
+
+        By("Then RedisInstance does not exist", func() {
+            Eventually(IsDeleted).
+                WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance).
+                Should(Succeed())
+        })
+    })
+})
+```
+
+##### Mock Design Best Practices
+
+1. **Thread Safety**: Always use `sync.Mutex` and lock/unlock around map operations
+   ```go
+   func (m *mock) Operation() {
+       m.mutex.Lock()
+       defer m.mutex.Unlock()
+       // ... operations
+   }
+   ```
+
+2. **Context Cancellation**: Check context at the start of every method
+   ```go
+   if isContextCanceled(ctx) {
+       return context.Canceled
+   }
+   ```
+
+3. **Match Real API Behavior**:
+   - Return same error types (`googleapi.Error` with proper codes)
+   - Use realistic state transitions (CREATING → READY → UPDATING → DELETING)
+   - Return 404 for non-existent resources
+   - Generate mock endpoints/IPs that look realistic
+
+4. **State Transitions**: Model asynchronous behavior correctly
+   ```go
+   // On Create: Set CREATING state
+   instance.State = redispb.Instance_CREATING
+   
+   // Test manually transitions to READY
+   infra.GcpMock().SetMemoryStoreRedisLifeCycleState(name, redispb.Instance_READY)
+   
+   // On Delete: Set DELETING state (don't immediately remove)
+   instance.State = redispb.Instance_DELETING
+   
+   // Test manually removes the resource
+   infra.GcpMock().DeleteMemorStoreRedisByName(name)
+   ```
+
+5. **Naming Consistency**: Use the same name construction as real client
+   ```go
+   name := gcpredisinstanceclient.GetGcpMemoryStoreRedisName(projectId, locationId, instanceId)
+   ```
+
+6. **Utils vs Client Interface Separation**:
+   - **Client Interface**: Methods the reconciler calls (Create, Get, Update, Delete)
+   - **Utils Interface**: Methods tests call to manipulate mock state (GetByName, SetState, Delete)
+   - Keep them separate - don't expose test utilities through the client interface
+
+7. **Async Operations Pattern**: For resources with long-running operations:
+   - Create separate operations mock
+   - Resource creation returns operation ID
+   - Test waits for operation completion by checking operation status
+   - Test explicitly marks operation as done
+
+##### Checklist for New Mock Client
+
+- [ ] Create `<service>ClientFake.go` file in `pkg/kcp/provider/<provider>/mock/`
+- [ ] Define `<Service>ClientFakeUtils` interface with test utilities
+- [ ] Implement mock struct with `sync.Mutex` and storage map
+- [ ] Implement all Utils interface methods (Get, Set, Delete)
+- [ ] Implement all Client interface methods (CRUD operations)
+- [ ] Check context cancellation in every method
+- [ ] Return appropriate errors (404 for not found, etc.)
+- [ ] Model async state transitions correctly
+- [ ] Add Utils interface to `Server` interface in `type.go`
+- [ ] Embed mock struct in `server` struct in `server.go`
+- [ ] Initialize mock in `New()` function in `server.go`
+- [ ] Add provider method to `server` struct
+- [ ] Write tests using both client and utils interfaces
+
+---
+
 #### DSL Helpers
 
 **Location**: `pkg/testinfra/dsl/`
