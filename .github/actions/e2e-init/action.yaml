@@ -18,7 +18,7 @@ runs:
       shell: bash
       run: |
         cat <<EOF > e2e-config.yaml
-        gardenKubeconfig: kubeconfig-garden.yaml
+        gardenKubeconfig: $PWD/kubeconfig-garden.yaml
         shootPrefix: pp
         kcpNamespace: kcp-system
         gardenNamespace: garden-spm-test01
