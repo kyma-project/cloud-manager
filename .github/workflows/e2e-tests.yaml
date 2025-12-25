@@ -48,7 +48,7 @@ jobs:
           KUBECONFIG: ./tmp/kubeconfig-shared-${{ env.PROVIDER }}.yaml
         run: |
           echo $KUBECONFIG
-          la -la ./tmp
+          ls -la ./tmp
           RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/azure/... -timeout 0 -v -godog.tags "@skr && @azure"
       - name: Delete shared instance
         if: always()
