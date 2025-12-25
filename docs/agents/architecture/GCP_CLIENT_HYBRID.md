@@ -52,7 +52,7 @@ Some GCP APIs lack modern Cloud Client Libraries:
 
 ## IpRange Client Structure
 
-**Location**: [pkg/kcp/provider/gcp/iprange/client/](../../../../pkg/kcp/provider/gcp/iprange/client/)
+**Location**: `pkg/kcp/provider/gcp/iprange/client/`
 
 ### Compute Client (NEW Pattern)
 

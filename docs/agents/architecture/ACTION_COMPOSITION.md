@@ -178,7 +178,7 @@ func waitResourceReady(ctx context.Context, st composed.State) (error, context.C
 
 ### Pattern 4: Declarative Status Update
 
-**Location**: [pkg/composed/updatestatus.go](../../../pkg/composed/updatestatus.go)
+**Location**: [pkg/composed/updateStatus.go](../../../pkg/composed/updateStatus.go)
 
 ```go
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {

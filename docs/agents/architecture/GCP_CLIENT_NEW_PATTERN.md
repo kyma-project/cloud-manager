@@ -15,7 +15,7 @@
 ## Pattern Status
 
 **Status**: ✅ **REQUIRED FOR ALL NEW GCP RESOURCES**  
-**Location**: [pkg/kcp/provider/gcp/client/gcpClients.go](../../../../pkg/kcp/provider/gcp/client/gcpClients.go)  
+**Location**: `pkg/kcp/provider/gcp/client/gcpClients.go`  
 **Examples**: GcpSubnet, GcpRedisCluster, GcpNfsVolume
 
 ## Rules: GCP Client NEW Pattern
@@ -56,7 +56,7 @@
 
 ## GcpClients Structure
 
-**Location**: [pkg/kcp/provider/gcp/client/gcpClients.go](../../../../pkg/kcp/provider/gcp/client/gcpClients.go)
+**Location**: `pkg/kcp/provider/gcp/client/gcpClients.go`
 
 ```go
 type GcpClients struct {

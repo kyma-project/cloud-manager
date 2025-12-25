@@ -15,7 +15,7 @@
 ## Pattern Status
 
 **Status**: ⚠️ **LEGACY - DO NOT USE FOR NEW CODE**  
-**Location**: [pkg/kcp/provider/gcp/client/provider.go](../../../../pkg/kcp/provider/gcp/client/provider.go)  
+**Location**: `pkg/kcp/provider/gcp/client/provider.go`  
 **Used By**: NfsInstance, NfsBackup, NfsRestore (legacy only)
 
 ## Rules: OLD Pattern
