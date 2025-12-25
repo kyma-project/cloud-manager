@@ -45,7 +45,7 @@ jobs:
           go run ./e2e/cmd instance credentials dump -a shared-$PROVIDER > ./tmp/kubeconfig-shared-$PROVIDER.yaml
       - name: run e2e tests
         env:
-          KUBECONFIG: $PWD/tmp/kubeconfig-shared-${{ env.PROVIDER }}.yaml
+          KUBECONFIG: $PWD/tmp/kubeconfig-kcp.yaml
         run: |
           echo $KUBECONFIG
           ls -la ./tmp
