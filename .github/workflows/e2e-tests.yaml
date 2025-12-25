@@ -25,22 +25,33 @@ jobs:
           GARDENER_KUBECONFIG: ${{ secrets.GARDENER_KUBECONFIG }}
           OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
           OIDC_ISSUER_URL: ${{ vars.OIDC_ISSUER_URL }}
+      - name: Set provider env var
+        run: |
+          PROVIDER=${{ inputs.provider }}
+          PROVIDER=${PROVIDER:-"azure"}
+          echo "PROVIDER=$PROVIDER" >> $GITHUB_ENV
+      - name: Break if provider is empty
+        if: ${{ env.PROVIDER == '' }}
+        run: echo "PROVIDER is missing or empty!" && exit 1
       - name: Create shared instance
         env:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
-          PROVIDER=${{ inputs.provider }}
-          PROVIDER=${PROVIDER:-"azure"}
           go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -t 30m -w
+      - name: Download kubeconfig of the shared instance
+        env:
+          KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
+        run: |
+          go run ./e2e/cmd instance creadentials dump -a shared-$PROVIDER > ./tmp/kubeconfig-shared-$PROVIDER.yaml
       - name: run e2e tests
+        env:
+          KUBECONFIG: ./tmp/kubeconfig-shared-${{ env.PROVIDER }}.yaml
         run: RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/azure/... -timeout 0 -v -godog.tags "@skr && @azure"
       - name: Delete shared instance
         if: always()
         env:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
-          PROVIDER=${{ inputs.provider }}
-          PROVIDER=${PROVIDER:-"azure"}
           go run ./e2e/cmd instance delete -a shared-$PROVIDER -t 30m -w
       - name: Destroy E2E environment
         if: always()
