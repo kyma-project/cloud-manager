@@ -4,17 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
-	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
@@ -25,6 +20,32 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		awsAccountId    = "974658265573"
 		toleranceWindow = 120 * time.Second
 	)
+
+	It("Scenario: Creates recurring backup schedule with existing backups", func() {
+		var (
+			suffix             string
+			skrNfsVolumeName   string
+			nfsInstanceName    string
+			awsNfsId           string
+			scheduleName       string
+			existingBackupName string
+		)
+
+		// This ensures each parallel test run has different resource names
+		suffix = fmt.Sprintf("recurring-%d", GinkgoParallelProcess())
+		skrNfsVolumeName = fmt.Sprintf("aws-vol-%s", suffix)
+		nfsInstanceName = fmt.Sprintf("aws-inst-%s", suffix)
+		awsNfsId = fmt.Sprintf("fs-%s", suffix)
+		scheduleName = fmt.Sprintf("aws-schedule-%s", suffix)
+		existingBackupName = fmt.Sprintf("aws-backup-existing-%s", suffix)
+
+		// TODO: Add rest of scenario
+		_ = skrNfsVolumeName
+		_ = nfsInstanceName
+		_ = awsNfsId
+		_ = scheduleName
+		_ = existingBackupName
+	})
 
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
 
