@@ -32,13 +32,15 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 	awsNfsId := "aws-filesystem-01"
 	scope := &cloudcontrolv1beta1.Scope{}
 
+	awsAccountId := "974658265573"
+
 	BeforeEach(func() {
 		By("Given KCP Scope exists", func() {
 
 			// Given Scope exists
-			Eventually(GivenScopeAwsExists).
+			Eventually(CreateScopeAws).
 				WithArguments(
-					infra.Ctx(), infra, scope,
+					infra.Ctx(), infra, scope, awsAccountId,
 					WithName(infra.SkrKymaRef().Name),
 				).
 				Should(Succeed())

@@ -19,12 +19,14 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 	skrAwsNfsVolumeBackupName := "restore-aws-nfs-volume-backup-01"
 	skrAwsNfsVolumeBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 
+	awsAccountId := "382492127"
+
 	BeforeEach(func() {
 		By("Given KCP Scope exists", func() {
 			// Given Scope exists
-			Eventually(GivenScopeAwsExists).
+			Eventually(CreateScopeAws).
 				WithArguments(
-					infra.Ctx(), infra, scope,
+					infra.Ctx(), infra, scope, awsAccountId,
 					WithName(infra.SkrKymaRef().Name),
 				).
 				Should(Succeed())

@@ -255,6 +255,9 @@ spec:
                 type: array
               id:
                 type: string
+              observedGeneration:
+                format: int64
+                type: integer
               opIdentifier:
                 description: Operation Identifier to track the Hyperscaler Operation
                 type: string

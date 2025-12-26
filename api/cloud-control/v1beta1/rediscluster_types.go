@@ -18,7 +18,6 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type RedisClusterAzure struct {
@@ -123,6 +122,9 @@ type RedisClusterStatus struct {
 	Id string `json:"id,omitempty"`
 
 	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// +optional
 	DiscoveryEndpoint string `json:"discoveryEndpoint,omitempty"`
 
 	// +optional
@@ -163,36 +165,20 @@ func (in *RedisCluster) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
+func (in *RedisCluster) ObservedGeneration() int64 {
+	return in.Status.ObservedGeneration
+}
+
+func (in *RedisCluster) SetObservedGeneration(v int64) {
+	in.Status.ObservedGeneration = v
+}
+
 func (in *RedisCluster) State() string {
 	return string(in.Status.State)
 }
 
 func (in *RedisCluster) SetState(v string) {
 	in.Status.State = StatusState(v)
-}
-
-func (in *RedisCluster) GetObjectMeta() *metav1.ObjectMeta {
-	return &in.ObjectMeta
-}
-
-func (in *RedisCluster) CloneForPatchStatus() client.Object {
-	result := &RedisCluster{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "RedisCluster",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
-	}
-
-	if result.Status.Conditions == nil {
-		result.Status.Conditions = []metav1.Condition{}
-	}
-
-	return result
 }
 
 func (in *RedisCluster) SetStatusStateToReady() {

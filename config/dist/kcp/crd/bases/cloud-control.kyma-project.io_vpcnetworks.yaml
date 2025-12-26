@@ -52,6 +52,9 @@ spec:
                 type: string
               subscription:
                 type: string
+              type:
+                default: kyma
+                type: string
             required:
             - cidrBlocks
             - region

@@ -66,7 +66,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 			Expect(CreateObj(infra.Ctx(), infra.Garden().Client(), secret)).To(Succeed())
 		})
 
-		By("Given Garden SecretBinding exists", func() {
+		By("Given Garden CredentialsBinding exists", func() {
 			Expect(CreateObj(infra.Ctx(), infra.Garden().Client(), credentialBinding)).To(Succeed())
 		})
 
@@ -84,11 +84,14 @@ var _ = Describe("Feature: KCP Subscription", func() {
 			subscriptionName = "1c3a1ec7-3558-467b-a127-25da69fc1887"
 		)
 
-		awsAccountId := infra.AwsMock().GetAccount()
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
+		awsAccountId := awsAccount.AccountId()
 
 		secret, credentialsBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
-			"accessKeyID":     []byte("some-key-id"),
-			"secretAccessKey": []byte("some-secret-access-key"),
+			"accessKeyID":     []byte(awsAccount.Credentials().AccessKeyId),
+			"secretAccessKey": []byte(awsAccount.Credentials().SecretAccessKey),
 		})
 
 		By("When KCP Subscription is created", func() {
@@ -98,7 +101,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 		By("Then KCP Subscription is Ready", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions(),
-					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeSubscription)).
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
 				Should(Succeed())
 		})
 
@@ -137,14 +140,16 @@ var _ = Describe("Feature: KCP Subscription", func() {
 		const (
 			provider         = cloudcontrolv1beta1.ProviderAws
 			subscriptionName = "f5591f18-a6d0-4864-b08c-5a874023be2e"
-			awsAccountId     = "227b765f-f4bb-480f-b205-7aef384fd712"
 		)
 
-		infra.AwsMock().SetAccount(awsAccountId)
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
+		awsAccountId := awsAccount.AccountId()
 
 		secret, secretBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
-			"accessKeyID":     []byte("some-key-id"),
-			"secretAccessKey": []byte("some-secret-access-key"),
+			"accessKeyID":     []byte(awsAccount.Credentials().AccessKeyId),
+			"secretAccessKey": []byte(awsAccount.Credentials().SecretAccessKey),
 		})
 
 		By("When KCP Subscription is created", func() {
@@ -154,7 +159,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 		By("Then KCP Subscription is Ready", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions(),
-					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeSubscription)).
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
 				Should(Succeed())
 		})
 
@@ -228,7 +233,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 		})
 
 		By("Then KCP Subscription has condition Subscription Unknown Deleting", func() {
-			cond := meta.FindStatusCondition(subscription.Status.Conditions, cloudcontrolv1beta1.ConditionTypeSubscription)
+			cond := meta.FindStatusCondition(subscription.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
 			Expect(cond.Status).To(Equal(metav1.ConditionUnknown))
 			Expect(cond.Reason).To(Equal(cloudcontrolv1beta1.ReasonDeleting))
 		})
@@ -274,7 +279,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 		By("Then KCP Subscription is Ready", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions(),
-					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeSubscription)).
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
 				Should(Succeed())
 		})
 
@@ -328,7 +333,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 		By("Then KCP Subscription is Ready", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions(),
-					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeSubscription)).
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
 				Should(Succeed())
 		})
 

@@ -32,11 +32,6 @@ type ObjWithCloneForPatch interface {
 	CloneForPatch() client.Object
 }
 
-type ObjWithCloneForPatchStatus interface {
-	ObjWithConditions
-	CloneForPatchStatus() client.Object
-}
-
 type ObjWithDeriveStateFromConditions interface {
 	ObjWithConditions
 	DeriveStateFromConditions() (changed bool)

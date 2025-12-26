@@ -1,21 +1,29 @@
 package mock
 
+var _ AccountRegion = (*accountRegionStore)(nil)
+
 type accountRegionStore struct {
 	*vpcStore
 	*nfsStore
 	*vpcPeeringStore
 	*elastiCacheClientFake
 	*routeTablesStore
-	*scopeStore
+
+	region string
 }
 
 func newAccountRegionStore(account, region string) *accountRegionStore {
 	return &accountRegionStore{
-		scopeStore:            &scopeStore{account: account},
-		vpcStore:              newVpcStore(account, region),
+		region: region,
+
+		vpcStore:              newVpcStore(),
 		vpcPeeringStore:       newVpcPeeringStore(),
 		elastiCacheClientFake: newElastiCacheClientFake(),
 		nfsStore:              &nfsStore{},
 		routeTablesStore:      &routeTablesStore{},
 	}
+}
+
+func (s *accountRegionStore) Region() string {
+	return s.region
 }

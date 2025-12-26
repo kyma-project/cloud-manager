@@ -27,17 +27,20 @@ var _ = Describe("Feature: KCP Scope", func() {
 			kymaName = "5d60be8c-e422-48ff-bd0a-166b0e09dc58"
 		)
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
 
 		shoot := &gardenertypes.Shoot{}
 
 		By("Given Shoot exists", func() {
 			Eventually(CreateShootAws).
-				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
+				WithArguments(infra.Ctx(), infra, shoot, awsAccount.Credentials(), WithName(kymaName)).
 				Should(Succeed(), "failed creating garden shoot for AWS")
 		})
 
-		awsMock := infra.AwsMock().MockConfigs(infra.AwsMock().GetAccount(), shoot.Spec.Region)
+		awsMock := awsAccount.Region(shoot.Spec.Region)
 
 		var awsCreatedInfra *AwsGardenerInfra
 
@@ -104,7 +107,7 @@ var _ = Describe("Feature: KCP Scope", func() {
 		By("And Then Scope has spec.scope.aws.accountId", func() {
 			Expect(scope.Spec.Scope.Aws).NotTo(BeNil())
 			Expect(scope.Spec.Scope.Aws.AccountId).NotTo(BeEmpty())
-			Expect(scope.Spec.Scope.Aws.AccountId).To(Equal(infra.AwsMock().GetAccount()))
+			Expect(scope.Spec.Scope.Aws.AccountId).To(Equal(awsAccount.AccountId()))
 		})
 
 		By("And Then Scope has vpc network name", func() {

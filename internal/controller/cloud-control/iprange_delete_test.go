@@ -35,17 +35,20 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 			nfsInstanceName = "40133258-d90b-497a-9b43-1281df9ed82d"
 		)
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpscope.Ignore.AddName(kymaName)
 
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName))).
 				To(Succeed())
 		})
 
-		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMock := awsAccount.Region(scope.Spec.Region)
 
 		By("And Given AWS VPC exists", func() {
 			var _ *ec2types.Vpc
@@ -180,17 +183,20 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 			redisInstanceName = "82a3bd14-6806-43ae-b702-0a77f811a918"
 		)
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpscope.Ignore.AddName(kymaName)
 
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName))).
 				To(Succeed())
 		})
 
-		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMock := awsAccount.Region(scope.Spec.Region)
 
 		By("And Given AWS VPC exists", func() {
 			var _ *ec2types.Vpc
@@ -326,17 +332,20 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 			redisClusterName = "635dea3f-1603-48ed-b8c4-9b223f6ea0e8"
 		)
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpscope.Ignore.AddName(kymaName)
 
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName))).
 				To(Succeed())
 		})
 
-		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMock := awsAccount.Region(scope.Spec.Region)
 
 		By("And Given AWS VPC exists", func() {
 			var _ *ec2types.Vpc

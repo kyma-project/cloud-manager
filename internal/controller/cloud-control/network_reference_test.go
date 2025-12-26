@@ -23,24 +23,26 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 	It("Scenario: Network reference is created and deleted", func() {
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		kymaName := "0b10bb9c-a727-4f5b-8d64-803110402586"
 		scope := &cloudcontrolv1beta1.Scope{}
 		netObjName := "bacd3153-ecd4-4666-86de-067f94aaae53"
 		var net *cloudcontrolv1beta1.Network
 
-		awsAccount := "acc-123"
 		awsRegion := "us-east-1"
 		netId := "net-345"
 		netName := "my-net"
 
 		By("Given Scope exists", func() {
 			kcpscope.Ignore.AddName(kymaName)
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName))).
 				To(Succeed())
 		})
 
 		By("When Network reference is created", func() {
-			net = cloudcontrolv1beta1.NewNetworkBuilder().WithAwsRef(awsAccount, awsRegion, netId, netName).Build()
+			net = cloudcontrolv1beta1.NewNetworkBuilder().WithAwsRef(awsAccount.AccountId(), awsRegion, netId, netName).Build()
 			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), net, WithName(netObjName), WithScope(kymaName))).
 				To(Succeed())
 		})
@@ -87,6 +89,10 @@ var _ = Describe("Feature: KCP Network reference", func() {
 	})
 
 	It("Scenario: Network reference can not be deleted when used by IpRange", func() {
+
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		kymaName := "19cf354a-aa43-4e53-aad7-23b2428e2eb4"
 		scope := &cloudcontrolv1beta1.Scope{}
 		netObjName := "47619a11-7259-43fe-ba26-94c5e6260f02"
@@ -95,7 +101,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("Given Scope exists", func() {
 			kcpscope.Ignore.AddName(kymaName)
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName))).
 				To(Succeed())
 		})
 
@@ -179,7 +185,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("Given Scope exists", func() {
 			kcpscope.Ignore.AddName(kymaName)
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+			Expect(CreateScopeGcp(infra.Ctx(), infra, scope, WithName(kymaName))).
 				To(Succeed())
 		})
 
@@ -256,6 +262,9 @@ var _ = Describe("Feature: KCP Network reference", func() {
 	})
 
 	It("Scenario: Network reference can not be deleted when used by VpcPeering local network", func() {
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		kymaName := "a4797ac1-25b2-4853-97ae-72dbc8e10828"
 		scope := &cloudcontrolv1beta1.Scope{}
 		localNetworkName := "ef40f1bf-c8b4-47bb-ba83-ddba69abdefc"
@@ -266,7 +275,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("Given Scope exists", func() {
 			kcpscope.Ignore.AddName(kymaName)
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName))).
 				To(Succeed())
 		})
 
@@ -363,6 +372,9 @@ var _ = Describe("Feature: KCP Network reference", func() {
 	})
 
 	It("Scenario: Network reference can not be deleted when used by VpcPeering remote network", func() {
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		kymaName := "0d79b58f-16e8-401c-b363-10f4d81d36e9"
 		scope := &cloudcontrolv1beta1.Scope{}
 		localNetworkName := "2c9ae7bc-73f6-494e-ae8b-f9a8e3e733ec"
@@ -373,7 +385,7 @@ var _ = Describe("Feature: KCP Network reference", func() {
 
 		By("Given Scope exists", func() {
 			kcpscope.Ignore.AddName(kymaName)
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, WithName(kymaName))).
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName))).
 				To(Succeed())
 		})
 

@@ -10,6 +10,7 @@ import (
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerapisecurity "github.com/gardener/gardener/pkg/apis/security/v1alpha1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -60,7 +61,7 @@ func CreateGardenerCredentials(ctx context.Context, infra testinfra.Infra) error
 	return nil
 }
 
-func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenerapicore.Shoot, opts ...ObjAction) error {
+func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenerapicore.Shoot, awsCredentials awsmock.AccountCredential, opts ...ObjAction) error {
 	// KCP Gardener-credentials secret
 	if err := CreateGardenerCredentials(ctx, infra); err != nil {
 		return err
@@ -183,8 +184,8 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 		secret := &corev1.Secret{}
 		actions.ApplyOnObject(secret)
 		secret.StringData = map[string]string{
-			"accessKeyID":     "accessKeyID",
-			"secretAccessKey": "secretAccessKey",
+			"accessKeyID":     awsCredentials.AccessKeyId,
+			"secretAccessKey": awsCredentials.SecretAccessKey,
 		}
 
 		err := infra.Garden().Client().Create(ctx, secret)

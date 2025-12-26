@@ -22,15 +22,28 @@ type NfsClient interface {
 	awsnfsinstanceclient.Client
 }
 
+type ElastiCacheClient interface {
+	awsclient.ElastiCacheClient
+}
+
 type ScopeClient interface {
 	scopeclient.AwsStsClient
+}
+
+type SubscriptionClient interface {
+	subscriptionclient.AwsStsClient
+}
+
+type ExposedDataClient interface {
+	awsexposeddataclient.Client
 }
 
 type Clients interface {
 	IpRangeClient
 	NfsClient
 	VpcPeeringClient
-	awsclient.ElastiCacheClient
+	ElastiCacheClient
+	ExposedDataClient
 }
 
 type Providers interface {
@@ -54,13 +67,15 @@ type Configs interface {
 type AccountRegion interface {
 	Clients
 	Configs
+
+	Region() string
 }
 
 type Server interface {
 	Providers
 
-	ScopeClient
-	ScopeConfig
+	NewAccount() Account
+	Login(key, secret string) (Account, error)
 
-	MockConfigs(account, region string) AccountRegion
+	XXX_MockConfigs(account, region string) AccountRegion
 }
