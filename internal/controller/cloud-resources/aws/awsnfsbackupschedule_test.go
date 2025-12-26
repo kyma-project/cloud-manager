@@ -186,6 +186,25 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		})
 	})
 
+	It("Scenario: Creates one-time backup schedule", func() {
+		var (
+			suffix           string
+			skrNfsVolumeName string
+			nfsInstanceName  string
+			awsNfsId         string
+			scheduleName     string
+		)
+
+		// Unique naming for parallel test runs
+		suffix = fmt.Sprintf("onetime-%d", GinkgoParallelProcess())
+		skrNfsVolumeName = fmt.Sprintf("aws-vol-%s", suffix)
+		nfsInstanceName = fmt.Sprintf("aws-inst-%s", suffix)
+		awsNfsId = fmt.Sprintf("fs-%s", suffix)
+		scheduleName = fmt.Sprintf("aws-schedule-%s", suffix)
+
+		// TODO: Add object initialization
+	})
+
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
 
 		//Define variables.
