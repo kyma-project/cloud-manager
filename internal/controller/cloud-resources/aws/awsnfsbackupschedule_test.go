@@ -59,13 +59,14 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			},
 		}
 
-		// Setup cleanup - prevents resource leaks
 		DeferCleanup(func() {
-			_ = Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)
-			_ = Delete(infra.Ctx(), infra.SKR().Client(), existingBackup)
-			_ = Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)
-			_ = Delete(infra.Ctx(), infra.KCP().Client(), nfsInstance)
-			_ = Delete(infra.Ctx(), infra.KCP().Client(), scope)
+			By("Cleanup: Delete test resources", func() {
+				_ = Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)
+				_ = Delete(infra.Ctx(), infra.SKR().Client(), existingBackup)
+				_ = Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)
+				_ = Delete(infra.Ctx(), infra.KCP().Client(), nfsInstance)
+				_ = Delete(infra.Ctx(), infra.KCP().Client(), scope)
+			})
 		})
 
 		// Set tolerance for backup schedule timing
@@ -212,9 +213,11 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		backupSchedule = &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
 
 		DeferCleanup(func() {
-			_ = Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)
-			_ = Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)
-			_ = Delete(infra.Ctx(), infra.KCP().Client(), scope)
+			By("Cleanup: Delete test resources", func() {
+				_ = Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)
+				_ = Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)
+				_ = Delete(infra.Ctx(), infra.KCP().Client(), scope)
+			})
 		})
 
 		// Set tolerance and stop reconciliation
