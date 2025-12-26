@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
@@ -19,82 +20,11 @@ import (
 var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 
 	const (
-		interval = time.Millisecond * 50
+		interval        = time.Millisecond * 50
+		timeout         = time.Second * 20
+		awsAccountId    = "974658265573"
+		toleranceWindow = 120 * time.Second
 	)
-	var (
-		timeout = time.Second * 20
-	)
-	var now time.Time
-	var skrNfsVolumeName string
-	var skrNfsVolume *cloudresourcesv1beta1.AwsNfsVolume
-	var nfsInstanceName string
-	var nfsInstance *cloudcontrolv1beta1.NfsInstance
-	var awsNfsId string
-	var scope *cloudcontrolv1beta1.Scope
-
-	awsAccountId := "974658265573"
-
-	BeforeEach(func() {
-		By("Given KCP Scope exists", func() {
-			now = time.Now().UTC()
-			skrNfsVolumeName = uuid.NewString()
-			skrNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{}
-			nfsInstanceName = uuid.NewString()
-			nfsInstance = &cloudcontrolv1beta1.NfsInstance{}
-			awsNfsId = uuid.NewString()
-			scope = &cloudcontrolv1beta1.Scope{}
-
-			Expect(client.IgnoreAlreadyExists(
-				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
-				To(Succeed())
-		})
-
-		By("And Given SKR AwsNfsVolume exists", func() {
-			skrawsnfsvol.Ignore.AddName(skrNfsVolumeName)
-			//Create SKR AwsNfsVolume if it doesn't exist.
-			Eventually(GivenAwsNfsVolumeExists).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), skrNfsVolume,
-					WithName(skrNfsVolumeName),
-					WithAwsNfsVolumeCapacity("1Gi"),
-				).
-				Should(Succeed())
-		})
-		By("And Given KCP NfsInstance exists", func() {
-			nfsinstance.Ignore.AddName(nfsInstanceName)
-			Eventually(GivenNfsInstanceExists).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
-					WithName(nfsInstanceName),
-					WithRemoteRef(skrNfsVolumeName),
-					WithScope(infra.SkrKymaRef().Name),
-					WithIpRange(nfsInstanceName),
-					WithNfsInstanceAws(),
-				).
-				Should(Succeed(), "failed creating NfsInstance")
-		})
-		By("And Given NfsInstance is in Ready state", func() {
-
-			//Update KCP NfsInstance status to Ready
-			Eventually(UpdateStatus).
-				WithArguments(
-					infra.Ctx(), infra.KCP().Client(), nfsInstance,
-					WithConditions(KcpReadyCondition()),
-					WithNfsInstanceStatusId(awsNfsId),
-				).
-				Should(Succeed())
-		})
-		By("And Given AwsNfsVolume is in Ready state", func() {
-
-			//Update KCP NfsInstance status to Ready
-			Eventually(UpdateStatus).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), skrNfsVolume,
-					WithConditions(SkrReadyCondition()),
-					WithAwsNfsVolumeStatusId(nfsInstanceName),
-				).
-				Should(Succeed())
-		})
-	})
 
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
 
