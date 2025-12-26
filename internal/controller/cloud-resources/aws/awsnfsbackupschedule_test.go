@@ -12,7 +12,9 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -130,7 +132,58 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				Should(Succeed())
 		})
 
-		// TODO: Add When and Then steps
+		By("When AwsNfsBackupSchedule is created", func() {
+			Eventually(CreateAwsNfsBackupSchedule).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule,
+					WithName(scheduleName),
+					WithNfsVolumeRef(skrNfsVolumeName),
+					WithSchedule("* * * * *"), // Every minute
+				).
+				Should(Succeed())
+		})
+
+		By("Then AwsNfsBackupSchedule has Active state", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule,
+					NewObjActions(),
+					HavingState(string(cloudresourcesv1beta1.JobStateActive)),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then AwsNfsBackupSchedule has Ready condition", func() {
+			Expect(backupSchedule.Status.Conditions).To(ContainElement(MatchFields(IgnoreExtras, Fields{
+				"Type":   Equal(cloudresourcesv1beta1.ConditionTypeReady),
+				"Status": Equal(metav1.ConditionTrue),
+			})))
+		})
+
+		By("And Then AwsNfsBackupSchedule has NextRun times populated", func() {
+			Expect(len(backupSchedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
+		})
+
+		By("And Then scheduled AwsNfsVolumeBackup is created", func() {
+			Eventually(func() error {
+				list := &cloudresourcesv1beta1.AwsNfsVolumeBackupList{}
+				err := infra.SKR().Client().List(infra.Ctx(), list)
+				if err != nil {
+					return err
+				}
+				// Should have 2 backups: existing + scheduled
+				if len(list.Items) != 2 {
+					return fmt.Errorf("expected 2 backups, got %d", len(list.Items))
+				}
+				return nil
+			}, timeout).Should(Succeed())
+		})
+
+		By("And Then existing AwsNfsVolumeBackup still exists", func() {
+			err := infra.SKR().Client().Get(infra.Ctx(), types.NamespacedName{
+				Namespace: existingBackup.Namespace,
+				Name:      existingBackup.Name,
+			}, existingBackup)
+			Expect(err).ToNot(HaveOccurred())
+		})
 	})
 
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
