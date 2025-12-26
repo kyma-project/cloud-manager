@@ -39,7 +39,7 @@ type stateImpl struct {
 	subscription       *cloudcontrolv1beta1.Subscription
 	vpcNetwork         *cloudcontrolv1beta1.VpcNetwork
 	// azureGardenerVpcNetwork exists only on Azure provider when Runtime is created in Gardener created network
-	azureGardenerVpcNetwork *cloudcontrolv1beta1.VpcNetwork
+	//azureGardenerVpcNetwork *cloudcontrolv1beta1.VpcNetwork
 	ipRange            *cloudcontrolv1beta1.IpRange
 	gcpSubnet          *cloudcontrolv1beta1.GcpSubnet
 }

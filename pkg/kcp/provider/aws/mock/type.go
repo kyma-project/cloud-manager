@@ -75,7 +75,6 @@ type Server interface {
 	Providers
 
 	NewAccount() Account
+	GetAccount(accountId string) Account
 	Login(key, secret string) (Account, error)
-
-	XXX_MockConfigs(account, region string) AccountRegion
 }

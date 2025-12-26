@@ -71,8 +71,8 @@ func (s *server) deleteAccount(accountId string) {
 	})
 }
 
-func (a *server) GetAccount(accountId string) Account {
-	for _, acc := range a.accounts {
+func (s *server) GetAccount(accountId string) Account {
+	for _, acc := range s.accounts {
 		if acc.accountId == accountId {
 			return acc
 		}
@@ -80,12 +80,12 @@ func (a *server) GetAccount(accountId string) Account {
 	return nil
 }
 
-func (a *server) Login(key, secret string) (Account, error) {
+func (s *server) Login(key, secret string) (Account, error) {
 	if key == "" || secret == "" {
 		return nil, fmt.Errorf("invalid empty aws credentials")
 	}
 
-	for _, acc := range a.accounts {
+	for _, acc := range s.accounts {
 		for _, cred := range acc.credentials {
 			if cred.AccessKeyId == key && cred.SecretAccessKey == secret {
 				return acc, nil
@@ -169,25 +169,4 @@ func (s *server) ExposedDataProvider() awsclient.SkrClientProvider[awsexposeddat
 		}
 		return acc.Region(region), nil
 	}
-}
-
-// TODO: shouldn't be used ==============================
-
-func (s *server) XXX_MockConfigs(account, region string) AccountRegion {
-	panic("should not be called")
-	//return s.getAccountRegionContext(account, region)
-}
-
-func (s *server) xxx_getAccountRegionContext(account, region string) *accountRegionStore {
-	s.m.Lock()
-	defer s.m.Unlock()
-
-	key := fmt.Sprintf("%s:%s", account, region)
-	acc, ok := s.accountStores[key]
-	if !ok {
-		acc = newAccountRegionStore(account, region)
-		s.accountStores[key] = acc
-	}
-
-	return acc
 }
