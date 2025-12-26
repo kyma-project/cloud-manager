@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
@@ -14,18 +15,24 @@ import (
 var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 
 	//Define variables
-	scope := &cloudcontrolv1beta1.Scope{}
-	skrAwsNfsVolumeName := "aws-nfs-volume-01"
-	skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
-	nfsInstanceName := "aws-nfs-instance-01"
-	nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
-	awsNfsId := "aws-filesystem-01"
+	var scope *cloudcontrolv1beta1.Scope
+	var skrAwsNfsVolumeName string
+	var skrAwsNfsVolume *cloudresourcesv1beta1.AwsNfsVolume
+	var nfsInstanceName string
+	var nfsInstance *cloudcontrolv1beta1.NfsInstance
+	var awsNfsId string
 
 	awsAccountId := "485392126"
 
 	BeforeEach(func() {
 		By("Given KCP Scope exists", func() {
-			// Given Scope exists
+			scope = &cloudcontrolv1beta1.Scope{}
+			skrAwsNfsVolumeName = uuid.NewString()
+			skrAwsNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{}
+			nfsInstanceName = uuid.NewString()
+			nfsInstance = &cloudcontrolv1beta1.NfsInstance{}
+			awsNfsId = uuid.NewString()
+
 			Expect(client.IgnoreAlreadyExists(
 				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
 				To(Succeed())

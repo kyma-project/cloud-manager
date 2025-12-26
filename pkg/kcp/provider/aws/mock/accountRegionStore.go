@@ -12,7 +12,7 @@ type accountRegionStore struct {
 	region string
 }
 
-func newAccountRegionStore(account, region string) *accountRegionStore {
+func newAccountRegionStore(region string) *accountRegionStore {
 	return &accountRegionStore{
 		region: region,
 

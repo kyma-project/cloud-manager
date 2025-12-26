@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
@@ -8,28 +9,30 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 
-	//Define variables
-	scope := &cloudcontrolv1beta1.Scope{}
-	skrAwsNfsVolumeName := "restore-aws-nfs-volume-01"
-	skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
-	skrAwsNfsVolumeBackupName := "restore-aws-nfs-volume-backup-01"
-	skrAwsNfsVolumeBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
+	var scope *cloudcontrolv1beta1.Scope
+	var skrAwsNfsVolumeName string
+	var skrAwsNfsVolume *cloudresourcesv1beta1.AwsNfsVolume
+	var skrAwsNfsVolumeBackupName string
+	var skrAwsNfsVolumeBackup *cloudresourcesv1beta1.AwsNfsVolumeBackup
 
 	awsAccountId := "382492127"
 
 	BeforeEach(func() {
+		scope = &cloudcontrolv1beta1.Scope{}
+		skrAwsNfsVolumeName = uuid.NewString()
+		skrAwsNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{}
+		skrAwsNfsVolumeBackupName = uuid.NewString()
+		skrAwsNfsVolumeBackup = &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
+
 		By("Given KCP Scope exists", func() {
-			// Given Scope exists
-			Eventually(CreateScopeAws).
-				WithArguments(
-					infra.Ctx(), infra, scope, awsAccountId,
-					WithName(infra.SkrKymaRef().Name),
-				).
-				Should(Succeed())
+			Expect(client.IgnoreAlreadyExists(
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				To(Succeed())
 		})
 		By("And Given Scope is in Ready state", func() {
 			Eventually(LoadAndCheck).
