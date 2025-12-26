@@ -6,11 +6,14 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
+	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
@@ -73,8 +76,20 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				Should(Succeed())
 		})
 
-		// TODO: Add test steps
-		_ = scope
+		// Set tolerance for backup schedule timing
+		backupschedule.ToleranceInterval = toleranceWindow
+
+		// Stop reconciliation to prevent interference
+		skrawsnfsvol.Ignore.AddName(skrNfsVolumeName)
+		nfsinstance.Ignore.AddName(nfsInstanceName)
+
+		By("Given KCP Scope exists", func() {
+			Expect(client.IgnoreAlreadyExists(
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				To(Succeed())
+		})
+
+		// TODO: Add more test steps
 	})
 
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
