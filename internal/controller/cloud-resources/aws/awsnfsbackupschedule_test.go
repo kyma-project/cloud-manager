@@ -172,7 +172,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				}
 				// Should have 2 backups: existing + scheduled
 				if len(volumeBackups) != 2 {
-					return fmt.Errorf("expected 2 backups for volume %s, got %d; all backups: %v", 
+					return fmt.Errorf("expected 2 backups for volume %s, got %d; all backups: %v",
 						skrNfsVolumeName, len(volumeBackups), allBackupNames)
 				}
 				return nil
