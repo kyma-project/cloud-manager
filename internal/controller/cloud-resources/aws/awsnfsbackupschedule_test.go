@@ -223,7 +223,52 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				Should(Succeed())
 		})
 
-		// TODO: Add test steps
+		// Set tolerance and stop reconciliation
+		backupschedule.ToleranceInterval = toleranceWindow
+		skrawsnfsvol.Ignore.AddName(skrNfsVolumeName)
+		nfsinstance.Ignore.AddName(nfsInstanceName)
+
+		By("Given KCP Scope exists", func() {
+			Expect(client.IgnoreAlreadyExists(
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				To(Succeed())
+		})
+
+		By("And Given SKR AwsNfsVolume exists", func() {
+			Eventually(CreateAwsNfsVolume).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume,
+					WithName(skrNfsVolumeName),
+					WithAwsNfsVolumeCapacity("100G"),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP NfsInstance exists", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					NewObjActions(),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given NfsInstance has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					WithNfsInstanceStatusId(nfsInstance.Name),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given AwsNfsVolume has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume,
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		// TODO: Add When and Then steps
 	})
 
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
