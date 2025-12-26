@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -29,6 +30,11 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			awsNfsId           string
 			scheduleName       string
 			existingBackupName string
+			skrNfsVolume       *cloudresourcesv1beta1.AwsNfsVolume
+			nfsInstance        *cloudcontrolv1beta1.NfsInstance
+			scope              *cloudcontrolv1beta1.Scope
+			backupSchedule     *cloudresourcesv1beta1.AwsNfsBackupSchedule
+			existingBackup     *cloudresourcesv1beta1.AwsNfsVolumeBackup
 		)
 
 		// This ensures each parallel test run has different resource names
@@ -39,12 +45,36 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		scheduleName = fmt.Sprintf("aws-schedule-%s", suffix)
 		existingBackupName = fmt.Sprintf("aws-backup-existing-%s", suffix)
 
-		// TODO: Add rest of scenario
-		_ = skrNfsVolumeName
-		_ = nfsInstanceName
-		_ = awsNfsId
-		_ = scheduleName
-		_ = existingBackupName
+		// Initialize objects
+		skrNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{}
+		nfsInstance = &cloudcontrolv1beta1.NfsInstance{}
+		scope = &cloudcontrolv1beta1.Scope{}
+		backupSchedule = &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
+		existingBackup = &cloudresourcesv1beta1.AwsNfsVolumeBackup{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      existingBackupName,
+				Namespace: DefaultSkrNamespace,
+			},
+		}
+
+		// Setup cleanup - prevents resource leaks
+		DeferCleanup(func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule).
+				Should(Succeed())
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), existingBackup).
+				Should(Succeed())
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume).
+				Should(Succeed())
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
+				Should(Succeed())
+		})
+
+		// TODO: Add test steps
+		_ = scope
 	})
 
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
