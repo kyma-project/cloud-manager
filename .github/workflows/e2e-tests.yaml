@@ -38,11 +38,6 @@ jobs:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
           go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -t 30m -w
-      - name: Download kubeconfig of the shared instance
-        env:
-          KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
-        run: |
-          go run ./e2e/cmd instance credentials dump -a shared-$PROVIDER > ./tmp/kubeconfig-shared-$PROVIDER.yaml
       - name: run e2e tests
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
