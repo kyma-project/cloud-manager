@@ -38,6 +38,12 @@ jobs:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
           go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -t 30m -w
+      - name: Add module to shared instance
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+        run: |
+          go run ./e2e/cmd instance modules add -m  cloud-manager -a shared-$PROVIDER
+          sleep 60
       - name: run e2e tests
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
