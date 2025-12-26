@@ -91,38 +91,53 @@ pkg/kcp/provider/gcp/nfsinstance/
 ### Phase 2: Feature Flag Setup
 
 #### 2.1 Define Feature Flag
-- [ ] Add feature flag to feature flag schema
-- [ ] Name: `gcpNfsInstanceUseV2` (or similar)
-- [ ] Default value: `false` (use v1)
-- [ ] Add flag to `pkg/feature/types.go`
-- [ ] Add flag to `config/featureToggles/featureToggles.local.yaml`
-- [ ] Document flag purpose and behavior
+- [x] Add feature flag to feature flag schema
+- [x] Name: `gcpNfsInstanceV2` (finalized)
+- [x] Default value: `false` (use v1)
+- [x] Add flag to `pkg/feature/ffGcpNfsInstanceV2.go`
+- [x] Add flag to `pkg/feature/ff_ga.yaml` and `pkg/feature/ff_edge.yaml`
+- [x] Document flag purpose and behavior
 
 **Feature flag definition**:
 ```go
-// pkg/feature/types.go
-gcpNfsInstanceUseV2 = Feature{
-    Name:        "gcpNfsInstanceUseV2",
-    Description: "Use v2 implementation for GCP NfsInstance reconciliation",
-    Default:     false,
+// pkg/feature/ffGcpNfsInstanceV2.go
+package feature
+
+import (
+	"context"
+)
+
+const GcpNfsInstanceV2FlagName = "gcpNfsInstanceV2"
+
+var GcpNfsInstanceV2 = &gcpNfsInstanceV2Info{}
+
+type gcpNfsInstanceV2Info struct{}
+
+func (k *gcpNfsInstanceV2Info) Value(ctx context.Context) bool {
+	return provider.BoolVariation(ctx, GcpNfsInstanceV2FlagName, false)
 }
 ```
 
 **Configuration**:
 ```yaml
-# config/featureToggles/featureToggles.local.yaml
-gcpNfsInstanceUseV2: false  # Default to v1
+# pkg/feature/ff_ga.yaml
+gcpNfsInstanceV2:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled  # Default to v1
 ```
 
 #### 2.2 Feature Flag Access Pattern
-- [ ] Add feature flag getter method
-- [ ] Document flag usage pattern
-- [ ] Plan flag check locations
-- [ ] Design fallback behavior
+- [x] Add feature flag getter method
+- [x] Document flag usage pattern
+- [x] Plan flag check locations
+- [x] Design fallback behavior
 
 **Usage pattern**:
 ```go
-if feature.GcpNfsInstanceUseV2.Value(ctx) {
+if feature.GcpNfsInstanceV2.Value(ctx) {
     // Use v2 implementation
     return gcpnfsinstancev2.New(r.gcpStateFactoryV2)(ctx, state)
 } else {
@@ -132,10 +147,10 @@ if feature.GcpNfsInstanceUseV2.Value(ctx) {
 ```
 
 #### 2.3 Test Feature Flag
-- [ ] Unit tests for flag definition
-- [ ] Test default value (false)
-- [ ] Test flag override
-- [ ] Document testing approach
+- [x] Unit tests for flag definition
+- [x] Test default value (false)
+- [x] Test flag override
+- [x] Document testing approach
 
 ---
 
@@ -1044,7 +1059,12 @@ All operations supported in `cloud.google.com/go/filestore/apiv1` CloudFilestore
 6. **Leaner test suite**: Avoid v1's pattern of testing every trivial method
 
 ### Feature Flag Strategy
-- **Default**: `gcpNfsInstanceUseV2 = false` (use v1, stable)
+- **Default**: `gcpNfsInstanceV2 = false` (use v1, stable)
+- **Feature Flag Name**: `gcpNfsInstanceV2` (finalized)
+- **Implementation**: `pkg/feature/ffGcpNfsInstanceV2.go`
+- **Configuration**: `pkg/feature/ff_ga.yaml` and `pkg/feature/ff_edge.yaml`
+- **Tests**: `pkg/feature/ffGcpNfsInstanceV2_test.go`
+- **Documentation**: `pkg/feature/README_GCP_NFSINSTANCE_V2.md`
 - **Enable v2**: Set flag to `true` in feature toggles configuration
 - **Rollout Plan**:
   1. Deploy with v2 implementation, flag = false (v1 active)
