@@ -18,8 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// I can not make this work, good luck figuring this one
-var _ = SkipDescribe("Feature: SKR AwsNfsBackupSchedule", func() {
+var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 
 	const (
 		interval = time.Millisecond * 50
