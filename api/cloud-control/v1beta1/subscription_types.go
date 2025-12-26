@@ -142,7 +142,7 @@ func (in *Subscription) SetObservedGeneration(v int64) {
 func (in *Subscription) SetStatusProcessing() {
 	in.Status.State = string(StateProcessing)
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeSubscription,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionUnknown,
 		ObservedGeneration: in.Status.ObservedGeneration,
 		Reason:             ReasonProcessing,
@@ -153,7 +153,7 @@ func (in *Subscription) SetStatusProcessing() {
 func (in *Subscription) SetStatusInvalidSpec(msg string) {
 	in.Status.State = string(StateWarning)
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeSubscription,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
 		ObservedGeneration: in.Status.ObservedGeneration,
 		Reason:             ReasonInvalidSpec,
@@ -164,7 +164,7 @@ func (in *Subscription) SetStatusInvalidSpec(msg string) {
 func (in *Subscription) SetStatusReady() {
 	in.Status.State = string(StateReady)
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeSubscription,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionTrue,
 		ObservedGeneration: in.Status.ObservedGeneration,
 		Reason:             ReasonReady,
@@ -175,7 +175,7 @@ func (in *Subscription) SetStatusReady() {
 func (in *Subscription) SetStatusInvalidBinding(msg string) {
 	in.Status.State = ReasonInvalidBinding
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeSubscription,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
 		ObservedGeneration: in.Status.ObservedGeneration,
 		Reason:             ReasonInvalidBinding,
@@ -195,14 +195,14 @@ func (in *Subscription) SetStatusDeleteWhileUsed(msg string) {
 }
 
 func (in *Subscription) RemoveStatusDeleteWhileUsed() {
-	in.Status.State = ConditionTypeDeleting
+	in.Status.State = string(StateDeleting)
 	meta.RemoveStatusCondition(&in.Status.Conditions, ConditionTypeDeleteWhileUsed)
 }
 
 func (in *Subscription) SetStatusDeleting() {
-	in.Status.State = ConditionTypeDeleting
+	in.Status.State = string(StateDeleting)
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeSubscription,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionUnknown,
 		ObservedGeneration: in.Status.ObservedGeneration,
 		Reason:             ReasonDeleting,

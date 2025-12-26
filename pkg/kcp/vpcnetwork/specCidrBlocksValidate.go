@@ -10,7 +10,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func specCidrBlocksValidate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,40 +18,23 @@ func specCidrBlocksValidate(ctx context.Context, st composed.State) (error, cont
 	invalid, overlapping, normalized := specCidrBlocksValidateImpl(state.ObjAsVpcNetwork().Spec.CidrBlocks)
 
 	if len(invalid) > 0 {
-		state.ObjAsVpcNetwork().Status.State = string(cloudcontrolv1beta1.StateWarning)
-
-		return composed.PatchStatus(state.ObjAsVpcNetwork()).
-			SetExclusiveConditions(metav1.Condition{
-				Type:               cloudcontrolv1beta1.ConditionTypeReady,
-				Status:             metav1.ConditionFalse,
-				ObservedGeneration: state.ObjAsVpcNetwork().Generation,
-				Reason:             cloudcontrolv1beta1.ReasonInvalidCidr,
-				Message:            fmt.Sprintf("Invalid CIDR blocks %v", invalid),
+		return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).
+			MutateStatus(func(obj *cloudcontrolv1beta1.VpcNetwork) {
+				obj.SetStatusInvalidCidr(fmt.Sprintf("Invalid CIDR blocks %v", invalid))
 			}).
-			Run(ctx, state)
+			OnSuccess(composed.Forget).
+			OnFailure(composed.Log("Failed to patch KCP VpcNetwork status with invalid cidr condition")).
+			Run(ctx, state.Cluster().K8sClient())
 	}
 
 	if len(overlapping) > 0 {
-		state.ObjAsVpcNetwork().Status.State = string(cloudcontrolv1beta1.StateWarning)
-
-		return composed.PatchStatus(state.ObjAsVpcNetwork()).
-			SetExclusiveConditions(
-				metav1.Condition{
-					Type:               cloudcontrolv1beta1.ConditionTypeReady,
-					Status:             metav1.ConditionFalse,
-					ObservedGeneration: state.ObjAsVpcNetwork().Generation,
-					Reason:             cloudcontrolv1beta1.ReasonCidrOverlap,
-					Message:            fmt.Sprintf("Overlapping CIDR blocks %v", overlapping),
-				},
-				metav1.Condition{
-					Type:               cloudcontrolv1beta1.ConditionTypeError,
-					Status:             metav1.ConditionTrue,
-					ObservedGeneration: state.ObjAsVpcNetwork().Generation,
-					Reason:             cloudcontrolv1beta1.ReasonCidrOverlap,
-					Message:            fmt.Sprintf("Overlapping CIDR blocks %v", overlapping),
-				},
-			).
-			Run(ctx, state)
+		return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).
+			MutateStatus(func(obj *cloudcontrolv1beta1.VpcNetwork) {
+				obj.SetStatusOverlappingCidr(fmt.Sprintf("Overlapping CIDR blocks %v", overlapping))
+			}).
+			OnSuccess(composed.Forget).
+			OnFailure(composed.Log("Failed to patch KCP VpcNetwork status with overlapping cidrs condition")).
+			Run(ctx, state.Cluster().K8sClient())
 	}
 
 	state.normalizedSpecCidrs = normalized

@@ -8,6 +8,10 @@ func NewVpcNetworkBuilder() *VpcNetworkBuilder {
 	return &VpcNetworkBuilder{obj: &VpcNetwork{}}
 }
 
+func (b *VpcNetworkBuilder) Build() *VpcNetwork {
+	return b.obj
+}
+
 func (b *VpcNetworkBuilder) WithObj(obj *VpcNetwork) *VpcNetworkBuilder {
 	b.obj = obj
 	return b
@@ -49,7 +53,7 @@ func (b *VpcNetworkBuilder) WithRegion(v string) *VpcNetworkBuilder {
 	return b
 }
 
-func (b *VpcNetworkBuilder) WithCidrBlock(cidr string) *VpcNetworkBuilder {
-	b.obj.Spec.CidrBlocks = append(b.obj.Spec.CidrBlocks, cidr)
+func (b *VpcNetworkBuilder) WithCidrBlocks(cidrs ...string) *VpcNetworkBuilder {
+	b.obj.Spec.CidrBlocks = append(b.obj.Spec.CidrBlocks, cidrs...)
 	return b
 }

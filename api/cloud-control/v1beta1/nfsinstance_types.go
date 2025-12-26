@@ -109,6 +109,9 @@ type NfsInstanceStatus struct {
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
 	//List of NFS Hosts (DNS Names or IP Addresses) that clients can use to connect
 	//
 	// XDeprecated: Use Host and Path
@@ -167,8 +170,12 @@ func (in *NfsInstance) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
-func (in *NfsInstance) GetObjectMeta() *metav1.ObjectMeta {
-	return &in.ObjectMeta
+func (in *NfsInstance) ObservedGeneration() int64 {
+	return in.Status.ObservedGeneration
+}
+
+func (in *NfsInstance) SetObservedGeneration(v int64) {
+	in.Status.ObservedGeneration = v
 }
 
 func (in *NfsInstance) SetStateData(key, value string) {
@@ -185,20 +192,6 @@ func (in *NfsInstance) SetStateData(key, value string) {
 func (in *NfsInstance) GetStateData(key string) (string, bool) {
 	v, found := in.Status.StateData[key]
 	return v, found
-}
-
-func (in *NfsInstance) CloneForPatchStatus() client.Object {
-	return &NfsInstance{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "NfsInstance",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
-	}
 }
 
 //+kubebuilder:object:root=true

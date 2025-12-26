@@ -197,7 +197,6 @@ func StartEx(opts StartOptions) (Infra, error) {
 	activeSkrCollection := skrruntime.NewActiveSkrCollection()
 
 	awsMock := awsmock.New()
-	awsMock.SetAccount("some-aws-account")
 
 	infra.InfraEnv = &infraEnv{
 		i:                   infra,

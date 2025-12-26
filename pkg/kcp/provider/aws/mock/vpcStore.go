@@ -51,8 +51,6 @@ type VpcSubnet struct {
 }
 
 type VpcConfig interface {
-	Account() string
-	Region() string
 	AddVpc(id, cidr string, tags []ec2types.Tag, subnets []VpcSubnet) *ec2types.Vpc
 	SetVpcError(id string, err error)
 	AddNatGateway(vpcId string, subnetId string) (*ec2types.NatGateway, error)
@@ -69,9 +67,6 @@ var _ VpcConfig = &vpcStore{}
 type vpcStore struct {
 	m sync.Mutex
 
-	account string
-	region  string
-
 	items []*vpcEntry
 
 	addressRange iprangeallocate.AddressSpace
@@ -79,11 +74,9 @@ type vpcStore struct {
 	errorMap map[string]error
 }
 
-func newVpcStore(account, region string) *vpcStore {
+func newVpcStore() *vpcStore {
 	return &vpcStore{
 		addressRange: iprangeallocate.NewAddressSpace(),
-		account:      account,
-		region:       region,
 		errorMap:     make(map[string]error),
 	}
 }
@@ -103,14 +96,6 @@ func (s *vpcStore) itemByVpcId(vpcId string) (*vpcEntry, error) {
 }
 
 // Config implementation =======================================
-
-func (s *vpcStore) Account() string {
-	return s.account
-}
-
-func (s *vpcStore) Region() string {
-	return s.region
-}
 
 func (s *vpcStore) AddNatGateway(vpcId string, subnetId string) (*ec2types.NatGateway, error) {
 	s.m.Lock()

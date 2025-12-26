@@ -34,8 +34,19 @@ const (
 // CT_VpcNetwork_InfrastructureProvisioned_ProviderError = "ProviderError"
 )
 
+type VpcNetworkType string
+
+const (
+	VpcNetworkTypeGardener VpcNetworkType = "gardener"
+	VpcNetworkTypeKyma     VpcNetworkType = "kyma"
+)
+
 // VpcNetworkSpec defines the desired state of VpcNetwork.
 type VpcNetworkSpec struct {
+	// +optional
+	// +kubebuilder:default=kyma
+	Type string `json:"type,omitempty"`
+
 	// +kubebuilder:validation:Required
 	Subscription string `json:"subscription"`
 
@@ -105,10 +116,6 @@ type VpcNetworkList struct {
 
 // interface implementations
 
-func (in *VpcNetwork) SubscriptionName() string {
-	return in.Spec.Subscription
-}
-
 func (in *VpcNetwork) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
@@ -139,9 +146,9 @@ func (in *VpcNetwork) HaveVpcCidrBlocksChanged() bool {
 func (in *VpcNetwork) SetStatusProcessing() {
 	in.Status.State = ReasonProcessing
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeInfrastructureProvisioned,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
-		ObservedGeneration: in.Status.ObservedGeneration,
+		ObservedGeneration: in.Generation,
 		Reason:             ReasonProcessing,
 		Message:            ReasonProcessing,
 	})
@@ -150,9 +157,9 @@ func (in *VpcNetwork) SetStatusProcessing() {
 func (in *VpcNetwork) SetStatusProvisioned() {
 	in.Status.State = ReasonProvisioned
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeInfrastructureProvisioned,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionTrue,
-		ObservedGeneration: in.Status.ObservedGeneration,
+		ObservedGeneration: in.Generation,
 		Reason:             ReasonProvisioned,
 		Message:            ReasonProvisioned,
 	})
@@ -161,9 +168,9 @@ func (in *VpcNetwork) SetStatusProvisioned() {
 func (in *VpcNetwork) SetStatusInvalidCidr(msg string) {
 	in.Status.State = ReasonInvalidCidr
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeInfrastructureProvisioned,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
-		ObservedGeneration: in.Status.ObservedGeneration,
+		ObservedGeneration: in.Generation,
 		Reason:             ReasonInvalidCidr,
 		Message:            msg,
 	})
@@ -172,31 +179,31 @@ func (in *VpcNetwork) SetStatusInvalidCidr(msg string) {
 func (in *VpcNetwork) SetStatusOverlappingCidr(msg string) {
 	in.Status.State = ReasonCidrOverlap
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeInfrastructureProvisioned,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
-		ObservedGeneration: in.Status.ObservedGeneration,
+		ObservedGeneration: in.Generation,
 		Reason:             ReasonCidrOverlap,
 		Message:            msg,
 	})
 }
 
-func (in *VpcNetwork) SetStatusInvalidSubscription() {
-	in.Status.State = ReasonInvalidSubscription
+func (in *VpcNetwork) SetStatusInvalidDependency(msg string) {
+	in.Status.State = ReasonInvalidDependency
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeInfrastructureProvisioned,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
-		ObservedGeneration: in.Status.ObservedGeneration,
-		Reason:             ReasonInvalidSubscription,
-		Message:            ReasonInvalidSubscription,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonInvalidDependency,
+		Message:            msg,
 	})
 }
 
 func (in *VpcNetwork) SetStatusProviderError(msg string) {
 	in.Status.State = ReasonProviderError
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeInfrastructureProvisioned,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
-		ObservedGeneration: in.Status.ObservedGeneration,
+		ObservedGeneration: in.Generation,
 		Reason:             ReasonProviderError,
 		Message:            msg,
 	})
@@ -207,21 +214,21 @@ func (in *VpcNetwork) SetStatusDeleteWhileUsed(msg string) {
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeDeleteWhileUsed,
 		Status:             metav1.ConditionTrue,
-		ObservedGeneration: in.Status.ObservedGeneration,
+		ObservedGeneration: in.Generation,
 		Reason:             ReasonDeleteWhileUsed,
 		Message:            msg,
 	})
 }
 
 func (in *VpcNetwork) RemoveStatusDeleteWhileUsed() {
-	in.Status.State = ConditionTypeDeleting
+	in.Status.State = string(StateDeleting)
 	meta.RemoveStatusCondition(&in.Status.Conditions, ConditionTypeDeleteWhileUsed)
 }
 
 func (in *VpcNetwork) SetStatusDeleting() {
-	in.Status.State = ConditionTypeDeleting
+	in.Status.State = string(StateDeleting)
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeInfrastructureProvisioned,
+		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionUnknown,
 		ObservedGeneration: in.Status.ObservedGeneration,
 		Reason:             ReasonDeleting,

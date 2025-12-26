@@ -17,9 +17,9 @@ limitations under the License.
 package v1beta1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Error reasons
@@ -40,6 +40,9 @@ const (
 
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
+	// +optional
+	VpcNetwork corev1.LocalObjectReference `json:"vpcNetwork"`
+
 	// +kubebuilder:validation:Required
 	RemoteRef RemoteRef `json:"remoteRef"`
 
@@ -107,6 +110,9 @@ type IpRangeOpenStack struct {
 // IpRangeStatus defines the observed state of IpRange
 type IpRangeStatus struct {
 	State StatusState `json:"state,omitempty"`
+
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// +optional
 	Cidr string `json:"cidr,omitempty"`
@@ -212,6 +218,14 @@ func (in *IpRange) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
+func (in *IpRange) ObservedGeneration() int64 {
+	return in.Status.ObservedGeneration
+}
+
+func (in *IpRange) SetObservedGeneration(v int64) {
+	in.Status.ObservedGeneration = v
+}
+
 func (in *IpRange) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
 }
@@ -222,21 +236,6 @@ func (in *IpRange) State() string {
 
 func (in *IpRange) SetState(v string) {
 	in.Status.State = StatusState(v)
-}
-
-func (in *IpRange) CloneForPatchStatus() client.Object {
-	out := &IpRange{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "IpRange",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
-	}
-	return out
 }
 
 //+kubebuilder:object:root=true

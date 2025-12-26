@@ -17,9 +17,9 @@ limitations under the License.
 package v1beta1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -38,6 +38,9 @@ const (
 
 // GcpSubnetSpec defines the desired state of GcpSubnet
 type GcpSubnetSpec struct {
+	// +optional
+	VpcNetwork corev1.LocalObjectReference `json:"vpcNetwork"`
+
 	// +kubebuilder:validation:Required
 	RemoteRef RemoteRef `json:"remoteRef"`
 
@@ -62,6 +65,9 @@ type GcpSubnetStatus struct {
 	Id string `json:"id,omitempty"`
 
 	State StatusState `json:"state,omitempty"`
+
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// List of status conditions to indicate the status of a Peering.
 	// +optional
@@ -103,8 +109,12 @@ func (in *GcpSubnet) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
-func (in *GcpSubnet) GetObjectMeta() *metav1.ObjectMeta {
-	return &in.ObjectMeta
+func (in *GcpSubnet) ObservedGeneration() int64 {
+	return in.Status.ObservedGeneration
+}
+
+func (in *GcpSubnet) SetObservedGeneration(v int64) {
+	in.Status.ObservedGeneration = v
 }
 
 func (in *GcpSubnet) State() string {
@@ -113,21 +123,6 @@ func (in *GcpSubnet) State() string {
 
 func (in *GcpSubnet) SetState(v string) {
 	in.Status.State = StatusState(v)
-}
-
-func (in *GcpSubnet) CloneForPatchStatus() client.Object {
-	out := &GcpSubnet{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "GcpSubnet",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
-	}
-	return out
 }
 
 // +kubebuilder:object:root=true

@@ -368,6 +368,9 @@ spec:
                 x-kubernetes-list-type: map
               id:
                 type: string
+              observedGeneration:
+                format: int64
+                type: integer
               primaryEndpoint:
                 type: string
               readEndpoint:

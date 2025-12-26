@@ -8,7 +8,7 @@ import (
 type State interface {
 	composed.State
 
-	ObjAsObjWithConditionsAndState() composed.ObjWithConditionsAndState
+	ObjAsObjWithStatus() composed.ObjWithStatus
 
 	Subscription() *cloudcontrolv1beta1.Subscription
 }
@@ -37,10 +37,15 @@ type stateImpl struct {
 	composed.State
 
 	subscription *cloudcontrolv1beta1.Subscription
+	vpcNetwork   *cloudcontrolv1beta1.VpcNetwork
+	// azureGardenerVpcNetwork exists only on Azure provider when Runtime is created in Gardener created network
+	//azureGardenerVpcNetwork *cloudcontrolv1beta1.VpcNetwork
+	ipRange   *cloudcontrolv1beta1.IpRange
+	gcpSubnet *cloudcontrolv1beta1.GcpSubnet
 }
 
-func (s *stateImpl) ObjAsObjWithConditionsAndState() composed.ObjWithConditionsAndState {
-	return s.Obj().(composed.ObjWithConditionsAndState)
+func (s *stateImpl) ObjAsObjWithStatus() composed.ObjWithStatus {
+	return s.Obj().(composed.ObjWithStatus)
 }
 
 func (s *stateImpl) Subscription() *cloudcontrolv1beta1.Subscription {
