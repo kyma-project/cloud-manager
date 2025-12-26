@@ -110,7 +110,6 @@ spec:
             - purpose
             - remoteRef
             - scope
-            - vpcNetwork
             type: object
           status:
             description: GcpSubnetStatus defines the observed state of GcpSubnet

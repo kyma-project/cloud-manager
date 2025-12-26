@@ -135,7 +135,6 @@ spec:
             required:
             - remoteRef
             - scope
-            - vpcNetwork
             type: object
           status:
             description: IpRangeStatus defines the observed state of IpRange

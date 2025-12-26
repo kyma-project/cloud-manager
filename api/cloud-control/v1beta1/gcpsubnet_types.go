@@ -38,6 +38,7 @@ const (
 
 // GcpSubnetSpec defines the desired state of GcpSubnet
 type GcpSubnetSpec struct {
+	// +optional
 	VpcNetwork corev1.LocalObjectReference `json:"vpcNetwork"`
 
 	// +kubebuilder:validation:Required

@@ -40,6 +40,7 @@ const (
 
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
+	// +optional
 	VpcNetwork corev1.LocalObjectReference `json:"vpcNetwork"`
 
 	// +kubebuilder:validation:Required
