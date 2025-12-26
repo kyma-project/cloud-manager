@@ -89,7 +89,48 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				To(Succeed())
 		})
 
-		// TODO: Add more test steps
+		By("And Given SKR AwsNfsVolume exists", func() {
+			Eventually(CreateAwsNfsVolume).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume,
+					WithName(skrNfsVolumeName),
+					WithAwsNfsVolumeCapacity("100G"),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP NfsInstance exists", func() {
+			// NfsInstance is created automatically by AwsNfsVolume controller
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					NewObjActions(),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given NfsInstance has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					WithNfsInstanceStatusId(nfsInstance.Name),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given AwsNfsVolume has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume,
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given existing AwsNfsVolumeBackup exists", func() {
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), existingBackup).
+				Should(Succeed())
+		})
+
+		// TODO: Add When and Then steps
 	})
 
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
