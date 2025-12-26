@@ -29,8 +29,8 @@ import (
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance"
-	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	gcpnfsinstancev1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1"
+	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	sapnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance"
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
@@ -43,7 +43,7 @@ import (
 func SetupNfsInstanceReconciler(
 	kcpManager manager.Manager,
 	awsSkrProvider awsclient.SkrClientProvider[awsnfsinstanceclient.Client],
-	filestoreClientProvider gcpclient.ClientProvider[gcpnfsinstanceclient.FilestoreClient],
+	filestoreClientProvider gcpclient.ClientProvider[gcpnfsinstancev1client.FilestoreClient],
 	sapProvider sapclient.SapClientProvider[sapnfsinstanceclient.Client],
 	env abstractions.Environment,
 ) error {
@@ -56,7 +56,7 @@ func SetupNfsInstanceReconciler(
 			focal.NewStateFactory(),
 			awsnfsinstance.NewStateFactory(awsSkrProvider),
 			azurenfsinstance.NewStateFactory(),
-			gcpnfsinstance.NewStateFactory(filestoreClientProvider, env),
+			gcpnfsinstancev1.NewStateFactory(filestoreClientProvider, env),
 			sapnfsinstance.NewStateFactory(sapProvider),
 		),
 	).SetupWithManager(kcpManager)

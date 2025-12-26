@@ -1,4 +1,4 @@
-package nfsinstance
+package v1
 
 import (
 	"context"

@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
-	gcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance"
+	gcpnfsinstancev1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1"
 	sapnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -29,7 +29,7 @@ type nfsInstanceReconciler struct {
 
 	awsStateFactory   awsnfsinstance.StateFactory
 	azureStateFactory azurenfsinstance.StateFactory
-	gcpStateFactory   gcpnfsinstance.StateFactory
+	gcpStateFactory   gcpnfsinstancev1.StateFactory
 	sapStateFactory   sapnfsinstance.StateFactory
 }
 
@@ -38,7 +38,7 @@ func NewNfsInstanceReconciler(
 	focalStateFactory focal.StateFactory,
 	awsStateFactory awsnfsinstance.StateFactory,
 	azureStateFactory azurenfsinstance.StateFactory,
-	gcpStateFactory gcpnfsinstance.StateFactory,
+	gcpStateFactory gcpnfsinstancev1.StateFactory,
 	sapStateFactory sapnfsinstance.StateFactory,
 ) NfsInstanceReconciler {
 	return &nfsInstanceReconciler{
@@ -81,7 +81,7 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 					nil,
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
-					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnfsinstance.New(r.gcpStateFactory)),
+					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnfsinstancev1.New(r.gcpStateFactory)),
 					composed.NewCase(statewithscope.OpenStackProviderPredicate, sapnfsinstance.New(r.sapStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))

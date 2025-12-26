@@ -1,4 +1,9 @@
-package nfsinstance
+// Package v1 provides the legacy GCP NfsInstance implementation.
+//
+// Deprecated: This package is maintained for backward compatibility only.
+// New code should use the v2 package when available via the gcpNfsInstanceV2 feature flag.
+// This implementation uses the OLD reconciler pattern and will be removed in a future release.
+package v1
 
 import (
 	"context"

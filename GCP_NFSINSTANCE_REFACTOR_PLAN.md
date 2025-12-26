@@ -157,11 +157,11 @@ if feature.GcpNfsInstanceV2.Value(ctx) {
 ### Phase 3: V1 Preservation
 
 #### 3.1 Create V1 Directory Structure
-- [ ] Create `pkg/kcp/provider/gcp/nfsinstance/v1/` directory
-- [ ] Move all current files to v1 folder
-- [ ] Update package declarations to `v1`
-- [ ] Create v1 README documenting legacy status
-- [ ] Add v1-specific godoc comments
+- [x] Create `pkg/kcp/provider/gcp/nfsinstance/v1/` directory
+- [x] Move all current files to v1 folder
+- [x] Update package declarations to `v1`
+- [x] Create v1 README documenting legacy status
+- [x] Add v1-specific godoc comments
 
 **Commands**:
 ```bash
@@ -171,13 +171,13 @@ mkdir -p pkg/kcp/provider/gcp/nfsinstance/v1/testdata
 ```
 
 #### 3.2 Move and Update V1 Files
-- [ ] Move `*.go` files to v1/
-- [ ] Move `*_test.go` files to v1/
-- [ ] Move `client/` directory to v1/client/
-- [ ] Move `testdata/` to v1/testdata/
-- [ ] Update package name in all files: `package nfsinstance` → `package v1`
-- [ ] Update imports in v1 files
-- [ ] Update client package name: `package client` → `package v1client`
+- [x] Move `*.go` files to v1/
+- [x] Move `*_test.go` files to v1/
+- [x] Move `client/` directory to v1/client/
+- [x] Move `testdata/` to v1/testdata/
+- [x] Update package name in all files: `package nfsinstance` → `package v1`
+- [x] Update imports in v1 files
+- [x] Update client package name: `package client` → `package v1client`
 
 **Files to move**:
 ```
@@ -205,12 +205,12 @@ testdata/* → v1/testdata/*
 ```
 
 #### 3.3 Update V1 References
-- [ ] Update imports in `pkg/kcp/nfsinstance/reconciler.go`
-- [ ] Update imports in `internal/controller/cloud-control/nfsinstance_controller.go`
-- [ ] Add v1 import aliases where needed
-- [ ] Create v1 state factory wrapper if needed
-- [ ] Verify all tests still pass with v1 imports
-- [ ] Add deprecation notices in v1 godoc
+- [x] Update imports in `pkg/kcp/nfsinstance/reconciler.go`
+- [x] Update imports in `internal/controller/cloud-control/nfsinstance_controller.go`
+- [x] Add v1 import aliases where needed
+- [x] Create v1 state factory wrapper if needed
+- [x] Verify all tests still pass with v1 imports
+- [x] Add deprecation notices in v1 godoc
 
 **Import changes example**:
 ```go
