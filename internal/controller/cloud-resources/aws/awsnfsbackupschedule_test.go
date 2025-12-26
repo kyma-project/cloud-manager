@@ -268,7 +268,52 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				Should(Succeed())
 		})
 
-		// TODO: Add When and Then steps
+		// WHEN
+		now := time.Now().UTC()
+		startTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+1, 0, 0, now.Location()).UTC()
+
+		By("When AwsNfsBackupSchedule is created with one-time schedule", func() {
+			Eventually(CreateAwsNfsBackupSchedule).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule,
+					WithName(scheduleName),
+					WithStartTime(startTime),
+					WithNfsVolumeRef(skrNfsVolumeName),
+				).
+				Should(Succeed())
+		})
+
+		// THEN
+		By("Then AwsNfsBackupSchedule has Active state", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule,
+					NewObjActions(),
+					HavingState(string(cloudresourcesv1beta1.JobStateActive)),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then AwsNfsBackupSchedule has NextRunTimes with single entry", func() {
+			Expect(len(backupSchedule.Status.NextRunTimes)).To(Equal(1))
+			Expect(backupSchedule.Status.NextRunTimes[0]).To(BeTemporally("~", startTime, time.Second))
+		})
+
+		By("And Then AwsNfsBackupSchedule has Ready condition", func() {
+			Expect(backupSchedule.Status.Conditions).To(ContainElement(MatchFields(IgnoreExtras, Fields{
+				"Type":   Equal(cloudresourcesv1beta1.ConditionTypeReady),
+				"Status": Equal(metav1.ConditionTrue),
+			})))
+		})
+
+		By("And Then scheduled AwsNfsVolumeBackup is created", func() {
+			expectedBackupName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, startTime.Format("20060102-150405"))
+			backup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
+
+			Eventually(LoadAndCheck, timeout*6, interval).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), backup,
+					NewObjActions(WithName(expectedBackupName)),
+				).
+				Should(Succeed())
+		})
 	})
 
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
