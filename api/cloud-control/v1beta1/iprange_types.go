@@ -236,7 +236,6 @@ func (in *IpRange) SetState(v string) {
 	in.Status.State = StatusState(v)
 }
 
-
 //+kubebuilder:object:root=true
 
 // IpRangeList contains a list of IpRange

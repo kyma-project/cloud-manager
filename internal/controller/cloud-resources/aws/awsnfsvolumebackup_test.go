@@ -8,6 +8,7 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
@@ -25,12 +26,9 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 	BeforeEach(func() {
 		By("Given KCP Scope exists", func() {
 			// Given Scope exists
-			Eventually(CreateScopeAws).
-				WithArguments(
-					infra.Ctx(), infra, scope, awsAccountId,
-					WithName(infra.SkrKymaRef().Name),
-				).
-				Should(Succeed())
+			Expect(client.IgnoreAlreadyExists(
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				To(Succeed())
 		})
 		By("And Given Scope is in Ready state", func() {
 			Eventually(LoadAndCheck).
