@@ -193,6 +193,10 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			nfsInstanceName  string
 			awsNfsId         string
 			scheduleName     string
+			scope            *cloudcontrolv1beta1.Scope
+			skrNfsVolume     *cloudresourcesv1beta1.AwsNfsVolume
+			nfsInstance      *cloudcontrolv1beta1.NfsInstance
+			backupSchedule   *cloudresourcesv1beta1.AwsNfsBackupSchedule
 		)
 
 		// Unique naming for parallel test runs
@@ -202,7 +206,24 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		awsNfsId = fmt.Sprintf("fs-%s", suffix)
 		scheduleName = fmt.Sprintf("aws-schedule-%s", suffix)
 
-		// TODO: Add object initialization
+		scope = &cloudcontrolv1beta1.Scope{}
+		skrNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{}
+		nfsInstance = &cloudcontrolv1beta1.NfsInstance{}
+		backupSchedule = &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
+
+		DeferCleanup(func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule).
+				Should(Succeed())
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume).
+				Should(Succeed())
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+
+		// TODO: Add test steps
 	})
 
 	Describe("Scenario: SKR Recurring AwsNfsBackupSchedule - Create", func() {
