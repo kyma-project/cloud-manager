@@ -50,7 +50,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/imdario/mergo v0.3.16
 	github.com/kyma-project/kim-snatch v0.0.0-20250827080002-9adca756fa16
-	github.com/onsi/ginkgo/v2 v2.27.2
+	github.com/onsi/ginkgo/v2 v2.27.3
 	github.com/onsi/gomega v1.38.3
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/peterbourgon/mergemap v0.0.1
