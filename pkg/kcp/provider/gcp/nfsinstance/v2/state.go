@@ -5,6 +5,7 @@
 // implementation when enabled via the gcpNfsInstanceV2 feature flag.
 //
 // Key improvements over v1:
+// - Modern GCP client (cloud.google.com/go/filestore) with protobuf types
 // - Better code organization (operations, validation, state packages)
 // - Cleaner state management
 // - Improved validation logic
@@ -13,9 +14,9 @@
 // - Consistent error handling
 //
 // Architecture:
-// - State hierarchy: focal.State → types.State → v2.State
+// - State hierarchy: focal.State → types.State → v2.State (OLD pattern)
 // - Action composition: Sequential execution with explicit flow control
-// - Client: Abstracted FilestoreClient interface
+// - Client: Modern FilestoreClient using cloud.google.com/go/filestore
 // - Operations: Separate packages for CRUD, validation, state management
 package v2
 
@@ -23,85 +24,56 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
-	"google.golang.org/api/file/v1"
 )
-
-// OperationType represents the type of operation to perform on a GCP Filestore instance.
-type OperationType int
-
-const (
-	// OpNone indicates no operation is needed.
-	OpNone OperationType = iota
-	// OpAdd indicates a new instance should be created.
-	OpAdd
-	// OpModify indicates an existing instance should be updated.
-	OpModify
-	// OpDelete indicates an instance should be deleted.
-	OpDelete
-)
-
-// String returns a string representation of the operation type.
-func (o OperationType) String() string {
-	switch o {
-	case OpNone:
-		return "NONE"
-	case OpAdd:
-		return "ADD"
-	case OpModify:
-		return "MODIFY"
-	case OpDelete:
-		return "DELETE"
-	default:
-		return "UNKNOWN"
-	}
-}
 
 // State represents the GCP-specific state for NfsInstance reconciliation.
 // It extends the shared types.State (OLD pattern) with GCP-specific fields.
+// Uses modern GCP protobuf types from cloud.google.com/go/filestore.
 type State struct {
-	types.State
+	types.State // Embedded shared state (OLD pattern compatibility)
 
-	// client is the GCP Filestore client for API operations.
-	client v2client.FilestoreClient
+	// Client for GCP Filestore operations
+	filestoreClient v2client.FilestoreClient
 
-	// gcpInstance is the cached GCP Filestore instance loaded from the API.
-	gcpInstance *file.Instance
+	// Cached GCP resources (using modern protobuf types)
+	instance *filestorepb.Instance // Current Filestore instance from GCP
 
-	// pendingOp tracks an in-progress GCP operation.
-	pendingOp *file.Operation
+	// Operation tracking
+	operationName string                  // Name of pending GCP operation
+	operationType gcpclient.OperationType // Type of operation: ADD, MODIFY, DELETE, NONE
 
-	// opType indicates what operation needs to be performed.
-	opType OperationType
+	// State machine
+	currentState v1beta1.StatusState // Current lifecycle state
 
-	// currentState tracks the current lifecycle state of the resource.
-	currentState v1beta1.StatusState
+	// Update tracking
+	updateMask []string // Fields to update in MODIFY operations
 
-	// updateMask contains the list of fields that need to be updated.
-	updateMask []string
+	// Validation tracking
+	validationErrors []error // Accumulated validation errors
 }
 
-// StateFactory creates new State instances for GCP NfsInstance reconciliation.
+// StateFactory creates State instances for reconciliation.
+// This interface supports dependency injection and testing.
 type StateFactory interface {
-	// NewState creates a new State from the shared types.State.
-	// Returns an error if the GCP client cannot be initialized.
 	NewState(ctx context.Context, nfsInstanceState types.State) (*State, error)
 }
 
-// stateFactory implements StateFactory.
+// stateFactory is the default implementation of StateFactory.
 type stateFactory struct {
-	filestoreClientProvider gcpclient.ClientProvider[v2client.FilestoreClient]
+	filestoreClientProvider gcpclient.GcpClientProvider[v2client.FilestoreClient]
 	env                     abstractions.Environment
 }
 
 // NewStateFactory creates a new StateFactory.
+// Follows the NEW pattern for GCP client initialization (GcpClientProvider).
 func NewStateFactory(
-	filestoreClientProvider gcpclient.ClientProvider[v2client.FilestoreClient],
+	filestoreClientProvider gcpclient.GcpClientProvider[v2client.FilestoreClient],
 	env abstractions.Environment,
 ) StateFactory {
 	return &stateFactory{
@@ -110,32 +82,109 @@ func NewStateFactory(
 	}
 }
 
-// NewState creates a new State instance.
+// NewState creates a new State instance with initialized GCP client.
+// This method is called at the start of each reconciliation loop.
+// Uses NEW pattern client initialization (no credentials file parameter needed).
 func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.State) (*State, error) {
-	fc, err := f.filestoreClientProvider(
-		ctx,
-		config.GcpConfig.CredentialsFile,
-	)
-	if err != nil {
-		return nil, err
-	}
+	filestoreClient := f.filestoreClientProvider()
 
-	return newState(nfsInstanceState, fc), nil
-}
-
-// newState creates a new State with the provided client.
-func newState(nfsInstanceState types.State, fc v2client.FilestoreClient) *State {
 	return &State{
-		State:  nfsInstanceState,
-		client: fc,
-		opType: OpNone,
-	}
+		State:           nfsInstanceState,
+		filestoreClient: filestoreClient,
+		operationType:   gcpclient.NONE,
+	}, nil
 }
 
-// Helper methods for State
+// ============================================================================
+// State Query Methods
+// ============================================================================
 
-// GetGcpLocation returns the GCP location (region/zone) for the instance.
-// Falls back to the Scope region if not explicitly specified.
+// GetFilestoreClient returns the GCP Filestore client.
+func (s *State) GetFilestoreClient() v2client.FilestoreClient {
+	return s.filestoreClient
+}
+
+// GetInstance returns the cached GCP Filestore instance.
+func (s *State) GetInstance() *filestorepb.Instance {
+	return s.instance
+}
+
+// SetInstance caches the GCP Filestore instance.
+func (s *State) SetInstance(instance *filestorepb.Instance) {
+	s.instance = instance
+}
+
+// GetOperationName returns the name of the pending GCP operation.
+func (s *State) GetOperationName() string {
+	return s.operationName
+}
+
+// SetOperationName sets the name of the pending GCP operation.
+func (s *State) SetOperationName(name string) {
+	s.operationName = name
+}
+
+// GetOperationType returns the type of operation (ADD, MODIFY, DELETE, NONE).
+func (s *State) GetOperationType() gcpclient.OperationType {
+	return s.operationType
+}
+
+// SetOperationType sets the type of operation.
+func (s *State) SetOperationType(opType gcpclient.OperationType) {
+	s.operationType = opType
+}
+
+// GetCurrentState returns the current lifecycle state.
+func (s *State) GetCurrentState() v1beta1.StatusState {
+	return s.currentState
+}
+
+// SetCurrentState sets the current lifecycle state.
+func (s *State) SetCurrentState(state v1beta1.StatusState) {
+	s.currentState = state
+}
+
+// GetUpdateMask returns the list of fields to update.
+func (s *State) GetUpdateMask() []string {
+	return s.updateMask
+}
+
+// SetUpdateMask sets the list of fields to update.
+func (s *State) SetUpdateMask(mask []string) {
+	s.updateMask = mask
+}
+
+// AddValidationError adds a validation error to the state.
+func (s *State) AddValidationError(err error) {
+	s.validationErrors = append(s.validationErrors, err)
+}
+
+// GetValidationErrors returns accumulated validation errors.
+func (s *State) GetValidationErrors() []error {
+	return s.validationErrors
+}
+
+// HasValidationErrors returns true if there are validation errors.
+func (s *State) HasValidationErrors() bool {
+	return len(s.validationErrors) > 0
+}
+
+// ClearValidationErrors clears all validation errors.
+func (s *State) ClearValidationErrors() {
+	s.validationErrors = nil
+}
+
+// ============================================================================
+// Helper Methods - GCP Resource Mapping
+// ============================================================================
+
+// GetGcpProjectId returns the GCP project ID from the Scope.
+func (s *State) GetGcpProjectId() string {
+	return s.Scope().Spec.Scope.Gcp.Project
+}
+
+// GetGcpLocation returns the GCP location (zone) for the Filestore instance.
+// Falls back to the region from Scope if not specified in NfsInstance.
 func (s *State) GetGcpLocation() string {
 	nfsInstance := s.ObjAsNfsInstance()
 	location := nfsInstance.Spec.Instance.Gcp.Location
@@ -145,124 +194,86 @@ func (s *State) GetGcpLocation() string {
 	return location
 }
 
-// GetInstanceName returns the name to use for the GCP Filestore instance.
-func (s *State) GetInstanceName() string {
-	return s.ObjAsNfsInstance().Name
-}
-
-// GetProjectId returns the GCP project ID from the Scope.
-func (s *State) GetProjectId() string {
-	return s.Scope().Spec.Scope.Gcp.Project
-}
-
-// GetVpcNetwork returns the VPC network from the Scope.
-func (s *State) GetVpcNetwork() string {
+// GetGcpVpcNetwork returns the VPC network name from the Scope.
+func (s *State) GetGcpVpcNetwork() string {
 	return s.Scope().Spec.Scope.Gcp.VpcNetwork
 }
 
-// DoesInstanceMatch checks if the cached GCP instance matches the desired state.
-func (s *State) DoesInstanceMatch() bool {
-	if s.gcpInstance == nil || len(s.gcpInstance.FileShares) == 0 {
+// GetGcpInstanceId returns the Filestore instance ID.
+// This is the name used in GCP APIs.
+func (s *State) GetGcpInstanceId() string {
+	return s.ObjAsNfsInstance().Name
+}
+
+// ============================================================================
+// Helper Methods - State Comparison
+// ============================================================================
+
+// DoesFilestoreMatch returns true if the cached GCP instance matches the desired spec.
+// Currently only checks capacity, can be extended to check other fields.
+func (s *State) DoesFilestoreMatch() bool {
+	if s.instance == nil || len(s.instance.FileShares) == 0 {
 		return false
 	}
 
 	nfsInstance := s.ObjAsNfsInstance()
-	desiredCapacity := int64(nfsInstance.Spec.Instance.Gcp.CapacityGb)
-	actualCapacity := s.gcpInstance.FileShares[0].CapacityGb
+	desiredCapacityGb := int64(nfsInstance.Spec.Instance.Gcp.CapacityGb)
+	actualCapacityGb := s.instance.FileShares[0].CapacityGb
 
-	return actualCapacity == desiredCapacity
+	return actualCapacityGb == desiredCapacityGb
 }
 
+// NeedsUpdate returns true if the Filestore instance needs to be updated.
+func (s *State) NeedsUpdate() bool {
+	return !s.DoesFilestoreMatch()
+}
+
+// ============================================================================
+// Helper Methods - GCP API Conversion
+// ============================================================================
+
 // ToGcpInstance converts the NfsInstance CRD spec to a GCP Filestore Instance.
-func (s *State) ToGcpInstance() *file.Instance {
+// Uses modern protobuf types from cloud.google.com/go/filestore.
+func (s *State) ToGcpInstance() *filestorepb.Instance {
 	nfsInstance := s.ObjAsNfsInstance()
 	gcpOptions := nfsInstance.Spec.Instance.Gcp
 
 	// Collect GCP details from Scope
-	project := s.GetProjectId()
-	vpc := s.GetVpcNetwork()
+	project := s.GetGcpProjectId()
+	vpc := s.GetGcpVpcNetwork()
 
-	return &file.Instance{
+	return &filestorepb.Instance{
 		Description: nfsInstance.Name,
-		Tier:        string(gcpOptions.Tier),
-		FileShares: []*file.FileShareConfig{
+		Tier:        convertTier(gcpOptions.Tier),
+		FileShares: []*filestorepb.FileShareConfig{
 			{
-				Name:         gcpOptions.FileShareName,
-				CapacityGb:   int64(gcpOptions.CapacityGb),
-				SourceBackup: gcpOptions.SourceBackup,
+				Name:       gcpOptions.FileShareName,
+				CapacityGb: int64(gcpOptions.CapacityGb),
+				// SourceBackup is not yet supported in v2 - will be added when needed
 			},
 		},
-		Networks: []*file.NetworkConfig{
+		Networks: []*filestorepb.NetworkConfig{
 			{
 				Network:         fmt.Sprintf("projects/%s/global/networks/%s", project, vpc),
-				Modes:           []string{"MODE_IPV4"},
+				Modes:           []filestorepb.NetworkConfig_AddressMode{filestorepb.NetworkConfig_MODE_IPV4},
 				ReservedIpRange: s.IpRange().Status.Cidr,
 			},
 		},
 	}
 }
 
-// SetOperationType sets the operation type for this reconciliation cycle.
-func (s *State) SetOperationType(opType OperationType) {
-	s.opType = opType
-}
-
-// GetOperationType returns the current operation type.
-func (s *State) GetOperationType() OperationType {
-	return s.opType
-}
-
-// SetCurrentState sets the current lifecycle state.
-func (s *State) SetCurrentState(state v1beta1.StatusState) {
-	s.currentState = state
-}
-
-// GetCurrentState returns the current lifecycle state.
-func (s *State) GetCurrentState() v1beta1.StatusState {
-	return s.currentState
-}
-
-// SetGcpInstance caches the GCP instance loaded from the API.
-func (s *State) SetGcpInstance(instance *file.Instance) {
-	s.gcpInstance = instance
-}
-
-// GetGcpInstance returns the cached GCP instance.
-func (s *State) GetGcpInstance() *file.Instance {
-	return s.gcpInstance
-}
-
-// SetPendingOperation sets the pending GCP operation.
-func (s *State) SetPendingOperation(op *file.Operation) {
-	s.pendingOp = op
-}
-
-// GetPendingOperation returns the pending GCP operation.
-func (s *State) GetPendingOperation() *file.Operation {
-	return s.pendingOp
-}
-
-// HasPendingOperation returns true if there is a pending operation.
-func (s *State) HasPendingOperation() bool {
-	return s.pendingOp != nil && !s.pendingOp.Done
-}
-
-// SetUpdateMask sets the list of fields to update.
-func (s *State) SetUpdateMask(mask []string) {
-	s.updateMask = mask
-}
-
-// GetUpdateMask returns the list of fields to update.
-func (s *State) GetUpdateMask() []string {
-	return s.updateMask
-}
-
-// HasUpdateMask returns true if there are fields to update.
-func (s *State) HasUpdateMask() bool {
-	return len(s.updateMask) > 0
-}
-
-// GetClient returns the GCP Filestore client.
-func (s *State) GetClient() v2client.FilestoreClient {
-	return s.client
+// convertTier converts the CRD tier string to GCP protobuf tier enum.
+func convertTier(tier v1beta1.GcpFileTier) filestorepb.Instance_Tier {
+	switch tier {
+	case v1beta1.BASIC_HDD:
+		return filestorepb.Instance_BASIC_HDD
+	case v1beta1.BASIC_SSD:
+		return filestorepb.Instance_BASIC_SSD
+	case v1beta1.ZONAL:
+		return filestorepb.Instance_ZONAL
+	case v1beta1.REGIONAL:
+		return filestorepb.Instance_REGIONAL
+	default:
+		return filestorepb.Instance_TIER_UNSPECIFIED
+	}
 }
