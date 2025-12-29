@@ -289,14 +289,14 @@ pkg/kcp/provider/gcp/nfsinstance/v2/
 ### Phase 5: V2 Client Implementation
 
 #### 5.1 Evaluate Modern Client Library
-- [ ] Study `cloud.google.com/go/filestore` API documentation
-- [ ] Review apiv1 package structure
-- [ ] Check CloudFilestoreManagerClient methods
-- [ ] Verify CRUD operations support
-- [ ] Check operation polling support
-- [ ] Compare with OLD client capabilities
-- [ ] List migration requirements
-- [ ] Assess compatibility with existing patterns
+- [x] Study `cloud.google.com/go/filestore` API documentation
+- [x] Review apiv1 package structure
+- [x] Check CloudFilestoreManagerClient methods
+- [x] Verify CRUD operations support
+- [x] Check operation polling support
+- [x] Compare with OLD client capabilities
+- [x] List migration requirements
+- [x] Assess compatibility with existing patterns
 
 **Modern client package**: `cloud.google.com/go/filestore/apiv1`
 
@@ -309,12 +309,12 @@ pkg/kcp/provider/gcp/nfsinstance/v2/
 - Operations handling
 
 #### 5.2 Design Client Interface
-- [ ] Define FilestoreClient interface
-- [ ] Document all required methods
-- [ ] Design mock client interface
-- [ ] Plan error handling strategy
-- [ ] Define retry logic (if needed)
-- [ ] Create client factory pattern
+- [x] Define FilestoreClient interface
+- [x] Document all required methods
+- [x] Design mock client interface
+- [x] Plan error handling strategy
+- [x] Define retry logic (if needed)
+- [x] Create client factory pattern
 
 **Interface design**:
 ```go
@@ -353,6 +353,31 @@ type FilestoreClient interface {
 - [ ] Test retry logic
 - [ ] Test metrics collection
 - [ ] Mock client validation tests
+
+#### Phase 5 Client Implementation Summary (COMPLETED 2025-12-29)
+
+**Modern Client Adopted**: `cloud.google.com/go/filestore/apiv1`
+- Added filestore module to go.mod
+- Integrated CloudFilestoreManagerClient into GcpClients struct
+- Created FilestoreClient interface with business operations
+- Implemented client wrapper following NEW pattern (GcpClientProvider)
+- Created comprehensive mock client with:
+  - In-memory instance and operation storage
+  - Auto-complete and manual operation modes
+  - Error injection capabilities
+  - State management (CREATING → READY, DELETING, etc.)
+- Added unit tests for mock client (all CRUD operations)
+- Used modern protobuf types (`filestorepb.Instance`, `filestorepb.OperationMetadata`)
+- Consistent with existing GCP resources (compute, redis)
+
+**Files Created**:
+- `pkg/kcp/provider/gcp/nfsinstance/v2/client/filestoreClient.go` - Client implementation
+- `pkg/kcp/provider/gcp/nfsinstance/v2/client/mockFilestoreClient.go` - Mock for testing
+
+**Integration**:
+- Added Filestore field to `GcpClients` struct
+- Initialized in `NewGcpClients()` with proper token provider
+- Client accessible via `gcpClients.Filestore`
 
 ---
 
@@ -1033,16 +1058,17 @@ All operations supported in `cloud.google.com/go/filestore/apiv1` CloudFilestore
 
 ### GCP Client Decision
 - **V1 Uses**: `google.golang.org/api/file/v1` (REST API wrapper)
-- **V2 Will Use**: `cloud.google.com/go/filestore` (modern client library)
+- **V2 Uses**: `cloud.google.com/go/filestore/apiv1` (modern client library) ✅ **IMPLEMENTED**
 - **Modern Client**: **EXISTS** at https://pkg.go.dev/cloud.google.com/go/filestore
-- **Decision**: Migrate to modern client in v2
+- **Decision**: Migrated to modern client in v2 (Phase 5 completed)
 - **Rationale**: 
-  - Modern client available from Google (contrary to initial finding)
+  - Modern client available from Google
   - Consistent with other GCP resources (compute, redis, etc.)
-  - Better type safety and API coverage
+  - Better type safety with protobuf types
   - Follows best practices for new GCP client usage
   - V1 remains unchanged for stability
   - Feature flag allows gradual rollout
+- **Integration**: Added to `pkg/kcp/provider/gcp/client/gcpClients.go` as `Filestore` field
 
 ### OLD Pattern Compliance
 - **MUST maintain 3-layer state hierarchy**: `focal.State` → `types.State` → GCP `State`

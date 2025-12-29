@@ -8,6 +8,7 @@ import (
 
 	"cloud.google.com/go/auth/oauth2adapt"
 	compute "cloud.google.com/go/compute/apiv1"
+	filestore "cloud.google.com/go/filestore/apiv1"
 	networkconnectivity "cloud.google.com/go/networkconnectivity/apiv1"
 	redisinstance "cloud.google.com/go/redis/apiv1"
 	rediscluster "cloud.google.com/go/redis/cluster/apiv1"
@@ -31,8 +32,9 @@ type GcpClients struct {
 	NetworkConnectivityCrossNetworkAutomation *networkconnectivity.CrossNetworkAutomationClient
 	RedisCluster                              *rediscluster.CloudRedisClusterClient
 	RedisInstance                             *redisinstance.CloudRedisClient
-	ServiceNetworking                         *servicenetworking.APIService // For IpRange PSA connections (OLD pattern API)
-	CloudResourceManager                      *cloudresourcemanager.Service // For IpRange project number lookup (OLD pattern API)
+	Filestore                                 *filestore.CloudFilestoreManagerClient // For NfsInstance v2
+	ServiceNetworking                         *servicenetworking.APIService          // For IpRange PSA connections (OLD pattern API)
+	CloudResourceManager                      *cloudresourcemanager.Service          // For IpRange project number lookup (OLD pattern API)
 	VpcPeeringClients                         *VpcPeeringClients
 }
 
@@ -129,6 +131,17 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		return nil, fmt.Errorf("create redis instance client: %w", err)
 	}
 
+	// filestore ----------------
+	filestoreTokenProvider, err := b.WithScopes(filestore.DefaultAuthScopes()).BuildTokenProvider()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create filestore token provider: %w", err)
+	}
+	filestoreTokenSource := oauth2adapt.TokenSourceFromTokenProvider(filestoreTokenProvider)
+	filestoreClient, err := filestore.NewCloudFilestoreManagerClient(ctx, option.WithTokenSource(filestoreTokenSource))
+	if err != nil {
+		return nil, fmt.Errorf("create filestore client: %w", err)
+	}
+
 	// service networking and cloud resource manager ----------------
 	// ServiceNetworking uses OLD pattern API (google.golang.org/api/servicenetworking/v1)
 	// because Google does not provide a modern Cloud Client Library for Service Networking API
@@ -184,6 +197,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		NetworkConnectivityCrossNetworkAutomation: ncCrossNetworkAutomation,
 		RedisCluster:                              redisCluster,
 		RedisInstance:                             redisInstance,
+		Filestore:                                 filestoreClient,
 		ServiceNetworking:                         serviceNetworking,
 		CloudResourceManager:                      cloudResourceManager,
 		VpcPeeringClients: &VpcPeeringClients{
