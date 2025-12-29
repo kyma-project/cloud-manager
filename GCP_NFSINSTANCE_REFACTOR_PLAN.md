@@ -226,12 +226,12 @@ import gcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gc
 ### Phase 4: V2 Structure Design
 
 #### 4.1 Define V2 Architecture
-- [ ] Design streamlined directory structure
-- [ ] Plan state management simplification
-- [ ] Define action organization strategy
-- [ ] Plan client interface improvements
-- [ ] Document differences from v1
-- [ ] Create v2 architecture document
+- [x] Design streamlined directory structure
+- [x] Plan state management simplification
+- [x] Define action organization strategy
+- [x] Plan client interface improvements
+- [x] Document differences from v1
+- [x] Create v2 architecture document
 
 **Proposed V2 structure**:
 ```
@@ -261,20 +261,20 @@ pkg/kcp/provider/gcp/nfsinstance/v2/
 ```
 
 #### 4.2 Create V2 Base Files
-- [ ] Create v2 directory structure
-- [ ] Create v2 README with architecture overview
-- [ ] Create `reconcile.go` with state factory interface
-- [ ] Create `state.go` with simplified state struct
-- [ ] Create `actions.go` with action composition
-- [ ] Add comprehensive godoc comments
+- [x] Create v2 directory structure
+- [x] Create v2 README with architecture overview
+- [x] Create `reconcile.go` with state factory interface
+- [x] Create `state.go` with simplified state struct
+- [x] Create `actions.go` with action composition
+- [x] Add comprehensive godoc comments
 
 #### 4.3 Plan Streamlining Improvements
-- [ ] Consolidate validation logic
-- [ ] Simplify state machine transitions
-- [ ] Reduce code duplication
-- [ ] Improve error handling consistency
-- [ ] Better separation of concerns
-- [ ] More idiomatic Go patterns
+- [x] Consolidate validation logic
+- [x] Simplify state machine transitions
+- [x] Reduce code duplication
+- [x] Improve error handling consistency
+- [x] Better separation of concerns
+- [x] More idiomatic Go patterns
 
 **Key improvements**:
 1. **Action organization**: Group related actions in packages
