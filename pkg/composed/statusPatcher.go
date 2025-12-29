@@ -147,6 +147,14 @@ func Forget(_ context.Context, err error) (bool, error) {
 	return true, StopAndForget
 }
 
+func LogError(err error, msg string) StatusPatchErrorHandler {
+	return func(ctx context.Context, _ error) (bool, error) {
+		logger := LoggerFromCtx(ctx)
+		logger.Error(err, msg)
+		return false, nil
+	}
+}
+
 func Log(msg string) StatusPatchErrorHandler {
 	return func(ctx context.Context, err error) (bool, error) {
 		logger := LoggerFromCtx(ctx)

@@ -18,6 +18,7 @@ package cloudcontrol
 
 import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	kcpsubscription "github.com/kyma-project/cloud-manager/pkg/kcp/subscription"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -26,20 +27,49 @@ import (
 var _ = Describe("Feature: VpcNetwork", func() {
 
 	It("Scenario: VpcNetwork AWS is created", func() {
+		const subscriptionName = "dd48fd32-7ae9-4fe3-aa24-d66cb1ea06df"
 		const vpcNetworkName = "3262da42-3fa7-485f-9487-bc66a5fcacc2"
+		const region = "us-east-1"
 
+		subscription := &cloudcontrolv1beta1.Subscription{}
 		var vpcNetwork *cloudcontrolv1beta1.VpcNetwork
 
-		By("When VpcNetwork AWS is created", func() {
-			// TODO: fix this, finish the test
+		awsAccount := infra.AwsMock().NewAccount()
+
+		By("Given AWS Subscription exists", func() {
+			kcpsubscription.Ignore.AddName(subscriptionName)
+			Expect(
+				CreateSubscription(infra.Ctx(), infra, subscription,
+					WithName(subscriptionName),
+					WithSubscriptionSpecGarden("binding-name")),
+			).To(Succeed())
+
+			Expect(
+				SubscriptionPatchStatusReadyAws(infra.Ctx(), infra, subscription, awsAccount.AccountId()),
+			).To(Succeed())
+		})
+
+		By("When VpcNetwork is created", func() {
 			vpcNetwork = cloudcontrolv1beta1.NewVpcNetworkBuilder().
-				WithSubscription("x").
+				WithRegion(region).
+				WithSubscription(subscriptionName).
 				WithCidrBlocks("10.250.0.0/16").
 				Build()
 
 			Expect(
 				CreateObj(infra.Ctx(), infra.KCP().Client(), vpcNetwork, WithName(vpcNetworkName)),
 			).To(Succeed())
+		})
+
+		By("Then VpcNetwork is ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcNetwork, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Subscription", func() {
+			Expect(infra.KCP().Client().Delete(infra.Ctx(), subscription)).To(Succeed())
 		})
 	})
 

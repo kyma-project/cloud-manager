@@ -7,7 +7,9 @@ import (
 )
 
 func newState(kcpCommonState kcpcommonaction.State) *State {
-	return &State{}
+	return &State{
+		State: kcpCommonState,
+	}
 }
 
 var _ vpcnetworktypes.State = (*State)(nil)

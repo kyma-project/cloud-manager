@@ -71,11 +71,13 @@ type VpcNetworkStatus struct {
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
+	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// +optional
 	CidrBlocks []string `json:"cidrBlocks"`
 
+	// +optional
 	Identifiers VpcNetworkStatusIdentifiers `json:"identifiers"`
 }
 

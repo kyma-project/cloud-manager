@@ -144,8 +144,6 @@ spec:
                 type: integer
               state:
                 type: string
-            required:
-            - identifiers
             type: object
         type: object
     served: true
