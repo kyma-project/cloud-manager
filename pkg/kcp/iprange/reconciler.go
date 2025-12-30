@@ -87,6 +87,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 					),
 					allocateIpRange,
 				),
+				copyCidrToStatus,
 				kcpNetworkInit,
 				kcpNetworkLoad,
 				kcpNetworkCreate,
