@@ -9,6 +9,10 @@ import (
 func shouldPeerWithKymaNetwork(ctx context.Context, st composed.State) bool {
 	state := st.(*State)
 
+	if composed.IsMarkedForDeletion(state.Obj()) {
+		return false
+	}
+
 	// can not peer with itself
 	if state.isKymaNetwork {
 		return false
