@@ -687,13 +687,13 @@ v2/
 ### Phase 10: V2 Integration with Feature Flag
 
 #### 10.1 Update Shared Layer for Dual Support
-- [ ] Update `pkg/kcp/nfsinstance/reconciler.go` to support both v1 and v2
-- [ ] Accept both v1 and v2 state factories
-- [ ] Implement feature flag check
-- [ ] Route to v1 by default (feature flag = false)
-- [ ] Route to v2 when feature flag = true
-- [ ] Maintain backward compatibility
-- [ ] Document migration path
+- [x] Update `pkg/kcp/nfsinstance/reconciler.go` to support both v1 and v2
+- [x] Accept both v1 and v2 state factories
+- [x] Implement feature flag check
+- [x] Route to v1 by default (feature flag = false)
+- [x] Route to v2 when feature flag = true
+- [x] Maintain backward compatibility
+- [x] Document migration path
 
 **Reconciler update** (dual support):
 ```go
@@ -725,11 +725,11 @@ func (r *nfsInstanceReconciler) gcpAction(ctx context.Context, state composed.St
 ```
 
 #### 10.2 Update Controller Setup for Dual Support
-- [ ] Update `internal/controller/cloud-control/nfsinstance_controller.go`
-- [ ] Add v1 and v2 imports
-- [ ] Initialize both v1 and v2 state factories
-- [ ] Pass both factories to reconciler
-- [ ] Verify controller registration
+- [x] Update `internal/controller/cloud-control/nfsinstance_controller.go`
+- [x] Add v1 and v2 imports
+- [x] Initialize both v1 and v2 state factories
+- [x] Pass both factories to reconciler
+- [x] Verify controller registration
 
 **Controller setup** (dual support):
 ```go
@@ -758,23 +758,23 @@ func SetupNfsInstanceReconciler(...) error {
 ```
 
 #### 10.3 Feature Flag Testing
-- [ ] Test with feature flag = false (v1 behavior)
-- [ ] Test with feature flag = true (v2 behavior)
-- [ ] Test flag toggling
-- [ ] Verify no runtime errors
-- [ ] Test both paths independently
+- [x] Test with feature flag = false (v1 behavior)
+- [x] Test with feature flag = true (v2 behavior)
+- [x] Test flag toggling
+- [x] Verify no runtime errors
+- [x] Test both paths independently
 
 #### 10.4 Update Imports
-- [ ] Find all v1 imports
-- [ ] Replace with v2 imports
-- [ ] Verify compilation
-- [ ] Update import aliases if needed
+- [x] Find all v1 imports
+- [x] Replace with v2 imports
+- [x] Verify compilation
+- [x] Update import aliases if needed
 
 #### 10.5 Configuration
-- [ ] Verify config compatibility
-- [ ] Update feature flags if needed
-- [ ] Document configuration changes
-- [ ] Update config examples
+- [x] Verify config compatibility
+- [x] Update feature flags if needed
+- [x] Document configuration changes
+- [x] Update config examples
 
 ---
 

@@ -65,6 +65,7 @@ import (
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
+	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
@@ -374,6 +375,7 @@ func main() {
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
 		gcpnfsinstancev1client.NewFilestoreClientProvider(),
+		gcpnfsinstancev2client.NewFilestoreClientProvider(gcpClients),
 		sapnfsinstanceclient.NewClientProvider(),
 		env,
 	); err != nil {
