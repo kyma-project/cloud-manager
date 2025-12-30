@@ -92,11 +92,11 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 				kcpNetworkLoad,
 				kcpNetworkCreate,
 				kcpNetworkWait,
+				kymaPeeringLoad,
 				composed.If(
 					shouldPeerWithKymaNetwork,
 					kymaNetworkLoad,
 					kymaNetworkWait,
-					kymaPeeringLoad,
 					kymaPeeringCreate,
 					kymaPeeringWait,
 				),
