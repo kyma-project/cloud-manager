@@ -43,21 +43,6 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			},
 		}
 
-		DeferCleanup(func() {
-			By("// cleanup: Delete test resources", func() {
-				Expect(Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)).To(Succeed())
-				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule).Should(Succeed())
-				Expect(Delete(infra.Ctx(), infra.SKR().Client(), existingBackup)).To(Succeed())
-				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), existingBackup).Should(Succeed())
-				Expect(Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)).To(Succeed())
-				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume).Should(Succeed())
-				Expect(Delete(infra.Ctx(), infra.KCP().Client(), nfsInstance)).To(Succeed())
-				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).Should(Succeed())
-				Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
-				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), scope).Should(Succeed())
-			})
-		})
-
 		// Set tolerance for backup schedule timing
 		backupschedule.ToleranceInterval = toleranceWindow
 
@@ -176,6 +161,19 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			}, existingBackup)
 			Expect(err).ToNot(HaveOccurred())
 		})
+
+		By("// cleanup: Delete test resources", func() {
+			Expect(Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)).To(Succeed())
+			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule).Should(Succeed())
+			Expect(Delete(infra.Ctx(), infra.SKR().Client(), existingBackup)).To(Succeed())
+			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), existingBackup).Should(Succeed())
+			Expect(Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)).To(Succeed())
+			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume).Should(Succeed())
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), nfsInstance)).To(Succeed())
+			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).Should(Succeed())
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
+			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), scope).Should(Succeed())
+		})
 	})
 
 	It("Scenario: Creates one-time backup schedule", func() {
@@ -187,17 +185,6 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		skrNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 		backupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
-
-		DeferCleanup(func() {
-			By("// cleanup: Delete test resources", func() {
-				Expect(Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)).To(Succeed())
-				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule).Should(Succeed())
-				Expect(Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)).To(Succeed())
-				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume).Should(Succeed())
-				Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
-				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), scope).Should(Succeed())
-			})
-		})
 
 		// Set tolerance and stop reconciliation
 		backupschedule.ToleranceInterval = toleranceWindow
@@ -287,6 +274,15 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 					NewObjActions(WithName(expectedBackupName)),
 				).
 				Should(Succeed())
+		})
+
+		By("// cleanup: Delete test resources", func() {
+			Expect(Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)).To(Succeed())
+			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule).Should(Succeed())
+			Expect(Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)).To(Succeed())
+			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume).Should(Succeed())
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
+			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), scope).Should(Succeed())
 		})
 	})
 })
