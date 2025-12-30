@@ -220,6 +220,18 @@ func PatchObjMergeAnnotation(ctx context.Context, k, v string, obj client.Object
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 
+func PatchObjMergeLabels(ctx context.Context, k, v string, obj client.Object, clnt client.Writer) (bool, error) {
+	if obj.GetLabels() != nil && obj.GetLabels()[k] == v {
+		return false, nil
+	}
+	if obj.GetLabels() == nil {
+		obj.SetLabels(map[string]string{})
+	}
+	obj.GetLabels()[k] = v
+	p := []byte(fmt.Sprintf(`{"metadata": {"labels":{"%s": "%s"}}}`, k, v))
+	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
+}
+
 func PatchObjRemoveFinalizer(ctx context.Context, f string, obj client.Object, clnt client.Writer) (bool, error) {
 	idx := -1
 	for i, s := range obj.GetFinalizers() {

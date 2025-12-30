@@ -92,6 +92,59 @@ func eventuallyTimeoutIs(ctx context.Context, d time.Duration) (context.Context,
 	return ctx, nil
 }
 
+func currentClusterIs(ctx context.Context, clusterAlias string) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+
+	_, err := session.AddExistingCluster(ctx, clusterAlias)
+	return ctx, err
+}
+
+func subscriptionExistsForProvider(ctx context.Context, alias string, provider string) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+
+	pt, err := cloudcontrolv1beta1.ParseProviderType(provider)
+	if err != nil {
+		return ctx, fmt.Errorf("failed to parse provider type: %w", err)
+	}
+
+	subscriptionList := &cloudcontrolv1beta1.SubscriptionList{}
+	err = world.Kcp().GetClient().List(ctx, subscriptionList)
+	if err != nil {
+		return ctx, fmt.Errorf("failed to list subscriptions in KCP: %w", err)
+	}
+
+	var theSubscription *cloudcontrolv1beta1.Subscription
+	for _, sub := range subscriptionList.Items {
+		if sub.Status.Provider == pt {
+			theSubscription = &sub
+			break
+		}
+	}
+
+	if theSubscription == nil {
+		return ctx, fmt.Errorf("subscription not found for provider %q", pt)
+	}
+
+	err = world.Kcp().AddResources(ctx, &ResourceDeclaration{
+		Alias:      alias,
+		Kind:       "Subscription",
+		ApiVersion: cloudcontrolv1beta1.GroupVersion.String(),
+		Name:       theSubscription.Name,
+		Namespace:  theSubscription.Namespace,
+	})
+	if err != nil {
+		return ctx, fmt.Errorf("error adding subscription resource to watch: %w", err)
+	}
+
+	return ctx, nil
+}
+
 func thereIsSharedSKRWithProvider(ctx context.Context, provider string) (context.Context, error) {
 	session := GetCurrentScenarioSession(ctx)
 	if session == nil {

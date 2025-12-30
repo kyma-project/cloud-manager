@@ -22,9 +22,10 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/meta"
 )
 
-var _ = Describe("Feature: VpcNetwork", func() {
+var _ = Describe("Feature: VpcNetwork", Focus, func() {
 
 	It("Scenario: VpcNetwork AWS is created", func() {
 		const subscriptionName = "dd48fd32-7ae9-4fe3-aa24-d66cb1ea06df"
@@ -66,6 +67,45 @@ var _ = Describe("Feature: VpcNetwork", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcNetwork, NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
 				Should(Succeed())
+			cond := meta.FindStatusCondition(*vpcNetwork.Conditions(), cloudcontrolv1beta1.ReasonReady)
+			Expect(cond).ToNot(BeNil())
+			Expect(cond.Reason).To(Equal(cloudcontrolv1beta1.ReasonProvisioned))
+		})
+
+		By("Then VpcNetwork has subscription label", func() {
+			Expect(vpcNetwork.Labels[cloudcontrolv1beta1.SubscriptionLabel]).To(Equal(subscriptionName))
+		})
+
+		By("Then VpcNetwork status has vpcID", func() {
+			Expect(vpcNetwork.Status.Identifiers.Vpc).NotTo(BeEmpty())
+		})
+
+		awsMock := awsAccount.Region(region)
+
+		var vpcID string
+
+		By("Then AWS VPC Network exists", func() {
+			vpc, err := awsMock.DescribeVpc(infra.Ctx(), vpcNetwork.Status.Identifiers.Vpc)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(vpc).ToNot(BeNil())
+			vpcID = *vpc.VpcId
+		})
+
+		By("When KCP VpcNetwork is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), vpcNetwork)).
+				To(Succeed())
+		})
+
+		By("Then KCP VpcNetwork does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcNetwork).
+				Should(Succeed())
+		})
+
+		By("Then AWS VPC Network does not exist", func() {
+			vpc, err := awsMock.DescribeVpc(infra.Ctx(), vpcID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(vpc).To(BeNil())
 		})
 
 		By("// cleanup: delete Subscription", func() {

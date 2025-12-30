@@ -78,6 +78,7 @@ func (r *vpcNetworkReconciler) newAction() composed.Action {
 					composed.ComposeActionsNoName(
 						// delete
 						providerFlow,
+						actions.PatchRemoveCommonFinalizer(),
 					),
 					composed.ComposeActionsNoName(
 						// create

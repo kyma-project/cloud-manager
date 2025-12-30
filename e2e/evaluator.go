@@ -36,6 +36,28 @@ func NewEvaluatorBuilder(skrNamespace string) *EvaluatorBuilder {
 function findConditionTrue(obj, tp) {
   if (obj && obj.status && obj.status.conditions && obj.status.conditions.length) {
     for (var cond of obj.status.conditions) {
+      if (cond.type == tp && cond.status == 'True') {
+        return cond
+      }
+    }
+  }
+  return undefined
+}
+
+function findConditionFalse(obj, tp) {
+  if (obj && obj.status && obj.status.conditions && obj.status.conditions.length) {
+    for (var cond of obj.status.conditions) {
+      if (cond.type == tp && cond.status == 'False') {
+        return cond
+      }
+    }
+  }
+  return undefined
+}
+
+function findCondition(obj, tp) {
+  if (obj && obj.status && obj.status.conditions && obj.status.conditions.length) {
+    for (var cond of obj.status.conditions) {
       if (cond.type == tp) {
         return cond
       }
@@ -43,6 +65,7 @@ function findConditionTrue(obj, tp) {
   }
   return undefined
 }
+
 `))
 
 	return &EvaluatorBuilder{
