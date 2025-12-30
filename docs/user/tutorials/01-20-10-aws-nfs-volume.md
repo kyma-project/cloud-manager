@@ -54,7 +54,7 @@ You have the Cloud Manager module added.
    {PV_NAME}  100G       RWX            Retain           Bound    {NAMESPACE_NAME}/my-vol               
    ```
 
-   Note the `RWX` access mode which allows the volume to be readable and writable from multiple workloads, and the `Bound` status which means the PersistentVolumeClaim claiming this PV is created.
+   Note the `RWX` access mode, which allows the volume to be readable and writable from multiple workloads, and the `Bound` status, which means the PersistentVolumeClaim claims that this PV has been created.
 
 5. Observe the generated PersistentVolumeClaim:
 
@@ -69,7 +69,7 @@ You have the Cloud Manager module added.
    my-vol   Bound    {PV_NAME}  100G       RWX                         
    ```
 
-   Similarly to PV, note the `RWX` access mode and `Bound` status.
+   Similarly to PV, note the `RWX` access mode and the `Bound` status.
 
 6. Create two workloads that both write to the volume:
 
