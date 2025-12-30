@@ -45,11 +45,16 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 
 		DeferCleanup(func() {
 			By("// cleanup: Delete test resources", func() {
-				_ = Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)
-				_ = Delete(infra.Ctx(), infra.SKR().Client(), existingBackup)
-				_ = Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)
-				_ = Delete(infra.Ctx(), infra.KCP().Client(), nfsInstance)
-				_ = Delete(infra.Ctx(), infra.KCP().Client(), scope)
+				Expect(Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)).To(Succeed())
+				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule).Should(Succeed())
+				Expect(Delete(infra.Ctx(), infra.SKR().Client(), existingBackup)).To(Succeed())
+				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), existingBackup).Should(Succeed())
+				Expect(Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)).To(Succeed())
+				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume).Should(Succeed())
+				Expect(Delete(infra.Ctx(), infra.KCP().Client(), nfsInstance)).To(Succeed())
+				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).Should(Succeed())
+				Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
+				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), scope).Should(Succeed())
 			})
 		})
 
@@ -185,9 +190,12 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 
 		DeferCleanup(func() {
 			By("// cleanup: Delete test resources", func() {
-				_ = Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)
-				_ = Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)
-				_ = Delete(infra.Ctx(), infra.KCP().Client(), scope)
+				Expect(Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)).To(Succeed())
+				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule).Should(Succeed())
+				Expect(Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)).To(Succeed())
+				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume).Should(Succeed())
+				Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
+				Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), scope).Should(Succeed())
 			})
 		})
 
