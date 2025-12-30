@@ -27,31 +27,16 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 	)
 
 	It("Scenario: Creates recurring backup schedule with existing backups", func() {
-		var (
-			suffix             string
-			skrNfsVolumeName   string
-			nfsInstanceName    string
-			scheduleName       string
-			existingBackupName string
-			skrNfsVolume       *cloudresourcesv1beta1.AwsNfsVolume
-			nfsInstance        *cloudcontrolv1beta1.NfsInstance
-			scope              *cloudcontrolv1beta1.Scope
-			backupSchedule     *cloudresourcesv1beta1.AwsNfsBackupSchedule
-			existingBackup     *cloudresourcesv1beta1.AwsNfsVolumeBackup
-		)
-
-		suffix = "6278871d-a536-4702-87a1-ffc21dfc38ad"
-		skrNfsVolumeName = suffix
-		nfsInstanceName = suffix
-		scheduleName = suffix
-		existingBackupName = fmt.Sprintf("%s-existing", suffix)
-
-		// Initialize objects
-		skrNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{}
-		nfsInstance = &cloudcontrolv1beta1.NfsInstance{}
-		scope = &cloudcontrolv1beta1.Scope{}
-		backupSchedule = &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
-		existingBackup = &cloudresourcesv1beta1.AwsNfsVolumeBackup{
+		suffix := "6278871d-a536-4702-87a1-ffc21dfc38ad"
+		skrNfsVolumeName := suffix
+		nfsInstanceName := suffix
+		scheduleName := suffix
+		existingBackupName := fmt.Sprintf("%s-existing", suffix)
+		skrNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		scope := &cloudcontrolv1beta1.Scope{}
+		backupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
+		existingBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      existingBackupName,
 				Namespace: DefaultSkrNamespace,
@@ -189,26 +174,14 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 	})
 
 	It("Scenario: Creates one-time backup schedule", func() {
-		var (
-			suffix           string
-			skrNfsVolumeName string
-			nfsInstanceName  string
-			scheduleName     string
-			scope            *cloudcontrolv1beta1.Scope
-			skrNfsVolume     *cloudresourcesv1beta1.AwsNfsVolume
-			nfsInstance      *cloudcontrolv1beta1.NfsInstance
-			backupSchedule   *cloudresourcesv1beta1.AwsNfsBackupSchedule
-		)
-
-		suffix = "a4e8b2f1-7d93-4c6a-9e5f-3b1c8d4a7e9b"
-		skrNfsVolumeName = suffix
-		nfsInstanceName = suffix
-		scheduleName = suffix
-
-		scope = &cloudcontrolv1beta1.Scope{}
-		skrNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{}
-		nfsInstance = &cloudcontrolv1beta1.NfsInstance{}
-		backupSchedule = &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
+		suffix := "a4e8b2f1-7d93-4c6a-9e5f-3b1c8d4a7e9b"
+		skrNfsVolumeName := suffix
+		nfsInstanceName := suffix
+		scheduleName := suffix
+		scope := &cloudcontrolv1beta1.Scope{}
+		skrNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		backupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
 
 		DeferCleanup(func() {
 			By("Cleanup: Delete test resources", func() {
