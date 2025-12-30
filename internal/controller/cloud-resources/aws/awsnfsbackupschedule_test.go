@@ -44,7 +44,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		}
 
 		DeferCleanup(func() {
-			By("Cleanup: Delete test resources", func() {
+			By("// cleanup: Delete test resources", func() {
 				_ = Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)
 				_ = Delete(infra.Ctx(), infra.SKR().Client(), existingBackup)
 				_ = Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)
@@ -184,7 +184,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		backupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
 
 		DeferCleanup(func() {
-			By("Cleanup: Delete test resources", func() {
+			By("// cleanup: Delete test resources", func() {
 				_ = Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)
 				_ = Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)
 				_ = Delete(infra.Ctx(), infra.KCP().Client(), scope)
