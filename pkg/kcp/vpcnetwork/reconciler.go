@@ -64,7 +64,7 @@ func (r *vpcNetworkReconciler) newAction() composed.Action {
 					composed.MarkedForDeletionPredicate,
 					composed.ComposeActionsNoName(
 						// delete
-						composed.Noop,
+						actions.PatchRemoveCommonFinalizer(),
 					),
 					composed.ComposeActionsNoName(
 						// create
