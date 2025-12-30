@@ -446,15 +446,15 @@ type StateFactory interface {
 ### Phase 7: V2 Action Implementation
 
 #### 7.1 Validation Actions
-- [ ] Implement pre-flight validations (`validation/preflight.go`)
-  - [ ] Capacity validation
-  - [ ] Tier validation
-  - [ ] Network validation
-  - [ ] IpRange validation
-- [ ] Implement post-create validations (`validation/postcreate.go`)
-  - [ ] No scale-down validation
-  - [ ] Tier consistency validation
-- [ ] Add validation helpers (`validation/helpers.go`)
+- [x] Implement pre-flight validations (`validation/preflight.go`)
+  - [x] Capacity validation
+  - [x] Tier validation
+  - [x] Network validation
+  - [x] IpRange validation
+- [x] Implement post-create validations (`validation/postcreate.go`)
+  - [x] No scale-down validation
+  - [x] Tier consistency validation
+- [x] Add validation helpers (`validation/helpers.go`)
 - [ ] Write validation tests
 
 **Action signature** (OLD pattern compatible):
@@ -463,163 +463,173 @@ func validatePreflight(ctx context.Context, st composed.State) (error, context.C
 ```
 
 #### 7.2 Load Actions
-- [ ] Implement loadInstance (`operations/load.go`)
-  - [ ] Call GCP Get API
-  - [ ] Handle not found
-  - [ ] Cache in state
-  - [ ] Set state flags
+- [x] Implement loadInstance (`operations/load.go`)
+  - [x] Call GCP Get API
+  - [x] Handle not found
+  - [x] Cache in state
+  - [x] Set state flags
 - [ ] Write load action tests
 - [ ] Test not-found scenarios
 - [ ] Test API error handling
 
 #### 7.3 Create Actions
-- [ ] Implement createInstance (`operations/create.go`)
-  - [ ] Build GCP instance spec
-  - [ ] Handle protocol selection
-  - [ ] Call Create API
-  - [ ] Store operation
-  - [ ] Set creating status
+- [x] Implement createInstance (`operations/create.go`)
+  - [x] Build GCP instance spec
+  - [x] Handle protocol selection
+  - [x] Call Create API
+  - [x] Store operation
+  - [x] Set creating status
 - [ ] Write create action tests
 - [ ] Test validation integration
 - [ ] Test error scenarios
 
 #### 7.4 Update Actions
-- [ ] Implement checkUpdateNeeded (`state/comparison.go`)
-  - [ ] Compare capacity
-  - [ ] Compare configuration
-  - [ ] Build update mask
-- [ ] Implement updateInstance (`operations/update.go`)
-  - [ ] Apply update mask
-  - [ ] Call Patch API
-  - [ ] Store operation
-  - [ ] Set updating status
+- [x] Implement checkUpdateNeeded (`state/comparison.go`)
+  - [x] Compare capacity
+  - [x] Compare configuration
+  - [x] Build update mask
+- [x] Implement updateInstance (`operations/update.go`)
+  - [x] Apply update mask
+  - [x] Call Patch API
+  - [x] Store operation
+  - [x] Set updating status
 - [ ] Write update action tests
 - [ ] Test various update scenarios
 
 #### 7.5 Delete Actions
-- [ ] Implement deleteInstance (`operations/delete.go`)
-  - [ ] Call Delete API
-  - [ ] Store operation
-  - [ ] Set deleting status
+- [x] Implement deleteInstance (`operations/delete.go`)
+  - [x] Call Delete API
+  - [x] Store operation
+  - [x] Set deleting status
 - [ ] Write delete action tests
 - [ ] Test finalizer integration
 
 #### 7.6 Operation Polling
-- [ ] Implement pollOperation (`operations/operation.go`)
-  - [ ] Get operation status
-  - [ ] Handle completion
-  - [ ] Handle errors
-  - [ ] Calculate retry delay
+- [x] Implement pollOperation (`operations/operation.go`)
+  - [x] Get operation status
+  - [x] Handle completion
+  - [x] Handle errors
+  - [x] Calculate retry delay
 - [ ] Write operation polling tests
 - [ ] Test timeout scenarios
 
 #### 7.7 State Machine
-- [ ] Implement state transitions (`state/machine.go`)
-  - [ ] Map GCP states to CRD states
-  - [ ] Handle state changes
-  - [ ] Trigger status updates
+- [x] Implement state transitions (`state/machine.go`)
+  - [x] Map GCP states to CRD states
+  - [x] Handle state changes
+  - [x] Trigger status updates
 - [ ] Write state machine tests
 - [ ] Document state flow
 
 #### 7.8 Status Updates
-- [ ] Implement updateStatus (`state/status.go`)
-  - [ ] Update NfsInstance status
-  - [ ] Set conditions
-  - [ ] Set hosts/capacity
-  - [ ] Handle state data
+- [x] Implement updateStatus (`state/status.go`)
+  - [x] Update NfsInstance status
+  - [x] Set conditions
+  - [x] Set hosts/capacity
+  - [x] Handle state data
 - [ ] Write status update tests
 - [ ] Test condition management
+
+**Phase 7 Implementation Note**: All actions consolidated into `actions.go` to avoid import cycles. Sub-packages removed.
 
 ---
 
 ### Phase 8: V2 Action Composition
 
 #### 8.1 Compose Main Action Flow
-- [ ] Create main action in `actions.go`
-- [ ] Compose action pipeline
-- [ ] Handle feature flags
-- [ ] Add finalizer management
-- [ ] Implement branching logic (create vs delete)
-- [ ] Add stop conditions
+- [x] Create main action in `actions.go`
+- [x] Compose action pipeline
+- [x] Handle feature flags
+- [x] Add finalizer management
+- [x] Implement branching logic (create vs delete)
+- [x] Add stop conditions
 
-**Action composition**:
+**Action composition** (implemented):
 ```go
-func New(stateFactory StateFactory) composed.Action {
-    return func(ctx context.Context, st composed.State) (error, context.Context) {
-        state, err := stateFactory.NewState(ctx, st.(types.State))
-        if err != nil {
-            // Handle state creation error
-        }
-        
-        return composed.ComposeActions(
-            "gcpNfsInstance",
-            validatePreflight,
-            actions.AddCommonFinalizer(),
-            pollOperation,
-            loadInstance,
-            validatePostCreate,
-            stateMachine,
-            checkUpdateNeeded,
-            composed.IfElse(
-                composed.Not(composed.MarkedForDeletionPredicate),
-                createOrUpdateFlow,
-                deleteFlow,
-            ),
-        )(ctx, state)
-    }
+func composeActions() composed.Action {
+    return composed.ComposeActions(
+        "gcpNfsInstanceV2",
+        validatePreflight,
+        actions.AddCommonFinalizer(),
+        pollOperation,
+        loadInstance,
+        validatePostCreate,
+        runStateMachine,
+        checkUpdateNeeded,
+        composed.IfElse(
+            composed.Not(composed.MarkedForDeletionPredicate),
+            createOrUpdateFlow,
+            deleteFlow,
+        ),
+    )
 }
 ```
 
 #### 8.2 Create/Update Flow
-- [ ] Compose create/update actions
-- [ ] Order actions logically
-- [ ] Handle conditional execution
-- [ ] Add logging
-- [ ] Document flow
+- [x] Compose create/update actions
+- [x] Order actions logically
+- [x] Handle conditional execution
+- [x] Add logging
+- [x] Document flow
 
+**Create/Update flow** (implemented):
 ```go
 var createOrUpdateFlow = composed.ComposeActions(
     "create-update",
     syncInstance,           // Create or update
-    pollOperation,          // Wait for completion
     updateStatus,           // Update CRD status
     composed.StopAndForgetAction,
 )
 ```
 
 #### 8.3 Delete Flow
-- [ ] Compose delete actions
-- [ ] Handle cleanup
-- [ ] Remove finalizer
-- [ ] Add logging
-- [ ] Document flow
+- [x] Compose delete actions
+- [x] Handle cleanup
+- [x] Remove finalizer
+- [x] Add logging
+- [x] Document flow
 
+**Delete flow** (implemented):
 ```go
 var deleteFlow = composed.ComposeActions(
     "delete",
-    deleteInstance,
-    pollOperation,
+    syncInstance,
     actions.RemoveCommonFinalizer(),
     composed.StopAndForgetAction,
 )
 ```
 
+**Phase 8 Implementation Note**: All action composition completed and consolidated in `actions.go`.
+
 ---
 
 ### Phase 9: V2 Testing
 
-#### 9.1 Unit Tests - Business Logic Focus
+#### 9.1 API Validation Tests (CEL Expressions)
+- [ ] **Add GCP NfsInstance capacity validation tests to `internal/api-tests/kcp_nfsinstance_test.go`**
+- [ ] Test BASIC_HDD tier: valid capacities (1024-65433)
+- [ ] Test BASIC_HDD tier: invalid capacities (<1024, >65433)
+- [ ] Test BASIC_SSD tier: valid capacities (2560-65433)
+- [ ] Test BASIC_SSD tier: invalid capacities (<2560, >65433)
+- [ ] Test ZONAL tier: valid capacities (1024-10240, divisible by 256)
+- [ ] Test ZONAL tier: invalid capacities (not divisible by 256, out of range)
+- [ ] Test REGIONAL tier: valid capacities (1024-10240, divisible by 256)
+- [ ] Test REGIONAL tier: invalid capacities (not divisible by 256, out of range)
+- [ ] Follow GcpNfsVolume test pattern from `skr_gcpnfsvolume_test.go`
+
+**Reference**: See `internal/api-tests/skr_gcpnfsvolume_test.go` for similar CEL validation test pattern
+
+#### 9.2 Unit Tests - Business Logic Focus
 - [ ] **Review v1 tests** - identify useless tests to avoid replicating
 - [ ] Test state factory (error cases, client initialization)
 - [ ] Test state helpers (business logic only - comparison, conversion)
-- [ ] Test validation actions (business rules - capacity limits, tier rules)
 - [ ] Test load actions (error handling, not-found scenarios)
 - [ ] Test create actions (GCP API request building, error handling)
 - [ ] Test update actions (update mask calculation, business rules)
 - [ ] Test delete actions (error handling, operation tracking)
 - [ ] Test operation polling (state transitions, timeout logic)
-- [ ] Test state machine (critical state transitions only)
 - [ ] Test status updates (condition logic, status field mapping)
+- [ ] Test validatePostCreate (no scale-down for BASIC tiers)
 - [ ] **SKIP trivial tests**: getters, setters, simple type conversions
 - [ ] **SKIP mock validation tests**: tests that only verify mock behavior
 - [ ] **SKIP redundant tests**: duplicate coverage of same logic
@@ -657,7 +667,7 @@ v2/
     └── comparison_test.go
 ```
 
-#### 9.2 Integration Tests - Critical Paths Only
+#### 9.3 Integration Tests - Critical Paths Only
 - [ ] Create test fixtures (minimal, reusable)
 - [ ] Test complete reconciliation flow (happy path)
 - [ ] Test create → ready flow (with GCP operations)
@@ -669,7 +679,7 @@ v2/
 - [ ] **FOCUS**: End-to-end critical business scenarios
 - [ ] **SKIP**: Testing every possible combination of states
 
-#### 9.3 Mock Testing
+#### 9.4 Mock Testing
 - [ ] Verify mock client works
 - [ ] Test error injection
 - [ ] Test operation scenarios

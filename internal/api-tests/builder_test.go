@@ -74,6 +74,10 @@ func canNotCreateKcp[T client.Object](title string, b Builder[T], errMsg string)
 	createScenario(func() client.Client { return infra.KCP().Client() },
 		title, b, false, errMsg, false)
 }
+func canChangeKcp[T client.Object](title string, b Builder[T], cb func(b Builder[T])) {
+	updateScenario(func() client.Client { return infra.KCP().Client() },
+		title, b, cb, true, "", false)
+}
 func canNotChangeKcp[T client.Object](title string, b Builder[T], cb func(b Builder[T]), errMsg string) {
 	updateScenario(func() client.Client { return infra.KCP().Client() },
 		title, b, cb, false, errMsg, false)

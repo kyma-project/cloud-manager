@@ -43,19 +43,6 @@ type State struct {
 
 	// Cached GCP resources (using modern protobuf types)
 	instance *filestorepb.Instance // Current Filestore instance from GCP
-
-	// Operation tracking
-	operationName string                  // Name of pending GCP operation
-	operationType gcpclient.OperationType // Type of operation: ADD, MODIFY, DELETE, NONE
-
-	// State machine
-	currentState v1beta1.StatusState // Current lifecycle state
-
-	// Update tracking
-	updateMask []string // Fields to update in MODIFY operations
-
-	// Validation tracking
-	validationErrors []error // Accumulated validation errors
 }
 
 // StateFactory creates State instances for reconciliation.
@@ -91,7 +78,6 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.Stat
 	return &State{
 		State:           nfsInstanceState,
 		filestoreClient: filestoreClient,
-		operationType:   gcpclient.NONE,
 	}, nil
 }
 
@@ -112,66 +98,6 @@ func (s *State) GetInstance() *filestorepb.Instance {
 // SetInstance caches the GCP Filestore instance.
 func (s *State) SetInstance(instance *filestorepb.Instance) {
 	s.instance = instance
-}
-
-// GetOperationName returns the name of the pending GCP operation.
-func (s *State) GetOperationName() string {
-	return s.operationName
-}
-
-// SetOperationName sets the name of the pending GCP operation.
-func (s *State) SetOperationName(name string) {
-	s.operationName = name
-}
-
-// GetOperationType returns the type of operation (ADD, MODIFY, DELETE, NONE).
-func (s *State) GetOperationType() gcpclient.OperationType {
-	return s.operationType
-}
-
-// SetOperationType sets the type of operation.
-func (s *State) SetOperationType(opType gcpclient.OperationType) {
-	s.operationType = opType
-}
-
-// GetCurrentState returns the current lifecycle state.
-func (s *State) GetCurrentState() v1beta1.StatusState {
-	return s.currentState
-}
-
-// SetCurrentState sets the current lifecycle state.
-func (s *State) SetCurrentState(state v1beta1.StatusState) {
-	s.currentState = state
-}
-
-// GetUpdateMask returns the list of fields to update.
-func (s *State) GetUpdateMask() []string {
-	return s.updateMask
-}
-
-// SetUpdateMask sets the list of fields to update.
-func (s *State) SetUpdateMask(mask []string) {
-	s.updateMask = mask
-}
-
-// AddValidationError adds a validation error to the state.
-func (s *State) AddValidationError(err error) {
-	s.validationErrors = append(s.validationErrors, err)
-}
-
-// GetValidationErrors returns accumulated validation errors.
-func (s *State) GetValidationErrors() []error {
-	return s.validationErrors
-}
-
-// HasValidationErrors returns true if there are validation errors.
-func (s *State) HasValidationErrors() bool {
-	return len(s.validationErrors) > 0
-}
-
-// ClearValidationErrors clears all validation errors.
-func (s *State) ClearValidationErrors() {
-	s.validationErrors = nil
 }
 
 // ============================================================================
