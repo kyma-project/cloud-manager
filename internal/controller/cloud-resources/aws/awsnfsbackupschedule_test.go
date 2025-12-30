@@ -40,8 +40,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			existingBackup     *cloudresourcesv1beta1.AwsNfsVolumeBackup
 		)
 
-		// This ensures each parallel test run has different resource names
-		suffix = fmt.Sprintf("recurring-%d", GinkgoParallelProcess())
+		suffix = "6278871d-a536-4702-87a1-ffc21dfc38ad"
 		skrNfsVolumeName = fmt.Sprintf("aws-vol-%s", suffix)
 		nfsInstanceName = fmt.Sprintf("aws-inst-%s", suffix)
 		scheduleName = fmt.Sprintf("aws-schedule-%s", suffix)
@@ -201,8 +200,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			backupSchedule   *cloudresourcesv1beta1.AwsNfsBackupSchedule
 		)
 
-		// Unique naming for parallel test runs
-		suffix = fmt.Sprintf("onetime-%d", GinkgoParallelProcess())
+		suffix = "a4e8b2f1-7d93-4c6a-9e5f-3b1c8d4a7e9b"
 		skrNfsVolumeName = fmt.Sprintf("aws-vol-%s", suffix)
 		nfsInstanceName = fmt.Sprintf("aws-inst-%s", suffix)
 		scheduleName = fmt.Sprintf("aws-schedule-%s", suffix)
