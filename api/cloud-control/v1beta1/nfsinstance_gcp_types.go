@@ -1,5 +1,10 @@
 package v1beta1
 
+// NfsOptionsGcp defines GCP-specific NFS instance options
+// +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD" && self.capacityGb >= 1024 && self.capacityGb <= 65433), message="BASIC_HDD tier capacityGb must be between 1024 and 65433"
+// +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_SSD" || self.tier == "BASIC_SSD" && self.capacityGb >= 2560 && self.capacityGb <= 65433), message="BASIC_SSD tier capacityGb must be between 2560 and 65433"
+// +kubebuilder:validation:XValidation:rule=(self.tier != "ZONAL" || self.tier == "ZONAL" && self.capacityGb >= 1024 && self.capacityGb <= 10240 && (self.capacityGb - 1024) % 256 == 0), message="ZONAL tier capacityGb must be between 1024 and 10240, and divisible by 256"
+// +kubebuilder:validation:XValidation:rule=(self.tier != "REGIONAL" || self.tier == "REGIONAL" && self.capacityGb >= 1024 && self.capacityGb <= 10240 && (self.capacityGb - 1024) % 256 == 0), message="REGIONAL tier capacityGb must be between 1024 and 10240, and divisible by 256"
 type NfsOptionsGcp struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."

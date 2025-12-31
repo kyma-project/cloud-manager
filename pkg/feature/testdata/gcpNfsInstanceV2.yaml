@@ -1,0 +1,10 @@
+gcpNfsInstanceV2:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Enable v2 on dev landscape
+      query: landscape == "dev"
+      variation: enabled
+  defaultRule:
+    variation: disabled
