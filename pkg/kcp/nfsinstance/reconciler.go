@@ -28,11 +28,11 @@ type nfsInstanceReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	awsStateFactory     awsnfsinstance.StateFactory
-	azureStateFactory   azurenfsinstance.StateFactory
-	gcpStateFactoryV1   gcpnfsinstancev1.StateFactory
-	gcpStateFactoryV2   gcpnfsinstancev2.StateFactory
-	sapStateFactory     sapnfsinstance.StateFactory
+	awsStateFactory   awsnfsinstance.StateFactory
+	azureStateFactory azurenfsinstance.StateFactory
+	gcpStateFactoryV1 gcpnfsinstancev1.StateFactory
+	gcpStateFactoryV2 gcpnfsinstancev2.StateFactory
+	sapStateFactory   sapnfsinstance.StateFactory
 }
 
 func NewNfsInstanceReconciler(
@@ -97,13 +97,13 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 func (r *nfsInstanceReconciler) gcpAction() composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
-		
+
 		// Check feature flag to determine which implementation to use
 		if feature.GcpNfsInstanceV2.Value(ctx) {
 			logger.Info("Using GCP NfsInstance v2 implementation")
 			return gcpnfsinstancev2.New(r.gcpStateFactoryV2)(ctx, st)
 		}
-		
+
 		logger.Info("Using GCP NfsInstance v1 implementation (default)")
 		return gcpnfsinstancev1.New(r.gcpStateFactoryV1)(ctx, st)
 	}
