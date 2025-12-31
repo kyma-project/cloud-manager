@@ -8,8 +8,9 @@ import (
 func copyCidrToStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if len(state.ObjAsIpRange().Status.Cidr) > 0 {
-		return nil, nil
+	if len(state.ObjAsIpRange().Status.Cidr) > 0 ||
+		state.ObjAsIpRange().Status.Cidr == state.ObjAsIpRange().Spec.Cidr {
+		return nil, ctx
 	}
 
 	state.ObjAsIpRange().Status.Cidr = state.ObjAsIpRange().Spec.Cidr
