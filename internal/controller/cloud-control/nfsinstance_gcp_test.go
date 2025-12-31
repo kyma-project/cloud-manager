@@ -36,6 +36,14 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 	if debugged.Debugged {
 		timeout = time.Minute * 20
 	}
+
+	// Skip v1 tests when GcpNfsInstanceV2 flag is enabled
+	BeforeEach(func() {
+		if feature.GcpNfsInstanceV2.Value(infra.Ctx()) {
+			Skip("Skipping v1 tests when GcpNfsInstanceV2 flag is enabled")
+		}
+	})
+
 	Context("Scenario: GCP NFSVolume Happy Path", Ordered, func() {
 		gcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 		It("Scenario: GCP NFSVolume Creation", func() {

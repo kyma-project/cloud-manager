@@ -203,6 +203,13 @@ func (m *MockFilestoreClient) GetOperation(ctx context.Context, operationName st
 
 // Test helper methods
 
+// GetInstanceByName retrieves an instance directly by its full name (for testing)
+func (m *MockFilestoreClient) GetInstanceByName(name string) *filestorepb.Instance {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.instances[name]
+}
+
 // SetInstance directly sets an instance in the mock storage
 func (m *MockFilestoreClient) SetInstance(projectId, location, instanceId string, instance *filestorepb.Instance) {
 	m.mu.Lock()

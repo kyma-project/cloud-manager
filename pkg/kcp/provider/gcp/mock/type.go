@@ -6,6 +6,7 @@ import (
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
+	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
@@ -29,6 +30,7 @@ type Clients interface {
 	gcpsubnetclient.ComputeClient
 	gcpsubnetclient.NetworkConnectivityClient
 	gcpexposeddataclient.Client
+	gcpnfsinstancev2client.FilestoreClient
 }
 
 type Providers interface {
@@ -42,6 +44,7 @@ type Providers interface {
 	SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient]
 	SubnetRegionOperationsClientProvider() client.GcpClientProvider[gcpsubnetclient.RegionOperationsClient]
 	FilestoreClientProvider() client.ClientProvider[gcpnfsinstancev1client.FilestoreClient]
+	FilestoreClientProviderV2() client.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient]
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
 	FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]
 	FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclient.FileBackupClient]
@@ -79,4 +82,6 @@ type Server interface {
 	ExposedDataConfig
 
 	FileBackupClientFakeUtils
+
+	FilestoreClientFakeUtils
 }

@@ -16,6 +16,7 @@ import (
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
+	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
@@ -72,11 +73,12 @@ func New() Server {
 			mutex:              sync.Mutex{},
 			connectionPolicies: map[string]*networkconnectivitypb.ServiceConnectionPolicy{},
 		},
-		nfsStore:          &nfsStore{},
-		serviceUsageStore: &serviceUsageStore{},
-		nfsRestoreStore:   &nfsRestoreStore{},
-		nfsBackupStore:    &nfsBackupStore{},
-		vpcPeeringStore:   &vpcPeeringStore{},
+		nfsStore:              &nfsStore{},
+		filestoreClientFakeV2: newFilestoreClientFakeV2(),
+		serviceUsageStore:     &serviceUsageStore{},
+		nfsRestoreStore:       &nfsRestoreStore{},
+		nfsBackupStore:        &nfsBackupStore{},
+		vpcPeeringStore:       &vpcPeeringStore{},
 		memoryStoreClientFake: &memoryStoreClientFake{
 			mutex:          sync.Mutex{},
 			redisInstances: map[string]*redispb.Instance{},
@@ -98,6 +100,7 @@ type server struct {
 	*computeClientFake
 	*networkConnectivityClientFake
 	*nfsStore
+	*filestoreClientFakeV2
 	*serviceUsageStore
 	*nfsRestoreStore
 	*nfsBackupStore
@@ -212,6 +215,12 @@ func (s *server) FilestoreClientProvider() client.ClientProvider[gcpnfsinstancev
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FilestoreClientProvider mock...")
 		return s, nil
+	}
+}
+
+func (s *server) FilestoreClientProviderV2() client.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient] {
+	return func() gcpnfsinstancev2client.FilestoreClient {
+		return s
 	}
 }
 

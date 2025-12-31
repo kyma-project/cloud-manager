@@ -664,7 +664,29 @@ v2/
     └── comparison_test.go
 ```
 
-#### 9.3 Integration Tests - Critical Paths Only
+#### 9.3 Controller Tests (Integration Tests)
+- [x] **Create nfsinstance_gcp_v2_test.go** - Complete Ginkgo/Gomega test suite
+- [x] **Test create scenario** - NfsInstance v2 creation with mock client
+- [x] **Test update scenario** - Capacity increase with operation handling
+- [x] **Test delete scenario** - Cleanup with finalizer removal
+- [x] **Test error handling** - GCP API error simulation and recovery
+- [x] **Integrate with testinfra** - Use infra.GcpMock().FilestoreClientProviderV2()
+- [x] **Update suite_test.go** - Add v2 filestore client provider parameter
+- [x] **Add v2 mock to GCP mock infrastructure** - FilestoreClientProviderV2()
+- [x] Follow CONTROLLER_TESTS.md patterns (Eventually, LoadAndCheck, By blocks)
+- [x] Validate status sync (Ready condition, capacity, host/path)
+- [x] Verify GCP mock state (instance created/updated/deleted)
+- [x] Test operation completion flow (async operations)
+
+**Status**: COMPLETE - All controller test scenarios implemented
+
+**Test coverage**:
+- Create flow: Scope → IpRange → NfsInstance → Ready
+- Update flow: Capacity change → Operation → Status update
+- Delete flow: Deletion timestamp → Cleanup → Removed
+- Error handling: API error → Error condition → Recovery → Ready
+
+#### 9.4 Integration Tests - Critical Paths Only
 - [ ] Create test fixtures (minimal, reusable)
 - [ ] Test complete reconciliation flow (happy path)
 - [ ] Test create → ready flow (with GCP operations)
