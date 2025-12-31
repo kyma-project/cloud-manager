@@ -1117,12 +1117,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		// Cloud Manager reconciles =======================================
 
 		By("Then Cloud Manager detects VPC CIDR changes and update routes", func() {
-			// trigger the reconciliation
-			_, err := composed.PatchObjMergeAnnotation(infra.Ctx(), "test", "1", kcpPeering, infra.KCP().Client())
-			Expect(err).To(Succeed())
-
 			// Removing ready condition to make sure that reconciliation happened
 			Expect(meta.RemoveStatusCondition(&kcpPeering.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)).To(BeTrue())
+
+			Expect(infra.KCP().Client().Status().Update(infra.Ctx(), kcpPeering)).To(Succeed())
 		})
 
 		By("And Then VpcPeering is ready", func() {
