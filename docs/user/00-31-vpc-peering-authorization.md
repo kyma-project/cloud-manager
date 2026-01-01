@@ -65,6 +65,7 @@ Grant the following permissions to the Kyma service account in your GCP project:
 
 | Permission                           | Description                                                                 |
 |--------------------------------------|-----------------------------------------------------------------------------|
+| `compute.globalOperations.get`       | Required to fetch the operations created by the peering request.            |
 | `compute.networks.addPeering`        | Required to create the peering request in the remote project and VPC.       |
 | `compute.networks.get`               | Required to fetch the list of existing VPC peerings from the remote VPC.    |
 | `compute.networks.listEffectiveTags` | Required to check if the remote VPC is tagged with the Kyma shoot name tag. |
