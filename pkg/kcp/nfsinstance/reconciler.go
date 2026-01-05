@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
-	gcpnfsinstancev1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1"
+	gcpnfsinstancev1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1" //nolint:staticcheck // SA1019: v1 maintained for backward compatibility until v2 is default
 	gcpnfsinstancev2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2"
 	sapnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance"
 	"github.com/kyma-project/cloud-manager/pkg/util"
