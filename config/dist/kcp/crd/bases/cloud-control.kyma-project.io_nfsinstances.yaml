@@ -71,6 +71,7 @@ spec:
                   azure:
                     type: object
                   gcp:
+                    description: NfsOptionsGcp defines GCP-specific NFS instance options
                     properties:
                       capacityGb:
                         default: 1024
@@ -116,6 +117,25 @@ spec:
                     - location
                     - tier
                     type: object
+                    x-kubernetes-validations:
+                    - message: BASIC_HDD tier capacityGb must be between 1024 and
+                        65433
+                      rule: (self.tier != "BASIC_HDD" || self.tier == "BASIC_HDD"
+                        && self.capacityGb >= 1024 && self.capacityGb <= 65433)
+                    - message: BASIC_SSD tier capacityGb must be between 2560 and
+                        65433
+                      rule: (self.tier != "BASIC_SSD" || self.tier == "BASIC_SSD"
+                        && self.capacityGb >= 2560 && self.capacityGb <= 65433)
+                    - message: ZONAL tier capacityGb must be between 1024 and 10240,
+                        and divisible by 256
+                      rule: (self.tier != "ZONAL" || self.tier == "ZONAL" && self.capacityGb
+                        >= 1024 && self.capacityGb <= 10240 && (self.capacityGb -
+                        1024) % 256 == 0)
+                    - message: REGIONAL tier capacityGb must be between 1024 and 10240,
+                        and divisible by 256
+                      rule: (self.tier != "REGIONAL" || self.tier == "REGIONAL" &&
+                        self.capacityGb >= 1024 && self.capacityGb <= 10240 && (self.capacityGb
+                        - 1024) % 256 == 0)
                   openStack:
                     properties:
                       sizeGb:
@@ -167,6 +187,12 @@ spec:
               rule: self.ipRange.name != ""
             - message: RemoteRef is required.
               rule: self.remoteRef.name != ""
+            - message: Cannot reduce capacity for BASIC_HDD tier instances.
+              rule: '!has(oldSelf.instance.gcp) || !has(self.instance.gcp) || oldSelf.instance.gcp.tier
+                != ''BASIC_HDD'' || self.instance.gcp.capacityGb >= oldSelf.instance.gcp.capacityGb'
+            - message: Cannot reduce capacity for BASIC_SSD tier instances.
+              rule: '!has(oldSelf.instance.gcp) || !has(self.instance.gcp) || oldSelf.instance.gcp.tier
+                != ''BASIC_SSD'' || self.instance.gcp.capacityGb >= oldSelf.instance.gcp.capacityGb'
           status:
             description: NfsInstanceStatus defines the observed state of NfsInstance
             properties:
