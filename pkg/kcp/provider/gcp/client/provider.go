@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,10 +12,8 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
-	"github.com/kyma-project/cloud-manager/pkg/metrics"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
-	"google.golang.org/api/googleapi"
 	"google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
@@ -143,14 +140,14 @@ func CheckGcpAuthentication(ctx context.Context, credentialsFile string) {
 
 	credentials, err := loadCredentials(ctx, credentialsFile, oauth2.UserinfoEmailScope)
 	if err != nil {
-		IncrementCallCounter("Authentication", "Check", "", err)
+		IncrementCallCounter("Authentication", "Check", "", "", err)
 		logger.Error(err, "GCP Authentication Check - failed to load credentials")
 		return
 	}
 
 	svc, err := oauth2.NewService(ctx, option.WithTokenSource(credentials.TokenSource))
 	if err != nil {
-		IncrementCallCounter("Authentication", "Check", "", err)
+		IncrementCallCounter("Authentication", "Check", "", "", err)
 		logger.Error(err, "GCP Authentication Check - error creating new oauth2.Service")
 		return
 	}
@@ -158,25 +155,11 @@ func CheckGcpAuthentication(ctx context.Context, credentialsFile string) {
 	userInfoSvc := oauth2.NewUserinfoV2MeService(svc)
 	userInfo, err := userInfoSvc.Get().Do()
 
-	IncrementCallCounter("Authentication", "Check", "", err)
+	IncrementCallCounter("Authentication", "Check", "", "", err)
 	if err != nil {
 		logger.Error(err, "GCP Authentication Check - error getting UserInfo")
 		return
 	}
 
 	logger.Info(fmt.Sprintf("GCP Authentication Check - successful [user = %s].", userInfo.Name))
-}
-
-func IncrementCallCounter(serviceName, operationName, region string, err error) {
-	responseCode := 200
-	if err != nil {
-		var e *googleapi.Error
-		if ok := errors.As(err, &e); ok {
-			responseCode = e.Code
-		} else {
-			responseCode = 500
-		}
-	}
-	gcpProject := ""
-	metrics.CloudProviderCallCount.WithLabelValues(metrics.CloudProviderGCP, fmt.Sprintf("%s/%s", serviceName, operationName), fmt.Sprintf("%d", responseCode), region, gcpProject).Inc()
 }
