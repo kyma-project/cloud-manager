@@ -12,35 +12,38 @@ This directory contains the modernized GCP NfsInstance implementation that follo
 
 - **Pattern**: OLD Reconciler Pattern (multi-provider CRD)
 - **State Hierarchy**: `focal.State` → `types.State` (shared) → `v2.State` (GCP-specific)
-- **Client**: `google.golang.org/api/file/v1` (REST API wrapper)
+- **Client**: `cloud.google.com/go/filestore/apiv1` (Modern protobuf API)
 - **CRD**: `cloud-control.kyma-project.io/v1beta1.NfsInstance` (multi-provider)
 
 ## Key Improvements Over V1
 
-### 1. Better Organization
-- Actions grouped by purpose (operations, validation, state management)
-- Clear separation of concerns
+### 1. Modern GCP Client
+- Uses `cloud.google.com/go/filestore/apiv1` (modern protobuf-based API)
+- Cleaner client interface with operation tracking
+- Better error handling and type safety
+- Follows NEW pattern for client initialization (GcpClientProvider)
+
+### 2. Simplified Package Structure
+- Flat file organization at package root
+- Actions as individual files (not grouped in subdirectories)
+- Clear action naming (createInstance, updateInstance, deleteInstance, etc.)
 - Easier to navigate and understand
 
-### 2. Simplified State Management
-- Cleaner state struct with better field naming
-- Consolidated state helper methods
-- Improved state machine logic in dedicated package
+### 3. Streamlined State Management
+- Cleaner state struct with modern protobuf types
+- Simple state getters/setters
+- No separate state machine package needed
 
-### 3. Improved Validation
-- Centralized validation logic in validation package
-- Clearer validation error messages
-- Better separation of pre-flight and post-creation validations
+### 4. Improved Action Flow
+- Clear branching with `IfElse` composition
+- Separate wait actions (waitInstanceReady, waitInstanceDeleted)
+- Operation polling handled explicitly
+- Better separation of concerns
 
-### 4. Enhanced Client Abstraction
-- Cleaner client interface
-- Better error handling
-- Easier to mock for testing
-
-### 5. Streamlined Testing
-- Focus on business logic tests
+### 5. Enhanced Testing
+- Mock client for unit tests
+- Better test organization
 - Avoid trivial getter/setter tests
-- Better test organization matching code structure
 
 ### 6. Consistent Error Handling
 - Uniform error patterns across all actions
@@ -52,83 +55,92 @@ This directory contains the modernized GCP NfsInstance implementation that follo
 ```
 v2/
 ├── README.md                      → This file (architecture overview)
-├── reconcile.go                   → Entry point, state factory exposure
-├── state.go                       → Streamlined state definition
-├── actions.go                     → Composed action flow
+├── reconcile.go                   → Entry point, wraps state factory
+├── state.go                       → State definition with protobuf types
+├── compose.go                     → Action composition with IfElse branching
+├── util.go                        → Helper utilities
 │
 ├── client/                        → GCP Filestore client abstraction
-│   ├── filestore.go              → Client interface & implementation
-│   ├── types.go                  → Client types & constants
-│   └── mock.go                   → Mock client for tests
+│   ├── filestoreClient.go        → Client interface & implementation (protobuf API)
+│   └── mockFilestoreClient.go    → Mock client for tests
 │
-├── operations/                    → CRUD operations and operation polling
-│   ├── create.go                 → Create filestore instance
-│   ├── update.go                 → Update filestore instance
-│   ├── delete.go                 → Delete filestore instance
-│   ├── load.go                   → Load instance from GCP
-│   └── operation.go              → Operation polling logic
-│
-├── validation/                    → Validation logic
-│   ├── preflight.go              → Pre-flight validations
-│   ├── postcreate.go             → Post-creation validations
-│   └── helpers.go                → Validation utilities
-│
-└── state/                         → State management
-    ├── machine.go                → State machine transitions
-    ├── status.go                 → Status update helpers
-    └── comparison.go             → Filestore comparison logic
+└── Actions (individual files at package root):
+    ├── pollOperation.go          → Poll pending GCP operations
+    ├── loadInstance.go           → Load instance from GCP
+    ├── createInstance.go         → Create filestore instance
+    ├── updateInstance.go         → Update filestore instance
+    ├── deleteInstance.go         → Delete filestore instance
+    ├── waitInstanceReady.go      → Wait for instance to become ready
+    ├── waitInstanceDeleted.go    → Wait for deletion to complete
+    └── updateStatus.go           → Update NfsInstance status
 ```
 
 ## Reconciliation Flow
 
 The v2 reconciler follows this streamlined action sequence:
 
-1. **validatePreflight** → Pre-flight validation (capacity, tier, network, IpRange)
-2. **AddCommonFinalizer** → Ensure finalizer for cleanup
-3. **pollOperation** → Poll pending GCP operations (if any)
-4. **loadInstance** → Fetch instance from GCP Filestore API
-5. **validatePostCreate** → Post-creation validation (no scale-down for BASIC tiers)
-6. **stateMachine** → State machine logic + determine operation type
-7. **Branch: Not Marked for Deletion**
-   - **syncInstance** → Create or update instance based on operation type
-   - **pollOperation** → Wait for GCP operation to complete
+1. **AddCommonFinalizer** → Ensure finalizer for cleanup
+2. **pollOperation** → Poll pending GCP operations (if any)
+3. **loadInstance** → Fetch instance from GCP Filestore API
+4. **Branch: Not Marked for Deletion** (`IfElse` composition)
+   - **createInstance** → Create instance if it doesn't exist
+   - **waitInstanceReady** → Wait for instance to become ready
+   - **updateInstance** → Update instance if changes needed
    - **updateStatus** → Update NfsInstance status
    - **StopAndForget** → Complete reconciliation
-8. **Branch: Marked for Deletion**
-   - **deleteInstance** → Delete filestore instance
-   - **pollOperation** → Wait for deletion to complete
+5. **Branch: Marked for Deletion**
+   - **deleteInstance** → Delete filestore instance if it exists
+   - **waitInstanceDeleted** → Wait for deletion to complete
    - **RemoveCommonFinalizer** → Remove finalizer
    - **StopAndForget** → Complete reconciliation
 
 ## State Machine
 
-The state machine manages the lifecycle of the GCP Filestore instance:
+The v2 implementation uses a simplified approach with wait actions instead of a complex state machine:
 
-| GCP State | CRD State | Operation Type | Next Action |
-|-----------|-----------|----------------|-------------|
-| Not Found | Any | ADD | Create instance |
-| CREATING | Processing | NONE | Poll operation |
-| READY | Processing | MODIFY (if mismatch) | Update instance |
-| READY | Processing | NONE (if match) | Update status to Ready |
-| READY | Ready | MODIFY (if mismatch) | Update instance |
-| READY | Ready | NONE (if match) | No-op, stop |
-| ERROR | Error | NONE | Report error |
-| DELETING | Deleting | NONE | Poll operation |
-| Deleted | Any (marked for deletion) | DELETE | Already deleted, remove finalizer |
+| Action | Condition | Behavior |
+|--------|-----------|----------|
+| **createInstance** | Instance doesn't exist in GCP | Create instance, store operation name |
+| **waitInstanceReady** | Instance is being created or updated | Wait until instance state is READY |
+| **updateInstance** | Instance exists but differs from spec | Update instance, store operation name |
+| **deleteInstance** | Instance exists and marked for deletion | Delete instance, store operation name |
+| **waitInstanceDeleted** | Instance is being deleted | Wait until instance is fully deleted |
+| **pollOperation** | Operation name stored in status | Poll operation until completion |
+
+The status conditions track the reconciliation state:
+- `Ready`: Instance is ready and matches spec
+- `Processing`: Operation in progress (create/update/delete)
+- `Error`: Error occurred during reconciliation
 
 ## Client Interface
 
-The client interface provides a clean abstraction over the GCP Filestore API:
+The client interface provides a clean abstraction over the GCP Filestore API using modern protobuf types:
 
 ```go
 type FilestoreClient interface {
-    GetInstance(ctx context.Context, projectId, location, instanceId string) (*file.Instance, error)
-    CreateInstance(ctx context.Context, projectId, location, instanceId string, instance *file.Instance) (*file.Operation, error)
-    UpdateInstance(ctx context.Context, projectId, location, instanceId, updateMask string, instance *file.Instance) (*file.Operation, error)
-    DeleteInstance(ctx context.Context, projectId, location, instanceId string) (*file.Operation, error)
-    GetOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error)
+    // GetInstance retrieves a Filestore instance by name.
+    GetInstance(ctx context.Context, projectId, location, instanceId string) (*filestorepb.Instance, error)
+
+    // CreateInstance creates a new Filestore instance.
+    // Returns the operation name for tracking.
+    CreateInstance(ctx context.Context, projectId, location, instanceId string, instance *filestorepb.Instance) (string, error)
+
+    // UpdateInstance updates an existing Filestore instance.
+    // The updateMask specifies which fields should be updated.
+    // Returns the operation name for tracking.
+    UpdateInstance(ctx context.Context, projectId, location, instanceId string, instance *filestorepb.Instance, updateMask []string) (string, error)
+
+    // DeleteInstance deletes a Filestore instance.
+    // Returns the operation name for tracking.
+    DeleteInstance(ctx context.Context, projectId, location, instanceId string) (string, error)
+
+    // GetOperation retrieves the status of a long-running operation.
+    // Returns true if the operation is done, false otherwise.
+    GetOperation(ctx context.Context, operationName string) (bool, error)
 }
 ```
+
+The client uses `cloud.google.com/go/filestore/apiv1` (modern protobuf-based API) and follows the NEW pattern for client initialization via `GcpClientProvider`.
 
 ## State Structure
 
@@ -136,44 +148,29 @@ type FilestoreClient interface {
 type State struct {
     types.State                           // Shared NfsInstance state (OLD pattern)
     
-    client          FilestoreClient       // GCP Filestore client
-    gcpInstance     *file.Instance        // Cached GCP instance
-    pendingOp       *file.Operation       // In-progress operation
-    opType          OperationType         // ADD, MODIFY, DELETE, NONE
-    
-    // State machine
-    currentState    v1beta1.StatusState   // Current lifecycle state
-    
-    // Update tracking
-    updateMask      []string              // Fields requiring update
+    filestoreClient v2client.FilestoreClient  // GCP Filestore client
+    instance        *filestorepb.Instance     // Cached GCP instance (protobuf type)
 }
 ```
 
-## Operation Types
-
-```go
-type OperationType int
-
-const (
-    OpNone   OperationType = iota  // No operation needed
-    OpAdd                          // Create new instance
-    OpModify                       // Update existing instance
-    OpDelete                       // Delete instance
-)
-```
+The state is simple and focuses on essential data:
+- Embeds `types.State` for OLD pattern compatibility
+- Uses modern protobuf types from `cloud.google.com/go/filestore/apiv1/filestorepb`
+- Client initialization follows NEW pattern (GcpClientProvider)
 
 ## Key Differences from V1
 
 | Aspect | V1 | V2 |
 |--------|----|----|
-| **File organization** | Flat structure | Organized in packages |
-| **State helpers** | Mixed in state.go | Separated by concern (state/, operations/, validation/) |
-| **Validation** | Split across files | Centralized in validation/ |
-| **Client** | Directly in client/ | Better abstraction in client/ |
+| **GCP Client** | `google.golang.org/api/file/v1` (REST wrapper) | `cloud.google.com/go/filestore/apiv1` (protobuf) |
+| **Client Pattern** | OLD pattern (ClientProvider) | NEW pattern (GcpClientProvider) |
+| **File organization** | Mixed/unclear structure | Flat action files at package root |
+| **Action composition** | Sequential with manual branching | `IfElse` composition with clear branching |
+| **Operation tracking** | Stored in state with manual polling | Operation name in status, explicit poll/wait actions |
+| **Wait logic** | Inline in actions | Separate wait actions (waitInstanceReady, waitInstanceDeleted) |
+| **State struct** | Many intermediate fields | Simple with protobuf types |
+| **Validation** | Mixed in actions | Inline in create/update actions |
 | **Testing** | Many trivial tests | Focus on business logic |
-| **Action naming** | check*, sync* | Clearer purpose-based names |
-| **Error handling** | Varied patterns | Consistent approach |
-| **State machine** | Embedded in checkNUpdateState | Dedicated state/machine.go |
 
 ## Feature Flag Usage
 
@@ -200,19 +197,29 @@ if feature.GcpNfsInstanceV2.Value(ctx) {
 
 ## Testing Strategy
 
-### Unit Tests
-- Focus on business logic and decision points
-- Test error handling and edge cases
-- Test state transitions and API interactions
+### Current Testing Status
+- **Unit Tests**: Limited to utility functions (util_test.go - tier conversion logic)
+- **Controller Tests**: Integration tests in [internal/controller/cloud-control/nfsinstance_gcp_v2_test.go](/internal/controller/cloud-control/nfsinstance_gcp_v2_test.go)
+  - Create and delete lifecycle
+  - Create, update, and delete lifecycle
+  - Uses testinfra framework with GCP mock server
+  - Feature flag gated (skips when `gcpNfsInstanceV2` disabled)
+- **Mocks**: Mock client available in client/mockFilestoreClient.go
+
+### Test Coverage
+- ✅ Complete reconciliation flows (create → ready → update → delete)
+- ✅ GCP Filestore instance creation and tracking
+- ✅ Status updates (Ready condition, host, path, capacity)
+- ✅ Capacity updates (scale up)
+- ✅ Deletion with finalizer cleanup
+
+### Recommended Approach for Additional Tests
+When adding more tests, focus on:
+- Error handling and edge cases
+- Error recovery scenarios
+- Validation logic
 - **Avoid** testing simple getters/setters
 - **Avoid** testing framework code
-- **Avoid** redundant tests
-
-### Integration Tests
-- Test complete reconciliation flows
-- Test create → ready → update → delete lifecycle
-- Test error recovery scenarios
-- Use testinfra framework with mocked clients
 
 ## Migration Path
 
