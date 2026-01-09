@@ -1,6 +1,10 @@
 package cloudcontrol
 
+// Run with: FF_IP_RANGE_REFACTORED=true go test
+
 import (
+	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -15,6 +19,10 @@ import (
 var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", func() {
 
 	It("Scenario: KCP GCP IpRange lifecycle with CIDR (refactored)", func() {
+		if !feature.IpRangeRefactored.Value(context.Background()) {
+			Skip("IpRange refactored implementation is disabled")
+		}
+
 		const (
 			kymaName    = "cbd30a68-eecd-4d3f-8a9b-2e60ed609115"
 			ipRangeName = "b9446f79-70f1-443f-bde4-adfa7f1b2d0d"
@@ -52,11 +60,8 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 		})
 
 		By("When KCP IpRange is created with refactored implementation", func() {
-			// Create context with ipRangeRefactored feature flag enabled
-			ctx := feature.ContextBuilderFromCtx(infra.Ctx()).Custom("ipRangeRefactored", true).Build(infra.Ctx())
-
 			Eventually(CreateKcpIpRange).
-				WithArguments(ctx, infra.KCP().Client(), ipRange,
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange,
 					WithName(ipRangeName),
 					WithKcpIpRangeSpecCidr("10.250.0.0/22"),
 					WithKcpIpRangeRemoteRef(ipRangeName),
@@ -147,6 +152,10 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 	})
 
 	It("Scenario: KCP GCP IpRange lifecycle without CIDR (refactored)", func() {
+		if !feature.IpRangeRefactored.Value(context.Background()) {
+			Skip("IpRange refactored implementation is disabled")
+		}
+
 		const (
 			kymaName    = "4d8c28c0-d1dd-4711-833d-aa2c559c9cc8"
 			ipRangeName = "d0590de2-aae5-42c2-b11d-f9506f14e5c6"
@@ -184,11 +193,8 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 		})
 
 		By("When KCP IpRange is created WITHOUT CIDR with refactored implementation", func() {
-			// Create context with ipRangeRefactored feature flag enabled
-			ctx := feature.ContextBuilderFromCtx(infra.Ctx()).Custom("ipRangeRefactored", true).Build(infra.Ctx())
-
 			Eventually(CreateKcpIpRange).
-				WithArguments(ctx, infra.KCP().Client(), ipRange,
+				WithArguments(infra.Ctx(), infra.KCP().Client(), ipRange,
 					WithName(ipRangeName),
 					// Note: NO WithKcpIpRangeSpecCidr() - testing defaulting
 					WithKcpIpRangeRemoteRef(ipRangeName),

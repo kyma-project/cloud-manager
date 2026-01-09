@@ -1,11 +1,15 @@
 package cloudcontrol
 
+// Run with: FF_IP_RANGE_REFACTORED unset or =false
+
 import (
+	"context"
 	"strconv"
 	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -17,6 +21,10 @@ import (
 var _ = Describe("Feature: KCP IpRange for GCP", func() {
 
 	It("Scenario: KCP IpRange with specified CIDR is created and deleted", func() {
+		if feature.IpRangeRefactored.Value(context.Background()) {
+			Skip("IpRange legacy implementation is disabled")
+		}
+
 		const (
 			kymaName    = "570c0d27-d67a-44cc-908a-2c151d50303e"
 			ipRangeName = "81dbff76-33ce-4a2b-be48-a48ea4f2a25b"
@@ -128,6 +136,10 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 	})
 
 	It("Scenario: KCP IpRange without CIDR is created and deleted", func() {
+		if feature.IpRangeRefactored.Value(context.Background()) {
+			Skip("IpRange legacy implementation is disabled")
+		}
+
 		const (
 			kymaName    = "89668d12-0132-4748-b175-fe66dd1c4d93"
 			ipRangeName = "6a9123da-dacb-4803-abf9-6d238e903d40"
