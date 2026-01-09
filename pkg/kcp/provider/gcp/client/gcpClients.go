@@ -19,6 +19,7 @@ import (
 	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
 	servicenetworking "google.golang.org/api/servicenetworking/v1"
+	"google.golang.org/grpc"
 )
 
 type GcpClients struct {
@@ -66,31 +67,66 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	}
 	computeTokenSource := oauth2adapt.TokenSourceFromTokenProvider(computeTokenProvider)
 
-	computeNetworks, err := compute.NewNetworksRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+	computeDialOpts := []option.ClientOption{
+		option.WithTokenSource(computeTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "Networks"))),
+	}
+
+	computeNetworks, err := compute.NewNetworksRESTClient(ctx, computeDialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("create compute networs client: %w", err)
 	}
-	computeAddress, err := compute.NewAddressesRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+
+	computeDialOptsAddresses := []option.ClientOption{
+		option.WithTokenSource(computeTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "Addresses"))),
+	}
+	computeAddress, err := compute.NewAddressesRESTClient(ctx, computeDialOptsAddresses...)
 	if err != nil {
 		return nil, fmt.Errorf("create compute addresses client: %w", err)
 	}
-	computeRouters, err := compute.NewRoutersRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+
+	computeDialOptsRouters := []option.ClientOption{
+		option.WithTokenSource(computeTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "Routers"))),
+	}
+	computeRouters, err := compute.NewRoutersRESTClient(ctx, computeDialOptsRouters...)
 	if err != nil {
 		return nil, fmt.Errorf("create compute routers client: %w", err)
 	}
-	computeSubnetworks, err := compute.NewSubnetworksRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+
+	computeDialOptsSubnetworks := []option.ClientOption{
+		option.WithTokenSource(computeTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "Subnetworks"))),
+	}
+	computeSubnetworks, err := compute.NewSubnetworksRESTClient(ctx, computeDialOptsSubnetworks...)
 	if err != nil {
 		return nil, fmt.Errorf("create compute subnetworks client: %w", err)
 	}
-	computeRegionOperations, err := compute.NewRegionOperationsRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+
+	computeDialOptsRegionOps := []option.ClientOption{
+		option.WithTokenSource(computeTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "RegionOperations"))),
+	}
+	computeRegionOperations, err := compute.NewRegionOperationsRESTClient(ctx, computeDialOptsRegionOps...)
 	if err != nil {
 		return nil, fmt.Errorf("create compute region operations client: %w", err)
 	}
-	computeGlobalAddresses, err := compute.NewGlobalAddressesRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+
+	computeDialOptsGlobalAddr := []option.ClientOption{
+		option.WithTokenSource(computeTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "GlobalAddresses"))),
+	}
+	computeGlobalAddresses, err := compute.NewGlobalAddressesRESTClient(ctx, computeDialOptsGlobalAddr...)
 	if err != nil {
 		return nil, fmt.Errorf("create compute global addresses client: %w", err)
 	}
-	computeGlobalOperations, err := compute.NewGlobalOperationsRESTClient(ctx, option.WithTokenSource(computeTokenSource))
+
+	computeDialOptsGlobalOps := []option.ClientOption{
+		option.WithTokenSource(computeTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "GlobalOperations"))),
+	}
+	computeGlobalOperations, err := compute.NewGlobalOperationsRESTClient(ctx, computeDialOptsGlobalOps...)
 	if err != nil {
 		return nil, fmt.Errorf("create compute global operations client: %w", err)
 	}
@@ -103,7 +139,11 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	}
 	networkConnectivityTokenSource := oauth2adapt.TokenSourceFromTokenProvider(networkConnectivityTokenProvider)
 
-	ncCrossNetworkAutomation, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, option.WithTokenSource(networkConnectivityTokenSource))
+	ncDialOpts := []option.ClientOption{
+		option.WithTokenSource(networkConnectivityTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("NetworkConnectivity", "CrossNetworkAutomation"))),
+	}
+	ncCrossNetworkAutomation, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, ncDialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("create network connectivity cross network automation client: %w", err)
 	}
@@ -115,7 +155,11 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		return nil, fmt.Errorf("failed to create redis cluster token provider: %w", err)
 	}
 	redisClusterTokenSource := oauth2adapt.TokenSourceFromTokenProvider(redisClusterTokenProvider)
-	redisCluster, err := rediscluster.NewCloudRedisClusterClient(ctx, option.WithTokenSource(redisClusterTokenSource))
+	redisClusterDialOpts := []option.ClientOption{
+		option.WithTokenSource(redisClusterTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("RedisCluster", "CloudRedisCluster"))),
+	}
+	redisCluster, err := rediscluster.NewCloudRedisClusterClient(ctx, redisClusterDialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("create redis cluster client: %w", err)
 	}
@@ -126,7 +170,11 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		return nil, fmt.Errorf("failed to create redis instance token provider: %w", err)
 	}
 	redisInstanceTokenSource := oauth2adapt.TokenSourceFromTokenProvider(redisInstanceTokenProvider)
-	redisInstance, err := redisinstance.NewCloudRedisClient(ctx, option.WithTokenSource(redisInstanceTokenSource))
+	redisInstanceDialOpts := []option.ClientOption{
+		option.WithTokenSource(redisInstanceTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("RedisInstance", "CloudRedis"))),
+	}
+	redisInstance, err := redisinstance.NewCloudRedisClient(ctx, redisInstanceDialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("create redis instance client: %w", err)
 	}
@@ -170,7 +218,11 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		return nil, fmt.Errorf("failed to build vpc peering compute token provider: %w", err)
 	}
 	vpcPeeringComputeNetworksTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringComputeNetworksTokenProvider)
-	vpcPeeringComputeNetworks, err := compute.NewNetworksRESTClient(ctx, option.WithTokenSource(vpcPeeringComputeNetworksTokenSource))
+	vpcPeeringNetworksDialOpts := []option.ClientOption{
+		option.WithTokenSource(vpcPeeringComputeNetworksTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "VpcPeeringNetworks"))),
+	}
+	vpcPeeringComputeNetworks, err := compute.NewNetworksRESTClient(ctx, vpcPeeringNetworksDialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("error creating vpc peering compute networks client: %w", err)
 	}
@@ -181,7 +233,11 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		return nil, fmt.Errorf("failed to build vpc peering resource manager token provider: %w", err)
 	}
 	vpcPeeringresourceManagerTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringResourceManagerTokenProvider)
-	vpcPeeringresourceManagerTagBindings, err := resourcemanager.NewTagBindingsRESTClient(ctx, option.WithTokenSource(vpcPeeringresourceManagerTokenSource))
+	vpcPeeringTagBindingsDialOpts := []option.ClientOption{
+		option.WithTokenSource(vpcPeeringresourceManagerTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("ResourceManager", "TagBindings"))),
+	}
+	vpcPeeringresourceManagerTagBindings, err := resourcemanager.NewTagBindingsRESTClient(ctx, vpcPeeringTagBindingsDialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("error creating resource_manager tag bindings client: %w", err)
 	}
