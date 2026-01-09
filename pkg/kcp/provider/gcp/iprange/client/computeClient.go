@@ -52,7 +52,6 @@ func (c *computeClient) GetIpRange(ctx context.Context, projectId, name string) 
 	}
 
 	out, err := c.globalAddressesClient.Get(ctx, req)
-	gcpclient.IncrementCallCounter("Compute", "GlobalAddresses.Get", "", err)
 	if err != nil {
 		logger.Info("GetIpRange", "err", err)
 	}
@@ -68,7 +67,6 @@ func (c *computeClient) DeleteIpRange(ctx context.Context, projectId, name strin
 	}
 
 	op, err := c.globalAddressesClient.Delete(ctx, req)
-	gcpclient.IncrementCallCounter("Compute", "GlobalAddresses.Delete", "", err)
 
 	var operationName string
 	if op != nil {
@@ -96,7 +94,6 @@ func (c *computeClient) CreatePscIpRange(ctx context.Context, projectId, vpcName
 	}
 
 	op, err := c.globalAddressesClient.Insert(ctx, req)
-	gcpclient.IncrementCallCounter("Compute", "GlobalAddresses.Insert", "", err)
 
 	var operationName string
 	if op != nil {
@@ -126,14 +123,12 @@ func (c *computeClient) ListGlobalAddresses(ctx context.Context, projectId, vpc 
 			break
 		}
 		if err != nil {
-			gcpclient.IncrementCallCounter("Compute", "GlobalAddresses.List", "", err)
 			logger.Error(err, "ListGlobalAddresses", "projectId", projectId, "vpc", vpc)
 			return nil, err
 		}
 		addresses = append(addresses, addr)
 	}
 
-	gcpclient.IncrementCallCounter("Compute", "GlobalAddresses.List", "", nil)
 	return addresses, nil
 }
 
@@ -146,7 +141,6 @@ func (c *computeClient) GetGlobalOperation(ctx context.Context, projectId, opera
 	}
 
 	out, err := c.globalOperationsClient.Get(ctx, req)
-	gcpclient.IncrementCallCounter("Compute", "GlobalOperations.Get", "", err)
 	if err != nil {
 		logger.Error(err, "GetGlobalOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
@@ -163,7 +157,6 @@ func (c *computeClient) WaitGlobalOperation(ctx context.Context, projectId, oper
 	}
 
 	_, err := c.globalOperationsClient.Wait(ctx, req)
-	gcpclient.IncrementCallCounter("Compute", "GlobalOperations.Wait", "", err)
 	if err != nil {
 		logger.Error(err, "WaitGlobalOperation", "projectId", projectId, "operationName", operationName)
 		return err
