@@ -202,11 +202,19 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	}
 	serviceNetworkingTokenSource := oauth2adapt.TokenSourceFromTokenProvider(serviceNetworkingTokenProvider)
 
-	serviceNetworking, err := servicenetworking.NewService(ctx, option.WithTokenSource(serviceNetworkingTokenSource))
+	// Wrap with metrics middleware for REST APIs
+	serviceNetworkingHTTPClient := NewMetricsHTTPClient("ServiceNetworking", nil)
+	cloudResourceManagerHTTPClient := NewMetricsHTTPClient("CloudResourceManager", nil)
+
+	serviceNetworking, err := servicenetworking.NewService(ctx,
+		option.WithTokenSource(serviceNetworkingTokenSource),
+		option.WithHTTPClient(serviceNetworkingHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create service networking client: %w", err)
 	}
-	cloudResourceManager, err := cloudresourcemanager.NewService(ctx, option.WithTokenSource(serviceNetworkingTokenSource))
+	cloudResourceManager, err := cloudresourcemanager.NewService(ctx,
+		option.WithTokenSource(serviceNetworkingTokenSource),
+		option.WithHTTPClient(cloudResourceManagerHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create cloud resource manager client: %w", err)
 	}

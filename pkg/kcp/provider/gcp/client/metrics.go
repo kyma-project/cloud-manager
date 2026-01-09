@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/kyma-project/cloud-manager/pkg/metrics"
 	"google.golang.org/api/googleapi"
@@ -37,22 +39,18 @@ func UnaryClientInterceptor(serviceName, resource string) grpc.UnaryClientInterc
 
 // Example: "/google.cloud.compute.v1.Addresses/Insert" -> "Insert"
 func extractOperationName(method string) string {
-	for i := len(method) - 1; i >= 0; i-- {
-		if method[i] == '/' {
-			return method[i+1:]
-		}
+	if idx := strings.LastIndexByte(method, '/'); idx >= 0 {
+		return method[idx+1:]
 	}
 	return method
 }
 
-func extractRegionAndProject(req interface{}) (region string, project string) {
+func extractRegionAndProject(req interface{}) (region, project string) {
 	if req == nil {
 		return "", ""
 	}
 
 	val := reflect.ValueOf(req)
-
-	// Dereference pointer if needed
 	if val.Kind() == reflect.Ptr {
 		if val.IsNil() {
 			return "", ""
@@ -64,42 +62,177 @@ func extractRegionAndProject(req interface{}) (region string, project string) {
 		return "", ""
 	}
 
-	if regionField := val.FieldByName("Region"); regionField.IsValid() && regionField.Kind() == reflect.String {
-		region = regionField.String()
+	if field := val.FieldByName("Region"); field.IsValid() && field.Kind() == reflect.String {
+		region = field.String()
 	}
 
-	if projectField := val.FieldByName("Project"); projectField.IsValid() && projectField.Kind() == reflect.String {
-		project = projectField.String()
-	} else if projectIdField := val.FieldByName("ProjectId"); projectIdField.IsValid() && projectIdField.Kind() == reflect.String {
-		project = projectIdField.String()
+	if field := val.FieldByName("Project"); field.IsValid() && field.Kind() == reflect.String {
+		project = field.String()
+	} else if field := val.FieldByName("ProjectId"); field.IsValid() && field.Kind() == reflect.String {
+		project = field.String()
 	}
 
 	return region, project
 }
 
-// This function is kept for backward compatibility with OLD pattern clients
-func IncrementCallCounter(serviceName, operationName, region string, project string, err error) {
-	responseCode := 200
+// metricsRoundTripper wraps an HTTP transport to automatically record metrics for REST API calls
+type metricsRoundTripper struct {
+	base        http.RoundTripper
+	serviceName string
+}
+
+// RoundTrip implements http.RoundTripper interface
+func (m *metricsRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	resp, err := m.base.RoundTrip(req)
+
+	operation := extractOperationFromURL(req.URL.Path, req.Method)
+	apiErr := m.convertToAPIError(resp, err)
+
+	IncrementCallCounter(m.serviceName, operation, "", "", apiErr)
+
+	return resp, err
+}
+
+// convertToAPIError normalizes response errors for metric recording
+func (m *metricsRoundTripper) convertToAPIError(resp *http.Response, err error) error {
 	if err != nil {
-		// Try to extract response code from googleapi.Error (REST APIs)
-		var e *googleapi.Error
-		if ok := errors.As(err, &e); ok {
-			responseCode = e.Code
-		} else if s, ok := status.FromError(err); ok {
-			// Extract from gRPC status (modern Cloud Client Libraries)
-			responseCode = httpCodeFromGrpcCode(s.Code())
-		} else {
-			// Generic error
-			responseCode = 500
+		return err
+	}
+	if resp != nil && resp.StatusCode >= 400 {
+		return &googleapi.Error{Code: resp.StatusCode}
+	}
+	return nil
+}
+
+// extractOperationFromURL extracts the operation name from REST API URL path
+// Example: POST /v1/projects/{project}/services/{service}:enable -> "Services.Enable"
+func extractOperationFromURL(path, method string) string {
+	parts := filterPathSegments(strings.Split(strings.TrimPrefix(path, "/"), "/"))
+	if len(parts) == 0 {
+		return method
+	}
+
+	// Handle custom methods (":enable", ":disable", etc.)
+	if idx := strings.IndexByte(parts[len(parts)-1], ':'); idx > 0 {
+		if len(parts) >= 2 {
+			resource := capitalize(parts[len(parts)-2])
+			action := capitalize(parts[len(parts)-1][idx+1:])
+			return resource + "." + action
 		}
 	}
+
+	// Standard REST operations
+	resource := capitalize(parts[0])
+	action := deriveActionFromMethod(method, hasResourceID(parts))
+	return resource + "." + action
+}
+
+// filterPathSegments removes version, project, and placeholder segments
+func filterPathSegments(parts []string) []string {
+	var result []string
+	skipNext := false
+
+	for i, part := range parts {
+		if skipNext {
+			skipNext = false
+			continue
+		}
+
+		// Skip version (v1, v1beta1) and "projects" at start
+		if i == 0 && (strings.HasPrefix(part, "v") || part == "projects") {
+			continue
+		}
+
+		// Skip "projects" and "{...}" placeholders along with next segment
+		if part == "projects" || part == "locations" || strings.HasPrefix(part, "{") {
+			skipNext = true
+			continue
+		}
+
+		result = append(result, part)
+	}
+
+	return result
+}
+
+// hasResourceID checks if the path targets a specific resource
+func hasResourceID(parts []string) bool {
+	return len(parts) > 1 && !strings.HasPrefix(parts[len(parts)-1], "{")
+}
+
+// deriveActionFromMethod maps HTTP methods to action names
+func deriveActionFromMethod(method string, hasID bool) string {
+	if hasID {
+		switch method {
+		case "GET":
+			return "Get"
+		case "DELETE":
+			return "Delete"
+		case "PUT", "PATCH":
+			return "Update"
+		}
+	} else {
+		switch method {
+		case "GET":
+			return "List"
+		case "POST":
+			return "Insert"
+		}
+	}
+	return method
+}
+
+func capitalize(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+// NewMetricsHTTPClient creates an HTTP client with automatic metrics recording for REST APIs
+func NewMetricsHTTPClient(serviceName string, baseTransport http.RoundTripper) *http.Client {
+	if baseTransport == nil {
+		baseTransport = http.DefaultTransport
+	}
+	return &http.Client{
+		Transport: &metricsRoundTripper{
+			base:        baseTransport,
+			serviceName: serviceName,
+		},
+	}
+}
+
+// IncrementCallCounter records API call metrics
+func IncrementCallCounter(serviceName, operationName, region, project string, err error) {
+	code := extractHTTPStatusCode(err)
 	metrics.CloudProviderCallCount.WithLabelValues(
 		metrics.CloudProviderGCP,
 		serviceName+"/"+operationName,
-		fmt.Sprintf("%d", responseCode),
+		fmt.Sprintf("%d", code),
 		region,
 		project,
 	).Inc()
+}
+
+// extractHTTPStatusCode converts errors to HTTP status codes
+func extractHTTPStatusCode(err error) int {
+	if err == nil {
+		return 200
+	}
+
+	// Try googleapi.Error (REST APIs)
+	var apiErr *googleapi.Error
+	if errors.As(err, &apiErr) {
+		return apiErr.Code
+	}
+
+	// Try gRPC status (gRPC APIs)
+	if s, ok := status.FromError(err); ok {
+		return httpCodeFromGrpcCode(s.Code())
+	}
+
+	// Generic error
+	return 500
 }
 
 func httpCodeFromGrpcCode(code codes.Code) int {
