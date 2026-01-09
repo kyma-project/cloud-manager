@@ -1,0 +1,28 @@
+name: E2E tests
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      provider:
+        type: choice
+        required: true
+        options:
+          - aws
+          - gcp
+          - azure
+        description: Choose the cloud provider for the shared instance
+        default: azure
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set provider env var
+        run: |
+          PROVIDER=${{ inputs.provider }}
+          PROVIDER=${PROVIDER:-"azure"}
+          echo "PROVIDER=$PROVIDER" >> $GITHUB_ENV
+      - name: Break if provider is empty
+        if: ${{ env.PROVIDER == '' }}
+        run: echo "PROVIDER is missing or empty!" && exit 1
