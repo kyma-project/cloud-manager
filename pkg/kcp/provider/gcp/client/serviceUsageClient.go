@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"google.golang.org/api/option"
 	"google.golang.org/api/serviceusage/v1"
