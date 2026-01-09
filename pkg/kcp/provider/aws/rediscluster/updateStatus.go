@@ -36,6 +36,30 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		hasChanged = true
 	}
 
+	if len(state.memberClusters) > 0 {
+		cacheNodeType := ptr.Deref(state.memberClusters[0].CacheNodeType, "")
+		if redisInstance.Status.CacheNodeType != cacheNodeType {
+			redisInstance.Status.CacheNodeType = cacheNodeType
+			hasChanged = true
+		}
+	}
+
+	if len(state.elastiCacheReplicationGroup.NodeGroups) > 0 {
+		shardCount := int32(len(state.elastiCacheReplicationGroup.NodeGroups))
+		if redisInstance.Status.ShardCount != shardCount {
+			redisInstance.Status.ShardCount = shardCount
+			hasChanged = true
+		}
+
+		if len(state.elastiCacheReplicationGroup.NodeGroups[0].NodeGroupMembers) > 0 {
+			replicasPerShard := int32(len(state.elastiCacheReplicationGroup.NodeGroups[0].NodeGroupMembers))
+			if redisInstance.Status.ReplicasPerShard != replicasPerShard {
+				redisInstance.Status.ReplicasPerShard = replicasPerShard
+				hasChanged = true
+			}
+		}
+	}
+
 	hasReadyCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
 	hasReadyStatusState := redisInstance.Status.State == cloudcontrolv1beta1.StateReady
 	if !hasChanged && hasReadyCondition && hasReadyStatusState {

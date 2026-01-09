@@ -42,6 +42,38 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		hasChanged = true
 	}
 
+	if state.azureRedisCluster.Properties != nil && state.azureRedisCluster.Properties.SKU != nil {
+		cacheNodeType := fmt.Sprintf("%d", *state.azureRedisCluster.Properties.SKU.Capacity)
+		if redisCluster.Status.CacheNodeType != cacheNodeType {
+			redisCluster.Status.CacheNodeType = cacheNodeType
+			hasChanged = true
+		}
+	}
+
+	if state.azureRedisCluster.Properties != nil {
+		if state.azureRedisCluster.Properties.ShardCount != nil {
+			shardCount := *state.azureRedisCluster.Properties.ShardCount
+			if redisCluster.Status.ShardCount != shardCount {
+				redisCluster.Status.ShardCount = shardCount
+				hasChanged = true
+			}
+		}
+
+		if state.azureRedisCluster.Properties.ReplicasPerPrimary != nil {
+			replicasPerShard := *state.azureRedisCluster.Properties.ReplicasPerPrimary
+			if redisCluster.Status.ReplicasPerShard != replicasPerShard {
+				redisCluster.Status.ReplicasPerShard = replicasPerShard
+				hasChanged = true
+			}
+		} else if state.azureRedisCluster.Properties.ReplicasPerMaster != nil {
+			replicasPerShard := *state.azureRedisCluster.Properties.ReplicasPerMaster
+			if redisCluster.Status.ReplicasPerShard != replicasPerShard {
+				redisCluster.Status.ReplicasPerShard = replicasPerShard
+				hasChanged = true
+			}
+		}
+	}
+
 	hasReadyCondition := meta.FindStatusCondition(redisCluster.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
 	hasReadyStatusState := redisCluster.Status.State == cloudcontrolv1beta1.StateReady
 
