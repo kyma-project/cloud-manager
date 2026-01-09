@@ -67,66 +67,54 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	}
 	computeTokenSource := oauth2adapt.TokenSourceFromTokenProvider(computeTokenProvider)
 
-	computeDialOpts := []option.ClientOption{
-		option.WithTokenSource(computeTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "Networks"))),
-	}
+	// Compute clients use REST protocol, need HTTP middleware
+	computeHTTPClient := NewMetricsHTTPClient("Compute", nil)
 
-	computeNetworks, err := compute.NewNetworksRESTClient(ctx, computeDialOpts...)
+	computeNetworks, err := compute.NewNetworksRESTClient(ctx,
+		option.WithTokenSource(computeTokenSource),
+		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute networs client: %w", err)
 	}
 
-	computeDialOptsAddresses := []option.ClientOption{
+	computeAddress, err := compute.NewAddressesRESTClient(ctx,
 		option.WithTokenSource(computeTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "Addresses"))),
-	}
-	computeAddress, err := compute.NewAddressesRESTClient(ctx, computeDialOptsAddresses...)
+		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute addresses client: %w", err)
 	}
 
-	computeDialOptsRouters := []option.ClientOption{
+	computeRouters, err := compute.NewRoutersRESTClient(ctx,
 		option.WithTokenSource(computeTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "Routers"))),
-	}
-	computeRouters, err := compute.NewRoutersRESTClient(ctx, computeDialOptsRouters...)
+		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute routers client: %w", err)
 	}
 
-	computeDialOptsSubnetworks := []option.ClientOption{
+	computeSubnetworks, err := compute.NewSubnetworksRESTClient(ctx,
 		option.WithTokenSource(computeTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "Subnetworks"))),
-	}
-	computeSubnetworks, err := compute.NewSubnetworksRESTClient(ctx, computeDialOptsSubnetworks...)
+		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute subnetworks client: %w", err)
 	}
 
-	computeDialOptsRegionOps := []option.ClientOption{
+	computeRegionOperations, err := compute.NewRegionOperationsRESTClient(ctx,
 		option.WithTokenSource(computeTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "RegionOperations"))),
-	}
-	computeRegionOperations, err := compute.NewRegionOperationsRESTClient(ctx, computeDialOptsRegionOps...)
+		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute region operations client: %w", err)
 	}
 
-	computeDialOptsGlobalAddr := []option.ClientOption{
+	computeGlobalAddresses, err := compute.NewGlobalAddressesRESTClient(ctx,
 		option.WithTokenSource(computeTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "GlobalAddresses"))),
-	}
-	computeGlobalAddresses, err := compute.NewGlobalAddressesRESTClient(ctx, computeDialOptsGlobalAddr...)
+		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute global addresses client: %w", err)
 	}
 
-	computeDialOptsGlobalOps := []option.ClientOption{
+	computeGlobalOperations, err := compute.NewGlobalOperationsRESTClient(ctx,
 		option.WithTokenSource(computeTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "GlobalOperations"))),
-	}
-	computeGlobalOperations, err := compute.NewGlobalOperationsRESTClient(ctx, computeDialOptsGlobalOps...)
+		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute global operations client: %w", err)
 	}
@@ -226,11 +214,13 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		return nil, fmt.Errorf("failed to build vpc peering compute token provider: %w", err)
 	}
 	vpcPeeringComputeNetworksTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringComputeNetworksTokenProvider)
-	vpcPeeringNetworksDialOpts := []option.ClientOption{
+
+	// VPC peering clients also use REST, need separate HTTP client
+	vpcPeeringHTTPClient := NewMetricsHTTPClient("Compute", nil)
+
+	vpcPeeringComputeNetworks, err := compute.NewNetworksRESTClient(ctx,
 		option.WithTokenSource(vpcPeeringComputeNetworksTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("Compute", "VpcPeeringNetworks"))),
-	}
-	vpcPeeringComputeNetworks, err := compute.NewNetworksRESTClient(ctx, vpcPeeringNetworksDialOpts...)
+		option.WithHTTPClient(vpcPeeringHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("error creating vpc peering compute networks client: %w", err)
 	}
@@ -241,11 +231,12 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		return nil, fmt.Errorf("failed to build vpc peering resource manager token provider: %w", err)
 	}
 	vpcPeeringresourceManagerTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringResourceManagerTokenProvider)
-	vpcPeeringTagBindingsDialOpts := []option.ClientOption{
+
+	resourceManagerHTTPClient := NewMetricsHTTPClient("ResourceManager", nil)
+
+	vpcPeeringresourceManagerTagBindings, err := resourcemanager.NewTagBindingsRESTClient(ctx,
 		option.WithTokenSource(vpcPeeringresourceManagerTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("ResourceManager", "TagBindings"))),
-	}
-	vpcPeeringresourceManagerTagBindings, err := resourcemanager.NewTagBindingsRESTClient(ctx, vpcPeeringTagBindingsDialOpts...)
+		option.WithHTTPClient(resourceManagerHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("error creating resource_manager tag bindings client: %w", err)
 	}
