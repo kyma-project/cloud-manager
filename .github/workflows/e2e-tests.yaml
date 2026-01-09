@@ -1,0 +1,35 @@
+name: E2E tests
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      provider:
+        type: choice
+        required: true
+        options:
+          - aws
+          - gcp
+          - azure
+        description: Choose the cloud provider for the shared instance
+        default: azure
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Initialize E2E environment
+        uses: ./.github/actions/e2e-init
+        id: e2e-init
+        env:
+          GARDENER_KUBECONFIG: ${{ secrets.GARDENER_KUBECONFIG }}
+          OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
+          OIDC_ISSUER_URL: ${{ vars.OIDC_ISSUER_URL }}
+      - name: Set provider env var
+        run: |
+          PROVIDER=${{ inputs.provider }}
+          PROVIDER=${PROVIDER:-"azure"}
+          echo "PROVIDER=$PROVIDER" >> $GITHUB_ENV
+      - name: Break if provider is empty
+        if: ${{ env.PROVIDER == '' }}
+        run: echo "PROVIDER is missing or empty!" && exit 1
