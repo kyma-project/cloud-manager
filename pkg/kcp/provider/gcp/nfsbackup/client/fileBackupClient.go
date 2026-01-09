@@ -46,7 +46,7 @@ type fileBackupClient struct {
 func (c *fileBackupClient) PatchFileBackup(ctx context.Context, projectId, location, name, updateMask string, backup *file.Backup) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFile.Projects.Locations.Backups.Patch(client.GetFileBackupPath(projectId, location, name), backup).UpdateMask(updateMask).Do()
-	client.IncrementCallCounter("File", "Backups.Patch", location, err)
+	client.IncrementCallCounter("File", "Backups.Patch", location, "", err)
 	if err != nil {
 		logger.Error(err, "PatchFileBackup", "projectId", projectId, "location", location, "name", name)
 		return nil, err
@@ -57,7 +57,7 @@ func (c *fileBackupClient) PatchFileBackup(ctx context.Context, projectId, locat
 func (c *fileBackupClient) GetFileBackup(ctx context.Context, projectId, location, name string) (*file.Backup, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	out, err := c.svcFile.Projects.Locations.Backups.Get(client.GetFileBackupPath(projectId, location, name)).Do()
-	client.IncrementCallCounter("File", "Backups.Get", location, err)
+	client.IncrementCallCounter("File", "Backups.Get", location, "", err)
 	if err != nil {
 		logger.Info("GetFileBackup", "err", err)
 		return nil, err
@@ -68,7 +68,7 @@ func (c *fileBackupClient) GetFileBackup(ctx context.Context, projectId, locatio
 func (c *fileBackupClient) ListFilesBackups(ctx context.Context, projectId, filter string) ([]*file.Backup, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	out, err := c.svcFile.Projects.Locations.Backups.List(client.GetFilestoreParentPath(projectId, "-")).Filter(filter).Do()
-	client.IncrementCallCounter("File", "Backups.List", "-", err)
+	client.IncrementCallCounter("File", "Backups.List", "-", "", err)
 	if err != nil {
 		logger.Info("ListFilesBackups", "err", err)
 		return nil, err
@@ -79,7 +79,7 @@ func (c *fileBackupClient) ListFilesBackups(ctx context.Context, projectId, filt
 func (c *fileBackupClient) CreateFileBackup(ctx context.Context, projectId, location, name string, backup *file.Backup) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFile.Projects.Locations.Backups.Create(client.GetFilestoreParentPath(projectId, location), backup).BackupId(name).Do()
-	client.IncrementCallCounter("File", "Backups.Create", location, err)
+	client.IncrementCallCounter("File", "Backups.Create", location, "", err)
 	if err != nil {
 		logger.Error(err, "CreateFileBackup", "projectId", projectId, "location", location, "name", name)
 		return nil, err
@@ -89,7 +89,7 @@ func (c *fileBackupClient) CreateFileBackup(ctx context.Context, projectId, loca
 func (c *fileBackupClient) DeleteFileBackup(ctx context.Context, projectId, location, name string) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFile.Projects.Locations.Backups.Delete(client.GetFileBackupPath(projectId, location, name)).Do()
-	client.IncrementCallCounter("File", "Backups.Delete", location, err)
+	client.IncrementCallCounter("File", "Backups.Delete", location, "", err)
 	if err != nil {
 		logger.Error(err, "DeleteFileBackup", "projectId", projectId, "location", location, "name", name)
 		return nil, err
@@ -100,7 +100,7 @@ func (c *fileBackupClient) DeleteFileBackup(ctx context.Context, projectId, loca
 func (c *fileBackupClient) GetBackupOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFile.Projects.Locations.Operations.Get(operationName).Do()
-	client.IncrementCallCounter("File", "Operations.Get", "", err)
+	client.IncrementCallCounter("File", "Operations.Get", "", "", err)
 	if err != nil {
 		logger.Error(err, "GetBackupOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
