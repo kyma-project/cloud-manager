@@ -2,7 +2,6 @@ package cloudresources
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -102,8 +101,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 
 		By("And Then GcpNfsVolumeBackupDiscovery will get Ready condition", func() {
 			Eventually(LoadAndCheck).
-				WithTimeout(30*time.Second).
-				WithPolling(200*time.Millisecond).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackupDiscovery,
 					NewObjActions(),
@@ -114,8 +111,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 
 		By("And Then GcpNfsVolumeBackupDiscovery status will be Ready", func() {
 			Eventually(LoadAndCheck).
-				WithTimeout(30*time.Second).
-				WithPolling(200*time.Millisecond).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackupDiscovery,
 					NewObjActions(),
@@ -126,8 +121,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 
 		By("And Then GcpNfsVolumeBackupDiscovery status fields should be populated", func() {
 			Eventually(LoadAndCheck).
-				WithTimeout(20*time.Second).
-				WithPolling(200*time.Millisecond).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackupDiscovery,
 					NewObjActions(),
@@ -149,8 +142,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 
 		By("// cleanup: Then GcpNfsVolumeBackupDiscovery does not exist", func() {
 			Eventually(IsDeleted).
-				WithTimeout(20*time.Second).
-				WithPolling(200*time.Millisecond).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackupDiscovery).
 				Should(Succeed())
 		})
