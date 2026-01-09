@@ -46,6 +46,18 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		hasChanged = true
 	}
 
+	memorySizeGb := state.gcpRedisInstance.MemorySizeGb
+	if redisInstance.Status.MemorySizeGb != memorySizeGb {
+		redisInstance.Status.MemorySizeGb = memorySizeGb
+		hasChanged = true
+	}
+
+	replicaCount := state.gcpRedisInstance.ReplicaCount
+	if redisInstance.Status.ReplicaCount != replicaCount {
+		redisInstance.Status.ReplicaCount = replicaCount
+		hasChanged = true
+	}
+
 	hasReadyCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
 	hasReadyStatusState := redisInstance.Status.State == cloudcontrolv1beta1.StateReady
 

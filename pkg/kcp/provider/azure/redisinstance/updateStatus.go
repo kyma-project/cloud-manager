@@ -42,6 +42,28 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		hasChanged = true
 	}
 
+	if state.azureRedisInstance.Properties != nil && state.azureRedisInstance.Properties.SKU != nil {
+		cacheNodeType := fmt.Sprintf("%s%d", *state.azureRedisInstance.Properties.SKU.Family, *state.azureRedisInstance.Properties.SKU.Capacity)
+		if redisInstance.Status.CacheNodeType != cacheNodeType {
+			redisInstance.Status.CacheNodeType = cacheNodeType
+			hasChanged = true
+		}
+
+		memorySizeGb := *state.azureRedisInstance.Properties.SKU.Capacity
+		if redisInstance.Status.MemorySizeGb != memorySizeGb {
+			redisInstance.Status.MemorySizeGb = memorySizeGb
+			hasChanged = true
+		}
+	}
+
+	if state.azureRedisInstance.Properties != nil && state.azureRedisInstance.Properties.ShardCount != nil {
+		replicaCount := *state.azureRedisInstance.Properties.ShardCount
+		if redisInstance.Status.ReplicaCount != replicaCount {
+			redisInstance.Status.ReplicaCount = replicaCount
+			hasChanged = true
+		}
+	}
+
 	hasReadyCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
 	hasReadyStatusState := redisInstance.Status.State == cloudcontrolv1beta1.StateReady
 

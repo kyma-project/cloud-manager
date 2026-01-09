@@ -130,6 +130,18 @@ type RedisClusterStatus struct {
 	// +optional
 	AuthString string `json:"authString,omitempty"`
 
+	// The reconciled machine type of the Redis cluster nodes.
+	// +optional
+	CacheNodeType string `json:"cacheNodeType,omitempty"`
+
+	// The reconciled number of shards in the Redis cluster.
+	// +optional
+	ShardCount int32 `json:"shardCount,omitempty"`
+
+	// The reconciled replicas per shard.
+	// +optional
+	ReplicasPerShard int32 `json:"replicasPerShard,omitempty"`
+
 	State StatusState `json:"state,omitempty"`
 
 	// List of status conditions to indicate the status of a RedisInstance.
