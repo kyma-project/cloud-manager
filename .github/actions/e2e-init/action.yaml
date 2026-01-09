@@ -7,6 +7,8 @@ runs:
       uses: actions/setup-go@v5
       with:
         go-version-file: 'go.mod'
+    - name: Setup OpenTofu
+      uses: opentofu/setup-opentofu@v1
     - name: Display Go version
       shell: bash
       run: go version
