@@ -140,14 +140,12 @@ func CheckGcpAuthentication(ctx context.Context, credentialsFile string) {
 
 	credentials, err := loadCredentials(ctx, credentialsFile, oauth2.UserinfoEmailScope)
 	if err != nil {
-		IncrementCallCounter("Authentication", "Check", "", "", err)
 		logger.Error(err, "GCP Authentication Check - failed to load credentials")
 		return
 	}
 
 	svc, err := oauth2.NewService(ctx, option.WithTokenSource(credentials.TokenSource))
 	if err != nil {
-		IncrementCallCounter("Authentication", "Check", "", "", err)
 		logger.Error(err, "GCP Authentication Check - error creating new oauth2.Service")
 		return
 	}
@@ -155,7 +153,6 @@ func CheckGcpAuthentication(ctx context.Context, credentialsFile string) {
 	userInfoSvc := oauth2.NewUserinfoV2MeService(svc)
 	userInfo, err := userInfoSvc.Get().Do()
 
-	IncrementCallCounter("Authentication", "Check", "", "", err)
 	if err != nil {
 		logger.Error(err, "GCP Authentication Check - error getting UserInfo")
 		return

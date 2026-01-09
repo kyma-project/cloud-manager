@@ -100,7 +100,6 @@ func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, pr
 		Network:               network,
 		ReservedPeeringRanges: reservedIpRanges,
 	}).Force(true).Do()
-	client.IncrementCallCounter("ServiceNetworking", "Services.Connections.Patch", "", "", err)
 	logger.Info("PatchServiceConnection", "operation", operation, "err", err)
 	return operation, err
 }
@@ -115,7 +114,6 @@ func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, p
 	operation, err := c.svcNet.Services.Connections.DeleteConnection(client.ServiceNetworkingServiceConnectionName, &servicenetworking.DeleteConnectionRequest{
 		ConsumerNetwork: network,
 	}).Do()
-	client.IncrementCallCounter("ServiceNetworking", "Services.Connections.DeleteConnection", "", "", err)
 	logger.Info("DeleteServiceConnection", "operation", operation, "err", err)
 	return operation, err
 }
@@ -124,7 +122,6 @@ func (c *serviceNetworkingClient) ListServiceConnections(ctx context.Context, pr
 	logger := composed.LoggerFromCtx(ctx)
 	network := client.GetVPCPath(projectId, vpcId)
 	out, err := c.svcNet.Services.Connections.List(client.ServiceNetworkingServicePath).Network(network).Do()
-	client.IncrementCallCounter("ServiceNetworking", "Services.Connections.List", "", "", err)
 	if err != nil {
 		logger.Error(err, "ListServiceConnections", "projectId", projectId, "vpcId", vpcId)
 		return nil, err
@@ -139,7 +136,6 @@ func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, p
 		Network:               network,
 		ReservedPeeringRanges: reservedIpRanges,
 	}).Do()
-	client.IncrementCallCounter("ServiceNetworking", "Services.Connections.Create", "", "", err)
 	logger.Info("CreateServiceConnection", "operation", operation, "err", err)
 	return operation, err
 }
@@ -147,7 +143,6 @@ func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, p
 func (c *serviceNetworkingClient) GetServiceNetworkingOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcNet.Operations.Get(operationName).Do()
-	client.IncrementCallCounter("ServiceNetworking", "Operations.Get", "", "", err)
 	if err != nil {
 		logger.Error(err, "GetServiceNetworkingOperation", "operationName", operationName)
 		return nil, err
