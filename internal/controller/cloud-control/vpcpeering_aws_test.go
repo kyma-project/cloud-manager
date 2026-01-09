@@ -1161,12 +1161,11 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		// DELETE
 
-		//
+		// Forces delete remote peering connection
 		By("When remote peering connection is deleted", func() {
 			// The VPC peering connection remains visible to the party that deleted it for 2 hours
-			Expect(awsMockRemote.DeleteVpcPeeringConnection(infra.Ctx(), &kcpPeering.Status.RemoteId)).To(Succeed())
+			Expect(awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodeDeleted)).To(Succeed())
 			//  and visible to the other party for 2 days
-			Expect(awsMockLocal.DeleteVpcPeeringConnection(infra.Ctx(), &kcpPeering.Status.Id)).To(Succeed())
 		})
 
 		By("When KCP VpcPeering is deleted", func() {
@@ -1201,8 +1200,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Then remote VpcPeeringConnection is deleted", func() {
-			remotePeering, _ := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
-			Expect(remotePeering).To(BeNil())
+			remotePeering, err := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
+			Expect(err).To(BeNil())
+			Expect(remotePeering.Status.Code).To(Equal(ec2types.VpcPeeringConnectionStateReasonCodeDeleted))
 		})
 
 		By("And Then remote route tables have no peering route to local VPC CIDR", func() {
