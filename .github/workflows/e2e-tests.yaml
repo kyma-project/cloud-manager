@@ -18,13 +18,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Initialize E2E environment
-        uses: ./.github/actions/e2e-init
-        id: e2e-init
-        env:
-          GARDENER_KUBECONFIG: ${{ secrets.GARDENER_KUBECONFIG }}
-          OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
-          OIDC_ISSUER_URL: ${{ vars.OIDC_ISSUER_URL }}
       - name: Set provider env var
         run: |
           PROVIDER=${{ inputs.provider }}
