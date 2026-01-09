@@ -25,10 +25,8 @@ import (
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 // AwsNfsBackupScheduleReconciler reconciles a AwsNfsBackupSchedule object
@@ -50,8 +48,6 @@ type AwsNfsBackupScheduleReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.0/pkg/reconcile
 func (r *AwsNfsBackupScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
 	return r.Reconciler.Run(ctx, req)
 }
 
