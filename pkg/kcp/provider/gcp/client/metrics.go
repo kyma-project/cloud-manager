@@ -75,6 +75,33 @@ func extractRegionAndProject(req interface{}) (region, project string) {
 	return region, project
 }
 
+// Example: /v1/projects/my-project/locations/europe-west1/instances/my-instance -> ("europe-west1", "my-project")
+func extractRegionAndProjectFromURL(path string) (region, project string) {
+	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
+
+	for i := 0; i < len(parts)-1; i++ {
+		switch parts[i] {
+		case "projects":
+			if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "{") {
+				project = parts[i+1]
+			}
+		case "regions", "locations":
+			if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "{") {
+				region = parts[i+1]
+			}
+		case "zones":
+			if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "{") {
+				zone := parts[i+1]
+				if idx := strings.LastIndexByte(zone, '-'); idx > 0 {
+					region = zone[:idx]
+				}
+			}
+		}
+	}
+
+	return region, project
+}
+
 // metricsRoundTripper wraps an HTTP transport to automatically record metrics for REST API calls
 type metricsRoundTripper struct {
 	base        http.RoundTripper
@@ -86,9 +113,10 @@ func (m *metricsRoundTripper) RoundTrip(req *http.Request) (*http.Response, erro
 	resp, err := m.base.RoundTrip(req)
 
 	operation := extractOperationFromURL(req.URL.Path, req.Method)
+	region, project := extractRegionAndProjectFromURL(req.URL.Path)
 	apiErr := m.convertToAPIError(resp, err)
 
-	IncrementCallCounter(m.serviceName, operation, "", "", apiErr)
+	IncrementCallCounter(m.serviceName, operation, region, project, apiErr)
 
 	return resp, err
 }
@@ -106,23 +134,24 @@ func (m *metricsRoundTripper) convertToAPIError(resp *http.Response, err error) 
 
 // extractOperationFromURL extracts the operation name from REST API URL path
 // Example: POST /v1/projects/{project}/services/{service}:enable -> "Services.Enable"
+// Example: GET /v1/services/{service}/connections -> "Connections.List"
+// Example: POST /v1/services/{service}/connections:deleteConnection -> "Connections.DeleteConnection"
 func extractOperationFromURL(path, method string) string {
 	parts := filterPathSegments(strings.Split(strings.TrimPrefix(path, "/"), "/"))
 	if len(parts) == 0 {
 		return method
 	}
 
-	// Handle custom methods (":enable", ":disable", etc.)
-	if idx := strings.IndexByte(parts[len(parts)-1], ':'); idx > 0 {
-		if len(parts) >= 2 {
-			resource := capitalize(parts[len(parts)-2])
-			action := capitalize(parts[len(parts)-1][idx+1:])
-			return resource + "." + action
-		}
+	// Handle custom methods (":enable", ":disable", ":deleteConnection", etc.)
+	lastPart := parts[len(parts)-1]
+	if idx := strings.IndexByte(lastPart, ':'); idx > 0 {
+		resource := capitalize(strings.TrimSuffix(lastPart, lastPart[idx:]))
+		action := capitalize(lastPart[idx+1:])
+		return resource + "." + action
 	}
 
 	// Standard REST operations
-	resource := capitalize(parts[0])
+	resource := capitalize(parts[len(parts)-1])
 	action := deriveActionFromMethod(method, hasResourceID(parts))
 	return resource + "." + action
 }
@@ -138,13 +167,20 @@ func filterPathSegments(parts []string) []string {
 			continue
 		}
 
-		// Skip version (v1, v1beta1) and "projects" at start
-		if i == 0 && (strings.HasPrefix(part, "v") || part == "projects") {
+		if i == 0 && strings.HasPrefix(part, "v") {
 			continue
 		}
 
-		// Skip "projects" and "{...}" placeholders along with next segment
-		if part == "projects" || part == "locations" || strings.HasPrefix(part, "{") {
+		if part == "projects" || part == "locations" || part == "regions" || part == "zones" {
+			skipNext = true
+			continue
+		}
+
+		if strings.HasPrefix(part, "{") {
+			continue
+		}
+
+		if part == "services" && i+1 < len(parts) && strings.Contains(parts[i+1], ".googleapis.com") {
 			skipNext = true
 			continue
 		}
