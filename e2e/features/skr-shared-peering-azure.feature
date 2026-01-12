@@ -15,7 +15,7 @@ Feature: AzureVpcPeering feature
       | provider                      | hashicorp/azurerm 4.55.0     |
       | provider                      | hashicorp/random 3.7.2       |
       | location                      | "westeurope"                 |
-      | name                          | "e2e-peering"                |
+      | name                          | "${_.peering.name}"          |
       | virtual_network_address_space | "192.168.255.0/25"           |
 
     When resource "peering" is created:
