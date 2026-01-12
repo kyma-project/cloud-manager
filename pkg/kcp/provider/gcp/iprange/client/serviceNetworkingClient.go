@@ -67,10 +67,13 @@ func NewServiceNetworkingClientProviderV2(gcpClients *client.GcpClients) client.
 func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient] {
 	return client.NewCachedClientProvider(
 		func(ctx context.Context, credentialsFile string) (ServiceNetworkingClient, error) {
-			httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
+			baseClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
 			if err != nil {
 				return nil, err
 			}
+
+			httpClient := client.NewMetricsHTTPClient("ServiceNetworking", baseClient.Transport)
+
 			svcNetClient, err := servicenetworking.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {
 				return nil, fmt.Errorf("error obtaining GCP ServiceNetworking Client: [%w]", err)
