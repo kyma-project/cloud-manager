@@ -181,7 +181,8 @@ func (s *State) ToGcpInstance() *filestorepb.Instance {
 			{
 				Network:         fmt.Sprintf("projects/%s/global/networks/%s", project, vpc),
 				Modes:           []filestorepb.NetworkConfig_AddressMode{filestorepb.NetworkConfig_MODE_IPV4},
-				ReservedIpRange: s.IpRange().Status.Cidr,
+				ReservedIpRange: s.IpRange().Status.Id,
+				ConnectMode:     filestorepb.NetworkConfig_PRIVATE_SERVICE_ACCESS,
 			},
 		},
 	}
