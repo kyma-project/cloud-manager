@@ -35,7 +35,6 @@ type efsClient struct {
 	svc *efs.Client
 }
 
-
 func (c *efsClient) DescribeFileSystems(ctx context.Context) ([]efstypes.FileSystemDescription, error) {
 	in := &efs.DescribeFileSystemsInput{}
 	out, err := c.svc.DescribeFileSystems(ctx, in)

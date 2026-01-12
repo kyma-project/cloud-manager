@@ -66,4 +66,3 @@ func (s *stateImpl) IpRange() *cloudcontrolv1beta1.IpRange {
 func (s *stateImpl) GcpSubnet() *cloudcontrolv1beta1.GcpSubnet {
 	return s.gcpSubnet
 }
-

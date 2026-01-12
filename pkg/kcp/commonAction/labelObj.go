@@ -25,4 +25,3 @@ func labelObj(ctx context.Context, st composed.State) (error, context.Context) {
 
 	return nil, ctx
 }
-

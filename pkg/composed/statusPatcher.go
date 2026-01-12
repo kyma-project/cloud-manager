@@ -82,9 +82,6 @@ func (u *StatusPatcher[T]) IsStale() bool {
 	if u.obj.GetGeneration() != u.obj.ObservedGeneration() {
 		return true
 	}
-	if u.obj.GetGeneration() <= 1 {
-		return true
-	}
 	if u.obj.Conditions() == nil || len(*u.obj.Conditions()) == 0 {
 		return true
 	}

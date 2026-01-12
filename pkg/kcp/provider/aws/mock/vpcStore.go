@@ -353,6 +353,39 @@ func (s *vpcStore) AttachInternetGateway(ctx context.Context, vpcId, internetGat
 	return nil
 }
 
+func (s *vpcStore) DetachInternetGateway(ctx context.Context, vpcId, internetGatewayId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	var igw *ec2types.InternetGateway
+	for _, x := range s.internetGateways {
+		if ptr.Deref(x.InternetGatewayId, "") == internetGatewayId {
+			igw = x
+			break
+		}
+	}
+	if igw == nil {
+		return awsmeta.NewHttpNotFoundError(fmt.Errorf("internet gateway %q not found", internetGatewayId))
+	}
+
+	found := false
+	igw.Attachments = pie.FilterNot(igw.Attachments, func(att ec2types.InternetGatewayAttachment) bool {
+		match := ptr.Deref(att.VpcId, "") == vpcId
+		if match {
+			found = true
+		}
+		return match
+	})
+	if !found {
+		return fmt.Errorf("vpc %q is not attached to internet gateway %q", vpcId, internetGatewayId)
+	}
+
+	return nil
+}
+
 func (s *vpcStore) DescribeInternetGateways(ctx context.Context, name string) ([]ec2types.InternetGateway, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled

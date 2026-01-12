@@ -136,6 +136,16 @@ func (c *defaultClusterInSession) KubernetesClientset() (*kubernetes.Clientset, 
 
 func (c *defaultClusterInSession) AddResources(ctx context.Context, arr ...*ResourceDeclaration) error {
 	for _, rd := range arr {
+		if rd.Namespace == "" {
+			switch c.ClusterAlias() {
+			case "kcp":
+				rd.Namespace = c.E2EConfig().KcpNamespace
+			case "garden":
+				rd.Namespace = c.E2EConfig().GardenNamespace
+			default:
+				rd.Namespace = c.E2EConfig().SkrNamespace
+			}
+		}
 		if ai := c.session.AliasInfo(rd.Alias); ai != nil {
 			return fmt.Errorf("resource %q already defined as type %T", rd.Alias, ai)
 		}
@@ -403,7 +413,7 @@ func (s *scenarioSession) createManagerAndStartIt(ctx context.Context, id *e2eke
 	}
 
 	cc := &defaultClusterInSession{
-		Cluster:            NewCluster(ctx, id.Alias, clstr),
+		Cluster:            NewCluster(ctx, id.Alias, clstr, s.world.Config()),
 		isCreatedInSession: isCreatedInSession,
 		runtimeID:          id.RuntimeID,
 		shootName:          id.ShootName,
@@ -450,7 +460,7 @@ func (s *scenarioSession) SetCurrentCluster(alias string) {
 }
 
 func (s *scenarioSession) Eval(ctx context.Context) (Evaluator, error) {
-	b := NewEvaluatorBuilder(s.world.Config().SkrNamespace)
+	b := NewEvaluatorBuilder()
 	for _, ws := range s.tfWorkspaces {
 		b.Set(ws.GetAlias(), ws.Outputs())
 	}

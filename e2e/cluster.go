@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/elliotchance/pie/v2"
+	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -42,17 +43,20 @@ type Cluster interface {
 	cluster.Cluster
 	ClusterEvaluationHandle
 
+	E2EConfig() *e2econfig.ConfigType
+
 	// AddResources declares k8s objects that are watched and can be got from the cache
 	AddResources(ctx context.Context, arr ...*ResourceDeclaration) error
 
 	GetSkrKyma(ctx context.Context) (*operatorv1beta2.Kyma, error)
 }
 
-func NewCluster(startCtx context.Context, alias string, clstr cluster.Cluster) Cluster {
+func NewCluster(startCtx context.Context, alias string, clstr cluster.Cluster, config *e2econfig.ConfigType) Cluster {
 	return &defaultCluster{
 		startCtx:     startCtx,
 		Cluster:      clstr,
 		clusterAlias: alias,
+		config:       config,
 		resources:    make(map[string]*ResourceInfo),
 		sources:      make(map[schema.GroupVersionKind]source.SyncingSource),
 		mappingCache: make(map[string]*meta.RESTMapping),
@@ -63,6 +67,8 @@ type defaultCluster struct {
 	m sync.Mutex
 
 	cluster.Cluster
+
+	config *e2econfig.ConfigType
 
 	clusterAlias string
 
@@ -76,6 +82,10 @@ type defaultCluster struct {
 
 func (c *defaultCluster) ClusterAlias() string {
 	return c.clusterAlias
+}
+
+func (c *defaultCluster) E2EConfig() *e2econfig.ConfigType {
+	return c.config
 }
 
 func (c *defaultCluster) AllResources() []*ResourceInfo {
@@ -98,6 +108,12 @@ func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDecla
 			return fmt.Errorf("failed to parse GroupVersion %s: %w", decl.ApiVersion, err)
 		}
 		gvk := gv.WithKind(decl.Kind)
+		gk := gvk.GroupKind()
+
+		_, err = c.GetRESTMapper().RESTMapping(gk, gvk.Version)
+		if err != nil {
+			return fmt.Errorf("invalid resource declaration for %q with GVK %s: %w", decl.Alias, gvk, err)
+		}
 
 		ri := &ResourceInfo{
 			ResourceDeclaration: *decl,

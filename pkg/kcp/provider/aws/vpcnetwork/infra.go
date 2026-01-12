@@ -119,7 +119,9 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 			vpc = v
 			return vpc.State == ec2types.VpcStateAvailable, nil
 		})
-		return nil, fmt.Errorf("error describing vpc while polling to become available: %w", err)
+		if err != nil {
+			return nil, fmt.Errorf("error describing vpc while polling to become available: %w", err)
+		}
 	}
 
 	// validate primary vpc block didn't change
@@ -192,30 +194,29 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 
 	// dhcp options
 
-	if vpc.DhcpOptionsId == nil {
-		doArr, err := o.client.DescribeDhcpOptions(ctx, o.name)
+	var do *ec2types.DhcpOptions
+	doArr, err := o.client.DescribeDhcpOptions(ctx, o.name)
+	if err != nil {
+		return nil, fmt.Errorf("error describing dhcp options: %w", err)
+	}
+	if len(doArr) == 0 {
+		domainName := "ec2.internal"
+		if o.client.Region() != "us-east-1" {
+			domainName = fmt.Sprintf("%s.compute.internal", o.client.Region())
+		}
+		dodo, err := o.client.CreateDhcpOptions(ctx, o.name, domainName, nil)
 		if err != nil {
-			return nil, fmt.Errorf("error describing dhcp options: %w", err)
+			return nil, fmt.Errorf("error creating dhcp options: %w", err)
 		}
+		do = dodo
+		updated = true
+	} else if len(doArr) == 1 {
+		do = &doArr[0]
+	} else {
+		return nil, fmt.Errorf("multiple dhcp options found with name %q", o.name)
+	}
 
-		var do *ec2types.DhcpOptions
-		if len(doArr) == 0 {
-			domainName := "ec2.internal"
-			if o.client.Region() != "us-east-1" {
-				domainName = fmt.Sprintf("%s.compute.internal", o.client.Region())
-			}
-			dodo, err := o.client.CreateDhcpOptions(ctx, o.name, domainName, nil)
-			if err != nil {
-				return nil, fmt.Errorf("error creating dhcp options: %w", err)
-			}
-			do = dodo
-			updated = true
-		} else if len(doArr) == 1 {
-			do = &doArr[0]
-		} else {
-			return nil, fmt.Errorf("multiple dhcp options found with name %q", o.name)
-		}
-
+	if ptr.Deref(vpc.DhcpOptionsId, "xxx") != ptr.Deref(do.DhcpOptionsId, "yyy") {
 		err = o.client.AssociateDhcpOptions(ctx, ptr.Deref(vpc.VpcId, ""), ptr.Deref(do.DhcpOptionsId, ""))
 		if err != nil {
 			return nil, fmt.Errorf("error associating dhcp options: %w", err)
@@ -300,15 +301,75 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 }
 
 func DeleteInfra(ctx context.Context, name string, c awsvpcnetworkclient.Client) error {
+	/*
+		* igw delete
+		  * detach from vpc
+		  * delete igw
+		* sg delete
+		* vpc delete
+	*/
+
+	// load vpc
 	vpcArr, err := c.DescribeVpcs(ctx, name)
 	if err != nil {
 		return fmt.Errorf("error describing vpc: %w", err)
 	}
+
+	// assuming only igw with that name is attached to the vpc(s)
+	// theoretically there could be other igws not attached to the vpc(s), but optimistically we ignore them
+
+	// load internet gateways
+	igwArr, err := c.DescribeInternetGateways(ctx, name)
+	if err != nil {
+		return fmt.Errorf("error describing internet gateways: %w", err)
+	}
+
 	for _, vpc := range vpcArr {
+
+		for _, igw := range igwArr {
+			// detach internet gateway from vpc
+			for _, att := range igw.Attachments {
+				if ptr.Deref(att.VpcId, "xxx") == ptr.Deref(vpc.VpcId, "yyy") {
+					if err := c.DetachInternetGateway(ctx, ptr.Deref(vpc.VpcId, ""), ptr.Deref(igw.InternetGatewayId, "")); err != nil {
+						return fmt.Errorf("error detaching internet gateway %q from vpc %q: %w", ptr.Deref(igw.InternetGatewayId, ""), ptr.Deref(vpc.VpcId, ""), err)
+					}
+				}
+			}
+		}
+
+		// delete all security groups from vpc
+		sgArr, err := c.DescribeSecurityGroups(ctx, []ec2types.Filter{
+			{
+				Name:   ptr.To("vpc-id"),
+				Values: []string{ptr.Deref(vpc.VpcId, "")},
+			},
+			{
+				Name:   ptr.To("tag:Name"),
+				Values: []string{name},
+			},
+		}, nil)
+		if err != nil {
+			return fmt.Errorf("error describing security groups: %w", err)
+		}
+		for _, sg := range sgArr {
+			if err := c.DeleteSecurityGroup(ctx, ptr.Deref(sg.GroupId, "")); err != nil {
+				return fmt.Errorf("error deleting security group %q: %w", ptr.Deref(sg.GroupId, ""), err)
+			}
+		}
+
 		if err := c.DeleteVpc(ctx, ptr.Deref(vpc.VpcId, "")); err != nil {
 			return fmt.Errorf("error deleting vpc: %w", err)
 		}
+	} // for each vpc
+
+	// delete internet gateway
+	for _, igw := range igwArr {
+		if err := c.DeleteInternetGateway(ctx, ptr.Deref(igw.InternetGatewayId, "")); err != nil {
+			return fmt.Errorf("error deleting internet gateway: %w", err)
+		}
 	}
+
+	// dhcp options
 
 	doArr, err := c.DescribeDhcpOptions(ctx, name)
 	if err != nil {
@@ -317,16 +378,6 @@ func DeleteInfra(ctx context.Context, name string, c awsvpcnetworkclient.Client)
 	for _, do := range doArr {
 		if err := c.DeleteDhcpOptions(ctx, ptr.Deref(do.DhcpOptionsId, "")); err != nil {
 			return fmt.Errorf("error deleting dhcp options: %w", err)
-		}
-	}
-
-	igwArr, err := c.DescribeInternetGateways(ctx, name)
-	if err != nil {
-		return fmt.Errorf("error describing internet gateways: %w", err)
-	}
-	for _, igw := range igwArr {
-		if err := c.DeleteInternetGateway(ctx, ptr.Deref(igw.InternetGatewayId, "")); err != nil {
-			return fmt.Errorf("error deleting internet gateway: %w", err)
 		}
 	}
 

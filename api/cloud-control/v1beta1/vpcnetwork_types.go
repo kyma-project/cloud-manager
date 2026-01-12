@@ -23,17 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-//CT_VpcNetwork_InfrastructureProvisioned = "InfrastructureProvisioned"
-
-// CT_VpcNetwork_InfrastructureProvisioned_Processing          = "Processing"
-// CT_VpcNetwork_InfrastructureProvisioned_Provisioned         = "Provisioned"
-// CT_VpcNetwork_InfrastructureProvisioned_InvalidCidr         = "InvalidCidr"
-// CT_VpcNetwork_InfrastructureProvisioned_OverlappingCidr     = "OverlappingCidr"
-// CT_VpcNetwork_InfrastructureProvisioned_InvalidSubscription = "InvalidSubscription"
-// CT_VpcNetwork_InfrastructureProvisioned_ProviderError = "ProviderError"
-)
-
+// +kubebuilder:validation:Enum=kyma;gardener
 type VpcNetworkType string
 
 const (
@@ -45,7 +35,7 @@ const (
 type VpcNetworkSpec struct {
 	// +optional
 	// +kubebuilder:default=kyma
-	Type string `json:"type,omitempty"`
+	Type VpcNetworkType `json:"type,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Subscription string `json:"subscription"`
@@ -97,6 +87,8 @@ type VpcNetworkStatusIdentifiers struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Subscription",type="string",JSONPath=".spec.subscription"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.conditions[?(@.type=="Ready")].reason`
 
 // VpcNetwork is the Schema for the vpcnetworks API.
 type VpcNetwork struct {

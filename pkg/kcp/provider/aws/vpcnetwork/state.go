@@ -51,7 +51,7 @@ func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.S
 
 func newState(baseState vpcnetworktypes.State, awsClient awsvpcnetworkclient.Client) *State {
 	return &State{
-		State: baseState,
+		State:     baseState,
 		awsClient: awsClient,
 	}
 }

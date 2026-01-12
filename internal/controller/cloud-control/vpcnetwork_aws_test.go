@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 )
 
-var _ = Describe("Feature: VpcNetwork", Focus, func() {
+var _ = Describe("Feature: VpcNetwork", func() {
 
 	It("Scenario: VpcNetwork AWS is created", func() {
 		const subscriptionName = "dd48fd32-7ae9-4fe3-aa24-d66cb1ea06df"

@@ -40,7 +40,7 @@ type Keb interface {
 	SkrManagerFactory
 
 	Config() *e2econfig.ConfigType
-	
+
 	KcpClient() client.Client
 	GardenClient() client.Client
 

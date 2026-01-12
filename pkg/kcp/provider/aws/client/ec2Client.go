@@ -16,6 +16,7 @@ type Ec2Client interface {
 
 	CreateInternetGateway(ctx context.Context, name string) (*ec2types.InternetGateway, error)
 	AttachInternetGateway(ctx context.Context, vpcId, internetGatewayId string) error
+	DetachInternetGateway(ctx context.Context, vpcId, internetGatewayId string) error
 	DescribeInternetGateways(ctx context.Context, name string) ([]ec2types.InternetGateway, error)
 	DeleteInternetGateway(ctx context.Context, internetGatewayId string) error
 
@@ -90,6 +91,18 @@ func (c *ec2Client) AttachInternetGateway(ctx context.Context, vpcId, internetGa
 		VpcId:             ptr.To(vpcId),
 	}
 	_, err := c.svc.AttachInternetGateway(ctx, in)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *ec2Client) DetachInternetGateway(ctx context.Context, vpcId, internetGatewayId string) error {
+	in := &ec2.DetachInternetGatewayInput{
+		InternetGatewayId: ptr.To(internetGatewayId),
+		VpcId:             ptr.To(vpcId),
+	}
+	_, err := c.svc.DetachInternetGateway(ctx, in)
 	if err != nil {
 		return err
 	}

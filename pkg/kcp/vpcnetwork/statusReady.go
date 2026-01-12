@@ -19,4 +19,3 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 		).
 		Run(ctx, state.Cluster().K8sClient())
 }
-

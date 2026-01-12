@@ -59,7 +59,6 @@ var cmdInstanceIgnore = &cobra.Command{
 				continue
 			}
 
-
 			if rt.Labels == nil {
 				rt.Labels = map[string]string{}
 			}
@@ -92,6 +91,14 @@ var cmdInstanceIgnore = &cobra.Command{
 			}
 			if err := setIgnoreLabel(rootCtx, kymaKcp, shouldIgnore); err != nil {
 				return fmt.Errorf("error handling KCP Kyma %q %q", rtAlias, rt.Name)
+			}
+			kymaKcp.Spec.Modules = nil
+			if err := keb.KcpClient().Update(rootCtx, kymaKcp); err != nil {
+				return fmt.Errorf("failed to remove modules from spec of KCP Kyma %q %q: %w", rtAlias, rt.Name, err)
+			}
+			kymaKcp.Status.Modules = nil
+			if err := keb.KcpClient().Status().Update(rootCtx, kymaKcp); err != nil {
+				return fmt.Errorf("failed to remove modules from status of KCP Kyma %q %q: %w", rtAlias, rt.Name, err)
 			}
 		}
 

@@ -18,7 +18,7 @@ type EvaluatorBuilder struct {
 	fixedData map[string]interface{}
 }
 
-func NewEvaluatorBuilder(skrNamespace string) *EvaluatorBuilder {
+func NewEvaluatorBuilder() *EvaluatorBuilder {
 	vm := goja.New()
 	vm.SetFieldNameMapper(goja.TagFieldNameMapper("json", true))
 	util.MustVoid(vm.GlobalObject().Set("id", func(fc goja.FunctionCall, r *goja.Runtime) goja.Value {
@@ -70,10 +70,9 @@ function findCondition(obj, tp) {
 
 	return &EvaluatorBuilder{
 		evaluator: &defaultEvaluatorImpl{
-			vm:           vm,
-			skrNamespace: skrNamespace,
-			loaded:       map[string]struct{}{},
-			evaluated:    map[string]struct{}{},
+			vm:        vm,
+			loaded:    map[string]struct{}{},
+			evaluated: map[string]struct{}{},
 		},
 		fixedData: map[string]interface{}{},
 	}
@@ -230,8 +229,7 @@ type Evaluator interface {
 }
 
 type defaultEvaluatorImpl struct {
-	vm           *goja.Runtime
-	skrNamespace string
+	vm *goja.Runtime
 
 	loaded    map[string]struct{}
 	evaluated map[string]struct{}
@@ -309,10 +307,6 @@ func (e *defaultEvaluatorImpl) evalResource(ri *ResourceInfo) (bool, error) {
 			return false, fmt.Errorf("error evaluating %q namespace %q: %w", ri.Alias, ri.Namespace, err)
 		}
 		ri.Namespace = namespace
-	} else if e.skrNamespace != "" {
-		ri.Namespace = e.skrNamespace
-	} else {
-		ri.Namespace = "default"
 	}
 
 	name, err := e.EvalTemplate(ri.Name)

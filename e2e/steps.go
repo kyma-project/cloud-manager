@@ -351,7 +351,7 @@ func resourceIsCreated(ctx context.Context, alias string, doc *godog.DocString) 
 	}
 	arr, err := util.YamlMultiDecodeToUnstructured([]byte(txt))
 	if err != nil {
-		return ctx, fmt.Errorf("failed to parse resource yaml: %w", err)
+		return ctx, fmt.Errorf("failed to parse resource yaml: %w\n\n%s", err, txt)
 	}
 	if len(arr) != 1 {
 		return ctx, fmt.Errorf("expected one resource in yaml but got %d", len(arr))
@@ -369,15 +369,26 @@ func resourceIsCreated(ctx context.Context, alias string, doc *godog.DocString) 
 
 	if obj.GetNamespace() == "" {
 		obj.SetNamespace(ri.Namespace)
+	} else if obj.GetNamespace() != ri.Namespace {
+		return ctx, fmt.Errorf("resource %q namespace %q does not match declared resource namespace %q", alias, obj.GetNamespace(), ri.Namespace)
 	}
+
 	if obj.GetName() == "" {
 		obj.SetName(ri.Name)
+	} else if obj.GetName() != ri.Name {
+		return ctx, fmt.Errorf("resource %q name %q does not match declared resource name %q", alias, obj.GetName(), ri.Name)
 	}
+
 	if obj.GetKind() == "" {
 		obj.SetKind(ri.Kind)
+	} else if obj.GetKind() != ri.Kind {
+		return ctx, fmt.Errorf("resource %q kind %q does not match declared resource kind %q", alias, obj.GetKind(), ri.Kind)
 	}
+
 	if obj.GetAPIVersion() == "" {
 		obj.SetAPIVersion(ri.ApiVersion)
+	} else if obj.GetAPIVersion() != ri.ApiVersion {
+		return ctx, fmt.Errorf("resource %q apiVersion %q does not match declared resource apiVersion %q", alias, obj.GetAPIVersion(), ri.ApiVersion)
 	}
 
 	err = session.CurrentCluster().GetClient().Create(ctx, obj)

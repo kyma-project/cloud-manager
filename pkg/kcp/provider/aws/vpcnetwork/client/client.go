@@ -18,6 +18,7 @@ type Client interface {
 
 	CreateInternetGateway(ctx context.Context, name string) (*ec2types.InternetGateway, error)
 	AttachInternetGateway(ctx context.Context, vpcId, internetGatewayId string) error
+	DetachInternetGateway(ctx context.Context, vpcId, internetGatewayId string) error
 	DescribeInternetGateways(ctx context.Context, name string) ([]ec2types.InternetGateway, error)
 	DeleteInternetGateway(ctx context.Context, internetGatewayId string) error
 
