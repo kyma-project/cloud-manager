@@ -5,7 +5,7 @@ go 1.25.5
 require (
 	cloud.google.com/go/auth v0.18.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/compute v1.52.0
+	cloud.google.com/go/compute v1.53.0
 	cloud.google.com/go/networkconnectivity v1.19.1
 	cloud.google.com/go/redis v1.18.3
 	cloud.google.com/go/resourcemanager v1.10.7
