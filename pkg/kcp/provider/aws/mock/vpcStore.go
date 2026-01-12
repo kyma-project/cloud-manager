@@ -428,30 +428,28 @@ func (s *vpcStore) DeleteInternetGateway(ctx context.Context, internetGatewayId 
 	return nil
 }
 
-func (s *vpcStore) CreateVpc(ctx context.Context, name, cidr string, tags []ec2types.Tag) (*ec2types.Vpc, error) {
+func (s *vpcStore) CreateVpc(ctx context.Context, name, cidrTxt string, tags []ec2types.Tag) (*ec2types.Vpc, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	tags = append([]ec2types.Tag{
-		{
-			Key:   ptr.To("Name"),
-			Value: ptr.To(name),
-		},
+	tags = append(tags, ec2types.Tag{
+		Key:   ptr.To("Name"),
+		Value: ptr.To(name),
 	})
 
 	item := &vpcEntry{
 		vpc: ec2types.Vpc{
 			VpcId:     ptr.To(uuid.NewString()),
-			CidrBlock: ptr.To(cidr),
+			CidrBlock: ptr.To(cidrTxt),
 			Tags:      tags,
 			State:     ec2types.VpcStateAvailable,
 			CidrBlockAssociationSet: []ec2types.VpcCidrBlockAssociation{
 				{
 					AssociationId: ptr.To(uuid.NewString()),
-					CidrBlock:     ptr.To(cidr),
+					CidrBlock:     ptr.To(cidrTxt),
 					CidrBlockState: &ec2types.VpcCidrBlockState{
 						State:         ec2types.VpcCidrBlockStateCodeAssociated,
 						StatusMessage: ptr.To("Associated"),

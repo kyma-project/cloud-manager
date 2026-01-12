@@ -136,16 +136,6 @@ func (c *defaultClusterInSession) KubernetesClientset() (*kubernetes.Clientset, 
 
 func (c *defaultClusterInSession) AddResources(ctx context.Context, arr ...*ResourceDeclaration) error {
 	for _, rd := range arr {
-		if rd.Namespace == "" {
-			switch c.ClusterAlias() {
-			case "kcp":
-				rd.Namespace = c.E2EConfig().KcpNamespace
-			case "garden":
-				rd.Namespace = c.E2EConfig().GardenNamespace
-			default:
-				rd.Namespace = c.E2EConfig().SkrNamespace
-			}
-		}
 		if ai := c.session.AliasInfo(rd.Alias); ai != nil {
 			return fmt.Errorf("resource %q already defined as type %T", rd.Alias, ai)
 		}

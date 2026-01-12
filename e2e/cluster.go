@@ -99,6 +99,17 @@ func (c *defaultCluster) AddResources(ctx context.Context, arr ...*ResourceDecla
 	addedSources := map[schema.GroupVersionKind]source.SyncingSource{}
 
 	for _, decl := range arr {
+		if decl.Namespace == "" {
+			switch c.ClusterAlias() {
+			case "kcp":
+				decl.Namespace = c.E2EConfig().KcpNamespace
+			case "garden":
+				decl.Namespace = c.E2EConfig().GardenNamespace
+			default:
+				decl.Namespace = c.E2EConfig().SkrNamespace
+			}
+		}
+
 		if _, ok := c.resources[decl.Alias]; ok {
 			return fmt.Errorf("alias %s already declared", decl.Alias)
 		}
