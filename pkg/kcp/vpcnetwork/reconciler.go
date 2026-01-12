@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
+	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -21,16 +22,20 @@ type VpcNetworkReconciler interface {
 func New(
 	composedStateFactory composed.StateFactory,
 	kcpCommonStateFactory kcpcommonaction.StateFactory,
+	awsStateFactory awsvpcnetwork.StateFactory,
 ) VpcNetworkReconciler {
 	return &vpcNetworkReconciler{
 		composedStateFactory:  composedStateFactory,
 		kcpCommonStateFactory: kcpCommonStateFactory,
+		awsStateFactory:       awsStateFactory,
 	}
 }
 
 type vpcNetworkReconciler struct {
 	composedStateFactory  composed.StateFactory
 	kcpCommonStateFactory kcpcommonaction.StateFactory
+
+	awsStateFactory awsvpcnetwork.StateFactory
 }
 
 func (r *vpcNetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -53,6 +58,14 @@ func (r *vpcNetworkReconciler) newKcpCommonState(name types.NamespacedName) kcpc
 }
 
 func (r *vpcNetworkReconciler) newAction() composed.Action {
+	providerFlow := composed.Switch(
+		nil,
+		composed.NewCase(kcpcommonaction.AwsProviderPredicate, awsvpcnetwork.New(r.awsStateFactory)),
+		composed.NewCase(kcpcommonaction.AzureProviderPredicate, composed.Noop),
+		composed.NewCase(kcpcommonaction.GcpProviderPredicate, composed.Noop),
+		composed.NewCase(kcpcommonaction.OpenStackProviderPredicate, composed.Noop),
+	)
+
 	return composed.ComposeActionsNoName(
 		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.VpcNetwork{}),
 		kcpcommonaction.New(),
@@ -64,12 +77,15 @@ func (r *vpcNetworkReconciler) newAction() composed.Action {
 					composed.MarkedForDeletionPredicate,
 					composed.ComposeActionsNoName(
 						// delete
-						composed.Noop,
+						providerFlow,
+						actions.PatchRemoveCommonFinalizer(),
 					),
 					composed.ComposeActionsNoName(
 						// create
 						actions.PatchAddCommonFinalizer(),
 						specCidrBlocksValidate,
+						providerFlow,
+						statusReady,
 					),
 				),
 			)(ctx, newState(st.(kcpcommonaction.State)))

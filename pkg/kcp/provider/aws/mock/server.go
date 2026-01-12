@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	awsvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
@@ -163,6 +164,16 @@ func (s *server) ElastiCacheProviderFake() awsclient.SkrClientProvider[awsclient
 
 func (s *server) ExposedDataProvider() awsclient.SkrClientProvider[awsexposeddataclient.Client] {
 	return func(_ context.Context, account, region, key, secret, role string) (awsexposeddataclient.Client, error) {
+		acc := s.GetAccount(account)
+		if acc == nil {
+			return nil, ErrNoAccount
+		}
+		return acc.Region(region), nil
+	}
+}
+
+func (s *server) VpcNetworkProvider() awsclient.SkrClientProvider[awsvpcnetworkclient.Client] {
+	return func(_ context.Context, account, region, key, secret, role string) (awsvpcnetworkclient.Client, error) {
 		acc := s.GetAccount(account)
 		if acc == nil {
 			return nil, ErrNoAccount

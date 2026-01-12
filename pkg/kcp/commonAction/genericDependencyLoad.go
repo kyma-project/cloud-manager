@@ -31,7 +31,7 @@ func genericDependencyLoad(ctx context.Context, dependencyObj client.Object, obj
 					Status:             metav1.ConditionFalse,
 					ObservedGeneration: obj.GetGeneration(),
 					Reason:             cloudcontrolv1beta1.ReasonInvalidDependency,
-					Message:            fmt.Sprintf("%s %s is not found", kind, name),
+					Message:            fmt.Sprintf("%s %s is not found in namespace %q", kind, name, namespace),
 				})
 			}).
 			OnSuccess(composed.RequeueAfter(commonrate.Slow10s.When(dependencyObj))).

@@ -27,7 +27,7 @@ func NewElastiCacheClientProvider() SkrClientProvider[ElastiCacheClient] {
 			return nil, err
 		}
 
-		return newClient(
+		return newElastiCacheClient(
 			ec2.NewFromConfig(cfg),
 			elasticache.NewFromConfig(cfg),
 			secretsmanager.NewFromConfig(cfg),
@@ -111,21 +111,21 @@ type ElastiCacheClient interface {
 	AuthorizeElastiCacheSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2types.IpPermission) error
 }
 
-func newClient(ec2Svc *ec2.Client, elastiCacheSvc *elasticache.Client, secretsManagerSvc *secretsmanager.Client) ElastiCacheClient {
-	return &client{
+func newElastiCacheClient(ec2Svc *ec2.Client, elastiCacheSvc *elasticache.Client, secretsManagerSvc *secretsmanager.Client) ElastiCacheClient {
+	return &elastiCacheClient{
 		ec2Svc:            ec2Svc,
 		elastiCacheSvc:    elastiCacheSvc,
 		secretsManagerSvc: secretsManagerSvc,
 	}
 }
 
-type client struct {
+type elastiCacheClient struct {
 	ec2Svc            *ec2.Client
 	elastiCacheSvc    *elasticache.Client
 	secretsManagerSvc *secretsmanager.Client
 }
 
-func (c *client) DescribeElastiCacheSubnetGroup(ctx context.Context, name string) ([]elasticachetypes.CacheSubnetGroup, error) {
+func (c *elastiCacheClient) DescribeElastiCacheSubnetGroup(ctx context.Context, name string) ([]elasticachetypes.CacheSubnetGroup, error) {
 
 	out, err := c.elastiCacheSvc.DescribeCacheSubnetGroups(ctx, &elasticache.DescribeCacheSubnetGroupsInput{
 		CacheSubnetGroupName: ptr.To(name),
@@ -142,7 +142,7 @@ func (c *client) DescribeElastiCacheSubnetGroup(ctx context.Context, name string
 	return out.CacheSubnetGroups, nil
 }
 
-func (c *client) CreateElastiCacheSubnetGroup(ctx context.Context, name string, subnetIds []string, tags []elasticachetypes.Tag) (*elasticache.CreateCacheSubnetGroupOutput, error) {
+func (c *elastiCacheClient) CreateElastiCacheSubnetGroup(ctx context.Context, name string, subnetIds []string, tags []elasticachetypes.Tag) (*elasticache.CreateCacheSubnetGroupOutput, error) {
 	out, err := c.elastiCacheSvc.CreateCacheSubnetGroup(ctx, &elasticache.CreateCacheSubnetGroupInput{
 		CacheSubnetGroupDescription: ptr.To(fmt.Sprintf("SubnetGroup for ElastiCache %s", name)),
 		CacheSubnetGroupName:        ptr.To(name),
@@ -157,7 +157,7 @@ func (c *client) CreateElastiCacheSubnetGroup(ctx context.Context, name string, 
 	return out, nil
 }
 
-func (c *client) DeleteElastiCacheSubnetGroup(ctx context.Context, name string) error {
+func (c *elastiCacheClient) DeleteElastiCacheSubnetGroup(ctx context.Context, name string) error {
 	_, err := c.elastiCacheSvc.DeleteCacheSubnetGroup(ctx, &elasticache.DeleteCacheSubnetGroupInput{
 		CacheSubnetGroupName: ptr.To(name),
 	})
@@ -169,7 +169,7 @@ func (c *client) DeleteElastiCacheSubnetGroup(ctx context.Context, name string) 
 	return nil
 }
 
-func (c *client) DescribeElastiCacheParameterGroup(ctx context.Context, name string) ([]elasticachetypes.CacheParameterGroup, error) {
+func (c *elastiCacheClient) DescribeElastiCacheParameterGroup(ctx context.Context, name string) ([]elasticachetypes.CacheParameterGroup, error) {
 	out, err := c.elastiCacheSvc.DescribeCacheParameterGroups(ctx, &elasticache.DescribeCacheParameterGroupsInput{
 		CacheParameterGroupName: ptr.To(name),
 	})
@@ -184,7 +184,7 @@ func (c *client) DescribeElastiCacheParameterGroup(ctx context.Context, name str
 	return out.CacheParameterGroups, nil
 }
 
-func (c *client) CreateElastiCacheParameterGroup(ctx context.Context, name, family string, tags []elasticachetypes.Tag) (*elasticache.CreateCacheParameterGroupOutput, error) {
+func (c *elastiCacheClient) CreateElastiCacheParameterGroup(ctx context.Context, name, family string, tags []elasticachetypes.Tag) (*elasticache.CreateCacheParameterGroupOutput, error) {
 	out, err := c.elastiCacheSvc.CreateCacheParameterGroup(ctx, &elasticache.CreateCacheParameterGroupInput{
 		CacheParameterGroupName:   ptr.To(name),
 		CacheParameterGroupFamily: ptr.To(family),
@@ -199,7 +199,7 @@ func (c *client) CreateElastiCacheParameterGroup(ctx context.Context, name, fami
 	return out, nil
 }
 
-func (c *client) DeleteElastiCacheParameterGroup(ctx context.Context, name string) error {
+func (c *elastiCacheClient) DeleteElastiCacheParameterGroup(ctx context.Context, name string) error {
 	_, err := c.elastiCacheSvc.DeleteCacheParameterGroup(ctx, &elasticache.DeleteCacheParameterGroupInput{
 		CacheParameterGroupName: ptr.To(name),
 	})
@@ -211,7 +211,7 @@ func (c *client) DeleteElastiCacheParameterGroup(ctx context.Context, name strin
 	return nil
 }
 
-func (c *client) DescribeElastiCacheParameters(ctx context.Context, groupName string) ([]elasticachetypes.Parameter, error) {
+func (c *elastiCacheClient) DescribeElastiCacheParameters(ctx context.Context, groupName string) ([]elasticachetypes.Parameter, error) {
 	result := []elasticachetypes.Parameter{}
 	var marker *string = nil
 	for {
@@ -236,7 +236,7 @@ func (c *client) DescribeElastiCacheParameters(ctx context.Context, groupName st
 	return result, nil
 }
 
-func (c *client) ModifyElastiCacheParameterGroup(ctx context.Context, groupName string, parameters []elasticachetypes.ParameterNameValue) error {
+func (c *elastiCacheClient) ModifyElastiCacheParameterGroup(ctx context.Context, groupName string, parameters []elasticachetypes.ParameterNameValue) error {
 	apiMaxChunkSize := 20
 	for i := 0; i < len(parameters); i += apiMaxChunkSize {
 		end := int(math.Min(float64(i+apiMaxChunkSize), float64(len(parameters))))
@@ -258,7 +258,7 @@ func (c *client) ModifyElastiCacheParameterGroup(ctx context.Context, groupName 
 
 var defaultParametersCache map[string][]elasticachetypes.Parameter = map[string][]elasticachetypes.Parameter{}
 
-func (c *client) DescribeEngineDefaultParameters(ctx context.Context, family string) ([]elasticachetypes.Parameter, error) {
+func (c *elastiCacheClient) DescribeEngineDefaultParameters(ctx context.Context, family string) ([]elasticachetypes.Parameter, error) {
 	if _, found := defaultParametersCache[family]; found {
 		return defaultParametersCache[family], nil
 	}
@@ -286,7 +286,7 @@ func (c *client) DescribeEngineDefaultParameters(ctx context.Context, family str
 	return result, nil
 }
 
-func (c *client) GetAuthTokenSecretValue(ctx context.Context, secretName string) (*secretsmanager.GetSecretValueOutput, error) {
+func (c *elastiCacheClient) GetAuthTokenSecretValue(ctx context.Context, secretName string) (*secretsmanager.GetSecretValueOutput, error) {
 	out, err := c.secretsManagerSvc.GetSecretValue(ctx, &secretsmanager.GetSecretValueInput{
 		SecretId: ptr.To(secretName),
 	})
@@ -302,7 +302,7 @@ func (c *client) GetAuthTokenSecretValue(ctx context.Context, secretName string)
 	return out, nil
 }
 
-func (c *client) CreateAuthTokenSecret(ctx context.Context, secretName string, tags []secretsmanagertypes.Tag) error {
+func (c *elastiCacheClient) CreateAuthTokenSecret(ctx context.Context, secretName string, tags []secretsmanagertypes.Tag) error {
 	_, err := c.secretsManagerSvc.CreateSecret(ctx, &secretsmanager.CreateSecretInput{
 		Name:         ptr.To(secretName),
 		SecretString: ptr.To(uuid.NewString()),
@@ -312,7 +312,7 @@ func (c *client) CreateAuthTokenSecret(ctx context.Context, secretName string, t
 	return err
 }
 
-func (c *client) DeleteAuthTokenSecret(ctx context.Context, secretName string) error {
+func (c *elastiCacheClient) DeleteAuthTokenSecret(ctx context.Context, secretName string) error {
 	_, err := c.secretsManagerSvc.DeleteSecret(ctx, &secretsmanager.DeleteSecretInput{
 		SecretId:                   ptr.To(secretName),
 		ForceDeleteWithoutRecovery: aws.Bool(true),
@@ -321,7 +321,7 @@ func (c *client) DeleteAuthTokenSecret(ctx context.Context, secretName string) e
 	return err
 }
 
-func (c *client) DescribeElastiCacheReplicationGroup(ctx context.Context, clusterId string) ([]elasticachetypes.ReplicationGroup, error) {
+func (c *elastiCacheClient) DescribeElastiCacheReplicationGroup(ctx context.Context, clusterId string) ([]elasticachetypes.ReplicationGroup, error) {
 	out, err := c.elastiCacheSvc.DescribeReplicationGroups(ctx, &elasticache.DescribeReplicationGroupsInput{
 		ReplicationGroupId: ptr.To(clusterId),
 	})
@@ -335,7 +335,7 @@ func (c *client) DescribeElastiCacheReplicationGroup(ctx context.Context, cluste
 	return out.ReplicationGroups, nil
 }
 
-func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticachetypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
+func (c *elastiCacheClient) CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticachetypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error) {
 	clusterMode := elasticachetypes.ClusterModeDisabled
 	if options.ClusterMode {
 		clusterMode = elasticachetypes.ClusterModeEnabled
@@ -371,7 +371,7 @@ func (c *client) CreateElastiCacheReplicationGroup(ctx context.Context, tags []e
 	return res, nil
 }
 
-func (c *client) ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error) {
+func (c *elastiCacheClient) ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error) {
 	params := &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId: aws.String(id),
 		ApplyImmediately:   aws.Bool(true),
@@ -414,7 +414,7 @@ func (c *client) ModifyElastiCacheReplicationGroup(ctx context.Context, id strin
 	return res, nil
 }
 
-func (c *client) DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error {
+func (c *elastiCacheClient) DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error {
 	deleteInput := &elasticache.DeleteReplicationGroupInput{
 		ReplicationGroupId:   ptr.To(id),
 		RetainPrimaryCluster: aws.Bool(false),
@@ -425,7 +425,7 @@ func (c *client) DeleteElastiCacheReplicationGroup(ctx context.Context, id strin
 	return err
 }
 
-func (c *client) DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticachetypes.CacheCluster, error) {
+func (c *elastiCacheClient) DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticachetypes.CacheCluster, error) {
 	out, err := c.elastiCacheSvc.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
 		CacheClusterId: ptr.To(id),
 	})
@@ -439,7 +439,7 @@ func (c *client) DescribeElastiCacheCluster(ctx context.Context, id string) ([]e
 	return out.CacheClusters, nil
 }
 
-func (c *client) ModifyElastiCacheClusterShardConfiguration(ctx context.Context, options RescaleElastiCacheClusterShardOptions) error {
+func (c *elastiCacheClient) ModifyElastiCacheClusterShardConfiguration(ctx context.Context, options RescaleElastiCacheClusterShardOptions) error {
 	_, err := c.elastiCacheSvc.ModifyReplicationGroupShardConfiguration(ctx, &elasticache.ModifyReplicationGroupShardConfigurationInput{
 		ApplyImmediately:   ptr.To(true),
 		NodeGroupCount:     ptr.To(options.DesiredShardCount),
@@ -454,7 +454,7 @@ func (c *client) ModifyElastiCacheClusterShardConfiguration(ctx context.Context,
 	return nil
 }
 
-func (c *client) ModifyElastiCacheClusterReplicaConfiguration(ctx context.Context, options RescaleElastiCacheClusterReplicaOptions) error {
+func (c *elastiCacheClient) ModifyElastiCacheClusterReplicaConfiguration(ctx context.Context, options RescaleElastiCacheClusterReplicaOptions) error {
 	var err error
 
 	if len(options.ReplicasToRemove) > 0 {
@@ -479,7 +479,7 @@ func (c *client) ModifyElastiCacheClusterReplicaConfiguration(ctx context.Contex
 	return nil
 }
 
-func (c *client) DescribeUserGroup(ctx context.Context, id string) (*elasticachetypes.UserGroup, error) {
+func (c *elastiCacheClient) DescribeUserGroup(ctx context.Context, id string) (*elasticachetypes.UserGroup, error) {
 	res, err := c.elastiCacheSvc.DescribeUserGroups(ctx, &elasticache.DescribeUserGroupsInput{
 		UserGroupId: ptr.To(id),
 	})
@@ -499,7 +499,7 @@ func (c *client) DescribeUserGroup(ctx context.Context, id string) (*elasticache
 	return ptr.To(res.UserGroups[0]), nil
 }
 
-func (c *client) CreateUserGroup(ctx context.Context, id string, tags []elasticachetypes.Tag) (*elasticache.CreateUserGroupOutput, error) {
+func (c *elastiCacheClient) CreateUserGroup(ctx context.Context, id string, tags []elasticachetypes.Tag) (*elasticache.CreateUserGroupOutput, error) {
 	res, err := c.elastiCacheSvc.CreateUserGroup(ctx, &elasticache.CreateUserGroupInput{
 		UserGroupId: ptr.To(id),
 		Engine:      ptr.To("redis"),
@@ -513,7 +513,7 @@ func (c *client) CreateUserGroup(ctx context.Context, id string, tags []elastica
 	return res, nil
 }
 
-func (c *client) DeleteUserGroup(ctx context.Context, id string) error {
+func (c *elastiCacheClient) DeleteUserGroup(ctx context.Context, id string) error {
 	_, err := c.elastiCacheSvc.DeleteUserGroup(ctx, &elasticache.DeleteUserGroupInput{
 		UserGroupId: ptr.To(id),
 	})
@@ -525,7 +525,7 @@ func (c *client) DeleteUserGroup(ctx context.Context, id string) error {
 	return nil
 }
 
-func (c *client) DescribeElastiCacheSecurityGroups(ctx context.Context, filters []ec2types.Filter, groupIds []string) ([]ec2types.SecurityGroup, error) {
+func (c *elastiCacheClient) DescribeElastiCacheSecurityGroups(ctx context.Context, filters []ec2types.Filter, groupIds []string) ([]ec2types.SecurityGroup, error) {
 	out, err := c.ec2Svc.DescribeSecurityGroups(ctx, &ec2.DescribeSecurityGroupsInput{
 		Filters:  filters,
 		GroupIds: groupIds,
@@ -536,7 +536,7 @@ func (c *client) DescribeElastiCacheSecurityGroups(ctx context.Context, filters 
 	return out.SecurityGroups, nil
 }
 
-func (c *client) CreateElastiCacheSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2types.Tag) (string, error) {
+func (c *elastiCacheClient) CreateElastiCacheSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2types.Tag) (string, error) {
 	out, err := c.ec2Svc.CreateSecurityGroup(ctx, &ec2.CreateSecurityGroupInput{
 		Description: ptr.To(fmt.Sprintf("SecurityGroup for ElastiCache %s", name)),
 		GroupName:   ptr.To(name),
@@ -554,7 +554,7 @@ func (c *client) CreateElastiCacheSecurityGroup(ctx context.Context, vpcId, name
 	return ptr.Deref(out.GroupId, ""), nil
 }
 
-func (c *client) DeleteElastiCacheSecurityGroup(ctx context.Context, id string) error {
+func (c *elastiCacheClient) DeleteElastiCacheSecurityGroup(ctx context.Context, id string) error {
 	in := &ec2.DeleteSecurityGroupInput{
 		GroupId: ptr.To(id),
 	}
@@ -562,7 +562,7 @@ func (c *client) DeleteElastiCacheSecurityGroup(ctx context.Context, id string) 
 	return err
 }
 
-func (c *client) AuthorizeElastiCacheSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2types.IpPermission) error {
+func (c *elastiCacheClient) AuthorizeElastiCacheSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2types.IpPermission) error {
 	_, err := c.ec2Svc.AuthorizeSecurityGroupIngress(ctx, &ec2.AuthorizeSecurityGroupIngressInput{
 		GroupId:       ptr.To(groupId),
 		IpPermissions: ipPermissions,

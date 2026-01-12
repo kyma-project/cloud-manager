@@ -1,8 +1,6 @@
 package ctrltest
 
 import (
-	"time"
-
 	"github.com/kyma-project/cloud-manager/e2e"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -46,7 +44,7 @@ var _ = Describe("Feature: Cluster context", func() {
 		var evaluator e2e.Evaluator
 
 		By("When Evaluation context is created", func() {
-			e, err := e2e.NewEvaluatorBuilder(config.SkrNamespace).
+			e, err := e2e.NewEvaluatorBuilder().
 				Add(world.Kcp()).
 				Build(infra.Ctx())
 			Expect(err).NotTo(HaveOccurred())
@@ -69,7 +67,7 @@ var _ = Describe("Feature: Cluster context", func() {
 			err := world.Kcp().GetClient().Create(infra.Ctx(), &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      cmTwoName,
-					Namespace: "default",
+					Namespace: config.KcpNamespace,
 				},
 				Data: map[string]string{
 					"myName": "cmTwo",
@@ -82,19 +80,18 @@ var _ = Describe("Feature: Cluster context", func() {
 			err := world.Kcp().GetClient().Create(infra.Ctx(), &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      cmOneName,
-					Namespace: "default",
+					Namespace: config.KcpNamespace,
 				},
 				Data: map[string]string{
 					"cmTwoName": cmTwoName,
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())
+			world.Kcp().GetCache().WaitForCacheSync(infra.Ctx())
 		})
 
 		By("When Evaluation context is created", func() {
-			// give time to cache to refresh
-			time.Sleep(2 * time.Second)
-			e, err := e2e.NewEvaluatorBuilder(config.SkrNamespace).
+			e, err := e2e.NewEvaluatorBuilder().
 				Add(world.Kcp()).
 				Build(infra.Ctx())
 			Expect(err).NotTo(HaveOccurred())
@@ -123,7 +120,7 @@ var _ = Describe("Feature: Cluster context", func() {
 			err := world.Kcp().GetClient().Delete(infra.Ctx(), &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      cmOneName,
-					Namespace: "default",
+					Namespace: config.KcpNamespace,
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())
@@ -133,7 +130,7 @@ var _ = Describe("Feature: Cluster context", func() {
 			err := world.Kcp().GetClient().Delete(infra.Ctx(), &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      cmTwoName,
-					Namespace: "default",
+					Namespace: config.KcpNamespace,
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())
