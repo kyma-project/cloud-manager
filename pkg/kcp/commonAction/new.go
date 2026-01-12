@@ -21,6 +21,7 @@ func New() composed.Action {
 		gcpSubnetLoad,
 		vpcNetworkLoad,
 		subscriptionLoad,
+		labelObj,
 		// TODO: setup feature context
 	)
 }

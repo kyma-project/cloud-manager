@@ -11,6 +11,9 @@ type State interface {
 	ObjAsObjWithStatus() composed.ObjWithStatus
 
 	Subscription() *cloudcontrolv1beta1.Subscription
+	VpcNetwork() *cloudcontrolv1beta1.VpcNetwork
+	IpRange() *cloudcontrolv1beta1.IpRange
+	GcpSubnet() *cloudcontrolv1beta1.GcpSubnet
 }
 
 // factory ========================================================================
@@ -50,4 +53,16 @@ func (s *stateImpl) ObjAsObjWithStatus() composed.ObjWithStatus {
 
 func (s *stateImpl) Subscription() *cloudcontrolv1beta1.Subscription {
 	return s.subscription
+}
+
+func (s *stateImpl) VpcNetwork() *cloudcontrolv1beta1.VpcNetwork {
+	return s.vpcNetwork
+}
+
+func (s *stateImpl) IpRange() *cloudcontrolv1beta1.IpRange {
+	return s.ipRange
+}
+
+func (s *stateImpl) GcpSubnet() *cloudcontrolv1beta1.GcpSubnet {
+	return s.gcpSubnet
 }

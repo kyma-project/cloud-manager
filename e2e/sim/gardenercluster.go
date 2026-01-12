@@ -49,7 +49,7 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 		return reconcile.Result{}, fmt.Errorf("error loading GardenerCluster: %w", err)
 	}
 
-	if _, ok := gc.Labels[DoNotReconcile]; ok {
+	if _, ok := gc.Labels[e2elib.DoNotReconcile]; ok {
 		return reconcile.Result{}, nil
 	}
 
