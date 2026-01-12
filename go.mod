@@ -36,7 +36,7 @@ require (
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/gardener/gardener v1.134.0
+	github.com/gardener/gardener v1.134.1
 	github.com/gardener/gardener-extension-provider-aws v1.66.2
 	github.com/gardener/gardener-extension-provider-azure v1.57.1
 	github.com/gardener/gardener-extension-provider-gcp v1.48.2
