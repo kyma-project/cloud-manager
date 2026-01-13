@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
+	"golang.org/x/oauth2"
 	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
 	servicenetworking "google.golang.org/api/servicenetworking/v1"
@@ -67,53 +68,46 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	}
 	computeTokenSource := oauth2adapt.TokenSourceFromTokenProvider(computeTokenProvider)
 
-	// Compute clients use REST protocol, need HTTP middleware
-	computeHTTPClient := NewMetricsHTTPClient("Compute", nil)
+	// Compute clients use REST protocol, wrap with metrics middleware
+	computeHTTPClient := NewMetricsHTTPClient("Compute", oauth2.NewClient(ctx, computeTokenSource).Transport)
 
 	computeNetworks, err := compute.NewNetworksRESTClient(ctx,
-		option.WithTokenSource(computeTokenSource),
 		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute networs client: %w", err)
 	}
 
 	computeAddress, err := compute.NewAddressesRESTClient(ctx,
-		option.WithTokenSource(computeTokenSource),
 		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute addresses client: %w", err)
 	}
 
 	computeRouters, err := compute.NewRoutersRESTClient(ctx,
-		option.WithTokenSource(computeTokenSource),
 		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute routers client: %w", err)
 	}
 
 	computeSubnetworks, err := compute.NewSubnetworksRESTClient(ctx,
-		option.WithTokenSource(computeTokenSource),
 		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute subnetworks client: %w", err)
 	}
 
 	computeRegionOperations, err := compute.NewRegionOperationsRESTClient(ctx,
-		option.WithTokenSource(computeTokenSource),
 		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute region operations client: %w", err)
 	}
 
 	computeGlobalAddresses, err := compute.NewGlobalAddressesRESTClient(ctx,
-		option.WithTokenSource(computeTokenSource),
 		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute global addresses client: %w", err)
 	}
 
 	computeGlobalOperations, err := compute.NewGlobalOperationsRESTClient(ctx,
-		option.WithTokenSource(computeTokenSource),
 		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create compute global operations client: %w", err)
@@ -191,17 +185,15 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	serviceNetworkingTokenSource := oauth2adapt.TokenSourceFromTokenProvider(serviceNetworkingTokenProvider)
 
 	// Wrap with metrics middleware for REST APIs
-	serviceNetworkingHTTPClient := NewMetricsHTTPClient("ServiceNetworking", nil)
-	cloudResourceManagerHTTPClient := NewMetricsHTTPClient("CloudResourceManager", nil)
+	serviceNetworkingHTTPClient := NewMetricsHTTPClient("ServiceNetworking", oauth2.NewClient(ctx, serviceNetworkingTokenSource).Transport)
+	cloudResourceManagerHTTPClient := NewMetricsHTTPClient("CloudResourceManager", oauth2.NewClient(ctx, serviceNetworkingTokenSource).Transport)
 
 	serviceNetworking, err := servicenetworking.NewService(ctx,
-		option.WithTokenSource(serviceNetworkingTokenSource),
 		option.WithHTTPClient(serviceNetworkingHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create service networking client: %w", err)
 	}
 	cloudResourceManager, err := cloudresourcemanager.NewService(ctx,
-		option.WithTokenSource(serviceNetworkingTokenSource),
 		option.WithHTTPClient(cloudResourceManagerHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("create cloud resource manager client: %w", err)
@@ -215,11 +207,10 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	}
 	vpcPeeringComputeNetworksTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringComputeNetworksTokenProvider)
 
-	// VPC peering clients also use REST, need separate HTTP client
-	vpcPeeringHTTPClient := NewMetricsHTTPClient("Compute", nil)
+	// VPC peering clients also use REST, wrap with metrics middleware
+	vpcPeeringHTTPClient := NewMetricsHTTPClient("Compute", oauth2.NewClient(ctx, vpcPeeringComputeNetworksTokenSource).Transport)
 
 	vpcPeeringComputeNetworks, err := compute.NewNetworksRESTClient(ctx,
-		option.WithTokenSource(vpcPeeringComputeNetworksTokenSource),
 		option.WithHTTPClient(vpcPeeringHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("error creating vpc peering compute networks client: %w", err)
@@ -232,10 +223,9 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	}
 	vpcPeeringresourceManagerTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringResourceManagerTokenProvider)
 
-	resourceManagerHTTPClient := NewMetricsHTTPClient("ResourceManager", nil)
+	resourceManagerHTTPClient := NewMetricsHTTPClient("ResourceManager", oauth2.NewClient(ctx, vpcPeeringresourceManagerTokenSource).Transport)
 
 	vpcPeeringresourceManagerTagBindings, err := resourcemanager.NewTagBindingsRESTClient(ctx,
-		option.WithTokenSource(vpcPeeringresourceManagerTokenSource),
 		option.WithHTTPClient(resourceManagerHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("error creating resource_manager tag bindings client: %w", err)
