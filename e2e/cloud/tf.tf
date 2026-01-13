@@ -27,7 +27,7 @@ module "m" {
 {{- end }}
 
 {{- range $key, $value := .Module.Variables }}
-  {{ $key }} = {{ $value }}
+  {{ $key }} = "{{ $value }}"
 {{- end }}
 }
 
