@@ -2,7 +2,9 @@ package cloudcontrol
 
 import (
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
@@ -65,14 +67,12 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		azureMock := infra.AzureMock().MockConfigs(kcpNetworkKyma.Spec.Network.Reference.Azure.SubscriptionId, kcpNetworkKyma.Spec.Network.Reference.Azure.TenantId)
 
 		By("And Given Azure Kyma Shoot VNet exist", func() {
-			err := azureMock.CreateNetwork(
-				infra.Ctx(),
+			_, err := azureclient.PollUntilDone(azureMock.CreateNetwork(infra.Ctx(),
 				kcpNetworkKyma.Spec.Network.Reference.Azure.ResourceGroup,
 				kcpNetworkKyma.Spec.Network.Reference.Azure.NetworkName,
-				scope.Spec.Region,
-				"10.250.0.0/22",
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.250.0.0/22", nil),
 				nil,
-			)
+			))(infra.Ctx(), nil)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -138,7 +138,13 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		cmCommonName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
 
 		By("When Azure CM Network is provisioned", func() {
-			err := azureMock.CreateNetwork(infra.Ctx(), cmCommonName, cmCommonName, scope.Spec.Region, kcpIpRange.Status.Cidr, nil)
+			_, err := azureclient.PollUntilDone(azureMock.CreateNetwork(
+				infra.Ctx(),
+				cmCommonName,
+				cmCommonName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, kcpIpRange.Status.Cidr, nil),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

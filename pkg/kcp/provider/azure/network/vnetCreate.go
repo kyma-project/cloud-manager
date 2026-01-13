@@ -2,8 +2,10 @@ package network
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -18,14 +20,14 @@ func vnetCreate(ctx context.Context, st composed.State) (error, context.Context)
 
 	logger.Info("Creating Azure VNet for KCP Network")
 
-	err := state.azureClient.CreateNetwork(
+	_, err := azureclient.PollUntilDone(state.azureClient.CreateNetwork(
 		ctx,
 		state.resourceGroupName,
 		state.vnetName,
-		state.location,
-		state.cidr,
-		state.tags,
-	)
+		azureclient.NewVirtualNetwork(state.location, state.cidr, state.tags),
+		nil,
+	))(ctx, nil)
+
 	if err != nil {
 		logger.Error(err, "Failed to create Azure VNet for KCP Network")
 

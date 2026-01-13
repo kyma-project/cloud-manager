@@ -3,13 +3,15 @@ package mock
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/elliotchance/pie/v2"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
-	"sync"
 )
 
 var _ NetworkClient = &networkStore{}
@@ -134,10 +136,18 @@ func (s *networkStore) AddRemoteSubscription(ctx context.Context, remoteSubscrip
 
 // NetworkClient ===================================================
 
-func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName, virtualNetworkName, location, addressSpace string, tags map[string]string) error {
+func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName string, virtualNetworkName string, parameters armnetwork.VirtualNetwork, options *armnetwork.VirtualNetworksClientBeginCreateOrUpdateOptions) (azureclient.Poller[armnetwork.VirtualNetworksClientCreateOrUpdateResponse], error) {
 	if isContextCanceled(ctx) {
-		return context.Canceled
+		return nil, context.Canceled
 	}
+
+	if options != nil && options.ResumeToken != "" {
+		ret, err := s.GetNetwork(ctx, resourceGroupName, virtualNetworkName)
+		return NewPollerMock(armnetwork.VirtualNetworksClientCreateOrUpdateResponse{
+			VirtualNetwork: ptr.Deref(ret, armnetwork.VirtualNetwork{}),
+		}, err, ""), err
+	}
+
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -148,9 +158,32 @@ func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName, vir
 
 	_, ok = s.items[resourceGroupName][virtualNetworkName]
 	if ok {
-		return fmt.Errorf("virtual network %s/%s/%s already exists", s.subscription, resourceGroupName, virtualNetworkName)
+		//TODO: return correct Azure error type, check azuremeta for details, first find out what actual Azure returns in this case
+		return nil, fmt.Errorf("virtual network %s/%s/%s already exists", s.subscription, resourceGroupName, virtualNetworkName)
+	}
+	if parameters.Properties == nil || parameters.Properties.AddressSpace == nil || len(parameters.Properties.AddressSpace.AddressPrefixes) == 0 {
+		//TODO: return correct Azure error type, check azuremeta for details, first find out what actual Azure returns in this case
+		return nil, fmt.Errorf("invalid parameters: address space must be specified")
 	}
 
+	cpy := parameters
+	net := &cpy
+	net.ID = ptr.To(azureutil.NewVirtualNetworkResourceId(s.subscription, resourceGroupName, virtualNetworkName).String())
+	net.Name = ptr.To(virtualNetworkName)
+
+	s.items[resourceGroupName][virtualNetworkName] = &networkEntry{network: net}
+
+	ret, err := util.JsonClone(net)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewPollerMock(armnetwork.VirtualNetworksClientCreateOrUpdateResponse{
+		VirtualNetwork: *ret,
+	}, nil, fmt.Sprintf("resumeToken/%s/%s", resourceGroupName, virtualNetworkName)), nil
+}
+
+func (s *networkStore) CreateNetworkOld(ctx context.Context, resourceGroupName, virtualNetworkName, location, addressSpace string, tags map[string]string) error {
 	var netTags map[string]*string
 	if tags != nil {
 		netTags = make(map[string]*string, len(tags))
@@ -159,20 +192,12 @@ func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName, vir
 		}
 	}
 
-	net := &armnetwork.VirtualNetwork{
-		ID:       ptr.To(azureutil.NewVirtualNetworkResourceId(s.subscription, resourceGroupName, virtualNetworkName).String()),
-		Name:     ptr.To(virtualNetworkName),
-		Location: ptr.To(location),
-		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
-			AddressSpace: &armnetwork.AddressSpace{
-				AddressPrefixes: []*string{ptr.To(addressSpace)},
-			},
-		},
-		Tags: netTags,
+	poll, err := s.CreateNetwork(ctx, resourceGroupName, virtualNetworkName, azureclient.NewVirtualNetwork(location, addressSpace, tags), nil)
+	if err != nil {
+		return err
 	}
-	s.items[resourceGroupName][virtualNetworkName] = &networkEntry{network: net}
-
-	return nil
+	_, err = poll.PollUntilDone(ctx, nil)
+	return err
 }
 
 func (s *networkStore) GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error) {
@@ -202,21 +227,35 @@ func (s *networkStore) getNetworkEntryNoLock(resourceGroupName, virtualNetworkNa
 	return s.items[resourceGroupName][virtualNetworkName], nil
 }
 
-func (s *networkStore) DeleteNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) error {
-	if isContextCanceled(ctx) {
-		return context.Canceled
+func (s *networkStore) DeleteNetworkOld(ctx context.Context, resourceGroupName, virtualNetworkName string) error {
+	poll, err := s.DeleteNetwork(ctx, resourceGroupName, virtualNetworkName, nil)
+	if err != nil {
+		return err
 	}
+	_, err = poll.PollUntilDone(ctx, nil)
+	return err
+}
+
+func (s *networkStore) DeleteNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string, options *armnetwork.VirtualNetworksClientBeginDeleteOptions) (azureclient.Poller[armnetwork.VirtualNetworksClientDeleteResponse], error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	_, err := s.getNetworkEntryNoLock(resourceGroupName, virtualNetworkName)
+
+	if azuremeta.IsNotFound(err) && options != nil && options.ResumeToken != "" {
+		return NewPollerMock(armnetwork.VirtualNetworksClientDeleteResponse{}, nil, fmt.Sprintf("resumeToken/%s/%s", resourceGroupName, virtualNetworkName)), nil
+	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	delete(s.items[resourceGroupName], virtualNetworkName)
 
-	return nil
+	return NewPollerMock(armnetwork.VirtualNetworksClientDeleteResponse{}, nil, fmt.Sprintf("resumeToken/%s/%s", resourceGroupName, virtualNetworkName)), nil
 }
 
 // SubnetsClient =========
