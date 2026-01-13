@@ -194,9 +194,6 @@ spec:
             properties:
               authString:
                 type: string
-              cacheNodeType:
-                description: The reconciled machine type of the Redis cluster nodes.
-                type: string
               conditions:
                 description: List of status conditions to indicate the status of a
                   RedisInstance.
@@ -261,6 +258,12 @@ spec:
               discoveryEndpoint:
                 type: string
               id:
+                type: string
+              nodeType:
+                description: |-
+                  The reconciled node/machine type of the Redis cluster.
+                  AWS: cache node type (e.g., "cache.t3.micro")
+                  Azure: SKU capacity (e.g., "3")
                 type: string
               observedGeneration:
                 format: int64

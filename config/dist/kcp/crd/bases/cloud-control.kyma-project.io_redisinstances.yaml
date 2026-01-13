@@ -305,9 +305,6 @@ spec:
                 type: string
               caCert:
                 type: string
-              cacheNodeType:
-                description: The reconciled machine type of the Redis instance.
-                type: string
               conditions:
                 description: List of status conditions to indicate the status of a
                   RedisInstance.
@@ -376,6 +373,12 @@ spec:
                   = MemorySizeGb (their capacity model)).'
                 format: int32
                 type: integer
+              nodeType:
+                description: |-
+                  The reconciled node/machine type of the Redis instance.
+                  AWS: cache node type (e.g., "cache.t3.micro")
+                  Azure: SKU family + capacity (e.g., "P3")
+                type: string
               observedGeneration:
                 format: int64
                 type: integer
