@@ -5,6 +5,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,13 +22,12 @@ func subnetCreate(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Creating Azure KCP IpRange subnet")
 
-	err := state.azureClient.CreateSubnet(
+	_, err := azureclient.PollUntilDone(state.azureClient.CreateSubnet(
 		ctx,
 		state.resourceGroupName, state.virtualNetworkName, state.subnetName,
-		state.ObjAsIpRange().Status.Cidr,
-		ptr.Deref(state.securityGroup.ID, ""),
-		"",
-	)
+		azureclient.NewSubnet(state.ObjAsIpRange().Status.Cidr, ptr.Deref(state.securityGroup.ID, ""), ""),
+		nil,
+	))(ctx, nil)
 
 	if azuremeta.IsTooManyRequests(err) {
 		return composed.LogErrorAndReturn(err,

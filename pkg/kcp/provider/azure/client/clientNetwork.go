@@ -8,12 +8,10 @@ import (
 )
 
 type NetworkClient interface {
-	CreateNetworkOld(ctx context.Context, resourceGroupName, virtualNetworkName, location, addressSpace string, tags map[string]string) error
 	CreateNetwork(ctx context.Context, resourceGroupName string, virtualNetworkName string, parameters armnetwork.VirtualNetwork, options *armnetwork.VirtualNetworksClientBeginCreateOrUpdateOptions) (Poller[armnetwork.VirtualNetworksClientCreateOrUpdateResponse], error)
 
 	GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error)
 
-	DeleteNetworkOld(ctx context.Context, resourceGroupName, virtualNetworkName string) error
 	DeleteNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string, options *armnetwork.VirtualNetworksClientBeginDeleteOptions) (Poller[armnetwork.VirtualNetworksClientDeleteResponse], error)
 }
 
@@ -55,30 +53,12 @@ func (c *networkClient) CreateNetwork(ctx context.Context, resourceGroupName str
 	return c.svc.BeginCreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, parameters, options)
 }
 
-func (c *networkClient) CreateNetworkOld(ctx context.Context, resourceGroupName, virtualNetworkName, location, addressSpace string, tags map[string]string) error {
-	poller, err := c.svc.BeginCreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, NewVirtualNetwork(location, addressSpace, tags), nil)
-	if err != nil {
-		return err
-	}
-	_, err = poller.PollUntilDone(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (c *networkClient) GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error) {
 	resp, err := c.svc.Get(ctx, resourceGroupName, virtualNetworkName, nil)
 	if err != nil {
 		return nil, err
 	}
 	return &resp.VirtualNetwork, nil
-}
-
-func (c *networkClient) DeleteNetworkOld(ctx context.Context, resourceGroupName, virtualNetworkName string) error {
-	_, err := c.svc.BeginDelete(ctx, resourceGroupName, virtualNetworkName, nil)
-	return err
 }
 
 func (c *networkClient) DeleteNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string, options *armnetwork.VirtualNetworksClientBeginDeleteOptions) (Poller[armnetwork.VirtualNetworksClientDeleteResponse], error) {

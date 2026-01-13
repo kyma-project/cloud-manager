@@ -82,7 +82,11 @@ func CreateAzureGardenerResources(
 		}
 		result.NatGateways = append(result.NatGateways, nat)
 
-		err = azureMock.CreateSubnet(ctx, resourceGroupName, resourceGroupName, name, subnetRanges[i-1].CIDR().String(), "x", netGatewayId.String())
+		_, err = azureclient.PollUntilDone(azureMock.CreateSubnet(
+			ctx, resourceGroupName, resourceGroupName, name,
+			azureclient.NewSubnet(subnetRanges[i-1].CIDR().String(), "x", netGatewayId.String()),
+			nil,
+		))(ctx, nil)
 		if err != nil {
 			return nil, fmt.Errorf("error creating subnet in zone %d: %w", i, err)
 		}
