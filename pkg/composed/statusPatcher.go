@@ -82,9 +82,6 @@ func (u *StatusPatcher[T]) IsStale() bool {
 	if u.obj.GetGeneration() != u.obj.ObservedGeneration() {
 		return true
 	}
-	if u.obj.GetGeneration() <= 1 {
-		return true
-	}
 	if u.obj.Conditions() == nil || len(*u.obj.Conditions()) == 0 {
 		return true
 	}
@@ -145,6 +142,14 @@ func RequeueAfter(requeueAfter time.Duration) StatusPatchErrorHandler {
 
 func Forget(_ context.Context, err error) (bool, error) {
 	return true, StopAndForget
+}
+
+func LogError(err error, msg string) StatusPatchErrorHandler {
+	return func(ctx context.Context, _ error) (bool, error) {
+		logger := LoggerFromCtx(ctx)
+		logger.Error(err, msg)
+		return false, nil
+	}
 }
 
 func Log(msg string) StatusPatchErrorHandler {

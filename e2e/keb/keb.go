@@ -39,6 +39,8 @@ import (
 type Keb interface {
 	SkrManagerFactory
 
+	Config() *e2econfig.ConfigType
+
 	KcpClient() client.Client
 	GardenClient() client.Client
 
@@ -488,6 +490,10 @@ func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetai
 		id.Message = errCond.Message
 	}
 	return id
+}
+
+func (k *defaultKeb) Config() *e2econfig.ConfigType {
+	return k.config
 }
 
 func (k *defaultKeb) KcpClient() client.Client {

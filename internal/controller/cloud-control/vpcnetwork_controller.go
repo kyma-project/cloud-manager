@@ -21,6 +21,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
+	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	kcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -31,11 +32,13 @@ import (
 
 func SetupVpcNetworkReconciler(
 	kcpManager manager.Manager,
+	awsStateFactory awsvpcnetwork.StateFactory,
 ) error {
 	return NewVpcNetworkReconciler(
 		kcpvpcnetwork.New(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
 			kcpcommonaction.NewStateFactory(),
+			awsStateFactory,
 		),
 	).SetupWithManager(kcpManager)
 }

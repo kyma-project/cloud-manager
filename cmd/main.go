@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"os"
 
+	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
+	awsvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
@@ -473,6 +475,7 @@ func main() {
 	}
 	if err = cloudcontrolcontroller.SetupVpcNetworkReconciler(
 		mgr,
+		awsvpcnetwork.NewStateFactory(awsvpcnetworkclient.NewClientProvider()),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcNetwork")
 		os.Exit(1)

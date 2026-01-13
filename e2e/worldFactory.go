@@ -139,8 +139,8 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	result.kcpManager = kcpManager
 	result.gardenManager = gardenManager
 	result.kebi = kebi
-	result.kcp = NewCluster(ctx, "kcp", kcpManager)
-	result.garden = NewCluster(ctx, "garden", gardenManager)
+	result.kcp = NewCluster(ctx, "kcp", kcpManager, opts.Config)
+	result.garden = NewCluster(ctx, "garden", gardenManager, opts.Config)
 
 	// Cloud -------------------------------
 

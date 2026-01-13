@@ -73,7 +73,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, nil
 	}
 
-	if _, ok := kcpKyma.Labels[DoNotReconcile]; ok {
+	if _, ok := kcpKyma.Labels[e2elib.DoNotReconcile]; ok {
 		return reconcile.Result{}, nil
 	}
 

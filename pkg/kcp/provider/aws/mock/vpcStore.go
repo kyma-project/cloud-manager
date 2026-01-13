@@ -72,6 +72,9 @@ type vpcStore struct {
 	addressRange iprangeallocate.AddressSpace
 
 	errorMap map[string]error
+
+	internetGateways []*ec2types.InternetGateway
+	dhcpOptions      []*ec2types.DhcpOptions
 }
 
 func newVpcStore() *vpcStore {
@@ -136,11 +139,11 @@ func (s *vpcStore) AddNatGateway(vpcId string, subnetId string) (*ec2types.NatGa
 func (s *vpcStore) AddVpc(id, cidrVal string, tags []ec2types.Tag, subnets []VpcSubnet) *ec2types.Vpc {
 	s.m.Lock()
 	defer s.m.Unlock()
-	existinIndex := pie.FindFirstUsing(s.items, func(value *vpcEntry) bool {
+	existingIndex := pie.FindFirstUsing(s.items, func(value *vpcEntry) bool {
 		return ptr.Deref(value.vpc.VpcId, "xxx") == id
 	})
-	if existinIndex > -1 {
-		return &s.items[existinIndex].vpc
+	if existingIndex > -1 {
+		return &s.items[existingIndex].vpc
 	}
 
 	item := &vpcEntry{
@@ -181,6 +184,307 @@ func (s *vpcStore) SetVpcError(id string, err error) {
 }
 
 // Client implementation ========================================
+
+func (s *vpcStore) DescribeDhcpOptions(ctx context.Context, name string) ([]ec2types.DhcpOptions, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	var result []ec2types.DhcpOptions
+	for _, x := range s.dhcpOptions {
+		if name == "" || awsutil.NameEc2TagEquals(x.Tags, name) {
+			cpy, err := util.JsonClone(x)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, *cpy)
+		}
+	}
+
+	return result, nil
+}
+
+func (s *vpcStore) CreateDhcpOptions(ctx context.Context, name string, domainName string, tags []ec2types.Tag) (*ec2types.DhcpOptions, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, x := range s.dhcpOptions {
+		nm := awsutil.GetEc2TagValue(x.Tags, "Name")
+		if nm == name {
+			return nil, fmt.Errorf("already have dhcp option named %q", name)
+		}
+	}
+
+	tags = append(tags, ec2types.Tag{
+		Key:   ptr.To("Name"),
+		Value: ptr.To(name),
+	})
+
+	o := &ec2types.DhcpOptions{
+		DhcpConfigurations: []ec2types.DhcpConfiguration{
+			{
+				Key:    ptr.To("domain-name"),
+				Values: []ec2types.AttributeValue{{Value: ptr.To(domainName)}},
+			},
+			{
+				Key:    ptr.To("domain-name-servers"),
+				Values: []ec2types.AttributeValue{{Value: ptr.To("AmazonProvidedDNS")}},
+			},
+		},
+		DhcpOptionsId: ptr.To(uuid.NewString()),
+		Tags:          tags,
+	}
+	s.dhcpOptions = append(s.dhcpOptions, o)
+
+	return o, nil
+}
+
+func (s *vpcStore) AssociateDhcpOptions(ctx context.Context, vpcId string, dhcpOptionsId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	item, err := s.itemByVpcId(vpcId)
+	if err != nil {
+		return err
+	}
+
+	item.vpc.DhcpOptionsId = ptr.To(dhcpOptionsId)
+
+	return nil
+}
+
+func (s *vpcStore) DeleteDhcpOptions(ctx context.Context, dhcpOptionsId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, item := range s.items {
+		if ptr.Deref(item.vpc.DhcpOptionsId, "") == dhcpOptionsId {
+			return fmt.Errorf("dhcp options %q can not be deleted since they are associated with vpc %q", dhcpOptionsId, ptr.Deref(item.vpc.VpcId, ""))
+		}
+	}
+
+	found := false
+	s.dhcpOptions = pie.FilterNot(s.dhcpOptions, func(x *ec2types.DhcpOptions) bool {
+		match := ptr.Deref(x.DhcpOptionsId, "") == dhcpOptionsId
+		if match {
+			found = true
+		}
+		return match
+	})
+	if !found {
+		return awsmeta.NewHttpNotFoundError(fmt.Errorf("dhcp options %q not found", dhcpOptionsId))
+	}
+
+	return nil
+}
+
+func (s *vpcStore) CreateInternetGateway(ctx context.Context, name string) (*ec2types.InternetGateway, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	iwg := &ec2types.InternetGateway{
+		InternetGatewayId: ptr.To(uuid.New().String()),
+		Tags: []ec2types.Tag{
+			{
+				Key:   ptr.To("Name"),
+				Value: ptr.To(name),
+			},
+		},
+	}
+
+	s.internetGateways = append(s.internetGateways, iwg)
+
+	return iwg, nil
+}
+
+func (s *vpcStore) AttachInternetGateway(ctx context.Context, vpcId, internetGatewayId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	var igw *ec2types.InternetGateway
+	for _, x := range s.internetGateways {
+		if ptr.Deref(x.InternetGatewayId, "") == internetGatewayId {
+			igw = x
+			break
+		}
+	}
+	if igw == nil {
+		return awsmeta.NewHttpNotFoundError(fmt.Errorf("internet gateway %q not found", internetGatewayId))
+	}
+
+	var vpc *ec2types.Vpc
+	for _, item := range s.items {
+		if ptr.Deref(item.vpc.VpcId, "") == vpcId {
+			vpc = &item.vpc
+			break
+		}
+	}
+	if vpc == nil {
+		return awsmeta.NewHttpNotFoundError(fmt.Errorf("vpc %q not found", vpcId))
+	}
+
+	for _, att := range igw.Attachments {
+		if ptr.Deref(att.VpcId, "") == vpcId {
+			return fmt.Errorf("vpc %q is already attached to internet gateway %q", vpcId, internetGatewayId)
+		}
+	}
+	igw.Attachments = append(igw.Attachments, ec2types.InternetGatewayAttachment{
+		State: ec2types.AttachmentStatusAttached,
+		VpcId: ptr.To(vpcId),
+	})
+
+	return nil
+}
+
+func (s *vpcStore) DetachInternetGateway(ctx context.Context, vpcId, internetGatewayId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	var igw *ec2types.InternetGateway
+	for _, x := range s.internetGateways {
+		if ptr.Deref(x.InternetGatewayId, "") == internetGatewayId {
+			igw = x
+			break
+		}
+	}
+	if igw == nil {
+		return awsmeta.NewHttpNotFoundError(fmt.Errorf("internet gateway %q not found", internetGatewayId))
+	}
+
+	found := false
+	igw.Attachments = pie.FilterNot(igw.Attachments, func(att ec2types.InternetGatewayAttachment) bool {
+		match := ptr.Deref(att.VpcId, "") == vpcId
+		if match {
+			found = true
+		}
+		return match
+	})
+	if !found {
+		return fmt.Errorf("vpc %q is not attached to internet gateway %q", vpcId, internetGatewayId)
+	}
+
+	return nil
+}
+
+func (s *vpcStore) DescribeInternetGateways(ctx context.Context, name string) ([]ec2types.InternetGateway, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	var result []ec2types.InternetGateway
+	for _, igw := range s.internetGateways {
+		if name == "" || awsutil.NameEc2TagEquals(igw.Tags, name) {
+			cpy, err := util.JsonClone(igw)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, *cpy)
+		}
+	}
+
+	return result, nil
+}
+
+func (s *vpcStore) DeleteInternetGateway(ctx context.Context, internetGatewayId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	found := false
+	s.internetGateways = pie.FilterNot(s.internetGateways, func(igw *ec2types.InternetGateway) bool {
+		match := ptr.Deref(igw.InternetGatewayId, "") == internetGatewayId
+		if match {
+			found = true
+		}
+		return match
+	})
+	if !found {
+		return awsmeta.NewHttpNotFoundError(fmt.Errorf("internet gateway %q not found", internetGatewayId))
+	}
+	return nil
+}
+
+func (s *vpcStore) CreateVpc(ctx context.Context, name, cidrTxt string, tags []ec2types.Tag) (*ec2types.Vpc, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	tags = append(tags, ec2types.Tag{
+		Key:   ptr.To("Name"),
+		Value: ptr.To(name),
+	})
+
+	item := &vpcEntry{
+		vpc: ec2types.Vpc{
+			VpcId:     ptr.To(uuid.NewString()),
+			CidrBlock: ptr.To(cidrTxt),
+			Tags:      tags,
+			State:     ec2types.VpcStateAvailable,
+			CidrBlockAssociationSet: []ec2types.VpcCidrBlockAssociation{
+				{
+					AssociationId: ptr.To(uuid.NewString()),
+					CidrBlock:     ptr.To(cidrTxt),
+					CidrBlockState: &ec2types.VpcCidrBlockState{
+						State:         ec2types.VpcCidrBlockStateCodeAssociated,
+						StatusMessage: ptr.To("Associated"),
+					},
+				},
+			},
+		},
+	}
+	s.items = append(s.items, item)
+
+	return &item.vpc, nil
+}
+
+func (s *vpcStore) DeleteVpc(ctx context.Context, vpcId string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	found := false
+	s.items = pie.FilterNot(s.items, func(entry *vpcEntry) bool {
+		match := ptr.Deref(entry.vpc.VpcId, "xxx") == vpcId
+		if match {
+			found = true
+		}
+		return match
+	})
+
+	if !found {
+		return awsmeta.NewHttpNotFoundError(fmt.Errorf("vpc %s not found", vpcId))
+	}
+
+	return nil
+}
 
 func (s *vpcStore) DescribeVpc(ctx context.Context, vpcId string) (*ec2types.Vpc, error) {
 	if isContextCanceled(ctx) {
@@ -344,7 +648,7 @@ func (s *vpcStore) DeleteSubnet(ctx context.Context, subnetId string) error {
 	return awsmeta.NewHttpNotFoundError(fmt.Errorf("subnet %s does not exist", subnetId))
 }
 
-func (s *vpcStore) DescribeNatGateways(ctx context.Context, vpcId string) ([]ec2types.NatGateway, error) {
+func (s *vpcStore) DescribeNatGateway(ctx context.Context, vpcId string) ([]ec2types.NatGateway, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}

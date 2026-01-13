@@ -15,10 +15,10 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.status.provider
+    - jsonPath: .status.provider
       name: Provider
       type: string
-    - jsonPath: .status.conditions[?(@.type=="Subscription")].reason
+    - jsonPath: .status.conditions[?(@.type=="Ready")].reason
       name: State
       type: string
     name: v1beta1
