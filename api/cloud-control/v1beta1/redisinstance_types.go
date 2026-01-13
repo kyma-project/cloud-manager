@@ -265,9 +265,11 @@ type RedisInstanceStatus struct {
 	// +optional
 	CaCert string `json:"caCert,omitempty"`
 
-	// The reconciled machine type of the Redis instance.
+	// The reconciled node/machine type of the Redis instance.
+	// AWS: cache node type (e.g., "cache.t3.micro")
+	// Azure: SKU family + capacity (e.g., "P3")
 	// +optional
-	CacheNodeType string `json:"cacheNodeType,omitempty"`
+	NodeType string `json:"nodeType,omitempty"`
 
 	// The reconciled memory size in GiB (GCP: Machine type = MemorySizeGb (their capacity model)).
 	// +optional

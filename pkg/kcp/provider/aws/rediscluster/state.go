@@ -299,3 +299,30 @@ func (s *State) GetReplicasForRemoval() []string {
 
 	return replicasToRemove
 }
+
+// GetProvisionedMachineType returns the provisioned machine type from the AWS ElastiCache Replication Group
+func (s *State) GetProvisionedMachineType() string {
+	if len(s.memberClusters) == 0 {
+		return ""
+	}
+	return ptr.Deref(s.memberClusters[0].CacheNodeType, "")
+}
+
+// GetProvisionedShardCount returns the provisioned shard count from the AWS ElastiCache Replication Group
+func (s *State) GetProvisionedShardCount() int32 {
+	if s.elastiCacheReplicationGroup == nil || len(s.elastiCacheReplicationGroup.NodeGroups) == 0 {
+		return 0
+	}
+	return int32(len(s.elastiCacheReplicationGroup.NodeGroups))
+}
+
+// GetProvisionedReplicasPerShard returns the provisioned replicas per shard from the AWS ElastiCache Replication Group
+func (s *State) GetProvisionedReplicasPerShard() int32 {
+	if s.elastiCacheReplicationGroup == nil || len(s.elastiCacheReplicationGroup.NodeGroups) == 0 {
+		return 0
+	}
+	if len(s.elastiCacheReplicationGroup.NodeGroups[0].NodeGroupMembers) == 0 {
+		return 0
+	}
+	return int32(len(s.elastiCacheReplicationGroup.NodeGroups[0].NodeGroupMembers))
+}

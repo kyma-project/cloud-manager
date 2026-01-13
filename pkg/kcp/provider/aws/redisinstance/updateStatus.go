@@ -46,20 +46,16 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		hasChanged = true
 	}
 
-	if len(state.memberClusters) > 0 {
-		cacheNodeType := ptr.Deref(state.memberClusters[0].CacheNodeType, "")
-		if redisInstance.Status.CacheNodeType != cacheNodeType {
-			redisInstance.Status.CacheNodeType = cacheNodeType
-			hasChanged = true
-		}
+	cacheNodeType := state.GetProvisionedMachineType()
+	if redisInstance.Status.NodeType != cacheNodeType {
+		redisInstance.Status.NodeType = cacheNodeType
+		hasChanged = true
 	}
 
-	if len(state.elastiCacheReplicationGroup.MemberClusters) > 0 {
-		replicaCount := int32(len(state.elastiCacheReplicationGroup.MemberClusters))
-		if redisInstance.Status.ReplicaCount != replicaCount {
-			redisInstance.Status.ReplicaCount = replicaCount
-			hasChanged = true
-		}
+	replicaCount := state.GetProvisionedReplicaCount()
+	if redisInstance.Status.ReplicaCount != replicaCount {
+		redisInstance.Status.ReplicaCount = replicaCount
+		hasChanged = true
 	}
 
 	hasReadyCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
