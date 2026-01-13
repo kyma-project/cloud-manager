@@ -23,75 +23,103 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	nfsInstance := state.ObjAsNfsInstance()
 	instance := state.GetInstance()
 
-	// Determine current state from instance
-	var currentState v1beta1.StatusState
+	// Determine desired state from instance
+	var desiredState v1beta1.StatusState
 	if instance == nil {
-		currentState = v1beta1.StatusState("Creating")
+		desiredState = v1beta1.StatusState("Creating")
 	} else {
 		switch instance.State {
 		case filestorepb.Instance_READY:
-			currentState = v1beta1.StateReady
+			desiredState = v1beta1.StateReady
 		case filestorepb.Instance_CREATING:
-			currentState = v1beta1.StatusState("Creating")
+			desiredState = v1beta1.StatusState("Creating")
 		case filestorepb.Instance_DELETING:
-			currentState = v1beta1.StatusState("Deleting")
+			desiredState = v1beta1.StatusState("Deleting")
 		case filestorepb.Instance_ERROR:
-			currentState = v1beta1.StateError
+			desiredState = v1beta1.StateError
 		default:
-			currentState = v1beta1.StatusState(instance.State.String())
+			desiredState = v1beta1.StatusState(instance.State.String())
 		}
 	}
 
-	previousState := nfsInstance.Status.State
+	currentState := nfsInstance.Status.State
+	changed := false
 
-	logger.Info("Updating status", "currentState", currentState, "previousState", previousState)
+	// Update state if different
+	if currentState != desiredState {
+		nfsInstance.Status.State = desiredState
+		changed = true
+		logger.Info("State changed", "previousState", currentState, "newState", desiredState)
+	}
 
-	// Update state
-	nfsInstance.Status.State = currentState
-
-	// Handle READY state
-	if currentState == v1beta1.StateReady && instance != nil {
+	// READY state: update fields
+	if desiredState == v1beta1.StateReady && instance != nil {
 		// Set hosts and path
 		if len(instance.Networks) > 0 && len(instance.Networks[0].IpAddresses) > 0 {
-			nfsInstance.Status.Hosts = instance.Networks[0].IpAddresses
-			nfsInstance.Status.Host = pie.First(instance.Networks[0].IpAddresses)
+			newHosts := instance.Networks[0].IpAddresses
+			if !pie.Equals(nfsInstance.Status.Hosts, newHosts) {
+				nfsInstance.Status.Hosts = newHosts
+				changed = true
+			}
+			newHost := pie.First(instance.Networks[0].IpAddresses)
+			if nfsInstance.Status.Host != newHost {
+				nfsInstance.Status.Host = newHost
+				changed = true
+			}
 		}
-		nfsInstance.Status.Path = nfsInstance.Spec.Instance.Gcp.FileShareName
+		newPath := nfsInstance.Spec.Instance.Gcp.FileShareName
+		if nfsInstance.Status.Path != newPath {
+			nfsInstance.Status.Path = newPath
+			changed = true
+		}
 
 		// Set capacity
 		if len(instance.FileShares) > 0 {
-			nfsInstance.Status.CapacityGb = int(instance.FileShares[0].CapacityGb)
+			if nfsInstance.Status.CapacityGb != int(instance.FileShares[0].CapacityGb) {
+				nfsInstance.Status.CapacityGb = int(instance.FileShares[0].CapacityGb)
+				changed = true
+			}
 			if qty, err := resource.ParseQuantity(fmt.Sprintf("%dGi", instance.FileShares[0].CapacityGb)); err == nil {
-				nfsInstance.Status.Capacity = qty
+				if nfsInstance.Status.Capacity.Cmp(qty) != 0 {
+					nfsInstance.Status.Capacity = qty
+					changed = true
+				}
 			} else {
 				logger.Error(err, "Error parsing capacity quantity")
 			}
 		}
 
 		// Set protocol state data
+		prevProtocol, _ := nfsInstance.GetStateData(gcpclient.GcpNfsStateDataProtocol)
+		newProtocol := ""
 		if instance.Protocol != 0 {
-			nfsInstance.SetStateData(gcpclient.GcpNfsStateDataProtocol, instance.Protocol.String())
+			newProtocol = instance.Protocol.String()
+		}
+		if prevProtocol != newProtocol {
+			nfsInstance.SetStateData(gcpclient.GcpNfsStateDataProtocol, newProtocol)
+			changed = true
 		}
 
-		// Set ready condition and stop
-		return composed.UpdateStatus(nfsInstance).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    v1beta1.ConditionTypeReady,
-				Status:  metav1.ConditionTrue,
-				Reason:  v1beta1.ReasonReady,
-				Message: "Filestore instance provisioned in GCP.",
-			}).
-			SuccessError(composed.StopAndForget).
-			Run(ctx, state)
+		if changed {
+			return composed.UpdateStatus(nfsInstance).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    v1beta1.ConditionTypeReady,
+					Status:  metav1.ConditionTrue,
+					Reason:  v1beta1.ReasonReady,
+					Message: "Filestore instance provisioned in GCP.",
+				}).
+				SuccessError(composed.StopAndForget).
+				Run(ctx, state)
+		}
+		return nil, nil
 	}
 
-	// Handle ERROR state
-	if currentState == v1beta1.StateError && instance != nil {
+	// ERROR state: update error condition
+	if desiredState == v1beta1.StateError && instance != nil {
 		errorMessage := "Filestore instance in error state"
 		if instance.StatusMessage != "" {
 			errorMessage = instance.StatusMessage
 		}
-
 		return composed.UpdateStatus(nfsInstance).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    v1beta1.ConditionTypeError,
@@ -103,8 +131,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	// Handle state changes (not ready, not error)
-	if previousState != currentState {
+	// If state changed but not READY or ERROR, update status
+	if changed {
 		return composed.UpdateStatus(nfsInstance).
 			RemoveConditions(v1beta1.ConditionTypeReady).
 			SuccessError(composed.StopWithRequeue).

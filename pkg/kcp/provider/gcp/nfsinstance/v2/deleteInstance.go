@@ -53,10 +53,21 @@ func deleteInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	// Store operation for polling
-	if operationName != "" {
-		nfsInstance.Status.OpIdentifier = operationName
+	// Update status with operation details
+	changed := false
 
+	if operationName != "" && nfsInstance.Status.OpIdentifier != operationName {
+		nfsInstance.Status.OpIdentifier = operationName
+		changed = true
+	}
+
+	newState := v1beta1.StatusState("Deleting")
+	if nfsInstance.Status.State != newState {
+		nfsInstance.Status.State = newState
+		changed = true
+	}
+
+	if changed {
 		return composed.UpdateStatus(nfsInstance).
 			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)

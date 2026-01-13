@@ -58,11 +58,27 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	// Store operation for polling
-	if operationName != "" {
-		nfsInstance.Status.OpIdentifier = operationName
-		nfsInstance.Status.Id = gcpclient.GetFilestoreInstancePath(project, location, name)
+	// Update status with operation details
+	changed := false
 
+	newId := gcpclient.GetFilestoreInstancePath(project, location, name)
+	if nfsInstance.Status.Id != newId {
+		nfsInstance.Status.Id = newId
+		changed = true
+	}
+
+	if operationName != "" && nfsInstance.Status.OpIdentifier != operationName {
+		nfsInstance.Status.OpIdentifier = operationName
+		changed = true
+	}
+
+	newState := v1beta1.StatusState("Creating")
+	if nfsInstance.Status.State != newState {
+		nfsInstance.Status.State = newState
+		changed = true
+	}
+
+	if changed {
 		return composed.UpdateStatus(nfsInstance).
 			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
