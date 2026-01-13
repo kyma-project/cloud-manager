@@ -21,12 +21,12 @@ func deleteInstance(ctx context.Context, st composed.State) (error, context.Cont
 
 	// Skip if instance doesn't exist
 	if instance == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// Skip if already deleting
 	if instance.State == filestorepb.Instance_DELETING {
-		return nil, nil
+		return nil, ctx
 	}
 
 	nfsInstance := state.ObjAsNfsInstance()
@@ -73,5 +73,5 @@ func deleteInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

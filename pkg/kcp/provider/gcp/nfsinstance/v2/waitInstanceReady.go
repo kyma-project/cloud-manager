@@ -18,14 +18,14 @@ func waitInstanceReady(ctx context.Context, st composed.State) (error, context.C
 
 	// Skip if instance doesn't exist
 	if instance == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// Check instance state
 	switch instance.State {
 	case filestorepb.Instance_READY:
 		// Instance is ready, continue
-		return nil, nil
+		return nil, ctx
 
 	case filestorepb.Instance_CREATING:
 		// Still creating, requeue
@@ -35,7 +35,7 @@ func waitInstanceReady(ctx context.Context, st composed.State) (error, context.C
 	case filestorepb.Instance_ERROR:
 		// Instance in error state, continue to status update
 		logger.Info("Instance in error state")
-		return nil, nil
+		return nil, ctx
 
 	default:
 		// Unknown state, requeue

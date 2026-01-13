@@ -32,7 +32,7 @@ func loadInstance(ctx context.Context, st composed.State) (error, context.Contex
 		// Handle "not found" - instance doesn't exist yet
 		if status.Code(err) == codes.NotFound {
 			state.SetInstance(nil)
-			return nil, nil
+			return nil, ctx
 		}
 
 		// API error - update status and requeue
@@ -51,5 +51,5 @@ func loadInstance(ctx context.Context, st composed.State) (error, context.Contex
 	// Cache the instance in state
 	state.SetInstance(instance)
 
-	return nil, nil
+	return nil, ctx
 }

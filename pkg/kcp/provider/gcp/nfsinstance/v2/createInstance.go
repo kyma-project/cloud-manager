@@ -21,7 +21,7 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 
 	// Skip if instance already exists
 	if state.GetInstance() != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	nfsInstance := state.ObjAsNfsInstance()
@@ -84,5 +84,5 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

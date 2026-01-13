@@ -22,17 +22,17 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 
 	// Skip if instance doesn't exist
 	if instance == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// Skip if instance is not ready
 	if instance.State != filestorepb.Instance_READY {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// Skip if no updates needed
 	if state.DoesFilestoreMatch() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Updating GCP Filestore Instance")
@@ -58,7 +58,7 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 
 	// If no changes, skip update
 	if len(updateMask) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// Update instance
@@ -86,5 +86,5 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

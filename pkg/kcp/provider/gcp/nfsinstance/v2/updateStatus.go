@@ -111,7 +111,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				SuccessError(composed.StopAndForget).
 				Run(ctx, state)
 		}
-		return nil, nil
+		return nil, ctx
 	}
 
 	// ERROR state: update error condition
@@ -139,5 +139,5 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

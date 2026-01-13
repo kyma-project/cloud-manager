@@ -18,7 +18,7 @@ func waitInstanceDeleted(ctx context.Context, st composed.State) (error, context
 
 	// If instance doesn't exist, deletion is complete
 	if instance == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// If instance is deleting, wait
@@ -29,5 +29,5 @@ func waitInstanceDeleted(ctx context.Context, st composed.State) (error, context
 
 	// Instance exists but not deleting - this shouldn't happen
 	// Continue anyway, deleteInstance will be called again next reconcile
-	return nil, nil
+	return nil, ctx
 }

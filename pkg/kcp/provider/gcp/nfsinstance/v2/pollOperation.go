@@ -20,7 +20,7 @@ func pollOperation(ctx context.Context, st composed.State) (error, context.Conte
 
 	// If no pending operation, continue to next action
 	if opName == "" {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Checking GCP Operation Status", "operation", opName)
