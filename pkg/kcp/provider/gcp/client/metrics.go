@@ -156,9 +156,8 @@ func extractOperationFromURL(path, method string) string {
 	return resource + "." + action
 }
 
-// filterPathSegments removes version, project, and placeholder segments
 func filterPathSegments(parts []string) []string {
-	var result []string
+	var cleaned []string
 	skipNext := false
 
 	for i, part := range parts {
@@ -185,7 +184,15 @@ func filterPathSegments(parts []string) []string {
 			continue
 		}
 
-		result = append(result, part)
+		cleaned = append(cleaned, part)
+	}
+
+	// Second pass: Google's REST API standard pattern
+	var result []string
+	for i, part := range cleaned {
+		if i%2 == 0 {
+			result = append(result, part)
+		}
 	}
 
 	return result
