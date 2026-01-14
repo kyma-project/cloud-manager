@@ -112,9 +112,8 @@ runs:
     - name: Run Cloud Manager
       shell: bash
       env:
+        CONFIG_DIR: ./tmp
         KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
-        GCP_VPC_PEERING_KEY_PATH: ./tmp/gcp-peering.json
-        GCP_SA_JSON_KEY_PATH: ./tmp/gcp-default.json
         LANDSCAPE: dev
         PEERING_NETWORK_TAG: e2e
       run: |
