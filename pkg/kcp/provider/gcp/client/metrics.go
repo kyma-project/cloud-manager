@@ -213,16 +213,12 @@ func looksLikeCollectionName(segment string) bool {
 	for _, c := range segment {
 		if c == '-' {
 			hasHyphen = true
-		} else if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+		} else if (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && (c < '0' || c > '9') {
 			return false
 		}
 	}
 
-	if hasHyphen {
-		return false
-	}
-
-	return true
+	return !hasHyphen
 }
 
 // hasResourceID checks if the path targets a specific resource
