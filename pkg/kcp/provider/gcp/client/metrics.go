@@ -191,11 +191,38 @@ func filterPathSegments(parts []string) []string {
 	var result []string
 	for i, part := range cleaned {
 		if i%2 == 0 {
-			result = append(result, part)
+			if looksLikeCollectionName(part) {
+				result = append(result, part)
+			}
 		}
 	}
 
 	return result
+}
+
+func looksLikeCollectionName(segment string) bool {
+	if len(segment) < 2 || len(segment) > 30 {
+		return false
+	}
+
+	if segment[0] < 'a' || segment[0] > 'z' {
+		return false
+	}
+
+	hasHyphen := false
+	for _, c := range segment {
+		if c == '-' {
+			hasHyphen = true
+		} else if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+			return false
+		}
+	}
+
+	if hasHyphen {
+		return false
+	}
+
+	return true
 }
 
 // hasResourceID checks if the path targets a specific resource
