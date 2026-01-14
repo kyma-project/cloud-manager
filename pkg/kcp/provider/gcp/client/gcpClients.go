@@ -221,11 +221,11 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	if err != nil {
 		return nil, fmt.Errorf("failed to build vpc peering resource manager token provider: %w", err)
 	}
-	vpcPeeringresourceManagerTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringResourceManagerTokenProvider)
+	vpcPeeringResourceManagerTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringResourceManagerTokenProvider)
 
-	resourceManagerHTTPClient := NewMetricsHTTPClient("ResourceManager", oauth2.NewClient(ctx, vpcPeeringresourceManagerTokenSource).Transport)
+	resourceManagerHTTPClient := NewMetricsHTTPClient("ResourceManager", oauth2.NewClient(ctx, vpcPeeringResourceManagerTokenSource).Transport)
 
-	vpcPeeringresourceManagerTagBindings, err := resourcemanager.NewTagBindingsRESTClient(ctx,
+	vpcPeeringResourceManagerTagBindings, err := resourcemanager.NewTagBindingsRESTClient(ctx,
 		option.WithHTTPClient(resourceManagerHTTPClient))
 	if err != nil {
 		return nil, fmt.Errorf("error creating resource_manager tag bindings client: %w", err)
@@ -247,7 +247,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		CloudResourceManager:                      cloudResourceManager,
 		VpcPeeringClients: &VpcPeeringClients{
 			ComputeNetworks:            vpcPeeringComputeNetworks,
-			ResourceManagerTagBindings: vpcPeeringresourceManagerTagBindings,
+			ResourceManagerTagBindings: vpcPeeringResourceManagerTagBindings,
 		},
 	}, nil
 }
