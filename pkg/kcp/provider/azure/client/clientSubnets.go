@@ -10,7 +10,7 @@ import (
 type SubnetsClient interface {
 	GetSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) (*armnetwork.Subnet, error)
 
-	CreateSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, subnetParameters armnetwork.Subnet, options *armnetwork.SubnetsClientBeginCreateOrUpdateOptions) (Poller[armnetwork.SubnetsClientCreateOrUpdateResponse], error)
+	CreateOrUpdateSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, subnetParameters armnetwork.Subnet, options *armnetwork.SubnetsClientBeginCreateOrUpdateOptions) (Poller[armnetwork.SubnetsClientCreateOrUpdateResponse], error)
 
 	DeleteSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, options *armnetwork.SubnetsClientBeginDeleteOptions) (Poller[armnetwork.SubnetsClientDeleteResponse], error)
 }
@@ -48,7 +48,7 @@ type subnetsClient struct {
 	svc *armnetwork.SubnetsClient
 }
 
-func (c *subnetsClient) CreateSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, subnetParameters armnetwork.Subnet, options *armnetwork.SubnetsClientBeginCreateOrUpdateOptions) (Poller[armnetwork.SubnetsClientCreateOrUpdateResponse], error) {
+func (c *subnetsClient) CreateOrUpdateSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, subnetParameters armnetwork.Subnet, options *armnetwork.SubnetsClientBeginCreateOrUpdateOptions) (Poller[armnetwork.SubnetsClientCreateOrUpdateResponse], error) {
 	return c.svc.BeginCreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, subnetName, subnetParameters, options)
 }
 

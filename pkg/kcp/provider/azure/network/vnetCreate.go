@@ -20,7 +20,7 @@ func vnetCreate(ctx context.Context, st composed.State) (error, context.Context)
 
 	logger.Info("Creating Azure VNet for KCP Network")
 
-	_, err := azureclient.PollUntilDone(state.azureClient.CreateNetwork(
+	_, err := azureclient.PollUntilDone(state.azureClient.CreateOrUpdateNetwork(
 		ctx,
 		state.resourceGroupName,
 		state.vnetName,

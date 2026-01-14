@@ -136,7 +136,7 @@ func (s *networkStore) AddRemoteSubscription(ctx context.Context, remoteSubscrip
 
 // NetworkClient ===================================================
 
-func (s *networkStore) CreateNetwork(ctx context.Context, resourceGroupName string, virtualNetworkName string, parameters armnetwork.VirtualNetwork, options *armnetwork.VirtualNetworksClientBeginCreateOrUpdateOptions) (azureclient.Poller[armnetwork.VirtualNetworksClientCreateOrUpdateResponse], error) {
+func (s *networkStore) CreateOrUpdateNetwork(ctx context.Context, resourceGroupName string, virtualNetworkName string, parameters armnetwork.VirtualNetwork, options *armnetwork.VirtualNetworksClientBeginCreateOrUpdateOptions) (azureclient.Poller[armnetwork.VirtualNetworksClientCreateOrUpdateResponse], error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
@@ -269,7 +269,7 @@ func (s *networkStore) getSubnetNoLock(resourceGroupName, virtualNetworkName, su
 	return nil, azuremeta.NewAzureNotFoundError()
 }
 
-func (s *networkStore) CreateSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, subnetParameters armnetwork.Subnet, options *armnetwork.SubnetsClientBeginCreateOrUpdateOptions) (azureclient.Poller[armnetwork.SubnetsClientCreateOrUpdateResponse], error) {
+func (s *networkStore) CreateOrUpdateSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, subnetParameters armnetwork.Subnet, options *armnetwork.SubnetsClientBeginCreateOrUpdateOptions) (azureclient.Poller[armnetwork.SubnetsClientCreateOrUpdateResponse], error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}

@@ -30,7 +30,7 @@ func CreateAzureGardenerResources(
 
 	resourceGroupName := common.GardenerVpcName(shootNamespace, shootName)
 
-	_, err := azureclient.PollUntilDone(azureMock.CreateNetwork(
+	_, err := azureclient.PollUntilDone(azureMock.CreateOrUpdateNetwork(
 		ctx, resourceGroupName, resourceGroupName,
 		azureclient.NewVirtualNetwork(location, vnetCidr, nil), nil,
 	))(ctx, nil)
@@ -82,7 +82,7 @@ func CreateAzureGardenerResources(
 		}
 		result.NatGateways = append(result.NatGateways, nat)
 
-		_, err = azureclient.PollUntilDone(azureMock.CreateSubnet(
+		_, err = azureclient.PollUntilDone(azureMock.CreateOrUpdateSubnet(
 			ctx, resourceGroupName, resourceGroupName, name,
 			azureclient.NewSubnet(subnetRanges[i-1].CIDR().String(), "x", netGatewayId.String()),
 			nil,

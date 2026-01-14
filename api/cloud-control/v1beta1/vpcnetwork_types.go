@@ -40,6 +40,7 @@ type VpcNetworkSpec struct {
 	// +kubebuilder:validation:Required
 	Subscription string `json:"subscription"`
 
+	// Region is required for AWS and Azure providers.
 	// +kubebuilder:validation:Required
 	Region string `json:"region"`
 

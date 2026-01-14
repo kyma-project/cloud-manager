@@ -22,7 +22,7 @@ func subnetCreate(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Creating Azure KCP IpRange subnet")
 
-	_, err := azureclient.PollUntilDone(state.azureClient.CreateSubnet(
+	_, err := azureclient.PollUntilDone(state.azureClient.CreateOrUpdateSubnet(
 		ctx,
 		state.resourceGroupName, state.virtualNetworkName, state.subnetName,
 		azureclient.NewSubnet(state.ObjAsIpRange().Status.Cidr, ptr.Deref(state.securityGroup.ID, ""), ""),

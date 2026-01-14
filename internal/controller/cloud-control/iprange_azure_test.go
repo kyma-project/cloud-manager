@@ -67,7 +67,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		azureMock := infra.AzureMock().MockConfigs(kcpNetworkKyma.Spec.Network.Reference.Azure.SubscriptionId, kcpNetworkKyma.Spec.Network.Reference.Azure.TenantId)
 
 		By("And Given Azure Kyma Shoot VNet exist", func() {
-			_, err := azureclient.PollUntilDone(azureMock.CreateNetwork(infra.Ctx(),
+			_, err := azureclient.PollUntilDone(azureMock.CreateOrUpdateNetwork(infra.Ctx(),
 				kcpNetworkKyma.Spec.Network.Reference.Azure.ResourceGroup,
 				kcpNetworkKyma.Spec.Network.Reference.Azure.NetworkName,
 				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.250.0.0/22", nil),
@@ -138,7 +138,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		cmCommonName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
 
 		By("When Azure CM Network is provisioned", func() {
-			_, err := azureclient.PollUntilDone(azureMock.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMock.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				cmCommonName,
 				cmCommonName,

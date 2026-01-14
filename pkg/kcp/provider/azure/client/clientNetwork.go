@@ -8,7 +8,7 @@ import (
 )
 
 type NetworkClient interface {
-	CreateNetwork(ctx context.Context, resourceGroupName string, virtualNetworkName string, parameters armnetwork.VirtualNetwork, options *armnetwork.VirtualNetworksClientBeginCreateOrUpdateOptions) (Poller[armnetwork.VirtualNetworksClientCreateOrUpdateResponse], error)
+	CreateOrUpdateNetwork(ctx context.Context, resourceGroupName string, virtualNetworkName string, parameters armnetwork.VirtualNetwork, options *armnetwork.VirtualNetworksClientBeginCreateOrUpdateOptions) (Poller[armnetwork.VirtualNetworksClientCreateOrUpdateResponse], error)
 
 	GetNetwork(ctx context.Context, resourceGroupName, virtualNetworkName string) (*armnetwork.VirtualNetwork, error)
 
@@ -49,7 +49,7 @@ type networkClient struct {
 	svc *armnetwork.VirtualNetworksClient
 }
 
-func (c *networkClient) CreateNetwork(ctx context.Context, resourceGroupName string, virtualNetworkName string, parameters armnetwork.VirtualNetwork, options *armnetwork.VirtualNetworksClientBeginCreateOrUpdateOptions) (Poller[armnetwork.VirtualNetworksClientCreateOrUpdateResponse], error) {
+func (c *networkClient) CreateOrUpdateNetwork(ctx context.Context, resourceGroupName string, virtualNetworkName string, parameters armnetwork.VirtualNetwork, options *armnetwork.VirtualNetworksClientBeginCreateOrUpdateOptions) (Poller[armnetwork.VirtualNetworksClientCreateOrUpdateResponse], error) {
 	return c.svc.BeginCreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, parameters, options)
 }
 

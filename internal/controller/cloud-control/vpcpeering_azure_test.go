@@ -54,7 +54,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, scope.Spec.Scope.Azure.TenantId)
 
 		By("And Given local Azure VNET exists", func() {
-			_, err := azureclient.PollUntilDone(azureMockLocal.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				localResourceGroupName,
 				localVirtualNetworkName,
@@ -65,7 +65,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			_, err := azureclient.PollUntilDone(azureMockRemote.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				remoteResourceGroup,
 				remoteVnetName,
@@ -342,7 +342,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, scope.Spec.Scope.Azure.TenantId)
 
 		By("And Given local Azure VNET exists", func() {
-			_, err := azureclient.PollUntilDone(azureMockLocal.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				localResourceGroupName,
 				localVirtualNetworkName,
@@ -353,7 +353,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			_, err := azureclient.PollUntilDone(azureMockRemote.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				remoteResourceGroup,
 				remoteVnetName,
@@ -493,7 +493,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, remoteTenant)
 
 		By("And Given local Azure VNET exists", func() {
-			_, err := azureclient.PollUntilDone(azureMockLocal.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				localResourceGroupName,
 				localVirtualNetworkName,
@@ -504,7 +504,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			_, err := azureclient.PollUntilDone(azureMockRemote.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				remoteResourceGroup,
 				remoteVnetName,
@@ -681,7 +681,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockLocal.AddRemoteSubscription(infra.Ctx(), &azureMockRemote)
 
 		By("And Given local Azure VNET exists", func() {
-			_, err := azureclient.PollUntilDone(azureMockLocal.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				localResourceGroupName,
 				localVirtualNetworkName,
@@ -692,7 +692,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			_, err := azureclient.PollUntilDone(azureMockRemote.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				remoteResourceGroup,
 				remoteVnetName,
@@ -952,7 +952,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockLocal.AddRemoteSubscription(infra.Ctx(), &azureMockRemote)
 
 		By("And Given local Azure VNET exists", func() {
-			_, err := azureclient.PollUntilDone(azureMockLocal.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				localResourceGroupName,
 				localVirtualNetworkName,
@@ -963,7 +963,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			_, err := azureclient.PollUntilDone(azureMockRemote.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				remoteResourceGroup,
 				remoteVnetName,
@@ -1217,7 +1217,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, remoteTenant)
 
 		By("And Given local Azure VNET exists", func() {
-			_, err := azureclient.PollUntilDone(azureMockLocal.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				localResourceGroupName,
 				localVirtualNetworkName,
@@ -1228,7 +1228,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			_, err := azureclient.PollUntilDone(azureMockRemote.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				remoteResourceGroup,
 				remoteVnetName,
@@ -1334,7 +1334,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, remoteTenant)
 
 		By("And Given local Azure VNET exists", func() {
-			_, err := azureclient.PollUntilDone(azureMockLocal.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				localResourceGroupName,
 				localVirtualNetworkName,
@@ -1345,7 +1345,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			_, err := azureclient.PollUntilDone(azureMockRemote.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				remoteResourceGroup,
 				remoteVnetName,
@@ -1475,7 +1475,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, remoteTenant)
 
 		By("And Given local Azure VNET exists", func() {
-			_, err := azureclient.PollUntilDone(azureMockLocal.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				localResourceGroupName,
 				localVirtualNetworkName,
@@ -1486,7 +1486,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			_, err := azureclient.PollUntilDone(azureMockRemote.CreateNetwork(
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
 				infra.Ctx(),
 				remoteResourceGroup,
 				remoteVnetName,
