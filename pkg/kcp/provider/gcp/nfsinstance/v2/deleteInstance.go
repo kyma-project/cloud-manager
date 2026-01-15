@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 // deleteInstance deletes a Filestore instance from GCP.
@@ -53,23 +54,12 @@ func deleteInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	// Update status with operation details
-	changed := false
-
-	if operationName != "" && nfsInstance.Status.OpIdentifier != operationName {
+	// Store operation for polling
+	if operationName != "" {
 		nfsInstance.Status.OpIdentifier = operationName
-		changed = true
-	}
 
-	newState := v1beta1.StatusState("Deleting")
-	if nfsInstance.Status.State != newState {
-		nfsInstance.Status.State = newState
-		changed = true
-	}
-
-	if changed {
 		return composed.UpdateStatus(nfsInstance).
-			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 

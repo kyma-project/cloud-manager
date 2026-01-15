@@ -12,6 +12,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 // createInstance creates a new Filestore instance in GCP.
@@ -80,7 +81,7 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 
 	if changed {
 		return composed.UpdateStatus(nfsInstance).
-			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 
