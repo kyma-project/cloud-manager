@@ -46,8 +46,6 @@ const (
 // NfsInstanceSpec defines the desired state of NfsInstance
 // +kubebuilder:validation:XValidation:rule=self.ipRange.name != "", message="IpRange is required."
 // +kubebuilder:validation:XValidation:rule=self.remoteRef.name != "", message="RemoteRef is required."
-// +kubebuilder:validation:XValidation:rule="!has(oldSelf.instance.gcp) || !has(self.instance.gcp) || oldSelf.instance.gcp.tier != 'BASIC_HDD' || self.instance.gcp.capacityGb >= oldSelf.instance.gcp.capacityGb", message="Cannot reduce capacity for BASIC_HDD tier instances."
-// +kubebuilder:validation:XValidation:rule="!has(oldSelf.instance.gcp) || !has(self.instance.gcp) || oldSelf.instance.gcp.tier != 'BASIC_SSD' || self.instance.gcp.capacityGb >= oldSelf.instance.gcp.capacityGb", message="Cannot reduce capacity for BASIC_SSD tier instances."
 type NfsInstanceSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteRef is immutable."

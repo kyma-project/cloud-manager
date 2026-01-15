@@ -210,12 +210,6 @@ spec:
               rule: self.ipRange.name != ""
             - message: RemoteRef is required.
               rule: self.remoteRef.name != ""
-            - message: Cannot reduce capacity for BASIC_HDD tier instances.
-              rule: '!has(oldSelf.instance.gcp) || !has(self.instance.gcp) || oldSelf.instance.gcp.tier
-                != ''BASIC_HDD'' || self.instance.gcp.capacityGb >= oldSelf.instance.gcp.capacityGb'
-            - message: Cannot reduce capacity for BASIC_SSD tier instances.
-              rule: '!has(oldSelf.instance.gcp) || !has(self.instance.gcp) || oldSelf.instance.gcp.tier
-                != ''BASIC_SSD'' || self.instance.gcp.capacityGb >= oldSelf.instance.gcp.capacityGb'
           status:
             description: NfsInstanceStatus defines the observed state of NfsInstance
             properties:
