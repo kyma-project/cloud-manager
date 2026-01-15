@@ -34,14 +34,12 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 
 	instance := state.ToGcpInstance()
 
-	// Set NFS protocol based on tier and feature flag
 	gcpOptions := nfsInstance.Spec.Instance.Gcp
 	if feature.Nfs41Gcp.Value(ctx) &&
 		(gcpOptions.Tier == v1beta1.ZONAL || gcpOptions.Tier == v1beta1.REGIONAL) {
 		instance.Protocol = filestorepb.Instance_NFS_V4_1
 	}
 
-	// Create instance
 	operationName, err := state.GetFilestoreClient().CreateInstance(ctx, project, location, name, instance)
 	if err != nil {
 		logger.Error(err, "Error creating Filestore Instance in GCP")
@@ -57,7 +55,6 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	// Update status with operation details
 	changed := false
 
 	newId := gcpclient.GetFilestoreInstancePath(project, location, name)

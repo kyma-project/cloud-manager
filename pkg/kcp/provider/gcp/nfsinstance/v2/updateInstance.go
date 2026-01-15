@@ -21,33 +21,27 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 	nfsInstance := state.ObjAsNfsInstance()
 	instance := state.GetInstance()
 
-	// Skip if instance doesn't exist
 	if instance == nil {
 		return nil, ctx
 	}
 
-	// Skip if instance is not ready
 	if instance.State != filestorepb.Instance_READY {
 		return nil, ctx
 	}
 
-	// Skip if no updates needed
 	if state.DoesFilestoreMatch() {
 		return nil, ctx
 	}
 
 	logger.Info("Updating GCP Filestore Instance")
 
-	// Get GCP details
 	project := state.GetGcpProjectId()
 	location := state.GetGcpLocation()
 	name := v2client.GetFilestoreInstanceId(nfsInstance.Name)
 
-	// Build instance and calculate update mask
 	gcpInstance := state.ToGcpInstance()
 	var updateMask []string
 
-	// Check if capacity changed
 	if len(instance.FileShares) > 0 {
 		desiredCapacity := int64(nfsInstance.Spec.Instance.Gcp.CapacityGb)
 		actualCapacity := instance.FileShares[0].CapacityGb
@@ -57,12 +51,10 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 		}
 	}
 
-	// If no changes, skip update
 	if len(updateMask) == 0 {
 		return nil, ctx
 	}
 
-	// Update instance
 	operationName, err := state.GetFilestoreClient().UpdateInstance(ctx, project, location, name, gcpInstance, updateMask)
 	if err != nil {
 		logger.Error(err, "Error updating Filestore Instance in GCP")
@@ -78,7 +70,6 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	// Store operation for polling
 	if operationName != "" {
 		nfsInstance.Status.OpIdentifier = operationName
 

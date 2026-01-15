@@ -16,29 +16,23 @@ func waitInstanceReady(ctx context.Context, st composed.State) (error, context.C
 
 	instance := state.GetInstance()
 
-	// Skip if instance doesn't exist
 	if instance == nil {
 		return nil, ctx
 	}
 
-	// Check instance state
 	switch instance.State {
 	case filestorepb.Instance_READY:
-		// Instance is ready, continue
 		return nil, ctx
 
 	case filestorepb.Instance_CREATING:
-		// Still creating, requeue
 		logger.Info("Instance is creating, waiting")
 		return composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), nil
 
 	case filestorepb.Instance_ERROR:
-		// Instance in error state, continue to status update
 		logger.Info("Instance in error state")
 		return nil, ctx
 
 	default:
-		// Unknown state, requeue
 		logger.Info("Instance in unknown state, waiting", "state", instance.State)
 		return composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), nil
 	}

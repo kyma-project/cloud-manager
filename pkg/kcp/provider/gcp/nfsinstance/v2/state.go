@@ -69,8 +69,6 @@ func NewStateFactory(
 }
 
 // NewState creates a new State instance with initialized GCP client.
-// This method is called at the start of each reconciliation loop.
-// Uses NEW pattern client initialization (no credentials file parameter needed).
 func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.State) (*State, error) {
 	filestoreClient := f.filestoreClientProvider()
 
@@ -79,10 +77,6 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.Stat
 		filestoreClient: filestoreClient,
 	}, nil
 }
-
-// ============================================================================
-// State Query Methods
-// ============================================================================
 
 // GetFilestoreClient returns the GCP Filestore client.
 func (s *State) GetFilestoreClient() v2client.FilestoreClient {
@@ -98,10 +92,6 @@ func (s *State) GetInstance() *filestorepb.Instance {
 func (s *State) SetInstance(instance *filestorepb.Instance) {
 	s.instance = instance
 }
-
-// ============================================================================
-// Helper Methods - GCP Resource Mapping
-// ============================================================================
 
 // GetGcpProjectId returns the GCP project ID from the Scope.
 func (s *State) GetGcpProjectId() string {
@@ -130,10 +120,6 @@ func (s *State) GetGcpInstanceId() string {
 	return s.ObjAsNfsInstance().Name
 }
 
-// ============================================================================
-// Helper Methods - State Comparison
-// ============================================================================
-
 // DoesFilestoreMatch returns true if the cached GCP instance matches the desired spec.
 // Currently only checks capacity, can be extended to check other fields.
 func (s *State) DoesFilestoreMatch() bool {
@@ -153,17 +139,12 @@ func (s *State) NeedsUpdate() bool {
 	return !s.DoesFilestoreMatch()
 }
 
-// ============================================================================
-// Helper Methods - GCP API Conversion
-// ============================================================================
-
 // ToGcpInstance converts the NfsInstance CRD spec to a GCP Filestore Instance.
 // Uses modern protobuf types from cloud.google.com/go/filestore.
 func (s *State) ToGcpInstance() *filestorepb.Instance {
 	nfsInstance := s.ObjAsNfsInstance()
 	gcpOptions := nfsInstance.Spec.Instance.Gcp
 
-	// Collect GCP details from Scope
 	project := s.GetGcpProjectId()
 	vpc := s.GetGcpVpcNetwork()
 
@@ -174,7 +155,6 @@ func (s *State) ToGcpInstance() *filestorepb.Instance {
 			{
 				Name:       gcpOptions.FileShareName,
 				CapacityGb: int64(gcpOptions.CapacityGb),
-				// SourceBackup is not yet supported in v2 - will be added when needed
 			},
 		},
 		Networks: []*filestorepb.NetworkConfig{

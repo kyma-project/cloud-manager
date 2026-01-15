@@ -23,7 +23,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	nfsInstance := state.ObjAsNfsInstance()
 	instance := state.GetInstance()
 
-	// Determine desired state from instance
 	var desiredState v1beta1.StatusState
 	if instance == nil {
 		desiredState = v1beta1.StatusState("Creating")
@@ -45,16 +44,13 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	currentState := nfsInstance.Status.State
 	changed := false
 
-	// Update state if different
 	if currentState != desiredState {
 		nfsInstance.Status.State = desiredState
 		changed = true
 		logger.Info("State changed", "previousState", currentState, "newState", desiredState)
 	}
 
-	// READY state: update fields
 	if desiredState == v1beta1.StateReady && instance != nil {
-		// Set hosts and path
 		if len(instance.Networks) > 0 && len(instance.Networks[0].IpAddresses) > 0 {
 			newHosts := instance.Networks[0].IpAddresses
 			if !pie.Equals(nfsInstance.Status.Hosts, newHosts) {
@@ -73,7 +69,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			changed = true
 		}
 
-		// Set capacity
 		if len(instance.FileShares) > 0 {
 			if nfsInstance.Status.CapacityGb != int(instance.FileShares[0].CapacityGb) {
 				nfsInstance.Status.CapacityGb = int(instance.FileShares[0].CapacityGb)
@@ -89,7 +84,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			}
 		}
 
-		// Set protocol state data
 		prevProtocol, _ := nfsInstance.GetStateData(gcpclient.GcpNfsStateDataProtocol)
 		newProtocol := ""
 		if instance.Protocol != 0 {
@@ -114,7 +108,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, ctx
 	}
 
-	// ERROR state: update error condition
 	if desiredState == v1beta1.StateError && instance != nil {
 		errorMessage := "Filestore instance in error state"
 		if instance.StatusMessage != "" {
@@ -131,7 +124,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	// If state changed but not READY or ERROR, update status
 	if changed {
 		return composed.UpdateStatus(nfsInstance).
 			RemoveConditions(v1beta1.ConditionTypeReady).

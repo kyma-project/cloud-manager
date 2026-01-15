@@ -21,21 +21,17 @@ func loadInstance(ctx context.Context, st composed.State) (error, context.Contex
 	nfsInstance := state.ObjAsNfsInstance()
 	logger.Info("Loading GCP Filestore Instance")
 
-	// Get GCP details
 	project := state.GetGcpProjectId()
 	location := state.GetGcpLocation()
 	name := v2client.GetFilestoreInstanceId(nfsInstance.Name)
 
-	// Call Filestore API to get instance
 	instance, err := state.GetFilestoreClient().GetInstance(ctx, project, location, name)
 	if err != nil {
-		// Handle "not found" - instance doesn't exist yet
 		if status.Code(err) == codes.NotFound {
 			state.SetInstance(nil)
 			return nil, ctx
 		}
 
-		// API error - update status and requeue
 		logger.Error(err, "Error getting Filestore Instance from GCP")
 		return composed.UpdateStatus(nfsInstance).
 			SetExclusiveConditions(metav1.Condition{
@@ -48,7 +44,6 @@ func loadInstance(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	// Cache the instance in state
 	state.SetInstance(instance)
 
 	return nil, ctx

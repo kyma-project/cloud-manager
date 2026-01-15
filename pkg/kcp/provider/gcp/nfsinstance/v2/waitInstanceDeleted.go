@@ -16,12 +16,10 @@ func waitInstanceDeleted(ctx context.Context, st composed.State) (error, context
 
 	instance := state.GetInstance()
 
-	// If instance doesn't exist, deletion is complete
 	if instance == nil {
 		return nil, ctx
 	}
 
-	// If instance is deleting, wait
 	if instance.State == filestorepb.Instance_DELETING {
 		logger.Info("Instance is deleting, waiting")
 		return composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), nil

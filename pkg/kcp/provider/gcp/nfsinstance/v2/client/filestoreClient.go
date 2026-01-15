@@ -105,7 +105,6 @@ func (c *filestoreClient) CreateInstance(ctx context.Context, projectId, locatio
 func (c *filestoreClient) UpdateInstance(ctx context.Context, projectId, location, instanceId string, instance *filestorepb.Instance, updateMask []string) (string, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
-	// Set the Name field - required for UpdateInstance API
 	instance.Name = GetFilestoreName(projectId, location, instanceId)
 
 	req := &filestorepb.UpdateInstanceRequest{

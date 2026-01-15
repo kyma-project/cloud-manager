@@ -18,19 +18,16 @@ func pollOperation(ctx context.Context, st composed.State) (error, context.Conte
 	nfsInstance := state.ObjAsNfsInstance()
 	opName := nfsInstance.Status.OpIdentifier
 
-	// If no pending operation, continue to next action
 	if opName == "" {
 		return nil, ctx
 	}
 
 	logger.Info("Checking GCP Operation Status", "operation", opName)
 
-	// Check operation status
 	isDone, err := state.GetFilestoreClient().GetOperation(ctx, opName)
 	if err != nil {
 		logger.Error(err, "Error getting Filestore Operation from GCP")
 
-		// Clear the operation identifier on error (might be invalid/not found)
 		nfsInstance.Status.OpIdentifier = ""
 
 		return composed.UpdateStatus(nfsInstance).
@@ -44,13 +41,11 @@ func pollOperation(ctx context.Context, st composed.State) (error, context.Conte
 			Run(ctx, state)
 	}
 
-	// Operation not completed yet, requeue and wait
 	if !isDone {
 		logger.Info("Operation still in progress, requeuing")
 		return composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime), nil
 	}
 
-	// Operation completed, clear the operation identifier
 	logger.Info("Operation completed")
 	nfsInstance.Status.OpIdentifier = ""
 

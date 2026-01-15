@@ -21,12 +21,10 @@ func deleteInstance(ctx context.Context, st composed.State) (error, context.Cont
 
 	instance := state.GetInstance()
 
-	// Skip if instance doesn't exist
 	if instance == nil {
 		return nil, ctx
 	}
 
-	// Skip if already deleting
 	if instance.State == filestorepb.Instance_DELETING {
 		return nil, ctx
 	}
@@ -34,12 +32,10 @@ func deleteInstance(ctx context.Context, st composed.State) (error, context.Cont
 	nfsInstance := state.ObjAsNfsInstance()
 	logger.Info("Deleting GCP Filestore Instance")
 
-	// Get GCP details
 	project := state.GetGcpProjectId()
 	location := state.GetGcpLocation()
 	name := v2client.GetFilestoreInstanceId(nfsInstance.Name)
 
-	// Delete instance
 	operationName, err := state.GetFilestoreClient().DeleteInstance(ctx, project, location, name)
 	if err != nil {
 		logger.Error(err, "Error deleting Filestore Instance in GCP")
@@ -55,7 +51,6 @@ func deleteInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	// Store operation for polling
 	if operationName != "" {
 		nfsInstance.Status.OpIdentifier = operationName
 
