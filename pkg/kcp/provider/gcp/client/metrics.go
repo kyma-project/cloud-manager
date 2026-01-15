@@ -79,7 +79,7 @@ func extractRegionAndProject(req interface{}) (region, project string) {
 func extractRegionAndProjectFromURL(path string) (region, project string) {
 	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
 
-	for i := 0; i < len(parts)-1; i++ {
+	for i := range parts {
 		switch parts[i] {
 		case "projects":
 			if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "{") {
@@ -92,7 +92,7 @@ func extractRegionAndProjectFromURL(path string) (region, project string) {
 		case "zones":
 			if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "{") {
 				zone := parts[i+1]
-				if idx := strings.LastIndexByte(zone, '-'); idx > 0 {
+				if idx := strings.LastIndexByte(zone, '-'); idx > 0 && idx < len(zone)-1 {
 					region = zone[:idx]
 				}
 			}
@@ -144,10 +144,16 @@ func extractOperationFromURL(path, method string) string {
 
 	// Handle custom methods (":enable", ":disable", ":deleteConnection", etc.)
 	lastPart := parts[len(parts)-1]
-	if idx := strings.IndexByte(lastPart, ':'); idx > 0 {
-		resource := capitalize(strings.TrimSuffix(lastPart, lastPart[idx:]))
+	if idx := strings.IndexByte(lastPart, ':'); idx >= 0 {
+		resource := ""
+		if idx > 0 {
+			resource = capitalize(lastPart[:idx])
+		}
 		action := capitalize(lastPart[idx+1:])
-		return resource + "." + action
+		if resource != "" {
+			return resource + "." + action
+		}
+		return action
 	}
 
 	// Standard REST operations
@@ -223,7 +229,24 @@ func looksLikeCollectionName(segment string) bool {
 
 // hasResourceID checks if the path targets a specific resource
 func hasResourceID(parts []string) bool {
-	return len(parts) > 1 && !strings.HasPrefix(parts[len(parts)-1], "{")
+	if len(parts) == 0 {
+		return false
+	}
+	lastPart := parts[len(parts)-1]
+	return len(parts)%2 == 0 && !strings.HasPrefix(lastPart, "{") && looksLikeResourceID(lastPart)
+}
+
+func looksLikeResourceID(segment string) bool {
+	return strings.ContainsAny(segment, "-_") || isNumeric(segment)
+}
+
+func isNumeric(s string) bool {
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return len(s) > 0
 }
 
 // deriveActionFromMethod maps HTTP methods to action names
