@@ -148,6 +148,12 @@ func (s *networkStore) CreateOrUpdateNetwork(ctx context.Context, resourceGroupN
 		}, err, ""), err
 	}
 
+	if parameters.Properties == nil || parameters.Properties.AddressSpace == nil || len(parameters.Properties.AddressSpace.AddressPrefixes) == 0 {
+		//TODO: return correct Azure error type, check azuremeta for details, first find out what actual Azure returns in this case
+		return nil, fmt.Errorf("invalid parameters: address space must be specified")
+	}
+	parameters.Properties.ProvisioningState = ptr.To(armnetwork.ProvisioningStateSucceeded)
+
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -156,24 +162,10 @@ func (s *networkStore) CreateOrUpdateNetwork(ctx context.Context, resourceGroupN
 		s.items[resourceGroupName] = map[string]*networkEntry{}
 	}
 
-	item, ok := s.items[resourceGroupName][virtualNetworkName]
-	if ok {
-		if options != nil && options.ResumeToken != "" {
-			return NewPollerMock(armnetwork.VirtualNetworksClientCreateOrUpdateResponse{
-				VirtualNetwork: *item.network,
-			}, nil, fmt.Sprintf("resumeToken/%s/%s", resourceGroupName, virtualNetworkName)), nil
-		}
-		//TODO: return correct Azure error type, check azuremeta for details, first find out what actual Azure returns in this case
-		return nil, fmt.Errorf("virtual network %s/%s/%s already exists", s.subscription, resourceGroupName, virtualNetworkName)
+	net, err := util.JsonClone(&parameters)
+	if err != nil {
+		return nil, err
 	}
-	if parameters.Properties == nil || parameters.Properties.AddressSpace == nil || len(parameters.Properties.AddressSpace.AddressPrefixes) == 0 {
-		//TODO: return correct Azure error type, check azuremeta for details, first find out what actual Azure returns in this case
-		return nil, fmt.Errorf("invalid parameters: address space must be specified")
-	}
-	parameters.Properties.ProvisioningState = ptr.To(armnetwork.ProvisioningStateSucceeded)
-
-	cpy := parameters
-	net := &cpy
 	net.ID = ptr.To(azureutil.NewVirtualNetworkResourceId(s.subscription, resourceGroupName, virtualNetworkName).String())
 	net.Name = ptr.To(virtualNetworkName)
 

@@ -161,7 +161,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 			return ptr.Deref(x, "")
 		})
 		added, removed := pie.Diff(existingCidrs, o.cidrBlocks)
-		if len(added) != 0 && len(removed) != 0 {
+		if len(added) != 0 || len(removed) != 0 {
 			updateNeeded = true
 		}
 	}
