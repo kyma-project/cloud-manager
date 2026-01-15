@@ -12,6 +12,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -20,7 +21,6 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	// Skip if instance already exists
 	if state.GetInstance() != nil {
 		return nil, ctx
 	}
@@ -28,12 +28,10 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 	nfsInstance := state.ObjAsNfsInstance()
 	logger.Info("Creating GCP Filestore Instance")
 
-	// Get GCP details
 	project := state.GetGcpProjectId()
 	location := state.GetGcpLocation()
-	name := fmt.Sprintf("cm-%.60s", nfsInstance.Name)
+	name := v2client.GetFilestoreInstanceId(nfsInstance.Name)
 
-	// Build instance
 	instance := state.ToGcpInstance()
 
 	// Set NFS protocol based on tier and feature flag

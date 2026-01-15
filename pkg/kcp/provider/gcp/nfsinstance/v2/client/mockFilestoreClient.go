@@ -56,7 +56,7 @@ func (m *MockFilestoreClient) GetInstance(ctx context.Context, projectId, locati
 		return nil, m.getInstanceError
 	}
 
-	key := formatInstanceName(projectId, location, instanceId)
+	key := GetFilestoreName(projectId, location, instanceId)
 	instance, exists := m.instances[key]
 	if !exists {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("instance %s not found", key))
@@ -73,7 +73,7 @@ func (m *MockFilestoreClient) CreateInstance(ctx context.Context, projectId, loc
 		return "", m.createInstanceError
 	}
 
-	key := formatInstanceName(projectId, location, instanceId)
+	key := GetFilestoreName(projectId, location, instanceId)
 
 	// Check if already exists
 	if _, exists := m.instances[key]; exists {
@@ -113,7 +113,7 @@ func (m *MockFilestoreClient) UpdateInstance(ctx context.Context, projectId, loc
 		return "", m.updateInstanceError
 	}
 
-	key := formatInstanceName(projectId, location, instanceId)
+	key := GetFilestoreName(projectId, location, instanceId)
 
 	// Check if exists
 	existingInstance, exists := m.instances[key]
@@ -157,7 +157,7 @@ func (m *MockFilestoreClient) DeleteInstance(ctx context.Context, projectId, loc
 		return "", m.deleteInstanceError
 	}
 
-	key := formatInstanceName(projectId, location, instanceId)
+	key := GetFilestoreName(projectId, location, instanceId)
 
 	// Check if exists
 	if _, exists := m.instances[key]; !exists {
@@ -215,7 +215,7 @@ func (m *MockFilestoreClient) SetInstance(projectId, location, instanceId string
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	key := formatInstanceName(projectId, location, instanceId)
+	key := GetFilestoreName(projectId, location, instanceId)
 	instance.Name = key
 	m.instances[key] = instance
 }

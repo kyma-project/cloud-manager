@@ -2,7 +2,6 @@ package v2
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -11,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 )
 
 // loadInstance loads the GCP Filestore instance from the API.
@@ -24,7 +24,7 @@ func loadInstance(ctx context.Context, st composed.State) (error, context.Contex
 	// Get GCP details
 	project := state.GetGcpProjectId()
 	location := state.GetGcpLocation()
-	name := fmt.Sprintf("cm-%.60s", nfsInstance.Name)
+	name := v2client.GetFilestoreInstanceId(nfsInstance.Name)
 
 	// Call Filestore API to get instance
 	instance, err := state.GetFilestoreClient().GetInstance(ctx, project, location, name)

@@ -63,7 +63,7 @@ func (c *filestoreClient) GetInstance(ctx context.Context, projectId, location, 
 	logger := composed.LoggerFromCtx(ctx).WithValues("projectId", projectId, "location", location, "instanceId", instanceId)
 
 	req := &filestorepb.GetInstanceRequest{
-		Name: formatInstanceName(projectId, location, instanceId),
+		Name: GetFilestoreName(projectId, location, instanceId),
 	}
 
 	instance, err := c.cloudFilestoreManager.GetInstance(ctx, req)
@@ -85,7 +85,7 @@ func (c *filestoreClient) CreateInstance(ctx context.Context, projectId, locatio
 
 	req := &filestorepb.CreateInstanceRequest{
 		Parent:     formatParentName(projectId, location),
-		InstanceId: instanceId,
+		InstanceId: GetFilestoreInstanceId(instanceId),
 		Instance:   instance,
 	}
 
@@ -106,7 +106,7 @@ func (c *filestoreClient) UpdateInstance(ctx context.Context, projectId, locatio
 	logger := composed.LoggerFromCtx(ctx)
 
 	// Set the Name field - required for UpdateInstance API
-	instance.Name = formatInstanceName(projectId, location, instanceId)
+	instance.Name = GetFilestoreName(projectId, location, instanceId)
 
 	req := &filestorepb.UpdateInstanceRequest{
 		UpdateMask: &fieldmaskpb.FieldMask{
@@ -133,7 +133,7 @@ func (c *filestoreClient) DeleteInstance(ctx context.Context, projectId, locatio
 	logger := composed.LoggerFromCtx(ctx).WithValues("projectId", projectId, "location", location, "instanceId", instanceId)
 
 	req := &filestorepb.DeleteInstanceRequest{
-		Name: formatInstanceName(projectId, location, instanceId),
+		Name: GetFilestoreName(projectId, location, instanceId),
 	}
 
 	op, err := c.cloudFilestoreManager.DeleteInstance(ctx, req)
@@ -170,10 +170,6 @@ func (c *filestoreClient) GetOperation(ctx context.Context, operationName string
 }
 
 // Helper functions for constructing GCP resource names
-
-func formatInstanceName(projectId, location, instanceId string) string {
-	return fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, location, instanceId)
-}
 
 func formatParentName(projectId, location string) string {
 	return fmt.Sprintf("projects/%s/locations/%s", projectId, location)
