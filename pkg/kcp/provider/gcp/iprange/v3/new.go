@@ -36,7 +36,6 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"gcpIpRange",
 			// Validation and setup
-			copyCidrToStatus,
 			validateCidr,
 
 			// Load remote resources

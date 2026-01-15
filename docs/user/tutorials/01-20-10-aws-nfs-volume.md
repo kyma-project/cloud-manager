@@ -43,17 +43,18 @@ You have the Cloud Manager module added.
 4. Observe the generated PersistentVolume:
 
    ```shell
-   kubectl -n $NAMESPACE get persistentvolume my-vol
+   export PV_NAME=`kubectl get awsnfsvolume my-vol -n $NAMESPACE -o jsonpath='{.status.id}'`
+   kubectl get persistentvolume $PV_NAME
    ```
 
    You should see the following details:
 
    ```console
-   NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM            STORAGECLASS
-   my-vol   100G       RWX            Retain           Bound    test-mt/my-vol               
+   NAME       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                    STORAGECLASS
+   {PV_NAME}  100G       RWX            Retain           Bound    {NAMESPACE_NAME}/my-vol               
    ```
 
-   The `RWX` access mode allows the volume to be readable and writable from multiple workloads. The `Bound` status which means the PersistentVolumeClaim claiming this PV is created.
+   Note the `RWX` access mode, which allows the volume to be readable and writable from multiple workloads, and the `Bound` status, which means the PersistentVolumeClaim claims that this PV has been created.
 
 5. Observe the generated PersistentVolumeClaim:
 
@@ -64,11 +65,11 @@ You have the Cloud Manager module added.
    You should see the following message:
 
    ```console
-   NAME     STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS 
-   my-vol   Bound    my-vol   100G       RWX                         
+   NAME     STATUS   VOLUME     CAPACITY   ACCESS MODES   STORAGECLASS 
+   my-vol   Bound    {PV_NAME}  100G       RWX                         
    ```
 
-   Similarly to PV, it should have the `RWX` access mode and `Bound` status.
+   Similarly to PV, note the `RWX` access mode and the `Bound` status.
 
 6. Create two workloads that both write to the volume:
 
