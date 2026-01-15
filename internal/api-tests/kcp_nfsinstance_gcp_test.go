@@ -140,7 +140,33 @@ var _ = Describe("Feature: KCP NfsInstance GCP", Ordered, func() {
 			func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
 				b.(*testKcpNfsInstanceGcpBuilder).WithCapacityGb(1024)
 			},
-			"Cannot reduce capacity for BASIC_HDD tier instances",
+			"BASIC_HDD tier capacityGb cannot be reduced",
+		)
+	})
+
+	Describe("BASIC_HDD tier fileShareName validation", func() {
+
+		for _, validName := range []string{"vol1", "ab", "vol_1", "volume12345678"} {
+			canCreateKcp(
+				fmt.Sprintf("NfsInstance GCP BASIC_HDD tier can be created with valid fileShareName: %s", validName),
+				newTestKcpNfsInstanceGcpBuilder().
+					WithTier(cloudcontrolv1beta1.BASIC_HDD).
+					WithCapacityGb(1024).
+					WithFileShareName(validName).
+					WithLocation("us-central1").
+					WithConnectMode(cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS),
+			)
+		}
+
+		canNotCreateKcp(
+			"NfsInstance GCP BASIC_HDD tier cannot be created with fileShareName longer than 16 characters",
+			newTestKcpNfsInstanceGcpBuilder().
+				WithTier(cloudcontrolv1beta1.BASIC_HDD).
+				WithCapacityGb(1024).
+				WithFileShareName("vol12345678901234567").
+				WithLocation("us-central1").
+				WithConnectMode(cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS),
+			"BASIC_HDD tier fileShareName length must be 16 or less characters",
 		)
 	})
 
@@ -193,7 +219,33 @@ var _ = Describe("Feature: KCP NfsInstance GCP", Ordered, func() {
 			func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
 				b.(*testKcpNfsInstanceGcpBuilder).WithCapacityGb(2560)
 			},
-			"Cannot reduce capacity for BASIC_SSD tier instances",
+			"BASIC_SSD tier capacityGb cannot be reduced",
+		)
+	})
+
+	Describe("BASIC_SSD tier fileShareName validation", func() {
+
+		for _, validName := range []string{"vol1", "ab", "vol_1", "volume12345678"} {
+			canCreateKcp(
+				fmt.Sprintf("NfsInstance GCP BASIC_SSD tier can be created with valid fileShareName: %s", validName),
+				newTestKcpNfsInstanceGcpBuilder().
+					WithTier(cloudcontrolv1beta1.BASIC_SSD).
+					WithCapacityGb(2560).
+					WithFileShareName(validName).
+					WithLocation("us-central1").
+					WithConnectMode(cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS),
+			)
+		}
+
+		canNotCreateKcp(
+			"NfsInstance GCP BASIC_SSD tier cannot be created with fileShareName longer than 16 characters",
+			newTestKcpNfsInstanceGcpBuilder().
+				WithTier(cloudcontrolv1beta1.BASIC_SSD).
+				WithCapacityGb(2560).
+				WithFileShareName("vol12345678901234567").
+				WithLocation("us-central1").
+				WithConnectMode(cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS),
+			"BASIC_SSD tier fileShareName length must be 16 or less characters",
 		)
 	})
 
@@ -203,7 +255,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP", Ordered, func() {
 
 	Describe("ZONAL tier capacity validation", func() {
 
-		for _, validCapacity := range []int{1024, 1280, 1536, 5120, 10240} {
+		for _, validCapacity := range []int{1024, 1280, 1536, 5120, 9984, 10240, 12800, 51200, 102400} {
 			canCreateKcp(
 				fmt.Sprintf("NfsInstance GCP ZONAL tier can be created with valid capacity: %d", validCapacity),
 				newTestKcpNfsInstanceGcpBuilder().
@@ -213,14 +265,14 @@ var _ = Describe("Feature: KCP NfsInstance GCP", Ordered, func() {
 			)
 		}
 
-		for _, invalidCapacity := range []int{0, 1023, 1025, 1200, 10241, 20000} {
+		for _, invalidCapacity := range []int{0, 1023, 1025, 1200, 9985, 10000, 10241, 11000, 102401, 200000} {
 			canNotCreateKcp(
 				fmt.Sprintf("NfsInstance GCP ZONAL tier cannot be created with invalid capacity: %d", invalidCapacity),
 				newTestKcpNfsInstanceGcpBuilder().
 					WithTier(cloudcontrolv1beta1.ZONAL).
 					WithCapacityGb(invalidCapacity).
 					WithValidDefaults(),
-				"ZONAL tier capacityGb must be between 1024 and 10240, and divisible by 256",
+				"ZONAL tier capacityGb must be between 1024 and 9984, and divisible by 256, or between 10240 and 102400, and divisible by 2560",
 			)
 		}
 
@@ -249,13 +301,39 @@ var _ = Describe("Feature: KCP NfsInstance GCP", Ordered, func() {
 		)
 	})
 
+	Describe("ZONAL tier fileShareName validation", func() {
+
+		for _, validName := range []string{"vol1", "ab", "vol_1", "volume1234567890123456789012"} {
+			canCreateKcp(
+				fmt.Sprintf("NfsInstance GCP ZONAL tier can be created with valid fileShareName: %s", validName),
+				newTestKcpNfsInstanceGcpBuilder().
+					WithTier(cloudcontrolv1beta1.ZONAL).
+					WithCapacityGb(1024).
+					WithFileShareName(validName).
+					WithLocation("us-central1").
+					WithConnectMode(cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS),
+			)
+		}
+
+		canNotCreateKcp(
+			"NfsInstance GCP ZONAL tier cannot be created with fileShareName longer than 32 characters",
+			newTestKcpNfsInstanceGcpBuilder().
+				WithTier(cloudcontrolv1beta1.ZONAL).
+				WithCapacityGb(1024).
+				WithFileShareName("vol123456789012345678901234567890123").
+				WithLocation("us-central1").
+				WithConnectMode(cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS),
+			"ZONAL tier fileShareName length must be 32 or less characters",
+		)
+	})
+
 	// ========================================================================
 	// REGIONAL Tier Tests
 	// ========================================================================
 
 	Describe("REGIONAL tier capacity validation", func() {
 
-		for _, validCapacity := range []int{1024, 1280, 1536, 5120, 10240} {
+		for _, validCapacity := range []int{1024, 1280, 1536, 5120, 9984, 10240, 12800, 51200, 102400} {
 			canCreateKcp(
 				fmt.Sprintf("NfsInstance GCP REGIONAL tier can be created with valid capacity: %d", validCapacity),
 				newTestKcpNfsInstanceGcpBuilder().
@@ -265,14 +343,14 @@ var _ = Describe("Feature: KCP NfsInstance GCP", Ordered, func() {
 			)
 		}
 
-		for _, invalidCapacity := range []int{0, 1023, 1025, 1200, 10241, 20000} {
+		for _, invalidCapacity := range []int{0, 1023, 1025, 1200, 9985, 10000, 10241, 11000, 102401, 200000} {
 			canNotCreateKcp(
 				fmt.Sprintf("NfsInstance GCP REGIONAL tier cannot be created with invalid capacity: %d", invalidCapacity),
 				newTestKcpNfsInstanceGcpBuilder().
 					WithTier(cloudcontrolv1beta1.REGIONAL).
 					WithCapacityGb(invalidCapacity).
 					WithValidDefaults(),
-				"REGIONAL tier capacityGb must be between 1024 and 10240, and divisible by 256",
+				"REGIONAL tier capacityGb must be between 1024 and 9984, and divisible by 256, or between 10240 and 102400, and divisible by 2560",
 			)
 		}
 
@@ -298,6 +376,32 @@ var _ = Describe("Feature: KCP NfsInstance GCP", Ordered, func() {
 			func(b Builder[*cloudcontrolv1beta1.NfsInstance]) {
 				b.(*testKcpNfsInstanceGcpBuilder).WithCapacityGb(1024)
 			},
+		)
+	})
+
+	Describe("REGIONAL tier fileShareName validation", func() {
+
+		for _, validName := range []string{"vol1", "ab", "vol_1", "volume1234567890123456789012"} {
+			canCreateKcp(
+				fmt.Sprintf("NfsInstance GCP REGIONAL tier can be created with valid fileShareName: %s", validName),
+				newTestKcpNfsInstanceGcpBuilder().
+					WithTier(cloudcontrolv1beta1.REGIONAL).
+					WithCapacityGb(1024).
+					WithFileShareName(validName).
+					WithLocation("us-central1").
+					WithConnectMode(cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS),
+			)
+		}
+
+		canNotCreateKcp(
+			"NfsInstance GCP REGIONAL tier cannot be created with fileShareName longer than 32 characters",
+			newTestKcpNfsInstanceGcpBuilder().
+				WithTier(cloudcontrolv1beta1.REGIONAL).
+				WithCapacityGb(1024).
+				WithFileShareName("vol123456789012345678901234567890123").
+				WithLocation("us-central1").
+				WithConnectMode(cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS),
+			"REGIONAL tier fileShareName length must be 32 or less characters",
 		)
 	})
 })
