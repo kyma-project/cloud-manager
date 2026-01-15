@@ -2,6 +2,7 @@ package subscription
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -22,9 +23,19 @@ func statusSaveOnCreate(ctx context.Context, st composed.State) (error, context.
 
 	switch state.provider {
 	case cloudcontrolv1beta1.ProviderGCP:
-		project, ok := state.credentialData["project_id"]
+		txt, ok := state.credentialData["serviceaccount.json"]
 		if !ok {
-			theErr = multierror.Append(theErr, errors.New("gardener credential for gcp missing project_id key"))
+			theErr = multierror.Append(theErr, errors.New("gardener credential for gcp missing serviceaccount.json key"))
+			break
+		}
+		data := map[string]string{}
+		if err := json.Unmarshal([]byte(txt), &data); err != nil {
+			theErr = multierror.Append(theErr, fmt.Errorf("error unmarshaling serviceaccount.json content: %w", err))
+			break
+		}
+		project, ok := data["project_id"]
+		if !ok {
+			theErr = multierror.Append(theErr, errors.New("gardener credential for gcp missing project_id key in serviceaccount.json"))
 		}
 		if theErr != nil {
 			break

@@ -19,3 +19,7 @@ const (
 	ExpiresAtAnnotation               = "operator.kyma-project.io/expires-at"
 	ForceKubeconfigRotationAnnotation = "operator.kyma-project.io/force-kubeconfig-rotation"
 )
+
+const (
+	DoNotReconcile = cloudcontrolv1beta1.LabelIgnore
+)

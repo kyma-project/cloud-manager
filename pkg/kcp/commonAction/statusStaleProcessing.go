@@ -15,6 +15,7 @@ func statusStaleProcessing(ctx context.Context, st composed.State) (error, conte
 	if state.ObjAsObjWithStatus().GetGeneration() != state.ObjAsObjWithStatus().ObservedGeneration() {
 		return composed.NewStatusPatcherComposed(state.ObjAsObjWithStatus()).
 			MutateStatus(func(o composed.ObjWithStatus) {
+				o.SetObservedGeneration(o.ObservedGeneration())
 				meta.SetStatusCondition(o.Conditions(), metav1.Condition{
 					Type:               cloudcontrolv1beta1.ConditionTypeReady,
 					Status:             metav1.ConditionUnknown,

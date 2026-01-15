@@ -5,6 +5,7 @@ import (
 	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	awsvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
@@ -38,12 +39,17 @@ type ExposedDataClient interface {
 	awsexposeddataclient.Client
 }
 
+type VpcNetworkClient interface {
+	awsvpcnetworkclient.Client
+}
+
 type Clients interface {
 	IpRangeClient
 	NfsClient
 	VpcPeeringClient
 	ElastiCacheClient
 	ExposedDataClient
+	VpcNetworkClient
 }
 
 type Providers interface {
@@ -54,6 +60,7 @@ type Providers interface {
 	VpcPeeringSkrProvider() awsclient.SkrClientProvider[awsvpcpeeringclient.Client]
 	ElastiCacheProviderFake() awsclient.SkrClientProvider[awsclient.ElastiCacheClient]
 	ExposedDataProvider() awsclient.SkrClientProvider[awsexposeddataclient.Client]
+	VpcNetworkProvider() awsclient.SkrClientProvider[awsvpcnetworkclient.Client]
 }
 
 type Configs interface {

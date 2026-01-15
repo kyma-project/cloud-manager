@@ -111,8 +111,8 @@ type SubscriptionInfoOpenStack struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Provider",type="string",JSONPath=".spec.status.provider"
-// +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.conditions[?(@.type=="Subscription")].reason`
+// +kubebuilder:printcolumn:name="Provider",type="string",JSONPath=".status.provider"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.conditions[?(@.type=="Ready")].reason`
 
 // Subscription is the Schema for the subscriptions API.
 type Subscription struct {

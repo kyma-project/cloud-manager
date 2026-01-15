@@ -15,7 +15,7 @@ func natGatewayLoad(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, ctx
 	}
 
-	gwList, err := state.awsClient.DescribeNatGateways(ctx, ptr.Deref(state.vpc.VpcId, ""))
+	gwList, err := state.awsClient.DescribeNatGateway(ctx, ptr.Deref(state.vpc.VpcId, ""))
 	if x := awserrorhandling.HandleError(ctx, err, state, "ExposedData on list AWS NatGateways", cloudcontrolv1beta1.ReasonUnknown, "Error loading NAT Gateway"); x != nil {
 		return x, ctx
 	}

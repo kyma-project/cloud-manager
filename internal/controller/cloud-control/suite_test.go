@@ -24,6 +24,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
+	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
@@ -177,6 +178,7 @@ var _ = BeforeSuite(func() {
 	// VpcNetwork
 	Expect(SetupVpcNetworkReconciler(
 		infra.KcpManager(),
+		awsvpcnetwork.NewStateFactory(infra.AwsMock().VpcNetworkProvider()),
 	)).To(Succeed())
 	// Subscription
 	Expect(SetupSubscriptionReconciler(

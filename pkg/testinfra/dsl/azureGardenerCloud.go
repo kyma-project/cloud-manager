@@ -3,9 +3,11 @@ package dsl
 import (
 	"context"
 	"fmt"
+
 	"github.com/3th1nk/cidr"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/kyma-project/cloud-manager/pkg/common"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 )
@@ -28,7 +30,10 @@ func CreateAzureGardenerResources(
 
 	resourceGroupName := common.GardenerVpcName(shootNamespace, shootName)
 
-	err := azureMock.CreateNetwork(ctx, resourceGroupName, resourceGroupName, location, vnetCidr, nil)
+	_, err := azureclient.PollUntilDone(azureMock.CreateOrUpdateNetwork(
+		ctx, resourceGroupName, resourceGroupName,
+		azureclient.NewVirtualNetwork(location, vnetCidr, nil), nil,
+	))(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating vnet: %w", err)
 	}
@@ -77,7 +82,11 @@ func CreateAzureGardenerResources(
 		}
 		result.NatGateways = append(result.NatGateways, nat)
 
-		err = azureMock.CreateSubnet(ctx, resourceGroupName, resourceGroupName, name, subnetRanges[i-1].CIDR().String(), "x", netGatewayId.String())
+		_, err = azureclient.PollUntilDone(azureMock.CreateOrUpdateSubnet(
+			ctx, resourceGroupName, resourceGroupName, name,
+			azureclient.NewSubnet(subnetRanges[i-1].CIDR().String(), "x", netGatewayId.String()),
+			nil,
+		))(ctx, nil)
 		if err != nil {
 			return nil, fmt.Errorf("error creating subnet in zone %d: %w", i, err)
 		}

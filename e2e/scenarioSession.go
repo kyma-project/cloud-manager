@@ -310,7 +310,7 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 
 	for _, c := range s.clusters {
 		if c.ClusterAlias() == alias {
-			return nil, fmt.Errorf("cluster %s already added to scenario", alias)
+			return c, nil
 		}
 	}
 
@@ -341,7 +341,7 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 		return nil, fmt.Errorf("error listing runtimes from KEB: %w", err)
 	}
 	if len(arr) == 0 {
-		return nil, fmt.Errorf("runtimes with alias %q not found", alias)
+		return nil, fmt.Errorf("runtime with alias %q not found", alias)
 	}
 	if len(arr) > 1 {
 		return nil, fmt.Errorf("found more then one runtime with alias %q", alias)
@@ -403,7 +403,7 @@ func (s *scenarioSession) createManagerAndStartIt(ctx context.Context, id *e2eke
 	}
 
 	cc := &defaultClusterInSession{
-		Cluster:            NewCluster(ctx, id.Alias, clstr),
+		Cluster:            NewCluster(ctx, id.Alias, clstr, s.world.Config()),
 		isCreatedInSession: isCreatedInSession,
 		runtimeID:          id.RuntimeID,
 		shootName:          id.ShootName,
@@ -450,7 +450,7 @@ func (s *scenarioSession) SetCurrentCluster(alias string) {
 }
 
 func (s *scenarioSession) Eval(ctx context.Context) (Evaluator, error) {
-	b := NewEvaluatorBuilder(s.world.Config().SkrNamespace)
+	b := NewEvaluatorBuilder()
 	for _, ws := range s.tfWorkspaces {
 		b.Set(ws.GetAlias(), ws.Outputs())
 	}

@@ -80,7 +80,7 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 		return reconcile.Result{}, nil
 	}
 
-	if _, ok := rt.Labels[DoNotReconcile]; ok {
+	if _, ok := rt.Labels[e2elib.DoNotReconcile]; ok {
 		return reconcile.Result{}, nil
 	}
 
