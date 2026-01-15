@@ -74,7 +74,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	computeNetworks, err := compute.NewNetworksRESTClient(ctx,
 		option.WithHTTPClient(computeHTTPClient))
 	if err != nil {
-		return nil, fmt.Errorf("create compute networs client: %w", err)
+		return nil, fmt.Errorf("create compute networks client: %w", err)
 	}
 
 	computeAddress, err := compute.NewAddressesRESTClient(ctx,
