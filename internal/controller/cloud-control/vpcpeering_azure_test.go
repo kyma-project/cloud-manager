@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -9,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -52,12 +54,24 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, scope.Spec.Scope.Azure.TenantId)
 
 		By("And Given local Azure VNET exists", func() {
-			err := azureMockLocal.CreateNetwork(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, scope.Spec.Region, "10.200.0.0/25", nil)
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				localResourceGroupName,
+				localVirtualNetworkName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.200.0.0/25", nil),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			err := azureMockRemote.CreateNetwork(infra.Ctx(), remoteResourceGroup, remoteVnetName, scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName})
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				remoteResourceGroup,
+				remoteVnetName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName}),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -328,12 +342,24 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, scope.Spec.Scope.Azure.TenantId)
 
 		By("And Given local Azure VNET exists", func() {
-			err := azureMockLocal.CreateNetwork(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, scope.Spec.Region, "10.200.0.0/25", nil)
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				localResourceGroupName,
+				localVirtualNetworkName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.200.0.0/25", nil),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			err := azureMockRemote.CreateNetwork(infra.Ctx(), remoteResourceGroup, remoteVnetName, scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName})
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				remoteResourceGroup,
+				remoteVnetName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName}),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -467,12 +493,24 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, remoteTenant)
 
 		By("And Given local Azure VNET exists", func() {
-			err := azureMockLocal.CreateNetwork(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, scope.Spec.Region, "10.200.0.0/25", nil)
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				localResourceGroupName,
+				localVirtualNetworkName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.200.0.0/25", nil),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			err := azureMockRemote.CreateNetwork(infra.Ctx(), remoteResourceGroup, remoteVnetName, scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName})
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				remoteResourceGroup,
+				remoteVnetName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName}),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -643,12 +681,24 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockLocal.AddRemoteSubscription(infra.Ctx(), &azureMockRemote)
 
 		By("And Given local Azure VNET exists", func() {
-			err := azureMockLocal.CreateNetwork(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, scope.Spec.Region, "10.200.0.0/25", nil)
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				localResourceGroupName,
+				localVirtualNetworkName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.200.0.0/25", nil),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			err := azureMockRemote.CreateNetwork(infra.Ctx(), remoteResourceGroup, remoteVnetName, scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName})
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				remoteResourceGroup,
+				remoteVnetName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName}),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -902,12 +952,24 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockLocal.AddRemoteSubscription(infra.Ctx(), &azureMockRemote)
 
 		By("And Given local Azure VNET exists", func() {
-			err := azureMockLocal.CreateNetwork(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, scope.Spec.Region, "10.200.0.0/25", nil)
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				localResourceGroupName,
+				localVirtualNetworkName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.200.0.0/25", nil),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			err := azureMockRemote.CreateNetwork(infra.Ctx(), remoteResourceGroup, remoteVnetName, scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName})
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				remoteResourceGroup,
+				remoteVnetName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName}),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -1155,12 +1217,24 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, remoteTenant)
 
 		By("And Given local Azure VNET exists", func() {
-			err := azureMockLocal.CreateNetwork(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, scope.Spec.Region, "10.200.0.0/25", nil)
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				localResourceGroupName,
+				localVirtualNetworkName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.200.0.0/25", nil),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			err := azureMockRemote.CreateNetwork(infra.Ctx(), remoteResourceGroup, remoteVnetName, scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName})
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				remoteResourceGroup,
+				remoteVnetName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName}),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -1260,12 +1334,24 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, remoteTenant)
 
 		By("And Given local Azure VNET exists", func() {
-			err := azureMockLocal.CreateNetwork(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, scope.Spec.Region, "10.200.0.0/25", nil)
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				localResourceGroupName,
+				localVirtualNetworkName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.200.0.0/25", nil),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			err := azureMockRemote.CreateNetwork(infra.Ctx(), remoteResourceGroup, remoteVnetName, scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName})
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				remoteResourceGroup,
+				remoteVnetName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName}),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -1389,12 +1475,24 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		azureMockRemote := infra.AzureMock().MockConfigs(remoteSubscription, remoteTenant)
 
 		By("And Given local Azure VNET exists", func() {
-			err := azureMockLocal.CreateNetwork(infra.Ctx(), localResourceGroupName, localVirtualNetworkName, scope.Spec.Region, "10.200.0.0/25", nil)
+			_, err := azureclient.PollUntilDone(azureMockLocal.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				localResourceGroupName,
+				localVirtualNetworkName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.200.0.0/25", nil),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		By("And Given remote Azure VNet exists with Kyma tag", func() {
-			err := azureMockRemote.CreateNetwork(infra.Ctx(), remoteResourceGroup, remoteVnetName, scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName})
+			_, err := azureclient.PollUntilDone(azureMockRemote.CreateOrUpdateNetwork(
+				infra.Ctx(),
+				remoteResourceGroup,
+				remoteVnetName,
+				azureclient.NewVirtualNetwork(scope.Spec.Region, "10.100.0.0/25", map[string]string{kymaName: kymaName}),
+				nil,
+			))(infra.Ctx(), nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 

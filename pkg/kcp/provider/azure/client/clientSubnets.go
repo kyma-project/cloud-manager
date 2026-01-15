@@ -2,31 +2,29 @@ package client
 
 import (
 	"context"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"k8s.io/utils/ptr"
 )
 
 type SubnetsClient interface {
 	GetSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) (*armnetwork.Subnet, error)
-	CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId, natGatewayId string) error
-	DeleteSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) error
+
+	CreateOrUpdateSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, subnetParameters armnetwork.Subnet, options *armnetwork.SubnetsClientBeginCreateOrUpdateOptions) (Poller[armnetwork.SubnetsClientCreateOrUpdateResponse], error)
+
+	DeleteSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, options *armnetwork.SubnetsClientBeginDeleteOptions) (Poller[armnetwork.SubnetsClientDeleteResponse], error)
 }
 
 func NewSubnetsClient(svc *armnetwork.SubnetsClient) SubnetsClient {
 	return &subnetsClient{svc: svc}
 }
 
-var _ SubnetsClient = &subnetsClient{}
+// helper functions ===================================================================
 
-type subnetsClient struct {
-	svc *armnetwork.SubnetsClient
-}
-
-func (c *subnetsClient) CreateSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName, addressPrefix, securityGroupId, natGatewayId string) error {
+func NewSubnet(addressPrefix string, securityGroupId string, natGatewayId string) armnetwork.Subnet {
 	subnet := armnetwork.Subnet{
 		Properties: &armnetwork.SubnetPropertiesFormat{
-			AddressPrefix:         ptr.To(addressPrefix),
-			DefaultOutboundAccess: ptr.To(false),
+			AddressPrefix: ptr.To(addressPrefix),
 		},
 	}
 	if securityGroupId != "" {
@@ -39,8 +37,19 @@ func (c *subnetsClient) CreateSubnet(ctx context.Context, resourceGroupName, vir
 			ID: ptr.To(natGatewayId),
 		}
 	}
-	_, err := c.svc.BeginCreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, subnetName, subnet, nil)
-	return err
+	return subnet
+}
+
+// subnetsClient impl ===================================================================
+
+var _ SubnetsClient = &subnetsClient{}
+
+type subnetsClient struct {
+	svc *armnetwork.SubnetsClient
+}
+
+func (c *subnetsClient) CreateOrUpdateSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, subnetParameters armnetwork.Subnet, options *armnetwork.SubnetsClientBeginCreateOrUpdateOptions) (Poller[armnetwork.SubnetsClientCreateOrUpdateResponse], error) {
+	return c.svc.BeginCreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, subnetName, subnetParameters, options)
 }
 
 func (c *subnetsClient) GetSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) (*armnetwork.Subnet, error) {
@@ -51,7 +60,6 @@ func (c *subnetsClient) GetSubnet(ctx context.Context, resourceGroupName, virtua
 	return &resp.Subnet, nil
 }
 
-func (c *subnetsClient) DeleteSubnet(ctx context.Context, resourceGroupName, virtualNetworkName, subnetName string) error {
-	_, err := c.svc.BeginDelete(ctx, resourceGroupName, virtualNetworkName, subnetName, nil)
-	return err
+func (c *subnetsClient) DeleteSubnet(ctx context.Context, resourceGroupName string, virtualNetworkName string, subnetName string, options *armnetwork.SubnetsClientBeginDeleteOptions) (Poller[armnetwork.SubnetsClientDeleteResponse], error) {
+	return c.svc.BeginDelete(ctx, resourceGroupName, virtualNetworkName, subnetName, options)
 }

@@ -5,6 +5,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,7 +21,9 @@ func subnetDelete(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Deleting Azure KCP IpRange subnet")
 
-	err := state.azureClient.DeleteSubnet(ctx, state.resourceGroupName, state.virtualNetworkName, state.subnetName)
+	_, err := azureclient.PollUntilDone(state.azureClient.DeleteSubnet(
+		ctx, state.resourceGroupName, state.virtualNetworkName, state.subnetName, nil,
+	))(ctx, nil)
 	if azuremeta.IsTooManyRequests(err) {
 		return composed.LogErrorAndReturn(err,
 			"Azure KCP IpRange too many requests on subnet delete",

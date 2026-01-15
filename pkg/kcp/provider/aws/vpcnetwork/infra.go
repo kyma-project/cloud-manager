@@ -2,13 +2,13 @@ package vpcnetwork
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/3th1nk/cidr"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
-	"github.com/hashicorp/go-multierror"
 	awsvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork/client"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/ptr"
@@ -58,19 +58,19 @@ type CreateInfraOutput struct {
 func (o *createInfraOptions) validate() error {
 	var result error
 	if o.name == "" {
-		result = multierror.Append(result, fmt.Errorf("name is required"))
+		result = errors.Join(result, fmt.Errorf("name is required"))
 	}
 	if len(o.cidrBlocks) == 0 {
-		result = multierror.Append(result, fmt.Errorf("at least one cidr block is required"))
+		result = errors.Join(result, fmt.Errorf("at least one cidr block is required"))
 	}
 	for _, c := range o.cidrBlocks {
 		_, err := cidr.Parse(c)
 		if err != nil {
-			result = multierror.Append(result, fmt.Errorf("invalid cidr block %q: %w", c, err))
+			result = errors.Join(result, fmt.Errorf("invalid cidr block %q: %w", c, err))
 		}
 	}
 	if o.client == nil {
-		result = multierror.Append(result, fmt.Errorf("client is required"))
+		result = errors.Join(result, fmt.Errorf("client is required"))
 	}
 	if o.timeout == 0 {
 		o.timeout = 5 * time.Minute
@@ -127,7 +127,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 	// validate primary vpc block didn't change
 
 	if ptr.Deref(vpc.CidrBlock, "") != o.cidrBlocks[0] {
-		return nil, fmt.Errorf("primary cidr block can not change - was %s changed to %s", ptr.Deref(vpc.CidrBlock, ""), o.cidrBlocks[0])
+		return nil, fmt.Errorf("primary cidr block can not change - %s was changed to %s", ptr.Deref(vpc.CidrBlock, ""), o.cidrBlocks[0])
 	}
 
 	// remove cidr blocks
