@@ -164,6 +164,19 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 			Expect(redisCluster.Status.AuthString).To(Equal(keys[0]))
 		})
 
+		By("And Then KCP RedisCluster has .status.nodeType set", func() {
+			expectedNodeType := fmt.Sprintf("%d", redisCapacity)
+			Expect(redisCluster.Status.NodeType).To(Equal(expectedNodeType))
+		})
+
+		By("And Then KCP RedisCluster has .status.shardCount set", func() {
+			Expect(redisCluster.Status.ShardCount).To(Equal(int32(shardCount)))
+		})
+
+		By("And Then KCP RedisCluster has .status.replicasPerShard set", func() {
+			Expect(redisCluster.Status.ReplicasPerShard).To(Equal(int32(replicaCount)))
+		})
+
 		By("And Then Private End Point is created", func() {
 			pep, err := azureMock.GetPrivateEndPoint(infra.Ctx(), resourceGroupName, name)
 			Expect(err).ToNot(HaveOccurred())

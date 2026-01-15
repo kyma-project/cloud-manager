@@ -154,6 +154,23 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Expect(redisInstance.Status.AuthString).To(Equal(keys[0]))
 		})
 
+		By("And Then KCP RedisInstance has .status.nodeType set", func() {
+			expectedNodeType := fmt.Sprintf("%s%d", redisFamily, redisCapacity)
+			// Azure converts S family to C (Basic) internally
+			if redisFamily == "S" {
+				expectedNodeType = fmt.Sprintf("C%d", redisCapacity)
+			}
+			Expect(redisInstance.Status.NodeType).To(Equal(expectedNodeType))
+		})
+
+		By("And Then KCP RedisInstance has .status.memorySizeGb set", func() {
+			Expect(redisInstance.Status.MemorySizeGb).To(Equal(int32(redisCapacity)))
+		})
+
+		By("And Then KCP RedisInstance has .status.replicaCount set", func() {
+			Expect(redisInstance.Status.ReplicaCount).To(Equal(int32(0)))
+		})
+
 		By("And Then Private End Point is created", func() {
 			pep, err := azureMock.GetPrivateEndPoint(infra.Ctx(), resourceGroupName, name)
 			Expect(err).ToNot(HaveOccurred())

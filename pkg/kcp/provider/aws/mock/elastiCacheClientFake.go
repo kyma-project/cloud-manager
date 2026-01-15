@@ -329,8 +329,10 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 		CacheParameterGroup: &elasticachetypes.CacheParameterGroupStatus{
 			CacheParameterGroupName: &options.ParameterGroupName,
 		},
-		EngineVersion: &options.EngineVersion,
-		Engine:        ptr.To("redis"),
+		EngineVersion:           &options.EngineVersion,
+		Engine:                  ptr.To("redis"),
+		CacheNodeType:           ptr.To(options.CacheNodeType),
+		AutoMinorVersionUpgrade: ptr.To(options.AutoMinorVersionUpgrade),
 	}
 
 	authTokenEnabled := options.AuthTokenSecretString != nil

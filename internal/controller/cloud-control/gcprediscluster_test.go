@@ -57,6 +57,9 @@ var _ = Describe("Feature: KCP GcpRedisCluster", func() {
 		})
 
 		redisCluster := &cloudcontrolv1beta1.GcpRedisCluster{}
+		clusterNodeType := "REDIS_SHARED_CORE_NANO"
+		clusterShardCount := 3
+		clusterReplicasCount := 1
 
 		By("When GcpRedisCluster is created", func() {
 			Eventually(CreateKcpGcpRedisCluster).
@@ -65,9 +68,9 @@ var _ = Describe("Feature: KCP GcpRedisCluster", func() {
 					WithRemoteRef("skr-rediscluster-example"),
 					WithGcpSubnet(kcpGcpSubnetName),
 					WithScope(scope.Name),
-					WithKcpGcpRedisClusterNodeType("REDIS_SHARED_CORE_NANO"),
-					WithKcpGcpRedisClusterShardCount(3),
-					WithKcpGcpRedisClusterReplicasPerShard(1),
+					WithKcpGcpRedisClusterNodeType(clusterNodeType),
+					WithKcpGcpRedisClusterShardCount(int32(clusterShardCount)),
+					WithKcpGcpRedisClusterReplicasPerShard(int32(clusterReplicasCount)),
 					WithKcpGcpRedisClusterConfigs(map[string]string{
 						"maxmemory-policy": "allkeys-lru",
 					}),
@@ -101,6 +104,18 @@ var _ = Describe("Feature: KCP GcpRedisCluster", func() {
 
 		By("And Then GcpRedisCluster has .status.discoveryEndpoint set", func() {
 			Expect(len(redisCluster.Status.DiscoveryEndpoint) > 0).To(Equal(true))
+		})
+
+		By("And Then GcpRedisCluster has .status.nodeType set", func() {
+			Expect(redisCluster.Status.NodeType).To(Equal(clusterNodeType))
+		})
+
+		By("And Then GcpRedisCluster has .status.shardCount set", func() {
+			Expect(redisCluster.Status.ShardCount).To(Equal(int32(clusterShardCount)))
+		})
+
+		By("And Then GcpRedisCluster has .status.replicasPerShard set", func() {
+			Expect(redisCluster.Status.ReplicasPerShard).To(Equal(int32(clusterReplicasCount)))
 		})
 
 		// DELETE
