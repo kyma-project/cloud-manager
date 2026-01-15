@@ -98,8 +98,19 @@ func (s *State) GetProvisionedMemorySizeGb() int32 {
 
 // GetProvisionedReplicaCount returns the provisioned replica count from the Azure Redis Instance
 func (s *State) GetProvisionedReplicaCount() int32 {
-	if s.azureRedisInstance == nil || s.azureRedisInstance.Properties == nil || s.azureRedisInstance.Properties.ShardCount == nil {
+	if s.azureRedisInstance == nil || s.azureRedisInstance.Properties == nil {
 		return 0
 	}
-	return *s.azureRedisInstance.Properties.ShardCount
+
+	// Try ReplicasPerPrimary first (newer API)
+	if s.azureRedisInstance.Properties.ReplicasPerPrimary != nil {
+		return *s.azureRedisInstance.Properties.ReplicasPerPrimary
+	}
+
+	// Fall back to ReplicasPerMaster (older API)
+	if s.azureRedisInstance.Properties.ReplicasPerMaster != nil {
+		return *s.azureRedisInstance.Properties.ReplicasPerMaster
+	}
+
+	return 0
 }

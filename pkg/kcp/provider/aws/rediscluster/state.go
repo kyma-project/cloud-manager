@@ -321,8 +321,11 @@ func (s *State) GetProvisionedReplicasPerShard() int32 {
 	if s.elastiCacheReplicationGroup == nil || len(s.elastiCacheReplicationGroup.NodeGroups) == 0 {
 		return 0
 	}
-	if len(s.elastiCacheReplicationGroup.NodeGroups[0].NodeGroupMembers) == 0 {
+	memberCount := len(s.elastiCacheReplicationGroup.NodeGroups[0].NodeGroupMembers)
+	if memberCount <= 1 {
 		return 0
 	}
-	return int32(len(s.elastiCacheReplicationGroup.NodeGroups[0].NodeGroupMembers))
+
+	// Subtract 1 to exclude the primary node, counting only replicas
+	return int32(memberCount - 1)
 }
