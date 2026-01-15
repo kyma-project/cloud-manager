@@ -6,6 +6,8 @@ require (
 	cloud.google.com/go/auth v0.18.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
 	cloud.google.com/go/compute v1.52.0
+	cloud.google.com/go/filestore v1.10.3
+	cloud.google.com/go/longrunning v0.7.0
 	cloud.google.com/go/networkconnectivity v1.19.1
 	cloud.google.com/go/redis v1.18.3
 	cloud.google.com/go/resourcemanager v1.10.7
