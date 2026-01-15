@@ -42,6 +42,9 @@ type State struct {
 
 	// Cached GCP resources (using modern protobuf types)
 	instance *filestorepb.Instance // Current Filestore instance from GCP
+
+	// Update tracking (following RedisInstance pattern)
+	updateMask []string // Fields that need to be updated in GCP
 }
 
 // StateFactory creates State instances for reconciliation.
@@ -75,6 +78,7 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.Stat
 	return &State{
 		State:           nfsInstanceState,
 		filestoreClient: filestoreClient,
+		updateMask:      []string{},
 	}, nil
 }
 
@@ -120,23 +124,18 @@ func (s *State) GetGcpInstanceId() string {
 	return s.ObjAsNfsInstance().Name
 }
 
-// DoesFilestoreMatch returns true if the cached GCP instance matches the desired spec.
-// Currently only checks capacity, can be extended to check other fields.
-func (s *State) DoesFilestoreMatch() bool {
-	if s.instance == nil || len(s.instance.FileShares) == 0 {
-		return false
-	}
-
-	nfsInstance := s.ObjAsNfsInstance()
-	desiredCapacityGb := int64(nfsInstance.Spec.Instance.Gcp.CapacityGb)
-	actualCapacityGb := s.instance.FileShares[0].CapacityGb
-
-	return actualCapacityGb == desiredCapacityGb
+// ShouldUpdateInstance returns true if there are fields to update.
+// Follows the RedisInstance pattern using updateMask.
+func (s *State) ShouldUpdateInstance() bool {
+	return len(s.updateMask) > 0
 }
 
-// NeedsUpdate returns true if the Filestore instance needs to be updated.
-func (s *State) NeedsUpdate() bool {
-	return !s.DoesFilestoreMatch()
+// UpdateCapacityGb adds capacity update to the updateMask.
+func (s *State) UpdateCapacityGb(capacityGb int64) {
+	s.updateMask = append(s.updateMask, "file_shares")
+	if len(s.instance.FileShares) > 0 {
+		s.instance.FileShares[0].CapacityGb = capacityGb
+	}
 }
 
 // ToGcpInstance converts the NfsInstance CRD spec to a GCP Filestore Instance.

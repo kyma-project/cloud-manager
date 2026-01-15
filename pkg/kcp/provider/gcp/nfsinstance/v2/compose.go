@@ -21,6 +21,7 @@ func composeActions() composed.Action {
 				"create-update",
 				createInstance,
 				waitInstanceReady,
+				modifyCapacityGb,
 				updateInstance,
 				updateStatus,
 			),

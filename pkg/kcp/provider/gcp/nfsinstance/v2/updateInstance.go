@@ -11,9 +11,11 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 // updateInstance updates an existing Filestore instance in GCP.
+// Uses the updateMask pattern from RedisInstance for efficient updates.
 func updateInstance(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
@@ -22,14 +24,14 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 	instance := state.GetInstance()
 
 	if instance == nil {
-		return nil, ctx
+		return composed.StopWithRequeue, nil
 	}
 
 	if instance.State != filestorepb.Instance_READY {
 		return nil, ctx
 	}
 
-	if state.DoesFilestoreMatch() {
+	if !state.ShouldUpdateInstance() {
 		return nil, ctx
 	}
 
@@ -39,23 +41,8 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 	location := state.GetGcpLocation()
 	name := v2client.GetFilestoreInstanceId(nfsInstance.Name)
 
-	gcpInstance := state.ToGcpInstance()
-	var updateMask []string
-
-	if len(instance.FileShares) > 0 {
-		desiredCapacity := int64(nfsInstance.Spec.Instance.Gcp.CapacityGb)
-		actualCapacity := instance.FileShares[0].CapacityGb
-
-		if desiredCapacity != actualCapacity {
-			updateMask = append(updateMask, "file_shares")
-		}
-	}
-
-	if len(updateMask) == 0 {
-		return nil, ctx
-	}
-
-	operationName, err := state.GetFilestoreClient().UpdateInstance(ctx, project, location, name, gcpInstance, updateMask)
+	// Use the modified instance from state (updated by modify actions)
+	operationName, err := state.GetFilestoreClient().UpdateInstance(ctx, project, location, name, state.GetInstance(), state.updateMask)
 	if err != nil {
 		logger.Error(err, "Error updating Filestore Instance in GCP")
 		return composed.UpdateStatus(nfsInstance).
@@ -74,7 +61,7 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 		nfsInstance.Status.OpIdentifier = operationName
 
 		return composed.UpdateStatus(nfsInstance).
-			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
 
