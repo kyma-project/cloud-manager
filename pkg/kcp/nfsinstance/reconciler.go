@@ -85,7 +85,7 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 					nil,
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
-					composed.NewCase(statewithscope.GcpProviderPredicate, r.gcpAction()),
+					composed.NewCase(statewithscope.GcpProviderPredicate, r.gcpActionRouter()),
 					composed.NewCase(statewithscope.OpenStackProviderPredicate, sapnfsinstance.New(r.sapStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
@@ -93,8 +93,8 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 	)
 }
 
-// gcpAction routes to v1 or v2 implementation based on feature flag.
-func (r *nfsInstanceReconciler) gcpAction() composed.Action {
+// gcpActionRouter routes to v1 or v2 implementation based on feature flag.
+func (r *nfsInstanceReconciler) gcpActionRouter() composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
 

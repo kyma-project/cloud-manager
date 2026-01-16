@@ -132,10 +132,11 @@ func (s *State) ShouldUpdateInstance() bool {
 
 // UpdateCapacityGb adds capacity update to the updateMask.
 func (s *State) UpdateCapacityGb(capacityGb int64) {
-	s.updateMask = append(s.updateMask, "file_shares")
-	if len(s.instance.FileShares) > 0 {
-		s.instance.FileShares[0].CapacityGb = capacityGb
+	if s.instance == nil || len(s.instance.FileShares) == 0 {
+		return
 	}
+	s.updateMask = append(s.updateMask, "file_shares")
+	s.instance.FileShares[0].CapacityGb = capacityGb
 }
 
 // ToGcpInstance converts the NfsInstance CRD spec to a GCP Filestore Instance.
