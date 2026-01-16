@@ -70,17 +70,21 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		}
 
 		if len(instance.FileShares) > 0 {
+			// Update deprecated field for backwards compatibility
 			if nfsInstance.Status.CapacityGb != int(instance.FileShares[0].CapacityGb) {
 				nfsInstance.Status.CapacityGb = int(instance.FileShares[0].CapacityGb)
 				changed = true
 			}
-			if qty, err := resource.ParseQuantity(fmt.Sprintf("%dGi", instance.FileShares[0].CapacityGb)); err == nil {
-				if nfsInstance.Status.Capacity.Cmp(qty) != 0 {
-					nfsInstance.Status.Capacity = qty
-					changed = true
-				}
-			} else {
-				logger.Error(err, "Error parsing capacity quantity")
+
+			// Update primary (non-deprecated) field - must succeed
+			qty, err := resource.ParseQuantity(fmt.Sprintf("%dGi", instance.FileShares[0].CapacityGb))
+			if err != nil {
+				logger.Error(err, "Failed to parse capacity quantity - primary status field cannot be updated", "capacityGb", instance.FileShares[0].CapacityGb)
+				return err, ctx
+			}
+			if nfsInstance.Status.Capacity.Cmp(qty) != 0 {
+				nfsInstance.Status.Capacity = qty
+				changed = true
 			}
 		}
 

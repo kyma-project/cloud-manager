@@ -1,6 +1,7 @@
 package cloudcontrol
 
 import (
+	"fmt"
 	"time"
 
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
@@ -11,6 +12,7 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
@@ -113,8 +115,12 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			Expect(len(nfsInstance.Status.Path) > 0).To(Equal(true))
 		})
 
-		By("And Then NfsInstance has .status.capacity set", func() {
+		By("And Then NfsInstance has both capacity fields set consistently", func() {
 			Expect(nfsInstance.Status.Capacity.IsZero()).To(BeFalse())
+			Expect(nfsInstance.Status.CapacityGb).To(BeNumerically(">", 0))
+			// Verify both fields represent the same value
+			expectedQuantity := resource.MustParse(fmt.Sprintf("%dGi", nfsInstance.Status.CapacityGb))
+			Expect(nfsInstance.Status.Capacity.Cmp(expectedQuantity)).To(Equal(0))
 		})
 
 		// DELETE
@@ -215,8 +221,12 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 				Should(Succeed(), "expected NfsInstance to have Ready state, but it didn't")
 		})
 
-		By("And Then NfsInstance has .status.capacity set", func() {
+		By("And Then NfsInstance has both capacity fields set consistently", func() {
 			Expect(nfsInstance.Status.Capacity.IsZero()).To(BeFalse())
+			Expect(nfsInstance.Status.CapacityGb).To(BeNumerically(">", 0))
+			// Verify both fields represent the same value
+			expectedQuantity := resource.MustParse(fmt.Sprintf("%dGi", nfsInstance.Status.CapacityGb))
+			Expect(nfsInstance.Status.Capacity.Cmp(expectedQuantity)).To(Equal(0))
 		})
 
 		originalCapacity := nfsInstance.Status.CapacityGb
