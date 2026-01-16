@@ -100,3 +100,27 @@ func (s *State) Subnet() *cloudcontrolv1beta1.GcpSubnet {
 func (s *State) SetSubnet(subnet *cloudcontrolv1beta1.GcpSubnet) {
 	s.subnet = subnet
 }
+
+// GetProvisionedMachineType returns the provisioned node type from the GCP Redis Cluster
+func (s *State) GetProvisionedMachineType() string {
+	if s.gcpRedisCluster == nil {
+		return ""
+	}
+	return s.gcpRedisCluster.NodeType.String()
+}
+
+// GetProvisionedShardCount returns the provisioned shard count from the GCP Redis Cluster
+func (s *State) GetProvisionedShardCount() int32 {
+	if s.gcpRedisCluster == nil || s.gcpRedisCluster.ShardCount == nil {
+		return 0
+	}
+	return *s.gcpRedisCluster.ShardCount
+}
+
+// GetProvisionedReplicasPerShard returns the provisioned replicas per shard from the GCP Redis Cluster
+func (s *State) GetProvisionedReplicasPerShard() int32 {
+	if s.gcpRedisCluster == nil || s.gcpRedisCluster.ReplicaCount == nil {
+		return 0
+	}
+	return *s.gcpRedisCluster.ReplicaCount
+}

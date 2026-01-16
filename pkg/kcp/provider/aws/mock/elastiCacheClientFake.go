@@ -329,11 +329,19 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 		CacheParameterGroup: &elasticachetypes.CacheParameterGroupStatus{
 			CacheParameterGroupName: &options.ParameterGroupName,
 		},
-		EngineVersion: &options.EngineVersion,
-		Engine:        ptr.To("redis"),
+		EngineVersion:           &options.EngineVersion,
+		Engine:                  ptr.To("redis"),
+		CacheNodeType:           ptr.To(options.CacheNodeType),
+		AutoMinorVersionUpgrade: ptr.To(options.AutoMinorVersionUpgrade),
 	}
 
 	authTokenEnabled := options.AuthTokenSecretString != nil
+
+	// Create member cluster IDs: primary + replicas
+	memberClusters := []string{options.Name}
+	for i := int32(0); i < options.ReplicasPerNodeGroup; i++ {
+		memberClusters = append(memberClusters, fmt.Sprintf("%s-replica-%d", options.Name, i+1))
+	}
 
 	nodeGroups := createNodeGroups(options.Name, options.ShardCount, options.ReplicasPerNodeGroup)
 	client.replicationGroups[options.Name] = &elasticachetypes.ReplicationGroup{
@@ -343,7 +351,7 @@ func (client *elastiCacheClientFake) CreateElastiCacheReplicationGroup(ctx conte
 		AutoMinorVersionUpgrade:  ptr.To(options.AutoMinorVersionUpgrade),
 		TransitEncryptionEnabled: ptr.To(true),
 		AuthTokenEnabled:         ptr.To(authTokenEnabled),
-		MemberClusters:           []string{options.Name},
+		MemberClusters:           memberClusters,
 		UserGroupIds:             []string{},
 		Engine:                   ptr.To("redis"),
 		AtRestEncryptionEnabled:  ptr.To(true),

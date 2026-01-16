@@ -2,6 +2,8 @@ package redisinstance
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/go-logr/logr"
@@ -76,4 +78,39 @@ func newState(state redisinstancetypes.State,
 
 		resourceGroupName: azurecommon.AzureCloudManagerResourceGroupName(state.Scope().Spec.Scope.Azure.VpcNetwork),
 	}
+}
+
+// GetProvisionedMachineType returns the provisioned machine type from the Azure Redis Instance
+func (s *State) GetProvisionedMachineType() string {
+	if s.azureRedisInstance == nil || s.azureRedisInstance.Properties == nil || s.azureRedisInstance.Properties.SKU == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s%d", *s.azureRedisInstance.Properties.SKU.Family, *s.azureRedisInstance.Properties.SKU.Capacity)
+}
+
+// GetProvisionedMemorySizeGb returns the provisioned memory size in GB from the Azure Redis Instance
+func (s *State) GetProvisionedMemorySizeGb() int32 {
+	if s.azureRedisInstance == nil || s.azureRedisInstance.Properties == nil || s.azureRedisInstance.Properties.SKU == nil {
+		return 0
+	}
+	return *s.azureRedisInstance.Properties.SKU.Capacity
+}
+
+// GetProvisionedReplicaCount returns the provisioned replica count from the Azure Redis Instance
+func (s *State) GetProvisionedReplicaCount() int32 {
+	if s.azureRedisInstance == nil || s.azureRedisInstance.Properties == nil {
+		return 0
+	}
+
+	// Try ReplicasPerPrimary first (newer API)
+	if s.azureRedisInstance.Properties.ReplicasPerPrimary != nil {
+		return *s.azureRedisInstance.Properties.ReplicasPerPrimary
+	}
+
+	// Fall back to ReplicasPerMaster (older API)
+	if s.azureRedisInstance.Properties.ReplicasPerMaster != nil {
+		return *s.azureRedisInstance.Properties.ReplicasPerMaster
+	}
+
+	return 0
 }
