@@ -33,10 +33,12 @@ func NewOldComputeClientProviderV2(gcpClients *gcpclient.GcpClients) gcpclient.C
 		func(ctx context.Context, credentialsFile string) (OldComputeClient, error) {
 			// For Discovery API, we need to create compute.Service with HTTP client
 			// Reuse the same credentials/auth that GcpClients uses
-			httpClient, err := gcpclient.GetCachedGcpClient(ctx, credentialsFile)
+			baseClient, err := gcpclient.GetCachedGcpClient(ctx, credentialsFile)
 			if err != nil {
 				return nil, fmt.Errorf("error obtaining GCP HTTP Client: %w", err)
 			}
+
+			httpClient := gcpclient.NewMetricsHTTPClient("Compute", baseClient.Transport)
 
 			computeService, err := compute.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {
