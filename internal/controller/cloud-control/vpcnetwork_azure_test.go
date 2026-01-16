@@ -17,9 +17,11 @@ limitations under the License.
 package cloudcontrol
 
 import (
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	kcpsubscription "github.com/kyma-project/cloud-manager/pkg/kcp/subscription"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -30,38 +32,40 @@ import (
 
 var _ = Describe("Feature: VpcNetwork", func() {
 
-	It("Scenario: VpcNetwork AWS is created", func() {
-		const subscriptionName = "dd48fd32-7ae9-4fe3-aa24-d66cb1ea06df"
-		const vpcNetworkName = "3262da42-3fa7-485f-9487-bc66a5fcacc2"
-		const region = "us-east-1"
+	It("Scenario: VpcNetwork Azure is created", func() {
+		const tenantId = "55504913-70e5-4cf1-9312-af1b16146f2d"
+		const subscriptionId = "894d9fab-9a89-4c01-b535-fd222ceee970"
+		const name = "4903778f-9e18-474a-a3d7-b4fadbae03bf"
+		const region = "eastus2"
 
 		subscription := &cloudcontrolv1beta1.Subscription{}
 		var vpcNetwork *cloudcontrolv1beta1.VpcNetwork
 
-		awsAccount := infra.AwsMock().NewAccount()
+		azureMock := infra.AzureMock().MockConfigs(subscriptionId, tenantId)
 
-		By("Given AWS Subscription exists", func() {
-			kcpsubscription.Ignore.AddName(subscriptionName)
+		By("Given Azure Subscription exists", func() {
+			kcpsubscription.Ignore.AddName(name)
 			Expect(
 				CreateSubscription(infra.Ctx(), infra, subscription,
-					WithName(subscriptionName),
+					WithName(name),
 					WithSubscriptionSpecGarden("binding-name")),
 			).To(Succeed())
 
 			Expect(
-				SubscriptionPatchStatusReadyAws(infra.Ctx(), infra, subscription, awsAccount.AccountId()),
+				SubscriptionPatchStatusReadyAzure(infra.Ctx(), infra, subscription, tenantId, subscriptionId),
 			).To(Succeed())
 		})
 
 		By("When VpcNetwork is created", func() {
 			vpcNetwork = cloudcontrolv1beta1.NewVpcNetworkBuilder().
+				WithName(name).
 				WithRegion(region).
-				WithSubscription(subscriptionName).
+				WithSubscription(name).
 				WithCidrBlocks("10.250.0.0/16").
 				Build()
 
 			Expect(
-				CreateObj(infra.Ctx(), infra.KCP().Client(), vpcNetwork, WithName(vpcNetworkName)),
+				CreateObj(infra.Ctx(), infra.KCP().Client(), vpcNetwork),
 			).To(Succeed())
 		})
 
@@ -76,31 +80,44 @@ var _ = Describe("Feature: VpcNetwork", func() {
 		})
 
 		By("Then VpcNetwork has subscription label", func() {
-			Expect(vpcNetwork.Labels[cloudcontrolv1beta1.SubscriptionLabel]).To(Equal(subscriptionName))
+			Expect(vpcNetwork.Labels[cloudcontrolv1beta1.SubscriptionLabel]).To(Equal(name))
 		})
 
 		By("Then VpcNetwork has provider label", func() {
-			Expect(vpcNetwork.Labels[cloudcontrolv1beta1.SubscriptionLabelProvider]).To(Equal(string(cloudcontrolv1beta1.ProviderAws)))
+			Expect(vpcNetwork.Labels[cloudcontrolv1beta1.SubscriptionLabelProvider]).To(Equal(string(cloudcontrolv1beta1.ProviderAzure)))
 		})
 
-		By("Then VpcNetwork status has vpcID", func() {
+		var resourceGroupID azureutil.ResourceDetails
+
+		By("Then VpcNetwork status has resource group ID", func() {
 			Expect(vpcNetwork.Status.Identifiers.Vpc).NotTo(BeEmpty())
+			rd, err := azureutil.ParseResourceID(vpcNetwork.Status.Identifiers.ResourceGroup)
+			Expect(err).NotTo(HaveOccurred())
+			resourceGroupID = rd
 		})
 
-		awsMock := awsAccount.Region(region)
+		var vpcID azureutil.ResourceDetails
 
-		var vpc *ec2types.Vpc
+		By("Then VpcNetwork status has vpc network ID", func() {
+			Expect(vpcNetwork.Status.Identifiers.Vpc).NotTo(BeEmpty())
+			rd, err := azureutil.ParseResourceID(vpcNetwork.Status.Identifiers.Vpc)
+			Expect(err).NotTo(HaveOccurred())
+			vpcID = rd
+			Expect(resourceGroupID.ResourceGroup).To(Equal(vpcID.ResourceGroup))
+		})
 
-		By("Then AWS VPC Network exists", func() {
-			aVpc, err := awsMock.DescribeVpc(infra.Ctx(), vpcNetwork.Status.Identifiers.Vpc)
+		var azureVirtualNetwork *armnetwork.VirtualNetwork
+
+		By("Then Azure VPC Network exists", func() {
+			vpc, err := azureMock.GetNetwork(infra.Ctx(), vpcID.ResourceGroup, vpcID.ResourceName)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(aVpc).ToNot(BeNil())
-			vpc = aVpc
+			Expect(vpc).ToNot(BeNil())
+			azureVirtualNetwork = vpc
 		})
 
 		By("Then Azure VPC Network has correct CIDR block", func() {
-			Expect(pie.Map(vpc.CidrBlockAssociationSet, func(x ec2types.VpcCidrBlockAssociation) string {
-				return ptr.Deref(x.CidrBlock, "")
+			Expect(pie.Map(azureVirtualNetwork.Properties.AddressSpace.AddressPrefixes, func(x *string) string {
+				return ptr.Deref(x, "")
 			})).To(Equal(vpcNetwork.Status.CidrBlocks))
 		})
 
@@ -117,10 +134,18 @@ var _ = Describe("Feature: VpcNetwork", func() {
 				Should(Succeed())
 		})
 
-		By("Then AWS VPC Network does not exist", func() {
-			vpc, err := awsMock.DescribeVpc(infra.Ctx(), ptr.Deref(vpc.VpcId, ""))
-			Expect(err).ToNot(HaveOccurred())
+		By("Then Azure VPC Network does not exist", func() {
+			vpc, err := azureMock.GetNetwork(infra.Ctx(), vpcID.ResourceGroup, vpcID.ResourceName)
+			Expect(err).To(HaveOccurred())
+			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
 			Expect(vpc).To(BeNil())
+		})
+
+		By("Then Azure VPC Network does not exist", func() {
+			rg, err := azureMock.GetResourceGroup(infra.Ctx(), resourceGroupID.ResourceGroup)
+			Expect(err).To(HaveOccurred())
+			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
+			Expect(rg).To(BeNil())
 		})
 
 		By("// cleanup: delete Subscription", func() {

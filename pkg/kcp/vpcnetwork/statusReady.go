@@ -12,6 +12,7 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 
 	return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).
 		MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
+			vpcNetwork.Status.CidrBlocks = state.normalizedSpecCidrs
 			vpcNetwork.SetStatusProvisioned()
 		}).
 		OnSuccess(

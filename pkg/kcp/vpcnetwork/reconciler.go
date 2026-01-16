@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
+	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -23,11 +24,13 @@ func New(
 	composedStateFactory composed.StateFactory,
 	kcpCommonStateFactory kcpcommonaction.StateFactory,
 	awsStateFactory awsvpcnetwork.StateFactory,
+	azureStateFactory azurevpcnetwork.StateFactory,
 ) VpcNetworkReconciler {
 	return &vpcNetworkReconciler{
 		composedStateFactory:  composedStateFactory,
 		kcpCommonStateFactory: kcpCommonStateFactory,
 		awsStateFactory:       awsStateFactory,
+		azureStateFactory:     azureStateFactory,
 	}
 }
 
@@ -35,7 +38,8 @@ type vpcNetworkReconciler struct {
 	composedStateFactory  composed.StateFactory
 	kcpCommonStateFactory kcpcommonaction.StateFactory
 
-	awsStateFactory awsvpcnetwork.StateFactory
+	awsStateFactory   awsvpcnetwork.StateFactory
+	azureStateFactory azurevpcnetwork.StateFactory
 }
 
 func (r *vpcNetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -61,7 +65,7 @@ func (r *vpcNetworkReconciler) newAction() composed.Action {
 	providerFlow := composed.Switch(
 		nil,
 		composed.NewCase(kcpcommonaction.AwsProviderPredicate, awsvpcnetwork.New(r.awsStateFactory)),
-		composed.NewCase(kcpcommonaction.AzureProviderPredicate, composed.Noop),
+		composed.NewCase(kcpcommonaction.AzureProviderPredicate, azurevpcnetwork.New(r.azureStateFactory)),
 		composed.NewCase(kcpcommonaction.GcpProviderPredicate, composed.Noop),
 		composed.NewCase(kcpcommonaction.OpenStackProviderPredicate, composed.Noop),
 	)
