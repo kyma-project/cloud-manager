@@ -8,9 +8,9 @@ package v1beta1
 // +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_SSD" || size(self.fileShareName) <= 16), message="BASIC_SSD tier fileShareName length must be 16 or less characters"
 // +kubebuilder:validation:XValidation:rule=(self.tier != "BASIC_SSD" || self.capacityGb >= oldSelf.capacityGb), message="BASIC_SSD tier capacityGb cannot be reduced"
 // +kubebuilder:validation:XValidation:rule=(self.tier != "ZONAL" || (self.capacityGb >= 1024 && self.capacityGb <= 9984 && (self.capacityGb - 1024) % 256 == 0 || self.capacityGb >= 10240 && self.capacityGb <= 102400 && (self.capacityGb - 10240) % 2560 == 0)), message="ZONAL tier capacityGb must be between 1024 and 9984, and divisible by 256, or between 10240 and 102400, and divisible by 2560"
-// +kubebuilder:validation:XValidation:rule=(self.tier != "ZONAL" || size(self.fileShareName) <= 32), message="ZONAL tier fileShareName length must be 32 or less characters"
+// +kubebuilder:validation:XValidation:rule=(self.tier != "ZONAL" || size(self.fileShareName) <= 63), message="ZONAL tier fileShareName length must be 63 or less characters"
 // +kubebuilder:validation:XValidation:rule=(self.tier != "REGIONAL" || (self.capacityGb >= 1024 && self.capacityGb <= 9984 && (self.capacityGb - 1024) % 256 == 0 || self.capacityGb >= 10240 && self.capacityGb <= 102400 && (self.capacityGb - 10240) % 2560 == 0)), message="REGIONAL tier capacityGb must be between 1024 and 9984, and divisible by 256, or between 10240 and 102400, and divisible by 2560"
-// +kubebuilder:validation:XValidation:rule=(self.tier != "REGIONAL" || size(self.fileShareName) <= 32), message="REGIONAL tier fileShareName length must be 32 or less characters"
+// +kubebuilder:validation:XValidation:rule=(self.tier != "REGIONAL" || size(self.fileShareName) <= 63), message="REGIONAL tier fileShareName length must be 63 or less characters"
 type NfsOptionsGcp struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Location is immutable."

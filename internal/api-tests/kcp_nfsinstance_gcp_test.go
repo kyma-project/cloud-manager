@@ -316,14 +316,14 @@ var _ = Describe("Feature: KCP NfsInstance GCP", Ordered, func() {
 		}
 
 		canNotCreateKcp(
-			"NfsInstance GCP ZONAL tier cannot be created with fileShareName longer than 32 characters",
+			"NfsInstance GCP ZONAL tier cannot be created with fileShareName longer than 63 characters",
 			newTestKcpNfsInstanceGcpBuilder().
 				WithTier(cloudcontrolv1beta1.ZONAL).
 				WithCapacityGb(1024).
-				WithFileShareName("vol123456789012345678901234567890123").
+				WithFileShareName("vol1234567890123456789012345678901234567890123456789012345678901234").
 				WithLocation("us-central1").
 				WithConnectMode(cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS),
-			"ZONAL tier fileShareName length must be 32 or less characters",
+			"ZONAL tier fileShareName length must be 63 or less characters",
 		)
 	})
 
@@ -394,14 +394,14 @@ var _ = Describe("Feature: KCP NfsInstance GCP", Ordered, func() {
 		}
 
 		canNotCreateKcp(
-			"NfsInstance GCP REGIONAL tier cannot be created with fileShareName longer than 32 characters",
+			"NfsInstance GCP REGIONAL tier cannot be created with fileShareName longer than 63 characters",
 			newTestKcpNfsInstanceGcpBuilder().
 				WithTier(cloudcontrolv1beta1.REGIONAL).
 				WithCapacityGb(1024).
-				WithFileShareName("vol123456789012345678901234567890123").
+				WithFileShareName("vol1234567890123456789012345678901234567890123456789012345678901234").
 				WithLocation("us-central1").
 				WithConnectMode(cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS),
-			"REGIONAL tier fileShareName length must be 32 or less characters",
+			"REGIONAL tier fileShareName length must be 63 or less characters",
 		)
 	})
 })

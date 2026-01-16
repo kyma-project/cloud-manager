@@ -46,7 +46,7 @@ func (b *testGcpNfsVolumeBuilder) WithValidFileShareName() *testGcpNfsVolumeBuil
 var _ = Describe("Feature: SKR GcpNfsVolume", Ordered, func() {
 
 	fileShareName17char := "file12345678901234567"
-	fileShareName33char := "file123456789012345678901234567890123"
+	fileShareName64char := "file1234567890123456789012345678901234567890123456789012345678901234"
 
 	// REGIONAL and ZONAL tiers have same constraints
 	for _, tier := range []cloudresourcesv1beta1.GcpFileTier{cloudresourcesv1beta1.REGIONAL, cloudresourcesv1beta1.ZONAL} {
@@ -65,8 +65,8 @@ var _ = Describe("Feature: SKR GcpNfsVolume", Ordered, func() {
 		}
 		canNotCreateSkr(
 			fmt.Sprintf("GcpNfsVolume %s tier instance can not be created with invalid fileShareName length", tier),
-			newTestGcpNfsVolumeBuilder().WithTier(tier).WithCapacityGb(1024).WithFileShareName(fileShareName33char),
-			fmt.Sprintf("%s tier fileShareName length must be 32 or less characters", tier),
+			newTestGcpNfsVolumeBuilder().WithTier(tier).WithCapacityGb(1024).WithFileShareName(fileShareName64char),
+			fmt.Sprintf("%s tier fileShareName length must be 63 or less characters", tier),
 		)
 		canChangeSkr(
 			fmt.Sprintf("GcpNfsVolume %s tier instance capacity can be increased", tier),
