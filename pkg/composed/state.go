@@ -220,7 +220,33 @@ func PatchObjMergeAnnotation(ctx context.Context, k, v string, obj client.Object
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 
-func PatchObjMergeLabels(ctx context.Context, k, v string, obj client.Object, clnt client.Writer) (bool, error) {
+func PatchObjMergeLabels(ctx context.Context, obj client.Object, clnt client.Writer, labels map[string]string) (bool, error) {
+	if obj.GetLabels() == nil {
+		obj.SetLabels(map[string]string{})
+	}
+	data := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"labels": labels,
+		},
+	}
+	p, err := json.Marshal(data)
+	if err != nil {
+		return false, err
+	}
+	allEqual := true
+	for k, v := range labels {
+		if obj.GetLabels()[k] != v {
+			obj.GetLabels()[k] = v
+			allEqual = false
+		}
+	}
+	if allEqual {
+		return false, nil
+	}
+	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
+}
+
+func PatchObjMergeLabel(ctx context.Context, obj client.Object, clnt client.Writer, k, v string) (bool, error) {
 	if obj.GetLabels() != nil && obj.GetLabels()[k] == v {
 		return false, nil
 	}

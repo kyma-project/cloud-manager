@@ -2,7 +2,9 @@ package vpcnetwork
 
 import (
 	"context"
+	"fmt"
 
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
@@ -28,6 +30,10 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, composed.State, error) {
+	if baseState.Subscription().Status.Provider != cloudcontrolv1beta1.ProviderAws {
+		return ctx, nil, fmt.Errorf("subscription for VpcNetwork must be of provider AWS, but subscription %q is of provider %q", baseState.Subscription().Name, baseState.Subscription().Status.Provider)
+	}
+
 	roleName := awsutil.RoleArnDefault(baseState.Subscription().Status.SubscriptionInfo.Aws.Account)
 
 	logger := composed.LoggerFromCtx(ctx)

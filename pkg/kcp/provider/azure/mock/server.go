@@ -3,9 +3,11 @@ package mock
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	dnsresplverclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
 	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
-	"sync"
+	azurevpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork/client"
 
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
@@ -35,6 +37,12 @@ type server struct {
 
 func (s *server) StorageProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.Client] {
 	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azurerwxvolumebackupclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
+	}
+}
+
+func (s *server) VpcNetworkProvider() azureclient.ClientProvider[azurevpcnetworkclient.Client] {
+	return func(_ context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azurevpcnetworkclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }

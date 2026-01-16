@@ -14,7 +14,10 @@ func labelObj(ctx context.Context, st composed.State) (error, context.Context) {
 		return nil, ctx
 	}
 
-	added, err := composed.PatchObjMergeLabels(ctx, cloudcontrolv1beta1.SubscriptionLabel, state.subscription.Name, state.Obj(), state.Cluster().K8sClient())
+	added, err := composed.PatchObjMergeLabels(ctx, state.Obj(), state.Cluster().K8sClient(), map[string]string{
+		cloudcontrolv1beta1.SubscriptionLabel:         state.subscription.Name,
+		cloudcontrolv1beta1.SubscriptionLabelProvider: string(state.subscription.Status.Provider),
+	})
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error setting subscription label", composed.StopWithRequeue, ctx)
 	}

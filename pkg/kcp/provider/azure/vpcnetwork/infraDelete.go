@@ -6,15 +6,14 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/ptr"
 )
 
-func infraCreateUpdate(ctx context.Context, st composed.State) (error, context.Context) {
+func infraDelete(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	name := fmt.Sprintf("cm-%s", state.ObjAsVpcNetwork().Name)
 
-	out, err := CreateInfra(ctx, WithName(name), WithCidrBlocks(state.ObjAsVpcNetwork().Spec.CidrBlocks), WithClient(state.awsClient))
+	err := DeleteInfra(ctx, name, state.azureClient)
 	if err != nil {
 		return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).
 			MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
@@ -22,20 +21,14 @@ func infraCreateUpdate(ctx context.Context, st composed.State) (error, context.C
 			}).
 			OnSuccess(
 				composed.Requeue,
-				composed.LogError(err, "Provider error on KCP VpcNetwork create/update"),
+				composed.LogError(err, "Provider error on KCP VpcNetwork delete"),
 			).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
 	return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).
 		MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
-			vpcNetwork.Status.Identifiers.Vpc = ptr.Deref(out.Vpc.VpcId, "")
-			vpcNetwork.Status.Identifiers.InternetGateway = ptr.Deref(out.InternetGateway.InternetGatewayId, "")
+			vpcNetwork.Status.Identifiers = cloudcontrolv1beta1.VpcNetworkStatusIdentifiers{}
 		}).
-		OnSuccess(
-			// log only if something was created/updated
-			composed.LogIf(out.Updated, "AWS KCP VpcNetwork is successfully updated"),
-			composed.LogIf(out.Created, "AWS KCP VpcNetwork is successfully created"),
-		).
 		Run(ctx, state.Cluster().K8sClient())
 }
