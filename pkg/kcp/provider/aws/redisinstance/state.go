@@ -229,5 +229,11 @@ func (s *State) GetProvisionedReplicaCount() int32 {
 	if s.elastiCacheReplicationGroup == nil || len(s.elastiCacheReplicationGroup.MemberClusters) == 0 {
 		return 0
 	}
-	return int32(len(s.elastiCacheReplicationGroup.MemberClusters))
+
+	// Subtract 1 to exclude the primary node, counting only replicas
+	memberCount := len(s.elastiCacheReplicationGroup.MemberClusters)
+	if memberCount <= 1 {
+		return 0
+	}
+	return int32(memberCount - 1)
 }
