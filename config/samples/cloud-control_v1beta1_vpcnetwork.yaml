@@ -1,60 +1,19 @@
 apiVersion: cloud-control.kyma-project.io/v1beta1
 kind: VpcNetwork
 metadata:
-  labels:
-    app.kubernetes.io/name: cloud-manager
-    app.kubernetes.io/managed-by: kustomize
   name: vpcnetwork-sample
 spec:
-  subscription: binding-name
+  subscription: subscription-name
   region: us-east1
   cidrBlocks:
-    - 10.250.0.0/15
-  addressSpace:
-    - cidrBlocks:
-        - 10.250.0.0/16
-      name: 92fcb2d3-a7ba-4b05-a7a7-6c9fb6278519
-      objectReference:
-        apiVersion: infrastructuremanager.kyma-project.io/v1
-        kind: Runtime
-        name: 92fcb2d3-a7ba-4b05-a7a7-6c9fb6278519
-    - cidrBlocks:
-        - 10.251.0.0/22
-      name: 1dbb91f7-e4b8-44ef-b117-e199bfbe2747
-      objectReference:
-        apiVersion: cloud-control.kyma-project.io/v1beta1
-        kind: IpRange
-        name: 1dbb91f7-e4b8-44ef-b117-e199bfbe2747
-    - cidrBlocks:
-        - 10.250.10.0/28
-      name: a8690618-9468-4b1b-b00f-0918884a71ea
-      objectReference:
-        apiVersion: cloud-control.kyma-project.io/v1beta1
-        kind: VpcPeering
-        name: a8690618-9468-4b1b-b00f-0918884a71ea
-    - cidrBlocks:
-        - 10.150.0.0/16 # remote vpc
-        - 10.151.0.0/16 # its peering connection A
-        - 10.152.0.0/16 # its peering connection B
-      name: 6cb23998-f18e-44b8-b3c7-923894ce1078
-      objectReference:
-        apiVersion: cloud-control.kyma-project.io/v1beta1
-        kind: VpcPeering
-        name: 6cb23998-f18e-44b8-b3c7-923894ce1078
-    - cidrBlocks:
-        - 10.151.10.0/28 # remove vpc
-      name: fbddf4bd-a79f-4630-ad20-4592a9e7574d
-      objectReference:
-        apiVersion: cloud-control.kyma-project.io/v1beta1
-        kind: VpcPeering
-        name: fbddf4bd-a79f-4630-ad20-4592a9e7574d
+    - 10.250.0.0/16
 status:
   state: Provisioned
   conditions:
     - message: Provisioned
       reason: Provisioned
       status: 'True'
-      type: Provisioned
+      type: Ready
       lastTransitionTime: '2025-12-01T10:41:08Z'
   cidrBlocks:
     - 10.250.0.0/15
@@ -63,18 +22,3 @@ status:
     router: router-id
     internetGateway: igw-id
     resourceGroup: rg-name
-  addressSpace:
-    - name: 92fcb2d3-a7ba-4b05-a7a7-6c9fb6278519
-      state: Reserved
-    - name: 1dbb91f7-e4b8-44ef-b117-e199bfbe2747
-      state: Reserved
-    - name: a8690618-9468-4b1b-b00f-0918884a71ea
-      state: Invalid
-      message: CIDR 10.250.10.0/28 overlaps with VpcNetwork
-    - name: 6cb23998-f18e-44b8-b3c7-923894ce1078
-      state: Reserved
-    - name: fbddf4bd-a79f-4630-ad20-4592a9e7574d
-      state: Invalid
-      conflictsWith:
-        - name: 6cb23998-f18e-44b8-b3c7-923894ce1078
-          cidr: 10.151.0.0/16
