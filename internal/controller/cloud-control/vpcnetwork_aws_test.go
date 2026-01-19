@@ -17,12 +17,15 @@ limitations under the License.
 package cloudcontrol
 
 import (
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	kcpsubscription "github.com/kyma-project/cloud-manager/pkg/kcp/subscription"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: VpcNetwork", func() {
@@ -76,20 +79,32 @@ var _ = Describe("Feature: VpcNetwork", func() {
 			Expect(vpcNetwork.Labels[cloudcontrolv1beta1.SubscriptionLabel]).To(Equal(subscriptionName))
 		})
 
+		By("Then VpcNetwork has provider label", func() {
+			Expect(vpcNetwork.Labels[cloudcontrolv1beta1.SubscriptionLabelProvider]).To(Equal(string(cloudcontrolv1beta1.ProviderAws)))
+		})
+
 		By("Then VpcNetwork status has vpcID", func() {
 			Expect(vpcNetwork.Status.Identifiers.Vpc).NotTo(BeEmpty())
 		})
 
 		awsMock := awsAccount.Region(region)
 
-		var vpcID string
+		var vpc *ec2types.Vpc
 
 		By("Then AWS VPC Network exists", func() {
-			vpc, err := awsMock.DescribeVpc(infra.Ctx(), vpcNetwork.Status.Identifiers.Vpc)
+			aVpc, err := awsMock.DescribeVpc(infra.Ctx(), vpcNetwork.Status.Identifiers.Vpc)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(vpc).ToNot(BeNil())
-			vpcID = *vpc.VpcId
+			Expect(aVpc).ToNot(BeNil())
+			vpc = aVpc
 		})
+
+		By("Then AWS VPC Network has correct CIDR block", func() {
+			Expect(pie.Map(vpc.CidrBlockAssociationSet, func(x ec2types.VpcCidrBlockAssociation) string {
+				return ptr.Deref(x.CidrBlock, "")
+			})).To(Equal(vpcNetwork.Status.CidrBlocks))
+		})
+
+		// DELETE ===============================================
 
 		By("When KCP VpcNetwork is deleted", func() {
 			Expect(Delete(infra.Ctx(), infra.KCP().Client(), vpcNetwork)).
@@ -103,7 +118,7 @@ var _ = Describe("Feature: VpcNetwork", func() {
 		})
 
 		By("Then AWS VPC Network does not exist", func() {
-			vpc, err := awsMock.DescribeVpc(infra.Ctx(), vpcID)
+			vpc, err := awsMock.DescribeVpc(infra.Ctx(), ptr.Deref(vpc.VpcId, ""))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(vpc).To(BeNil())
 		})

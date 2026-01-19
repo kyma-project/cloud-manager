@@ -61,3 +61,18 @@ func SubscriptionPatchStatusReadyAws(ctx context.Context, infra testinfra.Infra,
 		}).
 		Patch(ctx, infra.KCP().Client())
 }
+
+func SubscriptionPatchStatusReadyAzure(ctx context.Context, infra testinfra.Infra, subscription *cloudcontrolv1beta1.Subscription, azureTenantId string, azureSubscriptionId string) error {
+	return composed.NewStatusPatcher(subscription).
+		MutateStatus(func(sub *cloudcontrolv1beta1.Subscription) {
+			sub.Status.Provider = cloudcontrolv1beta1.ProviderAzure
+			sub.Status.SubscriptionInfo = &cloudcontrolv1beta1.SubscriptionInfo{
+				Azure: &cloudcontrolv1beta1.SubscriptionInfoAzure{
+					TenantId:       azureTenantId,
+					SubscriptionId: azureSubscriptionId,
+				},
+			}
+			sub.SetStatusReady()
+		}).
+		Patch(ctx, infra.KCP().Client())
+}

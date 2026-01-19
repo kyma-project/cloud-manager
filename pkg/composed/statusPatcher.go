@@ -164,6 +164,21 @@ func Log(msg string) StatusPatchErrorHandler {
 	}
 }
 
+func LogIf(condition bool, msg string) StatusPatchErrorHandler {
+	return func(ctx context.Context, err error) (bool, error) {
+		if !condition {
+			return false, nil
+		}
+		logger := LoggerFromCtx(ctx)
+		if err == nil {
+			logger.Info(msg)
+		} else {
+			logger.Error(err, msg)
+		}
+		return false, err
+	}
+}
+
 // NewStatusPatcherComposed handles proper status changes and composed Action results. This patcher embeds the StatusPatcher
 // and introduces new functions:
 //   - Run() that returns Action results

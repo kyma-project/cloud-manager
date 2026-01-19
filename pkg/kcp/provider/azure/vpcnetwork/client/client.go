@@ -10,7 +10,7 @@ import (
 )
 
 type Client interface {
-	SubscriptionID() string
+	SubscriptionId() string
 
 	azureclient.ResourceGroupClient
 	azureclient.NetworkClient
@@ -65,6 +65,6 @@ type client struct {
 	subscriptionID string
 }
 
-func (c *client) SubscriptionID() string {
+func (c *client) SubscriptionId() string {
 	return c.subscriptionID
 }
