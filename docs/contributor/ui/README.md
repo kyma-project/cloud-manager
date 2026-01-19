@@ -28,7 +28,7 @@ description: >-
 It is imperative that `resource.kind` `resource.group` and `resource.version` matches its `CustomResourceDefinition`. If
 there are no matches, Busola doesn't render the UI and path rendering the resource inaccessible in Busola.
 
-[Official List Documentation](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility)
+For more information see,  the [Extensibility documentation](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility) in the `/busola` repository.
 
 
 ### List
