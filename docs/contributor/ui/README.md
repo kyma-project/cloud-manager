@@ -9,6 +9,8 @@ Kyma manages its modules' user interfaces (UIs) using ConfigMaps. Each ConfigMap
 * `form` - used to define a GUI form when creating a new resource or editing an existing one. 
 * `translations` - used to define elements in different languages (English, German, etc.)
 
+For more information see,  the [Extensibility documentation](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility) in the `/busola` repository.
+
 Examples and important notes of each part are below
 
 ### General
@@ -27,8 +29,6 @@ description: >-
 ```
 It is imperative that `resource.kind` `resource.group` and `resource.version` matches its `CustomResourceDefinition`. If
 there are no matches, Busola doesn't render the UI and path rendering the resource inaccessible in Busola.
-
-For more information see,  the [Extensibility documentation](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility) in the `/busola` repository.
 
 
 ### List
