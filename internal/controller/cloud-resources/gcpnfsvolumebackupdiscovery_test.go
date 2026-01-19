@@ -4,14 +4,12 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/api/file/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
@@ -19,21 +17,13 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 	It("Scenario: SKR GcpNfsVolumeBackupDiscovery is created", func() {
 
 		name := uuid.NewString()
-		scope := &cloudcontrolv1beta1.Scope{}
+		scopeName := infra.SkrKymaRef().Name
+		shootName := scopeName // ShootName is always set to scope.Name in GivenScopeGcpExists
 
 		By("Given KCP Scope exists", func() {
-			// Given Scope exists
 			Expect(
-				infra.GivenScopeGcpExists(infra.SkrKymaRef().Name),
+				infra.GivenScopeGcpExists(scopeName),
 			).NotTo(HaveOccurred())
-
-			Eventually(func() (string, error) {
-				if err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope); err != nil {
-					return "", client.IgnoreNotFound(err)
-				}
-				return scope.Spec.ShootName, nil
-			}).
-				ShouldNot(BeEmpty(), "expected Scope to exist and have ShootName populated")
 		})
 
 		By("And Given shared backups exist for shoot", func() {
@@ -46,14 +36,14 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 				SourceInstance:     fmt.Sprintf("projects/kyma/locations/us-central1-a/instances/%s-instance-1", name),
 				SourceInstanceTier: "STANDARD",
 				Labels: map[string]string{
-					"managed-by":                                     "cloud-manager",
-					"scope-name":                                     scope.Name,
-					util.GcpLabelSkrVolumeName:                       fmt.Sprintf("%s-volume-1", name),
-					util.GcpLabelSkrVolumeNamespace:                  "default",
-					util.GcpLabelSkrBackupName:                       fmt.Sprintf("%s-backup-1", name),
-					util.GcpLabelSkrBackupNamespace:                  "default",
-					util.GcpLabelShootName:                           scope.Spec.ShootName,
-					fmt.Sprintf("cm-allow-%s", scope.Spec.ShootName): util.GcpLabelBackupAccessibleFrom,
+					"managed-by":                          "cloud-manager",
+					"scope-name":                          scopeName,
+					util.GcpLabelSkrVolumeName:            fmt.Sprintf("%s-volume-1", name),
+					util.GcpLabelSkrVolumeNamespace:       "default",
+					util.GcpLabelSkrBackupName:            fmt.Sprintf("%s-backup-1", name),
+					util.GcpLabelSkrBackupNamespace:       "default",
+					util.GcpLabelShootName:                shootName,
+					fmt.Sprintf("cm-allow-%s", shootName): util.GcpLabelBackupAccessibleFrom,
 				},
 				CapacityGb:   100,
 				StorageBytes: 107374182400, // 100 GB in bytes
@@ -67,14 +57,14 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 				SourceInstance:     fmt.Sprintf("projects/kyma/locations/us-central1-a/instances/%s-instance-2", name),
 				SourceInstanceTier: "PREMIUM",
 				Labels: map[string]string{
-					"managed-by":                                     "cloud-manager",
-					"scope-name":                                     scope.Name,
-					util.GcpLabelSkrVolumeName:                       fmt.Sprintf("%s-volume-2", name),
-					util.GcpLabelSkrVolumeNamespace:                  "default",
-					util.GcpLabelSkrBackupName:                       fmt.Sprintf("%s-backup-2", name),
-					util.GcpLabelSkrBackupNamespace:                  "default",
-					util.GcpLabelShootName:                           scope.Spec.ShootName,
-					fmt.Sprintf("cm-allow-%s", scope.Spec.ShootName): util.GcpLabelBackupAccessibleFrom,
+					"managed-by":                          "cloud-manager",
+					"scope-name":                          scopeName,
+					util.GcpLabelSkrVolumeName:            fmt.Sprintf("%s-volume-2", name),
+					util.GcpLabelSkrVolumeNamespace:       "default",
+					util.GcpLabelSkrBackupName:            fmt.Sprintf("%s-backup-2", name),
+					util.GcpLabelSkrBackupNamespace:       "default",
+					util.GcpLabelShootName:                shootName,
+					fmt.Sprintf("cm-allow-%s", shootName): util.GcpLabelBackupAccessibleFrom,
 				},
 				CapacityGb:   200,
 				StorageBytes: 214748364800, // 200 GB in bytes
@@ -84,7 +74,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 		gcpNfsVolumeBackupDiscovery := &cloudresourcesv1beta1.GcpNfsVolumeBackupDiscovery{}
 
 		By("When GcpNfsVolumeBackupDiscovery is created", func() {
-			Expect(CreateGcpNfsVolumeBackupDiscovery(
+			Expect(CreateObj(
 				infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackupDiscovery,
 				WithName(name),
 			)).To(Succeed())

@@ -11,6 +11,11 @@ import (
 	"google.golang.org/api/googleapi"
 )
 
+var (
+	scopeNameRegex = regexp.MustCompile(`.+labels\.scope-name="([^"]+)"`)
+	cmAllowRegex   = regexp.MustCompile(`labels\.cm-allow-([^=\s"]+)`)
+)
+
 type FileBackupClientFakeUtils interface {
 	CreateFakeBackup(backup *file.Backup)
 	ClearAllBackups()
@@ -56,15 +61,8 @@ func (s *nfsBackupStore) ListFilesBackups(ctx context.Context, project, filter s
 		return nil, context.Canceled
 	}
 
-	// try to match scope-name filter (used for SKR backups)
-	scopeRegex := `.+labels\.scope-name="(?P<Scope>[^"]+)"`
-	scopeRe := regexp.MustCompile(scopeRegex)
-	scopeMatches := scopeRe.FindStringSubmatch(filter)
-
-	// try to match cm-allow- filter (used for shared backups discovery)
-	cmAllowRegex := `labels\.cm-allow-([^=\s"]+)`
-	cmAllowRe := regexp.MustCompile(cmAllowRegex)
-	cmAllowMatches := cmAllowRe.FindStringSubmatch(filter)
+	scopeMatches := scopeNameRegex.FindStringSubmatch(filter)
+	cmAllowMatches := cmAllowRegex.FindStringSubmatch(filter)
 
 	if len(scopeMatches) == 0 && len(cmAllowMatches) == 0 {
 		return []*file.Backup{}, nil
@@ -85,16 +83,16 @@ func (s *nfsBackupStore) ListFilesBackups(ctx context.Context, project, filter s
 			continue
 		}
 
-		// match scope-name filter
+		// match scope-name filter (used for SKR backups)
 		if len(scopeMatches) > 0 {
-			scopeName := scopeMatches[scopeRe.SubexpIndex("Scope")]
+			scopeName := scopeMatches[1]
 			if backup.Labels["scope-name"] == scopeName {
 				result = append(result, backup)
 			}
 			continue
 		}
 
-		// match cm-allow- filter (shared backups)
+		// match cm-allow- filter (used for shared backups discovery)
 		if len(cmAllowMatches) > 0 {
 			shootName := cmAllowMatches[1]
 			allowLabel := fmt.Sprintf("cm-allow-%s", shootName)
