@@ -175,5 +175,3 @@ If a matching CustomResource is found, Busola renders the UI and path.
 
 
 You can also spin up a local cluster with kyma installed via k3d.
-
-Official documentation and instructions can be found [here](https://kyma-project.io/#/02-get-started/01-quick-install).
