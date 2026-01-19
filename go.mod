@@ -42,7 +42,7 @@ require (
 	github.com/gardener/gardener-extension-provider-gcp v1.48.2
 	github.com/gardener/gardener-extension-provider-openstack v1.51.0
 	github.com/go-logr/logr v1.4.3
-	github.com/go-viper/mapstructure/v2 v2.4.0
+	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.16.0
 	github.com/gophercloud/gophercloud/v2 v2.10.0
