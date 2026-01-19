@@ -24,6 +24,7 @@ type PodBuilder interface {
 	WithLabel(key, value string) PodBuilder
 	WithAnnotation(key, value string) PodBuilder
 	WithPodDetails(arr ...PodDetailFunc) PodBuilder
+	WithCommand(command []string) PodBuilder
 
 	DumpYaml(scheme *runtime.Scheme) ([]byte, error)
 	DumpYamlText(scheme *runtime.Scheme) string
@@ -140,6 +141,12 @@ func (b *podBuilder) WithAnnotation(key, value string) PodBuilder {
 		o.GetAnnotations()[key] = value
 	}
 
+	return b
+}
+
+// WithCommand sets the command to be executed in the container. Default is ["/bin/sh", "-c"]
+func (b *podBuilder) WithCommand(command []string) PodBuilder {
+	b.pod.Spec.Containers[0].Command = command
 	return b
 }
 
