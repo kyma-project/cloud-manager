@@ -98,7 +98,7 @@ var _ = Describe("Feature: VpcNetwork", func() {
 			vpc = aVpc
 		})
 
-		By("Then Azure VPC Network has correct CIDR block", func() {
+		By("Then AWS VPC Network has correct CIDR block", func() {
 			Expect(pie.Map(vpc.CidrBlockAssociationSet, func(x ec2types.VpcCidrBlockAssociation) string {
 				return ptr.Deref(x.CidrBlock, "")
 			})).To(Equal(vpcNetwork.Status.CidrBlocks))

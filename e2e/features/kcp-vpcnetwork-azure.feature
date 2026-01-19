@@ -1,4 +1,4 @@
-Feature: VpcNetwork AWS
+Feature: VpcNetwork Azure
 
   @kcp @azure @vpcnetwork
   Scenario: VpcNetwork Azure is created and deleted

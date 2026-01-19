@@ -90,7 +90,7 @@ var _ = Describe("Feature: VpcNetwork", func() {
 		var resourceGroupID azureutil.ResourceDetails
 
 		By("Then VpcNetwork status has resource group ID", func() {
-			Expect(vpcNetwork.Status.Identifiers.Vpc).NotTo(BeEmpty())
+			Expect(vpcNetwork.Status.Identifiers.ResourceGroup).NotTo(BeEmpty())
 			rd, err := azureutil.ParseResourceID(vpcNetwork.Status.Identifiers.ResourceGroup)
 			Expect(err).NotTo(HaveOccurred())
 			resourceGroupID = rd
@@ -134,7 +134,7 @@ var _ = Describe("Feature: VpcNetwork", func() {
 				Should(Succeed())
 		})
 
-		By("Then Azure VPC Network does not exist", func() {
+		By("Then Azure Resource Group does not exist", func() {
 			vpc, err := azureMock.GetNetwork(infra.Ctx(), vpcID.ResourceGroup, vpcID.ResourceName)
 			Expect(err).To(HaveOccurred())
 			Expect(azuremeta.IsNotFound(err)).To(BeTrue())
