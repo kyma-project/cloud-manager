@@ -24,7 +24,7 @@ func NewServiceUsageClientProvider() ClientProvider[ServiceUsageClient] {
 				return nil, err
 			}
 
-			httpClient := NewMetricsHTTPClient("ServiceUsage", baseClient.Transport)
+			httpClient := NewMetricsHTTPClient(baseClient.Transport)
 
 			serviceUsageClient, err := serviceusage.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {

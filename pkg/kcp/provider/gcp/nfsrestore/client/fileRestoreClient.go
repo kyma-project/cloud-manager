@@ -24,7 +24,7 @@ func NewFileRestoreClientProvider() client.ClientProvider[FileRestoreClient] {
 				return nil, err
 			}
 
-			httpClient := client.NewMetricsHTTPClient("File", baseClient.Transport)
+			httpClient := client.NewMetricsHTTPClient(baseClient.Transport)
 
 			fsClient, err := file.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {

@@ -72,7 +72,7 @@ func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient]
 				return nil, err
 			}
 
-			httpClient := client.NewMetricsHTTPClient("ServiceNetworking", baseClient.Transport)
+			httpClient := client.NewMetricsHTTPClient(baseClient.Transport)
 
 			svcNetClient, err := servicenetworking.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {

@@ -38,7 +38,7 @@ func NewOldComputeClientProviderV2(gcpClients *gcpclient.GcpClients) gcpclient.C
 				return nil, fmt.Errorf("error obtaining GCP HTTP Client: %w", err)
 			}
 
-			httpClient := gcpclient.NewMetricsHTTPClient("Compute", baseClient.Transport)
+			httpClient := gcpclient.NewMetricsHTTPClient(baseClient.Transport)
 
 			computeService, err := compute.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {
