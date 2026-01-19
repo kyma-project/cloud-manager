@@ -1,4 +1,5 @@
 name: E2E tests
+run-name: E2E tests ${{ inputs.provider }}
 on:
   pull_request:
   workflow_dispatch:
