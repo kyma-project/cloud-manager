@@ -69,7 +69,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	computeTokenSource := oauth2adapt.TokenSourceFromTokenProvider(computeTokenProvider)
 
 	// Compute clients use REST protocol, wrap with metrics middleware
-	computeHTTPClient := NewMetricsHTTPClient("Compute", oauth2.NewClient(ctx, computeTokenSource).Transport)
+	computeHTTPClient := NewMetricsHTTPClient(oauth2.NewClient(ctx, computeTokenSource).Transport)
 
 	computeNetworks, err := compute.NewNetworksRESTClient(ctx,
 		option.WithHTTPClient(computeHTTPClient))
@@ -123,7 +123,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 
 	ncDialOpts := []option.ClientOption{
 		option.WithTokenSource(networkConnectivityTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("NetworkConnectivity", "CrossNetworkAutomation"))),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor())),
 	}
 	ncCrossNetworkAutomation, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, ncDialOpts...)
 	if err != nil {
@@ -139,7 +139,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	redisClusterTokenSource := oauth2adapt.TokenSourceFromTokenProvider(redisClusterTokenProvider)
 	redisClusterDialOpts := []option.ClientOption{
 		option.WithTokenSource(redisClusterTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("RedisCluster", "CloudRedisCluster"))),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor())),
 	}
 	redisCluster, err := rediscluster.NewCloudRedisClusterClient(ctx, redisClusterDialOpts...)
 	if err != nil {
@@ -154,7 +154,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	redisInstanceTokenSource := oauth2adapt.TokenSourceFromTokenProvider(redisInstanceTokenProvider)
 	redisInstanceDialOpts := []option.ClientOption{
 		option.WithTokenSource(redisInstanceTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor("RedisInstance", "CloudRedis"))),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor())),
 	}
 	redisInstance, err := redisinstance.NewCloudRedisClient(ctx, redisInstanceDialOpts...)
 	if err != nil {
@@ -185,8 +185,8 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	serviceNetworkingTokenSource := oauth2adapt.TokenSourceFromTokenProvider(serviceNetworkingTokenProvider)
 
 	// Wrap with metrics middleware for REST APIs
-	serviceNetworkingHTTPClient := NewMetricsHTTPClient("ServiceNetworking", oauth2.NewClient(ctx, serviceNetworkingTokenSource).Transport)
-	cloudResourceManagerHTTPClient := NewMetricsHTTPClient("CloudResourceManager", oauth2.NewClient(ctx, serviceNetworkingTokenSource).Transport)
+	serviceNetworkingHTTPClient := NewMetricsHTTPClient(oauth2.NewClient(ctx, serviceNetworkingTokenSource).Transport)
+	cloudResourceManagerHTTPClient := NewMetricsHTTPClient(oauth2.NewClient(ctx, serviceNetworkingTokenSource).Transport)
 
 	serviceNetworking, err := servicenetworking.NewService(ctx,
 		option.WithHTTPClient(serviceNetworkingHTTPClient))
@@ -208,7 +208,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	vpcPeeringComputeNetworksTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringComputeNetworksTokenProvider)
 
 	// VPC peering clients also use REST, wrap with metrics middleware
-	vpcPeeringHTTPClient := NewMetricsHTTPClient("Compute", oauth2.NewClient(ctx, vpcPeeringComputeNetworksTokenSource).Transport)
+	vpcPeeringHTTPClient := NewMetricsHTTPClient(oauth2.NewClient(ctx, vpcPeeringComputeNetworksTokenSource).Transport)
 
 	vpcPeeringComputeNetworks, err := compute.NewNetworksRESTClient(ctx,
 		option.WithHTTPClient(vpcPeeringHTTPClient))
@@ -223,7 +223,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	}
 	vpcPeeringResourceManagerTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringResourceManagerTokenProvider)
 
-	resourceManagerHTTPClient := NewMetricsHTTPClient("ResourceManager", oauth2.NewClient(ctx, vpcPeeringResourceManagerTokenSource).Transport)
+	resourceManagerHTTPClient := NewMetricsHTTPClient(oauth2.NewClient(ctx, vpcPeeringResourceManagerTokenSource).Transport)
 
 	vpcPeeringResourceManagerTagBindings, err := resourcemanager.NewTagBindingsRESTClient(ctx,
 		option.WithHTTPClient(resourceManagerHTTPClient))
