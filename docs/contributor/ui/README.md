@@ -52,9 +52,9 @@ If no value is found in `Translation`, it displays as is.
 
 For example, if we have `name: spec.location`, it goes to [translations](#translations), looks up `spec.location` and replaces it with `Location`.
 
-[Official List Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/20-list-columns.md)
+[Official List Documentation](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility/20-list-columns.md)
 
-[Official List and Detail Widgets](https://github.com/kyma-project/busola/blob/main/docs/extensibility/50-list-and-details-widgets.md)
+[Official List and Detail Widgets](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility/50-list-and-details-widgets.md)
 
 ### Detail
 ```yaml
@@ -88,9 +88,9 @@ body:
 
 `children` are an array of child widgets. Note, the `source` in each child is relative to its parent.
 
-[Official Detail Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/30-details-summary.md)
+[Official Detail Documentation](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility/30-details-summary.md)
 
-[Official List and Detail Widgets](https://github.com/kyma-project/busola/blob/main/docs/extensibility/50-list-and-details-widgets.md)
+[Official List and Detail Widgets](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility/50-list-and-details-widgets.md)
 
 ### Form
 ```yaml
@@ -114,7 +114,7 @@ body:
 
 `simple` is a boolean used to display the field in the simple fom. By default, it is `false`
 
-[Official Forms Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/40-form-fields.md)
+[Official Forms Documentation](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility/40-form-fields.md)
 
 <a id="translations"></a>
 ### Translations
@@ -134,7 +134,7 @@ en:
 They are key-value pairs.
 
 
-[Official Translations Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/150-translations.md)
+[Official Translations Documentation](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility/150-translations.md)
 
 
 # Generating the ConfigMap
@@ -193,4 +193,4 @@ Official documentation and instructions can be found [here](https://kyma-project
 
 
 # Helpful Links
-[Translations](https://github.com/kyma-project/busola/blob/main/docs/extensibility/150-translations.md)
+[Translations](https://github.com/kyma-project/busola/blob/main/docs/user/extensibility/150-translations.md)
