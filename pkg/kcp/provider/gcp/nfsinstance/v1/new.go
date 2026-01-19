@@ -40,7 +40,7 @@ func New(stateFactory StateFactory) composed.Action {
 				Run(ctx, st)
 		}
 		return composed.ComposeActions(
-			"gcsNfsInstance",
+			"gcpNfsInstance",
 			validateAlways,
 			actions.AddCommonFinalizer(),
 			checkGcpOperation,
