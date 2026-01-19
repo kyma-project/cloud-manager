@@ -753,6 +753,8 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 		return ctx, fmt.Errorf("failed to create http operation resources: %w", err)
 	}
 
+	dumpYamlText := b.DumpYamlText(session.CurrentCluster().GetScheme())
+
 	failed := false
 	err = session.EventuallyValueIsOK(
 		ctx,
@@ -773,7 +775,7 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 	}
 
 	if failed {
-		return ctx, fmt.Errorf("http operation failed:\n%s", logs)
+		return ctx, fmt.Errorf("http operation failed:\n%s\n\n---\n%s", logs, dumpYamlText)
 	}
 
 	if !strings.Contains(logs, op.ExpectedOutput) {
