@@ -738,7 +738,8 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 			PodWithArguments(op.Args()...),
 		).
 		WithAnnotation(e2elib.ScenarioNameAnnotation, session.GetScenarioName()).
-		WithAnnotation(e2elib.StepNameAnnotation, session.GetStepName())
+		WithAnnotation(e2elib.StepNameAnnotation, session.GetStepName()).
+		WithCommand(nil)
 
 	if err := session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
 		Alias:      name,
