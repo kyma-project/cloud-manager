@@ -258,11 +258,14 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 		})
 
 		By("And Then NfsInstance status reflects the updated capacity", func() {
+			expectedCapacityGb := 2 * originalCapacity
+			expectedCapacity := resource.MustParse(fmt.Sprintf("%dGi", expectedCapacityGb))
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
-					NewObjActions()).
+					NewObjActions(),
+					HavingNfsInstanceStatusCapacityGb(expectedCapacityGb),
+					HavingNfsInstanceStatusCapacity(expectedCapacity)).
 				Should(Succeed())
-			Expect(nfsInstance.Status.CapacityGb).To(Equal(2 * originalCapacity))
 		})
 
 		// DELETE
