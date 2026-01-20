@@ -46,7 +46,7 @@ vpcPeeringSync:
   defaultRule:
     variation: disabled
 
-ipRangeRefactored:
+ipRangeV2:
   variations:
     enabled: true
     disabled: false

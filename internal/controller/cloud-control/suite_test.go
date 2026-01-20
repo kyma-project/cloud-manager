@@ -26,6 +26,7 @@ import (
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
+	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -179,6 +180,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupVpcNetworkReconciler(
 		infra.KcpManager(),
 		awsvpcnetwork.NewStateFactory(infra.AwsMock().VpcNetworkProvider()),
+		azurevpcnetwork.NewStateFactory(infra.AzureMock().VpcNetworkProvider()),
 	)).To(Succeed())
 	// Subscription
 	Expect(SetupSubscriptionReconciler(
