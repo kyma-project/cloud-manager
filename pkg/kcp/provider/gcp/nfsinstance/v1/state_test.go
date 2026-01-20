@@ -1,4 +1,4 @@
-package nfsinstance
+package v1
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	nfsinstancetypes "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/option"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -181,14 +181,14 @@ func (f *testStateFactory) newStateWith(ctx context.Context, nfsInstance *cloudc
 	}, nil
 }
 
-func NewFakeFilestoreClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsinstanceclient.FilestoreClient] {
+func NewFakeFilestoreClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsinstancev1client.FilestoreClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, credentialsFile string) (gcpnfsinstanceclient.FilestoreClient, error) {
+		func(ctx context.Context, credentialsFile string) (gcpnfsinstancev1client.FilestoreClient, error) {
 			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err
 			}
-			return gcpnfsinstanceclient.NewFilestoreClient(fsClient), nil
+			return gcpnfsinstancev1client.NewFilestoreClient(fsClient), nil
 		},
 	)
 }

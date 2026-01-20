@@ -59,3 +59,10 @@ nfs41Gcp:
     disabled: false
   defaultRule:
     variation: disabled
+
+gcpNfsInstanceV2:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled

@@ -1,14 +1,20 @@
-package nfsinstance
+// Package v1 provides the legacy GCP NfsInstance implementation.
+//
+// Deprecated: This package is maintained for backward compatibility only.
+// New code should use the v2 package when available via the gcpNfsInstanceV2 feature flag.
+// This implementation uses the OLD reconciler pattern and will be removed in a future release.
+package v1
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	v1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	"google.golang.org/api/file/v1"
 )
 
@@ -19,7 +25,7 @@ type State struct {
 	updateMask      []string
 	validations     []string
 	fsInstance      *file.Instance
-	filestoreClient client.FilestoreClient
+	filestoreClient v1client.FilestoreClient
 }
 
 type StateFactory interface {
@@ -27,11 +33,11 @@ type StateFactory interface {
 }
 
 type stateFactory struct {
-	filestoreClientProvider gcpclient.ClientProvider[client.FilestoreClient]
+	filestoreClientProvider gcpclient.ClientProvider[v1client.FilestoreClient]
 	env                     abstractions.Environment
 }
 
-func NewStateFactory(filestoreClientProvider gcpclient.ClientProvider[client.FilestoreClient], env abstractions.Environment) StateFactory {
+func NewStateFactory(filestoreClientProvider gcpclient.ClientProvider[v1client.FilestoreClient], env abstractions.Environment) StateFactory {
 	return &stateFactory{
 		filestoreClientProvider: filestoreClientProvider,
 		env:                     env,
@@ -50,7 +56,7 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.Stat
 	return newState(nfsInstanceState, fc), nil
 }
 
-func newState(nfsInstanceState types.State, fc client.FilestoreClient) *State {
+func newState(nfsInstanceState types.State, fc v1client.FilestoreClient) *State {
 	return &State{
 		State:           nfsInstanceState,
 		filestoreClient: fc,

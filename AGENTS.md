@@ -92,13 +92,24 @@ Cloud Manager is a Kubernetes controller manager (built with Kubebuilder) that p
 ### Rule 5: Testing Requirements
 
 **MUST INCLUDE**:
-- Unit tests with mocked cloud provider clients (`pkg/testinfra` framework)
+- Controller tests in `internal/controller/` using `pkg/testinfra` framework
 - Test both create and delete paths
 - Test error conditions (API failures, not found, conflicts)
 - Use `Eventually()` with `LoadAndCheck()` for assertions
 
+**UNIT TESTS** (optional, only for business logic):
+- Only write unit tests for complex business logic functions (e.g., validation, conversion, comparison)
+- DO NOT write unit tests for:
+  - Mock/fake implementations
+  - Simple getters/setters
+  - Client wrappers
+  - Actions that only orchestrate calls to other actions
+- Example: `util_test.go` testing `convertTier()` enum conversion is appropriate
+- Location: Same directory as the code being tested (`*_test.go`)
+
 **TEST FILE LOCATION**:
-- Controller tests: Same directory as reconciler (`*_test.go`)
+- Controller tests: `internal/controller/cloud-control/*_test.go` or `internal/controller/cloud-resources/*_test.go`
+- Unit tests: Same package as code under test (e.g., `pkg/kcp/provider/gcp/nfsinstance/v2/*_test.go`)
 - Mocks: `pkg/kcp/provider/<provider>/mock/` or `pkg/testinfra/`
 
 ### Rule 6: Feature Flag Handling

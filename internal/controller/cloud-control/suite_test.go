@@ -114,6 +114,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().NfsInstanceSkrProvider(),
 		infra.GcpMock().FilestoreClientProvider(),
+		infra.GcpMock().FilestoreClientProviderV2(),
 		infra.SapMock().NfsInstanceProvider(),
 		env,
 	)).NotTo(HaveOccurred())
