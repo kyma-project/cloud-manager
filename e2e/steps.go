@@ -564,7 +564,8 @@ func pvcFileOperationsSucceed(ctx context.Context, alias string, ops *godog.Tabl
 		).
 		WithAnnotation(e2elib.AliasLabel, alias).
 		WithAnnotation(e2elib.ScenarioNameAnnotation, session.GetScenarioName()).
-		WithAnnotation(e2elib.StepNameAnnotation, session.GetStepName())
+		WithAnnotation(e2elib.StepNameAnnotation, session.GetStepName()).
+		WithCommand([]string{"/bin/sh", "-c"})
 
 	err = session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
 		Alias:      podAlias,
@@ -738,8 +739,7 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 			PodWithArguments(op.Args()...),
 		).
 		WithAnnotation(e2elib.ScenarioNameAnnotation, session.GetScenarioName()).
-		WithAnnotation(e2elib.StepNameAnnotation, session.GetStepName()).
-		WithCommand(nil)
+		WithAnnotation(e2elib.StepNameAnnotation, session.GetStepName())
 
 	if err := session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
 		Alias:      name,
@@ -820,7 +820,8 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 
 	name := "e2eredisop" + util.RandomString(6)
 
-	b := NewPodBuilder(name, world.Config().SkrNamespace, "redis")
+	b := NewPodBuilder(name, world.Config().SkrNamespace, "redis").
+		WithCommand([]string{"/bin/sh", "-c"})
 
 	makeEnv := func(envVarName string, row *messages.PickleTableRow) error {
 		switch row.Cells[1].Value {
