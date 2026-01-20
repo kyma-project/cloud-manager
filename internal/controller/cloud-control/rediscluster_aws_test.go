@@ -137,6 +137,18 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 			Expect(len(redisCluster.Status.AuthString) > 0).To(Equal(true))
 		})
 
+		By("And Then RedisCluster has .status.nodeType set", func() {
+			Expect(redisCluster.Status.NodeType).To(Equal(cacheNodeType))
+		})
+
+		By("And Then RedisCluster has .status.shardCount set", func() {
+			Expect(redisCluster.Status.ShardCount).To(Equal(int32(shardCount)))
+		})
+
+		By("And Then RedisCluster has .status.replicasPerShard set", func() {
+			Expect(redisCluster.Status.ReplicasPerShard).To(Equal(int32(readReplicas)))
+		})
+
 		// DELETE
 
 		By("When RedisCluster is deleted", func() {

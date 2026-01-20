@@ -42,6 +42,24 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		hasChanged = true
 	}
 
+	cacheNodeType := state.GetProvisionedMachineType()
+	if redisInstance.Status.NodeType != cacheNodeType {
+		redisInstance.Status.NodeType = cacheNodeType
+		hasChanged = true
+	}
+
+	memorySizeGb := state.GetProvisionedMemorySizeGb()
+	if redisInstance.Status.MemorySizeGb != memorySizeGb {
+		redisInstance.Status.MemorySizeGb = memorySizeGb
+		hasChanged = true
+	}
+
+	replicaCount := state.GetProvisionedReplicaCount()
+	if redisInstance.Status.ReplicaCount != replicaCount {
+		redisInstance.Status.ReplicaCount = replicaCount
+		hasChanged = true
+	}
+
 	hasReadyCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
 	hasReadyStatusState := redisInstance.Status.State == cloudcontrolv1beta1.StateReady
 

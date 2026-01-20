@@ -188,8 +188,19 @@ spec:
                 type: string
               id:
                 type: string
+              nodeType:
+                description: The reconciled machine type of the Redis cluster.
+                type: string
               observedGeneration:
                 format: int64
+                type: integer
+              replicasPerShard:
+                description: The reconciled number of read replicas per shard.
+                format: int32
+                type: integer
+              shardCount:
+                description: The reconciled number of shards in the Redis cluster.
+                format: int32
                 type: integer
               state:
                 type: string

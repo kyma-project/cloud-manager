@@ -139,6 +139,14 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Expect(len(redisInstance.Status.AuthString) > 0).To(Equal(true))
 		})
 
+		By("And Then RedisInstance has .status.nodeType set", func() {
+			Expect(redisInstance.Status.NodeType).To(Equal(cacheNodeType))
+		})
+
+		By("And Then RedisInstance has .status.replicaCount set", func() {
+			Expect(redisInstance.Status.ReplicaCount).To(Equal(int32(readReplicas)))
+		})
+
 		// DELETE
 
 		By("When RedisInstance is deleted", func() {
