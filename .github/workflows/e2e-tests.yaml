@@ -1,5 +1,5 @@
 name: E2E tests
-run-name: E2E tests ${{ inputs.provider }}
+run-name: E2E tests ${{ inputs.provider || 'azure' }}
 on:
   pull_request:
   workflow_dispatch:
@@ -51,7 +51,7 @@ jobs:
         run: |
           echo $KUBECONFIG
           ls -la ./tmp
-          RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "@skr && @${PROVIDER}"
+          RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "@skr && @$PROVIDER"
       - name: Delete shared instance
         if: always()
         env:
