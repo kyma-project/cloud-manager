@@ -26,9 +26,9 @@ const (
 	SubscriptionLabelBindingName = "cloud-manager.kyma-project.io/binding-name"
 
 	// SubscriptionLabelProvider is set by the Subscription reconciler
-	SubscriptionLabelProvider = "cloud-manager.kyma-project-io/provider"
+	SubscriptionLabelProvider = "cloud-manager.kyma-project.io/provider"
 
-	// SubscriptionLabel should be set on other resources by thier reconcilers to indicate to which subscription they belong to
+	// SubscriptionLabel should be set on other resources by their reconcilers to indicate to which subscription they belong to
 	SubscriptionLabel = "cloud-manager.kyma-project.io/subscription"
 )
 
