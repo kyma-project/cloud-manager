@@ -1,6 +1,6 @@
 package cloudcontrol
 
-// Run with: FF_IP_RANGE_V2=true go test
+// Run with: FF_GCP_IP_RANGE_V3=true go test
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", func() {
 
 	It("Scenario: KCP GCP IpRange lifecycle with CIDR (refactored)", func() {
-		if !feature.IpRangeV2.Value(context.Background()) {
+		if !feature.GcpIpRangeV3.Value(context.Background()) {
 			Skip("IpRange refactored implementation is disabled")
 		}
 
@@ -152,7 +152,7 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 	})
 
 	It("Scenario: KCP GCP IpRange lifecycle without CIDR (refactored)", func() {
-		if !feature.IpRangeV2.Value(context.Background()) {
+		if !feature.GcpIpRangeV3.Value(context.Background()) {
 			Skip("IpRange refactored implementation is disabled")
 		}
 

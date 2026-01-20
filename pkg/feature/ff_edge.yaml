@@ -26,7 +26,7 @@ vpcPeeringSync:
   defaultRule:
     variation: enabled
 
-ipRangeV2:
+gcpIpRangeV3:
   variations:
     enabled: true
     disabled: false
