@@ -1,7 +1,7 @@
-Feature: VpcNetwork AWS
+Feature: VpcNetwork Azure
 
-  @kcp @aws @vpcnetwork
-  Scenario: VpcNetwork AWS is created and deleted
+  @kcp @azure @vpcnetwork
+  Scenario: VpcNetwork Azure is created and deleted
 
     Given current cluster is "kcp"
 
@@ -9,7 +9,7 @@ Feature: VpcNetwork AWS
       | Alias     | Kind                  | ApiVersion                              | Name               | Namespace |
       | vpc       | VpcNetwork            | cloud-control.kyma-project.io/v1beta1   | e2e-${id()}        |           |
 
-    Given Subscription "subscription" exists for "AWS" provider
+    Given Subscription "subscription" exists for "Azure" provider
 
     When resource "vpc" is created:
       """
@@ -19,7 +19,7 @@ Feature: VpcNetwork AWS
         subscription: ${subscription.metadata.name}
         cidrBlocks:
           - "10.250.0.0/16"
-        region: us-east-1
+        region: westeurope
       """
 
     Then eventually "findConditionTrue(vpc, 'Ready')" is ok, unless:
