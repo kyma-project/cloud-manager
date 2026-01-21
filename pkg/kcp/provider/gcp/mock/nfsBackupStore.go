@@ -11,6 +11,11 @@ import (
 	"google.golang.org/api/googleapi"
 )
 
+var (
+	scopeNameRegex = regexp.MustCompile(`.+labels\.scope-name="([^"]+)"`)
+	cmAllowRegex   = regexp.MustCompile(`labels\.cm-allow-([^=\s"]+)`)
+)
+
 type FileBackupClientFakeUtils interface {
 	CreateFakeBackup(backup *file.Backup)
 	ClearAllBackups()
@@ -52,23 +57,51 @@ func (s *nfsBackupStore) GetFileBackup(ctx context.Context, projectId, location,
 }
 
 func (s *nfsBackupStore) ListFilesBackups(ctx context.Context, project, filter string) ([]*file.Backup, error) {
-	regex := `.+labels.scope-name="(?P<Scope>.+)"`
-	re := regexp.MustCompile(regex)
-	matches := re.FindStringSubmatch(filter)
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
-	if len(matches) == 0 {
-		return s.backups, nil
+
+	scopeMatches := scopeNameRegex.FindStringSubmatch(filter)
+	cmAllowMatches := cmAllowRegex.FindStringSubmatch(filter)
+
+	if len(scopeMatches) == 0 && len(cmAllowMatches) == 0 {
+		return []*file.Backup{}, nil
 	}
+
 	result := make([]*file.Backup, 0)
+
 	for _, backup := range s.backups {
 		projectId, _, _ := client.GetProjectLocationNameFromFileBackupPath(backup.Name)
-		scopeName := matches[re.SubexpIndex("Scope")]
-		if projectId == project && backup.Labels != nil && backup.Labels["scope-name"] == scopeName {
-			result = append(result, backup)
+
+		// early continue if project does not match
+		if projectId != project {
+			continue
+		}
+
+		// early continue if no labels
+		if backup.Labels == nil {
+			continue
+		}
+
+		// match scope-name filter (used for SKR backups)
+		if len(scopeMatches) > 0 {
+			scopeName := scopeMatches[1]
+			if backup.Labels["scope-name"] == scopeName {
+				result = append(result, backup)
+			}
+			continue
+		}
+
+		// match cm-allow- filter (used for shared backups discovery)
+		if len(cmAllowMatches) > 0 {
+			shootName := cmAllowMatches[1]
+			allowLabel := fmt.Sprintf("cm-allow-%s", shootName)
+			if _, ok := backup.Labels[allowLabel]; ok {
+				result = append(result, backup)
+			}
 		}
 	}
+
 	return result, nil
 }
 
