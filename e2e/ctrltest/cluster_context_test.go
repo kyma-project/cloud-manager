@@ -92,7 +92,7 @@ var _ = Describe("Feature: Cluster context", func() {
 			world.Kcp().GetCache().WaitForCacheSync(infra.Ctx())
 		})
 
-		By("Then  expression cmOne.metadata.name returns value", func() {
+		By("Then expression cmOne.metadata.name returns value", func() {
 			Eventually(func() error {
 				evaluator, err := e2e.NewEvaluatorBuilder().
 					Add(world.Kcp()).
