@@ -155,8 +155,13 @@ func sanitizePath(path string) string {
 			continue
 		}
 
-		if strings.HasPrefix(part, ":") {
-			sanitized = append(sanitized, part)
+		if strings.Contains(part, ":") {
+			if expectingID {
+				sanitized = append(sanitized, "{id}"+part[strings.Index(part, ":"):])
+				expectingID = false
+			} else {
+				sanitized = append(sanitized, part)
+			}
 			continue
 		}
 
