@@ -170,6 +170,14 @@ func (in *NfsInstance) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
+func (in *NfsInstance) State() string {
+	return string(in.Status.State)
+}
+
+func (in *NfsInstance) SetState(state string) {
+	in.Status.State = StatusState(state)
+}
+
 func (in *NfsInstance) ObservedGeneration() int64 {
 	return in.Status.ObservedGeneration
 }

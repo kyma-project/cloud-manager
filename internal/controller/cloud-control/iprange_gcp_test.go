@@ -1,6 +1,6 @@
 package cloudcontrol
 
-// Run with: FF_IP_RANGE_REFACTORED unset or =false
+// Run with: FF_GCP_IP_RANGE_V3 unset or =false
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 var _ = Describe("Feature: KCP IpRange for GCP", func() {
 
 	It("Scenario: KCP IpRange with specified CIDR is created and deleted", func() {
-		if feature.IpRangeRefactored.Value(context.Background()) {
+		if feature.GcpIpRangeV3.Value(context.Background()) {
 			Skip("IpRange legacy implementation is disabled")
 		}
 
@@ -136,7 +136,7 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 	})
 
 	It("Scenario: KCP IpRange without CIDR is created and deleted", func() {
-		if feature.IpRangeRefactored.Value(context.Background()) {
+		if feature.GcpIpRangeV3.Value(context.Background()) {
 			Skip("IpRange legacy implementation is disabled")
 		}
 

@@ -89,3 +89,19 @@ func (s *State) UpdateReplicaCount(replicaCount int32) {
 	s.updateMask = append(s.updateMask, "replica_count")
 	s.gcpRedisInstance.ReplicaCount = replicaCount
 }
+
+// GetProvisionedMemorySizeGb returns the provisioned memory size in GB from the GCP Redis Instance
+func (s *State) GetProvisionedMemorySizeGb() int32 {
+	if s.gcpRedisInstance == nil {
+		return 0
+	}
+	return s.gcpRedisInstance.MemorySizeGb
+}
+
+// GetProvisionedReplicaCount returns the provisioned replica count from the GCP Redis Instance
+func (s *State) GetProvisionedReplicaCount() int32 {
+	if s.gcpRedisInstance == nil {
+		return 0
+	}
+	return s.gcpRedisInstance.ReplicaCount
+}

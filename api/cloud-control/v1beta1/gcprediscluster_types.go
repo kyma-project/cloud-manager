@@ -76,6 +76,18 @@ type GcpRedisClusterStatus struct {
 	// +optional
 	CaCert string `json:"caCert,omitempty"`
 
+	// The reconciled machine type of the Redis cluster.
+	// +optional
+	NodeType string `json:"nodeType,omitempty"`
+
+	// The reconciled number of shards in the Redis cluster.
+	// +optional
+	ShardCount int32 `json:"shardCount,omitempty"`
+
+	// The reconciled number of read replicas per shard.
+	// +optional
+	ReplicasPerShard int32 `json:"replicasPerShard,omitempty"`
+
 	// List of status conditions to indicate the status of a RedisInstance.
 	// +optional
 	// +listType=map

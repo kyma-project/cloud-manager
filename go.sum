@@ -19,6 +19,8 @@ cloud.google.com/go/compute v1.53.0/go.mod h1:zdogTa7daHhEtEX92+S5IARtQmi/RNVPUf
 cloud.google.com/go/compute/metadata v0.9.0 h1:pDUj4QMoPejqq20dK0Pg2N4yG9zIkYGdBtwLoEkH9Zs=
 cloud.google.com/go/compute/metadata v0.9.0/go.mod h1:E0bWwX5wTnLPedCKqk3pJmVgCBSM6qQI1yTBdEb3C10=
 cloud.google.com/go/datastore v1.0.0/go.mod h1:LXYbyblFSglQ5pkeyhO+Qmw7ukd3C+pD7TKLgZqpHYE=
+cloud.google.com/go/filestore v1.10.3 h1:3KZifUVTqGhNNv6MLeONYth1HjlVM4vDhaH+xrdPljU=
+cloud.google.com/go/filestore v1.10.3/go.mod h1:94ZGyLTx9j+aWKozPQ6Wbq1DuImie/L/HIdGMshtwac=
 cloud.google.com/go/firestore v1.1.0/go.mod h1:ulACoGHTpvq5r8rxGJ4ddJZBZqakUQqClKRT5SZwBmk=
 cloud.google.com/go/iam v1.5.3 h1:+vMINPiDF2ognBJ97ABAYYwRgsaqxPbQDlMnbHMjolc=
 cloud.google.com/go/iam v1.5.3/go.mod h1:MR3v9oLkZCTlaqljW6Eb2d3HGDGK5/bDv93jhfISFvU=
@@ -252,8 +254,8 @@ github.com/gardener/cert-management v0.19.0 h1:BNumdw748Pg9798NzxHmmpKuXFRLHSPuv
 github.com/gardener/cert-management v0.19.0/go.mod h1:u5OKwiDyUdCuW9vhDV92ozCVkynXUBrYCMHr4rVNiCY=
 github.com/gardener/etcd-druid/api v0.34.0 h1:GNeKNN/KS9Iy1su0N695/wq/VtNW9ekeRjihAza5xbc=
 github.com/gardener/etcd-druid/api v0.34.0/go.mod h1:SvgJtzYbrtBMPRL+AkRV5tXV2LjbSLCSBFu3cC6XjJs=
-github.com/gardener/gardener v1.134.1 h1:Ytfk3FxRJn3QEwQwVbFMKYIDaXMPL221iJ5jAxEJBa0=
-github.com/gardener/gardener v1.134.1/go.mod h1:Fk8RpMK3bhgc25mO/1FPeRDc9Mfxa2iOR8Ty+YeSlBE=
+github.com/gardener/gardener v1.134.2 h1:FXo//rR538EfkBsClK3pguiIeW7FtXf8Ci7TNZeXXOg=
+github.com/gardener/gardener v1.134.2/go.mod h1:Fk8RpMK3bhgc25mO/1FPeRDc9Mfxa2iOR8Ty+YeSlBE=
 github.com/gardener/gardener-extension-provider-aws v1.66.2 h1:LCcrzkR6kyR+a9NfdRCIeALg/VhVYGAsGzMnFzKs86s=
 github.com/gardener/gardener-extension-provider-aws v1.66.2/go.mod h1:fm9wXcm7GiOjGCvqU7ol/DdnmlNOVSXAfosftWSqOFo=
 github.com/gardener/gardener-extension-provider-azure v1.57.1 h1:mnzniJcPDjT+XNyRLBnrEqMNoG6/FtUSbKBKhQ8QClc=
@@ -299,8 +301,8 @@ github.com/go-sourcemap/sourcemap v2.1.3+incompatible/go.mod h1:F8jJfvm2KbVjc5Nq
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/go-task/slim-sprig/v3 v3.0.0 h1:sUs3vkvUymDpBKi3qH1YSqBQk9+9D/8M2mN1vB6EwHI=
 github.com/go-task/slim-sprig/v3 v3.0.0/go.mod h1:W848ghGpv3Qj3dhTPRyJypKRiqCdHZiAzKg9hl15HA8=
-github.com/go-viper/mapstructure/v2 v2.4.0 h1:EBsztssimR/CONLSZZ04E8qAkxNYq4Qp9LvH92wZUgs=
-github.com/go-viper/mapstructure/v2 v2.4.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
+github.com/go-viper/mapstructure/v2 v2.5.0 h1:vM5IJoUAy3d7zRSVtIwQgBj7BiWtMPfmPEgAXnvj1Ro=
+github.com/go-viper/mapstructure/v2 v2.5.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
 github.com/gobwas/glob v0.2.3 h1:A4xDbljILXROh+kObIiy5kIaPYD8e96x1tgBhUI5J+Y=
 github.com/gobwas/glob v0.2.3/go.mod h1:d3Ez4x06l9bZtSvzIay5+Yzi0fmZzPgnTbPcKjJAkT8=
 github.com/goccy/go-yaml v1.18.0 h1:8W7wMFS12Pcas7KU+VVkaiCng+kG8QiFeFwzFb+rwuw=

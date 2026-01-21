@@ -11,14 +11,14 @@ import (
 
 // New returns the action for GCP IpRange provisioning.
 // It routes to either the v3 refactored implementation or the v2 legacy implementation
-// based on the ipRangeRefactored feature flag.
+// based on the gcpIpRangeV3 feature flag.
 // Both state factories are passed from main.go to ensure proper provider wiring.
 func New(v3StateFactory gcpiprangev3.StateFactory, v2StateFactory gcpiprangev2.StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
 
 		// Check feature flag to determine which implementation to use
-		if feature.IpRangeRefactored.Value(ctx) {
+		if feature.GcpIpRangeV3.Value(ctx) {
 			logger.Info("Using v3 refactored IpRange implementation")
 			return gcpiprangev3.New(v3StateFactory)(ctx, st)
 		}
@@ -37,7 +37,7 @@ func NewAllocateIpRangeAction(v3StateFactory gcpiprangev3.StateFactory, v2StateF
 		logger := composed.LoggerFromCtx(ctx)
 
 		// Check feature flag to determine which implementation to use
-		if feature.IpRangeRefactored.Value(ctx) {
+		if feature.GcpIpRangeV3.Value(ctx) {
 			logger.Info("Using v3 refactored IpRange allocation")
 			return gcpiprangev3.NewAllocateIpRangeAction(v3StateFactory)(ctx, st)
 		}

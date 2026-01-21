@@ -21,14 +21,16 @@ jobs:
             nukeBackupsAzure: "false"
             nfs41Gcp: "false"
             vpcPeeringSync: "false"
-            ipRangeRefactored: "false"
+            gcpNfsInstanceV2: "false"
+            gcpIpRangeV3: "false"
           - name: Build & Test (Nuke Backups, NFSv4.1, Peering Sync, Gcp IP Range v3)
             nukeBackupsGcp: "true"
             nukeBackupsAws: "true"
             nukeBackupsAzure: "true"
             nfs41Gcp: "true"
             vpcPeeringSync: "true"
-            ipRangeRefactored: "true"
+            gcpNfsInstanceV2: "true"
+            gcpIpRangeV3: "true"
     runs-on: ubuntu-latest
     name: ${{ matrix.name }}
     steps:
@@ -47,7 +49,8 @@ jobs:
           FF_NUKE_BACKUPS_AZURE: ${{ matrix.nukeBackupsAzure }}
           FF_NFS41_GCP: ${{ matrix.nfs41Gcp }}
           FF_VPC_PEERING_SYNC: ${{ matrix.vpcPeeringSync }}
-          FF_IP_RANGE_REFACTORED: ${{ matrix.ipRangeRefactored }}
+          FF_GCP_NFS_INSTANCE_V2: ${{ matrix.gcpNfsInstanceV2 }}
+          FF_GCP_IP_RANGE_V3: ${{ matrix.gcpIpRangeV3 }}
         run: |
           ./config/sync.sh
           go mod tidy

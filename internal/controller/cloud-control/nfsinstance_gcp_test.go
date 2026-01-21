@@ -3,11 +3,12 @@ package cloudcontrol
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
@@ -36,6 +37,14 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 	if debugged.Debugged {
 		timeout = time.Minute * 20
 	}
+
+	// Skip v1 tests when GcpNfsInstanceV2 flag is enabled
+	BeforeEach(func() {
+		if feature.GcpNfsInstanceV2.Value(infra.Ctx()) {
+			Skip("Skipping v1 tests when GcpNfsInstanceV2 flag is enabled")
+		}
+	})
+
 	Context("Scenario: GCP NFSVolume Happy Path", Ordered, func() {
 		gcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 		It("Scenario: GCP NFSVolume Creation", func() {

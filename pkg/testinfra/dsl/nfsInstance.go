@@ -244,3 +244,16 @@ func HavingNfsInstanceStatusCapacity(capacity resource.Quantity) ObjAssertion {
 		return nil
 	}
 }
+
+func HavingNfsInstanceStatusCapacityGb(expectedCapacityGb int) ObjAssertion {
+	return func(obj client.Object) error {
+		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
+		if !ok {
+			return fmt.Errorf("the object %T is not KCP NfsInstance", obj)
+		}
+		if x.Status.CapacityGb != expectedCapacityGb {
+			return fmt.Errorf("the KCP NfsInstance status.capacityGb is %d, expected %d", x.Status.CapacityGb, expectedCapacityGb)
+		}
+		return nil
+	}
+}

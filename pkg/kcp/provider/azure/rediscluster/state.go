@@ -2,6 +2,8 @@ package rediscluster
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/go-logr/logr"
@@ -76,4 +78,39 @@ func newState(state redisclustertypes.State,
 
 		resourceGroupName: azurecommon.AzureCloudManagerResourceGroupName(state.Scope().Spec.Scope.Azure.VpcNetwork),
 	}
+}
+
+// GetProvisionedMachineType returns the provisioned machine type from the Azure Redis Cluster
+func (s *State) GetProvisionedMachineType() string {
+	if s.azureRedisCluster == nil || s.azureRedisCluster.Properties == nil || s.azureRedisCluster.Properties.SKU == nil {
+		return ""
+	}
+	return fmt.Sprintf("%d", *s.azureRedisCluster.Properties.SKU.Capacity)
+}
+
+// GetProvisionedShardCount returns the provisioned shard count from the Azure Redis Cluster
+func (s *State) GetProvisionedShardCount() int32 {
+	if s.azureRedisCluster == nil || s.azureRedisCluster.Properties == nil || s.azureRedisCluster.Properties.ShardCount == nil {
+		return 0
+	}
+	return *s.azureRedisCluster.Properties.ShardCount
+}
+
+// GetProvisionedReplicasPerShard returns the provisioned replicas per shard from the Azure Redis Cluster
+func (s *State) GetProvisionedReplicasPerShard() int32 {
+	if s.azureRedisCluster == nil || s.azureRedisCluster.Properties == nil {
+		return 0
+	}
+
+	// Try ReplicasPerPrimary first (newer API)
+	if s.azureRedisCluster.Properties.ReplicasPerPrimary != nil {
+		return *s.azureRedisCluster.Properties.ReplicasPerPrimary
+	}
+
+	// Fall back to ReplicasPerMaster (older API)
+	if s.azureRedisCluster.Properties.ReplicasPerMaster != nil {
+		return *s.azureRedisCluster.Properties.ReplicasPerMaster
+	}
+
+	return 0
 }

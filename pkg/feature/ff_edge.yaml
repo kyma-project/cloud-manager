@@ -26,9 +26,23 @@ vpcPeeringSync:
   defaultRule:
     variation: enabled
 
+gcpIpRangeV3:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
 nfs41Gcp:
   variations:
     enabled: true
     disabled: false
   defaultRule:
     variation: enabled
+
+gcpNfsInstanceV2:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
