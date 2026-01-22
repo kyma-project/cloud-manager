@@ -116,6 +116,7 @@ runs:
         KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         LANDSCAPE: dev
         PEERING_NETWORK_TAG: e2e
+        FEATURE_FLAG_CONFIG_FILE: ./pkg/feature/ff_edge.yaml
       run: |
         go run ./cmd > ./tmp/cloud-manager.log 2>&1 &
         CLOUD_MANAGER_PID=$!
