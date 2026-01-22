@@ -115,24 +115,31 @@ func extractRegionAndProjectFromPath(path string) (region, project string) {
 		switch parts[i] {
 		case "projects":
 			if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "{") {
-				project = parts[i+1]
+				project = sanitizePathValue(parts[i+1])
 			}
 		case "regions":
 			if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "{") {
-				region = parts[i+1]
+				region = sanitizePathValue(parts[i+1])
 			}
 		case "locations":
 			if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "{") {
-				region = convertZoneToRegion(parts[i+1])
+				region = convertZoneToRegion(sanitizePathValue(parts[i+1]))
 			}
 		case "zones":
 			if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "{") {
-				region = convertZoneToRegion(parts[i+1])
+				region = convertZoneToRegion(sanitizePathValue(parts[i+1]))
 			}
 		}
 	}
 
 	return region, project
+}
+
+func sanitizePathValue(value string) string {
+	if idx := strings.IndexAny(value, "=&?"); idx != -1 {
+		return value[:idx]
+	}
+	return value
 }
 
 func convertZoneToRegion(locationOrZone string) string {
@@ -148,38 +155,67 @@ func convertZoneToRegion(locationOrZone string) string {
 func sanitizePath(path string) string {
 	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
 	var sanitized []string
-	expectingID := false
 
-	for i, part := range parts {
+	for _, part := range parts {
 		if part == "" {
 			continue
 		}
 
 		if strings.Contains(part, ":") {
-			if expectingID {
-				sanitized = append(sanitized, "{id}"+part[strings.Index(part, ":"):])
-				expectingID = false
+			idx := strings.Index(part, ":")
+			if looksLikeID(part[:idx]) {
+				sanitized = append(sanitized, "{id}"+part[idx:])
 			} else {
 				sanitized = append(sanitized, part)
 			}
 			continue
 		}
 
-		if i == 0 && strings.HasPrefix(part, "v") {
+		if strings.HasPrefix(part, "v") && len(part) > 1 && part[1] >= '0' && part[1] <= '9' {
 			sanitized = append(sanitized, part)
 			continue
 		}
 
-		if expectingID {
+		if looksLikeID(part) {
 			sanitized = append(sanitized, "{id}")
-			expectingID = false
 		} else {
 			sanitized = append(sanitized, part)
-			expectingID = true
 		}
 	}
 
 	return "/" + strings.Join(sanitized, "/")
+}
+
+func looksLikeID(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+
+	hasDigit := false
+	hasLetter := false
+	hasHyphen := false
+
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			hasDigit = true
+		} else if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
+			hasLetter = true
+		} else if c == '-' || c == '_' {
+			hasHyphen = true
+		}
+	}
+
+	// Has hyphen - very likely an ID (my-project, res-id, instance-123)
+	if hasHyphen && hasLetter {
+		return true
+	}
+
+	// Short alphanumeric (p1, i1, abc123)
+	if hasDigit && hasLetter {
+		return true
+	}
+
+	return false
 }
 
 func IncrementCallCounter(operation, region, project string, err error) {
