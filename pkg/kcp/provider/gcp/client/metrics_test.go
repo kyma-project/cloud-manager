@@ -15,6 +15,7 @@ func TestParseGoogRequestParams(t *testing.T) {
 		expectedRegion  string
 		expectedProject string
 	}{
+		// Standard cases
 		{
 			name:            "project and region from standard path",
 			params:          "parent=projects/my-project/locations/us-central1",
@@ -52,10 +53,10 @@ func TestParseGoogRequestParams(t *testing.T) {
 			expectedProject: "gcp-123",
 		},
 		{
-			name:            "empty params",
-			params:          "",
-			expectedRegion:  "",
-			expectedProject: "",
+			name:            "URL encoded with special characters",
+			params:          "parent=projects%2Ftest-proj-123%2Fregions%2Feurope-west3",
+			expectedRegion:  "europe-west3",
+			expectedProject: "test-proj-123",
 		},
 		{
 			name:            "no region in path",
@@ -69,6 +70,14 @@ func TestParseGoogRequestParams(t *testing.T) {
 			expectedRegion:  "us-central1",
 			expectedProject: "",
 		},
+
+		// Edge cases ===============
+		{
+			name:            "empty params",
+			params:          "",
+			expectedRegion:  "",
+			expectedProject: "",
+		},
 		{
 			name:            "malformed params",
 			params:          "invalid",
@@ -76,10 +85,34 @@ func TestParseGoogRequestParams(t *testing.T) {
 			expectedProject: "",
 		},
 		{
-			name:            "URL encoded with special characters",
-			params:          "parent=projects%2Ftest-proj-123%2Fregions%2Feurope-west3",
-			expectedRegion:  "europe-west3",
-			expectedProject: "test-proj-123",
+			name:            "multiple equals signs",
+			params:          "parent=projects/my-project/locations/us-central1=extra",
+			expectedRegion:  "us-central1",
+			expectedProject: "my-project",
+		},
+		{
+			name:            "params with no value",
+			params:          "parent=",
+			expectedRegion:  "",
+			expectedProject: "",
+		},
+		{
+			name:            "only key no equals",
+			params:          "parent",
+			expectedRegion:  "",
+			expectedProject: "",
+		},
+		{
+			name:            "malformed URL encoding",
+			params:          "parent=projects%2my-project",
+			expectedRegion:  "",
+			expectedProject: "",
+		},
+		{
+			name:            "template variables in path",
+			params:          "parent=projects/{project}/regions/{region}",
+			expectedRegion:  "",
+			expectedProject: "",
 		},
 	}
 
@@ -124,7 +157,7 @@ func TestExtractFromGrpcContext(t *testing.T) {
 			expectedProject: "gcp-proj",
 		},
 		{
-			name:            "no metadata",
+			name:            "empty metadata map",
 			metadata:        map[string]string{},
 			expectedRegion:  "",
 			expectedProject: "",
@@ -145,72 +178,23 @@ func TestExtractFromGrpcContext(t *testing.T) {
 			expectedRegion:  "",
 			expectedProject: "",
 		},
+		{
+			name:            "no outgoing context",
+			metadata:        nil,
+			expectedRegion:  "",
+			expectedProject: "",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			if len(tt.metadata) > 0 {
+			if tt.metadata != nil {
 				md := metadata.New(tt.metadata)
 				ctx = metadata.NewOutgoingContext(ctx, md)
 			}
 
 			region, project := extractFromGrpcContext(ctx)
-			assert.Equal(t, tt.expectedRegion, region, "region mismatch")
-			assert.Equal(t, tt.expectedProject, project, "project mismatch")
-		})
-	}
-}
-
-func TestExtractFromGrpcContext_NoOutgoingContext(t *testing.T) {
-	ctx := context.Background()
-	region, project := extractFromGrpcContext(ctx)
-	assert.Equal(t, "", region)
-	assert.Equal(t, "", project)
-}
-
-func TestParseGoogRequestParams_EdgeCases(t *testing.T) {
-	tests := []struct {
-		name            string
-		params          string
-		expectedRegion  string
-		expectedProject string
-	}{
-		{
-			name:            "multiple equals signs",
-			params:          "parent=projects/my-project/locations/us-central1=extra",
-			expectedRegion:  "us-central1",
-			expectedProject: "my-project",
-		},
-		{
-			name:            "params with no value",
-			params:          "parent=",
-			expectedRegion:  "",
-			expectedProject: "",
-		},
-		{
-			name:            "only key no equals",
-			params:          "parent",
-			expectedRegion:  "",
-			expectedProject: "",
-		},
-		{
-			name:            "malformed URL encoding",
-			params:          "parent=projects%2my-project",
-			expectedRegion:  "",
-			expectedProject: "",
-		},
-		{
-			name:            "template variables in path",
-			params:          "parent=projects/{project}/regions/{region}",
-			expectedRegion:  "",
-			expectedProject: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			region, project := parseGoogRequestParams(tt.params)
 			assert.Equal(t, tt.expectedRegion, region, "region mismatch")
 			assert.Equal(t, tt.expectedProject, project, "project mismatch")
 		})
