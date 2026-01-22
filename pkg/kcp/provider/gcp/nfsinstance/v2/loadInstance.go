@@ -10,7 +10,6 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
-	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 )
 
 // loadInstance loads the GCP Filestore instance from the API.
@@ -23,7 +22,7 @@ func loadInstance(ctx context.Context, st composed.State) (error, context.Contex
 
 	project := state.GetGcpProjectId()
 	location := state.GetGcpLocation()
-	name := v2client.GetFilestoreInstanceId(nfsInstance.Name)
+	name := nfsInstance.Name
 
 	instance, err := state.GetFilestoreClient().GetInstance(ctx, project, location, name)
 	if err != nil {
