@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/file/v1"
@@ -18,10 +19,12 @@ type FileRestoreClient interface {
 func NewFileRestoreClientProvider() client.ClientProvider[FileRestoreClient] {
 	return client.NewCachedClientProvider(
 		func(ctx context.Context, credentialsFile string) (FileRestoreClient, error) {
-			httpClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
+			baseClient, err := client.GetCachedGcpClient(ctx, credentialsFile)
 			if err != nil {
 				return nil, err
 			}
+
+			httpClient := client.NewMetricsHTTPClient(baseClient.Transport)
 
 			fsClient, err := file.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {
@@ -47,7 +50,6 @@ func (c *fileRestoreClient) RestoreFile(ctx context.Context, projectId, destFile
 		SourceBackup: srcBackupFullPath,
 	}
 	operation, err := c.svcFile.Projects.Locations.Instances.Restore(destFileFullPath, request).Do()
-	client.IncrementCallCounter("File", "Instances.Restore", "", err)
 	if err != nil {
 		logger.Error(err, "RestoreFile", "projectId", projectId, "destFileFullPath", destFileFullPath, "destFileShareName", destFileShareName, "srcBackupFullPath", srcBackupFullPath)
 		return nil, err
@@ -58,7 +60,6 @@ func (c *fileRestoreClient) RestoreFile(ctx context.Context, projectId, destFile
 func (c *fileRestoreClient) GetRestoreOperation(ctx context.Context, projectId, operationName string) (*file.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcFile.Projects.Locations.Operations.Get(operationName).Do()
-	client.IncrementCallCounter("File", "Operations.Get", "", err)
 	if err != nil {
 		logger.Error(err, "GetRestoreOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
@@ -74,7 +75,6 @@ func (c *fileRestoreClient) FindRestoreOperation(ctx context.Context, projectId,
 	verbFilter := "metadata.verb=\"restore\""
 	filters := fmt.Sprintf("%s AND %s", targetFilter, verbFilter)
 	operationList, err := c.svcFile.Projects.Locations.Operations.List(filestoreParentPath).Filter(filters).Do()
-	client.IncrementCallCounter("File", "Operations.List", "", err)
 	if err != nil {
 		logger.Error(err, "FindRestoreOperation", "projectId", projectId, "destFileFullPath", destFileFullPath)
 		return nil, err
