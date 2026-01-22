@@ -12,7 +12,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
-	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -30,7 +29,7 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 
 	project := state.GetGcpProjectId()
 	location := state.GetGcpLocation()
-	name := v2client.GetFilestoreInstanceId(nfsInstance.Name)
+	name := nfsInstance.Name
 
 	instance := state.ToGcpInstance()
 
