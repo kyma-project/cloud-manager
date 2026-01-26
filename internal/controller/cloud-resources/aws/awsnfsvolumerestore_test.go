@@ -108,6 +108,12 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolumeRestore).
 				Should(Succeed())
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolumeBackup).
+				Should(Succeed())
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume).
+				Should(Succeed())
 		})
 	})
 
@@ -213,6 +219,15 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 		By("Then the AwsNfsVolumeRestore in SKR is deleted", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolumeRestore).
+				Should(Succeed())
+		})
+
+		By("// cleanup: Delete remaining test resources", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolumeBackup).
+				Should(Succeed())
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume).
 				Should(Succeed())
 		})
 	})
