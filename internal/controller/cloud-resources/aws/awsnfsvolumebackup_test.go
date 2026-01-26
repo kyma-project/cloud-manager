@@ -39,6 +39,12 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 		})
 
 		By("And Given Scope has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope,
+					NewObjActions(),
+				).
+				Should(Succeed())
+
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope,
 					WithConditions(KcpReadyCondition()),
