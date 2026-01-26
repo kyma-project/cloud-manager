@@ -220,33 +220,100 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 		})
 	})
 
-	Describe("Scenario: SKR AwsNfsVolumeBackup with location is created", func() {
-		//Define variables.
-		awsNfsVolumeBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
-		awsNfsVolumeBackupName := "aws-nfs-volume-backup-02"
+	It("Scenario: Creates AwsNfsVolumeBackup with custom location", func() {
+		suffix := "9d2f4e6a-8b3c-47d5-9e1a-6f4b7c9d3e5a"
+		skrAwsNfsVolumeName := suffix
+		nfsInstanceName := suffix
+		backupName := suffix
 		awsNfsVolumeBackupLocation := "us-west-1"
 
-		It("When AwsNfsVolumeBackup Create is called", func() {
+		scope := &cloudcontrolv1beta1.Scope{}
+		skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
+		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		awsNfsVolumeBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
+
+		// Stop reconciliation to prevent interference
+		skrawsnfsvol.Ignore.AddName(skrAwsNfsVolumeName)
+		nfsinstance.Ignore.AddName(nfsInstanceName)
+
+		By("Given KCP Scope exists", func() {
+			Expect(client.IgnoreAlreadyExists(
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				To(Succeed())
+		})
+
+		By("And Given Scope has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope,
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given SKR AwsNfsVolume exists", func() {
+			Eventually(GivenAwsNfsVolumeExists).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume,
+					WithName(skrAwsNfsVolumeName),
+					WithAwsNfsVolumeCapacity("1Gi"),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP NfsInstance exists", func() {
+			Eventually(GivenNfsInstanceExists).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					WithName(nfsInstanceName),
+					WithRemoteRef(skrAwsNfsVolumeName),
+					WithScope(infra.SkrKymaRef().Name),
+					WithIpRange(nfsInstanceName),
+					WithNfsInstanceAws(),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given NfsInstance has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					WithConditions(KcpReadyCondition()),
+					WithNfsInstanceStatusId(nfsInstance.Name),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given AwsNfsVolume has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume,
+					WithConditions(SkrReadyCondition()),
+					WithAwsNfsVolumeStatusId(nfsInstanceName),
+				).
+				Should(Succeed())
+		})
+
+		By("When AwsNfsVolumeBackup Create is called with custom location", func() {
 			Eventually(CreateAwsNfsVolumeBackup).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
-					WithName(awsNfsVolumeBackupName),
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
+					WithName(backupName),
 					WithAwsNfsVolume(skrAwsNfsVolumeName),
 					WithAwsNfsVolumeBackupLocation(awsNfsVolumeBackupLocation),
 				).
 				Should(Succeed())
+		})
 
-			By("And Then AwsNfsVolumeBackup has Ready condition", func() {
-				Eventually(LoadAndCheck).
-					WithArguments(
-						infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
-						NewObjActions(),
-						HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-						AssertAwsNfsVolumeBackupHasLocation(scope.Spec.Region),
-						AssertAwsNfsVolumeBackupHasLocation(awsNfsVolumeBackupLocation),
-					).
-					Should(Succeed())
-			})
+		By("Then AwsNfsVolumeBackup has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					AssertAwsNfsVolumeBackupHasLocation(scope.Spec.Region),
+					AssertAwsNfsVolumeBackupHasLocation(awsNfsVolumeBackupLocation),
+				).
+				Should(Succeed())
+		})
+
+		By("// cleanup: Delete test resources", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup).
+				Should(Succeed())
 		})
 	})
 
