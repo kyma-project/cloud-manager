@@ -28,3 +28,62 @@ initFileVar() {
   fi
   eval "$VAR_NAME=\"$VAR_VALUE\""
 }
+
+TMP_CREDS=$(mktemp)
+trap "rm -f \"$TMP_CREDS\"" EXIT
+
+putCredentialKeyVal() {
+  local key=$1
+  local value=$2
+  local FN
+  FN=$(mktemp)
+  trap "rm -f \"$FN\"" EXIT
+  echo -n "$value" > "$FN"
+  value=$(base64 < "$FN")
+  echo "  ${key}: ${value}" >> "$TMP_CREDS"
+  rm -f "$FN"
+}
+
+saveCredentialsToGarden() {
+  checkRequiredCommands "kubectl"
+
+  if [ -z "$GARDEN_KUBECONFIG" ]; then
+    return 0
+  fi
+  if [ ! -f "$GARDEN_KUBECONFIG" ]; then
+    echo "GARDEN_KUBECONFIG '$$GARDEN_KUBECONFIG' is not a valid file"
+    exit 1
+  fi
+
+  local TXT
+  TXT=$(cat "$TMP_CREDS")
+
+  if [ "${#TXT}" -eq 0 ]; then
+    return 0
+  fi
+  local SECRET_NAME="$1"
+  if [ -z "$SECRET_NAME" ]; then
+    echo "Error: saveCredentialsToGarden called w/out secret name parameter"
+    exit 1
+  fi
+
+  local FN
+  FN=$(mktemp)
+  trap "rm -f \"$FN\"" EXIT
+
+  cat << EOF > $FN
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${SECRET_NAME}
+type: Opaque
+data:
+${TXT}
+EOF
+
+  echo ""
+  cat "$FN"
+
+  KUBECONFIG="$GARDEN_KUBECONFIG" kubectl apply -f "$FN"
+  rm -f "$FN"
+}

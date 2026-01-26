@@ -103,12 +103,12 @@ func areMaintenancePoliciesDifferent(skrPolicy *cloudresourcesv1beta1.Maintenanc
 		return false
 	}
 
-	if skrPolicy.DayOfWeek == nil && kcpPolicy.DayOfWeek == nil {
-		return false
-	}
-
 	if (skrPolicy == nil && kcpPolicy != nil) || (skrPolicy != nil && kcpPolicy == nil) {
 		return true
+	}
+
+	if skrPolicy.DayOfWeek == nil && kcpPolicy.DayOfWeek == nil {
+		return false
 	}
 
 	if (skrPolicy.DayOfWeek == nil && kcpPolicy.DayOfWeek != nil) || (skrPolicy.DayOfWeek != nil && kcpPolicy.DayOfWeek == nil) {

@@ -59,7 +59,7 @@ var cmdInstanceWait = &cobra.Command{
 }
 
 func init() {
-	cmdInstanceWait.Flags().StringSliceVarP(&runtimes, "runtime", "r", []string{}, "runtime ID to wait for")
+	cmdInstanceWait.Flags().StringArrayVarP(&runtimes, "runtime", "r", []string{}, "runtime ID to wait for")
 	cmdInstanceWait.Flags().BoolVarP(&all, "all", "a", false, "wait for all runtimes")
 	cmdInstanceWait.Flags().DurationVarP(&timeout, "timeout", "t", 900*time.Second, "Timeout for waiting for instance to become ready")
 	cmdInstanceWait.MarkFlagsOneRequired("runtime", "all")

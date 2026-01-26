@@ -26,13 +26,15 @@ var _ = Describe("Feature: KCP Nuke AwsNfsVolumeBackup", func() {
 
 	recoveryPointArns := []string{"", ""}
 
+	awsAccountId := "37456563728"
+
 	BeforeEach(func() {
 		By("Given KCP Scope exists", func() {
 			kcpscope.Ignore.AddName(scopeName)
 			// Given Scope exists
-			Eventually(GivenScopeAwsExists).
+			Eventually(CreateScopeAws).
 				WithArguments(
-					infra.Ctx(), infra, scope,
+					infra.Ctx(), infra, scope, awsAccountId,
 					WithName(scopeName),
 				).
 				Should(Succeed())

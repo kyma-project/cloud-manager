@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
+
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -23,6 +24,9 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 			vpcId    = "b1d68fc4-1bd4-4ad6-b81c-3d86de54f4f9"
 		)
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
@@ -30,11 +34,11 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName)).
 				Should(Succeed())
 		})
 
-		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMock := awsAccount.Region(scope.Spec.Region)
 
 		var theVpc *ec2types.Vpc
 		By("And Given AWS VPC exists", func() {
@@ -171,6 +175,9 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 			iprangeCidr = "10.181.0.0/16"
 		)
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
@@ -178,11 +185,11 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName)).
 				Should(Succeed())
 		})
 
-		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMock := awsAccount.Region(scope.Spec.Region)
 
 		var theVpc *ec2types.Vpc
 		By("And Given AWS VPC exists", func() {
@@ -311,6 +318,9 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 			iprangeName = "d968c855-7de8-4e33-84b2-15510d9865a7"
 		)
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		scope := &cloudcontrolv1beta1.Scope{}
 		iprange := &cloudcontrolv1beta1.IpRange{}
 		var theVpc *ec2types.Vpc
@@ -320,11 +330,11 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName)).
 				Should(Succeed())
 		})
 
-		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMock := awsAccount.Region(scope.Spec.Region)
 
 		By("And Given AWS VPC exists", func() {
 			theVpc = awsMock.AddVpc(

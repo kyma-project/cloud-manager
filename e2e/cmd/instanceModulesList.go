@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/elliotchance/pie/v2"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
@@ -14,12 +15,14 @@ import (
 )
 
 type ModuleInfo struct {
-	Name    string
-	Spec    bool
-	State   string
-	Message string
-	CR      bool
-	CrState string
+	Alias     string
+	RuntimeID string
+	Name      string
+	Spec      bool
+	State     string
+	Message   string
+	CR        bool
+	CrState   string
 }
 
 var cmdInstanceModulesList = &cobra.Command{
@@ -30,76 +33,114 @@ var cmdInstanceModulesList = &cobra.Command{
 			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		clnt, err := keb.CreateInstanceClient(rootCtx, runtimeID)
-		if err != nil {
-			return err
-		}
-
-		kyma := &operatorv1beta2.Kyma{}
-		err = clnt.Get(rootCtx, types.NamespacedName{
-			Namespace: "kyma-system",
-			Name:      "default",
-		}, kyma)
-		if err != nil {
-			return fmt.Errorf("failed to get SKR kyma: %w", err)
-		}
-
-		tbl := table.New("Module", "Kyma Spec", "Kyma State", "Kyma Message", "Module CR", "CR State").WithPadding(4)
-		data := map[string]*ModuleInfo{}
-
-		dashIt := func(s string) string {
-			if s == "" {
-				return "-"
+		var runtimeIdList []string
+		if len(runtimes) > 0 {
+			runtimeIdList = append([]string{}, runtimes...)
+		} else {
+			idArr, err := keb.List(rootCtx)
+			if err != nil {
+				return fmt.Errorf("failed to list keb instances: %w", err)
 			}
-			return s
-		}
-
-		for _, m := range kyma.Status.Modules {
-			data[m.Name] = &ModuleInfo{
-				Name:    m.Name,
-				Spec:    false,
-				State:   dashIt(string(m.State)),
-				Message: dashIt(m.Message),
-				CR:      false,
-				CrState: "",
-			}
-		}
-		for _, m := range kyma.Spec.Modules {
-			mi, ok := data[m.Name]
-			if !ok {
-				data[m.Name] = &ModuleInfo{
-					Name:    m.Name,
-					Spec:    true,
-					State:   dashIt(""),
-					Message: dashIt(""),
-					CR:      false,
-					CrState: dashIt(""),
+			for _, id := range idArr {
+				if aliases == nil || pie.Contains(aliases, id.Alias) {
+					runtimeIdList = append(runtimeIdList, id.RuntimeID)
 				}
-			} else {
-				mi.Spec = true
 			}
 		}
 
-		for _, mi := range data {
-			if mi.Name == "cloud-manager" {
-				cr := &cloudresourcesv1beta1.CloudResources{}
-				err = clnt.Get(rootCtx, types.NamespacedName{
-					Namespace: "kyma-system",
-					Name:      "default",
-				}, cr)
-				if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
+		tbl := table.New("ALias", "RuntimeID", "Module", "Kyma Spec", "Kyma State", "Kyma Message", "Module CR", "CR State").WithPadding(4)
+		var data []*ModuleInfo
+
+		for _, rtID := range runtimeIdList {
+
+			id, err := keb.GetInstance(rootCtx, rtID)
+			if err != nil {
+				return fmt.Errorf("failed to get instance %q: %w", rtID, err)
+			}
+
+			clnt, err := keb.CreateInstanceClient(rootCtx, rtID)
+			if err != nil {
+				return err
+			}
+
+			skrKyma := &operatorv1beta2.Kyma{}
+			err = clnt.Get(rootCtx, types.NamespacedName{
+				Namespace: "kyma-system",
+				Name:      "default",
+			}, skrKyma)
+			if err != nil {
+				return fmt.Errorf("failed to get SKR kyma: %w", err)
+			}
+
+			dashIt := func(s string) string {
+				if s == "" {
+					return "-"
+				}
+				return s
+			}
+
+			localData := map[string]*ModuleInfo{}
+
+			for _, m := range skrKyma.Status.Modules {
+				if len(modules) > 0 && !pie.Contains(modules, m.Name) {
 					continue
 				}
-				if err != nil {
-					return fmt.Errorf("failed to get CloudResources: %w", err)
+				localData[m.Name] = &ModuleInfo{
+					Alias:     id.Alias,
+					RuntimeID: id.RuntimeID,
+					Name:      m.Name,
+					Spec:      false,
+					State:     dashIt(string(m.State)),
+					Message:   dashIt(m.Message),
+					CR:        false,
+					CrState:   "",
 				}
-				mi.CR = true
-				mi.CrState = dashIt(string(cr.Status.State))
 			}
-		}
+			for _, m := range skrKyma.Spec.Modules {
+				if len(modules) > 0 && !pie.Contains(modules, m.Name) {
+					continue
+				}
+				mi, ok := localData[m.Name]
+				if !ok {
+					localData[m.Name] = &ModuleInfo{
+						Name:    m.Name,
+						Spec:    true,
+						State:   dashIt(""),
+						Message: dashIt(""),
+						CR:      false,
+						CrState: dashIt(""),
+					}
+				} else {
+					mi.Spec = true
+				}
+			}
+
+			for _, mi := range localData {
+				if mi.Name == "cloud-manager" {
+					cr := &cloudresourcesv1beta1.CloudResources{}
+					err = clnt.Get(rootCtx, types.NamespacedName{
+						Namespace: "kyma-system",
+						Name:      "default",
+					}, cr)
+					if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
+						continue
+					}
+					if err != nil {
+						return fmt.Errorf("failed to get CloudResources: %w", err)
+					}
+					mi.CR = true
+					mi.CrState = dashIt(string(cr.Status.State))
+				}
+			}
+
+			for _, mi := range localData {
+				data = append(data, mi)
+			}
+
+		} // for runtime
 
 		for _, mi := range data {
-			tbl.AddRow(mi.Name, mi.Spec, mi.State, mi.Message, mi.CR, mi.CrState)
+			tbl.AddRow(mi.Alias, mi.RuntimeID, mi.Name, mi.Spec, mi.State, mi.Message, mi.CR, mi.CrState)
 		}
 
 		tbl.Print()
@@ -111,6 +152,8 @@ var cmdInstanceModulesList = &cobra.Command{
 
 func init() {
 	cmdInstanceModules.AddCommand(cmdInstanceModulesList)
-	cmdInstanceModulesList.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "The runtime ID")
-	_ = cmdInstanceModulesList.MarkFlagRequired("runtime-id")
+	cmdInstanceModulesList.Flags().StringArrayVarP(&runtimes, "runtime-id", "r", nil, "The runtime ID")
+	cmdInstanceModulesList.Flags().StringArrayVarP(&aliases, "alias", "a", nil, "The runtime alias")
+	cmdInstanceModulesList.Flags().StringArrayVarP(&modules, "module-name", "m", nil, "The module name")
+	cmdInstanceModulesList.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 }

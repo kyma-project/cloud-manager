@@ -2,11 +2,16 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type NetworkOwner string
@@ -18,6 +23,9 @@ const (
 
 type ConfigType struct {
 	GardenKubeconfig string `yaml:"gardenKubeconfig" json:"gardenKubeconfig"`
+
+	ShootPrefix      string            `yaml:"shootPrefix" json:"shootPrefix"`
+	ShootAnnotations map[string]string `yaml:"shootAnnotations" json:"shootAnnotations"`
 
 	KcpNamespace    string `yaml:"kcpNamespace" json:"kcpNamespace"`
 	GardenNamespace string `yaml:"gardenNamespace" json:"gardenNamespace"`
@@ -35,6 +43,20 @@ type ConfigType struct {
 	CloudProfiles map[string]string `yaml:"cloudProfiles" json:"cloudProfiles"`
 
 	OverwriteGardenerCredentials bool `yaml:"overwriteGardenerCredentials" json:"overwriteGardenerCredentials"`
+
+	ConfigDir      string `yaml:"configDir" json:"configDir"`
+	CredentialsDir string `yaml:"credentialsDir" json:"credentialsDir"`
+	TfWorkspaceDir string `yaml:"tfWorkspaceDir" json:"tfWorkspaceDir"`
+	TfCmd          string `yaml:"tfCmd" json:"tfCmd"`
+
+	DownloadGardenSecrets map[string]map[string]string `yaml:"downloadGardenSecrets" json:"downloadGardenSecrets"`
+}
+
+func (c *ConfigType) AfterConfigLoaded() {
+	// strip all whitespaces
+	c.ShootPrefix = strings.Join(strings.Fields(c.ShootPrefix), "")
+	c.ShootPrefix = strings.ReplaceAll(c.ShootPrefix, "-", "")
+	c.ShootPrefix = strings.ReplaceAll(c.ShootPrefix, "_", "")
 }
 
 func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byte) error {
@@ -58,6 +80,31 @@ func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byt
 	}
 
 	return nil
+}
+
+func (c *ConfigType) CreateGardenClient() (client.Client, error) {
+	kubeBytes, err := os.ReadFile(c.GardenKubeconfig)
+	if err != nil {
+		return nil, fmt.Errorf("error reading gardener kubeconfig: %w", err)
+	}
+
+	if err := c.SetGardenNamespaceFromKubeconfigBytes(kubeBytes); err != nil {
+		return nil, fmt.Errorf("error setting gardener namespace from kubeconfig: %w", err)
+	}
+
+	restConfig, err := clientcmd.RESTConfigFromKubeConfig(kubeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("error creating gardener rest config: %w", err)
+	}
+
+	clnt, err := client.New(restConfig, client.Options{
+		Scheme: commonscheme.GardenScheme,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating gardener client: %w", err)
+	}
+
+	return clnt, nil
 }
 
 type Subscriptions []SubscriptionInfo
@@ -128,6 +175,11 @@ func initConfig(cfg config.Config, obj *ConfigType) {
 				"openstack": "converged-cloud-kyma",
 			}),
 		),
+
+		config.Path(
+			"tfCmd",
+			config.DefaultScalar("tofu"),
+		),
 	)
 }
 
@@ -152,6 +204,15 @@ func LoadConfig() *ConfigType {
 		configDir = "../../../../"
 	}
 	result := &ConfigType{}
+	result.ConfigDir = configDir
+	if !strings.HasPrefix(configDir, "/") {
+		wd, err := os.Getwd()
+		if err == nil {
+			result.ConfigDir = path.Join(wd, configDir)
+		}
+	}
+	result.CredentialsDir = path.Join(result.ConfigDir, "tmp")
+	result.TfWorkspaceDir = path.Join(result.CredentialsDir, "tf-workspaces")
 	cfg.BaseDir(configDir)
 	initConfig(cfg, result)
 	cfg.Read()
@@ -161,6 +222,7 @@ func LoadConfig() *ConfigType {
 
 func Stub() *ConfigType {
 	result := DefaultConfig()
+	result.ShootPrefix = "e"
 	result.OidcClientId = "79221501-5dcc-4285-9af6-d023f313918e"
 	result.OidcIssuerUrl = "https://oidc.e2e.cloud-manager.kyma.local"
 	result.Administrators = []string{"admin@e2e.cloud-manager.kyma.local"}

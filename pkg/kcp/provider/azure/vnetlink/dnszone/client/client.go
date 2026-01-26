@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
@@ -18,19 +17,13 @@ type Client interface {
 func NewClientProvider() azureclient.ClientProvider[Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (Client, error) {
 
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{
-			AdditionallyAllowedTenants: []string{"*"},
-		})
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptionsBuilder().WithAnyTenant().Build())
 
 		if err != nil {
 			return nil, err
 		}
 
-		options := &arm.ClientOptions{
-			AuxiliaryTenants: auxiliaryTenants,
-		}
-
-		privateDnsClientFactory, err := armprivatedns.NewClientFactory(subscriptionId, cred, options)
+		privateDnsClientFactory, err := armprivatedns.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptionsBuilder().WithAuxiliaryTenants(auxiliaryTenants).Build())
 
 		if err != nil {
 			return nil, err

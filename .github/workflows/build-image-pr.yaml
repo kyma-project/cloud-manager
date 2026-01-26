@@ -2,7 +2,7 @@ name: Cloud-Manager Build Image PR
 
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
     paths-ignore:
       - .github/workflows/stale.yaml
       - docs/**
@@ -12,15 +12,13 @@ permissions:
   contents: read # This is required for actions/checkout
 
 jobs:
-  ado-build:
-    name: Build Image ADO
-    runs-on: ubuntu-latest
+  build-image:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
-    steps:
-      - name: Build Image ADO
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: build-image-pr-ado.yaml
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
+      name: cloud-manager
+      dockerfile: Dockerfile
+      export-tags: true
 
   local-build:
     name: Build Image Locally

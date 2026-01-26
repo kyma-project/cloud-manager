@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	"strings"
 )
 
@@ -216,6 +217,9 @@ func NewRedisInstanceResourceId(subscription, resourceGroup, redisInstanceName s
 
 // NewPrivateDnsZoneName Private endpoint private DNS zone configurations will only automatically generate if you use the recommended naming scheme
 func NewPrivateDnsZoneName() string {
+	if azureconfig.AzureConfig.ClientOptions.Cloud == "AzureChina" {
+		return "privatelink.redis.cache.chinacloudapi.cn"
+	}
 	return "privatelink.redis.cache.windows.net"
 }
 

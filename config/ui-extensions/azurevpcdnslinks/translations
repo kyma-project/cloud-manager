@@ -3,5 +3,6 @@ en:
   status: Status
   status.state: State
   spec.remoteLinkName: Remote Link Name
-  spec.remotePrivateDnsZone: Remote Private Dns Zone
+  spec.remotePrivateDnsZone: Remote Private DNS Zone
+  spec.remoteDnsResolverRuleset: Remote DNS Resolver Ruleset
   spec.remoteTenant: Remote Tenant

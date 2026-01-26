@@ -215,3 +215,25 @@ func (s *State) GetUpgradeParamGroupName() string {
 
 	return paramGroupName
 }
+
+// GetProvisionedMachineType returns the provisioned machine type from the AWS ElastiCache Replication Group
+func (s *State) GetProvisionedMachineType() string {
+	if len(s.memberClusters) == 0 {
+		return ""
+	}
+	return ptr.Deref(s.memberClusters[0].CacheNodeType, "")
+}
+
+// GetProvisionedReplicaCount returns the provisioned replica count from the AWS ElastiCache Replication Group
+func (s *State) GetProvisionedReplicaCount() int32 {
+	if s.elastiCacheReplicationGroup == nil || len(s.elastiCacheReplicationGroup.MemberClusters) == 0 {
+		return 0
+	}
+
+	// Subtract 1 to exclude the primary node, counting only replicas
+	memberCount := len(s.elastiCacheReplicationGroup.MemberClusters)
+	if memberCount <= 1 {
+		return 0
+	}
+	return int32(memberCount - 1)
+}

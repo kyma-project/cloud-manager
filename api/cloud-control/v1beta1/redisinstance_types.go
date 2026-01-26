@@ -16,11 +16,7 @@ package v1beta1
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 const (
 	ReasonCanNotLoadResourceGroup   = "ResourceGroupCanNotLoad"
@@ -248,7 +244,11 @@ type RedisInstanceAws struct {
 
 // RedisInstanceStatus defines the observed state of RedisInstance
 type RedisInstanceStatus struct {
+	// +optional
 	State StatusState `json:"state,omitempty"`
+
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// +optional
 	Id string `json:"id,omitempty"`
@@ -264,6 +264,20 @@ type RedisInstanceStatus struct {
 
 	// +optional
 	CaCert string `json:"caCert,omitempty"`
+
+	// The reconciled node/machine type of the Redis instance.
+	// AWS: cache node type (e.g., "cache.t3.micro")
+	// Azure: SKU family + capacity (e.g., "P3")
+	// +optional
+	NodeType string `json:"nodeType,omitempty"`
+
+	// The reconciled memory size in GiB (GCP: Machine type = MemorySizeGb (their capacity model)).
+	// +optional
+	MemorySizeGb int32 `json:"memorySizeGb,omitempty"`
+
+	// The reconciled replica count.
+	// +optional
+	ReplicaCount int32 `json:"replicaCount,omitempty"`
 
 	// List of status conditions to indicate the status of a RedisInstance.
 	// +optional
@@ -298,36 +312,20 @@ func (in *RedisInstance) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
+func (in *RedisInstance) ObservedGeneration() int64 {
+	return in.Status.ObservedGeneration
+}
+
+func (in *RedisInstance) SetObservedGeneration(v int64) {
+	in.Status.ObservedGeneration = v
+}
+
 func (in *RedisInstance) State() string {
 	return string(in.Status.State)
 }
 
 func (in *RedisInstance) SetState(v string) {
 	in.Status.State = StatusState(v)
-}
-
-func (in *RedisInstance) GetObjectMeta() *metav1.ObjectMeta {
-	return &in.ObjectMeta
-}
-
-func (in *RedisInstance) CloneForPatchStatus() client.Object {
-	result := &RedisInstance{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "RedisInstance",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
-	}
-
-	if result.Status.Conditions == nil {
-		result.Status.Conditions = []metav1.Condition{}
-	}
-
-	return result
 }
 
 func (in *RedisInstance) SetStatusStateToReady() {

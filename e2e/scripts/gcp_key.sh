@@ -31,7 +31,19 @@ create() {
   local FN=$(mktemp)
   trap "rm -f \"$FN\"" EXIT
   gcloud iam service-accounts keys create "$FN" --iam-account="$SA" --project $GCP_PROJECT
+
+  echo ""
   cat $FN
+
+  local VAL=$(cat "$FN")
+  putCredentialKeyVal "serviceaccount.json" "$VAL"
+  if [ "$SA_TYPE" = "default" ]; then
+    saveCredentialsToGarden "$GCP_GARDEN_DEFAULT_SECRET"
+  else
+    saveCredentialsToGarden "$GCP_GARDEN_PEERING_SECRET"
+  fi
+
+  rm -r "$FN"
 }
 
 

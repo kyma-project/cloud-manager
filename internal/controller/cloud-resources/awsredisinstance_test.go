@@ -1,7 +1,7 @@
 package cloudresources
 
 import (
-	"fmt"
+	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -194,25 +194,16 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 						WithName(authSecretName),
 						WithNamespace(awsRedisInstance.Namespace),
 					),
+					HavingLabelKeys(
+						util.WellKnownK8sLabelComponent,
+						util.WellKnownK8sLabelPartOf,
+						util.WellKnownK8sLabelManagedBy,
+					),
+					HavingLabel(cloudresourcesv1beta1.LabelRedisInstanceStatusId, awsRedisInstance.Status.Id),
+					HavingLabels(authSecretLabels),
+					HavingAnnotations(authSecretAnnotations),
 				).
 				Should(Succeed())
-
-			By("And it has defined cloud-manager default labels")
-			Expect(authSecret.Labels[util.WellKnownK8sLabelComponent]).ToNot(BeNil())
-			Expect(authSecret.Labels[util.WellKnownK8sLabelPartOf]).ToNot(BeNil())
-			Expect(authSecret.Labels[util.WellKnownK8sLabelManagedBy]).ToNot(BeNil())
-
-			By("And it has defined ownmership label")
-			Expect(authSecret.Labels[cloudresourcesv1beta1.LabelRedisInstanceStatusId]).To(Equal(awsRedisInstance.Status.Id))
-
-			By("And it has user defined custom labels")
-			for k, v := range authSecretLabels {
-				Expect(authSecret.Labels).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected auth Secret to have label %s=%s", k, v))
-			}
-			By("And it has user defined custom annotations")
-			for k, v := range authSecretAnnotations {
-				Expect(authSecret.Annotations).To(HaveKeyWithValue(k, v), fmt.Sprintf("expected auth Secret to have annotation %s=%s", k, v))
-			}
 
 			By("And it has user defined custom extraData")
 			Expect(authSecret.Data).To(HaveKeyWithValue("foo", []byte("bar")), "expected auth secret data to have foo=bar")
@@ -685,6 +676,214 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange, NewObjActions()).
 				Should(Succeed())
 		})
+
+		By("// cleanup: delete default SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: SKR AwsRedisInstance authSecret is modified", func() {
+		awsRedisInstanceName := "auth-secret-modified-instance-" + uuid.NewString()[:8]
+		skrIpRangeId := "6a07d35a-0e27-45e9-b7da-b99527cb0f09"
+		awsRedisInstance := &cloudresourcesv1beta1.AwsRedisInstance{}
+		tier := cloudresourcesv1beta1.AwsRedisTierP1
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+		skriprange.Ignore.AddName("default")
+
+		authSecretName := "aws-instance-auth-secret-" + uuid.NewString()[:8]
+		authSecretLabels := map[string]string{
+			"env": "test",
+		}
+		authSecretAnnotations := map[string]string{
+			"purpose": "testing",
+		}
+
+		By("Given default SKR IpRange does not exist", func() {
+			Consistently(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				ShouldNot(Succeed())
+		})
+
+		By("And Given AwsRedisInstance is created with initial authSecret config", func() {
+			Eventually(CreateAwsRedisInstance).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsRedisInstance,
+					WithName(awsRedisInstanceName),
+					WithAwsRedisInstanceRedisTier(tier),
+					WithAwsRedisInstanceEngineVersion("7.1"),
+					WithAwsRedisInstanceAuthSecretName(authSecretName),
+					WithAwsRedisInstanceAuthSecretLabels(authSecretLabels),
+					WithAwsRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given default SKR IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
+		})
+
+		By("And Given default SKR IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		kcpRedisInstance := &cloudcontrolv1beta1.RedisInstance{}
+
+		By("And Given KCP RedisInstance is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsRedisInstance,
+					NewObjActions(),
+					HavingAwsRedisInstanceStatusId(),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+				).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpRedisInstance,
+					NewObjActions(
+						WithName(awsRedisInstance.Status.Id),
+					),
+				).
+				Should(Succeed())
+		})
+
+		kcpRedisInstancePrimaryEndpoint := "10.0.0.3:6379"
+		kcpRedisInstanceAuthString := "aws-instance-auth-string-11111"
+
+		By("And Given KCP RedisInstance has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpRedisInstance,
+					WithRedisInstancePrimaryEndpoint(kcpRedisInstancePrimaryEndpoint),
+					WithRedisInstanceAuthString(kcpRedisInstanceAuthString),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given SKR AwsRedisInstance has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsRedisInstance,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+				).
+				Should(Succeed())
+		})
+
+		authSecret := &corev1.Secret{}
+		By("And Given SKR auth Secret is created with initial values", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					authSecret,
+					NewObjActions(
+						WithName(authSecretName),
+						WithNamespace(awsRedisInstance.Namespace),
+					),
+				).
+				Should(Succeed())
+
+			By("And it has initial labels")
+			Expect(authSecret.Labels).To(HaveKeyWithValue("env", "test"))
+
+			By("And it has initial annotations")
+			Expect(authSecret.Annotations).To(HaveKeyWithValue("purpose", "testing"))
+		})
+
+		newLabels := map[string]string{
+			"env":  "production",
+			"team": "platform",
+		}
+		newAnnotations := map[string]string{
+			"purpose":     "production-testing",
+			"cost-center": "12345",
+		}
+		newExtraData := map[string]string{
+			"custom-key": "custom-value",
+			"endpoint":   "{{.host}}:{{.port}}",
+		}
+
+		By("When AwsRedisInstance authSecret config is modified with new labels, annotations, and extraData", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					awsRedisInstance,
+					NewObjActions(),
+				).
+				Should(Succeed())
+
+			awsRedisInstance.Spec.AuthSecret.Labels = newLabels
+			awsRedisInstance.Spec.AuthSecret.Annotations = newAnnotations
+			awsRedisInstance.Spec.AuthSecret.ExtraData = newExtraData
+
+			Eventually(func() error {
+				return infra.SKR().Client().Update(infra.Ctx(), awsRedisInstance)
+			}).Should(Succeed())
+		})
+
+		By("Then SKR auth Secret is updated with new labels, annotations, and extraData", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), authSecret,
+					NewObjActions(WithName(authSecretName), WithNamespace(awsRedisInstance.Namespace)),
+					HavingLabels(map[string]string{
+						"env":  "production",
+						"team": "platform",
+					}),
+					HavingLabelKeys(
+						cloudresourcesv1beta1.LabelRedisInstanceStatusId,
+						cloudresourcesv1beta1.LabelCloudManaged,
+					),
+					HavingAnnotations(map[string]string{
+						"purpose":     "production-testing",
+						"cost-center": "12345",
+					}),
+				).
+				Should(Succeed())
+
+			// Verify extraData
+			Expect(authSecret.Data).To(And(
+				HaveKeyWithValue("custom-key", []byte("custom-value")),
+				HaveKeyWithValue("endpoint", []byte(kcpRedisInstancePrimaryEndpoint)),
+				HaveKey("host"),
+				HaveKey("port"),
+				HaveKey("authString"),
+			))
+		})
+
+		// Cleanup
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), awsRedisInstance).
+			Should(Succeed())
 
 		By("// cleanup: delete default SKR IpRange", func() {
 			Eventually(Delete).

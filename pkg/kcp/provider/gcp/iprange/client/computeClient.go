@@ -2,99 +2,164 @@ package client
 
 import (
 	"context"
-	"fmt"
+
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/option"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/proto"
 )
 
+// ComputeClient defines business operations for IpRange Compute API interactions.
+// Uses NEW pattern with cloud.google.com/go/compute/apiv1 (Cloud Client Library).
 type ComputeClient interface {
-	ListGlobalAddresses(ctx context.Context, projectId, vpc string) (*compute.AddressList, error)
-	CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (*compute.Operation, error)
-	DeleteIpRange(ctx context.Context, projectId, name string) (*compute.Operation, error)
-	GetIpRange(ctx context.Context, projectId, name string) (*compute.Address, error)
-	GetGlobalOperation(ctx context.Context, projectId, operationName string) (*compute.Operation, error)
+	ListGlobalAddresses(ctx context.Context, projectId, vpc string) ([]*computepb.Address, error)
+	CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (string, error) // returns operation name
+	DeleteIpRange(ctx context.Context, projectId, name string) (string, error)                                                       // returns operation name
+	GetIpRange(ctx context.Context, projectId, name string) (*computepb.Address, error)
+	GetGlobalOperation(ctx context.Context, projectId, operationName string) (*computepb.Operation, error)
+	WaitGlobalOperation(ctx context.Context, projectId, operationName string) error
 }
 
-func NewComputeClient() client.ClientProvider[ComputeClient] {
-	return client.NewCachedClientProvider(
-		func(ctx context.Context, saJsonKeyPath string) (ComputeClient, error) {
-			httpClient, err := client.GetCachedGcpClient(ctx, saJsonKeyPath)
-			if err != nil {
-				return nil, err
-			}
-
-			computeClient, err := compute.NewService(ctx, option.WithHTTPClient(httpClient))
-			if err != nil {
-				return nil, fmt.Errorf("error obtaining GCP Compute Client: [%w]", err)
-			}
-			return NewComputeClientForService(computeClient), nil
-		},
-	)
+// NewComputeClientProvider returns a provider function that creates ComputeClient instances.
+// Uses NEW pattern - accesses clients from GcpClients singleton.
+func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
+	return func() ComputeClient {
+		return NewComputeClient(gcpClients)
+	}
 }
 
-func NewComputeClientForService(svcCompute *compute.Service) ComputeClient {
-	return &computeClient{svcCompute: svcCompute}
+// NewComputeClient creates a new ComputeClient wrapping GcpClients.
+func NewComputeClient(gcpClients *gcpclient.GcpClients) ComputeClient {
+	return &computeClient{
+		globalAddressesClient:  gcpClients.ComputeGlobalAddresses,
+		globalOperationsClient: gcpClients.ComputeGlobalOperations,
+	}
 }
 
 type computeClient struct {
-	svcCompute *compute.Service
+	globalAddressesClient  *compute.GlobalAddressesClient
+	globalOperationsClient *compute.GlobalOperationsClient
 }
 
-func (c *computeClient) GetIpRange(ctx context.Context, projectId, name string) (*compute.Address, error) {
+func (c *computeClient) GetIpRange(ctx context.Context, projectId, name string) (*computepb.Address, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	out, err := c.svcCompute.GlobalAddresses.Get(projectId, name).Do()
-	client.IncrementCallCounter("Compute", "GlobalAddresses.Get", "", err)
+
+	req := &computepb.GetGlobalAddressRequest{
+		Project: projectId,
+		Address: name,
+	}
+
+	out, err := c.globalAddressesClient.Get(ctx, req)
 	if err != nil {
 		logger.Info("GetIpRange", "err", err)
 	}
 	return out, err
 }
 
-func (c *computeClient) DeleteIpRange(ctx context.Context, projectId, name string) (*compute.Operation, error) {
+func (c *computeClient) DeleteIpRange(ctx context.Context, projectId, name string) (string, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	operation, err := c.svcCompute.GlobalAddresses.Delete(projectId, name).Do()
-	client.IncrementCallCounter("Compute", "GlobalAddresses.Delete", "", err)
-	logger.Info("DeleteIpRange", "operation", operation, "err", err)
-	return operation, err
-}
 
-func (c *computeClient) CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (*compute.Operation, error) {
-	logger := composed.LoggerFromCtx(ctx)
-	operation, err := c.svcCompute.GlobalAddresses.Insert(projectId, &compute.Address{
-		Name:         name,
-		Description:  description,
-		Address:      address,
-		PrefixLength: prefixLength,
-		Network:      client.GetVPCPath(projectId, vpcName),
-		AddressType:  string(client.AddressTypeInternal),
-		Purpose:      string(client.IpRangePurposeVPCPeering),
-	}).Do()
-	client.IncrementCallCounter("Compute", "GlobalAddresses.Insert", "", err)
-	logger.Info("CreatePscIpRange", "operation", operation, "err", err)
-	return operation, err
-}
-
-func (c *computeClient) ListGlobalAddresses(ctx context.Context, projectId, vpc string) (*compute.AddressList, error) {
-	logger := composed.LoggerFromCtx(ctx)
-	filter := client.GetNetworkFilter(projectId, vpc)
-	out, err := c.svcCompute.GlobalAddresses.List(projectId).Filter(filter).Do()
-	client.IncrementCallCounter("Compute", "GlobalAddresses.List", "", err)
-	if err != nil {
-		logger.Error(err, "ListGlobalAddresses", "projectId", projectId, "vpc", vpc)
-		return nil, err
+	req := &computepb.DeleteGlobalAddressRequest{
+		Project: projectId,
+		Address: name,
 	}
-	return out, nil
+
+	op, err := c.globalAddressesClient.Delete(ctx, req)
+
+	var operationName string
+	if op != nil {
+		operationName = op.Proto().GetName()
+	}
+
+	logger.Info("DeleteIpRange", "operation", operationName, "err", err)
+	return operationName, err
 }
 
-func (c *computeClient) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*compute.Operation, error) {
+func (c *computeClient) CreatePscIpRange(ctx context.Context, projectId, vpcName, name, description, address string, prefixLength int64) (string, error) {
 	logger := composed.LoggerFromCtx(ctx)
-	out, err := c.svcCompute.GlobalOperations.Get(projectId, operationName).Do()
-	client.IncrementCallCounter("Compute", "GlobalOperations.Get", "", err)
+
+	req := &computepb.InsertGlobalAddressRequest{
+		Project: projectId,
+		AddressResource: &computepb.Address{
+			Name:         proto.String(name),
+			Description:  proto.String(description),
+			Address:      proto.String(address),
+			PrefixLength: proto.Int32(int32(prefixLength)),
+			Network:      proto.String(gcpclient.GetVPCPath(projectId, vpcName)),
+			AddressType:  proto.String(computepb.Address_INTERNAL.String()),
+			Purpose:      proto.String(computepb.Address_VPC_PEERING.String()),
+		},
+	}
+
+	op, err := c.globalAddressesClient.Insert(ctx, req)
+
+	var operationName string
+	if op != nil {
+		operationName = op.Proto().GetName()
+	}
+
+	logger.Info("CreatePscIpRange", "operation", operationName, "err", err)
+	return operationName, err
+}
+
+func (c *computeClient) ListGlobalAddresses(ctx context.Context, projectId, vpc string) ([]*computepb.Address, error) {
+	logger := composed.LoggerFromCtx(ctx)
+
+	filter := gcpclient.GetNetworkFilter(projectId, vpc)
+
+	req := &computepb.ListGlobalAddressesRequest{
+		Project: projectId,
+		Filter:  proto.String(filter),
+	}
+
+	it := c.globalAddressesClient.List(ctx, req)
+
+	var addresses []*computepb.Address
+	for {
+		addr, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			logger.Error(err, "ListGlobalAddresses", "projectId", projectId, "vpc", vpc)
+			return nil, err
+		}
+		addresses = append(addresses, addr)
+	}
+
+	return addresses, nil
+}
+
+func (c *computeClient) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*computepb.Operation, error) {
+	logger := composed.LoggerFromCtx(ctx)
+
+	req := &computepb.GetGlobalOperationRequest{
+		Project:   projectId,
+		Operation: operationName,
+	}
+
+	out, err := c.globalOperationsClient.Get(ctx, req)
 	if err != nil {
 		logger.Error(err, "GetGlobalOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *computeClient) WaitGlobalOperation(ctx context.Context, projectId, operationName string) error {
+	logger := composed.LoggerFromCtx(ctx)
+
+	req := &computepb.WaitGlobalOperationRequest{
+		Project:   projectId,
+		Operation: operationName,
+	}
+
+	_, err := c.globalOperationsClient.Wait(ctx, req)
+	if err != nil {
+		logger.Error(err, "WaitGlobalOperation", "projectId", projectId, "operationName", operationName)
+		return err
+	}
+	return nil
 }

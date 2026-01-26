@@ -2,36 +2,36 @@ package client
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/metrics"
-	"google.golang.org/api/cloudresourcemanager/v1"
-	"google.golang.org/api/googleapi"
-	"google.golang.org/api/oauth2/v2"
-	"google.golang.org/api/option"
-	"google.golang.org/api/transport"
 	"net/http"
 	"os"
 	"os/signal"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/oauth2/v2"
+	"google.golang.org/api/option"
+	"google.golang.org/api/transport"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-type ClientProvider[T any] func(ctx context.Context, saJsonKeyPath string) (T, error)
+type ClientProvider[T any] func(ctx context.Context, credentialsFile string) (T, error)
 
 func NewCachedClientProvider[T comparable](p ClientProvider[T]) ClientProvider[T] {
 	var result T
 	var nilT T
 	var m sync.Mutex
-	return func(ctx context.Context, saJsonKeyPath string) (T, error) {
+	return func(ctx context.Context, credentialsFile string) (T, error) {
 		m.Lock()
 		defer m.Unlock()
 		var err error
 		if result == nilT {
-			result, err = p(ctx, saJsonKeyPath)
+			result, err = p(ctx, credentialsFile)
 		}
 		return result, err
 	}
@@ -40,23 +40,23 @@ func NewCachedClientProvider[T comparable](p ClientProvider[T]) ClientProvider[T
 var gcpClient *http.Client
 var clientMutex sync.Mutex
 
-func newCachedGcpClient(ctx context.Context, saJsonKeyPath string) (*http.Client, error) {
+func newCachedGcpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
 	clientMutex.Lock()
 	defer clientMutex.Unlock()
 	if gcpClient == nil {
-		client, err := newHttpClient(ctx, saJsonKeyPath)
+		client, err := newHttpClient(ctx, credentialsFile)
 		if err != nil {
 			return nil, err
 		}
 		gcpClient = client
-		go renewCachedHttpClientPeriodically(context.Background(), saJsonKeyPath, os.Getenv("GCP_CLIENT_RENEW_DURATION"))
+		go renewCachedHttpClientPeriodically(context.Background(), credentialsFile, config.GcpConfig.ClientRenewDuration)
 	}
 	return gcpClient, nil
 }
 
-func GetCachedGcpClient(ctx context.Context, saJsonKeyPath string) (*http.Client, error) {
+func GetCachedGcpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
 	if gcpClient == nil {
-		return newCachedGcpClient(ctx, saJsonKeyPath)
+		return newCachedGcpClient(ctx, credentialsFile)
 	}
 	return gcpClient, nil
 }
@@ -80,18 +80,9 @@ func GetCachedProjectNumber(projectId string, crmService *cloudresourcemanager.S
 	return projectNumber, nil
 }
 
-func renewCachedHttpClientPeriodically(ctx context.Context, saJsonKeyPath, duration string) {
+func renewCachedHttpClientPeriodically(ctx context.Context, credentialsFile string, d time.Duration) {
 	logger := log.FromContext(ctx)
-	if duration == "" {
-		logger.Info("GCP_CLIENT_RENEW_DURATION not set, defaulting to 5m")
-		duration = "5m"
-	}
-	period, err := time.ParseDuration(duration)
-	if err != nil {
-		logger.Error(err, "error parsing GCP_CLIENT_RENEW_DURATION, defaulting to 5m")
-		period = 5 * time.Minute
-	}
-	ticker := time.NewTicker(period)
+	ticker := time.NewTicker(d)
 	defer ticker.Stop()
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGTERM, syscall.SIGINT)
@@ -102,7 +93,7 @@ func renewCachedHttpClientPeriodically(ctx context.Context, saJsonKeyPath, durat
 		case <-signalChannel:
 			return
 		case <-ticker.C:
-			client, err := newHttpClient(ctx, saJsonKeyPath)
+			client, err := newHttpClient(ctx, credentialsFile)
 			if err != nil {
 				logger.Error(err, "error renewing GCP HTTP client")
 			} else {
@@ -115,22 +106,46 @@ func renewCachedHttpClientPeriodically(ctx context.Context, saJsonKeyPath, durat
 	}
 }
 
-func newHttpClient(ctx context.Context, saJsonKeyPath string) (*http.Client, error) {
-	client, _, err := transport.NewHTTPClient(ctx, option.WithCredentialsFile(saJsonKeyPath), option.WithScopes("https://www.googleapis.com/auth/compute", "https://www.googleapis.com/auth/cloud-platform"))
+func loadCredentials(ctx context.Context, credentialsFile string, scopes ...string) (*google.Credentials, error) {
+	credentialsData, err := os.ReadFile(credentialsFile)
+	if err != nil {
+		return nil, fmt.Errorf("error reading credentials file: [%w]", err)
+	}
+	credentials, err := google.CredentialsFromJSON(ctx, credentialsData, scopes...)
+	if err != nil {
+		return nil, fmt.Errorf("error loading credentials: [%w]", err)
+	}
+	return credentials, nil
+}
+
+func newHttpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
+	credentials, err := loadCredentials(ctx, credentialsFile,
+		"https://www.googleapis.com/auth/compute",
+		"https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		return nil, err
+	}
+
+	client, _, err := transport.NewHTTPClient(ctx, option.WithTokenSource(credentials.TokenSource))
 	if err != nil {
 		return nil, fmt.Errorf("error obtaining GCP HTTP client: [%w]", err)
 	}
-	CheckGcpAuthentication(ctx, saJsonKeyPath)
-	client.Timeout = GcpConfig.GcpApiTimeout
+	CheckGcpAuthentication(ctx, credentialsFile)
+	client.Timeout = config.GcpConfig.GcpApiTimeout
 	return client, nil
 }
 
-func CheckGcpAuthentication(ctx context.Context, saJsonKeyPath string) {
+func CheckGcpAuthentication(ctx context.Context, credentialsFile string) {
 	logger := composed.LoggerFromCtx(ctx)
 
-	svc, err := oauth2.NewService(ctx, option.WithCredentialsFile(saJsonKeyPath))
+	credentials, err := loadCredentials(ctx, credentialsFile, oauth2.UserinfoEmailScope)
 	if err != nil {
-		IncrementCallCounter("Authentication", "Check", "", err)
+		logger.Error(err, "GCP Authentication Check - failed to load credentials")
+		return
+	}
+
+	svc, err := oauth2.NewService(ctx, option.WithTokenSource(credentials.TokenSource))
+	if err != nil {
 		logger.Error(err, "GCP Authentication Check - error creating new oauth2.Service")
 		return
 	}
@@ -138,25 +153,10 @@ func CheckGcpAuthentication(ctx context.Context, saJsonKeyPath string) {
 	userInfoSvc := oauth2.NewUserinfoV2MeService(svc)
 	userInfo, err := userInfoSvc.Get().Do()
 
-	IncrementCallCounter("Authentication", "Check", "", err)
 	if err != nil {
 		logger.Error(err, "GCP Authentication Check - error getting UserInfo")
 		return
 	}
 
 	logger.Info(fmt.Sprintf("GCP Authentication Check - successful [user = %s].", userInfo.Name))
-}
-
-func IncrementCallCounter(serviceName, operationName, region string, err error) {
-	responseCode := 200
-	if err != nil {
-		var e *googleapi.Error
-		if ok := errors.As(err, &e); ok {
-			responseCode = e.Code
-		} else {
-			responseCode = 500
-		}
-	}
-	gcpProject := ""
-	metrics.CloudProviderCallCount.WithLabelValues(metrics.CloudProviderGCP, fmt.Sprintf("%s/%s", serviceName, operationName), fmt.Sprintf("%d", responseCode), region, gcpProject).Inc()
 }

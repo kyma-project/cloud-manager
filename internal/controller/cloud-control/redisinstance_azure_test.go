@@ -2,7 +2,6 @@ package cloudcontrol
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
@@ -56,7 +55,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
 					WithConditions(KcpReadyCondition()),
-				).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).
+				).
 				Should(Succeed(), "Expected KCP IpRange to become ready")
 		})
 
@@ -153,6 +152,23 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(keys).To(HaveLen(2))
 			Expect(redisInstance.Status.AuthString).To(Equal(keys[0]))
+		})
+
+		By("And Then KCP RedisInstance has .status.nodeType set", func() {
+			expectedNodeType := fmt.Sprintf("%s%d", redisFamily, redisCapacity)
+			// Azure converts S family to C (Basic) internally
+			if redisFamily == "S" {
+				expectedNodeType = fmt.Sprintf("C%d", redisCapacity)
+			}
+			Expect(redisInstance.Status.NodeType).To(Equal(expectedNodeType))
+		})
+
+		By("And Then KCP RedisInstance has .status.memorySizeGb set", func() {
+			Expect(redisInstance.Status.MemorySizeGb).To(Equal(int32(redisCapacity)))
+		})
+
+		By("And Then KCP RedisInstance has .status.replicaCount set", func() {
+			Expect(redisInstance.Status.ReplicaCount).To(Equal(int32(0)))
 		})
 
 		By("And Then Private End Point is created", func() {

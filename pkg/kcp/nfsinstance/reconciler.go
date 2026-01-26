@@ -7,7 +7,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
-	gcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance"
+	gcpnfsinstancev1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1" //nolint:staticcheck // SA1019: v1 maintained for backward compatibility until v2 is default
+	gcpnfsinstancev2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2"
 	sapnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -29,7 +30,8 @@ type nfsInstanceReconciler struct {
 
 	awsStateFactory   awsnfsinstance.StateFactory
 	azureStateFactory azurenfsinstance.StateFactory
-	gcpStateFactory   gcpnfsinstance.StateFactory
+	gcpStateFactoryV1 gcpnfsinstancev1.StateFactory
+	gcpStateFactoryV2 gcpnfsinstancev2.StateFactory
 	sapStateFactory   sapnfsinstance.StateFactory
 }
 
@@ -38,7 +40,8 @@ func NewNfsInstanceReconciler(
 	focalStateFactory focal.StateFactory,
 	awsStateFactory awsnfsinstance.StateFactory,
 	azureStateFactory azurenfsinstance.StateFactory,
-	gcpStateFactory gcpnfsinstance.StateFactory,
+	gcpStateFactoryV1 gcpnfsinstancev1.StateFactory,
+	gcpStateFactoryV2 gcpnfsinstancev2.StateFactory,
 	sapStateFactory sapnfsinstance.StateFactory,
 ) NfsInstanceReconciler {
 	return &nfsInstanceReconciler{
@@ -46,7 +49,8 @@ func NewNfsInstanceReconciler(
 		focalStateFactory:    focalStateFactory,
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
-		gcpStateFactory:      gcpStateFactory,
+		gcpStateFactoryV1:    gcpStateFactoryV1,
+		gcpStateFactoryV2:    gcpStateFactoryV2,
 		sapStateFactory:      sapStateFactory,
 	}
 }
@@ -81,12 +85,28 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 					nil,
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsnfsinstance.New(r.awsStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
-					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnfsinstance.New(r.gcpStateFactory)),
+					composed.NewCase(statewithscope.GcpProviderPredicate, r.gcpActionRouter()),
 					composed.NewCase(statewithscope.OpenStackProviderPredicate, sapnfsinstance.New(r.sapStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},
 	)
+}
+
+// gcpActionRouter routes to v1 or v2 implementation based on feature flag.
+func (r *nfsInstanceReconciler) gcpActionRouter() composed.Action {
+	return func(ctx context.Context, st composed.State) (error, context.Context) {
+		logger := composed.LoggerFromCtx(ctx)
+
+		// Check feature flag to determine which implementation to use
+		if feature.GcpNfsInstanceV2.Value(ctx) {
+			logger.Info("Using GCP NfsInstance v2 implementation")
+			return gcpnfsinstancev2.New(r.gcpStateFactoryV2)(ctx, st)
+		}
+
+		logger.Info("Using GCP NfsInstance v1 implementation (default)")
+		return gcpnfsinstancev1.New(r.gcpStateFactoryV1)(ctx, st)
+	}
 }
 
 func (r *nfsInstanceReconciler) newFocalState(name types.NamespacedName) focal.State {

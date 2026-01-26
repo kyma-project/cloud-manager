@@ -112,7 +112,7 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 			return err
 		}
 		if apierrors.IsNotFound(err) {
-			b, err := kubeconfigToBytes(restConfigToKubeconfig(dsl.i.Garden().Cfg()))
+			b, err := KubeconfigToBytes(RestConfigToKubeconfig(dsl.i.Garden().Cfg()))
 			if err != nil {
 				return fmt.Errorf("error getting garden kubeconfig bytes: %w", err)
 			}

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -96,7 +98,7 @@ func (s *checkGcpOperationSuite) TestWhenSvcNwOperationNotComplete() {
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(s.T(), resCtx)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 }
 
 func (s *checkGcpOperationSuite) TestWhenSvcNwOperationSuccessful() {
@@ -194,7 +196,7 @@ func (s *checkGcpOperationSuite) TestWhenComputeOperationNotComplete() {
 	//Invoke the function under test
 	err, resCtx := checkGcpOperation(ctx, state)
 	assert.Nil(s.T(), resCtx)
-	assert.Equal(s.T(), composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime), err)
+	assert.Equal(s.T(), composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), err)
 }
 
 func (s *checkGcpOperationSuite) TestWhenComputeOperationSuccessful() {

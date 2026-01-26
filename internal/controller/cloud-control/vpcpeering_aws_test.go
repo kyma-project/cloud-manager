@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	"errors"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 
@@ -33,7 +34,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remoteVpcId          = "vpc-2c41e43fcd5340f8f"
 			remoteVpcCidr        = "10.200.0.0/16"
 			remoteVpcCidr2       = "10.201.0.0/16"
-			remoteAccountId      = "444455556666"
 			remoteRegion         = "eu-west1"
 			localMainRouteTable  = "rtb-c6606c725da27ff10"
 			localRouteTable      = "rtb-0c65354e2979d9c83"
@@ -49,6 +49,12 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			wrong3RouteTable     = "rtb-ae17300793a424247"
 		)
 
+		awsAccountLocal := infra.AwsMock().NewAccount()
+		defer awsAccountLocal.Delete()
+		awsAccountRemote := infra.AwsMock().NewAccount()
+		defer awsAccountRemote.Delete()
+		remoteAccountId := awsAccountRemote.AccountId()
+
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
@@ -56,15 +62,15 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(kymaName)).
 				Should(Succeed())
 		})
 
 		vpcName := scope.Spec.Scope.Aws.VpcNetwork
 		remoteVpcName := "Remote Network Name"
 
-		awsMockLocal := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
-		awsMockRemote := infra.AwsMock().MockConfigs(remoteAccountId, remoteRegion)
+		awsMockLocal := awsAccountLocal.Region(scope.Spec.Region)
+		awsMockRemote := awsAccountRemote.Region(remoteRegion)
 
 		By("And Given AWS VPC exists", func() {
 			awsMockLocal.AddVpc(
@@ -379,13 +385,18 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			localVpcCidr         = "10.180.0.0/16"
 			remoteVpcId          = "vpc-5a11d50637164d01a"
 			remoteVpcCidr        = "10.200.0.0/16"
-			remoteAccountId      = "777755556666"
 			remoteRegion         = "eu-west1"
 			localMainRouteTable  = "rtb-bb6743e182614c539"
 			localRouteTable      = "rtb-d6d5d9e2492449b38"
 			remoteMainRouteTable = "rtb-713e94a6caa54b27a"
 			remoteRouteTable     = "rtb-14ff90610fc54a4cb"
 		)
+
+		awsAccountLocal := infra.AwsMock().NewAccount()
+		defer awsAccountLocal.Delete()
+		awsAccountRemote := infra.AwsMock().NewAccount()
+		defer awsAccountRemote.Delete()
+		remoteAccountId := awsAccountRemote.AccountId()
 
 		scope := &cloudcontrolv1beta1.Scope{}
 
@@ -394,15 +405,15 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(kymaName)).
 				Should(Succeed())
 		})
 
 		vpcName := scope.Spec.Scope.Aws.VpcNetwork
 		remoteVpcName := "Remote Network Name"
 
-		awsMockLocal := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
-		awsMockRemote := infra.AwsMock().MockConfigs(remoteAccountId, remoteRegion)
+		awsMockLocal := awsAccountLocal.Region(scope.Spec.Region)
+		awsMockRemote := awsAccountRemote.Region(remoteRegion)
 
 		By("And Given AWS VPC exists", func() {
 			awsMockLocal.AddVpc(
@@ -610,7 +621,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			localVpcCidr           = "10.180.0.0/16"
 			remoteVpcId            = "vpc-9c7b1757ffb17f3db"
 			remoteVpcCidr          = "10.200.0.0/16"
-			remoteAccountId        = "777755557777"
 			remoteRegion           = "eu-west1"
 			localMainRouteTable    = "rtb-7ce283587d14d4517"
 			localRouteTable        = "rtb-1c690daffb668e1cc"
@@ -619,6 +629,12 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remoteRouteTableTagged = "rtb-04214f38752ba4e85"
 		)
 
+		awsAccountLocal := infra.AwsMock().NewAccount()
+		defer awsAccountLocal.Delete()
+		awsAccountRemote := infra.AwsMock().NewAccount()
+		defer awsAccountRemote.Delete()
+		remoteAccountId := awsAccountRemote.AccountId()
+
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
@@ -626,15 +642,15 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(kymaName)).
 				Should(Succeed())
 		})
 
 		vpcName := scope.Spec.Scope.Aws.VpcNetwork
 		remoteVpcName := "Remote Network Name"
 
-		awsMockLocal := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
-		awsMockRemote := infra.AwsMock().MockConfigs(remoteAccountId, remoteRegion)
+		awsMockLocal := awsAccountLocal.Region(scope.Spec.Region)
+		awsMockRemote := awsAccountRemote.Region(remoteRegion)
 
 		By("And Given AWS VPC exists", func() {
 			awsMockLocal.AddVpc(
@@ -857,7 +873,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remoteVpcCidr          = "10.200.0.0/16"
 			remoteVpcCidr2         = "10.201.0.0/16"
 			remoteVpcCidr3         = "10.202.0.0/16"
-			remoteAccountId        = "777755558888"
 			remoteRegion           = "eu-west1"
 			localMainRouteTable    = "rtb-b88be55c80e543b5a"
 			localRouteTable        = "rtb-1c0daaaefea92b991"
@@ -866,6 +881,12 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			remoteRouteTableTagged = "rtb-042142cb73d698886"
 		)
 
+		awsAccountLocal := infra.AwsMock().NewAccount()
+		defer awsAccountLocal.Delete()
+		awsAccountRemote := infra.AwsMock().NewAccount()
+		defer awsAccountRemote.Delete()
+		remoteAccountId := awsAccountRemote.AccountId()
+
 		scope := &cloudcontrolv1beta1.Scope{}
 
 		By("Given Scope exists", func() {
@@ -873,15 +894,15 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			kcpscope.Ignore.AddName(kymaName)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(kymaName)).
 				Should(Succeed())
 		})
 
 		vpcName := scope.Spec.Scope.Aws.VpcNetwork
 		remoteVpcName := "Remote Network Name"
 
-		awsMockLocal := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
-		awsMockRemote := infra.AwsMock().MockConfigs(remoteAccountId, remoteRegion)
+		awsMockLocal := awsAccountLocal.Region(scope.Spec.Region)
+		awsMockRemote := awsAccountRemote.Region(remoteRegion)
 
 		By("And Given local AWS VPC exists", func() {
 			awsMockLocal.AddVpc(
@@ -1096,12 +1117,10 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		// Cloud Manager reconciles =======================================
 
 		By("Then Cloud Manager detects VPC CIDR changes and update routes", func() {
-			// trigger the reconciliation
-			_, err := composed.PatchObjMergeAnnotation(infra.Ctx(), "test", "1", kcpPeering, infra.KCP().Client())
-			Expect(err).To(Succeed())
-
 			// Removing ready condition to make sure that reconciliation happened
 			Expect(meta.RemoveStatusCondition(&kcpPeering.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)).To(BeTrue())
+
+			Expect(infra.KCP().Client().Status().Update(infra.Ctx(), kcpPeering)).To(Succeed())
 		})
 
 		By("And Then VpcPeering is ready", func() {
@@ -1142,12 +1161,11 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		// DELETE
 
-		//
+		// Forces delete remote peering connection
 		By("When remote peering connection is deleted", func() {
 			// The VPC peering connection remains visible to the party that deleted it for 2 hours
-			Expect(awsMockRemote.DeleteVpcPeeringConnection(infra.Ctx(), &kcpPeering.Status.RemoteId)).To(Succeed())
+			Expect(awsMockRemote.SetVpcPeeringConnectionStatusCode(localVpcId, remoteVpcId, ec2types.VpcPeeringConnectionStateReasonCodeDeleted)).To(Succeed())
 			//  and visible to the other party for 2 days
-			Expect(awsMockLocal.DeleteVpcPeeringConnection(infra.Ctx(), &kcpPeering.Status.Id)).To(Succeed())
 		})
 
 		By("When KCP VpcPeering is deleted", func() {
@@ -1182,8 +1200,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		})
 
 		By("And Then remote VpcPeeringConnection is deleted", func() {
-			remotePeering, _ := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
-			Expect(remotePeering).To(BeNil())
+			remotePeering, err := awsMockRemote.DescribeVpcPeeringConnection(infra.Ctx(), kcpPeering.Status.Id)
+			Expect(err).To(BeNil())
+			Expect(remotePeering.Status.Code).To(Equal(ec2types.VpcPeeringConnectionStateReasonCodeDeleted))
 		})
 
 		By("And Then remote route tables have no peering route to local VPC CIDR", func() {

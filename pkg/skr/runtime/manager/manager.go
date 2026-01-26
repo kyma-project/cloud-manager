@@ -26,9 +26,14 @@ var _ SkrManager = &skrManager{}
 type SkrManager interface {
 	manager.Manager
 	KymaRef() klog.ObjectRef
+	IgnoreWatchErrors(bool)
 }
 
 func New(cfg *rest.Config, skrScheme *runtime.Scheme, kymaRef klog.ObjectRef, logger logr.Logger) (SkrManager, error) {
+	result := &skrManager{
+		kymaRef: kymaRef,
+		logger:  logger,
+	}
 	cls, err := cluster.New(cfg, func(clusterOptions *cluster.Options) {
 		clusterOptions.Scheme = skrScheme
 		clusterOptions.Logger = logger
@@ -44,17 +49,17 @@ func New(cfg *rest.Config, skrScheme *runtime.Scheme, kymaRef klog.ObjectRef, lo
 			if errors.Is(err, context.Canceled) {
 				return
 			}
+			if result.ignoreWatchErrors {
+				return
+			}
 			cache.DefaultWatchErrorHandler(ctx, r, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &skrManager{
-		Cluster: cls,
-		kymaRef: kymaRef,
-		logger:  logger,
-	}, nil
+	result.Cluster = cls
+	return result, nil
 }
 
 type skrManager struct {
@@ -63,6 +68,12 @@ type skrManager struct {
 	kymaRef     klog.ObjectRef
 	logger      logr.Logger
 	controllers []manager.Runnable
+
+	ignoreWatchErrors bool
+}
+
+func (m *skrManager) IgnoreWatchErrors(v bool) {
+	m.ignoreWatchErrors = v
 }
 
 func (m *skrManager) KymaRef() klog.ObjectRef {

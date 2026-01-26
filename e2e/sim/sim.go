@@ -14,10 +14,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-const (
-	DoNotReconcile = "sim.do-not-reconcile"
-)
-
 type Sim interface {
 	Sim() bool
 }

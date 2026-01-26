@@ -2,9 +2,10 @@ package cloudcontrol
 
 import (
 	"fmt"
+	"time"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/ptr"
-	"time"
 
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
@@ -22,6 +23,9 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 
 	It("Scenario: KCP AWS NfsInstance is created and deleted", func() {
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		name := "5338ac8f-4927-40ee-a51d-e22e2334bd19"
 		scope := &cloudcontrolv1beta1.Scope{}
 
@@ -30,13 +34,13 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 			kcpscope.Ignore.AddName(name)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(name)).
 				Should(Succeed(), "failed creating Scope")
 		})
 
 		vpcId := "85b43d7c-6488-4e15-9782-fff7bc31c286"
 
-		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMock := awsAccount.Region(scope.Spec.Region)
 
 		By("And Given AWS VPC exists", func() {
 			awsMock.AddVpc(

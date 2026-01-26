@@ -368,10 +368,28 @@ spec:
                 x-kubernetes-list-type: map
               id:
                 type: string
+              memorySizeGb:
+                description: 'The reconciled memory size in GiB (GCP: Machine type
+                  = MemorySizeGb (their capacity model)).'
+                format: int32
+                type: integer
+              nodeType:
+                description: |-
+                  The reconciled node/machine type of the Redis instance.
+                  AWS: cache node type (e.g., "cache.t3.micro")
+                  Azure: SKU family + capacity (e.g., "P3")
+                type: string
+              observedGeneration:
+                format: int64
+                type: integer
               primaryEndpoint:
                 type: string
               readEndpoint:
                 type: string
+              replicaCount:
+                description: The reconciled replica count.
+                format: int32
+                type: integer
               state:
                 type: string
             type: object

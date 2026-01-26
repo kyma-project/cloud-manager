@@ -1,14 +1,16 @@
 package v1beta1
 
 const (
-	ConditionTypeError   = "Error"
-	ConditionTypeReady   = "Ready"
-	ConditionTypeWarning = "Warning"
+	ConditionTypeError             = "Error"
+	ConditionTypeReady             = "Ready"
+	ConditionTypeWarning           = "Warning"
+	ConditionTypeUpdating          = "Updating"
+	ConditionTypeDeleteWhileUsed   = "DeleteWhileUsed"
+	ConditionTypeInvalidDependency = "InvalidDependency"
 
-	ConditionTypeUpdating = "Updating"
-
-	ReasonScopeNotFound = "ScopeNoFound"
-
+	ReasonScopeNotFound      = "ScopeNoFound"
+	ReasonProcessing         = "Processing"
+	ReasonInvalidSpec        = "InvalidSpec"
 	ReasonUnknown            = "Unknown"
 	ReasonNotFound           = "NotFound"
 	ReasonReady              = "Ready"
@@ -18,4 +20,11 @@ const (
 	ReasonWaitingDependency  = "WaitingDependency"
 	ReasonDeleteWhileUsed    = "DeleteWhileUsed"
 	ReasonCloudProviderError = "CloudProviderError"
+	ReasonProvisioned        = "Provisioned"
+	ReasonInvalidCidr        = "InvalidCidr"
+	ReasonCidrOverlap        = "CidrOverlap"
+	ReasonInvalidDependency  = "ReasonInvalidDependency"
+	ReasonInvalidBinding     = "InvalidBinding"
+	ReasonProviderError      = "ProviderError"
+	ReasonDeleting           = "Deleting"
 )

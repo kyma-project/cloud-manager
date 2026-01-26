@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/config/crd"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -86,6 +88,52 @@ func InitializeKcp(ctx context.Context, kcpClient client.Client, config *e2econf
 	if err != nil {
 		return fmt.Errorf("error creating gardener credentials: %w", err)
 	}
+
+	for _, si := range config.Subscriptions {
+		if !si.IsDefault {
+			continue
+		}
+		name := fmt.Sprintf("subscription-%s", strings.ToLower(string(si.Provider)))
+		subscription := &cloudcontrolv1beta1.Subscription{}
+		err = kcpClient.Get(ctx, types.NamespacedName{
+			Namespace: config.KcpNamespace,
+			Name:      name,
+		}, subscription)
+		if client.IgnoreNotFound(err) != nil {
+			return fmt.Errorf("error reading subscription %s: %w", name, err)
+		}
+		if err != nil {
+			// subscription does not exist
+			subscription = &cloudcontrolv1beta1.Subscription{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: config.KcpNamespace,
+					Name:      name,
+				},
+				Spec: cloudcontrolv1beta1.SubscriptionSpec{
+					Details: cloudcontrolv1beta1.SubscriptionDetails{
+						Garden: &cloudcontrolv1beta1.SubscriptionGarden{
+							BindingName: si.Name,
+						},
+					},
+				},
+			}
+			err = kcpClient.Create(ctx, subscription)
+			if err != nil {
+				return fmt.Errorf("error creating subscription %s: %w", name, err)
+			}
+		} else {
+			// subscription exists
+			subscription.Spec.Details = cloudcontrolv1beta1.SubscriptionDetails{
+				Garden: &cloudcontrolv1beta1.SubscriptionGarden{
+					BindingName: si.Name,
+				},
+			}
+			err = kcpClient.Update(ctx, subscription)
+			if err != nil {
+				return fmt.Errorf("error updating subscription %s: %w", name, err)
+			}
+		}
+	} // for config subscriptions
 
 	return nil
 }

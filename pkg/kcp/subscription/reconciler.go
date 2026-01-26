@@ -3,13 +3,11 @@ package subscription
 import (
 	"context"
 
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/apimachinery/pkg/api/meta"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -59,29 +57,36 @@ func (r *subscriptionReconciler) newAction() composed.Action {
 		composed.If(
 			composed.MarkedForDeletionPredicate,
 			// being deleted
+			statusDeleting,
 			resourcesLoad,
 			statusSaveOnDelete,
 			actions.PatchRemoveCommonFinalizer(),
 			composed.StopAndForgetAction,
 		),
 		composed.If(
-			// no update, once Subscription gets Ready condition, do not reconcile
-			func(ctx context.Context, st composed.State) bool {
-				state := st.(*State)
-				if composed.IsMarkedForDeletion(state.Obj()) {
-					return false
-				}
-				if meta.IsStatusConditionTrue(state.ObjAsSubscription().Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) {
-					return false
-				}
-				return true
-			},
+			composed.NotMarkedForDeletionPredicate,
 			// create
 			actions.PatchAddCommonFinalizer(),
-			gardenerClientCreate,
-			gardenerCredentialsRead,
-			statusSaveOnCreate,
-			composed.StopAndForgetAction,
+			statusInitial,
+			composed.IfElse(
+				isGardenerSubscription,
+				composed.ComposeActionsNoName(
+					checkIfGardenSubscriptionType,
+					gardenerClientCreate,
+					gardenerCredentialsRead,
+					statusSaveOnCreate,
+					composed.StopAndForgetAction,
+				),
+				composed.ComposeActionsNoName(
+					handleNonGardenerSubscriptionType,
+					composed.StopAndForgetAction,
+				),
+			),
 		),
 	)
+}
+
+func isGardenerSubscription(ctx context.Context, st composed.State) bool {
+	state := st.(*State)
+	return state.ObjAsSubscription().Spec.Details.Garden != nil
 }

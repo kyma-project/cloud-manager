@@ -1,31 +1,32 @@
 package iprange
 
 import (
-	"context"
-	"errors"
-	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
-	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
+	gcpiprangev2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
+	gcpiprangev3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3"
 )
 
-type StateFactory interface {
-	NewState(ctx context.Context, ipRangeState iprangetypes.State, logger logr.Logger) (composed.State, error)
+// V3StateFactory is an alias for gcpiprangev3.StateFactory to be used by the reconciler.
+type V3StateFactory = gcpiprangev3.StateFactory
+
+// NewV3StateFactory is a wrapper for gcpiprangev3.NewStateFactory to be called from controller setup.
+func NewV3StateFactory(
+	serviceNetworkingClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	computeClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
+) V3StateFactory {
+	return gcpiprangev3.NewStateFactory(serviceNetworkingClientProvider, computeClientProvider)
 }
 
-func NewStateFactory(serviceNetworkingClientProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient], computeClientProvider gcpclient.ClientProvider[gcpiprangeclient.ComputeClient], env abstractions.Environment) StateFactory {
-	return &generalStateFactory{
-		v2StateFactory: v2.NewStateFactory(serviceNetworkingClientProvider, computeClientProvider, env),
-	}
-}
+// V2StateFactory is an alias for gcpiprangev2.StateFactory to be used by the reconciler.
+type V2StateFactory = gcpiprangev2.StateFactory
 
-type generalStateFactory struct {
-	v2StateFactory v2.StateFactory
-}
-
-func (f *generalStateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.State, logger logr.Logger) (composed.State, error) {
-	return nil, errors.New("logical error - not implemented")
+// NewV2StateFactory is a wrapper for gcpiprangev2.NewStateFactory to be called from controller setup.
+func NewV2StateFactory(
+	serviceNetworkingClientProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
+	oldComputeClientProvider gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient],
+	env abstractions.Environment,
+) V2StateFactory {
+	return gcpiprangev2.NewStateFactory(serviceNetworkingClientProvider, oldComputeClientProvider, env)
 }

@@ -20,6 +20,9 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 
 	It("Scenario: KCP AWS RedisInstance is created and deleted", func() {
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		name := "6e6ff0b2-3edb-4d6e-8ae5-fbd3d3644ce2"
 		scope := &cloudcontrolv1beta1.Scope{}
 
@@ -28,7 +31,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			kcpscope.Ignore.AddName(name)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(name)).
 				Should(Succeed())
 		})
 
@@ -53,7 +56,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
 					WithConditions(KcpReadyCondition()),
-				).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).
+				).
 				Should(Succeed(), "Expected KCP IpRange to become ready")
 		})
 
@@ -88,7 +91,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				Should(Succeed(), "failed creating RedisInstance")
 		})
 
-		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMock := awsAccount.Region(scope.Spec.Region)
 
 		var awsElastiCacheClusterInstance *elasticachetypes.ReplicationGroup
 		By("Then AWS Redis is created", func() {
@@ -136,6 +139,14 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Expect(len(redisInstance.Status.AuthString) > 0).To(Equal(true))
 		})
 
+		By("And Then RedisInstance has .status.nodeType set", func() {
+			Expect(redisInstance.Status.NodeType).To(Equal(cacheNodeType))
+		})
+
+		By("And Then RedisInstance has .status.replicaCount set", func() {
+			Expect(redisInstance.Status.ReplicaCount).To(Equal(int32(readReplicas)))
+		})
+
 		// DELETE
 
 		By("When RedisInstance is deleted", func() {
@@ -161,6 +172,9 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 
 	It("Scenario: KCP AWS RedisInstance is upgraded (6.x -> 7.0)", func() {
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		name := "3c44ec47-b214-4ce9-9c1b-292b0508fb98"
 		scope := &cloudcontrolv1beta1.Scope{}
 
@@ -169,7 +183,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			kcpscope.Ignore.AddName(name)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(name)).
 				Should(Succeed())
 		})
 
@@ -194,7 +208,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
 					WithConditions(KcpReadyCondition()),
-				).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).
+				).
 				Should(Succeed(), "Expected KCP IpRange to become ready")
 		})
 
@@ -229,7 +243,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				Should(Succeed(), "failed creating RedisInstance")
 		})
 
-		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMock := awsAccount.Region(scope.Spec.Region)
 
 		var awsElastiCacheClusterInstance *elasticachetypes.ReplicationGroup
 		By("And Given AWS Redis is created", func() {
@@ -343,6 +357,9 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 
 	It("Scenario: KCP AWS RedisInstance is upgraded (7.0 -> 7.1)", func() {
 
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
 		name := "23549459-1164-4684-980d-27a0a579018b"
 		scope := &cloudcontrolv1beta1.Scope{}
 
@@ -351,7 +368,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			kcpscope.Ignore.AddName(name)
 
 			Eventually(CreateScopeAws).
-				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(name)).
 				Should(Succeed())
 		})
 
@@ -376,7 +393,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
 					WithConditions(KcpReadyCondition()),
-				).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).
+				).
 				Should(Succeed(), "Expected KCP IpRange to become ready")
 		})
 
@@ -411,7 +428,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 				Should(Succeed(), "failed creating RedisInstance")
 		})
 
-		awsMock := infra.AwsMock().MockConfigs(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region)
+		awsMock := awsAccount.Region(scope.Spec.Region)
 
 		var awsElastiCacheClusterInstance *elasticachetypes.ReplicationGroup
 		By("And Given AWS Redis is created", func() {

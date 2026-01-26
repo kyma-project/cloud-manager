@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
@@ -26,12 +25,12 @@ func NewFileShareClientProvider() azureclient.ClientProvider[FileShareClient] {
 func FileShareClientProvider(backupClientProvider azureclient.ClientProvider[Client]) azureclient.ClientProvider[FileShareClient] {
 
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (FileShareClient, error) {
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{})
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		fsc, err := armstorage.NewFileSharesClient(subscriptionId, cred, nil)
+		fsc, err := armstorage.NewFileSharesClient(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}

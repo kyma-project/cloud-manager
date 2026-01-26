@@ -9,6 +9,8 @@ Kyma manages its modules' user interfaces (UIs) using ConfigMaps. Each ConfigMap
 * `form` - used to define a GUI form when creating a new resource or editing an existing one. 
 * `translations` - used to define elements in different languages (English, German, etc.)
 
+For more information see,  the [Extensibility documentation](https://github.com/kyma-project/busola/blob/main/docs/contributor/extensibility/) in the `/busola` repository.
+
 Examples and important notes of each part are below
 
 ### General
@@ -52,10 +54,6 @@ If no value is found in `Translation`, it displays as is.
 
 For example, if we have `name: spec.location`, it goes to [translations](#translations), looks up `spec.location` and replaces it with `Location`.
 
-[Official List Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/20-list-columns.md)
-
-[Official List and Detail Widgets](https://github.com/kyma-project/busola/blob/main/docs/extensibility/50-list-and-details-widgets.md)
-
 ### Detail
 ```yaml
 body:
@@ -88,10 +86,6 @@ body:
 
 `children` are an array of child widgets. Note, the `source` in each child is relative to its parent.
 
-[Official Detail Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/30-details-summary.md)
-
-[Official List and Detail Widgets](https://github.com/kyma-project/busola/blob/main/docs/extensibility/50-list-and-details-widgets.md)
-
 ### Form
 ```yaml
 - path: spec.capacityGb
@@ -114,8 +108,6 @@ body:
 
 `simple` is a boolean used to display the field in the simple fom. By default, it is `false`
 
-[Official Forms Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/40-form-fields.md)
-
 <a id="translations"></a>
 ### Translations
 ```yaml
@@ -132,10 +124,6 @@ en:
 
 `translations` is optional, but it supports languages formatted for [i18next](https://www.i18next.com/). Translations prettify the `name` field of the aformentioned sections.
 They are key-value pairs.
-
-
-[Official Translations Documentation](https://github.com/kyma-project/busola/blob/main/docs/extensibility/150-translations.md)
-
 
 # Generating the ConfigMap
 
@@ -187,10 +175,3 @@ If a matching CustomResource is found, Busola renders the UI and path.
 
 
 You can also spin up a local cluster with kyma installed via k3d.
-
-Official documentation and instructions can be found [here](https://kyma-project.io/#/02-get-started/01-quick-install).
-
-
-
-# Helpful Links
-[Translations](https://github.com/kyma-project/busola/blob/main/docs/extensibility/150-translations.md)

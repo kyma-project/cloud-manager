@@ -11,12 +11,12 @@ var ScopeConfig = &ScopeConfigStruct{}
 func InitConfig(cfg config.Config) {
 	cfg.Path(
 		"scope",
+		config.Bind(ScopeConfig),
+		config.SourceFile("scope.yaml"),
 		config.Path(
 			"gardenerNamespace",
 			config.DefaultScalar("garden-kyma-dev"),
 			config.SourceEnv("GARDENER_NAMESPACE"),
 		),
-		config.SourceFile("scope.yaml"),
-		config.Bind(ScopeConfig),
 	)
 }

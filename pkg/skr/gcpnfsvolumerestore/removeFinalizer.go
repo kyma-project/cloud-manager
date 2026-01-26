@@ -5,7 +5,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -26,7 +26,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 				Reason:  cloudresourcesv1beta1.ConditionReasonNfsRestoreInProgress,
 				Message: "In progress restore cannot be deleted",
 			}).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 			Run(ctx, state)
 	}
 

@@ -28,7 +28,7 @@ func WithScope(scopeName string) ObjAction {
 	}
 }
 
-func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
+func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, awsAccountId string, opts ...ObjAction) error {
 	if scope == nil {
 		scope = &cloudcontrolv1beta1.Scope{}
 	}
@@ -48,7 +48,7 @@ func CreateScopeAws(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 		Provider:  cloudcontrolv1beta1.ProviderAws,
 		Scope: cloudcontrolv1beta1.ScopeInfo{
 			Aws: &cloudcontrolv1beta1.AwsScope{
-				AccountId:  infra.AwsMock().GetAccount(),
+				AccountId:  awsAccountId,
 				VpcNetwork: fmt.Sprintf("shoot--%s--%s", project, scope.Name),
 				Network: cloudcontrolv1beta1.AwsNetwork{
 					Nodes:    "10.250.0.0/22",
@@ -265,30 +265,6 @@ func CreateScopeOpenStack(ctx context.Context, infra testinfra.Infra, scope *clo
 		return fmt.Errorf("error creating kyma: %w", err)
 	}
 
-	return nil
-}
-
-func GivenScopeAwsExists(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
-
-	if scope == nil {
-		scope = &cloudcontrolv1beta1.Scope{}
-	}
-	NewObjActions(opts...).
-		Append(
-			WithNamespace(DefaultKcpNamespace),
-		).
-		ApplyOnObject(scope)
-
-	err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(scope), scope)
-	if client.IgnoreNotFound(err) != nil {
-		return err
-	}
-	if apierrors.IsNotFound(err) {
-		err := CreateScopeAws(ctx, infra, scope)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

@@ -1,9 +1,24 @@
 apiVersion: cloud-control.kyma-project.io/v1beta1
 kind: VpcNetwork
 metadata:
-  labels:
-    app.kubernetes.io/name: cloud-manager
-    app.kubernetes.io/managed-by: kustomize
   name: vpcnetwork-sample
 spec:
-  # TODO(user): Add fields here
+  subscription: subscription-name
+  region: us-east1
+  cidrBlocks:
+    - 10.250.0.0/16
+status:
+  state: Provisioned
+  conditions:
+    - message: Provisioned
+      reason: Provisioned
+      status: 'True'
+      type: Ready
+      lastTransitionTime: '2025-12-01T10:41:08Z'
+  cidrBlocks:
+    - 10.250.0.0/15
+  identifiers:
+    vpc: vpc-id
+    router: router-id
+    internetGateway: igw-id
+    resourceGroup: rg-name

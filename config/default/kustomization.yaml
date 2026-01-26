@@ -16,6 +16,7 @@ namePrefix: cloud-
 
 commonLabels:
   app.kubernetes.io/component: cloud-manager.kyma-project.io
+  kyma-project.io/module: cloud-manager
 
 resources:
 - ../crd

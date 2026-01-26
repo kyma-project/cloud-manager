@@ -39,6 +39,38 @@ func (s *testState) Network() *cloudcontrolv1beta1.Network {
 	return nil
 }
 
+func (s *testState) SetNetwork(network *cloudcontrolv1beta1.Network) {}
+
+func (s *testState) NetworkKey() client.ObjectKey {
+	return client.ObjectKey{}
+}
+
+func (s *testState) SetNetworkKey(key client.ObjectKey) {}
+
+func (s *testState) IsCloudManagerNetwork() bool {
+	return false
+}
+
+func (s *testState) SetIsCloudManagerNetwork(v bool) {}
+
+func (s *testState) IsKymaNetwork() bool {
+	return false
+}
+
+func (s *testState) SetIsKymaNetwork(v bool) {}
+
+func (s *testState) KymaNetwork() *cloudcontrolv1beta1.Network {
+	return nil
+}
+
+func (s *testState) SetKymaNetwork(network *cloudcontrolv1beta1.Network) {}
+
+func (s *testState) KymaPeering() *cloudcontrolv1beta1.VpcPeering {
+	return nil
+}
+
+func (s *testState) SetKymaPeering(peering *cloudcontrolv1beta1.VpcPeering) {}
+
 func (s *testState) ExistingCidrRanges() []string {
 	return nil
 }
@@ -119,7 +151,7 @@ func (c *computeClientStub) ListGlobalAddresses(ctx context.Context, projectId s
 	panic("unimplemented")
 }
 
-func newComputeClientStub() gcpiprangeclient.ComputeClient {
+func newComputeClientStub() gcpiprangeclient.OldComputeClient {
 	return &computeClientStub{
 		callCount: 0,
 		mutex:     &sync.Mutex{},
@@ -136,7 +168,7 @@ func TestLoadAddress(t *testing.T) {
 		var scope *cloudcontrolv1beta1.Scope
 		var k8sClient client.WithWatch
 		var address *compute.Address
-		var computeClient gcpiprangeclient.ComputeClient
+		var computeClient gcpiprangeclient.OldComputeClient
 
 		createEmptyGcpIpRangeState := func(k8sClient client.WithWatch, gcpNfsVolume *cloudcontrolv1beta1.IpRange) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())

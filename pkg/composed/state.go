@@ -65,21 +65,6 @@ type State interface {
 	// Cluster returns the used cluster
 	Cluster() StateCluster
 
-	// K8sClient returns the client to the cluster
-	//
-	// Deprecated: Use Cluster().K8sClient() instead
-	K8sClient() client.Client
-
-	// EventRecorder returns the event recorder of the connected cluster
-	//
-	// Deprecated: Use Cluster().EventRecorder() instead
-	EventRecorder() record.EventRecorder
-
-	// Scheme returns the Scheme
-	//
-	// Deprecated: Use Cluster().Scheme() instead
-	Scheme() *runtime.Scheme
-
 	Name() types.NamespacedName
 	Obj() client.Object
 	SetObj(client.Object)
@@ -127,18 +112,6 @@ type baseState struct {
 
 func (s *baseState) Cluster() StateCluster {
 	return s.cluster
-}
-
-func (s *baseState) K8sClient() client.Client {
-	return s.cluster.K8sClient()
-}
-
-func (s *baseState) EventRecorder() record.EventRecorder {
-	return s.cluster.EventRecorder()
-}
-
-func (s *baseState) Scheme() *runtime.Scheme {
-	return s.cluster.Scheme()
 }
 
 func (s *baseState) Name() types.NamespacedName {
@@ -244,6 +217,44 @@ func PatchObjMergeAnnotation(ctx context.Context, k, v string, obj client.Object
 	}
 	obj.GetAnnotations()[k] = v
 	p := []byte(fmt.Sprintf(`{"metadata": {"annotations":{"%s": "%s"}}}`, k, v))
+	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
+}
+
+func PatchObjMergeLabels(ctx context.Context, obj client.Object, clnt client.Writer, labels map[string]string) (bool, error) {
+	if obj.GetLabels() == nil {
+		obj.SetLabels(map[string]string{})
+	}
+	data := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"labels": labels,
+		},
+	}
+	p, err := json.Marshal(data)
+	if err != nil {
+		return false, err
+	}
+	allEqual := true
+	for k, v := range labels {
+		if obj.GetLabels()[k] != v {
+			obj.GetLabels()[k] = v
+			allEqual = false
+		}
+	}
+	if allEqual {
+		return false, nil
+	}
+	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
+}
+
+func PatchObjMergeLabel(ctx context.Context, obj client.Object, clnt client.Writer, k, v string) (bool, error) {
+	if obj.GetLabels() != nil && obj.GetLabels()[k] == v {
+		return false, nil
+	}
+	if obj.GetLabels() == nil {
+		obj.SetLabels(map[string]string{})
+	}
+	obj.GetLabels()[k] = v
+	p := []byte(fmt.Sprintf(`{"metadata": {"labels":{"%s": "%s"}}}`, k, v))
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenerapisecurity "github.com/gardener/gardener/pkg/apis/security/v1alpha1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
@@ -41,56 +41,57 @@ var _ = (client.Client)(nil)
 
 var _ = Describe("Feature: KCP Subscription", func() {
 
-	// nolint:staticcheck
-	commonInit := func(provider cloudcontrolv1beta1.ProviderType, subscriptionName string, secretData map[string][]byte) (*corev1.Secret, *gardenertypes.SecretBinding, *cloudcontrolv1beta1.Subscription) {
+	commonInit := func(provider cloudcontrolv1beta1.ProviderType, subscriptionName string, secretData map[string][]byte) (*corev1.Secret, *gardenerapisecurity.CredentialsBinding, *cloudcontrolv1beta1.Subscription) {
 		secret := &corev1.Secret{}
 		secret.Name = subscriptionName
 		secret.Namespace = DefaultGardenNamespace
 		secret.Data = secretData
 
-		// nolint:staticcheck
-		secretBinding := &gardenertypes.SecretBinding{}
-		secretBinding.Name = subscriptionName
-		secretBinding.Namespace = DefaultGardenNamespace
-		// nolint:staticcheck
-		secretBinding.Provider = &gardenertypes.SecretBindingProvider{Type: string(provider)}
-		secretBinding.SecretRef.Name = subscriptionName
-		secretBinding.SecretRef.Namespace = DefaultGardenNamespace
+		credentialBinding := &gardenerapisecurity.CredentialsBinding{}
+		credentialBinding.Name = subscriptionName
+		credentialBinding.Namespace = DefaultGardenNamespace
+		credentialBinding.Provider = gardenerapisecurity.CredentialsBindingProvider{Type: string(provider)}
+		credentialBinding.CredentialsRef.Kind = "Secret"
+		credentialBinding.CredentialsRef.APIVersion = "v1"
+		credentialBinding.CredentialsRef.Name = subscriptionName
+		credentialBinding.CredentialsRef.Namespace = DefaultGardenNamespace
 
 		subscription := cloudcontrolv1beta1.NewSubscriptionBuilder().
 			WithName(subscriptionName).
 			WithNamespace(DefaultKcpNamespace).
-			WithSecretBindingName(secretBinding.Name).
+			WithBindingName(credentialBinding.Name).
 			Build()
 
 		By(fmt.Sprintf("Given Garden Secret with %s credentials exists", strings.ToUpper(string(provider))), func() {
 			Expect(CreateObj(infra.Ctx(), infra.Garden().Client(), secret)).To(Succeed())
 		})
 
-		By("Given Garden SecretBinding exists", func() {
-			Expect(CreateObj(infra.Ctx(), infra.Garden().Client(), secretBinding)).To(Succeed())
+		By("Given Garden CredentialsBinding exists", func() {
+			Expect(CreateObj(infra.Ctx(), infra.Garden().Client(), credentialBinding)).To(Succeed())
 		})
 
 		By("Given KCP secret gardener-credentials exist", func() {
 			Expect(CreateGardenerCredentials(infra.Ctx(), infra)).To(Succeed())
 		})
 
-		return secret, secretBinding, subscription
+		return secret, credentialBinding, subscription
 	}
 
-	It("Scenario: KCP Subscription AWS is created and deleted", func() {
+	It("Scenario: KCP Subscription Garden AWS is created and deleted", func() {
 
 		const (
 			provider         = cloudcontrolv1beta1.ProviderAws
 			subscriptionName = "1c3a1ec7-3558-467b-a127-25da69fc1887"
-			awsAccountId     = "66beaa3c-69b9-4617-a7c4-4a10dca9ad48"
 		)
 
-		infra.AwsMock().SetAccount(awsAccountId)
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
 
-		secret, secretBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
-			"accessKeyID":     []byte("some-key-id"),
-			"secretAccessKey": []byte("some-secret-access-key"),
+		awsAccountId := awsAccount.AccountId()
+
+		secret, credentialsBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
+			"accessKeyID":     []byte(awsAccount.Credentials().AccessKeyId),
+			"secretAccessKey": []byte(awsAccount.Credentials().SecretAccessKey),
 		})
 
 		By("When KCP Subscription is created", func() {
@@ -128,25 +129,27 @@ var _ = Describe("Feature: KCP Subscription", func() {
 				Should(Succeed())
 		})
 
-		By("// cleanup: Delete Secret and SecretBinding", func() {
+		By("// cleanup: Delete Secret and CredentialsBinding", func() {
 			Expect(Delete(infra.Ctx(), infra.Garden().Client(), secret)).To(Succeed())
-			Expect(Delete(infra.Ctx(), infra.Garden().Client(), secretBinding)).To(Succeed())
+			Expect(Delete(infra.Ctx(), infra.Garden().Client(), credentialsBinding)).To(Succeed())
 		})
 	})
 
-	It("Scenario: KCP Subscription AWS deletion is blocked when used", func() {
+	It("Scenario: KCP Subscription deletion is blocked when used", func() {
 
 		const (
 			provider         = cloudcontrolv1beta1.ProviderAws
 			subscriptionName = "f5591f18-a6d0-4864-b08c-5a874023be2e"
-			awsAccountId     = "227b765f-f4bb-480f-b205-7aef384fd712"
 		)
 
-		infra.AwsMock().SetAccount(awsAccountId)
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
+		awsAccountId := awsAccount.AccountId()
 
 		secret, secretBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
-			"accessKeyID":     []byte("some-key-id"),
-			"secretAccessKey": []byte("some-secret-access-key"),
+			"accessKeyID":     []byte(awsAccount.Credentials().AccessKeyId),
+			"secretAccessKey": []byte(awsAccount.Credentials().SecretAccessKey),
 		})
 
 		By("When KCP Subscription is created", func() {
@@ -162,7 +165,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 
 		var resources []client.Object
 
-		By("When KCP resources labeled to use subscription are created", func() {
+		By("When KCP resources labeled to use subscription exist", func() {
 			// Random kinds used, kind is not important, but only the label `cloudcontrolv1beta1.SubscriptionLabel: subscriptionName`
 			var x client.Object
 			kcpscope.Ignore.AddName(subscriptionName)
@@ -218,14 +221,21 @@ var _ = Describe("Feature: KCP Subscription", func() {
 
 		By("Then KCP Subscription still exists with Warning/DeleteWhileUsed condition", func() {
 			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions(), HavingConditionReasonTrue(cloudcontrolv1beta1.ConditionTypeWarning, cloudcontrolv1beta1.ReasonDeleteWhileUsed)).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions(),
+					HavingConditionReasonTrue(cloudcontrolv1beta1.ConditionTypeDeleteWhileUsed, cloudcontrolv1beta1.ReasonDeleteWhileUsed)).
 				Should(Succeed())
-			cond := meta.FindStatusCondition(subscription.Status.Conditions, cloudcontrolv1beta1.ConditionTypeWarning)
+			cond := meta.FindStatusCondition(subscription.Status.Conditions, cloudcontrolv1beta1.ConditionTypeDeleteWhileUsed)
 			// Used by: cloud-control.kyma-project.io/v1beta1/IpRange: f5591f18-a6d0-4864-b08c-5a874023be2., cloud-control.kyma-project.io/v1beta1/Scope: f5591f18-a6d0-4864-b08c-5a874023be..
 			// order of the listed resources is not guaranteed so it must be checked one by one with substring
 			Expect(cond.Message).To(ContainSubstring("Used by: "))
 			Expect(cond.Message).To(ContainSubstring(fmt.Sprintf("%s/IpRange: %s", cloudcontrolv1beta1.GroupVersion.String(), subscriptionName)))
 			Expect(cond.Message).To(ContainSubstring(fmt.Sprintf("%s/Scope: %s", cloudcontrolv1beta1.GroupVersion.String(), subscriptionName)))
+		})
+
+		By("Then KCP Subscription has condition Subscription Unknown Deleting", func() {
+			cond := meta.FindStatusCondition(subscription.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
+			Expect(cond.Status).To(Equal(metav1.ConditionUnknown))
+			Expect(cond.Reason).To(Equal(cloudcontrolv1beta1.ReasonDeleting))
 		})
 
 		By("When Subscription dependant labeled resources are deleted", func() {
@@ -258,8 +268,8 @@ var _ = Describe("Feature: KCP Subscription", func() {
 			gcpProjectId     = "gcp-project-id"
 		)
 
-		secret, secretBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
-			"project_id": []byte(gcpProjectId),
+		secret, credentialsBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
+			"serviceaccount.json": []byte(fmt.Sprintf(`{"project_id":"%s"}`, gcpProjectId)),
 		})
 
 		By("When KCP Subscription is created", func() {
@@ -297,9 +307,9 @@ var _ = Describe("Feature: KCP Subscription", func() {
 				Should(Succeed())
 		})
 
-		By("// cleanup: Delete Secret and SecretBinding", func() {
+		By("// cleanup: Delete Secret and CredentialsBinding", func() {
 			Expect(Delete(infra.Ctx(), infra.Garden().Client(), secret)).To(Succeed())
-			Expect(Delete(infra.Ctx(), infra.Garden().Client(), secretBinding)).To(Succeed())
+			Expect(Delete(infra.Ctx(), infra.Garden().Client(), credentialsBinding)).To(Succeed())
 		})
 	})
 
@@ -311,7 +321,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 			azureSubscriptionId = "c9fcebc6-2593-45d5-b269-f76e8271e880"
 		)
 
-		secret, secretBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
+		secret, credentialsBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
 			"subscriptionID": []byte(azureSubscriptionId),
 			"tenantID":       []byte(azureTenantId),
 		})
@@ -352,9 +362,9 @@ var _ = Describe("Feature: KCP Subscription", func() {
 				Should(Succeed())
 		})
 
-		By("// cleanup: Delete Secret and SecretBinding", func() {
+		By("// cleanup: Delete Secret and CredentialsBinding", func() {
 			Expect(Delete(infra.Ctx(), infra.Garden().Client(), secret)).To(Succeed())
-			Expect(Delete(infra.Ctx(), infra.Garden().Client(), secretBinding)).To(Succeed())
+			Expect(Delete(infra.Ctx(), infra.Garden().Client(), credentialsBinding)).To(Succeed())
 		})
 	})
 })

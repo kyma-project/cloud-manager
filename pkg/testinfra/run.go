@@ -122,7 +122,7 @@ func StartEx(opts StartOptions) (Infra, error) {
 
 		kubeconfigFilePath := filepath.Join(configDir, fmt.Sprintf("kubeconfig-%s-%s", strings.ReplaceAll(opts.CallerId, "/", "-"), name))
 		fmt.Printf("%s kubeconfigFilePath: %s\n", name, kubeconfigFilePath)
-		b, err := kubeconfigToBytes(restConfigToKubeconfig(cfg))
+		b, err := KubeconfigToBytes(RestConfigToKubeconfig(cfg))
 		if err != nil {
 			return nil, fmt.Errorf("error getting %s kubeconfig bytes: %w", name, err)
 		}
@@ -197,7 +197,6 @@ func StartEx(opts StartOptions) (Infra, error) {
 	activeSkrCollection := skrruntime.NewActiveSkrCollection()
 
 	awsMock := awsmock.New()
-	awsMock.SetAccount("some-aws-account")
 
 	infra.InfraEnv = &infraEnv{
 		i:                   infra,

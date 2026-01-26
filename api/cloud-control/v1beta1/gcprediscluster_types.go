@@ -18,7 +18,6 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -64,6 +63,9 @@ type GcpRedisClusterStatus struct {
 	Id string `json:"id,omitempty"`
 
 	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// +optional
 	DiscoveryEndpoint string `json:"discoveryEndpoint,omitempty"`
 
 	// +optional
@@ -73,6 +75,18 @@ type GcpRedisClusterStatus struct {
 
 	// +optional
 	CaCert string `json:"caCert,omitempty"`
+
+	// The reconciled machine type of the Redis cluster.
+	// +optional
+	NodeType string `json:"nodeType,omitempty"`
+
+	// The reconciled number of shards in the Redis cluster.
+	// +optional
+	ShardCount int32 `json:"shardCount,omitempty"`
+
+	// The reconciled number of read replicas per shard.
+	// +optional
+	ReplicasPerShard int32 `json:"replicasPerShard,omitempty"`
 
 	// List of status conditions to indicate the status of a RedisInstance.
 	// +optional
@@ -107,6 +121,14 @@ func (in *GcpRedisCluster) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
 }
 
+func (in *GcpRedisCluster) ObservedGeneration() int64 {
+	return in.Status.ObservedGeneration
+}
+
+func (in *GcpRedisCluster) SetObservedGeneration(v int64) {
+	in.Status.ObservedGeneration = v
+}
+
 func (in *GcpRedisCluster) State() string {
 	return string(in.Status.State)
 }
@@ -117,26 +139,6 @@ func (in *GcpRedisCluster) SetState(v string) {
 
 func (in *GcpRedisCluster) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
-}
-
-func (in *GcpRedisCluster) CloneForPatchStatus() client.Object {
-	result := &GcpRedisCluster{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "GcpRedisCluster",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
-	}
-
-	if result.Status.Conditions == nil {
-		result.Status.Conditions = []metav1.Condition{}
-	}
-
-	return result
 }
 
 func (in *GcpRedisCluster) SetStatusStateToReady() {

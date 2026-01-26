@@ -19,7 +19,14 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
+
+	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
+	awsvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork/client"
+	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
+	azurevpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
@@ -61,7 +68,8 @@ import (
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
-	gcpnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client"
+	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
+	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
@@ -200,9 +208,10 @@ func main() {
 	//Get env
 	env := abstractions.NewOSEnvironment()
 
-	gcpClients, err := gcpclient.NewGcpClients(ctx, env.Get("GCP_SA_JSON_KEY_PATH"), env.Get("GCP_VPC_PEERING_KEY_PATH"), rootLogger.WithName("gcp-clients"))
+	gcpClients, err := gcpclient.NewGcpClients(ctx, config.GcpConfig.CredentialsFile, config.GcpConfig.PeeringCredentialsFile, rootLogger.WithName("gcp-clients"))
 	if err != nil {
-		setupLog.Error(err, "Failed to create gcp clients with sa json key path: "+env.Get("GCP_SA_JSON_KEY_PATH")+" and vpc peering key path: "+env.Get("GCP_VPC_PEERING_KEY_PATH"))
+		setupLog.Error(err, fmt.Sprintf("Failed to create gcp clients with sa json key path: %s and vpc peering key path: %s",
+			config.GcpConfig.CredentialsFile, config.GcpConfig.CredentialsFile))
 		os.Exit(1)
 	}
 	defer func() {
@@ -369,7 +378,8 @@ func main() {
 	if err = cloudcontrolcontroller.SetupNfsInstanceReconciler(
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
-		gcpnfsinstanceclient.NewFilestoreClientProvider(),
+		gcpnfsinstancev1client.NewFilestoreClientProvider(),
+		gcpnfsinstancev2client.NewFilestoreClientProvider(gcpClients),
 		sapnfsinstanceclient.NewClientProvider(),
 		env,
 	); err != nil {
@@ -391,8 +401,10 @@ func main() {
 		mgr,
 		awsiprangeclient.NewClientProvider(),
 		azureiprangeclient.NewClientProvider(),
-		gcpiprangeclient.NewServiceNetworkingClient(),
-		gcpiprangeclient.NewComputeClient(),
+		gcpiprangeclient.NewServiceNetworkingClientProvider(gcpClients),
+		gcpiprangeclient.NewComputeClientProvider(gcpClients),
+		gcpiprangeclient.NewServiceNetworkingClientProviderV2(gcpClients),
+		gcpiprangeclient.NewOldComputeClientProviderV2(gcpClients),
 		sapiprangeclient.NewClientProvider(),
 		env,
 	); err != nil {
@@ -465,10 +477,11 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureVNetLink")
 		os.Exit(1)
 	}
-	if err = (&cloudcontrolcontroller.VpcNetworkReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	if err = cloudcontrolcontroller.SetupVpcNetworkReconciler(
+		mgr,
+		awsvpcnetwork.NewStateFactory(awsvpcnetworkclient.NewClientProvider()),
+		azurevpcnetwork.NewStateFactory(azurevpcnetworkclient.NewClientProvider()),
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcNetwork")
 		os.Exit(1)
 	}

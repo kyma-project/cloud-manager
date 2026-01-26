@@ -24,7 +24,9 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
+	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
+	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -100,8 +102,10 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().IpRangeSkrProvider(),
 		infra.AzureMock().IpRangeProvider(),
-		infra.GcpMock().ServiceNetworkingClientProvider(),
-		infra.GcpMock().ComputeClientProvider(),
+		infra.GcpMock().ServiceNetworkingClientProviderGcp(), // v3: NEW pattern (GcpClientProvider)
+		infra.GcpMock().ComputeClientProviderGcp(),           // v3: NEW pattern (GcpClientProvider)
+		infra.GcpMock().ServiceNetworkingClientProvider(),    // v2: OLD pattern (ClientProvider)
+		infra.GcpMock().OldComputeClientProvider(),           // v2: OLD pattern (ClientProvider)
 		infra.SapMock().IpRangeProvider(),
 		env,
 	)).NotTo(HaveOccurred())
@@ -110,6 +114,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().NfsInstanceSkrProvider(),
 		infra.GcpMock().FilestoreClientProvider(),
+		infra.GcpMock().FilestoreClientProviderV2(),
 		infra.SapMock().NfsInstanceProvider(),
 		env,
 	)).NotTo(HaveOccurred())
@@ -171,6 +176,12 @@ var _ = BeforeSuite(func() {
 		infra.AzureMock().DnsZoneVNetLinkProvider(),
 		infra.AzureMock().DnsResolverVNetLinkProvider(),
 	)).NotTo(HaveOccurred())
+	// VpcNetwork
+	Expect(SetupVpcNetworkReconciler(
+		infra.KcpManager(),
+		awsvpcnetwork.NewStateFactory(infra.AwsMock().VpcNetworkProvider()),
+		azurevpcnetwork.NewStateFactory(infra.AzureMock().VpcNetworkProvider()),
+	)).To(Succeed())
 	// Subscription
 	Expect(SetupSubscriptionReconciler(
 		infra.KcpManager(),

@@ -17,23 +17,23 @@ type Client interface {
 func NewClientProvider() azureclient.ClientProvider[Client] {
 	return func(ctx context.Context, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (Client, error) {
 
-		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, &azidentity.ClientSecretCredentialOptions{})
+		cred, err := azidentity.NewClientSecretCredential(tenantId, clientId, clientSecret, azureclient.NewCredentialOptionsBuilder().Build())
 
 		if err != nil {
 			return nil, err
 		}
 
-		armRedisClientInstance, err := armredis.NewClient(subscriptionId, cred, nil)
+		armRedisClientInstance, err := armredis.NewClient(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		privateEndPointsClient, err := armnetwork.NewPrivateEndpointsClient(subscriptionId, cred, nil)
+		privateEndPointsClient, err := armnetwork.NewPrivateEndpointsClient(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}
 
-		privateDnsZoneGroupClient, err := armnetwork.NewPrivateDNSZoneGroupsClient(subscriptionId, cred, nil)
+		privateDnsZoneGroupClient, err := armnetwork.NewPrivateDNSZoneGroupsClient(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
 		if err != nil {
 			return nil, err
 		}

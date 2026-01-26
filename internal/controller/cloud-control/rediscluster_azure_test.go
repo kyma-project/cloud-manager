@@ -2,7 +2,6 @@ package cloudcontrol
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
@@ -56,7 +55,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
 					WithConditions(KcpReadyCondition()),
-				).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).
+				).
 				Should(Succeed(), "Expected KCP IpRange to become ready")
 		})
 
@@ -163,6 +162,19 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(keys).To(HaveLen(2))
 			Expect(redisCluster.Status.AuthString).To(Equal(keys[0]))
+		})
+
+		By("And Then KCP RedisCluster has .status.nodeType set", func() {
+			expectedNodeType := fmt.Sprintf("%d", redisCapacity)
+			Expect(redisCluster.Status.NodeType).To(Equal(expectedNodeType))
+		})
+
+		By("And Then KCP RedisCluster has .status.shardCount set", func() {
+			Expect(redisCluster.Status.ShardCount).To(Equal(int32(shardCount)))
+		})
+
+		By("And Then KCP RedisCluster has .status.replicasPerShard set", func() {
+			Expect(redisCluster.Status.ReplicasPerShard).To(Equal(int32(replicaCount)))
 		})
 
 		By("And Then Private End Point is created", func() {

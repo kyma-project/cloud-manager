@@ -2,18 +2,26 @@ apiVersion: cloud-control.kyma-project.io/v1beta1
 kind: Subscription
 metadata:
   name: subscription-sample
+  labels:
+    cloud-manager.kyma-project.io/binding-name: binding-name
+    cloud-manager.kyma-project-io/provider: gcp_or_aws_or_azure_or_openstack
 spec:
-  secretBindingName: secret-binding-22
+  details:
+    garden:
+      bindingName: binding-name
 status:
-  state: Ready|Error|Warning
+  state: Ready
   conditions:
-    - type: Ready
+    - type: Subscription
+      status: 'True'
       reason: Ready
-    - type: Error
-      reason: Error
-    - type: Warning
+      message: Ready
+      lastTransitionTime: '2025-12-01T10:41:08Z'
+    - type: DeleteWhileUsed
+      status: 'True'
       reason: DeleteWhileUsed
       message: Used by ...
+      lastTransitionTime: '2025-12-01T10:41:08Z'
   provider: gcp|aws|azure|openstack
   subscriptionInfo:
     gcp:

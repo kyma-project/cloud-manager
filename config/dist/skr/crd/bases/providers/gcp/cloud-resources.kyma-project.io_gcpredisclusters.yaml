@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.4
+    cloud-resources.kyma-project.io/version: v0.0.5
   name: gcpredisclusters.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -51,6 +51,7 @@ spec:
                     annotations:
                       additionalProperties:
                         type: string
+                      maxProperties: 64
                       type: object
                     extraData:
                       additionalProperties:
@@ -59,13 +60,16 @@ spec:
                     labels:
                       additionalProperties:
                         type: string
+                      maxProperties: 64
                       type: object
                     name:
+                      maxLength: 253
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                       type: string
+                      x-kubernetes-validations:
+                        - message: name is immutable
+                          rule: self == '' || oldSelf == '' || self == oldSelf
                   type: object
-                  x-kubernetes-validations:
-                    - message: AuthSecret is immutable.
-                      rule: (self == oldSelf)
                 redisConfigs:
                   additionalProperties:
                     type: string

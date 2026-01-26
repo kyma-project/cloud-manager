@@ -49,11 +49,13 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
 					WithConditions(KcpReadyCondition()),
-				).WithTimeout(20*time.Second).WithPolling(200*time.Millisecond).
+				).
 				Should(Succeed(), "Expected KCP IpRange to become ready")
 		})
 
 		redisInstance := &cloudcontrolv1beta1.RedisInstance{}
+		memorySizeGb := 5
+		replicaCount := 0
 
 		By("When RedisInstance is created", func() {
 			Eventually(CreateRedisInstance).
@@ -64,9 +66,9 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 					WithScope(name),
 					WithRedisInstanceGcp(),
 					WithKcpGcpRedisInstanceTier("BASIC"),
-					WithKcpGcpRedisInstanceMemorySizeGb(5),
+					WithKcpGcpRedisInstanceMemorySizeGb(int32(memorySizeGb)),
 					WithKcpGcpRedisInstanceRedisVersion("REDIS_7_0"),
-					WithKcpGcpRedisInstanceReplicaCount(0),
+					WithKcpGcpRedisInstanceReplicaCount(int32(replicaCount)),
 					WithKcpGcpRedisInstanceConfigs(map[string]string{
 						"maxmemory-policy": "allkeys-lru",
 					}),
@@ -115,6 +117,14 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		})
 		By("And Then RedisInstance has .status.authString set", func() {
 			Expect(len(redisInstance.Status.AuthString) > 0).To(Equal(true))
+		})
+
+		By("And Then RedisInstance has .status.memorySizeGb set", func() {
+			Expect(redisInstance.Status.MemorySizeGb).To(Equal(int32(memorySizeGb)))
+		})
+
+		By("And Then RedisInstance has .status.replicaCount set", func() {
+			Expect(redisInstance.Status.ReplicaCount).To(Equal(int32(replicaCount)))
 		})
 
 		// DELETE

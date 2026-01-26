@@ -1,0 +1,48 @@
+apiDisabled:
+  variations:
+    enabled: false
+    disabled: true
+  defaultRule:
+    variation: enabled
+
+nukeBackupsGcp:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+nukeBackupsAws:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+vpcPeeringSync:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+gcpIpRangeV3:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
+nfs41Gcp:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled
+
+gcpNfsInstanceV2:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled

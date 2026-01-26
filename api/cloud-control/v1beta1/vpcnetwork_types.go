@@ -17,29 +17,79 @@ limitations under the License.
 package v1beta1
 
 import (
+	"slices"
+
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// +kubebuilder:validation:Enum=kyma;gardener
+type VpcNetworkType string
+
+const (
+	VpcNetworkTypeGardener VpcNetworkType = "gardener"
+	VpcNetworkTypeKyma     VpcNetworkType = "kyma"
+)
 
 // VpcNetworkSpec defines the desired state of VpcNetwork.
 type VpcNetworkSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// +optional
+	// +kubebuilder:default=kyma
+	Type VpcNetworkType `json:"type,omitempty"`
 
-	// Foo is an example field of VpcNetwork. Edit vpcnetwork_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:validation:Required
+	Subscription string `json:"subscription"`
+
+	// Region is required for AWS and Azure providers.
+	// +kubebuilder:validation:Required
+	Region string `json:"region"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule="self.all(s, isCIDR(s))",message="cidrBlocks must be a list of valid CIDRs, for example '10.20.30.40/16'"
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=10
+	CidrBlocks []string `json:"cidrBlocks"`
 }
 
 // VpcNetworkStatus defines the observed state of VpcNetwork.
 type VpcNetworkStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// +optional
+	State string `json:"state,omitempty"`
+
+	// List of status conditions to indicate the status of a Peering.
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// +optional
+	CidrBlocks []string `json:"cidrBlocks"`
+
+	// +optional
+	Identifiers VpcNetworkStatusIdentifiers `json:"identifiers"`
+}
+
+type VpcNetworkStatusIdentifiers struct {
+	// +optional
+	Vpc string `json:"vpc"`
+
+	// +optional
+	Router string `json:"router"`
+
+	// +optional
+	InternetGateway string `json:"internetGateway"`
+
+	// +optional
+	ResourceGroup string `json:"resourceGroup"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Subscription",type="string",JSONPath=".spec.subscription"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.conditions[?(@.type=="Ready")].reason`
 
 // VpcNetwork is the Schema for the vpcnetworks API.
 type VpcNetwork struct {
@@ -57,6 +107,128 @@ type VpcNetworkList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []VpcNetwork `json:"items"`
+}
+
+// interface implementations
+
+func (in *VpcNetwork) Conditions() *[]metav1.Condition {
+	return &in.Status.Conditions
+}
+
+func (in *VpcNetwork) ObservedGeneration() int64 {
+	return in.Status.ObservedGeneration
+}
+
+func (in *VpcNetwork) SetObservedGeneration(v int64) {
+	in.Status.ObservedGeneration = v
+}
+
+// functions
+
+func (in *VpcNetwork) HaveVpcCidrBlocksChanged() bool {
+	if len(in.Spec.CidrBlocks) != len(in.Status.CidrBlocks) {
+		return true
+	}
+	for _, x := range in.Spec.CidrBlocks {
+		if !slices.Contains(in.Status.CidrBlocks, x) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (in *VpcNetwork) SetStatusProcessing() {
+	in.Status.State = ReasonProcessing
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonProcessing,
+		Message:            ReasonProcessing,
+	})
+}
+
+func (in *VpcNetwork) SetStatusProvisioned() {
+	in.Status.State = ReasonProvisioned
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionTrue,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonProvisioned,
+		Message:            ReasonProvisioned,
+	})
+}
+
+func (in *VpcNetwork) SetStatusInvalidCidr(msg string) {
+	in.Status.State = ReasonInvalidCidr
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonInvalidCidr,
+		Message:            msg,
+	})
+}
+
+func (in *VpcNetwork) SetStatusOverlappingCidr(msg string) {
+	in.Status.State = ReasonCidrOverlap
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonCidrOverlap,
+		Message:            msg,
+	})
+}
+
+func (in *VpcNetwork) SetStatusInvalidDependency(msg string) {
+	in.Status.State = ReasonInvalidDependency
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonInvalidDependency,
+		Message:            msg,
+	})
+}
+
+func (in *VpcNetwork) SetStatusProviderError(msg string) {
+	in.Status.State = ReasonProviderError
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonProviderError,
+		Message:            msg,
+	})
+}
+
+func (in *VpcNetwork) SetStatusDeleteWhileUsed(msg string) {
+	in.Status.State = ReasonDeleteWhileUsed
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeDeleteWhileUsed,
+		Status:             metav1.ConditionTrue,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonDeleteWhileUsed,
+		Message:            msg,
+	})
+}
+
+func (in *VpcNetwork) RemoveStatusDeleteWhileUsed() {
+	in.Status.State = string(StateDeleting)
+	meta.RemoveStatusCondition(&in.Status.Conditions, ConditionTypeDeleteWhileUsed)
+}
+
+func (in *VpcNetwork) SetStatusDeleting() {
+	in.Status.State = string(StateDeleting)
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionUnknown,
+		ObservedGeneration: in.Status.ObservedGeneration,
+		Reason:             ReasonDeleting,
+		Message:            ReasonDeleting,
+	})
 }
 
 func init() {

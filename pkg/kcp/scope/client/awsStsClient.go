@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 )

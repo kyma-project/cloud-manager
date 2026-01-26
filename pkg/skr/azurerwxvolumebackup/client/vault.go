@@ -8,7 +8,6 @@ import (
 	"io"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -29,14 +28,8 @@ type CreateVaultResponse struct {
 	Status string `json:"status"`
 }
 
-func NewVaultClient(subscriptionId string, cred *azidentity.ClientSecretCredential) (VaultClient, error) {
-
-	vc, err := armrecoveryservices.NewVaultsClient(subscriptionId, cred, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return vaultClient{vc}, nil
+func NewVaultClient(vc *armrecoveryservices.VaultsClient) VaultClient {
+	return vaultClient{vc}
 }
 
 // Returns operationId used to check the status

@@ -2,9 +2,11 @@ package mock
 
 import (
 	"context"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	dnsresolverclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
 	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
+	azurevpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork/client"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
@@ -93,6 +95,7 @@ type Clients interface {
 
 type Providers interface {
 	VpcPeeringProvider() azureclient.ClientProvider[azurevpcpeeringclient.Client]
+	VpcNetworkProvider() azureclient.ClientProvider[azurevpcnetworkclient.Client]
 	IpRangeProvider() azureclient.ClientProvider[azureiprangeclient.Client]
 	RedisClientProvider() azureclient.ClientProvider[azureredisinstanceclient.Client]
 	RedisClusterClientProvider() azureclient.ClientProvider[azureredisclusterclient.Client]

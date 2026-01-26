@@ -30,7 +30,7 @@ type ShootBuilder struct {
 }
 
 func NewShootBuilder(cpr e2elib.CloudProfileRegistry, config *e2econfig.ConfigType) *ShootBuilder {
-	return &ShootBuilder{
+	b := &ShootBuilder{
 		cpr:    cpr,
 		config: config,
 		obj: gardenertypes.Shoot{
@@ -39,11 +39,25 @@ func NewShootBuilder(cpr e2elib.CloudProfileRegistry, config *e2econfig.ConfigTy
 				Kind:       "Shoot",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: config.GardenNamespace,
+				Namespace:   config.GardenNamespace,
+				Annotations: config.ShootAnnotations,
 			},
-			Spec: gardenertypes.ShootSpec{},
 		},
 	}
+	loc, err := time.LoadLocation("Europe/Belgrade")
+	if err == nil {
+		if time.Now().In(loc).Hour() < 18 {
+			b.obj.Spec.Hibernation = &gardenertypes.Hibernation{
+				Schedules: []gardenertypes.HibernationSchedule{
+					{
+						Start:    ptr.To("00 20 * * 1,2,3,4,5,6,0"),
+						Location: ptr.To("Europe/Belgrade"),
+					},
+				},
+			}
+		}
+	}
+	return b
 }
 
 func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBuilder {
@@ -266,10 +280,20 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 	b.obj.Spec.Provider.Workers = rt.Spec.Shoot.Provider.Workers
 
 	b.obj.Spec.Region = rt.Spec.Shoot.Region
-	// SA1019 we keep support for secretBinding until all landscapes are migrated
-	// nolint:staticcheck
-	b.obj.Spec.SecretBindingName = ptr.To(rt.Spec.Shoot.SecretBindingName)
+	b.obj.Spec.CredentialsBindingName = ptr.To(rt.Spec.Shoot.SecretBindingName)
 
+	return b
+}
+
+func (b *ShootBuilder) WithAnnotations(annotations map[string]string) *ShootBuilder {
+	if len(annotations) > 0 {
+		if b.obj.Annotations == nil {
+			b.obj.Annotations = make(map[string]string)
+		}
+		for k, v := range annotations {
+			b.obj.Annotations[k] = v
+		}
+	}
 	return b
 }
 

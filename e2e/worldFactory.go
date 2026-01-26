@@ -7,15 +7,14 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/kyma-project/cloud-manager/e2e/cloud"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
-	"github.com/kyma-project/cloud-manager/e2e/sim"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/clock"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 )
 
@@ -32,6 +31,7 @@ type WorldCreateOptions struct {
 	CloudProfileLoader    e2elib.CloudProfileLoader
 	SkrKubeconfigProvider e2elib.SkrKubeconfigProvider
 	SkrManagerFactory     e2ekeb.SkrManagerFactory
+	CreateCloud           bool
 }
 
 func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) (WorldIntf, error) {
@@ -127,22 +127,6 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 
 	kebi := e2ekeb.NewKeb(kcpManager.GetClient(), gardenManager.GetClient(), opts.SkrManagerFactory, opts.CloudProfileLoader, opts.SkrKubeconfigProvider, opts.Config)
 
-	// SIM -----------------------------------
-
-	simInstance, err := sim.New(sim.CreateOptions{
-		Config:                opts.Config,
-		StartCtx:              ctx,
-		KcpManager:            kcpManager,
-		GardenClient:          gardenManager.GetClient(),
-		CloudProfileLoader:    opts.CloudProfileLoader,
-		Logger:                ctrl.Log,
-		SkrKubeconfigProvider: opts.SkrKubeconfigProvider,
-	})
-	if err != nil {
-		cancel()
-		return nil, fmt.Errorf("error creating sim instance: %w", err)
-	}
-
 	// give time to sim reconciler kinds to get added to cache and start syncing
 	time.Sleep(time.Second)
 
@@ -154,10 +138,19 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	result.config = opts.Config
 	result.kcpManager = kcpManager
 	result.gardenManager = gardenManager
-	result.simu = simInstance
 	result.kebi = kebi
-	result.kcp = NewCluster(ctx, "kcp", kcpManager)
-	result.garden = NewCluster(ctx, "garden", gardenManager)
+	result.kcp = NewCluster(ctx, "kcp", kcpManager, opts.Config)
+	result.garden = NewCluster(ctx, "garden", gardenManager, opts.Config)
+
+	// Cloud -------------------------------
+
+	if opts.CreateCloud {
+		cl, err := cloud.Create(ctx, gardenManager.GetClient(), opts.Config)
+		if err != nil {
+			return nil, fmt.Errorf("error creating cloud: %w", err)
+		}
+		result.cloud = cl
+	}
 
 	return result, nil
 }

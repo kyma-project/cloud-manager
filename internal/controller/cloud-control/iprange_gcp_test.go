@@ -1,21 +1,30 @@
 package cloudcontrol
 
+// Run with: FF_GCP_IP_RANGE_V3 unset or =false
+
 import (
+	"context"
+	"strconv"
+	"strings"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"strconv"
-	"strings"
 )
 
 var _ = Describe("Feature: KCP IpRange for GCP", func() {
 
 	It("Scenario: KCP IpRange with specified CIDR is created and deleted", func() {
+		if feature.GcpIpRangeV3.Value(context.Background()) {
+			Skip("IpRange legacy implementation is disabled")
+		}
+
 		const (
 			kymaName    = "570c0d27-d67a-44cc-908a-2c151d50303e"
 			ipRangeName = "81dbff76-33ce-4a2b-be48-a48ea4f2a25b"
@@ -78,7 +87,7 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 		})
 
 		By("And Then GCP global address is created", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gcpGlobalAddress).NotTo(BeNil())
 			chunks := strings.Split(ipRange.Status.Cidr, "/")
@@ -119,7 +128,7 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 		})
 
 		By("And Then GCP global address does not exist", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(gcpGlobalAddress).To(BeNil())
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})
@@ -127,6 +136,10 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 	})
 
 	It("Scenario: KCP IpRange without CIDR is created and deleted", func() {
+		if feature.GcpIpRangeV3.Value(context.Background()) {
+			Skip("IpRange legacy implementation is disabled")
+		}
+
 		const (
 			kymaName    = "89668d12-0132-4748-b175-fe66dd1c4d93"
 			ipRangeName = "6a9123da-dacb-4803-abf9-6d238e903d40"
@@ -188,7 +201,7 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 		})
 
 		By("And Then GCP global address is created", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gcpGlobalAddress).NotTo(BeNil())
 			chunks := strings.Split(ipRange.Status.Cidr, "/")
@@ -229,7 +242,7 @@ var _ = Describe("Feature: KCP IpRange for GCP", func() {
 		})
 
 		By("And Then GCP global address does not exist", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRange(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
 			Expect(gcpGlobalAddress).To(BeNil())
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})

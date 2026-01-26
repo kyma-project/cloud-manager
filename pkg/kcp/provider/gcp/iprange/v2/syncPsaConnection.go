@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -46,14 +47,14 @@ func syncPsaConnection(ctx context.Context, st composed.State) (error, context.C
 				Reason:  v1beta1.ReasonGcpError,
 				Message: err.Error(),
 			}).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpRetryWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 			Run(ctx, state)
 	}
 	if operation != nil {
 		ipRange.Status.OpIdentifier = operation.Name
 		return composed.PatchStatus(ipRange).
-			SuccessError(composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime)).
+			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).
 			Run(ctx, state)
 	}
-	return composed.StopWithRequeueDelay(gcpclient.GcpConfig.GcpOperationWaitTime), nil
+	return composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime), nil
 }

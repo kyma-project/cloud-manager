@@ -19,18 +19,42 @@ package cloudcontrol
 import (
 	"context"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
+	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
+	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
+	kcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
 
+func SetupVpcNetworkReconciler(
+	kcpManager manager.Manager,
+	awsStateFactory awsvpcnetwork.StateFactory,
+	azureStateFactory azurevpcnetwork.StateFactory,
+) error {
+	return NewVpcNetworkReconciler(
+		kcpvpcnetwork.New(
+			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
+			kcpcommonaction.NewStateFactory(),
+			awsStateFactory,
+			azureStateFactory,
+		),
+	).SetupWithManager(kcpManager)
+}
+
+func NewVpcNetworkReconciler(r kcpvpcnetwork.VpcNetworkReconciler) *VpcNetworkReconciler {
+	return &VpcNetworkReconciler{
+		Reconciler: r,
+	}
+}
+
 // VpcNetworkReconciler reconciles a VpcNetwork object
 type VpcNetworkReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
+	Reconciler kcpvpcnetwork.VpcNetworkReconciler
 }
 
 // +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=vpcnetworks,verbs=get;list;watch;create;update;patch;delete
@@ -39,25 +63,20 @@ type VpcNetworkReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the VpcNetwork object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.0/pkg/reconcile
 func (r *VpcNetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	return r.Reconciler.Reconcile(ctx, req)
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *VpcNetworkReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cloudcontrolv1beta1.VpcNetwork{}).
+		WithOptions(controller.Options{
+			MaxConcurrentReconciles: 10,
+		}).
 		Named("cloud-control-vpcnetwork").
 		Complete(r)
 }

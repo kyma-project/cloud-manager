@@ -39,7 +39,10 @@ import (
 type Keb interface {
 	SkrManagerFactory
 
+	Config() *e2econfig.ConfigType
+
 	KcpClient() client.Client
+	GardenClient() client.Client
 
 	CreateInstance(ctx context.Context, opts ...CreateOption) (InstanceDetails, error)
 	WaitProvisioningCompleted(ctx context.Context, opts ...WaitOption) error
@@ -489,8 +492,16 @@ func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetai
 	return id
 }
 
+func (k *defaultKeb) Config() *e2econfig.ConfigType {
+	return k.config
+}
+
 func (k *defaultKeb) KcpClient() client.Client {
 	return k.kcpClient
+}
+
+func (k *defaultKeb) GardenClient() client.Client {
+	return k.gardenClient
 }
 
 func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...WaitOption) error {
@@ -638,6 +649,9 @@ func (k *defaultKeb) GetInstance(ctx context.Context, runtimeID string) (*Instan
 }
 
 func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (InstanceDetails, error) {
+	if k.config.ShootPrefix == "" {
+		return InstanceDetails{}, fmt.Errorf("required config shootPrefix not set")
+	}
 	options := &createOptions{}
 	for _, o := range append(append([]CreateOption{}, defaultCreateOptions()...), opts...) {
 		o.ApplyOnCreate(options)

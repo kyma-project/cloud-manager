@@ -1,7 +1,7 @@
 package ctrltest
 
 import (
-	"time"
+	"fmt"
 
 	"github.com/kyma-project/cloud-manager/e2e"
 	. "github.com/onsi/ginkgo/v2"
@@ -43,23 +43,23 @@ var _ = Describe("Feature: Cluster context", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		var evaluator e2e.Evaluator
-
-		By("When Evaluation context is created", func() {
-			e, err := e2e.NewEvaluatorBuilder(config.SkrNamespace).
+		By("Then expression `cmOne` returns nil", func() {
+			evaluator, err := e2e.NewEvaluatorBuilder().
 				Add(world.Kcp()).
 				Build(infra.Ctx())
 			Expect(err).NotTo(HaveOccurred())
-			evaluator = e
-		})
 
-		By("Then expression `cmOne` returns nil", func() {
 			v, err := evaluator.Eval("cmOne")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(BeNil())
 		})
 
 		By("Then expression `cmTwo` returns nil", func() {
+			evaluator, err := e2e.NewEvaluatorBuilder().
+				Add(world.Kcp()).
+				Build(infra.Ctx())
+			Expect(err).NotTo(HaveOccurred())
+
 			v, err := evaluator.Eval("cmTwo")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(BeNil())
@@ -69,7 +69,7 @@ var _ = Describe("Feature: Cluster context", func() {
 			err := world.Kcp().GetClient().Create(infra.Ctx(), &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      cmTwoName,
-					Namespace: "default",
+					Namespace: config.KcpNamespace,
 				},
 				Data: map[string]string{
 					"myName": "cmTwo",
@@ -82,48 +82,81 @@ var _ = Describe("Feature: Cluster context", func() {
 			err := world.Kcp().GetClient().Create(infra.Ctx(), &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      cmOneName,
-					Namespace: "default",
+					Namespace: config.KcpNamespace,
 				},
 				Data: map[string]string{
 					"cmTwoName": cmTwoName,
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())
-		})
-
-		By("When Evaluation context is created", func() {
-			// give time to cache to refresh
-			time.Sleep(2 * time.Second)
-			e, err := e2e.NewEvaluatorBuilder(config.SkrNamespace).
-				Add(world.Kcp()).
-				Build(infra.Ctx())
-			Expect(err).NotTo(HaveOccurred())
-			evaluator = e
+			world.Kcp().GetCache().WaitForCacheSync(infra.Ctx())
 		})
 
 		By("Then expression cmOne.metadata.name returns value", func() {
-			v, err := evaluator.Eval("cmOne.metadata.name")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal(cmOneName))
+			Eventually(func() error {
+				evaluator, err := e2e.NewEvaluatorBuilder().
+					Add(world.Kcp()).
+					Build(infra.Ctx())
+				if err != nil {
+					return fmt.Errorf("error creating evaluator: %w", err)
+				}
+
+				v, err := evaluator.Eval("cmOne.metadata.name")
+				if err != nil {
+					return fmt.Errorf("error evaluating cmOne.metadata.name: %w", err)
+				}
+				if v != cmOneName {
+					return fmt.Errorf("expected cmOne.metadata.name to evaluate to %q, got %v", cmOneName, v)
+				}
+				return nil
+			}).Should(Succeed())
 		})
 
-		By("Then expression cmOne.data.cmTwoName returns value", func() {
-			v, err := evaluator.Eval("cmOne.data.cmTwoName")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal(cmTwoName))
+		By("And Then expression cmOne.data.cmTwoName returns value", func() {
+			Eventually(func() error {
+				evaluator, err := e2e.NewEvaluatorBuilder().
+					Add(world.Kcp()).
+					Build(infra.Ctx())
+				if err != nil {
+					return fmt.Errorf("error creating evaluator: %w", err)
+				}
+
+				v, err := evaluator.Eval("cmOne.data.cmTwoName")
+				if err != nil {
+					return fmt.Errorf("error evaluating cmOne.data.cmTwoName: %w", err)
+				}
+				if v != cmTwoName {
+					return fmt.Errorf("expected cmOne.data.cmTwoName to evaluate to %q, got %v", cmTwoName, v)
+				}
+				return nil
+			}).Should(Succeed())
 		})
 
 		By("And Then expression cmTwo.metadata.name returns value", func() {
-			v, err := evaluator.Eval("cmTwo.metadata.name")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v).To(Equal(cmTwoName))
+			Eventually(func() error {
+				evaluator, err := e2e.NewEvaluatorBuilder().
+					Add(world.Kcp()).
+					Build(infra.Ctx())
+				if err != nil {
+					return fmt.Errorf("error creating evaluator: %w", err)
+				}
+
+				v, err := evaluator.Eval("cmTwo.metadata.name")
+				if err != nil {
+					return fmt.Errorf("error evaluating cmTwo.metadata.name: %w", err)
+				}
+				if v != cmTwoName {
+					return fmt.Errorf("expected cmTwo.metadata.name to evaluate to %q, got %v", cmTwoName, v)
+				}
+				return nil
+			}).Should(Succeed())
 		})
 
 		By("// cleanup: delete cmOne", func() {
 			err := world.Kcp().GetClient().Delete(infra.Ctx(), &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      cmOneName,
-					Namespace: "default",
+					Namespace: config.KcpNamespace,
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())
@@ -133,7 +166,7 @@ var _ = Describe("Feature: Cluster context", func() {
 			err := world.Kcp().GetClient().Delete(infra.Ctx(), &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      cmTwoName,
-					Namespace: "default",
+					Namespace: config.KcpNamespace,
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())
