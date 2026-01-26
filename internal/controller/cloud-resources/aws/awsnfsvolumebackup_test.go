@@ -322,7 +322,6 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					AssertAwsNfsVolumeBackupHasLocation(scope.Spec.Region),
 					AssertAwsNfsVolumeBackupHasLocation(awsNfsVolumeBackupLocation),
 				).
 				Should(Succeed())
@@ -424,7 +423,6 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 					AssertAwsNfsVolumeBackupHasState(cloudresourcesv1beta1.StateReady),
-					AssertAwsNfsVolumeBackupHasLocation(scope.Spec.Region),
 					AssertAwsNfsVolumeBackupHasLocation(awsNfsVolumeBackupLocation),
 				).
 				Should(Succeed())
