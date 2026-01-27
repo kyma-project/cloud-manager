@@ -13,6 +13,11 @@ on:
           - azure
         description: Choose the cloud provider for the shared instance
         default: azure
+      feature_flags:
+        type: string
+        required: false
+        description: 'Feature flag file: ff_edge.yaml (default, with backup) | ff_ga.yaml (GA only)'
+        default: ./pkg/feature/ff_edge.yaml
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -22,10 +27,11 @@ jobs:
       - name: Initialize E2E environment
         uses: ./.github/actions/e2e-init
         id: e2e-init
-        env:
-          GARDENER_KUBECONFIG: ${{ secrets.GARDENER_KUBECONFIG }}
-          OIDC_CLIENT_ID: ${{ vars.OIDC_CLIENT_ID }}
-          OIDC_ISSUER_URL: ${{ vars.OIDC_ISSUER_URL }}
+        with:
+          gardener_kubeconfig: ${{ secrets.GARDENER_KUBECONFIG }}
+          oidc_client_id: ${{ vars.OIDC_CLIENT_ID }}
+          oidc_issuer_url: ${{ vars.OIDC_ISSUER_URL }}
+          feature_flag_file: ${{ inputs.feature_flags }}
       - name: Set provider env var
         run: |
           PROVIDER=${{ inputs.provider }}

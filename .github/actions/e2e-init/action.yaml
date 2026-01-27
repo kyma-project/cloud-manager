@@ -1,5 +1,19 @@
 name: E2E Init Action
 description: Initializes the environment for E2E tests
+inputs:
+  gardener_kubeconfig:
+    description: 'Gardener cluster kubeconfig content'
+    required: true
+  oidc_client_id:
+    description: 'OIDC client ID for authentication'
+    required: true
+  oidc_issuer_url:
+    description: 'OIDC issuer URL'
+    required: true
+  feature_flag_file:
+    description: 'Feature flag configuration file path'
+    required: false
+    default: './pkg/feature/ff_edge.yaml'
 runs:
   using: composite
   steps:
@@ -15,7 +29,7 @@ runs:
     - name: Write KUBECONFIG to file
       shell: bash
       run: |
-        echo "$GARDENER_KUBECONFIG" > kubeconfig-garden.yaml
+        echo "${{ inputs.gardener_kubeconfig }}" > kubeconfig-garden.yaml
     - name: Write e2e config file
       shell: bash
       run: |
@@ -36,8 +50,8 @@ runs:
             provider: gcp
             isDefault: true
         networkOwner: gardener
-        oidcClientId: $OIDC_CLIENT_ID
-        oidcIssuerUrl: $OIDC_ISSUER_URL
+        oidcClientId: ${{ inputs.oidc_client_id }}
+        oidcIssuerUrl: ${{ inputs.oidc_issuer_url }}
         administrators:
           - vladimir.andjelkoski@sap.com
           - dl_623b719a6a0d2d029907bee0@global.corp.sap
@@ -109,6 +123,20 @@ runs:
         echo "SIM_PID=$SIM_PID" >> "$GITHUB_ENV"
         echo "Waiting for sim to start"
         sleep 30
+    - name: Validate and prepare feature flags
+      shell: bash
+      run: |
+        FF_FILE="${{ inputs.feature_flag_file }}"
+        if [ ! -f "$FF_FILE" ]; then
+          echo "❌ Feature flag file not found: $FF_FILE"
+          echo "Available: $(ls -1 pkg/feature/ff_*.yaml 2>/dev/null || echo 'none')"
+          exit 1
+        fi
+        if ! grep -q '^features:' "$FF_FILE" 2>/dev/null; then
+          echo "❌ Invalid feature flag file format (missing 'features:' key)"
+          exit 1
+        fi
+        echo "✓ Using feature flags: $FF_FILE"
     - name: Run Cloud Manager
       shell: bash
       env:
@@ -116,7 +144,7 @@ runs:
         KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         LANDSCAPE: dev
         PEERING_NETWORK_TAG: e2e
-        FEATURE_FLAG_CONFIG_FILE: ./pkg/feature/ff_edge.yaml
+        FEATURE_FLAG_CONFIG_FILE: ${{ inputs.feature_flag_file }}
         GCP_SA_JSON_KEY_PATH: ./tmp/gcp-default.json
         GCP_VPC_PEERING_KEY_PATH: ./tmp/gcp-peering.json
       run: |
