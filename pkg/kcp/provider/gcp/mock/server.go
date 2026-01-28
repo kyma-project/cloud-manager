@@ -6,6 +6,7 @@ import (
 
 	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
@@ -88,7 +89,7 @@ func New() Server {
 			redisClusters: map[string]*clusterpb.Cluster{},
 		},
 		exposedDataStore: &exposedDataStore{
-			ipPool: iprangeallocate.NewAddressSpace(),
+			ipPool: util.Must(iprangeallocate.NewAddressSpace("33.0.0.0/16")),
 		},
 		regionalOperationsClientFake: regionalOperationsClientfake,
 	}

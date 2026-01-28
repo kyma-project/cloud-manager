@@ -19,7 +19,7 @@ func NewProviderClient(ctx context.Context, pp ProviderParams) (*ProvidedInfo, e
 		IdentityEndpoint: authUrl,
 		Username:         pp.Username,
 		Password:         pp.Password,
-		DomainName:       pp.ProjectDomainName,
+		DomainName:       pp.DomainName,
 		TenantName:       pp.ProjectName,
 		AllowReauth:      true,
 	}

@@ -23,7 +23,7 @@ type State struct {
 	subnet       *subnets.Subnet
 	shareNetwork *sharenetworks.ShareNetwork
 	share        *shares.Share
-	accessRight  *sapnfsinstanceclient.ShareAccess
+	accessRight  *sapclient.ShareAccess
 }
 
 type StateFactory interface {

@@ -245,9 +245,7 @@ type StatusPatcherComposed[T ObjWithStatus] struct {
 // some provides composed action result. This means on Log() execution will continue to the next, but on Continue(),
 // RequeueAfter() and similar the handler execution will stop and no other successive handlers will be called.
 func (u *StatusPatcherComposed[T]) OnFailure(handlers ...StatusPatchErrorHandler) *StatusPatcherComposed[T] {
-	for _, handler := range slices.Backward(handlers) {
-		u.failureHandlers = append(u.failureHandlers, handler)
-	}
+	u.failureHandlers = handlers
 	return u
 }
 
@@ -255,18 +253,14 @@ func (u *StatusPatcherComposed[T]) OnFailure(handlers ...StatusPatchErrorHandler
 // some provides composed action result. This means on Log() execution will continue to the next, but on Continue(),
 // RequeueAfter() and similar the handler execution will stop and no other successive handlers will be called.
 func (u *StatusPatcherComposed[T]) OnSuccess(handlers ...StatusPatchErrorHandler) *StatusPatcherComposed[T] {
-	for _, handler := range slices.Backward(handlers) {
-		u.successHandlers = append(u.successHandlers, handler)
-	}
+	u.successHandlers = handlers
 	return u
 }
 
 // OnStatusChanged adds handlers that will be called on successful patch but only if the status is changed. They
 // are all executed and do not affect the composed action result, so only valid handler is Log().
 func (u *StatusPatcherComposed[T]) OnStatusChanged(handlers ...StatusPatchErrorHandler) *StatusPatcherComposed[T] {
-	for _, handler := range slices.Backward(handlers) {
-		u.statusChangedHandlers = append(u.statusChangedHandlers, handler)
-	}
+	u.statusChangedHandlers = handlers
 	return u
 }
 

@@ -56,7 +56,7 @@ spec:
                 - message: cidrBlocks must be a list of valid CIDRs, for example '10.20.30.40/16'
                   rule: self.all(s, isCIDR(s))
               region:
-                description: Region is required for AWS and Azure providers.
+                description: Region is required for AWS, Azure, and OpenStack providers.
                 type: string
               subscription:
                 type: string

@@ -13,7 +13,7 @@ func shareNetworkLoad(ctx context.Context, st composed.State) (error, context.Co
 	shareNetworkId, _ := state.ObjAsNfsInstance().GetStateData(StateDataShareNetworkId)
 
 	if shareNetworkId == "" {
-		arr, err := state.sapClient.ListShareNetworks(ctx, state.network.ID)
+		arr, err := state.sapClient.ListShareNetworksByNetworkId(ctx, state.network.ID)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error listing SAP shareNetworks", composed.StopWithRequeue, ctx)
 		}

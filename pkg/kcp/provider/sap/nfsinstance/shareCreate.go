@@ -29,7 +29,7 @@ func shareCreate(ctx context.Context, st composed.State) (error, context.Context
 		common.TagScope:                  state.ObjAsNfsInstance().Spec.Scope.Name,
 		common.TagShoot:                  state.Scope().Spec.ShootName,
 	}
-	share, err := state.sapClient.CreateShare(
+	share, err := state.sapClient.CreateShareOp(
 		ctx,
 		state.shareNetwork.ID,
 		state.ShareName(),

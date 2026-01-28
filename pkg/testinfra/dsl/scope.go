@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
+	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -219,7 +220,7 @@ func CreateScopeGcp(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 	return nil
 }
 
-func CreateScopeOpenStack(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, opts ...ObjAction) error {
+func CreateScopeOpenStack(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, pp sapclient.ProviderParams, opts ...ObjAction) error {
 	if scope == nil {
 		scope = &cloudcontrolv1beta1.Scope{}
 	}
@@ -233,18 +234,18 @@ func CreateScopeOpenStack(ctx context.Context, infra testinfra.Infra, scope *clo
 	scope.Spec = cloudcontrolv1beta1.ScopeSpec{
 		KymaName:  scope.Name,
 		ShootName: scope.Name,
-		Region:    "eu-de-1",
+		Region:    pp.RegionName,
 		Provider:  cloudcontrolv1beta1.ProviderOpenStack,
 		Scope: cloudcontrolv1beta1.ScopeInfo{
 			OpenStack: &cloudcontrolv1beta1.OpenStackScope{
 				VpcNetwork: common.GardenerVpcName(infra.Garden().Namespace(), scope.Name),
-				DomainName: "kyma",
-				TenantName: "kyma-dev-02",
+				DomainName: pp.DomainName,
+				TenantName: pp.ProjectName,
 				Network: cloudcontrolv1beta1.OpenStackNetwork{
 					Nodes:    "10.250.0.0/16",
 					Pods:     "10.96.0.0/13",
 					Services: "10.104.0.0/13",
-					Zones:    []string{"eu-de-1d", "eu-de-1a", "eu-de-1b"},
+					Zones:    []string{pp.RegionName + "d", pp.RegionName + "a", pp.RegionName + "b"},
 				},
 			},
 		},

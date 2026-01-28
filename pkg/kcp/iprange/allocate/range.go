@@ -47,6 +47,13 @@ func (r *rng) overlaps(o *rng) bool {
 	return r.first.Cmp(o.last) <= 0 && o.first.Cmp(r.last) <= 0
 }
 
+func (r *rng) contains(o *rng) bool {
+	// r:   f-------l     f-----l     f-----l        f--l
+	// o:     f---l    f------l          f-----l           f--l
+	//        yes           no          no             no
+	return r.first.Cmp(o.first) <= 0 && r.last.Cmp(o.last) >= 0
+}
+
 func (r *rng) len() int {
 	return int(big.NewInt(0).Sub(r.last, r.first).Int64()) + 1
 }
@@ -64,4 +71,8 @@ func (r *rng) nextWithOnes(ones int) *rng {
 		return nil
 	}
 	return res
+}
+
+func (r *rng) String() string {
+	return r.s
 }

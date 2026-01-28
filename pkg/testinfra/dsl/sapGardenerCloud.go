@@ -19,7 +19,7 @@ type SapGardenerInfra struct {
 
 func CreateSapGardenerResources(
 	ctx context.Context,
-	sapMock sapmock.Server,
+	sapMock sapmock.Project,
 	shootNamespace, shootName string,
 	nodesCidr string,
 ) (*SapGardenerInfra, error) {
@@ -29,7 +29,7 @@ func CreateSapGardenerResources(
 
 	result.VPC = sapMock.AddNetwork(uuid.NewString(), vpcName)
 	result.Router = sapMock.AddRouter(uuid.NewString(), vpcName, "150.160.170.180")
-	subnet, err := sapMock.CreateSubnet(ctx, result.VPC.ID, vpcName, nodesCidr)
+	subnet, err := sapMock.CreateSubnetOp(ctx, result.VPC.ID, nodesCidr, vpcName)
 	if err != nil {
 		return nil, err
 	}

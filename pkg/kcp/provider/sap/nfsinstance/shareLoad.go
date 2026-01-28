@@ -18,7 +18,7 @@ func shareLoad(ctx context.Context, st composed.State) (error, context.Context) 
 			// shareNetwork not loaded so we can not list shares in that shareNetwork
 			return nil, nil
 		}
-		arr, err := state.sapClient.ListShares(ctx, state.shareNetwork.ID)
+		arr, err := state.sapClient.ListSharesInShareNetwork(ctx, state.shareNetwork.ID)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error listing SAP shares", composed.StopWithRequeue, ctx)
 		}

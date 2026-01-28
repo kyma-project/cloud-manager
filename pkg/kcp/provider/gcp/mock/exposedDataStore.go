@@ -92,7 +92,7 @@ func (s *exposedDataStore) InsertAddress(project string, region string, address 
 		address.CreationTimestamp = ptr.To(time.Now().Format(time.RFC3339))
 	}
 	if address.Address == nil {
-		ip, err := s.ipPool.AllocateWithPreference(32, "33.0.0.0/32")
+		ip, err := s.ipPool.Allocate(32)
 		if err != nil {
 			return nil, fmt.Errorf("ip allocation failed: %w", err)
 		}
