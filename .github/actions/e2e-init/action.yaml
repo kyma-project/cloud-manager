@@ -117,6 +117,8 @@ runs:
         LANDSCAPE: dev
         PEERING_NETWORK_TAG: e2e
         FEATURE_FLAG_CONFIG_FILE: ./pkg/feature/ff_edge.yaml
+        GCP_SA_JSON_KEY_PATH: ./tmp/gcp-default.json
+        GCP_VPC_PEERING_KEY_PATH: ./tmp/gcp-peering.json
       run: |
         go run ./cmd > ./tmp/cloud-manager.log 2>&1 &
         CLOUD_MANAGER_PID=$!

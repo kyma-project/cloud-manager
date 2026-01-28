@@ -130,6 +130,11 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 		timeout := time.Minute
 
 		if skrKyma != nil {
+			if skrKyma.DeletionTimestamp == nil {
+				// local copy is stale after delete call, requeue to reload from api server
+				logger.Info("Waiting SKR Kyma deletion to be observed...")
+				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
+			}
 			if skrKyma.DeletionTimestamp.Time.After(time.Now().Add(-timeout)) {
 				logger.Info("Waiting SKR Kyma is deleted...")
 				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
