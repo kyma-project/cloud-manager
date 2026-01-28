@@ -39,6 +39,9 @@ func NewClientProvider(gcpClients *client.GcpClients) client.GcpClientProvider[V
 }
 
 func NewVpcPeeringClient(gcpClients *client.GcpClients) VpcPeeringClient {
+	if gcpClients.VpcPeeringClients == nil {
+		return &gcpVpcPeeringClient{}
+	}
 	return &gcpVpcPeeringClient{networksClient: gcpClients.VpcPeeringClients.ComputeNetworks, resourceManagerClient: gcpClients.VpcPeeringClients.ResourceManagerTagBindings}
 }
 
