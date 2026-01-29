@@ -132,8 +132,8 @@ runs:
           echo "Available: $(ls -1 pkg/feature/ff_*.yaml 2>/dev/null || echo 'none')"
           exit 1
         fi
-        if ! grep -q '^features:' "$FF_FILE" 2>/dev/null; then
-          echo "❌ Invalid feature flag file format (missing 'features:' key)"
+        if ! grep -qE '(variations|defaultRule):' "$FF_FILE" 2>/dev/null; then
+          echo "❌ Invalid feature flag file format"
           exit 1
         fi
         echo "✓ Using feature flags: $FF_FILE"
