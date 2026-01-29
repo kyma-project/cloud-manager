@@ -118,29 +118,21 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 
 		// delete skr kyma
 
-		if skrKyma != nil && skrKyma.DeletionTimestamp == nil {
-			logger.Info("Deleting SKR Kyma")
-			err = mi.mngr.GetClient().Delete(ctx, skrKyma)
-			if err != nil {
-				return reconcile.Result{}, fmt.Errorf("error deleting SKR Kyma: %w", err)
-			}
-		}
-
-		// wait skr kyma deleted
-		timeout := time.Minute
-
 		if skrKyma != nil {
 			if skrKyma.DeletionTimestamp == nil {
-				// local copy is stale after delete call, requeue to reload from api server
-				logger.Info("Waiting SKR Kyma deletion to be observed...")
+				logger.Info("Deleting SKR Kyma")
+				err = mi.mngr.GetClient().Delete(ctx, skrKyma)
+				if err != nil {
+					return reconcile.Result{}, fmt.Errorf("error deleting SKR Kyma: %w", err)
+				}
 				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 			}
-			if skrKyma.DeletionTimestamp.Time.After(time.Now().Add(-timeout)) {
+			// wait skr kyma deleted
+			if skrKyma.DeletionTimestamp.Time.After(time.Now().Add(-time.Minute)) {
 				logger.Info("Waiting SKR Kyma is deleted...")
 				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
-			} else {
-				logger.Info("Timeout while waiting SKR Kyma to be deleted, continue...")
 			}
+			logger.Info("Timeout while waiting SKR Kyma to be deleted, continue...")
 		}
 
 		// stop manager
