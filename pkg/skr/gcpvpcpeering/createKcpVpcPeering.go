@@ -65,10 +65,10 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 	err := state.KcpCluster.K8sClient().Create(ctx, state.KcpVpcPeering)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "[SKR GCP VPC createKcpVpcPeering] Error creating KCP VpcPeering", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error creating KCP VpcPeering", composed.StopWithRequeue, ctx)
 	}
 
-	logger.Info("[SKR GCP VPC Peering createKcpVpcPeering] KCP VpcPeering created", "id", obj.Status.Id)
+	logger.Info("KCP VpcPeering created", "id", obj.Status.Id)
 
 	return nil, nil
 }

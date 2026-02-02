@@ -14,21 +14,26 @@ package vpcpeering
 
 import (
 	"context"
+
+	pb "cloud.google.com/go/compute/apiv1/computepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
-func createKymaVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
+func createLocalVpcPeering(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.kymaVpcPeering != nil {
+	if state.localVpcPeering != nil ||
+		state.localPeeringOperation != nil ||
+		(state.remotePeeringOperation != nil && state.remotePeeringOperation.Status == ptr.To(pb.Operation_DONE) && state.remotePeeringOperation.GetError().String() != "") {
 		return nil, nil
 	}
 
-	err := state.client.CreateKymaVpcPeering(
+	op, err := state.client.CreateLocalVpcPeering(
 		ctx,
 		state.getKymaVpcPeeringName(),
 		state.RemoteNetwork().Status.Network.Gcp.NetworkName,
@@ -51,6 +56,16 @@ func createKymaVpcPeering(ctx context.Context, st composed.State) (error, contex
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, state)
 	}
-	logger.Info("[KCP GCP VPCPeering createKymaVpcPeering] Kyma VPC Peering Connection created")
-	return composed.StopWithRequeueDelay(3 * util.Timing.T10000ms()), nil
+
+	state.ObjAsVpcPeering().Status.LocalPeeringOperation = ptr.Deref(op.Name, "OperationUnknown")
+	err = state.PatchObjStatus(ctx)
+	if err != nil {
+		return composed.LogErrorAndReturn(err,
+			"Error updating status with Local VPC Peering operation.",
+			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
+			ctx,
+		)
+	}
+	logger.Info("Local VPC Peering Connection created ", "localVpcPeering", state.getKymaVpcPeeringName())
+	return composed.StopWithRequeueDelay(3 * util.Timing.T10000ms()), ctx
 }
