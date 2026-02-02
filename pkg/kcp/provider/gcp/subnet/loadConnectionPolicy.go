@@ -23,7 +23,7 @@ func loadConnectionPolicy(ctx context.Context, st composed.State) (error, contex
 	region := state.Scope().Spec.Region
 
 	logger.Info("loading GCP Service Connection Policy")
-	connectionPolicy, err := state.networkComnnectivityClient.GetServiceConnectionPolicy(
+	connectionPolicy, err := state.networkConnectivityClient.GetServiceConnectionPolicy(
 		ctx,
 		GetServiceConnectionPolicyFullName(gcpScope.Project, region, gcpScope.VpcNetwork),
 	)

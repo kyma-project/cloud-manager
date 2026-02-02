@@ -28,7 +28,7 @@ func updateConnectionPolicy(ctx context.Context, st composed.State) (error, cont
 		return nil, ctx
 	}
 
-	err := state.networkComnnectivityClient.UpdateServiceConnectionPolicy(ctx, state.serviceConnectionPolicy, state.updateMask)
+	err := state.networkConnectivityClient.UpdateServiceConnectionPolicy(ctx, state.serviceConnectionPolicy, state.updateMask)
 
 	if err != nil {
 		logger.Error(err, "Error updating GCP Connection Policy")
