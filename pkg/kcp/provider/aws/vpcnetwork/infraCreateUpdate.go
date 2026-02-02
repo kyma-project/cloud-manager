@@ -21,8 +21,8 @@ func infraCreateUpdate(ctx context.Context, st composed.State) (error, context.C
 				vpcNetwork.SetStatusProviderError(err.Error())
 			}).
 			OnSuccess(
-				composed.Requeue,
 				composed.LogError(err, "Provider error on KCP AWS VpcNetwork create/update"),
+				composed.Requeue,
 			).
 			Run(ctx, state.Cluster().K8sClient())
 	}

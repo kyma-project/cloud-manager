@@ -30,17 +30,22 @@ var _ = Describe("Feature: KCP Scope", func() {
 
 		sapMock := infra.SapMock().NewProject()
 
+		By("Given OpenStack external network exists", func() {
+			Expect(SapInfraInitializeExternalNetworks(infra.Ctx(), sapMock)).
+				To(Succeed())
+		})
+
 		shoot := &gardenertypes.Shoot{}
 
-		By("Given Shoot exists", func() {
+		By("And Given Shoot exists", func() {
 			Expect(CreateShootSap(infra.Ctx(), infra, shoot, sapMock.ProviderParams(), WithName(kymaName))).
 				To(Succeed(), "failed creating garden shoot for SAP")
 		})
 
 		var sapCreatedInfra *SapGardenerInfra
 
-		By("An Given SAP infra exists", func() {
-			createdInfra, err := CreateSapGardenerResources(infra.Ctx(), sapMock, shoot.Namespace, shoot.Name, "10.250.0.0/16")
+		By("An Given SAP Gardener infra exists", func() {
+			createdInfra, err := SapInfraGardenerCreateResourcesAllWithNetwork(infra.Ctx(), sapMock, shoot.Namespace, shoot.Name, "10.250.0.0/16")
 			Expect(err).NotTo(HaveOccurred())
 			sapCreatedInfra = createdInfra
 		})

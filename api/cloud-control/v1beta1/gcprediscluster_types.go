@@ -129,6 +129,10 @@ func (in *GcpRedisCluster) SetObservedGeneration(v int64) {
 	in.Status.ObservedGeneration = v
 }
 
+func (in *GcpRedisCluster) GetStatus() any {
+	return &in.Status
+}
+
 func (in *GcpRedisCluster) State() string {
 	return string(in.Status.State)
 }

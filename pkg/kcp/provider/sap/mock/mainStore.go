@@ -21,6 +21,7 @@ import (
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	sapmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"github.com/pkg/errors"
 	"k8s.io/utils/ptr"
 )
 
@@ -174,11 +175,29 @@ func (s *mainStore) GetNetwork(ctx context.Context, id string) (*networks.Networ
 	return nil, nil
 }
 
+func (s *mainStore) CreateExternalNetwork(ctx context.Context, opts networks.CreateOptsBuilder) (*networks.Network, error) {
+	return s.CreateNetwork(ctx, external.CreateOptsExt{
+		CreateOptsBuilder: opts,
+		External:          ptr.To(true),
+	})
+}
+
 func (s *mainStore) CreateNetwork(ctx context.Context, opts networks.CreateOptsBuilder) (*networks.Network, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	optsInternal := opts.(networks.CreateOpts)
+	isExternal := false
+	var optsInternal networks.CreateOpts
+	switch oo := opts.(type) {
+	case external.CreateOptsExt:
+		isExternal = true
+		optsInternal = oo.CreateOptsBuilder.(networks.CreateOpts)
+	case networks.CreateOpts:
+		optsInternal = oo
+	default:
+		return nil, errors.Errorf("invalid options type: %T", opts)
+	}
+
 	if optsInternal.Name == "" {
 		return nil, fmt.Errorf("openstack network name is required")
 	}
@@ -196,7 +215,7 @@ func (s *mainStore) CreateNetwork(ctx context.Context, opts networks.CreateOptsB
 		AdminStateUp: up,
 	}
 
-	if _, ok := opts.(external.CreateOptsExt); ok {
+	if isExternal {
 		s.externalNetworks = append(s.externalNetworks, n)
 	} else {
 		s.internalNetworks = append(s.internalNetworks, n)
@@ -537,11 +556,27 @@ func (s *mainStore) CreateRouter(ctx context.Context, opts routers.CreateOpts) (
 		ID:          uuid.NewString(),
 		Name:        opts.Name,
 		Description: opts.Description,
+		Status:      "ACTIVE",
 	}
 	if opts.GatewayInfo != nil {
 		theRouter.GatewayInfo.NetworkID = opts.GatewayInfo.NetworkID
 		theRouter.GatewayInfo.ExternalFixedIPs = append([]routers.ExternalFixedIP{}, opts.GatewayInfo.ExternalFixedIPs...)
+		for i, ip := range theRouter.GatewayInfo.ExternalFixedIPs {
+			if ip.IPAddress != "" {
+				continue
+			}
+			subnetInfo := s.getSubnetInfoByIdNoLock(ip.SubnetID)
+			if subnetInfo.subnet == nil {
+				return nil, sapmeta.NewNotFoundError("subnet not found")
+			}
+			ipAddr, err := subnetInfo.addressSpace.AllocateOneIpAddress()
+			if err != nil {
+				return nil, fmt.Errorf("error allocating IP address for router subnet: %w", err)
+			}
+			theRouter.GatewayInfo.ExternalFixedIPs[i].IPAddress = ipAddr
+		}
 	}
+	s.routers = append(s.routers, theRouter)
 	return theRouter, nil
 }
 

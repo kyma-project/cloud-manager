@@ -186,6 +186,10 @@ func (in *NfsInstance) SetObservedGeneration(v int64) {
 	in.Status.ObservedGeneration = v
 }
 
+func (in *NfsInstance) GetStatus() any {
+	return &in.Status
+}
+
 func (in *NfsInstance) SetStateData(key, value string) {
 	if in.Status.StateData == nil {
 		in.Status.StateData = make(map[string]string)

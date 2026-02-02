@@ -3,9 +3,9 @@ package composed
 import (
 	"context"
 	"fmt"
-	"slices"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -16,6 +16,7 @@ type ObjWithStatus interface {
 	Conditions() *[]metav1.Condition
 	ObservedGeneration() int64
 	SetObservedGeneration(int64)
+	GetStatus() any
 }
 
 type StatusPatcher[T ObjWithStatus] struct {
@@ -119,7 +120,14 @@ func (u *StatusPatcher[T]) Patch(ctx context.Context, c client.Client) error {
 	if u.obj.GetGeneration() != u.obj.ObservedGeneration() {
 		u.obj.SetObservedGeneration(u.obj.GetGeneration())
 	}
-	return c.Status().Patch(ctx, u.obj, client.MergeFrom(u.objWithoutChanges))
+	// regular kubeapi will not change resourceVersion if no changes are made, ie patch is empty
+	// but fake client doesn't handle that and always on every patch regardless of changes increases resourceVersion,
+	// so we need to avoid calling patch if no changes are made ourselves
+	// to keep behavior consistent between real and fake clients and allow unit tests with fake client to pass
+	if !equality.Semantic.DeepEqual(u.objWithoutChanges.GetStatus(), u.obj.GetStatus()) {
+		return c.Status().Patch(ctx, u.obj, client.MergeFrom(u.objWithoutChanges))
+	}
+	return nil
 }
 
 // ===============
@@ -181,23 +189,26 @@ func LogIf(condition bool, msg string) StatusPatchErrorHandler {
 
 // NewStatusPatcherComposed handles proper status changes and composed Action results. This patcher embeds the StatusPatcher
 // and introduces new functions:
-//   - Run() that returns Action results
-//   - OnSuccess(), OnFailure() and OnStatusChanged() that defines behavior and Action results returned after patch has been done
+//   - StatusPatcherComposed.Run() that returns Action results
+//   - StatusPatcherComposed.OnSuccess(), StatusPatcherComposed.OnFailure() and StatusPatcherComposed.OnStatusChanged() that
+//     define behavior and Action flow control results returned after patch has been done
 //
 // IMPORTANT! All changes made to the object status MUST be done after patcher is created, and before call to Run(). Status
-// changes made before patcher is created will be omitted.
+// changes made before patcher is created will be omitted and not sent to the api server!
 //
 // Do not modify obj spec from the parcher creation to the patch call.
 // Patcher should be short-lived and used only for one status change. For (if) any other, a new patcher instance should
 // be created.
 //
-// Use .OnSuccess() and .OnFailure() to add custom outcome handlers of the type StatusPatchErrorHandler. Handlers are
-// appended to the list and executed in the given and added order. The execution of handlers stops when first of them
-// returns action result. By default, the patcher adds OnSuccess(Continue()), OnFailure(Requeue(), Log(genericMsg)).
+// Use StatusPatcherComposed.OnSuccess() and StatusPatcherComposed.OnFailure() to set custom outcome handlers of the type
+// StatusPatchErrorHandler. Handlers are executed in the given order. The execution of handlers stops when first of them
+// returns action flow control result. By default, the patcher sets:
+//   - StatusPatcherComposed.OnSuccess(Continue())
+//   - StatusPatcherComposed.OnFailure(Requeue(), Log(genericMsg))
 //
-// Use .OnStatusChanged() to add handlers that are called on success but only if status has changed. If an object is
-// already in the desired status, then its status will not change, no next reconciliation will be triggered, and no
-// status changge handlers will be called. All added status changed handlers are called, and their action result if any
+// Use StatusPatcherComposed.OnStatusChanged() to add handlers that are called on success but only if status has changed.
+// If an object is already in the desired status, then its status will not change, no next reconciliation will be triggered,
+// and no status changge handlers will be called. All added status changed handlers are called, and their action result if any
 // given is ignored. Only success handlers can affect the action result.
 //
 //	// obj is loaded and reconciled upon
@@ -215,15 +226,22 @@ func LogIf(condition bool, msg string) StatusPatchErrorHandler {
 //			Message: "Provisioned",
 //			// no need to set ObservedGeneration, since patcher does it for you
 //		}).
-//		OnFailure(Log("Error patching status of the SomeKind to ready status")).
-//		OnSuccess(Requeue()).
+//		OnFailure(
+//			Log("Error patching status of the SomeKind to ready status"),
+//			Requeue(),
+//		).
+//		OnSuccess(Forget()).
+//		OnStatusChanged(
+//			LogIf(updated, "Object is updated"),
+//			LogIf(created, "Object is created"),
+//		).
 //		Run(ctx, client)
 func NewStatusPatcherComposed[T ObjWithStatus](obj T) *StatusPatcherComposed[T] {
 	return &StatusPatcherComposed[T]{
 		StatusPatcher: NewStatusPatcher(obj),
 		failureHandlers: []StatusPatchErrorHandler{
-			Requeue,
 			Log(fmt.Sprintf("failed to patch status for object %T %s/%s", obj, obj.GetNamespace(), obj.GetName())),
+			Requeue,
 		},
 		successHandlers: []StatusPatchErrorHandler{
 			Continue,
@@ -240,25 +258,30 @@ type StatusPatcherComposed[T ObjWithStatus] struct {
 	failureHandlers       []StatusPatchErrorHandler
 }
 
-// OnFailure adds handlers that will be called on failed patch - ie when non nil error is returned.
+// OnFailure sets handlers that will be called on failed patch - when client.Patch returns error.
 // They are executed in given order all up until
-// some provides composed action result. This means on Log() execution will continue to the next, but on Continue(),
+// some provides composed action flow control result. This means on Log() execution will continue to the next, but on Continue(),
 // RequeueAfter() and similar the handler execution will stop and no other successive handlers will be called.
+// The call replaces previouslt defined handlers. When called multiple times, only the last call is effective.
 func (u *StatusPatcherComposed[T]) OnFailure(handlers ...StatusPatchErrorHandler) *StatusPatcherComposed[T] {
 	u.failureHandlers = handlers
 	return u
 }
 
-// OnSuccess adds handlers that will be called on successful patch. They are executed in given order all up until
-// some provides composed action result. This means on Log() execution will continue to the next, but on Continue(),
+// OnSuccess sets handlers that will be called on successful patch - when client.Patch returns nil.
+// They are executed in given order all up until
+// some provides composed action flow control result. This means on Log() execution will continue to the next, but on Continue(),
 // RequeueAfter() and similar the handler execution will stop and no other successive handlers will be called.
+// The call replaces previouslt defined handlers. When called multiple times, only the last call is effective.
 func (u *StatusPatcherComposed[T]) OnSuccess(handlers ...StatusPatchErrorHandler) *StatusPatcherComposed[T] {
 	u.successHandlers = handlers
 	return u
 }
 
-// OnStatusChanged adds handlers that will be called on successful patch but only if the status is changed. They
-// are all executed and do not affect the composed action result, so only valid handler is Log().
+// OnStatusChanged sets handlers that will be called on successful patch but only if the status is changed - if resourceVersion
+// changed. They are all executed and do not affect the composed action flow control result, even if a handler returns one,
+// so only valid handlers are custom handlers, Log() and LogIf().
+// The call replaces previouslt defined handlers. When called multiple times, only the last call is effective.
 func (u *StatusPatcherComposed[T]) OnStatusChanged(handlers ...StatusPatchErrorHandler) *StatusPatcherComposed[T] {
 	u.statusChangedHandlers = handlers
 	return u
@@ -271,7 +294,7 @@ func (u *StatusPatcherComposed[T]) Run(ctx context.Context, c client.Client) (er
 	err := u.Patch(ctx, c)
 	var result error
 	if err != nil {
-		for _, h := range slices.Backward(u.failureHandlers) {
+		for _, h := range u.failureHandlers {
 			handled, res := h(ctx, err)
 			if handled {
 				result = res
@@ -281,11 +304,11 @@ func (u *StatusPatcherComposed[T]) Run(ctx context.Context, c client.Client) (er
 	} else {
 		if resourceVersionBeforePatch != u.obj.GetResourceVersion() {
 			// statusChangedHandlers can not affect the composed result and all are executed
-			for _, h := range slices.Backward(u.statusChangedHandlers) {
+			for _, h := range u.statusChangedHandlers {
 				_, _ = h(ctx, err)
 			}
 		}
-		for _, h := range slices.Backward(u.successHandlers) {
+		for _, h := range u.successHandlers {
 			handled, res := h(ctx, err)
 			if handled {
 				result = res

@@ -123,6 +123,10 @@ func (in *VpcNetwork) SetObservedGeneration(v int64) {
 	in.Status.ObservedGeneration = v
 }
 
+func (in *VpcNetwork) GetStatus() any {
+	return &in.Status
+}
+
 // functions
 
 func (in *VpcNetwork) HaveVpcCidrBlocksChanged() bool {

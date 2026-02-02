@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
 	"time"
 
 	"github.com/3th1nk/cidr"
@@ -40,11 +41,18 @@ func WithTimeout(t time.Duration) CreateInfraOption {
 	}
 }
 
+func WithInterval(t time.Duration) CreateInfraOption {
+	return func(o *createInfraOptions) {
+		o.interval = t
+	}
+}
+
 type createInfraOptions struct {
 	name       string
 	cidrBlocks []string
 	client     awsvpcnetworkclient.Client
 	timeout    time.Duration
+	interval   time.Duration
 }
 
 type CreateInfraOutput struct {
@@ -74,6 +82,15 @@ func (o *createInfraOptions) validate() error {
 	}
 	if o.timeout == 0 {
 		o.timeout = 5 * time.Minute
+		if testing.Testing() {
+			o.timeout = time.Second
+		}
+	}
+	if o.interval == 0 {
+		o.interval = time.Second
+		if testing.Testing() {
+			o.interval = time.Millisecond
+		}
 	}
 	return result
 }
@@ -111,7 +128,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 	// wait VPC available
 
 	if vpc.State != ec2types.VpcStateAvailable {
-		err = wait.PollUntilContextTimeout(ctx, time.Second, o.timeout, false, func(ctx context.Context) (done bool, err error) {
+		err = wait.PollUntilContextTimeout(ctx, o.interval, o.timeout, false, func(ctx context.Context) (done bool, err error) {
 			v, err := o.client.DescribeVpc(ctx, ptr.Deref(vpc.VpcId, ""))
 			if err != nil {
 				return false, err
@@ -385,7 +402,7 @@ func DeleteInfra(ctx context.Context, name string, c awsvpcnetworkclient.Client)
 }
 
 func waitVpcCidrBlocksAvailable(ctx context.Context, vpc *ec2types.Vpc, o *createInfraOptions) error {
-	err := wait.PollUntilContextTimeout(ctx, time.Second, o.timeout, false, func(ctx context.Context) (done bool, err error) {
+	err := wait.PollUntilContextTimeout(ctx, o.interval, o.timeout, false, func(ctx context.Context) (done bool, err error) {
 		v, err := o.client.DescribeVpc(ctx, ptr.Deref(vpc.VpcId, ""))
 		if err != nil {
 			return false, err

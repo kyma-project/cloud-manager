@@ -320,6 +320,10 @@ func (in *RedisInstance) SetObservedGeneration(v int64) {
 	in.Status.ObservedGeneration = v
 }
 
+func (in *RedisInstance) GetStatus() any {
+	return &in.Status
+}
+
 func (in *RedisInstance) State() string {
 	return string(in.Status.State)
 }

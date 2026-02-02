@@ -17,6 +17,7 @@ type NetworkClient interface {
 	ListExternalNetworks(ctx context.Context, opts networks.ListOpts) ([]networks.Network, error)
 	GetNetwork(ctx context.Context, id string) (*networks.Network, error)
 	CreateNetwork(ctx context.Context, opts networks.CreateOptsBuilder) (*networks.Network, error)
+	CreateExternalNetwork(ctx context.Context, opts networks.CreateOptsBuilder) (*networks.Network, error)
 	DeleteNetwork(ctx context.Context, id string) error
 
 	ListInternalNetworksByName(ctx context.Context, name string) ([]networks.Network, error)
@@ -86,6 +87,13 @@ func (n *networkClient) GetNetwork(ctx context.Context, id string) (*networks.Ne
 		return nil, err
 	}
 	return network, nil
+}
+
+func (c *networkClient) CreateExternalNetwork(ctx context.Context, opts networks.CreateOptsBuilder) (*networks.Network, error) {
+	return c.CreateNetwork(ctx, external.CreateOptsExt{
+		CreateOptsBuilder: opts,
+		External:          ptr.To(true),
+	})
 }
 
 func (c *networkClient) CreateNetwork(ctx context.Context, opts networks.CreateOptsBuilder) (*networks.Network, error) {

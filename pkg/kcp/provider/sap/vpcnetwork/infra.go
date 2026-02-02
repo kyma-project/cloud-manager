@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"testing"
 	"time"
 
 	"github.com/3th1nk/cidr"
@@ -44,11 +45,18 @@ func WithTimeout(t time.Duration) CreateInfraOption {
 	}
 }
 
+func WithInterval(t time.Duration) CreateInfraOption {
+	return func(o *createInfraOptions) {
+		o.interval = t
+	}
+}
+
 type createInfraOptions struct {
 	name       string
 	cidrBlocks []string
 	client     sapvpcnetworkclient.Client
 	timeout    time.Duration
+	interval   time.Duration
 }
 
 type CreateInfraOutput struct {
@@ -77,6 +85,15 @@ func (o *createInfraOptions) validate() error {
 	}
 	if o.timeout == 0 {
 		o.timeout = 5 * time.Minute
+		if testing.Testing() {
+			o.timeout = time.Second
+		}
+	}
+	if o.interval == 0 {
+		o.interval = time.Second
+		if testing.Testing() {
+			o.interval = time.Millisecond
+		}
 	}
 	return result
 }
@@ -135,7 +152,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 		return nil, errors.New("no external subnet found matching configured floating pool subnet name")
 	}
 
-	// load internal network
+	// load interval network
 
 	internalNetwork, err := o.client.GetNetworkByName(ctx, o.name)
 	if err != nil {
@@ -236,10 +253,13 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 	if created || updated {
 		// wait router is active
 
-		err := wait.PollUntilContextTimeout(ctx, 2*time.Second, o.timeout, false, func(ctx context.Context) (done bool, err error) {
+		err := wait.PollUntilContextTimeout(ctx, o.interval, o.timeout, false, func(ctx context.Context) (done bool, err error) {
 			r, err := o.client.GetRouterByName(ctx, o.name)
 			if err != nil {
 				return false, err
+			}
+			if r == nil {
+				return false, fmt.Errorf("router %q not found", o.name)
 			}
 			if r.Status == "ACTIVE" {
 				router = r
@@ -255,11 +275,11 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 		}
 	}
 
-	// internal network create/update ============================================================
+	// interval network create/update ============================================================
 
 	if internalNetwork == nil {
 
-		// create internal network
+		// create interval network
 
 		internalNetwork, err = o.client.CreateNetwork(ctx, networks.CreateOpts{
 			Name:         o.name,
@@ -271,9 +291,9 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 
 		created = true
 
-		// wait internal network is active
+		// wait interval network is active
 
-		err := wait.PollUntilContextTimeout(ctx, 2*time.Second, o.timeout, false, func(ctx context.Context) (done bool, err error) {
+		err := wait.PollUntilContextTimeout(ctx, o.interval, o.timeout, false, func(ctx context.Context) (done bool, err error) {
 			net, err := o.client.GetNetworkByName(ctx, o.name)
 			if err != nil {
 				return false, err

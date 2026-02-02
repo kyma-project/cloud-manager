@@ -71,7 +71,7 @@ func (r *vpcNetworkReconciler) newAction() composed.Action {
 		composed.NewCase(kcpcommonaction.AwsProviderPredicate, awsvpcnetwork.New(r.awsStateFactory)),
 		composed.NewCase(kcpcommonaction.AzureProviderPredicate, azurevpcnetwork.New(r.azureStateFactory)),
 		composed.NewCase(kcpcommonaction.GcpProviderPredicate, composed.Noop),
-		composed.NewCase(kcpcommonaction.OpenStackProviderPredicate, sapvpcnetwork.New(r.azureStateFactory)),
+		composed.NewCase(kcpcommonaction.OpenStackProviderPredicate, sapvpcnetwork.New(r.sapStateFactory)),
 	)
 
 	return composed.ComposeActionsNoName(

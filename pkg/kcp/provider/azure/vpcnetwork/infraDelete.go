@@ -13,15 +13,15 @@ func infraDelete(ctx context.Context, st composed.State) (error, context.Context
 
 	name := fmt.Sprintf("cm-%s", state.ObjAsVpcNetwork().Name)
 
-	err := DeleteInfra(ctx, name, state.azureClient)
+	err := DeleteInfra(ctx, WithName(name), WithClient(state.azureClient))
 	if err != nil {
 		return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).
 			MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
 				vpcNetwork.SetStatusProviderError(err.Error())
 			}).
 			OnSuccess(
-				composed.Requeue,
 				composed.LogError(err, "Provider error on KCP VpcNetwork delete"),
+				composed.Requeue,
 			).
 			Run(ctx, state.Cluster().K8sClient())
 	}
