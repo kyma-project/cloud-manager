@@ -21,7 +21,6 @@ import (
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	sapmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"github.com/pkg/errors"
 	"k8s.io/utils/ptr"
 )
 
@@ -195,7 +194,7 @@ func (s *mainStore) CreateNetwork(ctx context.Context, opts networks.CreateOptsB
 	case networks.CreateOpts:
 		optsInternal = oo
 	default:
-		return nil, errors.Errorf("invalid options type: %T", opts)
+		return nil, fmt.Errorf("invalid options type: %T", opts)
 	}
 
 	if optsInternal.Name == "" {
