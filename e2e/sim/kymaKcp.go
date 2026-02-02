@@ -128,7 +128,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 			}
 			// wait skr kyma deleted
-			if skrKyma.DeletionTimestamp.Time.After(time.Now().Add(-time.Minute)) {
+			if skrKyma.DeletionTimestamp.After(time.Now().Add(-time.Minute)) {
 				logger.Info("Waiting SKR Kyma is deleted...")
 				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 			}
