@@ -26,7 +26,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 
 	logger.Info("Creating AWS ElastiCache")
 
-	var authTokenSecetString *string = nil
+	var authTokenSecetString *string
 
 	if state.authTokenValue != nil {
 		authTokenSecetString = state.authTokenValue.SecretString
