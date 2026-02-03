@@ -50,8 +50,8 @@ type networkClient struct {
 
 // low level methods matching the gophercloud api ================================
 
-func (n *networkClient) ListNetworks(ctx context.Context, opts networks.ListOpts) ([]networks.Network, error) {
-	page, err := networks.List(n.netSvc, opts).AllPages(ctx)
+func (c *networkClient) ListNetworks(ctx context.Context, opts networks.ListOpts) ([]networks.Network, error) {
+	page, err := networks.List(c.netSvc, opts).AllPages(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -62,12 +62,12 @@ func (n *networkClient) ListNetworks(ctx context.Context, opts networks.ListOpts
 	return arr, nil
 }
 
-func (n *networkClient) ListExternalNetworks(ctx context.Context, opts networks.ListOpts) ([]networks.Network, error) {
+func (c *networkClient) ListExternalNetworks(ctx context.Context, opts networks.ListOpts) ([]networks.Network, error) {
 	extOpts := external.ListOptsExt{
 		ListOptsBuilder: opts,
 		External:        ptr.To(true),
 	}
-	page, err := networks.List(n.netSvc, extOpts).AllPages(ctx)
+	page, err := networks.List(c.netSvc, extOpts).AllPages(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -78,8 +78,8 @@ func (n *networkClient) ListExternalNetworks(ctx context.Context, opts networks.
 	return arr, nil
 }
 
-func (n *networkClient) GetNetwork(ctx context.Context, id string) (*networks.Network, error) {
-	network, err := networks.Get(ctx, n.netSvc, id).Extract()
+func (c *networkClient) GetNetwork(ctx context.Context, id string) (*networks.Network, error) {
+	network, err := networks.Get(ctx, c.netSvc, id).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil
 	}
