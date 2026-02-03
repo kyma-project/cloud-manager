@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/conversion"
 )
 
 var _ SkrManager = &skrManager{}
@@ -135,6 +136,10 @@ func (m *skrManager) AddReadyzCheck(name string, check healthz.Checker) error {
 
 func (m *skrManager) GetWebhookServer() webhook.Server {
 	//TODO implement me
+	panic("implement me")
+}
+
+func (m *skrManager) GetConverterRegistry() conversion.Registry {
 	panic("implement me")
 }
 
