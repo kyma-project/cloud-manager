@@ -100,8 +100,8 @@ func NewReconciler(
 	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient],
 	env abstractions.Environment,
 ) Reconciler {
-	compSkrCluster := composed.NewStateCluster(skrCluster.GetClient(), skrCluster.GetAPIReader(), skrCluster.GetEventRecorderFor("cloud-resources"), skrCluster.GetScheme()) //nolint:staticcheck // SA1019
-	compKcpCluster := composed.NewStateCluster(kcpCluster.GetClient(), kcpCluster.GetAPIReader(), kcpCluster.GetEventRecorderFor("cloud-control"), kcpCluster.GetScheme())   //nolint:staticcheck // SA1019
+	compSkrCluster := composed.NewStateClusterFromCluster(skrCluster)
+	compKcpCluster := composed.NewStateClusterFromCluster(kcpCluster)
 	composedStateFactory := composed.NewStateFactory(compSkrCluster)
 	stateFactory := NewStateFactory(kymaRef, compKcpCluster, compSkrCluster, fileBackupClientProvider, env)
 	return Reconciler{
