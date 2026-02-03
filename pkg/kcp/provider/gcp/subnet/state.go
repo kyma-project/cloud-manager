@@ -18,9 +18,9 @@ import (
 type State struct {
 	focal.State
 
-	computeClient              client.ComputeClient
-	networkComnnectivityClient client.NetworkConnectivityClient
-	regionOperationsClient     client.RegionOperationsClient
+	computeClient             client.ComputeClient
+	networkConnectivityClient client.NetworkConnectivityClient
+	regionOperationsClient    client.RegionOperationsClient
 
 	subnet                  *computepb.Subnetwork
 	serviceConnectionPolicy *networkconnectivitypb.ServiceConnectionPolicy
@@ -67,10 +67,10 @@ func (statefactory *stateFactory) NewState(ctx context.Context, focalState focal
 
 func newState(focalState focal.State, computeClient client.ComputeClient, networkConnectivityClient client.NetworkConnectivityClient, regionOperationsClient client.RegionOperationsClient) *State {
 	return &State{
-		State:                      focalState,
-		computeClient:              computeClient,
-		networkComnnectivityClient: networkConnectivityClient,
-		regionOperationsClient:     regionOperationsClient,
+		State:                     focalState,
+		computeClient:             computeClient,
+		networkConnectivityClient: networkConnectivityClient,
+		regionOperationsClient:    regionOperationsClient,
 	}
 }
 

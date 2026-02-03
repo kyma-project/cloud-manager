@@ -30,7 +30,7 @@ func createConnectionPolicy(ctx context.Context, st composed.State) (error, cont
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	err := state.networkComnnectivityClient.CreateServiceConnectionPolicy(ctx, client.CreateServiceConnectionPolicyRequest{
+	err := state.networkConnectivityClient.CreateServiceConnectionPolicy(ctx, client.CreateServiceConnectionPolicyRequest{
 		ProjectId:     gcpScope.Project,
 		Region:        region,
 		Network:       gcpScope.VpcNetwork,
