@@ -14,7 +14,7 @@ import (
 )
 
 func NewStateClusterFromCluster(clstr cluster.Cluster) StateCluster {
-	return NewStateCluster(clstr.GetClient(), clstr.GetAPIReader(), clstr.GetEventRecorderFor("cloud-manager"), clstr.GetScheme())
+	return NewStateCluster(clstr.GetClient(), clstr.GetAPIReader(), clstr.GetEventRecorderFor("cloud-manager"), clstr.GetScheme()) //nolint:staticcheck // SA1019
 }
 
 func NewStateCluster(
