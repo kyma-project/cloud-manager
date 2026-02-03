@@ -7,20 +7,20 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func NewStateClusterFromCluster(clstr cluster.Cluster) StateCluster {
-	return NewStateCluster(clstr.GetClient(), clstr.GetAPIReader(), clstr.GetEventRecorderFor("cloud-manager"), clstr.GetScheme()) //nolint:staticcheck // SA1019
+	return NewStateCluster(clstr.GetClient(), clstr.GetAPIReader(), clstr.GetEventRecorder("cloud-manager"), clstr.GetScheme())
 }
 
 func NewStateCluster(
 	clnt client.Client,
 	reader client.Reader,
-	eventRecorder record.EventRecorder,
+	eventRecorder events.EventRecorder,
 	scheme *runtime.Scheme,
 ) StateCluster {
 	return &stateCluster{
@@ -34,14 +34,14 @@ func NewStateCluster(
 type StateCluster interface {
 	K8sClient() client.Client
 	ApiReader() client.Reader
-	EventRecorder() record.EventRecorder
+	EventRecorder() events.EventRecorder
 	Scheme() *runtime.Scheme
 }
 
 type stateCluster struct {
 	client        client.Client
 	reader        client.Reader
-	eventRecorder record.EventRecorder
+	eventRecorder events.EventRecorder
 	scheme        *runtime.Scheme
 }
 
@@ -53,7 +53,7 @@ func (c *stateCluster) ApiReader() client.Reader {
 	return c.reader
 }
 
-func (c *stateCluster) EventRecorder() record.EventRecorder {
+func (c *stateCluster) EventRecorder() events.EventRecorder {
 	return c.eventRecorder
 }
 
