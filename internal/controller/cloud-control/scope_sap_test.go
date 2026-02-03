@@ -28,20 +28,24 @@ var _ = Describe("Feature: KCP Scope", func() {
 
 		kymaNetworkName := common.KcpNetworkKymaCommonName(kymaName)
 
-		shoot := &gardenertypes.Shoot{}
+		sapMock := infra.SapMock().NewProject()
 
-		By("Given Shoot exists", func() {
-			Eventually(CreateShootSap).
-				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
-				Should(Succeed(), "failed creating garden shoot for SAP")
+		By("Given OpenStack external network exists", func() {
+			Expect(SapInfraInitializeExternalNetworks(infra.Ctx(), sapMock)).
+				To(Succeed())
 		})
 
-		sapMock := infra.SapMock()
+		shoot := &gardenertypes.Shoot{}
+
+		By("And Given Shoot exists", func() {
+			Expect(CreateShootSap(infra.Ctx(), infra, shoot, sapMock.ProviderParams(), WithName(kymaName))).
+				To(Succeed(), "failed creating garden shoot for SAP")
+		})
 
 		var sapCreatedInfra *SapGardenerInfra
 
-		By("An Given SAP infra exists", func() {
-			createdInfra, err := CreateSapGardenerResources(infra.Ctx(), sapMock, shoot.Namespace, shoot.Name, "10.250.0.0/16")
+		By("An Given SAP Gardener infra exists", func() {
+			createdInfra, err := SapInfraGardenerCreateResourcesAllWithNetwork(infra.Ctx(), sapMock, shoot.Namespace, shoot.Name, "10.250.0.0/16")
 			Expect(err).NotTo(HaveOccurred())
 			sapCreatedInfra = createdInfra
 		})
@@ -107,13 +111,13 @@ var _ = Describe("Feature: KCP Scope", func() {
 		By("And Then Scope has spec.scope.openstack.tenantName", func() {
 			Expect(scope.Spec.Scope.OpenStack).NotTo(BeNil())
 			Expect(scope.Spec.Scope.OpenStack.TenantName).NotTo(BeEmpty())
-			Expect(scope.Spec.Scope.OpenStack.TenantName).To(Equal(DefaultSapTenant))
+			Expect(scope.Spec.Scope.OpenStack.TenantName).To(Equal(sapMock.ProjectName()))
 		})
 
 		By("And Then Scope has spec.scope.openstack.domainName", func() {
 			Expect(scope.Spec.Scope.OpenStack).NotTo(BeNil())
 			Expect(scope.Spec.Scope.OpenStack.DomainName).NotTo(BeEmpty())
-			Expect(scope.Spec.Scope.OpenStack.DomainName).To(Equal(DefaultSapDomain))
+			Expect(scope.Spec.Scope.OpenStack.DomainName).To(Equal(sapMock.DomainName()))
 		})
 
 		By("And Then Scope has vpc network name", func() {

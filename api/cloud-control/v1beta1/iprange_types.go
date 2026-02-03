@@ -226,6 +226,10 @@ func (in *IpRange) SetObservedGeneration(v int64) {
 	in.Status.ObservedGeneration = v
 }
 
+func (in *IpRange) GetStatus() any {
+	return &in.Status
+}
+
 func (in *IpRange) GetObjectMeta() *metav1.ObjectMeta {
 	return &in.ObjectMeta
 }

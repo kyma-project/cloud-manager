@@ -40,7 +40,7 @@ type VpcNetworkSpec struct {
 	// +kubebuilder:validation:Required
 	Subscription string `json:"subscription"`
 
-	// Region is required for AWS and Azure providers.
+	// Region is required for AWS, Azure, and OpenStack providers.
 	// +kubebuilder:validation:Required
 	Region string `json:"region"`
 
@@ -121,6 +121,10 @@ func (in *VpcNetwork) ObservedGeneration() int64 {
 
 func (in *VpcNetwork) SetObservedGeneration(v int64) {
 	in.Status.ObservedGeneration = v
+}
+
+func (in *VpcNetwork) GetStatus() any {
+	return &in.Status
 }
 
 // functions

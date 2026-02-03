@@ -11,6 +11,7 @@ import (
 	gardenerapisecurity "github.com/gardener/gardener/pkg/apis/security/v1alpha1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
+	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -22,15 +23,6 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-type BindingTypeEnum string
-
-const (
-	BindingTypeSecret      = BindingTypeEnum("secret")
-	BindingTypeCredentials = BindingTypeEnum("credentials")
-)
-
-var BindingType = BindingTypeSecret
 
 func CreateGardenerCredentials(ctx context.Context, infra testinfra.Infra) error {
 	secret := &corev1.Secret{
@@ -80,8 +72,7 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerapicore.ShootSpec{
-			// nolint:staticcheck
-			CloudProfileName: ptr.To("aws"),
+			CredentialsBindingName: ptr.To(shoot.Name),
 			CloudProfile: &gardenerapicore.CloudProfileReference{
 				Kind: "CloudProfile",
 				Name: "aws",
@@ -131,52 +122,24 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 			},
 		}
 
-		if BindingType == BindingTypeSecret {
-			// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-			// nolint:staticcheck
-			shoot.Spec.SecretBindingName = ptr.To(shoot.Name)
-		} else {
-			shoot.Spec.CredentialsBindingName = ptr.To(shoot.Name)
-		}
-
 		err := infra.Garden().Client().Create(ctx, shoot)
 		if err != nil {
 			return fmt.Errorf("error creating Shoot: %w", err)
 		}
 	}
 
-	if BindingType == BindingTypeSecret {
-		// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-		// nolint:staticcheck
-		secretBinding := &gardenerapicore.SecretBinding{}
-		actions.ApplyOnObject(secretBinding)
-		// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-		// nolint:staticcheck
-		secretBinding.Provider = &gardenerapicore.SecretBindingProvider{
-			Type: string(cloudcontrolv1beta1.ProviderAws),
-		}
-		secretBinding.SecretRef = corev1.SecretReference{
-			Name:      shoot.Name,
-			Namespace: shoot.Namespace,
-		}
-		err := infra.Garden().Client().Create(ctx, secretBinding)
-		if err != nil {
-			return fmt.Errorf("error creating SecretBinding: %w", err)
-		}
-	} else {
-		credentialsBinding := &gardenerapisecurity.CredentialsBinding{}
-		actions.ApplyOnObject(credentialsBinding)
-		credentialsBinding.Provider.Type = string(cloudcontrolv1beta1.ProviderAws)
-		credentialsBinding.CredentialsRef = corev1.ObjectReference{
-			Kind:       "Secret",
-			Namespace:  shoot.Namespace,
-			Name:       shoot.Name,
-			APIVersion: "v1",
-		}
-		err := infra.Garden().Client().Create(ctx, credentialsBinding)
-		if err != nil {
-			return fmt.Errorf("error creating CredentialsBinding: %w", err)
-		}
+	credentialsBinding := &gardenerapisecurity.CredentialsBinding{}
+	actions.ApplyOnObject(credentialsBinding)
+	credentialsBinding.Provider.Type = string(cloudcontrolv1beta1.ProviderAws)
+	credentialsBinding.CredentialsRef = corev1.ObjectReference{
+		Kind:       "Secret",
+		Namespace:  shoot.Namespace,
+		Name:       shoot.Name,
+		APIVersion: "v1",
+	}
+	err := infra.Garden().Client().Create(ctx, credentialsBinding)
+	if err != nil {
+		return fmt.Errorf("error creating CredentialsBinding: %w", err)
 	}
 
 	// Secret
@@ -274,8 +237,7 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerapicore.ShootSpec{
-			// nolint:staticcheck
-			CloudProfileName: ptr.To("gcp"),
+			CredentialsBindingName: ptr.To(shoot.Name),
 			CloudProfile: &gardenerapicore.CloudProfileReference{
 				Kind: "CloudProfile",
 				Name: "gcp",
@@ -292,42 +254,17 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 			},
 		}
 
-		if BindingType == BindingTypeSecret {
-			// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-			// nolint:staticcheck
-			shoot.Spec.SecretBindingName = ptr.To(shoot.Name)
-		} else {
-			shoot.Spec.CredentialsBindingName = ptr.To(shoot.Name)
-		}
-
 		err := infra.Garden().Client().Create(ctx, shoot)
 		if err != nil {
 			return fmt.Errorf("error creating Shoot: %w", err)
 		}
 	}
 
-	if BindingType == BindingTypeSecret {
-		// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-		// nolint:staticcheck
-		secretBinding := &gardenerapicore.SecretBinding{}
-		actions.ApplyOnObject(secretBinding)
-		// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-		// nolint:staticcheck
-		secretBinding.Provider = &gardenerapicore.SecretBindingProvider{
-			Type: string(cloudcontrolv1beta1.ProviderGCP),
-		}
-		secretBinding.SecretRef = corev1.SecretReference{
-			Name:      shoot.Name,
-			Namespace: shoot.Namespace,
-		}
-		err := infra.Garden().Client().Create(ctx, secretBinding)
-		if err != nil {
-			return fmt.Errorf("error creating SecretBinding: %w", err)
-		}
-	} else {
+	// credentialsBinding
+	{
 		credentialsBinding := &gardenerapisecurity.CredentialsBinding{}
 		actions.ApplyOnObject(credentialsBinding)
-		credentialsBinding.Provider.Type = string(cloudcontrolv1beta1.ProviderAws)
+		credentialsBinding.Provider.Type = string(cloudcontrolv1beta1.ProviderGCP)
 		credentialsBinding.CredentialsRef = corev1.ObjectReference{
 			Kind:       "Secret",
 			Namespace:  shoot.Namespace,
@@ -356,7 +293,11 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 	return nil
 }
 
-func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardenerapicore.Shoot, opts ...ObjAction) error {
+func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardenerapicore.Shoot, tenant string, subscription string, region string, opts ...ObjAction) error {
+	if region == "" {
+		region = "westeurope"
+	}
+
 	// KCP Gardener-credentials secret
 	{
 		secret := &corev1.Secret{
@@ -398,13 +339,12 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerapicore.ShootSpec{
-			// nolint:staticcheck
-			CloudProfileName: ptr.To("azure"),
+			CredentialsBindingName: ptr.To(shoot.Name),
 			CloudProfile: &gardenerapicore.CloudProfileReference{
 				Kind: "CloudProfile",
 				Name: "azure",
 			},
-			Region: "westeurope",
+			Region: region,
 			Networking: &gardenerapicore.Networking{
 				IPFamilies: []gardenerapicore.IPFamily{gardenerapicore.IPFamilyIPv4},
 				Nodes:      ptr.To("10.250.0.0/22"),
@@ -456,42 +396,17 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 			},
 		}
 
-		if BindingType == BindingTypeSecret {
-			// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-			// nolint:staticcheck
-			shoot.Spec.SecretBindingName = ptr.To(shoot.Name)
-		} else {
-			shoot.Spec.CredentialsBindingName = ptr.To(shoot.Name)
-		}
-
 		err := infra.Garden().Client().Create(ctx, shoot)
 		if err != nil {
 			return fmt.Errorf("error creating Shoot: %w", err)
 		}
 	}
 
-	if BindingType == BindingTypeSecret {
-		// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-		// nolint:staticcheck
-		secretBinding := &gardenerapicore.SecretBinding{}
-		actions.ApplyOnObject(secretBinding)
-		// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-		// nolint:staticcheck
-		secretBinding.Provider = &gardenerapicore.SecretBindingProvider{
-			Type: string(cloudcontrolv1beta1.ProviderAzure),
-		}
-		secretBinding.SecretRef = corev1.SecretReference{
-			Name:      shoot.Name,
-			Namespace: shoot.Namespace,
-		}
-		err := infra.Garden().Client().Create(ctx, secretBinding)
-		if err != nil {
-			return fmt.Errorf("error creating SecretBinding: %w", err)
-		}
-	} else {
+	// credentialsBinding
+	{
 		credentialsBinding := &gardenerapisecurity.CredentialsBinding{}
 		actions.ApplyOnObject(credentialsBinding)
-		credentialsBinding.Provider.Type = string(cloudcontrolv1beta1.ProviderAws)
+		credentialsBinding.Provider.Type = string(cloudcontrolv1beta1.ProviderAzure)
 		credentialsBinding.CredentialsRef = corev1.ObjectReference{
 			Kind:       "Secret",
 			Namespace:  shoot.Namespace,
@@ -509,8 +424,8 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 		secret := &corev1.Secret{}
 		actions.ApplyOnObject(secret)
 		secret.StringData = map[string]string{
-			"tenantID":       DefaultAzureTenantId,
-			"subscriptionID": DefaultAzureSubscriptionId,
+			"tenantID":       tenant,
+			"subscriptionID": subscription,
 			"clientID":       "someAzureClientId",
 			"clientSecret":   "someAzureClientSecret",
 		}
@@ -524,7 +439,7 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 	return nil
 }
 
-func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenerapicore.Shoot, opts ...ObjAction) error {
+func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenerapicore.Shoot, pp sapclient.ProviderParams, opts ...ObjAction) error {
 	// KCP Gardener-credentials secret
 	if err := CreateGardenerCredentials(ctx, infra); err != nil {
 		return err
@@ -543,12 +458,12 @@ func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerapicore.ShootSpec{
-			CloudProfileName: ptr.To("converged-cloud-kyma"),
+			CredentialsBindingName: ptr.To(shoot.Name),
 			CloudProfile: &gardenerapicore.CloudProfileReference{
 				Kind: "CloudProfile",
 				Name: "converged-cloud-kyma",
 			},
-			Region: "eu-de-1",
+			Region: pp.RegionName,
 			Networking: &gardenerapicore.Networking{
 				IPFamilies: []gardenerapicore.IPFamily{gardenerapicore.IPFamilyIPv4},
 				Nodes:      ptr.To("10.250.0.0/16"),
@@ -572,18 +487,10 @@ func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 				Workers: []gardenerapicore.Worker{
 					{
 						Name:  "cpu-worker-0",
-						Zones: []string{"eu-de-1b", "eu-de-1a", "eu-de-1c"},
+						Zones: []string{pp.RegionName + "b", pp.RegionName + "a", pp.RegionName + "c"},
 					},
 				},
 			},
-		}
-
-		if BindingType == BindingTypeSecret {
-			// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-			// nolint:staticcheck
-			shoot.Spec.SecretBindingName = ptr.To(shoot.Name)
-		} else {
-			shoot.Spec.CredentialsBindingName = ptr.To(shoot.Name)
 		}
 
 		err := infra.Garden().Client().Create(ctx, shoot)
@@ -592,28 +499,11 @@ func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 		}
 	}
 
-	if BindingType == BindingTypeSecret {
-		// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-		// nolint:staticcheck
-		secretBinding := &gardenerapicore.SecretBinding{}
-		actions.ApplyOnObject(secretBinding)
-		// SA1019 keep using SecretBinding until migrated to CredentialsBinding
-		// nolint:staticcheck
-		secretBinding.Provider = &gardenerapicore.SecretBindingProvider{
-			Type: string(cloudcontrolv1beta1.ProviderOpenStack),
-		}
-		secretBinding.SecretRef = corev1.SecretReference{
-			Name:      shoot.Name,
-			Namespace: shoot.Namespace,
-		}
-		err := infra.Garden().Client().Create(ctx, secretBinding)
-		if err != nil {
-			return fmt.Errorf("error creating SecretBinding: %w", err)
-		}
-	} else {
+	// credentialsBinding
+	{
 		credentialsBinding := &gardenerapisecurity.CredentialsBinding{}
 		actions.ApplyOnObject(credentialsBinding)
-		credentialsBinding.Provider.Type = string(cloudcontrolv1beta1.ProviderAws)
+		credentialsBinding.Provider.Type = string(cloudcontrolv1beta1.ProviderOpenStack)
 		credentialsBinding.CredentialsRef = corev1.ObjectReference{
 			Kind:       "Secret",
 			Namespace:  shoot.Namespace,
@@ -631,8 +521,8 @@ func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 		secret := &corev1.Secret{}
 		actions.ApplyOnObject(secret)
 		secret.StringData = map[string]string{
-			"domainName": DefaultSapDomain,
-			"tenantName": DefaultSapTenant,
+			"domainName": pp.DomainName,
+			"tenantName": pp.ProjectName,
 		}
 
 		err := infra.Garden().Client().Create(ctx, secret)
@@ -650,10 +540,4 @@ var (
 
 const (
 	DefaultGcpProject = "project_id"
-
-	DefaultAzureTenantId       = "someAzureTenantId"
-	DefaultAzureSubscriptionId = "someAzureSubscriptionId"
-
-	DefaultSapDomain = "kyma"
-	DefaultSapTenant = "kyma-project-01"
 )

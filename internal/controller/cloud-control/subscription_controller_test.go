@@ -147,7 +147,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 
 		awsAccountId := awsAccount.AccountId()
 
-		secret, secretBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
+		secret, credentialsBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
 			"accessKeyID":     []byte(awsAccount.Credentials().AccessKeyId),
 			"secretAccessKey": []byte(awsAccount.Credentials().SecretAccessKey),
 		})
@@ -255,9 +255,9 @@ var _ = Describe("Feature: KCP Subscription", func() {
 				Should(Succeed())
 		})
 
-		By("// cleanup: Delete Secret and SecretBinding", func() {
+		By("// cleanup: Delete Secret and CredentialsBinding", func() {
 			Expect(Delete(infra.Ctx(), infra.Garden().Client(), secret)).To(Succeed())
-			Expect(Delete(infra.Ctx(), infra.Garden().Client(), secretBinding)).To(Succeed())
+			Expect(Delete(infra.Ctx(), infra.Garden().Client(), credentialsBinding)).To(Succeed())
 		})
 	})
 

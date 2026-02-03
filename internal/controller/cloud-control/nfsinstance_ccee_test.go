@@ -19,15 +19,15 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 		name := "f7db16a8-0fb4-4f9d-b055-e360a10e1f36"
 		scope := &cloudcontrolv1beta1.Scope{}
 
+		sapMock := infra.SapMock().NewProject()
+
 		By("Given OpenStack Scope exists", func() {
 			// Tell Scope reconciler to ignore this Scope
 			kcpscope.Ignore.AddName(name)
 
-			Expect(CreateScopeOpenStack(infra.Ctx(), infra, scope, WithName(name))).
+			Expect(CreateScopeOpenStack(infra.Ctx(), infra, scope, sapMock.ProviderParams(), WithName(name))).
 				To(Succeed(), "failed creating Scope")
 		})
-
-		sapMock := infra.SapMock()
 
 		//var sapGardenInfra *SapGardenerInfra
 
@@ -111,13 +111,13 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 					HavingNfsInstanceStatusId()).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 
-			x, err := infra.SapMock().GetShare(infra.Ctx(), nfsInstance.Status.Id)
+			x, err := sapMock.GetShare(infra.Ctx(), nfsInstance.Status.Id)
 			Expect(err).NotTo(HaveOccurred())
 			theShare = x
 		})
 
 		By("When Share is available", func() {
-			infra.SapMock().SetShareStatus(theShare.ID, "available")
+			sapMock.SetShareStatus(theShare.ID, "available")
 		})
 
 		By("Then NfsInstance has Ready condition", func() {
@@ -129,7 +129,7 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 				Should(Succeed(), "expected NfsInstance to have Ready state, but it didn't")
 
 			// reload share
-			x, err := infra.SapMock().GetShare(infra.Ctx(), nfsInstance.Status.Id)
+			x, err := sapMock.GetShare(infra.Ctx(), nfsInstance.Status.Id)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(x).NotTo(BeNil())
 			theShare = x
@@ -145,7 +145,7 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 		})
 
 		By("And Then Share has access granted", func() {
-			arr, err := infra.SapMock().ListShareAccessRules(infra.Ctx(), theShare.ID)
+			arr, err := sapMock.ListShareAccessRules(infra.Ctx(), theShare.ID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(arr).To(HaveLen(1), "expected one access right")
 			Expect(arr[0].AccessTo).To(Equal(scope.Spec.Scope.OpenStack.Network.Nodes))
@@ -168,13 +168,13 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 		})
 
 		By("And Then SAP Share does not exist", func() {
-			x, err := infra.SapMock().GetShare(infra.Ctx(), theShare.ID)
+			x, err := sapMock.GetShare(infra.Ctx(), theShare.ID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(x).To(BeNil())
 		})
 
 		By("And Then SAP Share Network does not exist", func() {
-			x, err := infra.SapMock().GetShareNetwork(infra.Ctx(), theShare.ShareNetworkID)
+			x, err := sapMock.GetShareNetwork(infra.Ctx(), theShare.ShareNetworkID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(x).To(BeNil())
 		})

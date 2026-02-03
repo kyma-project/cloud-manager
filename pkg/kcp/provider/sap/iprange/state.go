@@ -20,7 +20,7 @@ type State struct {
 	net          *networks.Network
 	subnet       *subnets.Subnet
 	router       *routers.Router
-	routerSubnet *sapiprangeclient.RouterSubnetInterfaceInfo
+	routerSubnet *sapclient.RouterSubnetInterfaceInfo
 }
 
 type StateFactory interface {

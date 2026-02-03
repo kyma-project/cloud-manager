@@ -2,10 +2,11 @@ package allocate
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"math/big"
 	"net"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRange(t *testing.T) {
@@ -58,6 +59,28 @@ func TestRange(t *testing.T) {
 		}
 	})
 
+	t.Run("contains", func(t *testing.T) {
+		list := []struct {
+			a string
+			b string
+			c bool
+		}{
+			{"10.250.0.0/16", "10.250.10.0/30", true},
+			{"10.250.0.0/16", "10.250.0.0/30", true},
+			{"10.250.0.0/16", "10.250.255.252/30", true},
+			{"10.250.0.0/17", "10.250.255.252/30", false},
+		}
+		for _, item := range list {
+			t.Run(fmt.Sprintf("%s-%s", item.a, item.b), func(t *testing.T) {
+				a, err := parseRange(item.a)
+				assert.NoError(t, err)
+				b, err := parseRange(item.b)
+				assert.NoError(t, err)
+				assert.Equal(t, item.c, a.contains(b))
+			})
+		}
+	})
+
 	t.Run("len", func(t *testing.T) {
 		list := []struct {
 			s string
@@ -98,5 +121,16 @@ func TestRange(t *testing.T) {
 				}
 			})
 		}
+	})
+}
+
+func TestRangeList(t *testing.T) {
+	t.Run("string", func(t *testing.T) {
+		list := newRangeList()
+		err := list.addStrings("10.250.0.0/17", "10.250.240.0/21", "10.250.255.244/30")
+		assert.NoError(t, err)
+		actual := list.String()
+		expected := "10.250.0.0/17 10.250.240.0/21 10.250.255.244/30"
+		assert.Equal(t, expected, actual)
 	})
 }

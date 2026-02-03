@@ -16,13 +16,14 @@ var _ = Describe("Feature: KCP IpRange SAP", func() {
 		name := "dc01bde6-3012-4336-92a2-54deec85c0c6"
 		scope := &cloudcontrolv1beta1.Scope{}
 
+		sapMock := infra.SapMock().NewProject()
+
 		By("Given OpenStack Scope exists", func() {
 			// Tell Scope reconciler to ignore this Scope
 			kcpscope.Ignore.AddName(name)
 
-			Eventually(CreateScopeOpenStack).
-				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
-				Should(Succeed(), "failed creating Scope")
+			Expect(CreateScopeOpenStack(infra.Ctx(), infra, scope, sapMock.ProviderParams(), WithName(name))).
+				To(Succeed(), "failed creating Scope")
 		})
 
 		var kcpNetworkKyma *cloudcontrolv1beta1.Network
@@ -44,8 +45,6 @@ var _ = Describe("Feature: KCP IpRange SAP", func() {
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
 				Should(Succeed())
 		})
-
-		sapMock := infra.SapMock()
 
 		var sapGardenInfra *SapGardenerInfra
 

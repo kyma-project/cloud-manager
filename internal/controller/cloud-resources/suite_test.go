@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 
@@ -45,7 +46,7 @@ import (
 
 var infra testinfra.Infra
 
-var addressSpace = iprangeallocate.NewAddressSpace()
+var addressSpace = util.Must(iprangeallocate.NewAddressSpace("10.0.0.0/8"))
 
 func TestControllers(t *testing.T) {
 	if len(os.Getenv("PROJECTROOT")) == 0 {

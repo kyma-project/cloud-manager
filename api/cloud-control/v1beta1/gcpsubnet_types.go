@@ -117,6 +117,10 @@ func (in *GcpSubnet) SetObservedGeneration(v int64) {
 	in.Status.ObservedGeneration = v
 }
 
+func (in *GcpSubnet) GetStatus() any {
+	return &in.Status
+}
+
 func (in *GcpSubnet) State() string {
 	return string(in.Status.State)
 }

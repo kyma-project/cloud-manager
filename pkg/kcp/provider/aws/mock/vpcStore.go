@@ -79,7 +79,7 @@ type vpcStore struct {
 
 func newVpcStore() *vpcStore {
 	return &vpcStore{
-		addressRange: iprangeallocate.NewAddressSpace(),
+		addressRange: util.Must(iprangeallocate.NewAddressSpace("34.0.0.0/8")),
 		errorMap:     make(map[string]error),
 	}
 }

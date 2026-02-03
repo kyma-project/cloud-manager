@@ -13,7 +13,7 @@ func networkLoad(ctx context.Context, st composed.State) (error, context.Context
 	networkId, _ := state.ObjAsNfsInstance().GetStateData(StateDataNetworkId)
 
 	if networkId == "" {
-		arr, err := state.sapClient.ListInternalNetworks(ctx, state.Scope().Spec.Scope.OpenStack.VpcNetwork)
+		arr, err := state.sapClient.ListInternalNetworksByName(ctx, state.Scope().Spec.Scope.OpenStack.VpcNetwork)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error listing SAP networks", composed.StopWithRequeue, ctx)
 		}
@@ -21,7 +21,7 @@ func networkLoad(ctx context.Context, st composed.State) (error, context.Context
 			state.network = &arr[0]
 		}
 	} else {
-		n, err := state.sapClient.GetNetworkById(ctx, networkId)
+		n, err := state.sapClient.GetNetwork(ctx, networkId)
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error getting SAP network", composed.StopWithRequeue, ctx)
 		}

@@ -23,7 +23,7 @@ func shareNetworkDelete(ctx context.Context, st composed.State) (error, context.
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	arr, err := state.sapClient.ListShares(ctx, state.shareNetwork.ID)
+	arr, err := state.sapClient.ListSharesInShareNetwork(ctx, state.shareNetwork.ID)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error listing shares for delete share network", composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
 	}

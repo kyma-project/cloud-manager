@@ -187,6 +187,10 @@ func (in *RedisCluster) SetObservedGeneration(v int64) {
 	in.Status.ObservedGeneration = v
 }
 
+func (in *RedisCluster) GetStatus() any {
+	return &in.Status
+}
+
 func (in *RedisCluster) State() string {
 	return string(in.Status.State)
 }

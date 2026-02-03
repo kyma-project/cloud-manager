@@ -27,6 +27,8 @@ import (
 	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
 	azurevpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	sapvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/vpcnetwork"
+	sapvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/vpcnetwork/client"
 
 	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
@@ -481,6 +483,7 @@ func main() {
 		mgr,
 		awsvpcnetwork.NewStateFactory(awsvpcnetworkclient.NewClientProvider()),
 		azurevpcnetwork.NewStateFactory(azurevpcnetworkclient.NewClientProvider()),
+		sapvpcnetwork.NewStateFactory(sapvpcnetworkclient.NewClientProvider()),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcNetwork")
 		os.Exit(1)

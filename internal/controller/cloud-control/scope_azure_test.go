@@ -31,14 +31,14 @@ var _ = Describe("Feature: KCP Scope", func() {
 
 		shoot := &gardenertypes.Shoot{}
 
-		By("Given Shoot exists", func() {
-			Eventually(CreateShootAzure).
-				WithArguments(infra.Ctx(), infra, shoot, WithName(kymaName)).
-				Should(Succeed(), "failed creating garden shoot for Azure")
-		})
+		azureTenantId := "a1817060-7f3f-4796-9633-7d823c9d2893"
+		azureSubscriptionId := "23ddb148-bb68-4c6f-ae3f-4347bc6330d1"
+		azureRegion := "westeurope"
 
-		azureTenantId := DefaultAzureTenantId
-		azureSubscriptionId := DefaultAzureSubscriptionId
+		By("Given Shoot exists", func() {
+			Expect(CreateShootAzure(infra.Ctx(), infra, shoot, azureTenantId, azureSubscriptionId, azureRegion, WithName(kymaName))).
+				To(Succeed(), "failed creating garden shoot for Azure")
+		})
 
 		azureMock := infra.AzureMock().MockConfigs(azureSubscriptionId, azureTenantId)
 
@@ -120,8 +120,8 @@ var _ = Describe("Feature: KCP Scope", func() {
 
 		By("And Then Scope has Azure subscriptionId and tenantId", func() {
 			Expect(scope.Spec.Scope.Azure).NotTo(BeNil())
-			Expect(scope.Spec.Scope.Azure.SubscriptionId).To(Equal("someAzureSubscriptionId")) // fixed value from CreateShootAzure
-			Expect(scope.Spec.Scope.Azure.TenantId).To(Equal("someAzureTenantId"))             // fixed value from CreateShootAzure
+			Expect(scope.Spec.Scope.Azure.SubscriptionId).To(Equal(azureSubscriptionId))
+			Expect(scope.Spec.Scope.Azure.TenantId).To(Equal(azureTenantId))
 		})
 
 		By("And Then Scope has vpc network name", func() {

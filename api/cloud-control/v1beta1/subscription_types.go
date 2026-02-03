@@ -137,6 +137,10 @@ func (in *Subscription) SetObservedGeneration(v int64) {
 	in.Status.ObservedGeneration = v
 }
 
+func (in *Subscription) GetStatus() any {
+	return &in.Status
+}
+
 // functions ===============
 
 func (in *Subscription) SetStatusProcessing() {

@@ -14,7 +14,7 @@ func subnetCreate(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, ctx
 	}
 
-	subnet, err := state.sapClient.CreateSubnet(ctx, state.net.ID, state.ObjAsIpRange().Status.Cidr, state.SubnetName())
+	subnet, err := state.sapClient.CreateSubnetOp(ctx, state.net.ID, state.ObjAsIpRange().Status.Cidr, state.SubnetName())
 	if err != nil {
 		logger.Error(err, "Error creating Openstack subnet for SAP KCP IpRange")
 		return composed.StopWithRequeue, ctx

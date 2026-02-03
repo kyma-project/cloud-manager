@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
 	"time"
 
 	"github.com/3th1nk/cidr"
+	azruntime "github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/elliotchance/pie/v2"
@@ -47,15 +49,22 @@ func WithTimeout(t time.Duration) CreateInfraOption {
 	}
 }
 
+func WithInterval(t time.Duration) CreateInfraOption {
+	return func(o *createInfraOptions) {
+		o.interval = t
+	}
+}
+
 type createInfraOptions struct {
 	name       string
 	location   string
 	cidrBlocks []string
 	client     azurevpcnetworkclient.Client
 	timeout    time.Duration
+	interval   time.Duration
 }
 
-func (o *createInfraOptions) validate() error {
+func (o *createInfraOptions) validateForCreateUpdate() error {
 	var result error
 	if o.name == "" {
 		result = errors.Join(result, fmt.Errorf("name is required"))
@@ -77,6 +86,38 @@ func (o *createInfraOptions) validate() error {
 	}
 	if o.timeout == 0 {
 		o.timeout = 5 * time.Minute
+		if testing.Testing() {
+			o.timeout = time.Second
+		}
+	}
+	if o.interval == 0 {
+		o.interval = time.Second
+		if testing.Testing() {
+			o.interval = time.Millisecond
+		}
+	}
+	return result
+}
+
+func (o *createInfraOptions) validateForDelete() error {
+	var result error
+	if o.name == "" {
+		result = errors.Join(result, fmt.Errorf("name is required"))
+	}
+	if o.client == nil {
+		result = errors.Join(result, fmt.Errorf("client is required"))
+	}
+	if o.timeout == 0 {
+		o.timeout = 5 * time.Minute
+		if testing.Testing() {
+			o.timeout = time.Second
+		}
+	}
+	if o.interval == 0 {
+		o.interval = time.Second
+		if testing.Testing() {
+			o.interval = time.Millisecond
+		}
 	}
 	return result
 }
@@ -95,7 +136,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 	for _, opt := range opts {
 		opt(o)
 	}
-	if err := o.validate(); err != nil {
+	if err := o.validateForCreateUpdate(); err != nil {
 		return nil, err
 	}
 
@@ -135,7 +176,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 		vnetOut, err := func() (*armnetwork.VirtualNetwork, error) {
 			toCtx, cancel := context.WithTimeout(ctx, o.timeout)
 			defer cancel()
-			resp, err := poller.PollUntilDone(toCtx, nil)
+			resp, err := poller.PollUntilDone(toCtx, &azruntime.PollUntilDoneOptions{Frequency: o.interval})
 			if err != nil {
 				return nil, fmt.Errorf("error polling network %q: %w", o.name, err)
 			}
@@ -174,7 +215,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 		vnetOut, err := func() (*armnetwork.VirtualNetwork, error) {
 			toCtx, cancel := context.WithTimeout(ctx, o.timeout)
 			defer cancel()
-			resp, err := poller.PollUntilDone(toCtx, nil)
+			resp, err := poller.PollUntilDone(toCtx, &azruntime.PollUntilDoneOptions{Frequency: o.interval})
 			if err != nil {
 				return nil, fmt.Errorf("error polling network %q: %w", o.name, err)
 			}
@@ -195,19 +236,31 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 	}, nil
 }
 
-func DeleteInfra(ctx context.Context, name string, c azurevpcnetworkclient.Client) error {
-	vnetPoller, err := c.DeleteNetwork(ctx, name, name, nil)
+func DeleteInfra(ctx context.Context, opts ...CreateInfraOption) error {
+	o := &createInfraOptions{}
+	for _, opt := range opts {
+		opt(o)
+	}
+	if err := o.validateForDelete(); err != nil {
+		return err
+	}
+	vnetPoller, err := o.client.DeleteNetwork(ctx, o.name, o.name, nil)
 	if azuremeta.IgnoreNotFoundError(err) != nil {
 		return fmt.Errorf("failed to delete network: %w", err)
 	}
 	if err == nil {
-		_, err = vnetPoller.PollUntilDone(ctx, nil)
+		err = func() error {
+			toCtx, cancel := context.WithTimeout(ctx, o.timeout)
+			defer cancel()
+			_, err := vnetPoller.PollUntilDone(toCtx, &azruntime.PollUntilDoneOptions{Frequency: o.interval})
+			return err
+		}()
 		if err != nil {
 			return fmt.Errorf("error polling network deletion: %w", err)
 		}
 	}
 
-	err = c.DeleteResourceGroup(ctx, name)
+	err = o.client.DeleteResourceGroup(ctx, o.name)
 	if azuremeta.IgnoreNotFoundError(err) != nil {
 		return fmt.Errorf("failed to delete resource group: %w", err)
 	}

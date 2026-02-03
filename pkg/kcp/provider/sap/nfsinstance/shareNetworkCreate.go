@@ -20,7 +20,7 @@ func shareNetworkCreate(ctx context.Context, st composed.State) (error, context.
 
 	logger.Info("Creating SAP shareNetwork")
 
-	shareNetwork, err := state.sapClient.CreateShareNetwork(ctx, state.network.ID, state.subnet.ID, state.ShareNetworkName())
+	shareNetwork, err := state.sapClient.CreateShareNetworkOp(ctx, state.network.ID, state.subnet.ID, state.ShareNetworkName())
 	if err != nil {
 		logger.Error(err, "Error creating SAP shareNetwork")
 		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
