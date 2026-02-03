@@ -26,10 +26,10 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 
 	logger.Info("Creating AWS ElastiCache")
 
-	var authTokenSecetString *string
+	var authTokenSecretString *string
 
 	if state.authTokenValue != nil {
-		authTokenSecetString = state.authTokenValue.SecretString
+		authTokenSecretString = state.authTokenValue.SecretString
 	}
 
 	automaticFailoverEnabled := redisInstance.Spec.Instance.Aws.ReadReplicas > 0
@@ -57,7 +57,7 @@ func createElastiCacheCluster(ctx context.Context, st composed.State) (error, co
 		CacheNodeType:              redisInstance.Spec.Instance.Aws.CacheNodeType,
 		EngineVersion:              redisInstance.Spec.Instance.Aws.EngineVersion,
 		AutoMinorVersionUpgrade:    redisInstance.Spec.Instance.Aws.AutoMinorVersionUpgrade,
-		AuthTokenSecretString:      authTokenSecetString,
+		AuthTokenSecretString:      authTokenSecretString,
 		PreferredMaintenanceWindow: redisInstance.Spec.Instance.Aws.PreferredMaintenanceWindow,
 		SecurityGroupIds:           []string{state.securityGroupId},
 		ReplicasPerNodeGroup:       redisInstance.Spec.Instance.Aws.ReadReplicas,
