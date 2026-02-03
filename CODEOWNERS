@@ -4,5 +4,7 @@
 # All files and subdirectories in /docs
 /docs/user/ @kyma-project/technical-writers
 
+/pkg/kcp/provider/google/ @tmilos77
+
 # All .md files
 *.md @kyma-project/technical-writers

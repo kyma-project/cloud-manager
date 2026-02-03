@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/metrics"
 	"google.golang.org/api/cloudresourcemanager/v1"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -72,7 +73,7 @@ func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient]
 				return nil, err
 			}
 
-			httpClient := client.NewMetricsHTTPClient(baseClient.Transport)
+			httpClient := metrics.NewMetricsHTTPClient(baseClient.Transport)
 
 			svcNetClient, err := servicenetworking.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {

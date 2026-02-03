@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/metrics"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
@@ -157,7 +158,7 @@ func (c *filestoreClient) GetOperation(ctx context.Context, operationName string
 	}
 
 	op, err := c.cloudFilestoreManager.LROClient.GetOperation(ctx, req)
-	gcpclient.IncrementCallCounter("Filestore", "GetOperation", "", err)
+	metrics.IncrementCallCounter("Filestore", "GetOperation", "", err)
 
 	if err != nil {
 		logger.Error(err, "Failed to get operation",
