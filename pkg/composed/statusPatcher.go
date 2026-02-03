@@ -262,7 +262,7 @@ type StatusPatcherComposed[T ObjWithStatus] struct {
 // They are executed in given order all up until
 // some provides composed action flow control result. This means on Log() execution will continue to the next, but on Continue(),
 // RequeueAfter() and similar the handler execution will stop and no other successive handlers will be called.
-// The call replaces previouslt defined handlers. When called multiple times, only the last call is effective.
+// The call replaces previously defined handlers. When called multiple times, only the last call is effective.
 func (u *StatusPatcherComposed[T]) OnFailure(handlers ...StatusPatchErrorHandler) *StatusPatcherComposed[T] {
 	u.failureHandlers = handlers
 	return u
@@ -272,7 +272,7 @@ func (u *StatusPatcherComposed[T]) OnFailure(handlers ...StatusPatchErrorHandler
 // They are executed in given order all up until
 // some provides composed action flow control result. This means on Log() execution will continue to the next, but on Continue(),
 // RequeueAfter() and similar the handler execution will stop and no other successive handlers will be called.
-// The call replaces previouslt defined handlers. When called multiple times, only the last call is effective.
+// The call replaces previously defined handlers. When called multiple times, only the last call is effective.
 func (u *StatusPatcherComposed[T]) OnSuccess(handlers ...StatusPatchErrorHandler) *StatusPatcherComposed[T] {
 	u.successHandlers = handlers
 	return u
@@ -281,7 +281,7 @@ func (u *StatusPatcherComposed[T]) OnSuccess(handlers ...StatusPatchErrorHandler
 // OnStatusChanged sets handlers that will be called on successful patch but only if the status is changed - if resourceVersion
 // changed. They are all executed and do not affect the composed action flow control result, even if a handler returns one,
 // so only valid handlers are custom handlers, Log() and LogIf().
-// The call replaces previouslt defined handlers. When called multiple times, only the last call is effective.
+// The call replaces previously defined handlers. When called multiple times, only the last call is effective.
 func (u *StatusPatcherComposed[T]) OnStatusChanged(handlers ...StatusPatchErrorHandler) *StatusPatcherComposed[T] {
 	u.statusChangedHandlers = handlers
 	return u
