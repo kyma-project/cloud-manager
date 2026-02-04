@@ -77,8 +77,8 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 	const maxConcurrency = 10
 	semaphore := make(chan struct{}, maxConcurrency)
 
-	var foundKinds []string
-	var mu sync.Mutex
+	// Channel to collect found kinds without mutex contention
+	resultsCh := make(chan string, len(gvksToCheck))
 	var wg sync.WaitGroup
 
 	// Get the client once before spawning goroutines
@@ -86,7 +86,7 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 
 	for _, item := range gvksToCheck {
 		wg.Add(1)
-		go func(gvk, listGvk schema.GroupVersionKind) {
+		go func(gvk, listGvk schema.GroupVersionKind, scheme *runtime.Scheme) {
 			defer wg.Done()
 
 			// Acquire semaphore
@@ -136,13 +136,18 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 				return
 			}
 
-			mu.Lock()
-			foundKinds = append(foundKinds, gvk.Kind)
-			mu.Unlock()
-		}(item.gvk, item.listGvk)
+			resultsCh <- gvk.Kind
+		}(item.gvk, item.listGvk, scheme)
 	}
 
 	wg.Wait()
+	close(resultsCh)
+
+	// Collect results from channel
+	var foundKinds []string
+	for kind := range resultsCh {
+		foundKinds = append(foundKinds, kind)
+	}
 
 	// If context was cancelled, we may have incomplete results - requeue to try again
 	if ctx.Err() != nil {
