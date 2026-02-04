@@ -20,9 +20,13 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	var foundKinds []string
-	var mu sync.Mutex
-	var wg sync.WaitGroup
+	// Collect GVKs to check first (synchronous, fast in-memory operations)
+	type gvkToCheck struct {
+		gvk     schema.GroupVersionKind
+		listGvk schema.GroupVersionKind
+		listObj runtime.Object
+	}
+	var gvksToCheck []gvkToCheck
 
 	for gvk := range state.Cluster().Scheme().AllKnownTypes() {
 		if gvk.Group != cloudresourcesv1beta1.GroupVersion.Group {
@@ -57,13 +61,36 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 			continue
 		}
 
+		gvksToCheck = append(gvksToCheck, gvkToCheck{gvk: gvk, listGvk: listGvk, listObj: listObj})
+	}
+
+	// Limit concurrent API calls to avoid overwhelming the API server
+	const maxConcurrency = 10
+	semaphore := make(chan struct{}, maxConcurrency)
+
+	var foundKinds []string
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	// Get the client once before spawning goroutines
+	k8sClient := state.Cluster().K8sClient()
+
+	for _, item := range gvksToCheck {
 		wg.Add(1)
 		go func(gvk, listGvk schema.GroupVersionKind, listObj runtime.Object) {
 			defer wg.Done()
 
+			// Acquire semaphore
+			select {
+			case semaphore <- struct{}{}:
+				defer func() { <-semaphore }()
+			case <-ctx.Done():
+				return
+			}
+
 			list := listObj.(client.ObjectList)
 
-			err := state.Cluster().K8sClient().List(ctx, list)
+			err := k8sClient.List(ctx, list)
 			if meta.IsNoMatchError(err) {
 				// this CRD is not installed
 				return
@@ -86,7 +113,7 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 			mu.Lock()
 			foundKinds = append(foundKinds, gvk.Kind)
 			mu.Unlock()
-		}(gvk, listGvk, listObj)
+		}(item.gvk, item.listGvk, item.listObj)
 	}
 
 	wg.Wait()
