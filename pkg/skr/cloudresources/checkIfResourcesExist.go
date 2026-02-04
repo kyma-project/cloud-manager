@@ -24,11 +24,12 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 	type gvkToCheck struct {
 		gvk     schema.GroupVersionKind
 		listGvk schema.GroupVersionKind
-		listObj runtime.Object
 	}
 	var gvksToCheck []gvkToCheck
 
-	for gvk := range state.Cluster().Scheme().AllKnownTypes() {
+	scheme := state.Cluster().Scheme()
+
+	for gvk := range scheme.AllKnownTypes() {
 		if gvk.Group != cloudresourcesv1beta1.GroupVersion.Group {
 			continue
 		}
@@ -44,10 +45,12 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 			Version: gvk.Version,
 			Kind:    gvk.Kind + "List",
 		}
-		if !state.Cluster().Scheme().Recognizes(listGvk) {
+		if !scheme.Recognizes(listGvk) {
 			continue
 		}
-		listObj, err := state.Cluster().Scheme().New(listGvk)
+
+		// Validate that we can create a list object and it implements client.ObjectList
+		listObj, err := scheme.New(listGvk)
 		if runtime.IsNotRegisteredError(err) {
 			continue
 		}
@@ -60,8 +63,14 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 				Error(err, "Error instantiating GVK list object")
 			continue
 		}
+		if _, ok := listObj.(client.ObjectList); !ok {
+			logger.
+				WithValues("gvk", listGvk.String()).
+				Info("List object does not implement client.ObjectList")
+			continue
+		}
 
-		gvksToCheck = append(gvksToCheck, gvkToCheck{gvk: gvk, listGvk: listGvk, listObj: listObj})
+		gvksToCheck = append(gvksToCheck, gvkToCheck{gvk: gvk, listGvk: listGvk})
 	}
 
 	// Limit concurrent API calls to avoid overwhelming the API server
@@ -77,7 +86,7 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 
 	for _, item := range gvksToCheck {
 		wg.Add(1)
-		go func(gvk, listGvk schema.GroupVersionKind, listObj runtime.Object) {
+		go func(gvk, listGvk schema.GroupVersionKind) {
 			defer wg.Done()
 
 			// Acquire semaphore
@@ -88,15 +97,20 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 				return
 			}
 
-			list, ok := listObj.(client.ObjectList)
-			if !ok {
+			// Create a fresh list object for this goroutine
+			listObj, err := scheme.New(listGvk)
+			if err != nil {
 				logger.
-					WithValues("gvk", listGvk.String()).
-					Info("List object does not implement client.ObjectList")
+					WithValues(
+						"errorType", fmt.Sprintf("%T", err),
+						"gvk", listGvk.String(),
+					).
+					Error(err, "Error creating list object in goroutine")
 				return
 			}
+			list := listObj.(client.ObjectList) // Safe: validated during gvksToCheck build
 
-			err := k8sClient.List(ctx, list)
+			err = k8sClient.List(ctx, list)
 			if meta.IsNoMatchError(err) {
 				// this CRD is not installed
 				return
@@ -119,7 +133,7 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 			mu.Lock()
 			foundKinds = append(foundKinds, gvk.Kind)
 			mu.Unlock()
-		}(item.gvk, item.listGvk, item.listObj)
+		}(item.gvk, item.listGvk)
 	}
 
 	wg.Wait()
