@@ -57,7 +57,7 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 		if err != nil {
 			logger.
 				WithValues(
-					"errorType", fmt.Errorf("%T", err),
+					"errorType", fmt.Sprintf("%T", err),
 					"gvk", listGvk.String(),
 				).
 				Error(err, "Error instantiating GVK list object")
@@ -92,10 +92,10 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 			// Acquire semaphore
 			select {
 			case semaphore <- struct{}{}:
-				defer func() { <-semaphore }()
 			case <-ctx.Done():
 				return
 			}
+			defer func() { <-semaphore }()
 
 			// Create a fresh list object for this goroutine
 			listObj, err := scheme.New(listGvk)
@@ -108,7 +108,13 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 					Error(err, "Error creating list object in goroutine")
 				return
 			}
-			list := listObj.(client.ObjectList) // Safe: validated during gvksToCheck build
+			list, ok := listObj.(client.ObjectList)
+			if !ok {
+				logger.
+					WithValues("gvk", listGvk.String()).
+					Info("List object does not implement client.ObjectList")
+				return
+			}
 
 			err = k8sClient.List(ctx, list)
 			if meta.IsNoMatchError(err) {
