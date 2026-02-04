@@ -3,6 +3,9 @@ package cloudresources
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -11,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 func checkIfResourcesExist(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,6 +21,8 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 	logger := composed.LoggerFromCtx(ctx)
 
 	var foundKinds []string
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 
 	for gvk := range state.Cluster().Scheme().AllKnownTypes() {
 		if gvk.Group != cloudresourcesv1beta1.GroupVersion.Group {
@@ -52,30 +56,40 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 				Error(err, "Error instantiating GVK list object")
 			continue
 		}
-		list := listObj.(client.ObjectList)
 
-		err = state.Cluster().K8sClient().List(ctx, list)
-		if meta.IsNoMatchError(err) {
-			// this CRD is not installed
-			continue
-		}
-		if err != nil {
-			logger.
-				WithValues(
-					"errorType", fmt.Sprintf("%T", err),
-					"gvk", gvk.String(),
-					"listGvk", listGvk.String(),
-				).
-				Error(err, "Error listing GVK")
-			continue
-		}
+		wg.Add(1)
+		go func(gvk, listGvk schema.GroupVersionKind, listObj runtime.Object) {
+			defer wg.Done()
 
-		if meta.LenList(list) == 0 {
-			continue
-		}
+			list := listObj.(client.ObjectList)
 
-		foundKinds = append(foundKinds, gvk.Kind)
+			err := state.Cluster().K8sClient().List(ctx, list)
+			if meta.IsNoMatchError(err) {
+				// this CRD is not installed
+				return
+			}
+			if err != nil {
+				logger.
+					WithValues(
+						"errorType", fmt.Sprintf("%T", err),
+						"gvk", gvk.String(),
+						"listGvk", listGvk.String(),
+					).
+					Error(err, "Error listing GVK")
+				return
+			}
+
+			if meta.LenList(list) == 0 {
+				return
+			}
+
+			mu.Lock()
+			foundKinds = append(foundKinds, gvk.Kind)
+			mu.Unlock()
+		}(gvk, listGvk, listObj)
 	}
+
+	wg.Wait()
 
 	if len(foundKinds) == 0 {
 		return nil, nil
