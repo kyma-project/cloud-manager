@@ -3,6 +3,7 @@ package cloudresources
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -148,6 +149,9 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 	for kind := range resultsCh {
 		foundKinds = append(foundKinds, kind)
 	}
+
+	// Sort for deterministic error messages and easier testing
+	sort.Strings(foundKinds)
 
 	// If context was cancelled, we may have incomplete results - requeue to try again
 	if ctx.Err() != nil {
