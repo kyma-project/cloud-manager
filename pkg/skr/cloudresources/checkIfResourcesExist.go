@@ -88,7 +88,13 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 				return
 			}
 
-			list := listObj.(client.ObjectList)
+			list, ok := listObj.(client.ObjectList)
+			if !ok {
+				logger.
+					WithValues("gvk", listGvk.String()).
+					Info("List object does not implement client.ObjectList")
+				return
+			}
 
 			err := k8sClient.List(ctx, list)
 			if meta.IsNoMatchError(err) {
@@ -117,6 +123,11 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 	}
 
 	wg.Wait()
+
+	// If context was cancelled, we may have incomplete results - requeue to try again
+	if ctx.Err() != nil {
+		return composed.StopWithRequeue, ctx
+	}
 
 	if len(foundKinds) == 0 {
 		return nil, nil
