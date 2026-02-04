@@ -203,6 +203,9 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 			Storage: &gardeneraws.Storage{
 				ManagedDefaultClass: ptr.To(true),
 			},
+			LoadBalancerController: &gardeneraws.LoadBalancerControllerConfig{
+				Enabled: true,
+			},
 		}
 	case "azure":
 		nodesRange := cidr.ParseNoError(rt.Spec.Shoot.Networking.Nodes)
