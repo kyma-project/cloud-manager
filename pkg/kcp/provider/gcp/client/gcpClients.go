@@ -257,6 +257,16 @@ func (c *GcpClients) Close() error {
 	return reflectingClose(c)
 }
 
+// RoutersWrapped is supposed to replace usage of field ComputeRouters after the refactoring
+func (c *GcpClients) RoutersWrapped() RoutersClient {
+	return &routersClient{inner: c.ComputeRouters}
+}
+
+// AddressesWrapped is supposed to replace usage of field ComputeAddresses after the refactoring
+func (c *GcpClients) AddressesWrapped() AddressesClient {
+	return &addressesClient{inner: c.ComputeAddresses}
+}
+
 func (c *VpcPeeringClients) Close() error {
 	return reflectingClose(c)
 }
