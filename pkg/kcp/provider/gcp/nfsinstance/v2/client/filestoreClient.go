@@ -157,7 +157,6 @@ func (c *filestoreClient) GetOperation(ctx context.Context, operationName string
 	}
 
 	op, err := c.cloudFilestoreManager.LROClient.GetOperation(ctx, req)
-	gcpclient.IncrementCallCounter("Filestore", "GetOperation", "", err)
 
 	if err != nil {
 		logger.Error(err, "Failed to get operation",
