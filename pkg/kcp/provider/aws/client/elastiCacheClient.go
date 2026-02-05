@@ -213,7 +213,7 @@ func (c *elastiCacheClient) DeleteElastiCacheParameterGroup(ctx context.Context,
 
 func (c *elastiCacheClient) DescribeElastiCacheParameters(ctx context.Context, groupName string) ([]elasticachetypes.Parameter, error) {
 	result := []elasticachetypes.Parameter{}
-	var marker *string = nil
+	var marker *string
 	for {
 		out, err := c.elastiCacheSvc.DescribeCacheParameters(ctx, &elasticache.DescribeCacheParametersInput{
 			CacheParameterGroupName: ptr.To(groupName),
@@ -264,7 +264,7 @@ func (c *elastiCacheClient) DescribeEngineDefaultParameters(ctx context.Context,
 	}
 
 	result := []elasticachetypes.Parameter{}
-	var marker *string = nil
+	var marker *string
 	for {
 		out, err := c.elastiCacheSvc.DescribeEngineDefaultParameters(ctx, &elasticache.DescribeEngineDefaultParametersInput{
 			CacheParameterGroupFamily: ptr.To(family),
