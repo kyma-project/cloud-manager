@@ -167,7 +167,11 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		return nil, fmt.Errorf("failed to create filestore token provider: %w", err)
 	}
 	filestoreTokenSource := oauth2adapt.TokenSourceFromTokenProvider(filestoreTokenProvider)
-	filestoreClient, err := filestore.NewCloudFilestoreManagerClient(ctx, option.WithTokenSource(filestoreTokenSource))
+	filestoreDialOpts := []option.ClientOption{
+		option.WithTokenSource(filestoreTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor())),
+	}
+	filestoreClient, err := filestore.NewCloudFilestoreManagerClient(ctx, filestoreDialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("create filestore client: %w", err)
 	}
