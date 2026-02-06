@@ -51,7 +51,12 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
+	
+	// Configure restore to overwrite existing files in place
+	// Setting newFileSystem=false with file-system-path=/ forces root directory restore
 	restoreMetadataOut.RestoreMetadata["newFileSystem"] = "false"
+	restoreMetadataOut.RestoreMetadata["file-system-path"] = "/"
+	restoreMetadataOut.RestoreMetadata["ItemsToRestore"] = "/"
 
 	//Create a Restore Job
 	restoreJobOutput, err := state.awsClient.StartRestoreJob(ctx, &client.StartRestoreJobInput{
