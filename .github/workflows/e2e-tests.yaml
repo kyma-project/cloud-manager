@@ -21,6 +21,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      AWS_ROLE_NAME: ${{ vars.AWS_ROLE_NAME }}
+      AWS_PEERING_ROLE_NAME: ${{ vars.AWS_PEERING_ROLE_NAME }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
