@@ -21,4 +21,3 @@ type routersClient struct {
 func (c *routersClient) ListRouters(ctx context.Context, req *computepb.ListRoutersRequest, opts ...gax.CallOption) IteratorWithAll[*computepb.Router] {
 	return c.inner.List(ctx, req, opts...)
 }
-

@@ -10,7 +10,8 @@ import (
 
 type FilestoreClient interface {
 	GetFilestoreInstance(ctx context.Context, req *filestorepb.GetInstanceRequest, opts ...gax.CallOption) (*filestorepb.Instance, error)
-	CreateFilestoreInstance(ctx context.Context, req *filestorepb.CreateInstanceRequest, opts ...gax.CallOption)
+	CreateFilestoreInstance(ctx context.Context, req *filestorepb.CreateInstanceRequest, opts ...gax.CallOption) (Operation[*filestorepb.Instance], error)
+	UpdateFilestoreInstance(ctx context.Context, req *filestorepb.UpdateInstanceRequest, opts ...gax.CallOption) (Operation[*filestorepb.Instance], error)
 }
 
 var _ FilestoreClient = (*filestoreClient)(nil)
@@ -23,6 +24,10 @@ func (c *filestoreClient) GetFilestoreInstance(ctx context.Context, req *filesto
 	return c.inner.GetInstance(ctx, req, opts...)
 }
 
-func (c *filestoreClient) CreateFilestoreInstance(ctx context.Context, req *filestorepb.CreateInstanceRequest, opts ...gax.CallOption) {
-	op, err := c.inner.CreateInstance(ctx, req, opts...)
+func (c *filestoreClient) CreateFilestoreInstance(ctx context.Context, req *filestorepb.CreateInstanceRequest, opts ...gax.CallOption) (Operation[*filestorepb.Instance], error) {
+	return c.inner.CreateInstance(ctx, req, opts...)
+}
+
+func (c *filestoreClient) UpdateFilestoreInstance(ctx context.Context, req *filestorepb.UpdateInstanceRequest, opts ...gax.CallOption) (Operation[*filestorepb.Instance], error) {
+	return c.inner.UpdateInstance(ctx, req, opts...)
 }

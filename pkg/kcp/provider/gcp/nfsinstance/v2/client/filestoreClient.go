@@ -10,7 +10,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/metrics"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
