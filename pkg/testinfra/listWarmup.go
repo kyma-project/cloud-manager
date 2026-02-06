@@ -12,7 +12,7 @@ import (
 func WarmupList(ctx context.Context, group string, skipKinds []string, c client.Reader, scheme *runtime.Scheme) {
 	arrList := util.AllListsInGroup(group, skipKinds, scheme)
 
-	worker := func(i int, ctx context.Context, jobs <-chan client.ObjectList, wg *sync.WaitGroup) {
+	worker := func(ctx context.Context, jobs <-chan client.ObjectList, wg *sync.WaitGroup) {
 		defer func() {
 			wg.Done()
 		}()
@@ -34,7 +34,7 @@ func WarmupList(ctx context.Context, group string, skipKinds []string, c client.
 
 	wg.Add(workerCount)
 	for i := 0; i < workerCount; i++ {
-		go worker(i, ctx, jobs, &wg)
+		go worker(ctx, jobs, &wg)
 	}
 
 	for _, list := range arrList {
