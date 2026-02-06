@@ -21,9 +21,9 @@ import (
 	"os"
 	"testing"
 
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -78,6 +78,8 @@ var _ = BeforeSuite(func() {
 
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
+
+	testinfra.WarmupList(infra.Ctx(), cloudresourcesv1beta1.GroupVersion.Group, []string{"CloudResources"}, infra.SKR().Client(), infra.SKR().Scheme())
 })
 
 var _ = AfterSuite(func() {
