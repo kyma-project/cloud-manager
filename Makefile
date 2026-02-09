@@ -5,6 +5,11 @@ IMG ?= controller:latest
 ENVTEST_K8S_VERSION = 1.34.1
 JV_VERSION = v0.5.0
 
+# TEST_PATH: optional target path for tests.
+# Usage: make test pkg/kcp/provider/gcp
+# When provided, targets ./{path}/... otherwise defaults to ./...
+TEST_PATH ?=
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -87,7 +92,7 @@ test-ff: jv download-flag-schema
 
 .PHONY: test
 test: manifests generate fmt vet envtest test-ff build_ui ## Run tests.
-	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" GOFIPS140=v1.0.0 go test ./... -test.v -v -coverprofile cover.out
+	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" GOFIPS140=v1.0.0 go test $(if $(TEST_PATH),./$(TEST_PATH)/...,./...) -test.v -v -coverprofile cover.out
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
 GOLANGCI_LINT_VERSION ?= v1.54.2
