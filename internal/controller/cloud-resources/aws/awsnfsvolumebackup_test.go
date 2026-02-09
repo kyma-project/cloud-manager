@@ -1,10 +1,13 @@
 package aws
 
 import (
+	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
 	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
+	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -122,6 +125,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 		skrAwsNfsVolumeName := suffix
 		nfsInstanceName := suffix
 		backupName := suffix
+		var recoveryPointArn string
 
 		scope := &cloudcontrolv1beta1.Scope{}
 		skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
@@ -207,6 +211,8 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 					AssertAwsNfsVolumeBackupHasLocation(scope.Spec.Region),
 				).
 				Should(Succeed())
+
+			recoveryPointArn = awsNfsVolumeBackup.Status.Id
 		})
 
 		By("When SKR AwsNfsVolumeBackup Delete is called", func() {
@@ -229,6 +235,28 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup).
 				Should(Succeed())
+		})
+
+		By("And Then the backup is deleted from AWS cloud provider (mock)", func() {
+			// Verify the recovery point no longer exists in the mock
+			mockClient, err := awsnfsvolumebackupclient.NewMockClient()(
+				infra.Ctx(),
+				awsAccountId,
+				scope.Spec.Region,
+				"", "", "", // credentials not needed for mock
+			)
+			Expect(err).NotTo(HaveOccurred())
+
+			vaultName := fmt.Sprintf("cm-%s", skrAwsNfsVolumeName)
+
+			_, err = mockClient.DescribeRecoveryPoint(
+				infra.Ctx(),
+				awsAccountId,
+				vaultName,
+				recoveryPointArn,
+			)
+			Expect(err).To(HaveOccurred(), "Expected recovery point to be deleted from cloud provider")
+			Expect(mockClient.IsNotFound(err)).To(BeTrue(), "Expected ResourceNotFoundException, got: %v", err)
 		})
 	})
 
@@ -340,6 +368,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 		nfsInstanceName := suffix
 		backupName := suffix
 		awsNfsVolumeBackupLocation := "us-west-1"
+		var recoveryPointArn string
 
 		scope := &cloudcontrolv1beta1.Scope{}
 		skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
@@ -426,6 +455,8 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 					AssertAwsNfsVolumeBackupHasLocation(awsNfsVolumeBackupLocation),
 				).
 				Should(Succeed())
+
+			recoveryPointArn = awsNfsVolumeBackup.Status.Id
 		})
 
 		By("When SKR AwsNfsVolumeBackup Delete is called", func() {
@@ -448,6 +479,21 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolumeBackup).
 				Should(Succeed())
+		})
+
+		By("And Then the backup is deleted from AWS cloud provider (mock)", func() {
+			mockClient, err := awsnfsvolumebackupclient.NewMockClient()(
+				infra.Ctx(), awsAccountId, awsNfsVolumeBackupLocation, "", "", "")
+			Expect(err).NotTo(HaveOccurred())
+
+			vaultName := fmt.Sprintf("cm-%s", skrAwsNfsVolumeName)
+
+			_, err = mockClient.DescribeRecoveryPoint(
+				infra.Ctx(), awsAccountId,
+				vaultName,
+				recoveryPointArn)
+			Expect(err).To(HaveOccurred())
+			Expect(mockClient.IsNotFound(err)).To(BeTrue())
 		})
 	})
 })
