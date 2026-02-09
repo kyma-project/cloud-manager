@@ -62,7 +62,7 @@ require (
 	github.com/rodaine/table v1.3.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	github.com/thomaspoignant/go-feature-flag v1.50.0
+	github.com/thomaspoignant/go-feature-flag v1.51.0
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.1
@@ -152,8 +152,7 @@ require (
 	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/thomaspoignant/go-feature-flag/modules/core v0.3.1 // indirect
-	github.com/thomaspoignant/go-feature-flag/modules/evaluation v0.2.1 // indirect
+	github.com/thomaspoignant/go-feature-flag/modules/core v0.5.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
