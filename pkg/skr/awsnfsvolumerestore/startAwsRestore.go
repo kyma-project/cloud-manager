@@ -3,6 +3,7 @@ package awsnfsvolumerestore
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -62,7 +63,14 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 		RestoreMetadata:  restoreMetadataOut.RestoreMetadata,
 	})
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error starting AWS Restore ", composed.StopWithRequeueDelay(time.Second), ctx)
+		// If idempotency token was already used, the job likely exists but we lost the JobId
+		// This can happen if status patch failed after StartRestoreJob succeeded
+		// Skip with longer requeue delay to let checkRestoreJob handle it
+		if strings.Contains(err.Error(), "Idempotency token already used") {
+			logger.Info("Idempotency token already used - restore job may exist, will check status on next reconcile")
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		}
+		return composed.LogErrorAndReturn(err, "Error starting AWS Restore", composed.StopWithRequeueDelay(time.Second), ctx)
 	}
 	//Update the status with details.
 	restore.Status.JobId = ptr.Deref(restoreJobOutput.RestoreJobId, "")
