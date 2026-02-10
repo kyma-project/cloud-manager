@@ -67,10 +67,15 @@ Feature: AWS NfsVolume feature
 
     # AWS Backup restores to a timestamped subdirectory (aws-backup-restore_*), not in-place
     # Per AWS documentation, file system should have minimal activity during restore
-    # Original file remains unchanged - restored files are in separate restore directory
+    # Original file at root remains unchanged with current content
     And PVC "pvc" file operations succeed:
       | Operation | Path     | Content      |
       | Contains  | test.txt | second value |
+    
+    # Restored content from backup is in the restore subdirectory
+    And PVC "pvc" file operations succeed:
+      | Operation | Path                          | Content     |
+      | Contains  | aws-backup-restore_*/test.txt | first value |
 
     When resource "schedule" is created:
       """

@@ -33,11 +33,18 @@ func FileExistsOperation(path string) FileOperationFunc {
 func FileContainsOperation(path, content string) FileOperationFunc {
 	path = strings.TrimPrefix(path, "/")
 	return func(rootDir string) []string {
+		var fileAssignment string
+		if strings.Contains(path, "*") {
+			fileAssignment = fmt.Sprintf(`FILE=$(ls %s/%s 2>/dev/null | head -n1)`, rootDir, path)
+		} else {
+			fileAssignment = fmt.Sprintf(`FILE=%s/%s`, rootDir, path)
+		}
+
 		return []string{
 			``,
 			`# FileContainsOperation`,
 			fmt.Sprintf(`mkdir -p %s`, rootDir),
-			fmt.Sprintf(`FILE=%s/%s`, rootDir, path),
+			fileAssignment,
 			fmt.Sprintf(`DIR=%s`, rootDir),
 			fmt.Sprintf(`CONTENT="%s"`, content),
 			`if ! grep "$CONTENT" "$FILE"; then`,
