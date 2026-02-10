@@ -57,6 +57,21 @@ func (m *mockClient) DescribeRestoreJob(_ context.Context, restoreJobId string) 
 	}
 }
 
+func (m *mockClient) ListRestoreJobsByRecoveryPoint(_ context.Context, recoveryPointArn string) ([]backuptypes.RestoreJobsListMember, error) {
+	var jobs []backuptypes.RestoreJobsListMember
+	for _, job := range m.restoreJobs {
+		if ptr.Deref(job.RecoveryPointArn, "") == recoveryPointArn {
+			jobs = append(jobs, backuptypes.RestoreJobsListMember{
+				RestoreJobId:     job.RestoreJobId,
+				RecoveryPointArn: job.RecoveryPointArn,
+				CreationDate:     job.CreationDate,
+				Status:           job.Status,
+			})
+		}
+	}
+	return jobs, nil
+}
+
 func (m *mockClient) GetRecoveryPointRestoreMetadata(_ context.Context, _, backupVaultName, recoveryPointArn string) (*backup.GetRecoveryPointRestoreMetadataOutput, error) {
 	return &backup.GetRecoveryPointRestoreMetadataOutput{
 		BackupVaultArn:   ptr.To(backupVaultName),
