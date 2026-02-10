@@ -60,7 +60,7 @@ jobs:
         run: |
           echo $KUBECONFIG
           ls -la ./tmp
-          RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "@skr && @$PROVIDER"
+          RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "@skr && @$PROVIDER && nfs"
       - name: Delete shared instance
         if: always()
         env:
