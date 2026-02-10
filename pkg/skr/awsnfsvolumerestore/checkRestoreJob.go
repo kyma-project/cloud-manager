@@ -23,9 +23,9 @@ func checkRestoreJob(ctx context.Context, st composed.State) (error, context.Con
 	restoreJobOutput, err := state.awsClient.DescribeRestoreJob(ctx, restore.Status.JobId)
 
 	if err != nil && !state.awsClient.IsNotFound(err) {
-		// As we have idempotency token, we can safely reset and retry
-		restore.Status.JobId = ""
-		return composed.LogErrorAndReturn(err, "Error loading AWS restore Job", composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx)
+		// Don't reset JobId - retry with exponential backoff
+		// The job exists in AWS, we just can't describe it right now
+		return composed.LogErrorAndReturn(err, "Error loading AWS restore Job", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 
 	if err != nil {
