@@ -3,6 +3,8 @@ package awsnfsvolumerestore
 import (
 	"context"
 	"fmt"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -10,7 +12,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func startAwsRestore(ctx context.Context, st composed.State) (error, context.Context) {
@@ -51,12 +52,6 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
-	
-	// Configure restore to overwrite existing files in place
-	// Setting newFileSystem=false with file-system-path=/ forces root directory restore
-	restoreMetadataOut.RestoreMetadata["newFileSystem"] = "false"
-	restoreMetadataOut.RestoreMetadata["file-system-path"] = "/"
-	restoreMetadataOut.RestoreMetadata["ItemsToRestore"] = "/"
 
 	//Create a Restore Job
 	restoreJobOutput, err := state.awsClient.StartRestoreJob(ctx, &client.StartRestoreJobInput{
