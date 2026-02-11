@@ -54,6 +54,37 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 
+	// Log the metadata we received from AWS
+	logger.Info("Restore metadata from AWS", "metadata", restoreMetadataOut.RestoreMetadata)
+
+	// AWS returns metadata that may include parameters for creating a NEW filesystem
+	// We need to restore to the EXISTING filesystem, so set both file-system-id and newFileSystem
+	// References: https://docs.aws.amazon.com/aws-backup/latest/devguide/restoring-efs.html
+	fileSystemId := state.GetFileSystemId()
+	if fileSystemId == "" {
+		restore.Status.State = cloudresourcesv1beta1.JobStateError
+		return composed.PatchStatus(restore).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ConditionTypeError,
+				Message: "Cannot determine EFS filesystem ID from NFS volume",
+			}).
+			SuccessLogMsg("Missing filesystem ID").
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	}
+
+	// Set metadata to restore to existing filesystem
+	// newFileSystem=false tells AWS to restore to existing EFS
+	// AWS Backup will restore to a timestamped subdirectory by default
+	restoreMetadataOut.RestoreMetadata = map[string]string{
+		"file-system-id": fileSystemId,
+		"newFileSystem":  "false",
+	}
+
+	logger.Info("Modified restore metadata for existing filesystem", "metadata", restoreMetadataOut.RestoreMetadata, "fileSystemId", fileSystemId)
+
 	//Create a Restore Job
 	restoreJobOutput, err := state.awsClient.StartRestoreJob(ctx, &client.StartRestoreJobInput{
 		BackupVaultName:  state.GetVaultName(),

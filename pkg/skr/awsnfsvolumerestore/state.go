@@ -2,6 +2,7 @@ package awsnfsvolumerestore
 
 import (
 	"fmt"
+	"strings"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -75,4 +76,23 @@ func (s *State) GetBackupRoleArn() string {
 
 func (s *State) GetVaultName() string {
 	return fmt.Sprintf("cm-%s", s.Scope().Name)
+}
+
+func (s *State) GetFileSystemId() string {
+	if s.skrAwsNfsVolume == nil {
+		return ""
+	}
+	// The AwsNfsVolume.Status.Server contains the EFS filesystem DNS name
+	// Format: fs-<id>.efs.<region>.amazonaws.com
+	// Extract the filesystem ID (fs-<id>)
+	server := s.skrAwsNfsVolume.Status.Server
+	if server == "" {
+		return ""
+	}
+	// Extract "fs-xxxxx" from "fs-xxxxx.efs.region.amazonaws.com"
+	parts := strings.Split(server, ".")
+	if len(parts) > 0 {
+		return parts[0]
+	}
+	return ""
 }

@@ -62,14 +62,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 		})
 
 		By("And Given AwsNfsVolume has Ready condition", func() {
-			Eventually(UpdateStatus).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume,
-					WithConditions(SkrReadyCondition()),
-				).
-				Should(Succeed())
-		})
-
-		By("And Given SKR AwsNfsVolumeBackup exists", func() {
+			//Update SKR AwsNfsVolume status to Ready with Server field
 			Eventually(GivenAwsNfsVolumeBackupExists).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolumeBackup,
 					WithName(skrAwsNfsVolumeBackupName),
