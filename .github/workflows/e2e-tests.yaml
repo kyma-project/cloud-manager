@@ -61,12 +61,17 @@ jobs:
           echo $KUBECONFIG
           ls -la ./tmp
           RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "@skr && @$PROVIDER"
+      - name: Grace period for resources to settle
+        if: always()
+        run: |
+          echo "Waiting 10 minutes for resources to finish provisioning before cleanup..."
+          sleep 600
       - name: Delete shared instance
         if: always()
         env:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
-          go run ./e2e/cmd instance delete -a shared-$PROVIDER -t 30m -w
+          go run ./e2e/cmd instance delete -a shared-$PROVIDER -t 60m -w
       - name: Destroy E2E environment
         if: always()
         uses: ./.github/actions/e2e-destroy
