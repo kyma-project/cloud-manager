@@ -27,7 +27,11 @@ module "m" {
 {{- end }}
 
 {{- range $key, $value := .Module.Variables }}
+  {{- if needsQuotes $value }}
   {{ $key }} = "{{ $value }}"
+  {{- else }}
+  {{ $key }} = {{ $value }}
+  {{- end }}
 {{- end }}
 }
 

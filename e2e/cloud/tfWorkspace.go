@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -118,13 +119,33 @@ func (w *tfWorkspace) Out() string {
 	return w.out
 }
 
+func needsQuotes(value string) bool {
+	if value == "true" || value == "false" {
+		return false
+	}
+
+	if matched, _ := regexp.MatchString(`^-?\d+(\.\d+)?$`, value); matched {
+		return false
+	}
+
+	if strings.HasPrefix(value, "[") || strings.HasPrefix(value, "{") {
+		return false
+	}
+
+	return true
+}
+
 func (w *tfWorkspace) Create() error {
 	txt, err := fs.ReadFile("tf.tf")
 	if err != nil {
 		return fmt.Errorf("could not read embedded .tf file: %w", err)
 	}
 
-	tpl := template.Must(template.New("tf.tf").Parse(string(txt)))
+	funcMap := template.FuncMap{
+		"needsQuotes": needsQuotes,
+	}
+
+	tpl := template.Must(template.New("tf.tf").Funcs(funcMap).Parse(string(txt)))
 	buf := new(bytes.Buffer)
 	err = tpl.Execute(buf, w.data)
 	if err != nil {
