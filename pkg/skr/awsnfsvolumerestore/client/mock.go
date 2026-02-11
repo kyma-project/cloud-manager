@@ -62,8 +62,11 @@ func (m *mockClient) GetRecoveryPointRestoreMetadata(_ context.Context, _, backu
 	return &backup.GetRecoveryPointRestoreMetadataOutput{
 		BackupVaultArn:   ptr.To(backupVaultName),
 		RecoveryPointArn: ptr.To(recoveryPointArn),
-		RestoreMetadata:  map[string]string{},
-		ResourceType:     ptr.To("EFS"),
+		RestoreMetadata: map[string]string{
+			"file-system-id":  "fs-mock-12345",
+			"PerformanceMode": "generalPurpose",
+		},
+		ResourceType: ptr.To("EFS"),
 	}, nil
 }
 
