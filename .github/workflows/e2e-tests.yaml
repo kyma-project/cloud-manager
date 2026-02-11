@@ -34,7 +34,7 @@ jobs:
           gardener_kubeconfig: ${{ secrets.GARDENER_KUBECONFIG }}
           oidc_client_id: ${{ vars.OIDC_CLIENT_ID }}
           oidc_issuer_url: ${{ vars.OIDC_ISSUER_URL }}
-          feature_flag_file: ${{ inputs.feature_flags }}
+          feature_flag_file: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
       - name: Set provider env var
         run: |
           PROVIDER=${{ inputs.provider }}
