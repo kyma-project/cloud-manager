@@ -64,11 +64,12 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 		})
 		By("And Given AwsNfsVolume is in Ready state", func() {
 
-			//Update SKR AwsNfsVolume status to Ready
+			//Update SKR AwsNfsVolume status to Ready with Server field
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume,
 					WithConditions(SkrReadyCondition()),
+					WithAwsNfsVolumeStatusServer("fs-mock-12345.efs.eu-west-1.amazonaws.com"),
 				).
 				Should(Succeed())
 		})
