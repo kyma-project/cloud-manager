@@ -3,13 +3,14 @@ package client
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 var (
@@ -55,21 +56,6 @@ func (m *mockClient) DescribeRestoreJob(_ context.Context, restoreJobId string) 
 	return nil, &backuptypes.ResourceNotFoundException{
 		Message: ptr.To("BackupJob not found"),
 	}
-}
-
-func (m *mockClient) ListRestoreJobsByRecoveryPoint(_ context.Context, recoveryPointArn string) ([]backuptypes.RestoreJobsListMember, error) {
-	var jobs []backuptypes.RestoreJobsListMember
-	for _, job := range m.restoreJobs {
-		if ptr.Deref(job.RecoveryPointArn, "") == recoveryPointArn {
-			jobs = append(jobs, backuptypes.RestoreJobsListMember{
-				RestoreJobId:     job.RestoreJobId,
-				RecoveryPointArn: job.RecoveryPointArn,
-				CreationDate:     job.CreationDate,
-				Status:           job.Status,
-			})
-		}
-	}
-	return jobs, nil
 }
 
 func (m *mockClient) GetRecoveryPointRestoreMetadata(_ context.Context, _, backupVaultName, recoveryPointArn string) (*backup.GetRecoveryPointRestoreMetadataOutput, error) {

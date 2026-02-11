@@ -63,35 +63,21 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 		RestoreMetadata:  restoreMetadataOut.RestoreMetadata,
 	})
 	if err != nil {
-		// If idempotency token was already used, the job likely exists but we lost the JobId
-		// This can happen if status patch failed after StartRestoreJob succeeded
-		// Try to find the existing restore job by recovery point ARN
+		// If idempotency token was already used, the restore job was created but we lost the JobId
+		// (e.g., pod crashed after StartRestoreJob but before status patch succeeded)
+		// We cannot recover the JobId without ListRestoreJobs permission, so we'll fail
+		// and require manual cleanup or CR recreation
 		if strings.Contains(err.Error(), "Idempotency token already used") {
-			logger.Info("Idempotency token already used - searching for existing restore job")
-
-			jobs, listErr := state.awsClient.ListRestoreJobsByRecoveryPoint(ctx, state.GetRecoveryPointArn())
-			if listErr != nil {
-				return composed.LogErrorAndReturn(listErr, "Error listing restore jobs", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
-			}
-
-			// Find the most recent restore job (should be ours)
-			if len(jobs) == 0 {
-				logger.Info("No restore jobs found for recovery point, will retry")
-				return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
-			}
-
-			// Use the most recent job (first in the list)
-			jobId := ptr.Deref(jobs[0].RestoreJobId, "")
-			if jobId == "" {
-				return composed.LogErrorAndReturn(fmt.Errorf("found restore job but JobId is empty"), "Invalid restore job", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
-			}
-
-			logger.Info("Found existing restore job", "jobId", jobId)
-			restore.Status.JobId = jobId
-			restore.Status.State = cloudresourcesv1beta1.JobStateInProgress
+			restore.Status.State = cloudresourcesv1beta1.JobStateError
 			return composed.PatchStatus(restore).
-				SetExclusiveConditions().
-				SuccessError(composed.StopWithRequeueDelay(util.Timing.T1000ms())).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudresourcesv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudcontrolv1beta1.ConditionTypeError,
+					Message: "Idempotency token collision detected - restore job exists in AWS but JobId was lost. Please delete this CR and create a new one.",
+				}).
+				SuccessLogMsg("Idempotency token collision - cannot recover JobId").
+				SuccessError(composed.StopAndForget).
 				Run(ctx, state)
 		}
 		return composed.LogErrorAndReturn(err, "Error starting AWS Restore", composed.StopWithRequeueDelay(time.Second), ctx)

@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
@@ -19,7 +18,6 @@ type Client interface {
 	LocalClient
 	StartRestoreJob(ctx context.Context, params *StartRestoreJobInput) (*backup.StartRestoreJobOutput, error)
 	DescribeRestoreJob(ctx context.Context, restoreJobId string) (*backup.DescribeRestoreJobOutput, error)
-	ListRestoreJobsByRecoveryPoint(ctx context.Context, recoveryPointArn string) ([]backuptypes.RestoreJobsListMember, error)
 	GetRecoveryPointRestoreMetadata(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.GetRecoveryPointRestoreMetadataOutput, error)
 }
 
@@ -93,36 +91,6 @@ func (c *client) DescribeRestoreJob(ctx context.Context, restoreJobId string) (*
 		return nil, err
 	}
 	return out, nil
-}
-
-func (c *client) ListRestoreJobsByRecoveryPoint(ctx context.Context, recoveryPointArn string) ([]backuptypes.RestoreJobsListMember, error) {
-	// AWS doesn't support filtering by recovery point ARN, so we list recent EFS restore jobs
-	// and filter manually
-	createdAfter := time.Now().Add(-24 * time.Hour) // Look back 24 hours
-	in := &backup.ListRestoreJobsInput{
-		ByResourceType: ptr.To("EFS"),
-		ByCreatedAfter: ptr.To(createdAfter),
-	}
-	out, err := c.svc.ListRestoreJobs(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-
-	// Filter by recovery point ARN
-	var filtered []backuptypes.RestoreJobsListMember
-	for _, job := range out.RestoreJobs {
-		// Need to describe each job to get the recovery point ARN
-		// This is inefficient but AWS API doesn't provide a better way
-		details, err := c.DescribeRestoreJob(ctx, ptr.Deref(job.RestoreJobId, ""))
-		if err != nil {
-			continue // Skip jobs we can't describe
-		}
-		if ptr.Deref(details.RecoveryPointArn, "") == recoveryPointArn {
-			filtered = append(filtered, job)
-		}
-	}
-
-	return filtered, nil
 }
 
 func (c *client) GetRecoveryPointRestoreMetadata(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.GetRecoveryPointRestoreMetadataOutput, error) {
