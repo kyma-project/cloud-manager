@@ -31,7 +31,8 @@ func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions)
 
 	var typesToDelete []reflect.Type
 	for kind, tp := range knownTypes {
-		if strings.HasSuffix(kind, "List") {
+		// Skip List types and nil types
+		if strings.HasSuffix(kind, "List") || tp == nil {
 			continue
 		}
 		typesToDelete = append(typesToDelete, tp)
@@ -41,6 +42,11 @@ func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions)
 	skippedCount := 0
 
 	for _, tp := range typesToDelete {
+		if tp == nil {
+			logger.Debug("skipping nil type")
+			continue
+		}
+
 		objPtr := reflect.New(tp)
 		obj, ok := objPtr.Interface().(client.Object)
 		if !ok {
@@ -81,17 +87,24 @@ func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions)
 			continue
 		}
 
-		list := reflect.New(knownTypes[kind+"List"]).Interface().(client.ObjectList)
-		countErr := c.List(ctx, list)
-		if countErr == nil {
-			arr, _ := meta.ExtractList(list)
-			if len(arr) == 0 {
-				deletedCount++
-				logger.Info("deleted all resources", "kind", kind)
+		// Try to count remaining resources (optional, for logging)
+		listType := knownTypes[kind+"List"]
+		if listType != nil {
+			list := reflect.New(listType).Interface().(client.ObjectList)
+			countErr := c.List(ctx, list)
+			if countErr == nil {
+				arr, _ := meta.ExtractList(list)
+				if len(arr) == 0 {
+					deletedCount++
+					logger.Info("deleted all resources", "kind", kind)
+				} else {
+					logger.Info("deletion initiated", "kind", kind, "remaining", len(arr))
+				}
 			} else {
-				logger.Info("deletion initiated", "kind", kind, "remaining", len(arr))
+				logger.Info("deletion initiated", "kind", kind)
 			}
 		} else {
+			deletedCount++
 			logger.Info("deletion initiated", "kind", kind)
 		}
 	}
