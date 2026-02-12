@@ -41,7 +41,12 @@ func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions)
 	skippedCount := 0
 
 	for _, tp := range typesToDelete {
-		obj := reflect.New(tp).Interface().(client.Object)
+		objPtr := reflect.New(tp)
+		obj, ok := objPtr.Interface().(client.Object)
+		if !ok {
+			logger.Debug("skipping non-Object type", "type", tp.Name())
+			continue
+		}
 		kind := obj.GetObjectKind().GroupVersionKind().Kind
 
 		if opts.ExcludeDefaultIpRange && kind == "IpRange" {
