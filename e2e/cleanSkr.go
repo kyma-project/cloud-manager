@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"reflect"
 	"strings"
 
@@ -12,37 +12,85 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// CleanSkrNoWait is not yet used, but it should clean SKR so it deletes all SKR cloud-manager resources
-func CleanSkrNoWait(ctx context.Context, c client.Client) error {
+type CleanSkrOptions struct {
+	Logger                *slog.Logger
+	ExcludeDefaultIpRange bool
+}
+
+func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions) error {
+	if opts == nil {
+		opts = &CleanSkrOptions{}
+	}
+
+	logger := opts.Logger
+	if logger == nil {
+		logger = slog.Default()
+	}
+
 	knownTypes := commonscheme.SkrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion)
+
+	var typesToDelete []reflect.Type
 	for kind, tp := range knownTypes {
-		if !strings.HasSuffix(kind, "List") {
+		if strings.HasSuffix(kind, "List") {
 			continue
 		}
+		typesToDelete = append(typesToDelete, tp)
+	}
 
-		list := reflect.New(tp).Interface().(client.ObjectList)
-		err := c.List(ctx, list)
-		if meta.IsNoMatchError(err) {
-			continue
-		}
-		if err != nil {
-			return fmt.Errorf("error listing kind %s: %w", kind, err)
-		}
+	deletedCount := 0
+	skippedCount := 0
 
-		list.GetResourceVersion()
-		arr, err := meta.ExtractList(list)
-		if err != nil {
-			return fmt.Errorf("error extracting %s list as dependants on %s: %w", kind, tp, err)
-		}
+	for _, tp := range typesToDelete {
+		obj := reflect.New(tp).Interface().(client.Object)
+		kind := obj.GetObjectKind().GroupVersionKind().Kind
 
-		for _, rtObj := range arr {
-			obj := rtObj.(client.Object)
-			err = c.Delete(ctx, obj)
-			if err != nil {
-				return fmt.Errorf("error deleting %s %s/%s object: %w", kind, obj.GetNamespace(), obj.GetName(), err)
+		if opts.ExcludeDefaultIpRange && kind == "IpRange" {
+			listObj := &cloudresourcesv1beta1.IpRangeList{}
+			err := c.List(ctx, listObj)
+			if err == nil && len(listObj.Items) > 0 {
+				for _, item := range listObj.Items {
+					if item.Name != "default" {
+						err := c.Delete(ctx, &item)
+						if err != nil {
+							logger.Warn("error deleting IpRange", "name", item.Name, "error", err)
+						} else {
+							deletedCount++
+							logger.Info("deleted IpRange", "name", item.Name)
+						}
+					} else {
+						skippedCount++
+						logger.Info("skipped default IpRange", "name", item.Name)
+					}
+				}
+				continue
 			}
+		}
+
+		err := c.DeleteAllOf(ctx, obj)
+		if meta.IsNoMatchError(err) {
+			logger.Debug("resource type not found in cluster", "kind", kind)
+			continue
+		}
+		if err != nil {
+			logger.Warn("error deleting all resources", "kind", kind, "error", err)
+			continue
+		}
+
+		list := reflect.New(knownTypes[kind+"List"]).Interface().(client.ObjectList)
+		countErr := c.List(ctx, list)
+		if countErr == nil {
+			arr, _ := meta.ExtractList(list)
+			if len(arr) == 0 {
+				deletedCount++
+				logger.Info("deleted all resources", "kind", kind)
+			} else {
+				logger.Info("deletion initiated", "kind", kind, "remaining", len(arr))
+			}
+		} else {
+			logger.Info("deletion initiated", "kind", kind)
 		}
 	}
 
+	logger.Info("cleanup completed", "deleted", deletedCount, "skipped", skippedCount)
 	return nil
 }
