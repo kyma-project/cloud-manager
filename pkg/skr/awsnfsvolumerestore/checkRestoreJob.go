@@ -23,7 +23,7 @@ func checkRestoreJob(ctx context.Context, st composed.State) (error, context.Con
 	restoreJobOutput, err := state.awsClient.DescribeRestoreJob(ctx, restore.Status.JobId)
 
 	if err != nil && !state.awsClient.IsNotFound(err) {
-		// Don't reset JobId - retry with exponential backoff
+		// Don't reset JobId - retry with fixed delay
 		// The job exists in AWS, we just can't describe it right now
 		return composed.LogErrorAndReturn(err, "Error loading AWS restore Job", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
