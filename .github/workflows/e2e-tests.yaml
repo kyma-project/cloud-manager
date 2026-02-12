@@ -1,5 +1,15 @@
 name: E2E tests
 run-name: E2E tests ${{ inputs.provider || 'azure' }}
+
+# Required GitHub Repository Configuration:
+#
+# Secrets (Settings > Secrets and variables > Actions > Secrets):
+#   GARDENER_KUBECONFIG          - Kubeconfig for Gardener cluster access (contains auth token)
+#
+# Variables (Settings > Secrets and variables > Actions > Variables):
+#   OIDC_CLIENT_ID               - Gardener OIDC client identifier
+#   OIDC_ISSUER_URL              - Gardener OIDC issuer endpoint (e.g., https://dex.canary.gardener.cloud.sap)
+
 on:
   pull_request:
   workflow_dispatch:
@@ -22,11 +32,26 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      AWS_ROLE_NAME: ${{ vars.AWS_ROLE_NAME }}
-      AWS_PEERING_ROLE_NAME: ${{ vars.AWS_PEERING_ROLE_NAME }}
+      AWS_ROLE_NAME: CloudManagerRole
+      AWS_PEERING_ROLE_NAME: CloudManagerPeeringRole
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Validate required configuration
+        shell: bash
+        run: |
+          MISSING=""
+          [ -z "${{ vars.OIDC_CLIENT_ID }}" ] && MISSING="$MISSING OIDC_CLIENT_ID"
+          [ -z "${{ vars.OIDC_ISSUER_URL }}" ] && MISSING="$MISSING OIDC_ISSUER_URL"
+          [ -z "${{ secrets.GARDENER_KUBECONFIG }}" ] && MISSING="$MISSING GARDENER_KUBECONFIG"
+          
+          if [ -n "$MISSING" ]; then
+            echo "::error::❌ Missing required configuration:$MISSING"
+            echo "::error::Please configure these in Settings > Secrets and variables > Actions"
+            echo "::error::See workflow comments for details"
+            exit 1
+          fi
+          echo "✅ All required configuration variables are set"
       - name: Initialize E2E environment
         uses: ./.github/actions/e2e-init
         id: e2e-init
