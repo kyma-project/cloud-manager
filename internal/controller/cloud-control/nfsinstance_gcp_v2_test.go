@@ -283,4 +283,106 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 		})
 	})
 
+	It("Scenario: KCP GCP NfsInstance v2 is created from backup", func() {
+
+		const kymaName = "76261c61-5ff3-45e7-9642-47b574003ee7"
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeGcp).
+				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		kcpIpRangeName := "14161cce-cd3e-49f8-9b06-18db08409440"
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+		// Tell IpRange reconciler to ignore this kymaName
+		kcpiprange.Ignore.AddName(kcpIpRangeName)
+		By("And Given KCP IpRange exists", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(
+					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithName(kcpIpRangeName),
+					WithScope(scope.Name),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed(), "Expected KCP IpRange to become ready")
+		})
+
+		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		sourceBackupPath := "projects/test-project/locations/us-central1/backups/my-backup"
+
+		By("When NfsInstance is created with SourceBackup", func() {
+			Eventually(CreateNfsInstance).
+				WithArguments(
+					infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					WithName(kymaName),
+					WithRemoteRef("skr-nfs-v2-from-backup"),
+					WithIpRange(kcpIpRangeName),
+					WithScope(kymaName),
+					WithNfsInstanceGcp(scope.Spec.Region),
+					WithSourceBackup(sourceBackupPath),
+				).
+				Should(Succeed(), "failed creating NfsInstance with SourceBackup")
+		})
+
+		var filestoreInstance *filestorepb.Instance
+		By("Then GCP Filestore instance is created with SourceBackup", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					NewObjActions(),
+					HavingNfsInstanceStatusId()).
+				Should(Succeed(), "expected NfsInstance to get status.id")
+
+			// Get instance from mock using Status.Id as full key
+			mockServer := infra.GcpMock()
+			filestoreInstance = mockServer.GetInstanceByName(nfsInstance.Status.Id)
+			Expect(filestoreInstance).NotTo(BeNil())
+			Expect(filestoreInstance.FileShares).To(HaveLen(1))
+			Expect(filestoreInstance.FileShares[0].GetSourceBackup()).To(Equal(sourceBackupPath))
+		})
+
+		By("When GCP Filestore instance is Ready", func() {
+			mockServer := infra.GcpMock()
+			mockServer.SetInstanceReady(nfsInstance.Status.Id)
+		})
+
+		By("Then NfsInstance has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+					HavingState("Ready"),
+				).
+				Should(Succeed(), "expected NfsInstance to have Ready state, but it didn't")
+		})
+
+		// DELETE
+
+		By("When NfsInstance is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
+				Should(Succeed(), "failed deleting NfsInstance")
+		})
+
+		By("Then NfsInstance does not exist", func() {
+			Eventually(IsDeleted, 5*time.Second).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
+				Should(Succeed(), "expected NfsInstance not to exist (be deleted), but it still exists")
+		})
+	})
+
 })
