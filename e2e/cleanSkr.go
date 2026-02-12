@@ -53,9 +53,9 @@ func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions)
 			logger.Debug("skipping non-Object type", "type", tp.Name())
 			continue
 		}
-		kind := obj.GetObjectKind().GroupVersionKind().Kind
 
-		if opts.ExcludeDefaultIpRange && kind == "IpRange" {
+		// Check type name directly since GetObjectKind().GroupVersionKind().Kind is empty for new instances
+		if opts.ExcludeDefaultIpRange && tp.Name() == "IpRange" {
 			listObj := &cloudresourcesv1beta1.IpRangeList{}
 			err := c.List(ctx, listObj)
 			if err == nil && len(listObj.Items) > 0 {
@@ -79,16 +79,16 @@ func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions)
 
 		err := c.DeleteAllOf(ctx, obj)
 		if meta.IsNoMatchError(err) {
-			logger.Debug("resource type not found in cluster", "kind", kind)
+			logger.Debug("resource type not found in cluster", "kind", tp.Name())
 			continue
 		}
 		if err != nil {
-			logger.Warn("error deleting all resources", "kind", kind, "error", err)
+			logger.Warn("error deleting all resources", "kind", tp.Name(), "error", err)
 			continue
 		}
 
 		// Try to count remaining resources (optional, for logging)
-		listType := knownTypes[kind+"List"]
+		listType := knownTypes[tp.Name()+"List"]
 		if listType != nil {
 			list := reflect.New(listType).Interface().(client.ObjectList)
 			countErr := c.List(ctx, list)
@@ -96,16 +96,16 @@ func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions)
 				arr, _ := meta.ExtractList(list)
 				if len(arr) == 0 {
 					deletedCount++
-					logger.Info("deleted all resources", "kind", kind)
+					logger.Info("deleted all resources", "kind", tp.Name())
 				} else {
-					logger.Info("deletion initiated", "kind", kind, "remaining", len(arr))
+					logger.Info("deletion initiated", "kind", tp.Name(), "remaining", len(arr))
 				}
 			} else {
-				logger.Info("deletion initiated", "kind", kind)
+				logger.Info("deletion initiated", "kind", tp.Name())
 			}
 		} else {
 			deletedCount++
-			logger.Info("deletion initiated", "kind", kind)
+			logger.Info("deletion initiated", "kind", tp.Name())
 		}
 	}
 
