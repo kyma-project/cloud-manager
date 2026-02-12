@@ -61,11 +61,16 @@ jobs:
           echo $KUBECONFIG
           ls -la ./tmp
           RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "@skr && @$PROVIDER"
-      - name: Grace period for resources to settle
+      - name: Clean up orphaned SKR resources
         if: always()
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
-          echo "Waiting 10 minutes for resources to finish provisioning before cleanup..."
-          sleep 600
+          echo "Cleaning up orphaned cloud resources from SKR instance..."
+          echo "This runs after tests (pass or fail) while SIM and CM are still active"
+          go run ./e2e/cmd instance clean -a shared-$PROVIDER --verbose || {
+            echo "⚠️  Cleanup failed, but continuing with instance deletion..."
+          }
       - name: Delete shared instance
         if: always()
         env:
