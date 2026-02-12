@@ -7,20 +7,32 @@ runs:
       shell: bash
       if: always()
       run: |
-        echo "Killing Cloud Manager with PID $CLOUD_MANAGER_PID"
-        kill $CLOUD_MANAGER_PID
+        if [ -n "$CLOUD_MANAGER_PID" ]; then
+          echo "Killing Cloud Manager with PID $CLOUD_MANAGER_PID"
+          kill $CLOUD_MANAGER_PID || true
+        else
+          echo "CLOUD_MANAGER_PID not set, skipping"
+        fi
     - name: Kill sim
       shell: bash
       if: always()
       run: |
-        echo "Killing sim with PID $SIM_PID"
-        kill $SIM_PID
+        if [ -n "$SIM_PID" ]; then
+          echo "Killing sim with PID $SIM_PID"
+          kill $SIM_PID || true
+        else
+          echo "SIM_PID not set, skipping"
+        fi
     - name: Kill envtest
       shell: bash
       if: always()
       run: |
-        echo "Killing envtest with PID $ENVTEST_PID"
-        kill $ENVTEST_PID
+        if [ -n "$ENVTEST_PID" ]; then
+          echo "Killing envtest with PID $ENVTEST_PID"
+          kill $ENVTEST_PID || true
+        else
+          echo "ENVTEST_PID not set, skipping"
+        fi
     - name: Upload logs
       uses: actions/upload-artifact@v4
       with:
