@@ -23,6 +23,15 @@ runs:
         go-version-file: 'go.mod'
     - name: Setup OpenTofu
       uses: opentofu/setup-opentofu@v1
+    - name: Install kubectl oidc-login plugin
+      shell: bash
+      run: |
+        OIDC_LOGIN_VERSION="v1.30.0"
+        curl -L "https://github.com/int128/kubelogin/releases/download/${OIDC_LOGIN_VERSION}/kubelogin_linux_amd64.zip" -o /tmp/kubelogin.zip
+        unzip -o /tmp/kubelogin.zip -d /tmp
+        sudo mv /tmp/kubelogin /usr/local/bin/kubectl-oidc_login
+        sudo chmod +x /usr/local/bin/kubectl-oidc_login
+        kubectl oidc-login --version
     - name: Display Go version
       shell: bash
       run: go version
