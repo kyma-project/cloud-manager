@@ -92,8 +92,8 @@ Examples:
 
 		logger.Info("starting cleanup of cloud resources...")
 		err = e2e.CleanSkrNoWait(rootCtx, skrClient, &e2e.CleanSkrOptions{
-			Logger:                logger,
-			ExcludeDefaultIpRange: cleanKeepDefaultIpRange,
+			Logger:             logger,
+			KeepDefaultIpRange: cleanKeepDefaultIpRange,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to clean SKR: %w", err)

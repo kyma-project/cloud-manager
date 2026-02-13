@@ -13,8 +13,8 @@ import (
 )
 
 type CleanSkrOptions struct {
-	Logger                *slog.Logger
-	ExcludeDefaultIpRange bool
+	Logger             *slog.Logger
+	KeepDefaultIpRange bool
 }
 
 func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions) error {
@@ -42,11 +42,6 @@ func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions)
 	skippedCount := 0
 
 	for _, tp := range typesToDelete {
-		if tp == nil {
-			logger.Debug("skipping nil type")
-			continue
-		}
-
 		objPtr := reflect.New(tp)
 		obj, ok := objPtr.Interface().(client.Object)
 		if !ok {
@@ -55,7 +50,7 @@ func CleanSkrNoWait(ctx context.Context, c client.Client, opts *CleanSkrOptions)
 		}
 
 		// Check type name directly since GetObjectKind().GroupVersionKind().Kind is empty for new instances
-		if opts.ExcludeDefaultIpRange && tp.Name() == "IpRange" {
+		if opts.KeepDefaultIpRange && tp.Name() == "IpRange" {
 			listObj := &cloudresourcesv1beta1.IpRangeList{}
 			err := c.List(ctx, listObj)
 			if err == nil && len(listObj.Items) > 0 {

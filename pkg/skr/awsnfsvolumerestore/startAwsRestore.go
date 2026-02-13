@@ -78,10 +78,9 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 	// Set metadata to restore to existing filesystem
 	// newFileSystem=false tells AWS to restore to existing EFS
 	// AWS Backup will restore to a timestamped subdirectory by default
-	restoreMetadataOut.RestoreMetadata = map[string]string{
-		"file-system-id": fileSystemId,
-		"newFileSystem":  "false",
-	}
+	// Modify existing metadata to preserve AWS-provided parameters like PerformanceMode
+	restoreMetadataOut.RestoreMetadata["file-system-id"] = fileSystemId
+	restoreMetadataOut.RestoreMetadata["newFileSystem"] = "false"
 
 	logger.Info("Modified restore metadata for existing filesystem", "metadata", restoreMetadataOut.RestoreMetadata, "fileSystemId", fileSystemId)
 
