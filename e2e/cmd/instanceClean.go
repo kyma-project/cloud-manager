@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
-	"os"
 
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/e2e"
@@ -12,8 +10,7 @@ import (
 )
 
 var (
-	cleanKeepDefaultIpRange bool
-	cleanVerbose            bool
+	cleanVerbose bool
 )
 
 var cmdInstanceClean = &cobra.Command{
@@ -22,7 +19,7 @@ var cmdInstanceClean = &cobra.Command{
 	Long: `Delete all SKR cloud-manager resources from the specified instance.
 
 This command is useful for cleaning up orphaned resources that remain after e2e test failures.
-When tests complete successfully, they typically clean up after themselves, leaving only the default IP range.
+When tests complete successfully, they typically clean up after themselves.
 However, failed tests may leave resources undeleted.
 
 This cleanup runs using DeleteAllOf for efficiency and should be executed after tests complete
@@ -35,22 +32,10 @@ Examples:
   # Clean instance by alias
   e2e instance clean --alias my-test-cluster
 
-  # Clean and keep the default IpRange
-  e2e instance clean --runtime-id abc-123 --keep-default-iprange
-
   # Clean with verbose logging
   e2e instance clean --runtime-id abc-123 --verbose
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Setup logger
-		logLevel := slog.LevelInfo
-		if cleanVerbose {
-			logLevel = slog.LevelDebug
-		}
-		logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: logLevel,
-		}))
-
 		keb, err := e2ekeb.Create(rootCtx, config)
 		if err != nil {
 			return fmt.Errorf("failed to create keb: %w", err)
@@ -72,38 +57,35 @@ Examples:
 			runtimeID = idArr[0].RuntimeID
 		}
 
-		logger.Info("cleaning SKR instance", "runtimeID", runtimeID)
+		if cleanVerbose {
+			fmt.Printf("Cleaning SKR instance %s...\n", runtimeID)
+		}
 
 		instance, err := keb.GetInstance(rootCtx, runtimeID)
 		if err != nil {
 			return fmt.Errorf("failed to get instance details: %w", err)
 		}
 
-		logger.Info("instance details",
-			"alias", instance.Alias,
-			"provider", instance.Provider,
-			"shootName", instance.ShootName)
+		if cleanVerbose {
+			fmt.Printf("Instance: %s (provider: %s, shoot: %s)\n", instance.Alias, instance.Provider, instance.ShootName)
+			fmt.Println("Connecting to SKR instance...")
+		}
 
-		logger.Info("connecting to SKR instance...")
 		skrClient, err := keb.CreateInstanceClient(rootCtx, runtimeID)
 		if err != nil {
 			return fmt.Errorf("failed to create SKR client: %w", err)
 		}
 
-		logger.Info("starting cleanup of cloud resources...")
-		err = e2e.CleanSkrNoWait(rootCtx, skrClient, &e2e.CleanSkrOptions{
-			Logger:             logger,
-			KeepDefaultIpRange: cleanKeepDefaultIpRange,
-		})
+		if cleanVerbose {
+			fmt.Println("Starting cleanup of cloud resources...")
+		}
+
+		err = e2e.CleanSkrNoWait(rootCtx, skrClient)
 		if err != nil {
 			return fmt.Errorf("failed to clean SKR: %w", err)
 		}
 
-		logger.Info("cleanup completed successfully")
 		fmt.Printf("\n✅ Successfully cleaned SKR instance %s\n", runtimeID)
-		if cleanKeepDefaultIpRange {
-			fmt.Println("   (default IpRange was preserved)")
-		}
 
 		return nil
 	},
@@ -113,7 +95,6 @@ func init() {
 	cmdInstance.AddCommand(cmdInstanceClean)
 	cmdInstanceClean.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "Runtime ID of the instance to clean")
 	cmdInstanceClean.Flags().StringVarP(&alias, "alias", "a", "", "Alias of the instance to clean")
-	cmdInstanceClean.Flags().BoolVarP(&cleanKeepDefaultIpRange, "keep-default-iprange", "k", true, "Keep the default IpRange resource (recommended)")
 	cmdInstanceClean.Flags().BoolVarP(&cleanVerbose, "verbose", "v", false, "Enable verbose logging")
 	cmdInstanceClean.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceClean.MarkFlagsOneRequired("runtime-id", "alias")

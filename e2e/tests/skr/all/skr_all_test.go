@@ -11,7 +11,7 @@ import (
 var opts *godog.Options
 
 func init() {
-	opts = tests.BuildOptions()
+	opts = tests.BuildOptions(tests.WithTags("@none && ~@skip"))
 	godog.BindFlags("godog.", flag.CommandLine, opts)
 }
 
