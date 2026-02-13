@@ -91,7 +91,7 @@ func (s *State) GetFileSystemId() string {
 	}
 	// Extract "fs-xxxxx" from "fs-xxxxx.efs.region.amazonaws.com"
 	parts := strings.Split(server, ".")
-	if len(parts) > 0 {
+	if len(parts) > 0 && strings.HasPrefix(parts[0], "fs-") {
 		return parts[0]
 	}
 	return ""
