@@ -33,8 +33,8 @@ func (h *HttpOperation) Validate() error {
 
 func (h *HttpOperation) Args() []string {
 	result := []string{
-		"-L", // follow location 3xx redicts
-		"-m",
+		"-L", // follow location 3xx redirects
+		"-m", fmt.Sprintf("%d", h.MaxTime),
 	}
 	if h.Method != "" {
 		result = append(result, "-X", h.Method)

@@ -24,6 +24,7 @@ type PodBuilder interface {
 	WithLabel(key, value string) PodBuilder
 	WithAnnotation(key, value string) PodBuilder
 	WithPodDetails(arr ...PodDetailFunc) PodBuilder
+	WithCommand(command []string) PodBuilder
 
 	DumpYaml(scheme *runtime.Scheme) ([]byte, error)
 	DumpYamlText(scheme *runtime.Scheme) string
@@ -49,7 +50,6 @@ func NewPodBuilder(name, namespace, image string) PodBuilder {
 						Name:            name,
 						Image:           image,
 						ImagePullPolicy: corev1.PullIfNotPresent,
-						Command:         []string{"/bin/sh", "-c"},
 						Args: []string{
 							"echo 'Noop! I am not given any script to run.'",
 						},
@@ -140,6 +140,12 @@ func (b *podBuilder) WithAnnotation(key, value string) PodBuilder {
 		o.GetAnnotations()[key] = value
 	}
 
+	return b
+}
+
+// WithCommand sets the command to be executed in the container
+func (b *podBuilder) WithCommand(command []string) PodBuilder {
+	b.pod.Spec.Containers[0].Command = command
 	return b
 }
 

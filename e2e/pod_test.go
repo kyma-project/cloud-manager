@@ -58,6 +58,7 @@ func TestPodBuilder(t *testing.T) {
 		assert.Len(t, pod.Spec.Containers, 1)
 		assert.Equal(t, image, pod.Spec.Containers[0].Image)
 		assert.Len(t, pod.Spec.Containers[0].VolumeMounts, 3)
+		assert.Nil(t, pod.Spec.Containers[0].Command)
 
 		// script volume mount
 
