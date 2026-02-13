@@ -132,7 +132,7 @@ Create `pkg/kcp/provider/gcp/nfsbackup/client/v1/` directory and move:
 
 #### Step 2.2: Create v1 SKR Directory
 
-Create `pkg/skr/gcpnfsvolumebackup/v1/` directory containing:
+Create `pkg/skr/gcpnfsvolumebackup/v1/` directory containing all actions (no shared package):
 - `reconciler.go` - Action composition for v1
 - `state.go` - State with v1 FileBackupClient
 - `createNfsBackup.go` - Create using old types
@@ -140,54 +140,16 @@ Create `pkg/skr/gcpnfsvolumebackup/v1/` directory containing:
 - `loadNfsBackup.go` - Load using old types  
 - `checkBackupOperation.go` - Check operation using old types
 - `addLabelsToNfsBackup.go` - Add labels using old types
+- `loadScope.go` - Load Scope from KCP
+- `loadGcpNfsVolume.go` - Load GcpNfsVolume from SKR
 - `updateStatus.go` - Update status using old types
 - `updateCapacity.go` - Update capacity using old types
 - `mirrorLabelsToStatus.go` - Mirror labels using old types
-
-#### Step 2.3: Create Shared Package
-
-Create `pkg/skr/gcpnfsvolumebackup/common/` directory for shared actions:
-- `loadScope.go` - Load Scope (version-agnostic)
-- `loadGcpNfsVolume.go` - Load GcpNfsVolume (version-agnostic)
-- `addFinalizer.go` - Add finalizer (version-agnostic)
-- `removeFinalizer.go` - Remove finalizer (version-agnostic)
-- `shortCircuit.go` - Short-circuit logic (version-agnostic)
-- `markFailed.go` - Mark failed logic (version-agnostic)
+- `shortCircuit.go` - Short-circuit logic
+- `markFailed.go` - Mark failed logic
 - `ignorant.go` - Test ignore list
-- `types.go` - Common state interface for shared actions
 
-The common state interface should be:
-```go
-package common
-
-import (
-    cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-    cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-    "github.com/kyma-project/cloud-manager/pkg/composed"
-    "k8s.io/klog/v2"
-)
-
-// State is the common interface for v1 and v2 states
-type State interface {
-    composed.State
-    
-    // Common accessors
-    GetKymaRef() klog.ObjectRef
-    GetKcpCluster() composed.StateCluster
-    GetSkrCluster() composed.StateCluster
-    GetScope() *cloudcontrolv1beta1.Scope
-    SetScope(scope *cloudcontrolv1beta1.Scope)
-    GetGcpNfsVolume() *cloudresourcesv1beta1.GcpNfsVolume
-    SetGcpNfsVolume(vol *cloudresourcesv1beta1.GcpNfsVolume)
-    ObjAsGcpNfsVolumeBackup() *cloudresourcesv1beta1.GcpNfsVolumeBackup
-    
-    // Backup state (interface to abstract v1/v2 types)
-    HasFileBackup() bool
-    GetFileBackupState() string
-    GetFileBackupStorageBytes() int64
-    GetFileBackupLabels() map[string]string
-}
-```
+**Note**: Each version (v1, v2) has its own complete set of actions. No shared/common package exists. This simplifies the architecture and avoids interface complexity.
 
 ---
 
@@ -415,6 +377,7 @@ package v2
 
 import (
     "context"
+    "fmt"
     "slices"
     "sort"
     "strings"
@@ -427,7 +390,6 @@ import (
     gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
     "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
     v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
-    "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/common"
     "k8s.io/klog/v2"
 )
 
@@ -445,7 +407,7 @@ type State struct {
     fileBackupClient v2client.FileBackupClient
 }
 
-// Implement common.State interface
+// State accessors
 func (s *State) GetKymaRef() klog.ObjectRef { return s.KymaRef }
 func (s *State) GetKcpCluster() composed.StateCluster { return s.KcpCluster }
 func (s *State) GetSkrCluster() composed.StateCluster { return s.SkrCluster }
@@ -540,7 +502,6 @@ import (
     cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
     "github.com/kyma-project/cloud-manager/pkg/common/actions"
     "github.com/kyma-project/cloud-manager/pkg/composed"
-    "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/common"
     metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -572,12 +533,12 @@ func New(stateFactory StateFactory) composed.Action {
 func composeActions() composed.Action {
     return composed.ComposeActions(
         "gcpNfsVolumeBackupV2",
-        common.LoadScope,
+        loadScope,
         shortCircuitCompleted,
         markFailed,
         actions.AddCommonFinalizer(),
         loadNfsBackup,
-        common.LoadGcpNfsVolume,
+        loadGcpNfsVolume,
         // Check pending operation (shared - works for both create and delete operations)
         checkBackupOperation,
         composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
@@ -662,7 +623,7 @@ func composeActions() composed.Action {
 
 #### Step 4.3: Create v2 Actions
 
-Create v2-specific actions using protobuf types:
+Create v2-specific actions using protobuf types (complete set, no shared package):
 - `pkg/skr/gcpnfsvolumebackup/v2/loadNfsBackup.go` - Load backup from GCP
 - `pkg/skr/gcpnfsvolumebackup/v2/createNfsBackup.go` - Create backup in GCP
 - `pkg/skr/gcpnfsvolumebackup/v2/deleteNfsBackup.go` - Delete backup from GCP
@@ -671,8 +632,11 @@ Create v2-specific actions using protobuf types:
 - `pkg/skr/gcpnfsvolumebackup/v2/updateStatus.go` - Combined status update (Ready condition, capacity, labels mirror)
 - `pkg/skr/gcpnfsvolumebackup/v2/waitBackupReady.go` - Wait for backup state READY (redundancy for create)
 - `pkg/skr/gcpnfsvolumebackup/v2/waitBackupDeleted.go` - Wait for backup deleted (redundancy for delete)
+- `pkg/skr/gcpnfsvolumebackup/v2/loadScope.go` - Load Scope from KCP
+- `pkg/skr/gcpnfsvolumebackup/v2/loadGcpNfsVolume.go` - Load GcpNfsVolume from SKR
 - `pkg/skr/gcpnfsvolumebackup/v2/shortCircuit.go` - Short-circuit for already ready backups
 - `pkg/skr/gcpnfsvolumebackup/v2/markFailed.go` - Mark backup as failed
+- `pkg/skr/gcpnfsvolumebackup/v2/ignorant.go` - Test ignore list
 
 **Removed from v1 (consolidated into `updateStatus`):**
 - ~~`mirrorLabelsToStatus.go`~~ - Merged into `updateStatus`
@@ -1083,26 +1047,12 @@ make build
 | `pkg/kcp/provider/gcp/nfsbackup/client/v1/fileBackupClient.go` | v1 client (moved) |
 | `pkg/kcp/provider/gcp/nfsbackup/client/v2/fileBackupClient.go` | v2 client (new library) |
 | `pkg/kcp/provider/gcp/nfsbackup/client/v2/util.go` | v2 client utilities |
-| `pkg/skr/gcpnfsvolumebackup/common/types.go` | Common state interface |
-| `pkg/skr/gcpnfsvolumebackup/common/loadScope.go` | Shared action |
-| `pkg/skr/gcpnfsvolumebackup/common/loadGcpNfsVolume.go` | Shared action |
-| `pkg/skr/gcpnfsvolumebackup/common/addFinalizer.go` | Shared action |
-| `pkg/skr/gcpnfsvolumebackup/common/removeFinalizer.go` | Shared action |
 | `pkg/skr/gcpnfsvolumebackup/v1/reconcile.go` | v1 action composition |
 | `pkg/skr/gcpnfsvolumebackup/v1/state.go` | v1 state |
-| `pkg/skr/gcpnfsvolumebackup/v1/*.go` | v1 version-specific actions |
+| `pkg/skr/gcpnfsvolumebackup/v1/*.go` | v1 complete action set |
 | `pkg/skr/gcpnfsvolumebackup/v2/reconcile.go` | v2 action composition |
 | `pkg/skr/gcpnfsvolumebackup/v2/state.go` | v2 state with protobuf types |
-| `pkg/skr/gcpnfsvolumebackup/v2/loadNfsBackup.go` | Load backup from GCP |
-| `pkg/skr/gcpnfsvolumebackup/v2/createNfsBackup.go` | Create backup in GCP |
-| `pkg/skr/gcpnfsvolumebackup/v2/deleteNfsBackup.go` | Delete backup from GCP |
-| `pkg/skr/gcpnfsvolumebackup/v2/checkBackupOperation.go` | Check async operation |
-| `pkg/skr/gcpnfsvolumebackup/v2/addLabelsToNfsBackup.go` | Add labels to ready backup |
-| `pkg/skr/gcpnfsvolumebackup/v2/updateStatus.go` | Combined status update |
-| `pkg/skr/gcpnfsvolumebackup/v2/waitBackupReady.go` | Wait for backup READY state |
-| `pkg/skr/gcpnfsvolumebackup/v2/waitBackupDeleted.go` | Wait for backup deletion |
-| `pkg/skr/gcpnfsvolumebackup/v2/shortCircuit.go` | Short-circuit optimization |
-| `pkg/skr/gcpnfsvolumebackup/v2/markFailed.go` | Mark failed logic |
+| `pkg/skr/gcpnfsvolumebackup/v2/*.go` | v2 complete action set |
 | `pkg/kcp/provider/gcp/mock/nfsBackupStoreV2.go` | v2 mock implementation |
 | `internal/controller/cloud-resources/gcpnfsvolumebackup_v2_test.go` | v2 controller tests |
 
@@ -1126,7 +1076,7 @@ make build
 | Risk | Mitigation |
 |------|------------|
 | Breaking existing functionality | Feature flag defaults to v1 |
-| Type mismatches between v1/v2 | Use common interface for shared actions |
+| Code duplication between v1/v2 | Acceptable trade-off for simplicity and independence |
 | Missing test coverage | Mandatory controller tests for v2 |
 | GCP API behavior differences | Test against mock, document differences |
 
