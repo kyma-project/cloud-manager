@@ -1,4 +1,4 @@
-package gcpnfsvolumebackupdiscovery
+package v1
 
 import (
 	"context"
@@ -27,36 +27,47 @@ func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, er
 	}
 	logger := composed.LoggerFromCtx(ctx)
 
+	//Create state object
 	state, err := r.newState(ctx, req.NamespacedName)
 	if err != nil {
-		logger.Error(err, "Error getting the GcpNfsVolumeBackupDiscovery state object")
+		logger.Error(err, "Error getting the GcpNfsVolumeBackup state object")
 	}
 
+	//Create action handler.
 	action := r.newAction()
 
 	return composed.Handling().
-		WithMetrics("gcpnfsvolumebackupdiscovery", util.RequestObjToString(req)).
+		WithMetrics("gcpnfsvolumebackup", util.RequestObjToString(req)).
 		WithNoLog().
 		Handle(action(ctx, state))
 }
 
 func (r *Reconciler) newState(ctx context.Context, name types.NamespacedName) (*State, error) {
 	return r.stateFactory.NewState(ctx,
-		r.composedStateFactory.NewState(name, &cloudresourcesv1beta1.GcpNfsVolumeBackupDiscovery{}),
+		r.composedStateFactory.NewState(name, &cloudresourcesv1beta1.GcpNfsVolumeBackup{}),
 	)
 }
 
 func (r *Reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
-		"crGcpNfsVolumeBackupDiscoveryMain",
-		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolumeBackupDiscovery{}),
+		"crGcpNfsVolumeBackupMain",
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolumeBackup{}),
 		composed.LoadObj,
-		setProcessing,
-		shortCircuit,
 		loadScope,
-		loadAvailableBackups,
+		shortCircuitCompleted,
+		markFailed,
+		addFinalizer,
+		loadNfsBackup,
+		loadGcpNfsVolume,
+		addLabelsToNfsBackup,
+		mirrorLabelsToStatus,
+		createNfsBackup,
+		deleteNfsBackup,
+		checkBackupOperation,
+		removeFinalizer,
+		updateCapacity,
 		updateStatus,
-		composed.StopAndForgetAction,
+		StopAndRequeueForCapacityAction(),
 	)
 }
 
