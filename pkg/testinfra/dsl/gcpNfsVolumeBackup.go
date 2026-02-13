@@ -7,7 +7,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	"google.golang.org/api/file/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -27,12 +27,12 @@ func WithGcpNfsVolume(name string) ObjAction {
 	}
 }
 
-func CreateGcpFileBackupDirectly(ctx context.Context, backupClient gcpnfsbackupclient.FileBackupClient, project, location string, backup *file.Backup) error {
+func CreateGcpFileBackupDirectly(ctx context.Context, backupClient gcpnfsbackupclientv1.FileBackupClient, project, location string, backup *file.Backup) error {
 	_, err := backupClient.CreateFileBackup(ctx, project, location, backup.Name, backup)
 	return err
 }
 
-func ListGcpFileBackups(ctx context.Context, backupClient gcpnfsbackupclient.FileBackupClient, project, scopeName string) ([]*file.Backup, error) {
+func ListGcpFileBackups(ctx context.Context, backupClient gcpnfsbackupclientv1.FileBackupClient, project, scopeName string) ([]*file.Backup, error) {
 	filter := gcpclient.GetSkrBackupsFilter(scopeName)
 	return backupClient.ListFilesBackups(ctx, project, filter)
 }

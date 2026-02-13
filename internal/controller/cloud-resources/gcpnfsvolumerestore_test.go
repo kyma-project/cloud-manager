@@ -7,7 +7,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
-	skrgcpnfsvolbackup "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup"
+	skrgcpnfsvolbackup "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

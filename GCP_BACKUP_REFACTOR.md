@@ -126,7 +126,7 @@ gcpBackupV2:
 #### Step 2.1: Create v1 Client Directory
 
 Create `pkg/kcp/provider/gcp/nfsbackup/client/v1/` directory and move:
-- Copy `pkg/kcp/provider/gcp/nfsbackup/client/fileBackupClient.go` → `pkg/kcp/provider/gcp/nfsbackup/client/v1/fileBackupClient.go`
+- Move `pkg/kcp/provider/gcp/nfsbackup/client/fileBackupClient.go` → `pkg/kcp/provider/gcp/nfsbackup/client/v1/fileBackupClient.go`
 - Update package declaration to `package v1`
 - Update imports to reflect new location
 
@@ -1098,7 +1098,7 @@ make build
 ## Implementation Order
 
 1. **Phase 1**: Create feature flag (foundation) ✅ **COMPLETED**
-2. **Phase 2**: Create v1 directory structure (safe move)
+2. **Phase 2**: Create v1 directory structure (safe move) ✅ **COMPLETED**
 3. **Phase 3**: Create v2 client (new library integration)
 4. **Phase 4**: Create v2 SKR implementation (new reconciler)
 5. **Phase 5**: Update root reconciler (routing logic)

@@ -1,8 +1,7 @@
-package gcpnfsvolumerestore
+package v1
 
 import (
 	"context"
-	"fmt"
 	"net/http/httptest"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
-	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/option"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,6 +77,7 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 		Namespace: "test",
 	},
 	Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
+		Location: "us-west1",
 		Source: cloudresourcesv1beta1.GcpNfsVolumeBackupSource{
 			Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
 				Name:      "test-gcp-nfs-volume",
@@ -88,6 +87,7 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 	},
 	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
 		Location: "us-west1",
+		State:    "Ready",
 		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",
@@ -101,69 +101,45 @@ var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 	},
 }
 
-var gcpNfsVolumeRestore = cloudresourcesv1beta1.GcpNfsVolumeRestore{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "test-gcp-nfs-volume-restore",
-		Namespace: "test",
-	},
-	Spec: cloudresourcesv1beta1.GcpNfsVolumeRestoreSpec{
-		Destination: cloudresourcesv1beta1.GcpNfsVolumeRestoreDestination{
-			Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
-				Name:      "test-gcp-nfs-volume",
-				Namespace: "test",
-			},
-		},
-		Source: cloudresourcesv1beta1.GcpNfsVolumeRestoreSource{
-			Backup: cloudresourcesv1beta1.GcpNfsVolumeBackupRef{
-				Name:      "test-gcp-nfs-volume-backup",
-				Namespace: "test",
-			},
-		},
-	},
-}
-
-var deletingGcpNfsVolumeRestore = cloudresourcesv1beta1.GcpNfsVolumeRestore{
+var deletingGpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "test-gcp-nfs-volume-restore",
 		Namespace:         "test",
 		DeletionTimestamp: &metav1.Time{Time: time.Now()},
 		Finalizers:        []string{api.CommonFinalizerDeletionHook},
 	},
-	Spec: cloudresourcesv1beta1.GcpNfsVolumeRestoreSpec{
-		Destination: cloudresourcesv1beta1.GcpNfsVolumeRestoreDestination{
+	Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
+		Location: "us-west1",
+		Source: cloudresourcesv1beta1.GcpNfsVolumeBackupSource{
 			Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
 				Name:      "test-gcp-nfs-volume",
 				Namespace: "test",
 			},
 		},
-		Source: cloudresourcesv1beta1.GcpNfsVolumeRestoreSource{
-			Backup: cloudresourcesv1beta1.GcpNfsVolumeBackupRef{
-				Name:      "test-gcp-nfs-volume-backup",
-				Namespace: "test",
+	},
+	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
+		Location: "us-west1",
+		State:    "Ready",
+		Conditions: []metav1.Condition{
+			{
+				Type:               "Ready",
+				Status:             "True",
+				LastTransitionTime: metav1.Time{Time: time.Now()},
+				Reason:             "Ready",
+				Message:            "NFS backup is ready",
 			},
 		},
+		Id: "cffd6896-0127-48a1-8a64-e07f6ad5c912",
 	},
 }
 
 type testStateFactory struct {
-	factory                   StateFactory
-	skrCluster                composed.StateCluster
-	kcpCluster                composed.StateCluster
-	fileRestoreClientProvider client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]
-	env                       abstractions.Environment
-	fakeHttpServer            *httptest.Server
-}
-
-func NewFakeFileRestoreClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient] {
-	return client.NewCachedClientProvider(
-		func(ctx context.Context, credentialsFile string) (gcpnfsrestoreclient.FileRestoreClient, error) {
-			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
-			if err != nil {
-				return nil, err
-			}
-			return gcpnfsrestoreclient.NewFileRestoreClient(fsClient), nil
-		},
-	)
+	factory                  StateFactory
+	skrCluster               composed.StateCluster
+	kcpCluster               composed.StateCluster
+	fileBackupClientProvider client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
+	env                      abstractions.Environment
+	fakeHttpServer           *httptest.Server
 }
 
 func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient] {
@@ -178,7 +154,7 @@ func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.Cli
 	)
 }
 
-func newTestStateFactoryWithObj(fakeHttpServer *httptest.Server, gcpNfsVolumeRestore *cloudresourcesv1beta1.GcpNfsVolumeRestore) (*testStateFactory, error) {
+func newTestStateFactoryWithObj(fakeHttpServer *httptest.Server, gcpNfsVolumeBackup *cloudresourcesv1beta1.GcpNfsVolumeBackup) (*testStateFactory, error) {
 	kcpClient := fake.NewClientBuilder().
 		WithScheme(commonscheme.KcpScheme).
 		WithObjects(&scope).
@@ -189,44 +165,34 @@ func newTestStateFactoryWithObj(fakeHttpServer *httptest.Server, gcpNfsVolumeRes
 		WithScheme(commonscheme.SkrScheme).
 		WithObjects(&gcpNfsVolume).
 		WithStatusSubresource(&gcpNfsVolume).
-		WithObjects(&gcpNfsVolumeBackup).
-		WithStatusSubresource(&gcpNfsVolumeBackup).
-		WithObjects(gcpNfsVolumeRestore).
-		WithStatusSubresource(gcpNfsVolumeRestore).
+		WithObjects(gcpNfsVolumeBackup).
+		WithStatusSubresource(gcpNfsVolumeBackup).
 		Build()
 	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)
-	nfsRestoreClient := NewFakeFileRestoreClientProvider(fakeHttpServer)
-	nfsRestoreClientBackup := NewFakeFileBackupClientProvider(fakeHttpServer)
+	nfsBackupClient := NewFakeFileBackupClientProvider(fakeHttpServer)
 	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
-	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster, nfsRestoreClient, nfsRestoreClientBackup, env)
+	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster, nfsBackupClient, env)
 
 	return &testStateFactory{
-		factory:                   factory,
-		skrCluster:                skrCluster,
-		kcpCluster:                kcpCluster,
-		fileRestoreClientProvider: nfsRestoreClient,
-		env:                       env,
-		fakeHttpServer:            fakeHttpServer,
+		factory:                  factory,
+		skrCluster:               skrCluster,
+		kcpCluster:               kcpCluster,
+		fileBackupClientProvider: nfsBackupClient,
+		env:                      env,
+		fakeHttpServer:           fakeHttpServer,
 	}, nil
 
 }
 
-func (f *testStateFactory) newStateWith(nfsRestore *cloudresourcesv1beta1.GcpNfsVolumeRestore) (*State, error) {
+func (f *testStateFactory) newStateWith(nfsBackup *cloudresourcesv1beta1.GcpNfsVolumeBackup) (*State, error) {
 	return f.factory.NewState(context.Background(), composed.NewStateFactory(f.skrCluster).NewState(
 		types.NamespacedName{
-			Name:      nfsRestore.Name,
-			Namespace: nfsRestore.Namespace,
-		}, nfsRestore))
+			Name:      nfsBackup.Name,
+			Namespace: nfsBackup.Namespace,
+		}, nfsBackup))
 }
 
 // Fake client doesn't support type "apply" for patching so falling back on update for unit tests.
 func (s *State) PatchObjStatus(ctx context.Context) error {
 	return s.Cluster().K8sClient().Status().Update(ctx, s.Obj())
-}
-
-func gcpNfsVolumeBackupToUrl(backup *cloudresourcesv1beta1.GcpNfsVolumeBackup) string {
-	if backup.Status.Id == "" || backup.Status.Location == "" {
-		return ""
-	}
-	return fmt.Sprintf("projects/%s/locations/%s/backups/%s", scope.Spec.Scope.Gcp.Project, backup.Status.Location, fmt.Sprintf("cm-%.60s", backup.Status.Id))
 }
