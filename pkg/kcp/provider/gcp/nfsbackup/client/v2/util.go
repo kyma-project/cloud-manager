@@ -30,3 +30,9 @@ func GetProjectLocationNameFromFileBackupPath(fullPath string) (projectId, locat
 	}
 	return matches[1], matches[2], matches[3]
 }
+
+// GetFilestoreInstancePath returns the full GCP Filestore instance resource name.
+// Format: projects/{project}/locations/{location}/instances/{name}
+func GetFilestoreInstancePath(projectId, location, name string) string {
+	return fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, location, name)
+}
