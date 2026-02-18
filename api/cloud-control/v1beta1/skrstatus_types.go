@@ -47,7 +47,7 @@ type SkrStatusSpec struct {
 	AverageIntervalSeconds int           `json:"averageIntervalSeconds,omitempty"`
 
 	// +optional
-	Conditions []SkrStatusCondition `json:"conditions"`
+	Conditions []SkrStatusCondition `json:"conditions,omitempty"`
 }
 
 // SkrStatusStatus defines the observed state of SkrStatus.
