@@ -62,7 +62,15 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 		})
 
 		By("And Given AwsNfsVolume has Ready condition", func() {
-			//Update SKR AwsNfsVolume status to Ready with Server field
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume,
+					WithConditions(SkrReadyCondition()),
+					WithAwsNfsVolumeStatusServer("fs-mock-12345.efs.eu-west-1.amazonaws.com"),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given SKR AwsNfsVolumeBackup exists", func() {
 			Eventually(GivenAwsNfsVolumeBackupExists).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolumeBackup,
 					WithName(skrAwsNfsVolumeBackupName),
@@ -87,7 +95,6 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 				).
 				Should(Succeed())
 		})
-
 		By("Then AwsNfsVolumeRestore has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsNfsVolumeRestore,
@@ -158,6 +165,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume,
 					WithConditions(SkrReadyCondition()),
+					WithAwsNfsVolumeStatusServer("fs-mock-12345.efs.eu-west-1.amazonaws.com"),
 				).
 				Should(Succeed())
 		})

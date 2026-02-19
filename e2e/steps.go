@@ -1074,5 +1074,5 @@ func tfModuleIsDestroyed(ctx context.Context, alias string) (context.Context, er
 		return ctx, fmt.Errorf("failed to destroy tf workspace: %w", err)
 	}
 
-	return ctx, godog.ErrPending
+	return ctx, nil
 }
