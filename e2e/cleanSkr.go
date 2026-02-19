@@ -2,47 +2,51 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strings"
 
+	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// CleanSkrNoWait is not yet used, but it should clean SKR so it deletes all SKR cloud-manager resources
 func CleanSkrNoWait(ctx context.Context, c client.Client) error {
+	logger := logr.FromContextOrDiscard(ctx)
+
 	knownTypes := commonscheme.SkrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion)
+
+	var typesToDelete []reflect.Type
 	for kind, tp := range knownTypes {
-		if !strings.HasSuffix(kind, "List") {
+		// Skip List types and nil types
+		if strings.HasSuffix(kind, "List") || tp == nil {
 			continue
 		}
-
-		list := reflect.New(tp).Interface().(client.ObjectList)
-		err := c.List(ctx, list)
-		if meta.IsNoMatchError(err) {
-			continue
-		}
-		if err != nil {
-			return fmt.Errorf("error listing kind %s: %w", kind, err)
-		}
-
-		list.GetResourceVersion()
-		arr, err := meta.ExtractList(list)
-		if err != nil {
-			return fmt.Errorf("error extracting %s list as dependants on %s: %w", kind, tp, err)
-		}
-
-		for _, rtObj := range arr {
-			obj := rtObj.(client.Object)
-			err = c.Delete(ctx, obj)
-			if err != nil {
-				return fmt.Errorf("error deleting %s %s/%s object: %w", kind, obj.GetNamespace(), obj.GetName(), err)
-			}
-		}
+		typesToDelete = append(typesToDelete, tp)
 	}
 
+	for _, tp := range typesToDelete {
+		objPtr := reflect.New(tp)
+		obj, ok := objPtr.Interface().(client.Object)
+		if !ok {
+			logger.V(1).Info("skipping non-Object type", "type", tp.Name())
+			continue
+		}
+
+		err := c.DeleteAllOf(ctx, obj)
+		if meta.IsNoMatchError(err) {
+			logger.V(1).Info("resource type not found in cluster", "kind", tp.Name())
+			continue
+		}
+		if err != nil {
+			logger.Info("error deleting all resources", "kind", tp.Name(), "error", err)
+			continue
+		}
+
+		logger.Info("deletion initiated", "kind", tp.Name())
+	}
+
+	logger.Info("cleanup completed")
 	return nil
 }

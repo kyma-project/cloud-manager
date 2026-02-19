@@ -1,0 +1,47 @@
+name: E2E Destroy Action
+description: Destroys the environment after E2E tests
+runs:
+  using: composite
+  steps:
+    - name: Kill Cloud Manager
+      shell: bash
+      if: always()
+      run: |
+        if [ -n "$CLOUD_MANAGER_PID" ]; then
+          echo "Killing Cloud Manager with PID $CLOUD_MANAGER_PID"
+          kill $CLOUD_MANAGER_PID || true
+        else
+          echo "CLOUD_MANAGER_PID not set, skipping"
+        fi
+    - name: Kill sim
+      shell: bash
+      if: always()
+      run: |
+        if [ -n "$SIM_PID" ]; then
+          echo "Killing sim with PID $SIM_PID"
+          kill $SIM_PID || true
+        else
+          echo "SIM_PID not set, skipping"
+        fi
+    - name: Kill envtest
+      shell: bash
+      if: always()
+      run: |
+        if [ -n "$ENVTEST_PID" ]; then
+          echo "Killing envtest with PID $ENVTEST_PID"
+          kill $ENVTEST_PID || true
+        else
+          echo "ENVTEST_PID not set, skipping"
+        fi
+    - name: Upload logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: logs
+        path: |
+          tmp/envtest.log
+          tmp/sim.log
+          tmp/cloud-manager.log
+    - name: Delete tmp directory
+      shell: bash
+      if: always()
+      run: rm -rf ./tmp

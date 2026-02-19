@@ -65,10 +65,17 @@ Feature: AWS NfsVolume feature
 
     Then eventually "restore.status.state == 'Done'" is ok
 
-    # check file content matches the original restored value
+    # AWS Backup restores to a timestamped subdirectory (aws-backup-restore_*), not in-place
+    # Per AWS documentation, file system should have minimal activity during restore
+    # Original file at root remains unchanged with current content
     And PVC "pvc" file operations succeed:
-      | Operation | Path     | Content     |
-      | Contains  | test.txt | first value |
+      | Operation | Path     | Content      |
+      | Contains  | test.txt | second value |
+    
+    # Restored content from backup is in the restore subdirectory
+    And PVC "pvc" file operations succeed:
+      | Operation | Path                          | Content     |
+      | Contains  | aws-backup-restore_*/test.txt | first value |
 
     When resource "schedule" is created:
       """
