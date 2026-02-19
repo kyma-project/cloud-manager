@@ -3,6 +3,7 @@ package e2e
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/go-multierror"
 )
@@ -32,19 +33,21 @@ func (h *HttpOperation) Validate() error {
 }
 
 func (h *HttpOperation) Args() []string {
-	result := []string{
+	curlArgs := []string{
+		"curl",
 		"-L", // follow location 3xx redirects
 		"-m", fmt.Sprintf("%d", h.MaxTime),
 	}
 	if h.Method != "" {
-		result = append(result, "-X", h.Method)
+		curlArgs = append(curlArgs, "-X", h.Method)
 	}
 	if h.ContentType != "" {
-		result = append(result, "-H", "Content-Type: "+h.ContentType)
+		curlArgs = append(curlArgs, "-H", "Content-Type: "+h.ContentType)
 	}
 	if h.Data != "" {
-		result = append(result, "-d", h.Data)
+		curlArgs = append(curlArgs, "-d", h.Data)
 	}
-	result = append(result, h.Url)
-	return result
+	curlArgs = append(curlArgs, h.Url)
+
+	return []string{strings.Join(curlArgs, " ")}
 }
