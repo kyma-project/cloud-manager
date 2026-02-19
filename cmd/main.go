@@ -70,6 +70,7 @@ import (
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
@@ -238,7 +239,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupReconciler(skrRegistry, gcpnfsbackupclientv1.NewFileBackupClientProvider(), env, setupLog); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupReconciler(
+		skrRegistry,
+		gcpnfsbackupclientv1.NewFileBackupClientProvider(),
+		gcpnfsbackupclientv2.NewFileBackupClientProvider(gcpClients),
+		env,
+		setupLog,
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeBackup")
 		os.Exit(1)
 	}
