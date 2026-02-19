@@ -22,9 +22,12 @@ import (
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
-	gcpnfsvolumebackup "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
+	gcpnfsvolumebackupv1 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v1"
+	gcpnfsvolumebackupv2 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v2"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -33,9 +36,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+// gcpNfsVolumeBackupRunner is a common interface for v1 and v2 reconcilers
+type gcpNfsVolumeBackupRunner interface {
+	Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error)
+}
+
 // GcpNfsVolumeBackupReconciler reconciles a GcpNfsVolumeBackup object
 type GcpNfsVolumeBackupReconciler struct {
-	Reconciler gcpnfsvolumebackup.Reconciler
+	reconciler gcpNfsVolumeBackupRunner
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsvolumebackups,verbs=get;list;watch;create;update;patch;delete
@@ -52,25 +60,59 @@ type GcpNfsVolumeBackupReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.0/pkg/reconcile
 func (r *GcpNfsVolumeBackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return r.Reconciler.Run(ctx, req)
+	return r.reconciler.Run(ctx, req)
 }
 
 type GcpNfsVolumeBackupReconcilerFactory struct {
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
-	env                      abstractions.Environment
+	fileBackupClientProviderV1 gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
+	fileBackupClientProviderV2 gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
+	env                        abstractions.Environment
+	useV2                      bool
 }
 
 func (f *GcpNfsVolumeBackupReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
-	return &GcpNfsVolumeBackupReconciler{
-		Reconciler: gcpnfsvolumebackup.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.fileBackupClientProvider, f.env),
+	if f.useV2 {
+		reconciler := gcpnfsvolumebackupv2.NewReconciler(
+			args.KymaRef,
+			args.KcpCluster,
+			args.SkrCluster,
+			f.fileBackupClientProviderV2,
+		)
+		return &GcpNfsVolumeBackupReconciler{reconciler: &reconciler}
 	}
+
+	reconciler := gcpnfsvolumebackupv1.NewReconciler(
+		args.KymaRef,
+		args.KcpCluster,
+		args.SkrCluster,
+		f.fileBackupClientProviderV1,
+		f.env,
+	)
+	return &GcpNfsVolumeBackupReconciler{reconciler: &reconciler}
 }
 
-func SetupGcpNfsVolumeBackupReconciler(reg skrruntime.SkrRegistry, fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
-	env abstractions.Environment, logger logr.Logger) error {
+func SetupGcpNfsVolumeBackupReconciler(
+	reg skrruntime.SkrRegistry,
+	fileBackupClientProviderV1 gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
+	fileBackupClientProviderV2 gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient],
+	env abstractions.Environment,
+	logger logr.Logger,
+) error {
+	// Check feature flag at startup to determine which implementation to use
+	useV2 := feature.GcpBackupV2.Value(context.Background())
+	if useV2 {
+		logger.Info("GcpNfsVolumeBackup: Using v2 implementation")
+	} else {
+		logger.Info("GcpNfsVolumeBackup: Using v1 implementation (default)")
+	}
 
 	return reg.Register().
-		WithFactory(&GcpNfsVolumeBackupReconcilerFactory{fileBackupClientProvider: fileBackupClientProvider, env: env}).
+		WithFactory(&GcpNfsVolumeBackupReconcilerFactory{
+			fileBackupClientProviderV1: fileBackupClientProviderV1,
+			fileBackupClientProviderV2: fileBackupClientProviderV2,
+			env:                        env,
+			useV2:                      useV2,
+		}).
 		For(&cloudresourcesv1beta1.GcpNfsVolumeBackup{}).
 		Complete()
 }

@@ -652,100 +652,76 @@ Create v2-specific actions using protobuf types (complete set, no shared package
 
 ---
 
-### Phase 5: Update Root Reconciler with Feature Flag Routing
+### Phase 5: Update Controller with Feature Flag Routing at Startup
 
-#### Step 5.1: Update Root Reconciler
+**Implementation Approach Changed**: Instead of per-request routing in a root reconciler, feature flag is checked at startup in the controller factory. This eliminates per-request overhead and keeps v1 unchanged.
 
-Modify `pkg/skr/gcpnfsvolumebackup/reconciler.go`:
+#### Step 5.1: Add Reconciler to v2
+
+Add `Reconciler` struct to `pkg/skr/gcpnfsvolumebackup/v2/reconcile.go` matching v1's interface:
 
 ```go
-package gcpnfsvolumebackup
-
-import (
-    "context"
-
-    cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-    "github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-    "github.com/kyma-project/cloud-manager/pkg/composed"
-    "github.com/kyma-project/cloud-manager/pkg/feature"
-    gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-    gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
-    gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
-    v1 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v1"
-    v2 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v2"
-    "github.com/kyma-project/cloud-manager/pkg/util"
-    "k8s.io/apimachinery/pkg/types"
-    "k8s.io/klog/v2"
-    ctrl "sigs.k8s.io/controller-runtime"
-    "sigs.k8s.io/controller-runtime/pkg/cluster"
-)
-
 type Reconciler struct {
     composedStateFactory composed.StateFactory
-    stateFactoryV1       v1.StateFactory
-    stateFactoryV2       v2.StateFactory
+    stateFactory         StateFactory
 }
 
 func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-    if Ignore.ShouldIgnoreKey(req) {
-        return ctrl.Result{}, nil
-    }
-    logger := composed.LoggerFromCtx(ctx)
-
-    baseState := r.composedStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.GcpNfsVolumeBackup{})
-
-    action := r.newAction()
-
-    return composed.Handling().
-        WithMetrics("gcpnfsvolumebackup", util.RequestObjToString(req)).
-        WithNoLog().
-        Handle(action(ctx, baseState))
+    // Same pattern as v1
 }
 
-func (r *Reconciler) newAction() composed.Action {
-    return composed.ComposeActions(
-        "crGcpNfsVolumeBackupMain",
-        feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolumeBackup{}),
-        composed.LoadObj,
-        r.versionRouter(),
-    )
+func NewReconciler(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster,
+    fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]) Reconciler {
+    // Initialize v2 reconciler
+}
+```
+
+#### Step 5.2: Update Controller
+
+Modify `internal/controller/cloud-resources/gcpnfsvolumebackup_controller.go`:
+
+```go
+// gcpNfsVolumeBackupRunner is a common interface for v1 and v2 reconcilers
+type gcpNfsVolumeBackupRunner interface {
+    Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error)
 }
 
-// versionRouter routes to v1 or v2 implementation based on feature flag
-func (r *Reconciler) versionRouter() composed.Action {
-    return func(ctx context.Context, st composed.State) (error, context.Context) {
-        logger := composed.LoggerFromCtx(ctx)
-
-        if feature.GcpBackupV2.Value(ctx) {
-            logger.Info("Using GcpNfsVolumeBackup v2 implementation")
-            return v2.New(r.stateFactoryV2)(ctx, st)
-        }
-
-        logger.Info("Using GcpNfsVolumeBackup v1 implementation (default)")
-        return v1.New(r.stateFactoryV1)(ctx, st)
-    }
+type GcpNfsVolumeBackupReconcilerFactory struct {
+    fileBackupClientProviderV1 gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
+    fileBackupClientProviderV2 gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
+    env                        abstractions.Environment
+    useV2                      bool
 }
 
-func NewReconciler(
-    kymaRef klog.ObjectRef,
-    kcpCluster cluster.Cluster,
-    skrCluster cluster.Cluster,
-    fileBackupClientProviderV1 gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
-    fileBackupClientProviderV2 gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient],
-    env abstractions.Environment,
-) Reconciler {
-    compSkrCluster := composed.NewStateClusterFromCluster(skrCluster)
-    compKcpCluster := composed.NewStateClusterFromCluster(kcpCluster)
-    composedStateFactory := composed.NewStateFactory(compSkrCluster)
-
-    stateFactoryV1 := v1.NewStateFactory(kymaRef, compKcpCluster, compSkrCluster, fileBackupClientProviderV1, env)
-    stateFactoryV2 := v2.NewStateFactory(kymaRef, compKcpCluster, compSkrCluster, fileBackupClientProviderV2)
-
-    return Reconciler{
-        composedStateFactory: composedStateFactory,
-        stateFactoryV1:       stateFactoryV1,
-        stateFactoryV2:       stateFactoryV2,
+func (f *GcpNfsVolumeBackupReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
+    if f.useV2 {
+        reconciler := gcpnfsvolumebackupv2.NewReconciler(...)
+        return &GcpNfsVolumeBackupReconciler{reconciler: &reconciler}
     }
+    reconciler := gcpnfsvolumebackupv1.NewReconciler(...)
+    return &GcpNfsVolumeBackupReconciler{reconciler: &reconciler}
+}
+
+func SetupGcpNfsVolumeBackupReconciler(...) error {
+    // Check feature flag at startup
+    useV2 := feature.GcpBackupV2.Value(context.Background())
+    // Log and create factory with appropriate flag
+}
+```
+
+#### Step 5.3: Update main.go
+
+Pass both v1 and v2 client providers:
+
+```go
+if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupReconciler(
+    skrRegistry,
+    gcpnfsbackupclientv1.NewFileBackupClientProvider(),
+    gcpnfsbackupclientv2.NewFileBackupClientProvider(gcpClients),
+    env,
+    setupLog,
+); err != nil {
+    // ...
 }
 ```
 
@@ -1047,10 +1023,10 @@ make build
 | `pkg/kcp/provider/gcp/nfsbackup/client/v1/fileBackupClient.go` | v1 client (moved) |
 | `pkg/kcp/provider/gcp/nfsbackup/client/v2/fileBackupClient.go` | v2 client (new library) |
 | `pkg/kcp/provider/gcp/nfsbackup/client/v2/util.go` | v2 client utilities |
-| `pkg/skr/gcpnfsvolumebackup/v1/reconcile.go` | v1 action composition |
+| `pkg/skr/gcpnfsvolumebackup/v1/reconciler.go` | v1 reconciler (moved from original location) |
 | `pkg/skr/gcpnfsvolumebackup/v1/state.go` | v1 state |
 | `pkg/skr/gcpnfsvolumebackup/v1/*.go` | v1 complete action set |
-| `pkg/skr/gcpnfsvolumebackup/v2/reconcile.go` | v2 action composition |
+| `pkg/skr/gcpnfsvolumebackup/v2/reconcile.go` | v2 reconciler with Reconciler struct |
 | `pkg/skr/gcpnfsvolumebackup/v2/state.go` | v2 state with protobuf types |
 | `pkg/skr/gcpnfsvolumebackup/v2/*.go` | v2 complete action set |
 | `pkg/kcp/provider/gcp/mock/nfsBackupStoreV2.go` | v2 mock implementation |
@@ -1063,10 +1039,10 @@ make build
 | `pkg/feature/ff_ga.yaml` | Add gcpBackupV2 flag |
 | `pkg/feature/ff_edge.yaml` | Add gcpBackupV2 flag |
 | `config/featureToggles/featureToggles.local.yaml` | Add gcpBackupV2 flag |
-| `pkg/skr/gcpnfsvolumebackup/reconciler.go` | Route to v1/v2 based on flag |
+| `internal/controller/cloud-resources/gcpnfsvolumebackup_controller.go` | Check feature flag at startup, route to v1 or v2 |
+| `cmd/main.go` | Pass both v1 and v2 client providers |
 | `pkg/kcp/provider/gcp/mock/server.go` | Add v2 provider |
 | `pkg/kcp/provider/gcp/mock/type.go` | Add v2 interface |
-| `internal/controller/cloud-resources/gcpnfsvolumebackup_controller.go` | Accept v2 provider |
 | `internal/controller/cloud-resources/suite_test.go` | Initialize v2 provider |
 
 ---
@@ -1101,7 +1077,7 @@ make build
 2. **Phase 2**: Create v1 directory structure (safe move) ✅ **COMPLETED**
 3. **Phase 3**: Create v2 client (new library integration) ✅ **COMPLETED**
 4. **Phase 4**: Create v2 SKR implementation (new reconciler) ✅ **COMPLETED**
-5. **Phase 5**: Update root reconciler (routing logic)
+5. **Phase 5**: Update controller with startup flag routing ✅ **COMPLETED**
 6. **Phase 6**: Create v2 mock (test infrastructure)
 7. **Phase 7**: Update controller and tests (validation)
 8. **Phase 8**: Cleanup and validation (quality)
