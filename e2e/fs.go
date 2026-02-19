@@ -33,21 +33,23 @@ func FileExistsOperation(path string) FileOperationFunc {
 func FileContainsOperation(path, content string) FileOperationFunc {
 	path = strings.TrimPrefix(path, "/")
 	return func(rootDir string) []string {
-		fileAssignment := fmt.Sprintf(`FILE=%s/%s`, rootDir, path)
+		filePattern := fmt.Sprintf(`%s/%s`, rootDir, path)
 
 		return []string{
 			``,
 			`# FileContainsOperation`,
 			fmt.Sprintf(`mkdir -p %s`, rootDir),
-			fileAssignment,
+			fmt.Sprintf(`PATTERN="%s"`, filePattern),
 			fmt.Sprintf(`DIR=%s`, rootDir),
 			fmt.Sprintf(`CONTENT="%s"`, content),
-			`if ! grep "$CONTENT" "$FILE"; then`,
+			`# Expand glob pattern`,
+			`FILE=$(echo $PATTERN)`,
+			`if ! grep "$CONTENT" $FILE; then`,
 			`  echo "content '$CONTENT' not found"`,
 			`  echo "directory '$DIR' content:"`,
 			`  ls -la $DIR || true`,
 			`  echo "file content:"`,
-			`  cat $FILE || true`,
+			`  cat $FILE 2>/dev/null || echo "File not found: $FILE"`,
 			`  exit 1`,
 			`fi`,
 			``,
