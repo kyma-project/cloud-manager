@@ -67,6 +67,12 @@ type AzureRedisInstanceSpec struct {
 	// +optional
 	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`
 
+	// DEPRECATED: Use AuthSecret instead. This field is kept for backward compatibility.
+	// This field was incorrectly named 'volume' and has been renamed to 'authSecret'.
+	// Support for this field will be removed in a future version.
+	// +optional
+	Volume *RedisAuthSecretSpec `json:"volume,omitempty"`
+
 	// +optional
 	IpRange IpRangeRef `json:"ipRange"`
 }
