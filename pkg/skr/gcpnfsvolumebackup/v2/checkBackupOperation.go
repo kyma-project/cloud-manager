@@ -25,7 +25,7 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 		return nil, nil
 	}
 
-	done, err := state.fileBackupClient.GetOperation(ctx, opName)
+	done, err := state.fileBackupClient.IsBackupOperationDone(ctx, opName)
 	if err != nil {
 		// If the operation is not found, reset the OpIdentifier and let retry or updateStatus to update the status.
 		if gcpmeta.IsNotFound(err) {

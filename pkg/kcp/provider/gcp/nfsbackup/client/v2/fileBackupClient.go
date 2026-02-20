@@ -30,9 +30,9 @@ type FileBackupClient interface {
 	// Returns the operation name for tracking.
 	DeleteBackup(ctx context.Context, projectId, location, name string) (string, error)
 
-	// GetOperation retrieves the status of a long-running operation.
+	// IsBackupOperationDone retrieves the status of a long-running operation.
 	// Returns true if the operation is done, false otherwise.
-	GetOperation(ctx context.Context, operationName string) (bool, error)
+	IsBackupOperationDone(ctx context.Context, operationName string) (bool, error)
 
 	// UpdateBackup updates an existing Filestore backup (e.g., labels).
 	// Returns the operation name for tracking.
@@ -148,7 +148,7 @@ func (c *fileBackupClient) DeleteBackup(ctx context.Context, projectId, location
 	return op.Name(), nil
 }
 
-func (c *fileBackupClient) GetOperation(ctx context.Context, operationName string) (bool, error) {
+func (c *fileBackupClient) IsBackupOperationDone(ctx context.Context, operationName string) (bool, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	req := &longrunningpb.GetOperationRequest{

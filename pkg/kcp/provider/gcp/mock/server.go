@@ -16,6 +16,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
@@ -79,6 +80,7 @@ func New() Server {
 		serviceUsageStore:     &serviceUsageStore{},
 		nfsRestoreStore:       &nfsRestoreStore{},
 		nfsBackupStore:        &nfsBackupStore{},
+		nfsBackupStoreV2:      &nfsBackupStoreV2{},
 		vpcPeeringStore:       &vpcPeeringStore{},
 		memoryStoreClientFake: &memoryStoreClientFake{
 			mutex:          sync.Mutex{},
@@ -105,6 +107,7 @@ type server struct {
 	*serviceUsageStore
 	*nfsRestoreStore
 	*nfsBackupStore
+	*nfsBackupStoreV2
 	*vpcPeeringStore
 	*memoryStoreClientFake
 	*memoryStoreClusterClientFake
@@ -246,6 +249,12 @@ func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupcl
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Info("Inside the GCP FileBackupClientProvider mock...")
 		return s, nil
+	}
+}
+
+func (s *server) FileBackupClientProviderV2() client.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient] {
+	return func() gcpnfsbackupclientv2.FileBackupClient {
+		return s.nfsBackupStoreV2
 	}
 }
 
