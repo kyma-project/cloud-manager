@@ -5,6 +5,7 @@ import (
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
@@ -48,6 +49,7 @@ type Providers interface {
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
 	FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]
 	FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
+	FileBackupClientProviderV2() client.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
 	VpcPeeringProvider() client.GcpClientProvider[gcpvpcpeeringclient.VpcPeeringClient]
 	MemoryStoreProviderFake() client.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient]
 	MemoryStoreClusterProviderFake() client.GcpClientProvider[gcpredisclusterclient.MemorystoreClusterClient]
@@ -82,6 +84,8 @@ type Server interface {
 	ExposedDataConfig
 
 	FileBackupClientFakeUtils
+
+	FileBackupClientFakeUtilsV2
 
 	FilestoreClientFakeUtils
 }
