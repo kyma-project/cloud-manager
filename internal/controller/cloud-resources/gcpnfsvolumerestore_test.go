@@ -1,13 +1,15 @@
 package cloudresources
 
 import (
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
-	skrgcpnfsvolbackup "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v1"
+	skrgcpnfsvolbackupv1 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v1"
+	skrgcpnfsvolbackupv2 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v2"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -60,7 +62,8 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore", func() {
 		})
 		By("And Given SKR GcpNfsVolumeBackup exists", func() {
 			// tell skrgcpnfsvolbackup reconciler to ignore this SKR GcpNfsVolumeBackup
-			skrgcpnfsvolbackup.Ignore.AddName(skrGcpNfsBackupName)
+			skrgcpnfsvolbackupv1.Ignore.AddName(skrGcpNfsBackupName)
+			skrgcpnfsvolbackupv2.Ignore.AddName(skrGcpNfsBackupName)
 			//Create SKR GcpNfsVolumeBackup if it doesn't exist.
 			Eventually(CreateGcpNfsVolumeBackup).
 				WithArguments(
