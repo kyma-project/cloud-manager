@@ -21,7 +21,7 @@ export default [
     { text: 'AzureVpcPeering Custom Resource', link: './resources/04-30-30-azure-vpc-peering.md' },
     { text: 'AwsRedisInstance Custom Resource', link: './resources/04-40-10-aws-redis-instance' },   
     { text: 'GcpRedisInstance Custom Resource', link: './resources/04-40-20-gcp-redis-instance' },
-    { text: 'AzureRedisInstance Custom Resource', link: './resources/04-40-30-azure-redis-instance.' },
+    { text: 'AzureRedisInstance Custom Resource', link: './resources/04-40-30-azure-redis-instance' },
     { text: 'AwsRedisCluster Custom Resource', link: './resources/04-50-10-aws-redis-cluster' },   
     { text: 'GcpRedisCluster Custom Resource', link: './resources/04-50-20-gcp-redis-cluster' },
     { text: 'GcpSubnet Custom Resource', link: './resources/04-50-21-gcp-subnet' },
