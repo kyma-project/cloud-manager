@@ -5,12 +5,23 @@ import (
 	"errors"
 	"fmt"
 
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	"google.golang.org/api/file/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// GcpNfsVolumeBackupPath returns the full GCP backup path from scope and backup status.
+// Use this to interact with mock GCP APIs in tests.
+func GcpNfsVolumeBackupPath(scope *cloudcontrolv1beta1.Scope, backup *cloudresourcesv1beta1.GcpNfsVolumeBackup) string {
+	project := scope.Spec.Scope.Gcp.Project
+	location := backup.Status.Location
+	name := fmt.Sprintf("cm-%.60s", backup.Status.Id)
+	return gcpnfsbackupclientv2.GetFileBackupPath(project, location, name)
+}
 
 func WithGcpNfsVolume(name string) ObjAction {
 	return &objAction{
@@ -27,12 +38,12 @@ func WithGcpNfsVolume(name string) ObjAction {
 	}
 }
 
-func CreateGcpFileBackupDirectly(ctx context.Context, backupClient gcpnfsbackupclient.FileBackupClient, project, location string, backup *file.Backup) error {
+func CreateGcpFileBackupDirectly(ctx context.Context, backupClient gcpnfsbackupclientv1.FileBackupClient, project, location string, backup *file.Backup) error {
 	_, err := backupClient.CreateFileBackup(ctx, project, location, backup.Name, backup)
 	return err
 }
 
-func ListGcpFileBackups(ctx context.Context, backupClient gcpnfsbackupclient.FileBackupClient, project, scopeName string) ([]*file.Backup, error) {
+func ListGcpFileBackups(ctx context.Context, backupClient gcpnfsbackupclientv1.FileBackupClient, project, scopeName string) ([]*file.Backup, error) {
 	filter := gcpclient.GetSkrBackupsFilter(scopeName)
 	return backupClient.ListFilesBackups(ctx, project, filter)
 }
@@ -130,6 +141,19 @@ func HavingGcpNfsVolumeBackupAccessibleFromStatus(accessibleFrom string) ObjAsse
 		}
 		if x.Status.AccessibleFrom != accessibleFrom {
 			return fmt.Errorf("the GcpNfsVolumeBackup AccessibleFrom status is %s, expected %s", x.Status.AccessibleFrom, accessibleFrom)
+		}
+		return nil
+	}
+}
+
+func HavingGcpNfsVolumeBackupStatusId() ObjAssertion {
+	return func(obj client.Object) error {
+		x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup)
+		if !ok {
+			return fmt.Errorf("the object %T is not GcpNfsVolumeBackup", obj)
+		}
+		if x.Status.Id == "" {
+			return errors.New("the GcpNfsVolumeBackup ID not set")
 		}
 		return nil
 	}

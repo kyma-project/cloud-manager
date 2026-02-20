@@ -13,7 +13,7 @@ import (
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/option"
@@ -166,14 +166,14 @@ func NewFakeFileRestoreClientProvider(fakeHttpServer *httptest.Server) client.Cl
 	)
 }
 
-func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsbackupclient.FileBackupClient] {
+func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, credentialsFile string) (gcpnfsbackupclient.FileBackupClient, error) {
+		func(ctx context.Context, credentialsFile string) (gcpnfsbackupclientv1.FileBackupClient, error) {
 			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err
 			}
-			return gcpnfsbackupclient.NewFileBackupClient(fsClient), nil
+			return gcpnfsbackupclientv1.NewFileBackupClient(fsClient), nil
 		},
 	)
 }
