@@ -72,39 +72,6 @@ func (s *State) ObjAsGcpNfsVolumeBackup() *cloudresourcesv1beta1.GcpNfsVolumeBac
 	return s.Obj().(*cloudresourcesv1beta1.GcpNfsVolumeBackup)
 }
 
-// Backup state accessors (abstract away protobuf details)
-func (s *State) HasFileBackup() bool { return s.fileBackup != nil }
-
-func (s *State) GetFileBackupState() string {
-	if s.fileBackup == nil {
-		return ""
-	}
-	return s.fileBackup.State.String()
-}
-
-func (s *State) GetFileBackupStorageBytes() int64 {
-	if s.fileBackup == nil {
-		return 0
-	}
-	return s.fileBackup.StorageBytes
-}
-
-func (s *State) GetFileBackupLabels() map[string]string {
-	if s.fileBackup == nil {
-		return nil
-	}
-	return s.fileBackup.Labels
-}
-
-// GetFileBackup returns the raw backup object (for v2-specific usage)
-func (s *State) GetFileBackup() *filestorepb.Backup { return s.fileBackup }
-
-// SetFileBackup sets the backup object
-func (s *State) SetFileBackup(backup *filestorepb.Backup) { s.fileBackup = backup }
-
-// GetFileBackupClient returns the v2 client
-func (s *State) GetFileBackupClient() v2client.FileBackupClient { return s.fileBackupClient }
-
 func (s *State) isTimeForCapacityUpdate() bool {
 	backup := s.ObjAsGcpNfsVolumeBackup()
 
@@ -117,12 +84,6 @@ func (s *State) isTimeForCapacityUpdate() bool {
 
 func stopAndRequeueForCapacity() error {
 	return composed.StopWithRequeueDelay(gcpclient.GcpCapacityCheckInterval)
-}
-
-func StopAndRequeueForCapacityAction() composed.Action {
-	return func(ctx context.Context, st composed.State) (error, context.Context) {
-		return stopAndRequeueForCapacity(), nil
-	}
 }
 
 func (s *State) specCommaSeparatedAccessibleFrom() string {
