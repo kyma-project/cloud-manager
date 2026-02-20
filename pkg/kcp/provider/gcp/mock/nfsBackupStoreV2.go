@@ -20,6 +20,9 @@ var (
 type FileBackupClientFakeUtilsV2 interface {
 	CreateFakeBackupV2(backup *filestorepb.Backup)
 	ClearAllBackupsV2()
+	GetNfsBackupV2ByName(name string) *filestorepb.Backup
+	SetNfsBackupV2State(name string, state filestorepb.Backup_State)
+	DeleteNfsBackupV2ByName(name string)
 }
 
 // nfsBackupStoreV2 implements FileBackupClient using protobuf types
@@ -38,6 +41,33 @@ func (s *nfsBackupStoreV2) ClearAllBackupsV2() {
 	s.backups = []*filestorepb.Backup{}
 }
 
+func (s *nfsBackupStoreV2) GetNfsBackupV2ByName(name string) *filestorepb.Backup {
+	for _, backup := range s.backups {
+		if backup.Name == name {
+			return backup
+		}
+	}
+	return nil
+}
+
+func (s *nfsBackupStoreV2) SetNfsBackupV2State(name string, state filestorepb.Backup_State) {
+	for _, backup := range s.backups {
+		if backup.Name == name {
+			backup.State = state
+			return
+		}
+	}
+}
+
+func (s *nfsBackupStoreV2) DeleteNfsBackupV2ByName(name string) {
+	for i, backup := range s.backups {
+		if backup.Name == name {
+			s.backups = append(s.backups[:i], s.backups[i+1:]...)
+			return
+		}
+	}
+}
+
 func (s *nfsBackupStoreV2) GetBackup(ctx context.Context, projectId, location, name string) (*filestorepb.Backup, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
@@ -48,9 +78,7 @@ func (s *nfsBackupStoreV2) GetBackup(ctx context.Context, projectId, location, n
 
 	for _, backup := range s.backups {
 		if backup.Name == completeName {
-			logger.WithName("GetBackup - mock v2").Info("Got Nfs Backup", "backup", backup.Name)
-			// Mark as READY for mock purposes
-			backup.State = filestorepb.Backup_READY
+			logger.WithName("GetBackup - mock v2").Info("Got Nfs Backup", "backup", backup.Name, "state", backup.State.String())
 			return backup, nil
 		}
 	}
@@ -130,8 +158,9 @@ func (s *nfsBackupStoreV2) CreateBackup(ctx context.Context, projectId, location
 		}
 	}
 
+	backup.State = filestorepb.Backup_CREATING
 	s.backups = append(s.backups, backup)
-	logger.WithName("CreateBackup - mock v2").Info(fmt.Sprintf("Created backup, total: %d", len(s.backups)))
+	logger.WithName("CreateBackup - mock v2").Info(fmt.Sprintf("Created backup in CREATING state, total: %d", len(s.backups)))
 
 	return fmt.Sprintf("operations/create-%s", name), nil
 }
@@ -144,10 +173,10 @@ func (s *nfsBackupStoreV2) DeleteBackup(ctx context.Context, projectId, location
 	logger := composed.LoggerFromCtx(ctx)
 
 	completeName := fmt.Sprintf("projects/%s/locations/%s/backups/%s", projectId, location, name)
-	for i, backup := range s.backups {
+	for _, backup := range s.backups {
 		if backup.Name == completeName {
-			s.backups = append(s.backups[:i], s.backups[i+1:]...)
-			logger.WithName("DeleteBackup - mock v2").Info(fmt.Sprintf("Deleted backup, total: %d", len(s.backups)))
+			backup.State = filestorepb.Backup_DELETING
+			logger.WithName("DeleteBackup - mock v2").Info("Set backup state to DELETING")
 			return fmt.Sprintf("operations/delete-%s", name), nil
 		}
 	}
