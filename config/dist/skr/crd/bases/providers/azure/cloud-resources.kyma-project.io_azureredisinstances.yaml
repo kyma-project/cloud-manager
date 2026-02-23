@@ -145,6 +145,9 @@ spec:
               required:
                 - redisTier
               type: object
+              x-kubernetes-validations:
+                - message: Cannot set both 'volume' (deprecated) and 'authSecret' fields. Use 'authSecret' only.
+                  rule: '!(has(self.volume) && self.volume != null && has(self.authSecret) && self.authSecret != null)'
             status:
               description: AzureRedisInstanceStatus defines the observed state of AzureRedisInstance
               properties:
