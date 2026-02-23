@@ -204,6 +204,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 			Should(Succeed())
 
 		By("// cleanup: delete default SKR IpRange", func() {
+			skriprange.Ignore.RemoveName("default")
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())
@@ -360,6 +361,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 			Should(Succeed())
 
 		By("// cleanup: delete default SKR IpRange", func() {
+			skriprange.Ignore.RemoveName("default")
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())
@@ -530,6 +532,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		})
 
 		By("// cleanup: delete default SKR IpRange", func() {
+			skriprange.Ignore.RemoveName("default")
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())
@@ -750,6 +753,181 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 			Should(Succeed())
 
 		By("// cleanup: delete default SKR IpRange", func() {
+			skriprange.Ignore.RemoveName("default")
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: SKR AzureRedisCluster with deprecated volume field creates auth secret", func() {
+
+		azureRedisClusterName := "volume-compat-cluster"
+		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7vc"
+		azureRedisCluster := &cloudresourcesv1beta1.AzureRedisCluster{}
+		redisVersion := "6.0"
+		tier := cloudresourcesv1beta1.AzureRedisTierC3
+		var shardCount int32 = 2
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+		skriprange.Ignore.AddName("default")
+
+		const (
+			volumeSecretName = "volume-cluster-secret"
+		)
+		volumeSecretLabels := map[string]string{
+			"migrated": "true",
+			"app":      "redis",
+		}
+		volumeSecretAnnotations := map[string]string{
+			"purpose": "volume-migration-test",
+		}
+		volumeExtraData := map[string]string{
+			"connection-string": "redis://{{.host}}:{{.port}}",
+			"password":          "{{.authString}}",
+		}
+
+		By("Given default SKR IpRange does not exist", func() {
+			Consistently(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				ShouldNot(Succeed())
+		})
+
+		By("When AzureRedisCluster is created with deprecated volume field", func() {
+			Eventually(CreateAzureRedisCluster).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), azureRedisCluster,
+					WithName(azureRedisClusterName),
+					WithAzureRedisClusterRedisVersion(redisVersion),
+					WithAzureRedisClusterRedisTier(tier),
+					WithAzureRedisClusterShardCount(shardCount),
+					WithAzureRedisClusterVolume(&cloudresourcesv1beta1.RedisAuthSecretSpec{
+						Name:        volumeSecretName,
+						Labels:      volumeSecretLabels,
+						Annotations: volumeSecretAnnotations,
+						ExtraData:   volumeExtraData,
+					}),
+				).
+				Should(Succeed())
+		})
+
+		By("Then default SKR IpRange is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					NewObjActions(WithName("default"), WithNamespace("kyma-system"))).
+				Should(Succeed())
+		})
+
+		By("When default SKR IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		kcpRedisCluster := &cloudcontrolv1beta1.RedisCluster{}
+
+		By("Then KCP RedisCluster is created", func() {
+			// load SKR AzureRedisCluster to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					azureRedisCluster,
+					NewObjActions(),
+					HavingAzureRedisClusterStatusId(),
+					HavingAzureRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+				).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpRedisCluster,
+					NewObjActions(
+						WithName(azureRedisCluster.Status.Id),
+					),
+				).
+				Should(Succeed(), "expected KCP RedisCluster to be created")
+		})
+
+		By("When KCP RedisCluster has Ready condition", func() {
+			kcpRedisClusterPrimaryEndpoint := "volume-cluster-redis.azure.com:6379"
+			kcpRedisClusterAuthString := "test-cluster-auth-456"
+
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpRedisCluster,
+					WithRedisInstanceDiscoveryEndpoint(kcpRedisClusterPrimaryEndpoint),
+					WithRedisInstanceAuthString(kcpRedisClusterAuthString),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed(), "failed updating KCP RedisCluster status")
+		})
+
+		By("Then SKR AzureRedisCluster has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					azureRedisCluster,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed(), "expected AzureRedisCluster to have Ready condition")
+		})
+
+		authSecret := &corev1.Secret{}
+
+		By("Then SKR auth Secret is created using volume field configuration", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), authSecret,
+					NewObjActions(WithName(volumeSecretName), WithNamespace(azureRedisCluster.Namespace)),
+					HavingLabels(map[string]string{
+						"migrated": "true",
+						"app":      "redis",
+					}),
+					HavingLabelKeys(
+						cloudresourcesv1beta1.LabelRedisClusterStatusId,
+						cloudresourcesv1beta1.LabelCloudManaged,
+					),
+					HavingAnnotations(map[string]string{
+						"purpose": "volume-migration-test",
+					}),
+				).
+				Should(Succeed(), "expected auth Secret to be created from volume field")
+		})
+
+		By("And Then auth Secret contains standard fields", func() {
+			Expect(authSecret.Data).To(HaveKey("host"))
+			Expect(authSecret.Data).To(HaveKey("port"))
+			Expect(authSecret.Data).To(HaveKey("authString"))
+			Expect(authSecret.Data).To(HaveKey("primaryEndpoint"))
+		})
+
+		By("And Then auth Secret contains extraData from volume field with templating", func() {
+			Expect(authSecret.Data).To(HaveKeyWithValue("connection-string", Not(ContainSubstring("{{"))))
+			Expect(authSecret.Data).To(HaveKeyWithValue("password", Not(ContainSubstring("{{"))))
+		})
+
+		// CleanUp
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), azureRedisCluster).
+			Should(Succeed())
+
+		By("// cleanup: delete default SKR IpRange", func() {
+			skriprange.Ignore.RemoveName("default")
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())
