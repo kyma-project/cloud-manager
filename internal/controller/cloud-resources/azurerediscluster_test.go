@@ -225,6 +225,17 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		azureRedisClusterRedisConfigs.MaxClients = "5"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
+		By("// setup: ensure default SKR IpRange is deleted from previous test", func() {
+			defaultIpRange := &cloudresourcesv1beta1.IpRange{}
+			defaultIpRange.Name = "default"
+			defaultIpRange.Namespace = "kyma-system"
+			_ = infra.SKR().Client().Delete(infra.Ctx(), defaultIpRange)
+			Eventually(IsDeleted).
+				WithContext(infra.Ctx()).
+				WithArguments(infra.SKR().Client(), defaultIpRange).
+				Should(Succeed())
+		})
+
 		skriprange.Ignore.AddName("default")
 
 		const (
@@ -378,6 +389,17 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		azureRedisCluster := &cloudresourcesv1beta1.AzureRedisCluster{}
 		tier := cloudresourcesv1beta1.AzureRedisTierC4
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+		By("// setup: ensure default SKR IpRange is deleted from previous test", func() {
+			defaultIpRange := &cloudresourcesv1beta1.IpRange{}
+			defaultIpRange.Name = "default"
+			defaultIpRange.Namespace = "kyma-system"
+			_ = infra.SKR().Client().Delete(infra.Ctx(), defaultIpRange)
+			Eventually(IsDeleted).
+				WithContext(infra.Ctx()).
+				WithArguments(infra.SKR().Client(), defaultIpRange).
+				Should(Succeed())
+		})
 
 		skriprange.Ignore.AddName("default")
 
@@ -551,6 +573,17 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		var shardCount int32 = 1
 		var replicaCount int32 = 2
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+
+		By("// setup: ensure default SKR IpRange is deleted from previous test", func() {
+			defaultIpRange := &cloudresourcesv1beta1.IpRange{}
+			defaultIpRange.Name = "default"
+			defaultIpRange.Namespace = "kyma-system"
+			_ = infra.SKR().Client().Delete(infra.Ctx(), defaultIpRange)
+			Eventually(IsDeleted).
+				WithContext(infra.Ctx()).
+				WithArguments(infra.SKR().Client(), defaultIpRange).
+				Should(Succeed())
+		})
 
 		skriprange.Ignore.AddName("default")
 
