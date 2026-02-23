@@ -10,8 +10,9 @@ import (
 )
 
 func getAuthSecretName(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) string {
-	if azureRedis.Spec.AuthSecret != nil && len(azureRedis.Spec.AuthSecret.Name) > 0 {
-		return azureRedis.Spec.AuthSecret.Name
+	effectiveAuthSecret := getEffectiveAuthSecret(azureRedis)
+	if effectiveAuthSecret != nil && len(effectiveAuthSecret.Name) > 0 {
+		return effectiveAuthSecret.Name
 	}
 
 	return azureRedis.Name
@@ -20,8 +21,9 @@ func getAuthSecretName(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) str
 func getAuthSecretLabels(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) map[string]string {
 	labelsBuilder := util.NewLabelBuilder()
 
-	if azureRedis.Spec.AuthSecret != nil {
-		for labelName, labelValue := range azureRedis.Spec.AuthSecret.Labels {
+	effectiveAuthSecret := getEffectiveAuthSecret(azureRedis)
+	if effectiveAuthSecret != nil {
+		for labelName, labelValue := range effectiveAuthSecret.Labels {
 			labelsBuilder.WithCustomLabel(labelName, labelValue)
 		}
 	}
@@ -36,11 +38,13 @@ func getAuthSecretLabels(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) m
 }
 
 func getAuthSecretAnnotations(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) map[string]string {
-	if azureRedis.Spec.AuthSecret == nil {
+	// Use effective auth secret (supports both authSecret and deprecated volume)
+	effectiveAuthSecret := getEffectiveAuthSecret(azureRedis)
+	if effectiveAuthSecret == nil {
 		return nil
 	}
 	result := map[string]string{}
-	for k, v := range azureRedis.Spec.AuthSecret.Annotations {
+	for k, v := range effectiveAuthSecret.Annotations {
 		result[k] = v
 	}
 	return result

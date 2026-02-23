@@ -67,11 +67,13 @@ func (s *State) SetSkrIpRange(skrIpRange *cloudresourcesv1beta1.IpRange) {
 func (s *State) GetAuthSecretData() map[string][]byte {
 	authSecretBaseData := getAuthSecretBaseData(s.KcpRedisCluster)
 	redisCluster := s.ObjAsAzureRedisCluster()
-	if redisCluster.Spec.AuthSecret == nil {
+
+	effectiveAuthSecret := getEffectiveAuthSecret(redisCluster)
+	if effectiveAuthSecret == nil {
 		return authSecretBaseData
 	}
 
-	parsedAuthSecretExtraData := parseAuthSecretExtraData(redisCluster.Spec.AuthSecret.ExtraData, authSecretBaseData)
+	parsedAuthSecretExtraData := parseAuthSecretExtraData(effectiveAuthSecret.ExtraData, authSecretBaseData)
 
 	return util.MergeMaps(authSecretBaseData, parsedAuthSecretExtraData, false)
 }
