@@ -3,6 +3,7 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -106,6 +107,11 @@ func (s *State) IsAllowedToRestoreBackup() bool {
 
 	allowed, exists := labels[ConvertToAccessibleFromKey(shootName)]
 	if exists && allowed == util.GcpLabelBackupAccessibleFrom {
+		return true
+	}
+
+	allowedAll, existsAll := labels[ConvertToAccessibleFromKey("all")]
+	if existsAll && allowedAll == util.GcpLabelBackupAccessibleFrom {
 		return true
 	}
 

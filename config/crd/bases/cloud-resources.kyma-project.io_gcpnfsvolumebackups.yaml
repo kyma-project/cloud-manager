@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.8
+    cloud-resources.kyma-project.io/version: v0.0.9
   name: gcpnfsvolumebackups.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -58,7 +58,7 @@ spec:
                 accessibleFrom:
                   description: |-
                     AccessibleFrom is an array of shootNames or subaccountIds that would have access to the backup for restore.
-                    "ALL" is also accepted as a value to allow access from all shoots in the same global account and gcp project. "ALL" cannot be used in combination with other values.
+                    "all" is also accepted as a value to allow access from all shoots in the same global account and gcp project. "all" cannot be used in combination with other values.
                   items:
                     type: string
                   maxItems: 10
@@ -66,8 +66,8 @@ spec:
                   type: array
                   x-kubernetes-list-type: set
                   x-kubernetes-validations:
-                    - message: The value 'ALL' cannot be combined with other values.
-                      rule: (self.all(x, x == 'ALL') || self.all(x, x != 'ALL'))
+                    - message: The value 'all' cannot be combined with other values.
+                      rule: (self.all(x, x == 'all') || self.all(x, x != 'all'))
                 location:
                   description: |-
                     GCP Region Name (as specified in https://cloud.google.com/filestore/docs/regions) where this backup should be created.

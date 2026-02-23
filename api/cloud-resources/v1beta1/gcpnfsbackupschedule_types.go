@@ -98,12 +98,12 @@ type GcpNfsBackupScheduleSpec struct {
 	DeleteCascade bool `json:"deleteCascade,omitempty"`
 
 	// AccessibleFrom is an array of shootNames or subaccountIds that would have access to the backups created by this schedule for restore.
-	// "ALL" is also accepted as a value to allow access from all shoots in the same global account and gcp project. "ALL" cannot be used in combination with other values.
+	// "all" is also accepted as a value to allow access from all shoots in the same global account and gcp project. "all" cannot be used in combination with other values.
 	// +optional
 	// +listType=set
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=10
-	// +kubebuilder:validation:XValidation:rule="(self.all(x, x == 'ALL') || self.all(x, x != 'ALL'))", message="The value 'ALL' cannot be combined with other values."
+	// +kubebuilder:validation:XValidation:rule="(self.all(x, x == 'all') || self.all(x, x != 'all'))", message="The value 'all' cannot be combined with other values."
 	AccessibleFrom []string `json:"accessibleFrom,omitempty"`
 }
 

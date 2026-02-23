@@ -39,7 +39,7 @@ This table lists the parameters of the given resource together with their descri
 | **source.volume.name**      | string     | Required. Name of the source GcpNfsVolume.                                                                                                                                                                                                            |
 | **source.volume.namespace** | string     | Optional. Namespace of the source GcpNfsVolume. Defaults to the namespace of the GcpNfsVolumeBackup resource if not provided.                                                                                                                         |
 | **location**                | string     | Optional. Immutable. The GCP region where the backup is stored. If left empty, it defaults to the region of the cluster. Must be a valid [GCP region](https://cloud.google.com/filestore/docs/regions).                                              |
-| **accessibleFrom**          | \[\]string | Optional. Array of shoot names or subaccount IDs that are granted access to restore from this backup. Use `"ALL"` to allow access from all shoots in the same global account and GCP project. `"ALL"` cannot be combined with other values. Max 10 items. |
+| **accessibleFrom**          | \[\]string | Optional. Array of shoot names or subaccount IDs that are granted access to restore from this backup. Use `"all"` to allow access from all shoots in the same global account and GCP project. `"all"` cannot be combined with other values. Max 10 items. |
 
 **Status:**
 
@@ -106,7 +106,7 @@ spec:
     volume:
       name: critical-data
   accessibleFrom:
-    - "ALL"
+    - "all"
 ```
 
 ## Related Resources <!-- {docsify-ignore} -->
