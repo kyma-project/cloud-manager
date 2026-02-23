@@ -49,6 +49,7 @@ func (r *reconciler) newAction() composed.Action {
 		"azureRedisInstance",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AzureRedisInstance{}),
 		composed.LoadObj,
+		migrateVolumeToAuthSecret, // Handle backward compatibility for 'volume' field
 		defaultiprange.New(),
 		updateId,
 		loadKcpRedisInstance,

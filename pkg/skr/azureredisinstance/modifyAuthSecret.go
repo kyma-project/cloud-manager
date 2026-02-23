@@ -20,8 +20,8 @@ func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 	currentSecretData := state.AuthSecret.Data
 	desiredSecretData := state.GetAuthSecretData()
 
-	desiredLabels := getAuthSecretLabels(state.ObjAsAzureRedisInstance())
-	desiredAnnotations := getAuthSecretAnnotations(state.ObjAsAzureRedisInstance())
+	desiredLabels := getAuthSecretLabels(state)
+	desiredAnnotations := getAuthSecretAnnotations(state)
 
 	dataChanged := !maps.EqualFunc(currentSecretData, desiredSecretData, func(l, r []byte) bool { return bytes.Equal(l, r) })
 	labelsChanged := !maps.Equal(state.AuthSecret.Labels, desiredLabels)

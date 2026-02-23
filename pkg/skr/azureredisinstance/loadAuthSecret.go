@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -18,7 +19,7 @@ func loadAuthSecret(ctx context.Context, st composed.State) (error, context.Cont
 	azureRedisInstance := state.ObjAsAzureRedisInstance()
 
 	secret := &corev1.Secret{}
-	authSecretName := getAuthSecretName(state.ObjAsAzureRedisInstance())
+	authSecretName := getAuthSecretName(state)
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
 		Namespace: state.Obj().GetNamespace(),
 		Name:      authSecretName,

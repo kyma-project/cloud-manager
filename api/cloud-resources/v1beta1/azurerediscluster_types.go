@@ -45,6 +45,7 @@ type RedisClusterAzureConfigs struct {
 }
 
 // AzureRedisClusterSpec defines the desired state of AzureRedisCluster
+// +kubebuilder:validation:XValidation:rule="!(has(self.volume) && has(self.authSecret))", message="Cannot set both 'volume' (deprecated) and 'authSecret' fields. Use 'authSecret' only."
 type AzureRedisClusterSpec struct {
 	// +kubebuilder:validation:Required
 	RedisTier AzureRedisClusterTier `json:"redisTier"`
@@ -69,6 +70,12 @@ type AzureRedisClusterSpec struct {
 
 	// +optional
 	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`
+
+	// DEPRECATED: Use AuthSecret instead. This field is kept for backward compatibility.
+	// This field was incorrectly named 'volume' and has been renamed to 'authSecret'.
+	// Support for this field will be removed in a future version.
+	// +optional
+	Volume *RedisAuthSecretSpec `json:"volume,omitempty"`
 
 	// +optional
 	IpRange IpRangeRef `json:"ipRange"`

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.58
+    cloud-resources.kyma-project.io/version: v0.0.59
   name: azureredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -114,9 +114,40 @@ spec:
                   x-kubernetes-validations:
                     - message: RedisVersion is immutable.
                       rule: (self == oldSelf)
+                volume:
+                  description: |-
+                    DEPRECATED: Use AuthSecret instead. This field is kept for backward compatibility.
+                    This field was incorrectly named 'volume' and has been renamed to 'authSecret'.
+                    Support for this field will be removed in a future version.
+                  properties:
+                    annotations:
+                      additionalProperties:
+                        type: string
+                      maxProperties: 64
+                      type: object
+                    extraData:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    labels:
+                      additionalProperties:
+                        type: string
+                      maxProperties: 64
+                      type: object
+                    name:
+                      maxLength: 253
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                      type: string
+                      x-kubernetes-validations:
+                        - message: name is immutable
+                          rule: self == '' || oldSelf == '' || self == oldSelf
+                  type: object
               required:
                 - redisTier
               type: object
+              x-kubernetes-validations:
+                - message: Cannot set both 'volume' (deprecated) and 'authSecret' fields. Use 'authSecret' only.
+                  rule: '!(has(self.volume) && has(self.authSecret))'
             status:
               description: AzureRedisInstanceStatus defines the observed state of AzureRedisInstance
               properties:
