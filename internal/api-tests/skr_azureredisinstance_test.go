@@ -56,6 +56,11 @@ func (b *testAzureRedisInstanceBuilder) WithAuthSecretExtraData(extraData map[st
 	return b
 }
 
+func (b *testAzureRedisInstanceBuilder) WithVolume(volumeSpec *cloudresourcesv1beta1.RedisAuthSecretSpec) *testAzureRedisInstanceBuilder {
+	b.instance.Spec.Volume = volumeSpec
+	return b
+}
+
 var _ = Describe("Feature: SKR AzureRedisInstance", Ordered, func() {
 
 	Context("Scenario: authSecret mutability", func() {
@@ -154,6 +159,31 @@ var _ = Describe("Feature: SKR AzureRedisInstance", Ordered, func() {
 				builder.WithAuthSecretName("")
 				builder.instance.Spec.AuthSecret.Labels = nil
 			},
+		)
+	})
+
+	Context("Scenario: CEL validation - volume and authSecret mutual exclusivity", func() {
+
+		canCreateSkr(
+			"AzureRedisInstance with only authSecret",
+			newTestAzureRedisInstanceBuilder().WithAuthSecretName("auth-only"),
+		)
+
+		canCreateSkr(
+			"AzureRedisInstance with only volume (deprecated)",
+			newTestAzureRedisInstanceBuilder().WithVolume(&cloudresourcesv1beta1.RedisAuthSecretSpec{
+				Name: "volume-only",
+			}),
+		)
+
+		canNotCreateSkr(
+			"AzureRedisInstance cannot have both volume and authSecret",
+			newTestAzureRedisInstanceBuilder().
+				WithVolume(&cloudresourcesv1beta1.RedisAuthSecretSpec{
+					Name: "volume-secret",
+				}).
+				WithAuthSecretName("auth-secret"),
+			"Cannot set both 'volume' (deprecated) and 'authSecret' fields",
 		)
 	})
 })

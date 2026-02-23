@@ -97,32 +97,4 @@ var _ = Describe("Feature: SKR AzureRedisCluster Volume→AuthSecret Migration",
 			Expect(azureRedisCluster.Spec.Volume).To(BeNil())
 		})
 	})
-
-	It("Scenario: CEL validation rejects setting both volume and authSecret", func() {
-
-		const (
-			redisClusterName = "test-validation-cluster"
-			correctSecret    = "correct-auth-secret"
-			wrongSecret      = "wrong-volume-secret"
-		)
-
-		azureRedisCluster := &cloudresourcesv1beta1.AzureRedisCluster{}
-
-		By("When AzureRedisCluster is created with both 'volume' and 'authSecret' fields", func() {
-			err := CreateAzureRedisCluster(
-				infra.Ctx(), infra.SKR().Client(), azureRedisCluster,
-				WithName(redisClusterName),
-				WithAzureRedisClusterRedisTier(cloudresourcesv1beta1.AzureRedisTierC3),
-				WithAzureRedisClusterAuthSecretName(correctSecret),
-				WithAzureRedisClusterVolume(&cloudresourcesv1beta1.RedisAuthSecretSpec{
-					Name: wrongSecret,
-				}),
-			)
-
-			By("Then creation is rejected by CEL validation", func() {
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("Cannot set both 'volume' (deprecated) and 'authSecret' fields"))
-			})
-		})
-	})
 })

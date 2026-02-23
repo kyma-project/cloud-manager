@@ -51,7 +51,7 @@ type RedisInstanceAzureConfigs struct {
 }
 
 // AzureRedisInstanceSpec defines the desired state of AzureRedisInstance
-// +kubebuilder:validation:XValidation:rule="!(has(self.volume) && self.volume != null && has(self.authSecret) && self.authSecret != null)", message="Cannot set both 'volume' (deprecated) and 'authSecret' fields. Use 'authSecret' only."
+// +kubebuilder:validation:XValidation:rule="!(has(self.volume) && has(self.authSecret))", message="Cannot set both 'volume' (deprecated) and 'authSecret' fields. Use 'authSecret' only."
 type AzureRedisInstanceSpec struct {
 	// +kubebuilder:validation:Required
 	RedisTier AzureRedisTier `json:"redisTier"`
