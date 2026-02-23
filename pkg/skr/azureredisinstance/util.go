@@ -9,25 +9,24 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-func getAuthSecretName(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) string {
-	effectiveAuthSecret := getEffectiveAuthSecret(azureRedis)
-	if effectiveAuthSecret != nil && len(effectiveAuthSecret.Name) > 0 {
-		return effectiveAuthSecret.Name
+func getAuthSecretName(state *State) string {
+	if state.AuthSecretDetails != nil && len(state.AuthSecretDetails.Name) > 0 {
+		return state.AuthSecretDetails.Name
 	}
 
-	return azureRedis.Name
+	return state.ObjAsAzureRedisInstance().Name
 }
 
-func getAuthSecretLabels(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) map[string]string {
+func getAuthSecretLabels(state *State) map[string]string {
 	labelsBuilder := util.NewLabelBuilder()
 
-	effectiveAuthSecret := getEffectiveAuthSecret(azureRedis)
-	if effectiveAuthSecret != nil {
-		for labelName, labelValue := range effectiveAuthSecret.Labels {
+	if state.AuthSecretDetails != nil {
+		for labelName, labelValue := range state.AuthSecretDetails.Labels {
 			labelsBuilder.WithCustomLabel(labelName, labelValue)
 		}
 	}
 
+	azureRedis := state.ObjAsAzureRedisInstance()
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelRedisInstanceStatusId, azureRedis.Status.Id)
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelRedisInstanceNamespace, azureRedis.Namespace)
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
@@ -37,14 +36,12 @@ func getAuthSecretLabels(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) m
 	return pvLabels
 }
 
-func getAuthSecretAnnotations(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) map[string]string {
-	// Use effective auth secret (supports both authSecret and deprecated volume)
-	effectiveAuthSecret := getEffectiveAuthSecret(azureRedis)
-	if effectiveAuthSecret == nil {
+func getAuthSecretAnnotations(state *State) map[string]string {
+	if state.AuthSecretDetails == nil {
 		return nil
 	}
 	result := map[string]string{}
-	for k, v := range effectiveAuthSecret.Annotations {
+	for k, v := range state.AuthSecretDetails.Annotations {
 		result[k] = v
 	}
 	return result

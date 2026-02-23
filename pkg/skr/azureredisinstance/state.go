@@ -17,9 +17,10 @@ type State struct {
 	KymaRef    klog.ObjectRef
 	KcpCluster composed.StateCluster
 
-	KcpRedisInstance *cloudcontrolv1beta1.RedisInstance
-	SkrIpRange       *cloudresourcesv1beta1.IpRange
-	AuthSecret       *corev1.Secret
+	KcpRedisInstance  *cloudcontrolv1beta1.RedisInstance
+	SkrIpRange        *cloudresourcesv1beta1.IpRange
+	AuthSecret        *corev1.Secret
+	AuthSecretDetails *cloudresourcesv1beta1.RedisAuthSecretSpec
 }
 
 func newStateFactory(
@@ -66,14 +67,12 @@ func (s *State) SetSkrIpRange(skrIpRange *cloudresourcesv1beta1.IpRange) {
 
 func (s *State) GetAuthSecretData() map[string][]byte {
 	authSecretBaseData := getAuthSecretBaseData(s.KcpRedisInstance)
-	redisInstance := s.ObjAsAzureRedisInstance()
 
-	effectiveAuthSecret := getEffectiveAuthSecret(redisInstance)
-	if effectiveAuthSecret == nil {
+	if s.AuthSecretDetails == nil {
 		return authSecretBaseData
 	}
 
-	parsedAuthSecretExtraData := parseAuthSecretExtraData(effectiveAuthSecret.ExtraData, authSecretBaseData)
+	parsedAuthSecretExtraData := parseAuthSecretExtraData(s.AuthSecretDetails.ExtraData, authSecretBaseData)
 
 	return util.MergeMaps(authSecretBaseData, parsedAuthSecretExtraData, false)
 }
