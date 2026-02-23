@@ -11,11 +11,11 @@ import (
 
 var _ = Describe("Feature: SKR AzureRedisInstance Volume→AuthSecret Migration", func() {
 
-	It("Scenario: AzureRedisInstance with deprecated volume field is migrated to authSecret", func() {
+	It("Scenario: AzureRedisInstance with deprecated volume field works (backward compatibility)", func() {
 
 		const (
-			redisInstanceName = "test-migration-instance"
-			secretName        = "test-migration-secret"
+			redisInstanceName = "test-backward-compat-instance"
+			secretName        = "test-compat-secret"
 		)
 
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
@@ -44,7 +44,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance Volume→AuthSecret Migration"
 				Should(Succeed())
 		})
 
-		By("Then the reconciler migrates 'volume' to 'authSecret'", func() {
+		By("Then the spec.volume remains unchanged (ArgoCD-safe)", func() {
 			Eventually(func() error {
 				return infra.SKR().Client().Get(infra.Ctx(), infra.SKR().ObjKey(redisInstanceName), azureRedisInstance)
 			}).
@@ -52,29 +52,58 @@ var _ = Describe("Feature: SKR AzureRedisInstance Volume→AuthSecret Migration"
 				WithPolling(200 * time.Millisecond).
 				Should(Succeed())
 
-			Eventually(func() bool {
-				_ = infra.SKR().Client().Get(infra.Ctx(), infra.SKR().ObjKey(redisInstanceName), azureRedisInstance)
-				return azureRedisInstance.Spec.AuthSecret != nil && azureRedisInstance.Spec.Volume == nil
+			// Verify the spec is NOT modified by the controller (ArgoCD-safe)
+			Expect(azureRedisInstance.Spec.Volume).NotTo(BeNil(), "spec.volume should remain set for backward compatibility")
+			Expect(azureRedisInstance.Spec.Volume.Name).To(Equal(secretName))
+			Expect(azureRedisInstance.Spec.Volume.Labels).To(HaveKeyWithValue("migrated", "true"))
+			Expect(azureRedisInstance.Spec.Volume.Annotations).To(HaveKeyWithValue("test", "migration"))
+			Expect(azureRedisInstance.Spec.Volume.ExtraData).To(HaveKeyWithValue("hostname", "{{ .host }}"))
+			Expect(azureRedisInstance.Spec.Volume.ExtraData).To(HaveKeyWithValue("password", "{{ .authString }}"))
+			Expect(azureRedisInstance.Spec.Volume.ExtraData).To(HaveKeyWithValue("tls", "true"))
+
+			// The controller should NOT populate authSecret from volume (non-destructive)
+			Expect(azureRedisInstance.Spec.AuthSecret).To(BeNil(), "spec.authSecret should remain nil (non-destructive migration)")
+		})
+	})
+
+	It("Scenario: AzureRedisInstance with authSecret field works", func() {
+
+		const (
+			redisInstanceName = "test-new-field-instance"
+			secretName        = "test-new-secret"
+		)
+
+		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
+
+		By("When AzureRedisInstance is created with 'authSecret' field", func() {
+			Eventually(CreateAzureRedisInstance).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
+					WithName(redisInstanceName),
+					WithAzureRedisInstanceRedisTier(cloudresourcesv1beta1.AzureRedisTierP1),
+					WithAzureRedisInstanceAuthSecretName(secretName),
+				).
+				Should(Succeed())
+		})
+
+		By("Then the spec.authSecret remains unchanged", func() {
+			Eventually(func() error {
+				return infra.SKR().Client().Get(infra.Ctx(), infra.SKR().ObjKey(redisInstanceName), azureRedisInstance)
 			}).
-				WithTimeout(5*time.Second).
-				WithPolling(200*time.Millisecond).
-				Should(BeTrue(), "Expected Volume to be migrated to AuthSecret")
+				WithTimeout(5 * time.Second).
+				WithPolling(200 * time.Millisecond).
+				Should(Succeed())
 
 			Expect(azureRedisInstance.Spec.AuthSecret).NotTo(BeNil())
 			Expect(azureRedisInstance.Spec.AuthSecret.Name).To(Equal(secretName))
-			Expect(azureRedisInstance.Spec.AuthSecret.Labels).To(HaveKeyWithValue("migrated", "true"))
-			Expect(azureRedisInstance.Spec.AuthSecret.Annotations).To(HaveKeyWithValue("test", "migration"))
-			Expect(azureRedisInstance.Spec.AuthSecret.ExtraData).To(HaveKeyWithValue("hostname", "{{ .host }}"))
-			Expect(azureRedisInstance.Spec.AuthSecret.ExtraData).To(HaveKeyWithValue("password", "{{ .authString }}"))
-			Expect(azureRedisInstance.Spec.AuthSecret.ExtraData).To(HaveKeyWithValue("tls", "true"))
 			Expect(azureRedisInstance.Spec.Volume).To(BeNil())
 		})
 	})
 
-	It("Scenario: AzureRedisInstance with both volume and authSecret prefers authSecret", func() {
+	It("Scenario: CEL validation rejects setting both volume and authSecret", func() {
 
 		const (
-			redisInstanceName = "test-conflict-instance"
+			redisInstanceName = "test-validation-instance"
 			correctSecret     = "correct-auth-secret"
 			wrongSecret       = "wrong-volume-secret"
 		)
@@ -82,32 +111,20 @@ var _ = Describe("Feature: SKR AzureRedisInstance Volume→AuthSecret Migration"
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
 
 		By("When AzureRedisInstance is created with both 'volume' and 'authSecret' fields", func() {
-			Eventually(CreateAzureRedisInstance).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
-					WithName(redisInstanceName),
-					WithAzureRedisInstanceRedisTier(cloudresourcesv1beta1.AzureRedisTierP1),
-					WithAzureRedisInstanceAuthSecretName(correctSecret),
-					WithAzureRedisInstanceVolume(&cloudresourcesv1beta1.RedisAuthSecretSpec{
-						Name: wrongSecret,
-					}),
-				).
-				Should(Succeed())
-		})
+			err := CreateAzureRedisInstance(
+				infra.Ctx(), infra.SKR().Client(), azureRedisInstance,
+				WithName(redisInstanceName),
+				WithAzureRedisInstanceRedisTier(cloudresourcesv1beta1.AzureRedisTierP1),
+				WithAzureRedisInstanceAuthSecretName(correctSecret),
+				WithAzureRedisInstanceVolume(&cloudresourcesv1beta1.RedisAuthSecretSpec{
+					Name: wrongSecret,
+				}),
+			)
 
-		By("Then the reconciler prefers 'authSecret' and clears 'volume'", func() {
-			// Wait for conflict resolution to happen
-			Eventually(func() bool {
-				_ = infra.SKR().Client().Get(infra.Ctx(), infra.SKR().ObjKey(redisInstanceName), azureRedisInstance)
-				return azureRedisInstance.Spec.Volume == nil
-			}).
-				WithTimeout(5*time.Second).
-				WithPolling(200*time.Millisecond).
-				Should(BeTrue(), "Expected Volume to be cleared when AuthSecret is present")
-
-			Expect(azureRedisInstance.Spec.AuthSecret).NotTo(BeNil())
-			Expect(azureRedisInstance.Spec.AuthSecret.Name).To(Equal(correctSecret))
-			Expect(azureRedisInstance.Spec.Volume).To(BeNil())
+			By("Then creation is rejected by CEL validation", func() {
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("Cannot set both 'volume' (deprecated) and 'authSecret' fields"))
+			})
 		})
 	})
 })
