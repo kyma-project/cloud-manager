@@ -30,9 +30,9 @@ type FileBackupClient interface {
 	// Returns the operation name for tracking.
 	DeleteBackup(ctx context.Context, projectId, location, name string) (string, error)
 
-	// IsBackupOperationDone retrieves the status of a long-running operation.
-	// Returns true if the operation is done, false otherwise.
-	IsBackupOperationDone(ctx context.Context, operationName string) (bool, error)
+	// GetBackupLROperation retrieves the status of a long-running operation.
+	// Returns the full operation object to allow callers to check Done status and Error.
+	GetBackupLROperation(ctx context.Context, operationName string) (*longrunningpb.Operation, error)
 
 	// UpdateBackup updates an existing Filestore backup (e.g., labels).
 	// Returns the operation name for tracking.
@@ -148,7 +148,7 @@ func (c *fileBackupClient) DeleteBackup(ctx context.Context, projectId, location
 	return op.Name(), nil
 }
 
-func (c *fileBackupClient) IsBackupOperationDone(ctx context.Context, operationName string) (bool, error) {
+func (c *fileBackupClient) GetBackupLROperation(ctx context.Context, operationName string) (*longrunningpb.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	req := &longrunningpb.GetOperationRequest{
@@ -158,10 +158,10 @@ func (c *fileBackupClient) IsBackupOperationDone(ctx context.Context, operationN
 	op, err := c.cloudFilestoreManager.LROClient.GetOperation(ctx, req)
 	if err != nil {
 		logger.Error(err, "Failed to get operation", "operationName", operationName)
-		return false, err
+		return nil, err
 	}
 
-	return op.Done, nil
+	return op, nil
 }
 
 func (c *fileBackupClient) UpdateBackup(ctx context.Context, projectId, location, name string, backup *filestorepb.Backup, updateMask []string) (string, error) {

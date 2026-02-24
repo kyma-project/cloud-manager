@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
+	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	"google.golang.org/api/googleapi"
@@ -187,15 +188,18 @@ func (s *nfsBackupStoreV2) DeleteBackup(ctx context.Context, projectId, location
 	}
 }
 
-func (s *nfsBackupStoreV2) IsBackupOperationDone(ctx context.Context, operationName string) (bool, error) {
+func (s *nfsBackupStoreV2) GetBackupLROperation(ctx context.Context, operationName string) (*longrunningpb.Operation, error) {
 	if s.backupOperationError != nil {
-		return false, s.backupOperationError
+		return nil, s.backupOperationError
 	}
 	if isContextCanceled(ctx) {
-		return false, context.Canceled
+		return nil, context.Canceled
 	}
-	// Mock always returns done
-	return true, nil
+	// Mock always returns done with no error
+	return &longrunningpb.Operation{
+		Name: operationName,
+		Done: true,
+	}, nil
 }
 
 func (s *nfsBackupStoreV2) UpdateBackup(ctx context.Context, projectId, location, name string, backup *filestorepb.Backup, updateMask []string) (string, error) {

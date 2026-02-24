@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
+	"google.golang.org/grpc/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -20,12 +21,11 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 	opName := backup.Status.OpIdentifier
 	logger.Info("Checking GCP Backup Operation Status")
 
-	// If no OpIdentifier, then continue to next action.
 	if opName == "" {
 		return nil, nil
 	}
 
-	done, err := state.fileBackupClient.IsBackupOperationDone(ctx, opName)
+	op, err := state.fileBackupClient.GetBackupLROperation(ctx, opName)
 	if err != nil {
 		// If the operation is not found, reset the OpIdentifier and let retry or updateStatus to update the status.
 		if gcpmeta.IsNotFound(err) {
@@ -44,15 +44,28 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state)
 	}
 
-	// Operation not completed yet.. requeue again.
-	if !done {
+	if !op.Done {
 		return composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime), nil
 	}
 
 	// Operation is done, reset OpIdentifier
 	backup.Status.OpIdentifier = ""
 
-	// If the operation completed successfully, update the status based on the context
+	if op.GetError() != nil {
+		opErr := status.FromProto(op.GetError())
+		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
+		logger.Error(opErr.Err(), "GCP Filestore backup operation failed", "code", opErr.Code(), "message", opErr.Message())
+		return composed.PatchStatus(backup).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonGcpError,
+				Message: "Operation failed",
+			}).
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	}
+
 	if backup.Status.State == cloudresourcesv1beta1.GcpNfsBackupDeleting {
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupDeleted
 		state.fileBackup = nil
@@ -62,7 +75,6 @@ func checkBackupOperation(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state)
 	}
 
-	// The operation is backup creation - mark as ready
 	backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupReady
 	return composed.PatchStatus(backup).
 		SetExclusiveConditions(metav1.Condition{
