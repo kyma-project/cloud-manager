@@ -55,7 +55,7 @@ var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
 	},
 	Status: cloudresourcesv1beta1.AwsNfsVolumeStatus{
 		Id:     "test-aws-nfs-instance",
-		Server: "fs-test123.efs.us-east-1.amazonaws.com",
+		Server: "fs-12345678.efs.us-east-1.amazonaws.com",
 		Conditions: []metav1.Condition{
 			{
 				Type:               "Ready",

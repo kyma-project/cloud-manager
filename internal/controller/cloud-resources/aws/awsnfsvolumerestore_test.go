@@ -65,7 +65,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume,
 					WithConditions(SkrReadyCondition()),
-					WithAwsNfsVolumeStatusServer("fs-mock-12345.efs.eu-west-1.amazonaws.com"),
+					WithAwsNfsVolumeStatusServer("fs-abcd1234.efs.eu-west-1.amazonaws.com"),
 				).
 				Should(Succeed())
 		})
@@ -165,7 +165,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeRestore", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrAwsNfsVolume,
 					WithConditions(SkrReadyCondition()),
-					WithAwsNfsVolumeStatusServer("fs-mock-12345.efs.eu-west-1.amazonaws.com"),
+					WithAwsNfsVolumeStatusServer("fs-abcd1234.efs.eu-west-1.amazonaws.com"),
 				).
 				Should(Succeed())
 		})

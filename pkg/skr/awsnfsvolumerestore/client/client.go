@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
@@ -11,6 +12,7 @@ import (
 
 type LocalClient interface {
 	IsNotFound(err error) bool
+	IsInvalidParameter(err error) bool
 }
 
 type Client interface {
@@ -63,6 +65,14 @@ func (c *localClient) IsNotFound(err error) bool {
 	}
 	var resourceNotFoundException *backuptypes.ResourceNotFoundException
 	return errors.As(err, &resourceNotFoundException)
+}
+
+func (c *localClient) IsInvalidParameter(err error) bool {
+	if err == nil {
+		return false
+	}
+	var invalidParameterValueException *backuptypes.InvalidParameterValueException
+	return errors.As(err, &invalidParameterValueException)
 }
 
 func (c *client) StartRestoreJob(ctx context.Context, params *StartRestoreJobInput) (*backup.StartRestoreJobOutput, error) {

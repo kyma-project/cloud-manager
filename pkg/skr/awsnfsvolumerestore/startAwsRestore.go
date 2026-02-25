@@ -3,7 +3,6 @@ package awsnfsvolumerestore
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -97,7 +96,7 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 		// (e.g., pod crashed after StartRestoreJob but before status patch succeeded)
 		// We cannot recover the JobId without ListRestoreJobs permission, so we'll fail
 		// and require manual cleanup or CR recreation
-		if strings.Contains(err.Error(), "Idempotency token already used") {
+		if state.awsClient.IsInvalidParameter(err) {
 			restore.Status.State = cloudresourcesv1beta1.JobStateError
 			return composed.PatchStatus(restore).
 				SetExclusiveConditions(metav1.Condition{
