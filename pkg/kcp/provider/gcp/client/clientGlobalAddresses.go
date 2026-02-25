@@ -12,7 +12,7 @@ type GlobalAddressesClient interface {
 	GetGlobalAddress(ctx context.Context, req *computepb.GetGlobalAddressRequest, opts ...gax.CallOption) (*computepb.Address, error)
 	DeleteGlobalAddress(ctx context.Context, req *computepb.DeleteGlobalAddressRequest, opts ...gax.CallOption) (VoidOperation, error)
 	InsertGlobalAddress(ctx context.Context, req *computepb.InsertGlobalAddressRequest, opts ...gax.CallOption) (VoidOperation, error)
-	ListGlobalAddresses(ctx context.Context, req *computepb.ListGlobalAddressesRequest, opts ...gax.CallOption) IteratorWithAll[*computepb.Address]
+	ListGlobalAddresses(ctx context.Context, req *computepb.ListGlobalAddressesRequest, opts ...gax.CallOption) Iterator[*computepb.Address]
 }
 
 var _ GlobalAddressesClient = (*globalAddressesClient)(nil)
@@ -33,6 +33,6 @@ func (c *globalAddressesClient) InsertGlobalAddress(ctx context.Context, req *co
 	return c.inner.Insert(ctx, req, opts...)
 }
 
-func (c *globalAddressesClient) ListGlobalAddresses(ctx context.Context, req *computepb.ListGlobalAddressesRequest, opts ...gax.CallOption) IteratorWithAll[*computepb.Address] {
+func (c *globalAddressesClient) ListGlobalAddresses(ctx context.Context, req *computepb.ListGlobalAddressesRequest, opts ...gax.CallOption) Iterator[*computepb.Address] {
 	return c.inner.List(ctx, req, opts...)
 }

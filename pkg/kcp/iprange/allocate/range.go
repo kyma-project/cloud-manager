@@ -39,6 +39,28 @@ func parseRange(s string) (*rng, error) {
 	}, nil
 }
 
+func (r *rng) clone() *rng {
+	if r == nil {
+		return nil
+	}
+
+	result := &rng{
+		s: r.s,
+		n: &net.IPNet{},
+		first: new(big.Int).Set(r.first),
+		last:  new(big.Int).Set(r.last),
+	}
+	if r.n.IP != nil {
+		result.n.IP = make(net.IP, len(r.n.IP))
+		copy(result.n.IP, r.n.IP)
+	}
+	if r.n.Mask != nil {
+		result.n.Mask = make(net.IPMask, len(r.n.Mask))
+		copy(result.n.Mask, r.n.Mask)
+	}
+	return result
+}
+
 func (r *rng) overlaps(o *rng) bool {
 	// r: f-l       f---l     f------l     f-l        f---l         f-l
 	// o:     f-l     f---l     f--l     f-----l   f----l      f-l

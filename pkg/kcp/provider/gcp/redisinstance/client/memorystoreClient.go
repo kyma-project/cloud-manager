@@ -37,7 +37,7 @@ type MemorystoreClient interface {
 }
 
 func NewMemorystoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[MemorystoreClient] {
-	return func() MemorystoreClient {
+	return func(_ string) MemorystoreClient {
 		return NewMemorystoreClient(gcpClients)
 	}
 }

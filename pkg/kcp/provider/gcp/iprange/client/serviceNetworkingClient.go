@@ -45,7 +45,7 @@ type ServiceNetworkingClient interface {
 // because Google does not provide a modern Cloud Client Library for Service Networking API.
 // The clients are initialized in GcpClients and injected here for consistency with other providers.
 func NewServiceNetworkingClientProvider(gcpClients *client.GcpClients) client.GcpClientProvider[ServiceNetworkingClient] {
-	return func() ServiceNetworkingClient {
+	return func(_ string) ServiceNetworkingClient {
 		return NewServiceNetworkingClientForService(
 			gcpClients.ServiceNetworking,
 			gcpClients.CloudResourceManager,

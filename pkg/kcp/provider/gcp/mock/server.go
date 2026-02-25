@@ -159,7 +159,7 @@ func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[gcpipra
 
 // ServiceNetworkingClientProviderGcp returns a GcpClientProvider (NEW pattern)
 func (s *server) ServiceNetworkingClientProviderGcp() client.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient] {
-	return func() gcpiprangeclient.ServiceNetworkingClient {
+	return func(_ string) gcpiprangeclient.ServiceNetworkingClient {
 		// For NEW pattern (refactored), return the new gRPC-based store
 		return s.iprangeStore
 	}
@@ -176,7 +176,7 @@ func (s *server) ComputeClientProvider() client.ClientProvider[gcpiprangeclient.
 
 // ComputeClientProviderGcp returns a GcpClientProvider (NEW pattern)
 func (s *server) ComputeClientProviderGcp() client.GcpClientProvider[gcpiprangeclient.ComputeClient] {
-	return func() gcpiprangeclient.ComputeClient {
+	return func(_ string) gcpiprangeclient.ComputeClient {
 		// For NEW pattern (refactored), return the new gRPC-based store
 		return s.iprangeStore
 	}
@@ -194,19 +194,19 @@ func (s *server) OldComputeClientProvider() client.ClientProvider[gcpiprangeclie
 }
 
 func (s *server) SubnetComputeClientProvider() client.GcpClientProvider[gcpsubnetclient.ComputeClient] {
-	return func() gcpsubnetclient.ComputeClient {
+	return func(_ string) gcpsubnetclient.ComputeClient {
 		return s
 	}
 }
 
 func (s *server) SubnetRegionOperationsClientProvider() client.GcpClientProvider[gcpsubnetclient.RegionOperationsClient] {
-	return func() gcpsubnetclient.RegionOperationsClient {
+	return func(_ string) gcpsubnetclient.RegionOperationsClient {
 		return s
 	}
 }
 
 func (s *server) SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient] {
-	return func() gcpsubnetclient.NetworkConnectivityClient {
+	return func(_ string) gcpsubnetclient.NetworkConnectivityClient {
 		return s
 	}
 }
@@ -220,7 +220,7 @@ func (s *server) FilestoreClientProvider() client.ClientProvider[gcpnfsinstancev
 }
 
 func (s *server) FilestoreClientProviderV2() client.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient] {
-	return func() gcpnfsinstancev2client.FilestoreClient {
+	return func(_ string) gcpnfsinstancev2client.FilestoreClient {
 		return s
 	}
 }
@@ -250,25 +250,25 @@ func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupcl
 }
 
 func (s *server) VpcPeeringProvider() client.GcpClientProvider[gcpvpcpeeringclient.VpcPeeringClient] {
-	return func() gcpvpcpeeringclient.VpcPeeringClient {
+	return func(_ string) gcpvpcpeeringclient.VpcPeeringClient {
 		return s
 	}
 }
 
 func (s *server) MemoryStoreProviderFake() client.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient] {
-	return func() gcpredisinstanceclient.MemorystoreClient {
+	return func(_ string) gcpredisinstanceclient.MemorystoreClient {
 		return s
 	}
 }
 
 func (s *server) MemoryStoreClusterProviderFake() client.GcpClientProvider[gcpredisclusterclient.MemorystoreClusterClient] {
-	return func() gcpredisclusterclient.MemorystoreClusterClient {
+	return func(_ string) gcpredisclusterclient.MemorystoreClusterClient {
 		return s
 	}
 }
 
 func (s *server) ExposedDataProvider() client.GcpClientProvider[gcpexposeddataclient.Client] {
-	return func() gcpexposeddataclient.Client {
+	return func(_ string) gcpexposeddataclient.Client {
 		return s
 	}
 }

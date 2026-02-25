@@ -73,7 +73,7 @@ func NewStateFactory(
 
 // NewState creates a new State instance with initialized GCP client.
 func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState types.State) (*State, error) {
-	filestoreClient := f.filestoreClientProvider()
+	filestoreClient := f.filestoreClientProvider(nfsInstanceState.Scope().Spec.Scope.Gcp.Project)
 
 	return &State{
 		State:           nfsInstanceState,

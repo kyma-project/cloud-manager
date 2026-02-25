@@ -8,6 +8,13 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
+var PrivateRanges = [...]string{
+	"10.0.0.0/8",
+	"172.16.0.0/12",
+	"192.168.0.0/16",
+	"100.64.0.0/10",
+}
+
 type AddressSpace interface {
 	Reserve(arr ...string) error
 	Release(r string) error
@@ -16,33 +23,53 @@ type AddressSpace interface {
 	MustAllocate(maskOnes int) string
 	AllocateOneIpAddress() (string, error)
 	MustAllocateOneIpAddress() string
+	Clone() AddressSpace
 	fmt.Stringer
 }
 
-func NewAddressSpace(cidr string) (AddressSpace, error) {
-	rr, err := parseRange(cidr)
-	if err != nil {
+func MustNewAddressSpace(cidrs ...string) AddressSpace {
+	return util.Must(NewAddressSpace(cidrs...))
+}
+
+func NewAddressSpace(cidrs ...string) (AddressSpace, error) {
+	validSpace := newRangeList()
+	if len(cidrs) == 0 {
+		cidrs = []string{"0.0.0.0/0"}
+	}
+	if err := validSpace.addStrings(cidrs...); err != nil {
 		return nil, err
 	}
 	return &addressSpace{
-		space:    rr,
-		occupied: newRangeList(),
+		validSpace: validSpace,
+		occupied:   newRangeList(),
 	}, nil
 }
 
+var _ AddressSpace = (*addressSpace)(nil)
+
 type addressSpace struct {
-	space    *rng
-	occupied *rngList
+	validSpace *rngList
+	occupied   *rngList
+}
+
+func (as *addressSpace) Clone() AddressSpace {
+	return &addressSpace{
+		validSpace: as.validSpace.clone(),
+		occupied:   as.occupied.clone(),
+	}
 }
 
 func (as *addressSpace) Reserve(arr ...string) error {
 	for _, r := range arr {
 		rr, err := parseRange(r)
 		if err != nil {
-			return err
+			return fmt.Errorf("error parsing ip range %s: %w", r, err)
 		}
-		if !as.space.contains(rr) {
-			return fmt.Errorf("requested range %s is out of address space %s", r, as.space.s)
+		if !as.validSpace.contains(rr) {
+			return fmt.Errorf("range %s is out of address space %s", r, as.validSpace.String())
+		}
+		if as.occupied.overlaps(rr) {
+			return fmt.Errorf("range %s overlaps with already occupied ranges %s", r, as.occupied.String())
 		}
 		as.occupied.add(rr)
 	}
@@ -65,7 +92,10 @@ func (as *addressSpace) MustAllocateOneIpAddress() string {
 }
 
 func (as *addressSpace) AllocateOneIpAddress() (string, error) {
-	startAtRange := fmt.Sprintf("%s/32", as.space.n.IP.String())
+	startAtRange := fmt.Sprintf("%s/32", as.validSpace.items[0].n.IP.String())
+	if startAtRange == "0.0.0.0/32" {
+		startAtRange = "10.0.0.0/32"
+	}
 	result, err := as.allocateInternal(startAtRange)
 	if err != nil {
 		return result, err
@@ -79,7 +109,10 @@ func (as *addressSpace) MustAllocate(maskOnes int) string {
 }
 
 func (as *addressSpace) Allocate(maskOnes int) (string, error) {
-	startAtRange := fmt.Sprintf("%s/%d", as.space.n.IP.String(), maskOnes)
+	startAtRange := fmt.Sprintf("%s/%d", as.validSpace.items[0].n.IP.String(), maskOnes)
+	if startAtRange == "0.0.0.0/32" {
+		startAtRange = fmt.Sprintf("10.0.0.0/%d", maskOnes)
+	}
 	return as.allocateInternal(startAtRange)
 }
 
@@ -88,8 +121,8 @@ func (as *addressSpace) allocateInternal(startAtRange string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("invalid startAtRange: %w", err)
 	}
-	if !as.space.contains(current) {
-		return "", fmt.Errorf("startAtRange %s is out of address space %s", startAtRange, as.space.s)
+	if !as.validSpace.contains(current) {
+		return "", fmt.Errorf("startAtRange %s is out of address space %s", startAtRange, as.validSpace.String())
 	}
 
 	for as.occupied.overlaps(current) {
@@ -97,7 +130,7 @@ func (as *addressSpace) allocateInternal(startAtRange string) (string, error) {
 		if current == nil {
 			return "", errors.New("unable to find vacant cidr slot")
 		}
-		if !as.space.contains(current) {
+		if !as.validSpace.contains(current) {
 			return "", errors.New("address space exhausted")
 		}
 	}
@@ -108,5 +141,5 @@ func (as *addressSpace) allocateInternal(startAtRange string) (string, error) {
 }
 
 func (as *addressSpace) String() string {
-	return fmt.Sprintf("%s(%s)", as.space.s, as.occupied.String())
+	return fmt.Sprintf("%s(%s)", as.validSpace.String(), as.occupied.String())
 }

@@ -38,7 +38,7 @@ func NewStateFactory(clientProvider gcpclient.GcpClientProvider[gcpvpcpeeringcli
 }
 
 func (f *stateFactory) NewState(vpcPeeringState vpcpeeringtypes.State) (*State, error) {
-	vpcPeeringClient := f.clientProvider()
+	vpcPeeringClient := f.clientProvider(vpcPeeringState.Scope().Spec.Scope.Gcp.Project)
 	return newState(vpcPeeringState, vpcPeeringClient), nil
 }
 

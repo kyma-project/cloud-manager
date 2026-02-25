@@ -1,6 +1,10 @@
 package util
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/mitchellh/copystructure"
+)
 
 func JsonClone[T any](a T) (T, error) {
 	var res T
@@ -19,4 +23,13 @@ func JsonCloneInto[T any, R any](source T, destination R) error {
 	}
 	err = json.Unmarshal(b, &destination)
 	return err
+}
+
+func Clone[T any](a T) (T, error) {
+	cpy, err := copystructure.Copy(a)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	return cpy.(T), nil
 }

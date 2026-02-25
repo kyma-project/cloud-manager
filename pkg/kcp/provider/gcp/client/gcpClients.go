@@ -18,9 +18,9 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/oauth2"
-	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
-	servicenetworking "google.golang.org/api/servicenetworking/v1"
+	"google.golang.org/api/servicenetworking/v1"
 	"google.golang.org/grpc"
 )
 
@@ -263,15 +263,15 @@ func (c *GcpClients) RoutersWrapped() RoutersClient {
 }
 
 // AddressesWrapped is supposed to replace usage of field ComputeAddresses after the refactoring
-func (c *GcpClients) AddressesWrapped() AddressesClient {
-	return &addressesClient{inner: c.ComputeAddresses}
+func (c *GcpClients) AddressesWrapped() RegionalAddressesClient {
+	return &regionalAddressesClient{inner: c.ComputeAddresses}
 }
 
 func (c *VpcPeeringClients) Close() error {
 	return reflectingClose(c)
 }
 
-type GcpClientProvider[T any] func() T
+type GcpClientProvider[T any] func(string) T
 
 // ReflectingClose ===============================
 

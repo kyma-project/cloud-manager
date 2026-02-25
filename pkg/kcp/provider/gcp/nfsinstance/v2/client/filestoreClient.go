@@ -40,7 +40,7 @@ type FilestoreClient interface {
 // NewFilestoreClientProvider creates a provider function for FilestoreClient instances.
 // Follows the NEW pattern - accesses clients from GcpClients singleton.
 func NewFilestoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[FilestoreClient] {
-	return func() FilestoreClient {
+	return func(_ string) FilestoreClient {
 		return NewFilestoreClient(gcpClients)
 	}
 }

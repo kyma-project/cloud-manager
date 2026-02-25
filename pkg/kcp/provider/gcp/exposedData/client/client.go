@@ -17,7 +17,7 @@ type Client interface {
 }
 
 func NewClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[Client] {
-	return func() Client {
+	return func(_ string) Client {
 		return &client{
 			routersClient: gcpClients.RoutersWrapped(),
 			addressClient: gcpClients.AddressesWrapped(),
@@ -28,7 +28,7 @@ func NewClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProv
 var _ Client = (*client)(nil)
 
 type client struct {
-	addressClient gcpclient.AddressesClient
+	addressClient gcpclient.RegionalAddressesClient
 	routersClient gcpclient.RoutersClient
 }
 
