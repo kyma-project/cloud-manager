@@ -3,6 +3,7 @@ package gcpnfsvolumerestore
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -10,7 +11,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"google.golang.org/api/file/v1"
@@ -31,7 +32,7 @@ type State struct {
 	fileBackup *file.Backup
 
 	fileRestoreClient client.FileRestoreClient
-	fileBackupClient  gcpnfsbackupclient.FileBackupClient
+	fileBackupClient  gcpnfsbackupclientv1.FileBackupClient
 }
 
 type StateFactory interface {
@@ -40,7 +41,7 @@ type StateFactory interface {
 
 func NewStateFactory(kymaRef klog.ObjectRef, kcpCluster composed.StateCluster, skrCluster composed.StateCluster,
 	fileRestoreClientProvider gcpclient.ClientProvider[client.FileRestoreClient],
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient],
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
 	env abstractions.Environment) StateFactory {
 
 	return &stateFactory{
@@ -58,7 +59,7 @@ type stateFactory struct {
 	kcpCluster                composed.StateCluster
 	skrCluster                composed.StateCluster
 	fileRestoreClientProvider gcpclient.ClientProvider[client.FileRestoreClient]
-	fileBackupClientProvider  gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient]
+	fileBackupClientProvider  gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
 	env                       abstractions.Environment
 }
 
@@ -106,6 +107,11 @@ func (s *State) IsAllowedToRestoreBackup() bool {
 
 	allowed, exists := labels[ConvertToAccessibleFromKey(shootName)]
 	if exists && allowed == util.GcpLabelBackupAccessibleFrom {
+		return true
+	}
+
+	allowedAll, existsAll := labels[ConvertToAccessibleFromKey("all")]
+	if existsAll && allowedAll == util.GcpLabelBackupAccessibleFrom {
 		return true
 	}
 

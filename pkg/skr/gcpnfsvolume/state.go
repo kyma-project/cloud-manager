@@ -10,7 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"google.golang.org/api/file/v1"
@@ -33,7 +33,7 @@ type State struct {
 
 	fileBackup *file.Backup
 
-	fileBackupClient gcpnfsbackupclient.FileBackupClient
+	fileBackupClient gcpnfsbackupclientv1.FileBackupClient
 }
 
 type StateFactory interface {
@@ -44,7 +44,7 @@ func NewStateFactory(
 	kymaRef klog.ObjectRef,
 	kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster,
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient],
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
 	env abstractions.Environment,
 ) StateFactory {
 	return &stateFactory{
@@ -60,7 +60,7 @@ type stateFactory struct {
 	kymaRef                  klog.ObjectRef
 	kcpCluster               composed.StateCluster
 	skrCluster               composed.StateCluster
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient]
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
 	env                      abstractions.Environment
 }
 

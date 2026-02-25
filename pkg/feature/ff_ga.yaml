@@ -66,3 +66,10 @@ gcpNfsInstanceV2:
     disabled: false
   defaultRule:
     variation: disabled
+
+gcpBackupV2:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
