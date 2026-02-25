@@ -19,7 +19,6 @@ package cloudresources
 import (
 	"context"
 
-	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -67,11 +66,11 @@ type GcpNfsVolumeBackupReconcilerFactory struct {
 	fileBackupClientProviderV1 gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
 	fileBackupClientProviderV2 gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
 	env                        abstractions.Environment
-	useV2                      bool
 }
 
 func (f *GcpNfsVolumeBackupReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
-	if f.useV2 {
+	// Check feature flag at reconciler creation time (after feature.Initialize has run)
+	if feature.GcpBackupV2.Value(context.Background()) {
 		reconciler := gcpnfsvolumebackupv2.NewReconciler(
 			args.KymaRef,
 			args.KcpCluster,
@@ -96,22 +95,12 @@ func SetupGcpNfsVolumeBackupReconciler(
 	fileBackupClientProviderV1 gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
 	fileBackupClientProviderV2 gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient],
 	env abstractions.Environment,
-	logger logr.Logger,
 ) error {
-	// Check feature flag at startup to determine which implementation to use
-	useV2 := feature.GcpBackupV2.Value(context.Background())
-	if useV2 {
-		logger.Info("GcpNfsVolumeBackup: Using v2 implementation")
-	} else {
-		logger.Info("GcpNfsVolumeBackup: Using v1 implementation (default)")
-	}
-
 	return reg.Register().
 		WithFactory(&GcpNfsVolumeBackupReconcilerFactory{
 			fileBackupClientProviderV1: fileBackupClientProviderV1,
 			fileBackupClientProviderV2: fileBackupClientProviderV2,
 			env:                        env,
-			useV2:                      useV2,
 		}).
 		For(&cloudresourcesv1beta1.GcpNfsVolumeBackup{}).
 		Complete()
