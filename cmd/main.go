@@ -244,7 +244,6 @@ func main() {
 		gcpnfsbackupclientv1.NewFileBackupClientProvider(),
 		gcpnfsbackupclientv2.NewFileBackupClientProvider(gcpClients),
 		env,
-		setupLog,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeBackup")
 		os.Exit(1)
