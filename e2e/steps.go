@@ -712,11 +712,22 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 		return ctx, ErrNoSession
 	}
 
+	eval, err := session.Eval(ctx)
+	if err != nil {
+		return ctx, errEvalContextBuilding(err)
+	}
+
 	x, err := ad.CreateInstance(new(HttpOperation), tbl)
 	if err != nil {
 		return ctx, fmt.Errorf("invalid HTTP operation parameters: %w", err)
 	}
 	op := x.(*HttpOperation)
+
+	op.Url, err = eval.EvalTemplate(op.Url)
+	if err != nil {
+		return ctx, fmt.Errorf("failed to evaluate tf variable %q: %w", op.Url, err)
+	}
+
 	if err := op.Validate(); err != nil {
 		return ctx, err
 	}
@@ -742,6 +753,8 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 		return ctx, fmt.Errorf("failed to create http operation resources: %w", err)
 	}
 
+	dumpYamlText := b.DumpYamlText(session.CurrentCluster().GetScheme())
+
 	failed := false
 	err = session.EventuallyValueIsOK(
 		ctx,
@@ -762,7 +775,7 @@ func httpOperationSucceeds(ctx context.Context, tbl *godog.Table) (context.Conte
 	}
 
 	if failed {
-		return ctx, fmt.Errorf("http operation failed:\n%s", logs)
+		return ctx, fmt.Errorf("http operation failed:\n%s\n\n---\n%s", logs, dumpYamlText)
 	}
 
 	if !strings.Contains(logs, op.ExpectedOutput) {
@@ -992,18 +1005,15 @@ func tfModuleIsApplied(ctx context.Context, alias string, tbl *godog.Table) (con
 		return ctx, ErrNoSession
 	}
 
-	data, err := ad.ParseMap(tbl)
-	if err != nil {
-		return ctx, fmt.Errorf("failed to parse table: %w", err)
-	}
-
 	eval, err := session.Eval(ctx)
 	if err != nil {
 		return ctx, errEvalContextBuilding(err)
 	}
 
 	b := world.Cloud().WorkspaceBuilder(alias)
-	for k, v := range data {
+	for _, row := range tbl.Rows {
+		k := row.Cells[0].Value
+		v := row.Cells[1].Value
 		switch k {
 		case "source":
 			vv := v
@@ -1040,6 +1050,9 @@ func tfModuleIsApplied(ctx context.Context, alias string, tbl *godog.Table) (con
 		return ctx, fmt.Errorf("failed to apply tf workspace: %w", err)
 	}
 
+	// Sleeping for 5m to allow cloud-init to finish
+	time.Sleep(5 * time.Minute)
+
 	return ctx, nil
 }
 
@@ -1061,5 +1074,5 @@ func tfModuleIsDestroyed(ctx context.Context, alias string) (context.Context, er
 		return ctx, fmt.Errorf("failed to destroy tf workspace: %w", err)
 	}
 
-	return ctx, godog.ErrPending
+	return ctx, nil
 }

@@ -118,19 +118,22 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 
 		// delete skr kyma
 
-		if skrKyma != nil && skrKyma.DeletionTimestamp == nil {
-			logger.Info("Deleting SKR Kyma")
-			err = mi.mngr.GetClient().Delete(ctx, skrKyma)
-			if err != nil {
-				return reconcile.Result{}, fmt.Errorf("error deleting SKR Kyma: %w", err)
-			}
-		}
-
-		// wait skr kyma deleted
-
 		if skrKyma != nil {
-			logger.Info("Waiting SKR Kyma is deleted...")
-			return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
+			if skrKyma.DeletionTimestamp == nil {
+				logger.Info("Deleting SKR Kyma")
+				err = mi.mngr.GetClient().Delete(ctx, skrKyma)
+				if err != nil {
+					return reconcile.Result{}, fmt.Errorf("error deleting SKR Kyma: %w", err)
+				}
+				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
+			}
+			// wait skr kyma deleted - check if deletion started less than 3 minutes ago
+			deletionAge := time.Since(skrKyma.DeletionTimestamp.Time)
+			if deletionAge < 3*time.Minute {
+				logger.Info("Waiting SKR Kyma is deleted...", "deletionAge", deletionAge)
+				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
+			}
+			logger.Info("Timeout while waiting SKR Kyma to be deleted (after 3 minutes), continue...")
 		}
 
 		// stop manager

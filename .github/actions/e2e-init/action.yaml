@@ -1,0 +1,153 @@
+name: E2E Init Action
+description: Initializes the environment for E2E tests
+inputs:
+  gardener_kubeconfig:
+    description: 'Gardener cluster kubeconfig content'
+    required: true
+  oidc_client_id:
+    description: 'OIDC client ID for authentication'
+    required: true
+  oidc_issuer_url:
+    description: 'OIDC issuer URL'
+    required: true
+  feature_flag_file:
+    description: 'Feature flag configuration file path'
+    required: false
+    default: './pkg/feature/ff_edge.yaml'
+runs:
+  using: composite
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: 'go.mod'
+    - name: Setup OpenTofu
+      uses: opentofu/setup-opentofu@v1
+    - name: Display Go version
+      shell: bash
+      run: go version
+    - name: Write KUBECONFIG to file
+      shell: bash
+      run: |
+        echo "${{ inputs.gardener_kubeconfig }}" > kubeconfig-garden.yaml
+    - name: Write e2e config file
+      shell: bash
+      run: |
+        cat <<EOF > e2e-config.yaml
+        gardenKubeconfig: $PWD/kubeconfig-garden.yaml
+        shootPrefix: pp
+        kcpNamespace: kcp-system
+        gardenNamespace: garden-spm-test01
+        skrNamespace: default
+        subscriptions:
+          - name: my-aws-secret
+            provider: aws
+            isDefault: true
+          - name: svc-btp-kyma-phoenix-dev
+            provider: azure
+            isDefault: true
+          - name: gardener-sc-learn
+            provider: gcp
+            isDefault: true
+        networkOwner: gardener
+        oidcClientId: ${{ inputs.oidc_client_id }}
+        oidcIssuerUrl: ${{ inputs.oidc_issuer_url }}
+        administrators:
+          - vladimir.andjelkoski@sap.com
+          - dl_623b719a6a0d2d029907bee0@global.corp.sap
+        overwriteGardenerCredentials: true
+        downloadGardenSecrets:
+          cm-e2e-default-aws:
+            AWS_ACCESS_KEY_ID: accessKeyID
+            AWS_SECRET_ACCESS_KEY: secretAccessKey
+          cm-e2e-peering-aws:
+            AWS_PEERING_ACCESS_KEY_ID: accessKeyID
+            AWS_PEERING_SECRET_ACCESS_KEY: secretAccessKey
+          cm-e2e-default-gcp:
+            "gcp-default.json": serviceaccount.json
+          cm-e2e-peering-gcp:
+            "gcp-peering.json": serviceaccount.json
+          svc-btp-kyma-phoenix-dev:
+            AZURE_CLIENT_ID: clientID
+            AZURE_CLIENT_SECRET: clientSecret
+            AZURE_PEERING_CLIENT_ID: clientID
+            AZURE_PEERING_CLIENT_SECRET: clientSecret
+
+        EOF
+    - name: Display e2e config file
+      shell: bash
+      run: cat e2e-config.yaml
+    - name: Create tmp directory
+      shell: bash
+      run: mkdir ./tmp
+    - name: List directory
+      shell: bash
+      run: ls -la
+    - name: Download credentials
+      shell: bash
+      run: go run ./e2e/cmd credentials download
+    - name: List tmp directory
+      shell: bash
+      run: ls -la ./tmp
+    - name: Download setup-envtest
+      shell: bash
+      run: make envtest
+    - name: Get ENVTEST_K8S_VERSION from Makefile
+      shell: bash
+      run: |
+        ENVTEST_K8S_VERSION=$(grep "ENVTEST_K8S_VERSION = " Makefile | awk -F '[[:space:]]*=[[:space:]]*' '{print $2}')
+        echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
+        echo "ENVTEST_K8S_VERSION=$ENVTEST_K8S_VERSION" >> $GITHUB_ENV
+    - name: Setup envtest
+      shell: bash
+      run: |
+        ./bin/setup-envtest use $ENVTEST_K8S_VERSION --bin-dir $PWD/bin -p path
+    - name: Run envtest
+      shell: bash
+      run: |
+        go run ./e2e/cmd envtest run -v $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml > ./tmp/envtest.log 2>&1 &
+        ENVTEST_PID=$!
+        echo "ENVTEST_PID=$ENVTEST_PID" >> "$GITHUB_ENV"
+        echo "Waiting for envtest to start K8S cluster"
+        sleep 30
+    - name: List tmp directory after K8S start
+      shell: bash
+      run: ls -la ./tmp
+    - name: Run sim
+      shell: bash
+      env:
+        KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
+      run: |
+        go run ./e2e/cmd sim run  > ./tmp/sim.log 2>&1 &
+        SIM_PID=$!
+        echo "SIM_PID=$SIM_PID" >> "$GITHUB_ENV"
+        echo "Waiting for sim to start"
+        sleep 30
+    - name: Validate and prepare feature flags
+      shell: bash
+      run: |
+        FF_FILE="${{ inputs.feature_flag_file }}"
+        if [ ! -f "$FF_FILE" ]; then
+          echo "❌ Feature flag file not found: $FF_FILE"
+          echo "Available: $(ls -1 pkg/feature/ff_*.yaml 2>/dev/null || echo 'none')"
+          exit 1
+        fi
+        if ! grep -qE '(variations|defaultRule):' "$FF_FILE" 2>/dev/null; then
+          echo "❌ Invalid feature flag file format"
+          exit 1
+        fi
+        echo "✓ Using feature flags: $FF_FILE"
+    - name: Run Cloud Manager
+      shell: bash
+      env:
+        CONFIG_DIR: ./tmp
+        KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
+        LANDSCAPE: dev
+        PEERING_NETWORK_TAG: e2e
+        FEATURE_FLAG_CONFIG_FILE: ${{ inputs.feature_flag_file }}
+        GCP_SA_JSON_KEY_PATH: ./tmp/gcp-default.json
+        GCP_VPC_PEERING_KEY_PATH: ./tmp/gcp-peering.json
+      run: |
+        go run ./cmd > ./tmp/cloud-manager.log 2>&1 &
+        CLOUD_MANAGER_PID=$!
+        echo "CLOUD_MANAGER_PID=$CLOUD_MANAGER_PID" >> "$GITHUB_ENV"
