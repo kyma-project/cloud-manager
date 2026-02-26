@@ -16,7 +16,7 @@ func shareLoad(ctx context.Context, st composed.State) (error, context.Context) 
 	if shareId == "" {
 		if state.shareNetwork == nil {
 			// shareNetwork not loaded so we can not list shares in that shareNetwork
-			return nil, nil
+			return nil, ctx
 		}
 		arr, err := state.sapClient.ListSharesInShareNetwork(ctx, state.shareNetwork.ID)
 		if err != nil {
@@ -38,9 +38,12 @@ func shareLoad(ctx context.Context, st composed.State) (error, context.Context) 
 	}
 
 	if state.share != nil {
-		logger = logger.WithValues("sapShareId", state.share.ID)
+		logger = logger.WithValues(
+			"sapShareId", state.share.ID,
+			"sapShareStatus", state.share.Status,
+		)
 		ctx = composed.LoggerIntoCtx(ctx, logger)
-		logger.Info("SAP share loaded")
+		//logger.Info("SAP share loaded")
 	}
 
 	// save shareId

@@ -1,12 +1,14 @@
 package cloudresources
 
 import (
+	"context"
 	"strings"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -29,6 +31,11 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 	scope := &cloudcontrolv1beta1.Scope{}
 
 	BeforeEach(func() {
+		// Skip if v2 feature flag is enabled - these are v1 tests
+		if feature.GcpBackupV2.Value(context.Background()) {
+			Skip("Skipping v1 GcpNfsVolumeBackup tests because gcpBackupV2 feature flag is enabled")
+		}
+
 		By("Given KCP Scope exists", func() {
 
 			// Given Scope exists

@@ -31,7 +31,7 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	if !changed {
-		return nil, nil
+		return nil, ctx
 	}
 
 	return composed.PatchStatus(state.ObjAsNfsInstance()).

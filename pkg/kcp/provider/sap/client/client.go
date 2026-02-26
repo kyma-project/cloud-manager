@@ -62,6 +62,7 @@ func (b *ClientFactory) ensureShareSvc(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to create shared file system v2 client: %w", err)
 	}
+	shareSvc.Microversion = "2.65"
 	b.shareSvc = shareSvc
 	return nil
 }

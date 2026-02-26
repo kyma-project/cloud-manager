@@ -13,7 +13,7 @@ func networkStopWhenNotFound(ctx context.Context, st composed.State) (error, con
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.network != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	networkId, _ := state.ObjAsNfsInstance().GetStateData(StateDataNetworkId)

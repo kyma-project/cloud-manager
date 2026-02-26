@@ -18,7 +18,7 @@ func shareExportRead(ctx context.Context, st composed.State) (error, context.Con
 
 	list, err := state.sapClient.ListShareExportLocations(ctx, state.share.ID)
 	if err != nil {
-		logger.Error(err, "error listing SAP share export locations")
+		logger.Error(err, "Error listing SAP share export locations")
 		state.ObjAsNfsInstance().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsNfsInstance()).
 			SetExclusiveConditions(metav1.Condition{
@@ -80,7 +80,7 @@ func shareExportRead(ctx context.Context, st composed.State) (error, context.Con
 
 	if state.ObjAsNfsInstance().Status.Host == h &&
 		state.ObjAsNfsInstance().Status.Path == p {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.ObjAsNfsInstance().Status.Host = h

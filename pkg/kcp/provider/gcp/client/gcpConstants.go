@@ -30,7 +30,7 @@ const skrBackupsFilter = "labels.managed-by=\"%s\" AND labels.scope-name=\"%s\""
 const sharedBackupsFilter = "labels.managed-by=\"%s\" AND " +
 	"( labels.cm-allow-%s=\"" + util.GcpLabelBackupAccessibleFrom + "\"" +
 	" OR labels.cm-allow-%s=\"" + util.GcpLabelBackupAccessibleFrom + "\"" +
-	" OR labels.ALL=\"" + util.GcpLabelBackupAccessibleFrom + "\")"
+	" OR labels.cm-allow-all=\"" + util.GcpLabelBackupAccessibleFrom + "\")"
 
 const GcpNfsStateDataProtocol = "gcpNfsProtocol"
 

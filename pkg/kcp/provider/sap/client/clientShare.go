@@ -186,8 +186,6 @@ func NewShareAccessFromShareAccessRulesShareAccess(o *shareaccessrules.ShareAcce
 }
 
 func (c *shareClient) ListShareAccessRules(ctx context.Context, shareId string) ([]ShareAccess, error) {
-	// https://dashboard.eu-de-1.cloud.sap/kyma/kyma-dev-02/shared-filesystem-storage/shares/d6b9995f-4c6a-4d95-8b51-6ca88c753f0f/rules
-
 	arr, err := shareaccessrules.List(ctx, c.shareSvc, shareId).Extract()
 	if gophercloud.ResponseCodeIs(err, http.StatusNotFound) {
 		return nil, nil

@@ -10,7 +10,11 @@ func accessLoad(ctx context.Context, st composed.State) (error, context.Context)
 	state := st.(*State)
 
 	if state.share == nil {
-		return nil, nil
+		return nil, ctx
+	}
+	// if list access rules is called when deleting it will return 400 Share not found
+	if state.share.Status == "deleting" {
+		return nil, ctx
 	}
 
 	arr, err := state.sapClient.ListShareAccessRules(ctx, state.share.ID)
@@ -35,5 +39,5 @@ func accessLoad(ctx context.Context, st composed.State) (error, context.Context)
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }

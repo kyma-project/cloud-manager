@@ -8,7 +8,7 @@ import (
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
-	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	"google.golang.org/api/file/v1"
 )
 
@@ -17,7 +17,7 @@ type StateFactory interface {
 }
 
 func NewStateFactory(
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient],
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
 	env abstractions.Environment) StateFactory {
 	return stateFactory{
 		fileBackupClientProvider: fileBackupClientProvider,
@@ -26,7 +26,7 @@ func NewStateFactory(
 }
 
 type stateFactory struct {
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient]
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
 	env                      abstractions.Environment
 }
 
@@ -46,7 +46,7 @@ func (f stateFactory) NewState(ctx context.Context, nukeState nuketypes.State) (
 
 type State struct {
 	nuketypes.State
-	fileBackupClient  gcpnfsbackupclient.FileBackupClient
+	fileBackupClient  gcpnfsbackupclientv1.FileBackupClient
 	ProviderResources []*nuketypes.ProviderResourceKindState
 }
 

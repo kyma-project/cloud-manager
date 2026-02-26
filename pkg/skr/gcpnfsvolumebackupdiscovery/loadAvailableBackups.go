@@ -5,7 +5,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
@@ -18,7 +18,7 @@ func loadAvailableBackups(ctx context.Context, st composed.State) (error, contex
 
 	backups, err := state.fileBackupClient.ListFilesBackups(
 		ctx, state.Scope.Spec.Scope.Gcp.Project,
-		client.GetSharedBackupsFilter(state.Scope.Spec.ShootName, state.Scope.Spec.ShootName), // todo: change second arg to SubaccountId
+		gcpclient.GetSharedBackupsFilter(state.Scope.Spec.ShootName, state.Scope.Spec.ShootName), // todo: change second arg to SubaccountId
 	)
 
 	if err != nil {

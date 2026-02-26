@@ -38,7 +38,7 @@ func subnetLoad(ctx context.Context, st composed.State) (error, context.Context)
 	if state.subnet != nil {
 		logger = logger.WithValues("sapSubnetId", state.subnet.ID)
 		ctx = composed.LoggerIntoCtx(ctx, logger)
-		logger.Info("SAP subnet loaded")
+		//logger.Info("SAP subnet loaded")
 	}
 
 	if state.subnet != nil && subnetId == "" {

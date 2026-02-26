@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"time"
 
-	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -374,14 +374,14 @@ func (s *State) PatchObjStatus(ctx context.Context) error {
 	return s.Cluster().K8sClient().Status().Update(ctx, s.Obj())
 }
 
-func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsbackupclient.FileBackupClient] {
+func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, credentialsFile string) (gcpnfsbackupclient.FileBackupClient, error) {
+		func(ctx context.Context, credentialsFile string) (gcpnfsbackupclientv1.FileBackupClient, error) {
 			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err
 			}
-			return gcpnfsbackupclient.NewFileBackupClient(fsClient), nil
+			return gcpnfsbackupclientv1.NewFileBackupClient(fsClient), nil
 		},
 	)
 }

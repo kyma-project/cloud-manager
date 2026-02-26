@@ -56,34 +56,34 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 	}
 
 	if errors.Is(err, context.DeadlineExceeded) {
-		logger.Info("Reconciliation finished with context deadline exceeded")
+		//logger.Info("Reconciliation finished with context deadline exceeded")
 		result = labelDeadline
 		return ctrl.Result{}, nil
 	}
 	if errors.Is(err, context.Canceled) {
-		logger.Info("Reconciliation finished with context canceled")
+		//logger.Info("Reconciliation finished with context canceled")
 		result = labelCanceled
 		return ctrl.Result{}, nil
 	}
 	if IsTerminal(err) {
-		logger.WithValues("err", err.Error()).Info("Reconciliation finished with terminal error")
+		//logger.WithValues("err", err.Error()).Info("Reconciliation finished with terminal error")
 		result = labelError
 		return ctrl.Result{}, err
 	}
 	if IsStopAndForget(err) {
-		logger.Info("Reconciliation finished with stop and forget")
+		//logger.Info("Reconciliation finished with stop and forget")
 		result = labelSuccess
 		return ctrl.Result{}, nil
 	}
 	if IsStopWithRequeue(err) {
-		logger.Info("Reconciliation finished with requeue")
+		//logger.Info("Reconciliation finished with requeue")
 		result = labelRequeue
 		return ctrl.Result{Requeue: true}, nil
 	}
 	if IsStopWithRequeueDelay(err) {
 		var ed *stopWithRequeueDelay
 		errors.As(err, &ed)
-		logger.WithValues("delay", ed.Delay().String()).Info("Reconciliation finished with requeue delayed")
+		//logger.WithValues("delay", ed.Delay().String()).Info("Reconciliation finished with requeue delayed")
 		if ed.Delay() <= 0 {
 			ed = &stopWithRequeueDelay{delay: time.Hour}
 			logger.Info("Reconciliation requeue delayed set to 1h since it was zero")
@@ -91,7 +91,7 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 		result = labelRequeueAfter
 		return ctrl.Result{RequeueAfter: ed.Delay()}, nil
 	}
-	logger.Info("Reconciliation finished without control error - doing stop and forget")
+	//logger.Info("Reconciliation finished without control error - doing stop and forget")
 	result = labelSuccess
 	return ctrl.Result{}, err
 }

@@ -16,7 +16,7 @@ func accessRevoke(ctx context.Context, st composed.State) (error, context.Contex
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.accessRight == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Revoking SAP NfsInstance access rights")

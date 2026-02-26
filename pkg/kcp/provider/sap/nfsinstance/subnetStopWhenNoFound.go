@@ -13,7 +13,7 @@ func subnetStopWhenNoFound(ctx context.Context, st composed.State) (error, conte
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.subnet != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	networkId, _ := state.ObjAsNfsInstance().GetStateData(StateDataNetworkId)

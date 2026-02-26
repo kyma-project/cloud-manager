@@ -12,7 +12,7 @@ func shareUpdateStatusCapacity(ctx context.Context, st composed.State) (error, c
 	state := st.(*State)
 
 	if state.ObjAsNfsInstance().Status.CapacityGb == state.ObjAsNfsInstance().Spec.Instance.OpenStack.SizeGb {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.ObjAsNfsInstance().Status.CapacityGb = state.ObjAsNfsInstance().Spec.Instance.OpenStack.SizeGb

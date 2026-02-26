@@ -35,7 +35,7 @@ func shareNetworkLoad(ctx context.Context, st composed.State) (error, context.Co
 	if state.shareNetwork != nil {
 		logger = logger.WithValues("sapShareNetworkId", state.shareNetwork.ID)
 		ctx = composed.LoggerIntoCtx(ctx, logger)
-		logger.Info("SAP shareNetwork loaded")
+		//logger.Info("SAP shareNetwork loaded")
 	}
 
 	// save shareNetworkId
@@ -49,5 +49,5 @@ func shareNetworkLoad(ctx context.Context, st composed.State) (error, context.Co
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

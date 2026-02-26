@@ -24,5 +24,5 @@ func conditionsInit(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	return nil, ctx
 }
