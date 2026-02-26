@@ -3,7 +3,6 @@ package awsnfsvolumerestore
 import (
 	"context"
 	"fmt"
-
 	"github.com/aws/aws-sdk-go-v2/service/backup/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -24,9 +23,9 @@ func checkRestoreJob(ctx context.Context, st composed.State) (error, context.Con
 	restoreJobOutput, err := state.awsClient.DescribeRestoreJob(ctx, restore.Status.JobId)
 
 	if err != nil && !state.awsClient.IsNotFound(err) {
-		// Don't reset JobId - retry with fixed delay
-		// The job exists in AWS, we just can't describe it right now
-		return composed.LogErrorAndReturn(err, "Error loading AWS restore Job", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+		// As we have idempotency token, we can safely reset and retry
+		restore.Status.JobId = ""
+		return composed.LogErrorAndReturn(err, "Error loading AWS restore Job", composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx)
 	}
 
 	if err != nil {
