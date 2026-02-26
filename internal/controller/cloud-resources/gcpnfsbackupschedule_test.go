@@ -241,7 +241,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 		nfsBackupMinutelySchedule := "* * * * *"
 		nfsBackupLocation := "us-west1"
 
-		accessibleFrom := []string{
+		accessibleFromTargets := []string{
 			"shoot-1",
 			"shoot-2",
 			"shoot-3",
@@ -261,7 +261,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 					WithGcpLocation(nfsBackupLocation),
 					WithNfsVolumeRef(skrNfsVolumeName),
 					WithRetentionDays(0),
-					WithGcpNfsBackupScheduleAccessibleFrom(accessibleFrom),
+					WithGcpNfsBackupScheduleAccessibleFromSpecific(accessibleFromTargets...),
 				).
 				Should(Succeed())
 			By("Then GcpNfsBackupSchedule is created in SKR", func() {
@@ -294,7 +294,9 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 					).
 					Should(Succeed())
 
-				Expect(nfsBackup.Spec.AccessibleFrom).To(ContainElements(accessibleFrom))
+				Expect(nfsBackup.Spec.AccessibleFrom).NotTo(BeNil())
+				Expect(nfsBackup.Spec.AccessibleFrom.Type).To(Equal(cloudresourcesv1beta1.AccessibleFromTypeSpecific))
+				Expect(nfsBackup.Spec.AccessibleFrom.Targets).To(ContainElements(accessibleFromTargets))
 
 			})
 

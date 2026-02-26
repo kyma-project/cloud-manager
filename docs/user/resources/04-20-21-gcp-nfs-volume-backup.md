@@ -39,7 +39,9 @@ This table lists the parameters of the given resource together with their descri
 | **source.volume.name**      | string     | Yes      | Yes       | Name of the source GcpNfsVolume.                                                                                                                                                                                               |
 | **source.volume.namespace** | string     | No       | Yes       | Namespace of the source GcpNfsVolume. Defaults to the namespace of the GcpNfsVolumeBackup resource if not provided.                                                                                                            |
 | **location**                | string     | No       | Yes       | The GCP region where the backup is stored. If left empty, it defaults to the region of the cluster. Must be a valid [GCP region](https://cloud.google.com/filestore/docs/regions).                                            |
-| **accessibleFrom**          | \[\]string | No       | No        | Array of shoot names or subaccount IDs that are granted access to restore from this backup. Use `"all"` to allow access from all shoots in the same global account and GCP project. `"all"` cannot be combined with other values. Max 10 items. |
+| **accessibleFrom**          | object     | No       | No        | Specifies access scope for cross-cluster backup sharing.                                                                                                                                                                        |
+| **accessibleFrom.type**     | string     | Yes*     | No        | Access scope type. `All` allows access from all shoots in the same global account and GCP project. `Specific` requires explicit targets. *Required when accessibleFrom is specified.                                           |
+| **accessibleFrom.targets**  | \[\]string | No       | No        | Array of shoot names or subaccount IDs granted access. Required when type is `Specific`, must be empty when type is `All`. Max 10 items.                                                                                       |
 
 **Status:**
 
@@ -88,8 +90,10 @@ spec:
       name: my-vol
       namespace: production
   accessibleFrom:
-    - "a1b2c3d"   # shoot ID of target cluster
-    - "e4f5g6h"   # another cluster's shoot ID
+    type: Specific
+    targets:
+      - "a1b2c3d"   # shoot ID of target cluster
+      - "e4f5g6h"   # another cluster's shoot ID
 ```
 
 ### Backup Accessible to All Clusters
@@ -106,7 +110,7 @@ spec:
     volume:
       name: critical-data
   accessibleFrom:
-    - "all"
+    type: All
 ```
 
 ## Related Resources <!-- {docsify-ignore} -->

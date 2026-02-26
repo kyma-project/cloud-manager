@@ -9,4 +9,19 @@ metadata:
     app.kubernetes.io/created-by: cloud-manager
   name: gcpnfsbackupschedule-sample
 spec:
-  # TODO(user): Add fields here
+  nfsVolumeRef:
+    name: my-gcp-nfs-volume
+    namespace: default
+  location: us-west1
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  # AccessibleFrom defines who can access backups created by this schedule.
+  # Use type: All to allow access from all shoots in the same global account.
+  # Use type: Specific with targets to restrict access to specific shoots.
+  accessibleFrom:
+    type: All
+  # Example with specific targets:
+  # accessibleFrom:
+  #   type: Specific
+  #   targets:
+  #     - shoot-prod-1
+  #     - shoot-staging-1

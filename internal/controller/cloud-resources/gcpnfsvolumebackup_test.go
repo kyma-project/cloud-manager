@@ -281,7 +281,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", func() {
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
 					WithName(gcpNfsVolumeBackupName),
 					WithGcpNfsVolume(skrGcpNfsVolumeName),
-					WithGcpNfsVolumeBackupAccessibleFrom(additionalShoots),
+					WithGcpNfsVolumeBackupAccessibleFromSpecific(additionalShoots...),
 				).
 				Should(Succeed())
 			By("Then GcpNfsVolumeBackup is created in SKR", func() {
