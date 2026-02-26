@@ -1,6 +1,7 @@
 Feature: AWS NfsVolume feature
 
-  @skr @aws @nfs
+  # Skipped until PR #1716 is merged - requires file-system-id parameter fix for restore to existing filesystem
+  @skip @skr @aws @nfs
   Scenario: AwsNfsVolume scenario
 
     Given there is shared SKR with "AWS" provider
