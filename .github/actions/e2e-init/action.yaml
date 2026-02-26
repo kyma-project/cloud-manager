@@ -35,7 +35,14 @@ runs:
       run: |
         cat <<EOF > e2e-config.yaml
         gardenKubeconfig: $PWD/kubeconfig-garden.yaml
-        shootPrefix: pp
+        shootPrefix: cm
+        shootLabels:
+          cloud-manager.kyma-project.io/created-by: "${{ github.actor }}"
+          cloud-manager.kyma-project.io/run-type: "e2e"
+          cloud-manager.kyma-project.io/team: "cloud-manager"
+          cloud-manager.kyma-project.io/ci-run-id: "${{ github.run_id }}"
+          cloud-manager.kyma-project.io/pr-number: "${{ github.event.pull_request.number || 'none' }}"
+          cloud-manager.kyma-project.io/workflow: "${{ github.workflow }}"
         kcpNamespace: kcp-system
         gardenNamespace: garden-spm-test01
         skrNamespace: default

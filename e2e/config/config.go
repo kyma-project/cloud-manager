@@ -26,6 +26,7 @@ type ConfigType struct {
 
 	ShootPrefix      string            `yaml:"shootPrefix" json:"shootPrefix"`
 	ShootAnnotations map[string]string `yaml:"shootAnnotations" json:"shootAnnotations"`
+	ShootLabels      map[string]string `yaml:"shootLabels" json:"shootLabels"`
 
 	KcpNamespace    string `yaml:"kcpNamespace" json:"kcpNamespace"`
 	GardenNamespace string `yaml:"gardenNamespace" json:"gardenNamespace"`
