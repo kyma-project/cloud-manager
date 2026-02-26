@@ -69,8 +69,8 @@ func NewStateFactory(
 // This follows the multi-provider pattern where provider-specific state wraps shared state.
 func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.State) (*State, error) {
 	// Get GCP clients using provider functions
-	serviceNetworkingClient := f.serviceNetworkingClientProvider()
-	computeClient := f.computeClientProvider()
+	serviceNetworkingClient := f.serviceNetworkingClientProvider(ipRangeState.Scope().Spec.Scope.Gcp.Project)
+	computeClient := f.computeClientProvider(ipRangeState.Scope().Spec.Scope.Gcp.Project)
 
 	return &State{
 		State:                   ipRangeState,

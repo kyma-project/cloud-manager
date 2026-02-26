@@ -58,9 +58,9 @@ func NewStateFactory(
 
 func (statefactory *stateFactory) NewState(ctx context.Context, focalState focal.State) (*State, error) {
 
-	computeClient := statefactory.computeClientProvider()
-	networkConnectivityClient := statefactory.networkConnectivityClientProvider()
-	regionOperationsClient := statefactory.regionOperationsClientProvider()
+	computeClient := statefactory.computeClientProvider(focalState.Scope().Spec.Scope.Gcp.Project)
+	networkConnectivityClient := statefactory.networkConnectivityClientProvider(focalState.Scope().Spec.Scope.Gcp.Project)
+	regionOperationsClient := statefactory.regionOperationsClientProvider(focalState.Scope().Spec.Scope.Gcp.Project)
 
 	return newState(focalState, computeClient, networkConnectivityClient, regionOperationsClient), nil
 }

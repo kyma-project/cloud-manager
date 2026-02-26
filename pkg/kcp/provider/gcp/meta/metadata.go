@@ -2,6 +2,8 @@ package meta
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
 
 	"github.com/googleapis/gax-go/v2/apierror"
 	"google.golang.org/api/googleapi"
@@ -37,7 +39,7 @@ func IsNotAuthorized(err error) bool {
 
 	var googleapierror *googleapi.Error
 	if ok := errors.As(err, &googleapierror); ok {
-		if googleapierror.Code == 403 {
+		if googleapierror.Code == http.StatusForbidden {
 			return true
 		}
 	}
@@ -45,6 +47,9 @@ func IsNotAuthorized(err error) bool {
 	var apiError *apierror.APIError
 	if ok := errors.As(err, &apiError); ok {
 		if apiError.GRPCStatus().Code() == codes.PermissionDenied {
+			return true
+		}
+		if apiError.HTTPCode() == http.StatusForbidden {
 			return true
 		}
 	}
@@ -59,7 +64,7 @@ func IsTooManyRequests(err error) bool {
 
 	var googleapierror *googleapi.Error
 	if ok := errors.As(err, &googleapierror); ok {
-		if googleapierror.Code == 429 {
+		if googleapierror.Code == http.StatusTooManyRequests {
 			return true
 		}
 	}
@@ -73,4 +78,49 @@ func IsTooManyRequests(err error) bool {
 	}
 
 	return false
+}
+
+func NewNotFoundError(message string, a ...any) error {
+	herr := &googleapi.Error{
+		Code:    http.StatusNotFound,
+		Message: fmt.Sprintf(message, a...),
+	}
+	err, _ := apierror.FromError(herr)
+	return err
+}
+
+func NewNotAuthorizedError(message string, a ...any) error {
+	herr := &googleapi.Error{
+		Code:    http.StatusForbidden,
+		Message: fmt.Sprintf(message, a...),
+	}
+	err, _ := apierror.FromError(herr)
+	return err
+}
+
+func NewTooManyRequestsError(message string, a ...any) error {
+	herr := &googleapi.Error{
+		Code:    http.StatusTooManyRequests,
+		Message: fmt.Sprintf(message, a...),
+	}
+	err, _ := apierror.FromError(herr)
+	return err
+}
+
+func NewBadRequestError(message string, a ...any) error {
+	herr := &googleapi.Error{
+		Code:    http.StatusBadRequest,
+		Message: fmt.Sprintf(message, a...),
+	}
+	err, _ := apierror.FromError(herr)
+	return err
+}
+
+func NewInternalServerError(message string, a ...any) error {
+	herr := &googleapi.Error{
+		Code:    http.StatusInternalServerError,
+		Message: fmt.Sprintf(message, a...),
+	}
+	err, _ := apierror.FromError(herr)
+	return err
 }

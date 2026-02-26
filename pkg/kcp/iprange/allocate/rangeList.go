@@ -19,6 +19,18 @@ func newRangeList(items ...*rng) *rngList {
 	}
 }
 
+func (l *rngList) clone() *rngList {
+	if l == nil {
+		return nil
+	}
+
+	result := &rngList{}
+	for _, r := range l.items {
+		result.items = append(result.items, r.clone())
+	}
+	return result
+}
+
 func (l *rngList) addStrings(items ...string) error {
 	for _, s := range items {
 		s = strings.TrimSpace(s)
@@ -54,6 +66,15 @@ func (l *rngList) removeString(s string) bool {
 func (l *rngList) overlaps(o *rng) bool {
 	for _, r := range l.items {
 		if r.overlaps(o) {
+			return true
+		}
+	}
+	return false
+}
+
+func (l *rngList) contains(o *rng) bool {
+	for _, r := range l.items {
+		if r.contains(o) {
 			return true
 		}
 	}

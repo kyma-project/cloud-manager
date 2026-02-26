@@ -6,6 +6,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/metrics"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/option"
 )
@@ -24,7 +25,7 @@ func NewFileRestoreClientProvider() client.ClientProvider[FileRestoreClient] {
 				return nil, err
 			}
 
-			httpClient := client.NewMetricsHTTPClient(baseClient.Transport)
+			httpClient := metrics.NewMetricsHTTPClient(baseClient.Transport)
 
 			fsClient, err := file.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {

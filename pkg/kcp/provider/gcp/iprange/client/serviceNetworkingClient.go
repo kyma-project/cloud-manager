@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/metrics"
 	"google.golang.org/api/cloudresourcemanager/v1"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -44,7 +45,7 @@ type ServiceNetworkingClient interface {
 // because Google does not provide a modern Cloud Client Library for Service Networking API.
 // The clients are initialized in GcpClients and injected here for consistency with other providers.
 func NewServiceNetworkingClientProvider(gcpClients *client.GcpClients) client.GcpClientProvider[ServiceNetworkingClient] {
-	return func() ServiceNetworkingClient {
+	return func(_ string) ServiceNetworkingClient {
 		return NewServiceNetworkingClientForService(
 			gcpClients.ServiceNetworking,
 			gcpClients.CloudResourceManager,
@@ -72,7 +73,7 @@ func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient]
 				return nil, err
 			}
 
-			httpClient := client.NewMetricsHTTPClient(baseClient.Transport)
+			httpClient := metrics.NewMetricsHTTPClient(baseClient.Transport)
 
 			svcNetClient, err := servicenetworking.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {
