@@ -16,13 +16,10 @@ import (
 var (
 	MockAwsAccount = "some-aws-account"
 
-	mock = &mockClient{
-		localClient: *newLocalClient(),
-	}
+	mock = &mockClient{}
 )
 
 type mockClient struct {
-	localClient
 	restoreJobs []backup.DescribeRestoreJobOutput
 }
 

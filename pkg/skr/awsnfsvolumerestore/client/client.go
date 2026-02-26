@@ -2,21 +2,13 @@ package client
 
 import (
 	"context"
-	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
-	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/ptr"
 )
 
-type LocalClient interface {
-	IsNotFound(err error) bool
-	IsInvalidParameter(err error) bool
-}
-
 type Client interface {
-	LocalClient
 	StartRestoreJob(ctx context.Context, params *StartRestoreJobInput) (*backup.StartRestoreJobOutput, error)
 	DescribeRestoreJob(ctx context.Context, restoreJobId string) (*backup.DescribeRestoreJobOutput, error)
 	GetRecoveryPointRestoreMetadata(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.GetRecoveryPointRestoreMetadataOutput, error)
@@ -40,39 +32,14 @@ func NewClientProvider() awsclient.SkrClientProvider[Client] {
 	}
 }
 
-func newLocalClient() *localClient {
-	return &localClient{}
-}
-
 func newClient(svc *backup.Client) Client {
 	return &client{
-		localClient: *newLocalClient(),
-		svc:         svc,
+		svc: svc,
 	}
-}
-
-type localClient struct {
 }
 
 type client struct {
-	localClient
 	svc *backup.Client
-}
-
-func (c *localClient) IsNotFound(err error) bool {
-	if err == nil {
-		return false
-	}
-	var resourceNotFoundException *backuptypes.ResourceNotFoundException
-	return errors.As(err, &resourceNotFoundException)
-}
-
-func (c *localClient) IsInvalidParameter(err error) bool {
-	if err == nil {
-		return false
-	}
-	var invalidParameterValueException *backuptypes.InvalidParameterValueException
-	return errors.As(err, &invalidParameterValueException)
 }
 
 func (c *client) StartRestoreJob(ctx context.Context, params *StartRestoreJobInput) (*backup.StartRestoreJobOutput, error) {

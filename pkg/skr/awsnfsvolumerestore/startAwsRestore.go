@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -96,7 +97,7 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 		// (e.g., pod crashed after StartRestoreJob but before status patch succeeded)
 		// We cannot recover the JobId without ListRestoreJobs permission, so we'll fail
 		// and require manual cleanup or CR recreation
-		if state.awsClient.IsInvalidParameter(err) {
+		if awsmeta.IsInvalidParameter(err) {
 			restore.Status.State = cloudresourcesv1beta1.JobStateError
 			return composed.PatchStatus(restore).
 				SetExclusiveConditions(metav1.Condition{
