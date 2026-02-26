@@ -156,5 +156,8 @@ func (f *gardenClientFactory) getRestConfig(ctx context.Context) (*rest.Config, 
 		return nil, fmt.Errorf("error creating gardener rest client config: %w", err)
 	}
 
+	restConfig.QPS = 100
+	restConfig.Burst = 150
+
 	return restConfig, nil
 }
