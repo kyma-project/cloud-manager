@@ -31,7 +31,7 @@ func networkLoad(ctx context.Context, st composed.State) (error, context.Context
 	if state.network != nil {
 		logger = logger.WithValues("sapNetworkId", state.network.ID)
 		ctx = composed.LoggerIntoCtx(ctx, logger)
-		logger.Info("SAP network loaded")
+		//logger.Info("SAP network loaded")
 	}
 
 	// save the network id

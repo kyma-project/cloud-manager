@@ -258,6 +258,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 				APIVersion: gardeneraopenstack.SchemeGroupVersion.String(),
 				Kind:       "InfrastructureConfig",
 			},
+			FloatingPoolName: "FloatingIP-external-kyma-01",
 		}
 
 		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {

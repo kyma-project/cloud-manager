@@ -16,7 +16,7 @@ func shareCreate(ctx context.Context, st composed.State) (error, context.Context
 	state := st.(*State)
 
 	if state.share != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)

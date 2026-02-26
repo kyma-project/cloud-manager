@@ -261,7 +261,6 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 		time.Sleep(util.Timing.T100ms())
 		return
 	}
-	skrManager.GetScheme()
 
 	ctx = feature.ContextBuilderFromCtx(ctx).
 		Landscape(os.Getenv("LANDSCAPE")).
