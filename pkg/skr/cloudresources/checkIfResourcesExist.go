@@ -3,6 +3,8 @@ package cloudresources
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -11,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 func checkIfResourcesExist(ctx context.Context, st composed.State) (error, context.Context) {
@@ -54,7 +55,8 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 		}
 		list := listObj.(client.ObjectList)
 
-		err = state.Cluster().K8sClient().List(ctx, list)
+		err = state.Cluster().ApiReader().List(ctx, list)
+
 		if meta.IsNoMatchError(err) {
 			// this CRD is not installed
 			continue

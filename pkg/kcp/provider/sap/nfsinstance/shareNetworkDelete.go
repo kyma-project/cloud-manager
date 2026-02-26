@@ -18,7 +18,7 @@ func shareNetworkDelete(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 
 	if state.shareNetwork == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
@@ -35,10 +35,10 @@ func shareNetworkDelete(ctx context.Context, st composed.State) (error, context.
 			WithValues("existingShares", fmt.Sprintf("%v", ids)).
 			Info("Other shares exist, not deleting SAP share network")
 
-		return nil, nil
+		return nil, ctx
 	}
 
-	logger.Info("Deleting SAP share")
+	logger.Info("Deleting SAP share network")
 
 	err = state.sapClient.DeleteShareNetwork(ctx, state.shareNetwork.ID)
 

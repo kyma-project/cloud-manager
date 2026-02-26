@@ -155,6 +155,7 @@ func (s *State) ToGcpInstance() *filestorepb.Instance {
 			{
 				Name:       gcpOptions.FileShareName,
 				CapacityGb: int64(gcpOptions.CapacityGb),
+				Source:     toSourceBackup(gcpOptions.SourceBackup),
 			},
 		},
 		Networks: []*filestorepb.NetworkConfig{
@@ -165,5 +166,16 @@ func (s *State) ToGcpInstance() *filestorepb.Instance {
 				ConnectMode:     filestorepb.NetworkConfig_PRIVATE_SERVICE_ACCESS,
 			},
 		},
+	}
+}
+
+// toSourceBackup converts a backup path string to the protobuf Source oneof type.
+// Returns nil if the backup path is empty (fresh instance creation).
+func toSourceBackup(backupPath string) *filestorepb.FileShareConfig_SourceBackup {
+	if backupPath == "" {
+		return nil
+	}
+	return &filestorepb.FileShareConfig_SourceBackup{
+		SourceBackup: backupPath,
 	}
 }

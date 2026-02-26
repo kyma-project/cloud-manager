@@ -30,7 +30,7 @@ var _ = ginkgo.Describe("Feature: KCP Network", func() {
 	canNotCreateKcp(
 		"Network can not be managed and reference at the same time",
 		nb().WithScope("s").WithCidr("10.0.0.0/24").WithGcpRef("proj", "net"),
-		"Too many: 2: must have at most 1 items",
+		"Too many: 2: must have at most 1 item",
 	)
 
 	canNotChangeKcp(

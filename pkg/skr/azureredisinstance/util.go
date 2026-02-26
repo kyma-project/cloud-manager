@@ -9,23 +9,24 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-func getAuthSecretName(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) string {
-	if azureRedis.Spec.AuthSecret != nil && len(azureRedis.Spec.AuthSecret.Name) > 0 {
-		return azureRedis.Spec.AuthSecret.Name
+func getAuthSecretName(state *State) string {
+	if state.AuthSecretDetails != nil && len(state.AuthSecretDetails.Name) > 0 {
+		return state.AuthSecretDetails.Name
 	}
 
-	return azureRedis.Name
+	return state.ObjAsAzureRedisInstance().Name
 }
 
-func getAuthSecretLabels(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) map[string]string {
+func getAuthSecretLabels(state *State) map[string]string {
 	labelsBuilder := util.NewLabelBuilder()
 
-	if azureRedis.Spec.AuthSecret != nil {
-		for labelName, labelValue := range azureRedis.Spec.AuthSecret.Labels {
+	if state.AuthSecretDetails != nil {
+		for labelName, labelValue := range state.AuthSecretDetails.Labels {
 			labelsBuilder.WithCustomLabel(labelName, labelValue)
 		}
 	}
 
+	azureRedis := state.ObjAsAzureRedisInstance()
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelRedisInstanceStatusId, azureRedis.Status.Id)
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelRedisInstanceNamespace, azureRedis.Namespace)
 	labelsBuilder.WithCustomLabel(cloudresourcesv1beta1.LabelCloudManaged, "true")
@@ -35,12 +36,12 @@ func getAuthSecretLabels(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) m
 	return pvLabels
 }
 
-func getAuthSecretAnnotations(azureRedis *cloudresourcesv1beta1.AzureRedisInstance) map[string]string {
-	if azureRedis.Spec.AuthSecret == nil {
+func getAuthSecretAnnotations(state *State) map[string]string {
+	if state.AuthSecretDetails == nil {
 		return nil
 	}
 	result := map[string]string{}
-	for k, v := range azureRedis.Spec.AuthSecret.Annotations {
+	for k, v := range state.AuthSecretDetails.Annotations {
 		result[k] = v
 	}
 	return result

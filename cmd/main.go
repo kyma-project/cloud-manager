@@ -69,7 +69,8 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
@@ -233,17 +234,22 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolume")
 		os.Exit(1)
 	}
-	if err = cloudresourcescontroller.SetupGcpNfsVolumeReconciler(skrRegistry, gcpnfsbackupclient.NewFileBackupClientProvider(), env); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeReconciler(skrRegistry, gcpnfsbackupclientv1.NewFileBackupClientProvider(), env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolume")
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupReconciler(skrRegistry, gcpnfsbackupclient.NewFileBackupClientProvider(), env, setupLog); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupReconciler(
+		skrRegistry,
+		gcpnfsbackupclientv1.NewFileBackupClientProvider(),
+		gcpnfsbackupclientv2.NewFileBackupClientProvider(gcpClients),
+		env,
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeBackup")
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupDiscoveryReconciler(skrRegistry, gcpnfsbackupclient.NewFileBackupClientProvider(), env, setupLog); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeBackupDiscoveryReconciler(skrRegistry, gcpnfsbackupclientv1.NewFileBackupClientProvider(), env, setupLog); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeBackupDiscovery")
 		os.Exit(1)
 	}
@@ -251,7 +257,7 @@ func main() {
 	if err = cloudresourcescontroller.SetupGcpNfsVolumeRestoreReconciler(
 		skrRegistry,
 		gcpnfsrestoreclient.NewFileRestoreClientProvider(),
-		gcpnfsbackupclient.NewFileBackupClientProvider(),
+		gcpnfsbackupclientv1.NewFileBackupClientProvider(),
 		env,
 		setupLog); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeRestore")
@@ -434,7 +440,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupNukeReconciler(
 		mgr,
 		activeSkrCollection,
-		gcpnfsbackupclient.NewFileBackupClientProvider(),
+		gcpnfsbackupclientv1.NewFileBackupClientProvider(),
 		awsnukeclient.NewClientProvider(),
 		azurenukeclient.NewClientProvider(),
 		env,

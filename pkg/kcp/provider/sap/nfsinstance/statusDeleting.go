@@ -10,7 +10,7 @@ func statusDeleting(ctx context.Context, st composed.State) (error, context.Cont
 	state := st.(*State)
 
 	if state.ObjAsNfsInstance().Status.State == "Deleting" {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.ObjAsNfsInstance().Status.State = "Deleting"

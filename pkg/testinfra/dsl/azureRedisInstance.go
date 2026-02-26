@@ -138,6 +138,18 @@ func WithAzureRedisInstanceAuthSecretExtraData(extraData map[string]string) ObjA
 	}
 }
 
+func WithAzureRedisInstanceVolume(volume *cloudresourcesv1beta1.RedisAuthSecretSpec) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if azureRedisInstance, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance); ok {
+				azureRedisInstance.Spec.Volume = volume
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceVolume", obj))
+		},
+	}
+}
+
 func HavingAzureRedisInstanceStatusId() ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance)

@@ -11,7 +11,7 @@ func accessMismatchCheck(ctx context.Context, st composed.State) (error, context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.accessRight == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	mismatch := false
@@ -47,7 +47,7 @@ func accessMismatchCheck(ctx context.Context, st composed.State) (error, context
 	}
 
 	if !mismatch {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// delete access right
@@ -70,5 +70,5 @@ func accessMismatchCheck(ctx context.Context, st composed.State) (error, context
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

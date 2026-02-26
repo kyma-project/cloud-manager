@@ -3,13 +3,13 @@
   "features": {
     "control_panel": true,
     "summarize": {
-      "auto_generate_summary": true,
-      "auto_insert_summary": true,
+      "auto_generate_summary": false,
+      "auto_insert_summary": false,
       "use_custom_summarize_prompt": false,
       "use_custom_summarize_output_template": false
     },
     "review": {
-      "auto_generate_review": true,
+      "auto_generate_review": false,
       "use_custom_review_focus": false
     }
   }

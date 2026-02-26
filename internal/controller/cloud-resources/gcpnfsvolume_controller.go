@@ -21,7 +21,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client"
+	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -35,7 +35,7 @@ import (
 )
 
 type GcpNfsVolumeReconcilerFactory struct {
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient]
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
 	env                      abstractions.Environment
 }
 
@@ -75,7 +75,7 @@ func (r *GcpNfsVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 func SetupGcpNfsVolumeReconciler(
 	reg skrruntime.SkrRegistry,
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclient.FileBackupClient],
+	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
 	env abstractions.Environment,
 ) error {
 	return reg.Register().
