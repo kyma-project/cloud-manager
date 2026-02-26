@@ -2,6 +2,7 @@ package sapnfsvolume
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -17,6 +18,11 @@ func pvcCreate(ctx context.Context, st composed.State) (error, context.Context) 
 	if composed.IsMarkedForDeletion(state.Obj()) {
 		return nil, ctx
 	}
+	// if PV is not created then PVC can not be created
+	if state.PV == nil {
+		return nil, ctx
+	}
+	// if PVC is already created, nothing to do
 	if state.PVC != nil {
 		return nil, ctx
 	}

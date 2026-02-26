@@ -13,7 +13,7 @@ func shareNetworkCreate(ctx context.Context, st composed.State) (error, context.
 	state := st.(*State)
 
 	if state.shareNetwork != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)

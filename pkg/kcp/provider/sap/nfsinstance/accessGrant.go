@@ -13,7 +13,7 @@ func accessGrant(ctx context.Context, st composed.State) (error, context.Context
 	state := st.(*State)
 
 	if state.accessRight != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)

@@ -13,7 +13,7 @@ func shareExpandShrink(ctx context.Context, st composed.State) (error, context.C
 	state := st.(*State)
 
 	if state.share.Size == state.ObjAsNfsInstance().Spec.Instance.OpenStack.SizeGb {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)

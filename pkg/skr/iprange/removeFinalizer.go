@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -20,7 +21,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 		return nil, nil
 	}
 
-	logger.Info("Removing IpRange finalizer")
+	logger.Info("Removing SKR IpRange finalizer")
 
 	// KCP IpRange does not exist, remove the finalizer so SKR IpRange is also deleted
 	controllerutil.RemoveFinalizer(state.Obj(), api.CommonFinalizerDeletionHook)
