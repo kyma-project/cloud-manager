@@ -3,7 +3,6 @@ package awsnfsvolumerestore
 import (
 	"fmt"
 	"regexp"
-	"strings"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -79,9 +78,10 @@ func (s *State) GetVaultName() string {
 	return fmt.Sprintf("cm-%s", s.Scope().Name)
 }
 
-// efsFileSystemIdRegex validates EFS filesystem ID format: fs-<8-17 hex chars>
+// efsFileSystemIdRegex extracts and validates EFS filesystem ID from DNS name
 // AWS EFS filesystem IDs have format fs-[0-9a-f]{8} or fs-[0-9a-f]{17}
-var efsFileSystemIdRegex = regexp.MustCompile(`^fs-[0-9a-f]{8,17}$`)
+// Example: fs-12345678.efs.us-east-1.amazonaws.com -> fs-12345678
+var efsFileSystemIdRegex = regexp.MustCompile(`^(fs-[0-9a-f]{8,17})\.`)
 
 func (s *State) GetFileSystemId() string {
 	if s.skrAwsNfsVolume == nil {
@@ -89,19 +89,15 @@ func (s *State) GetFileSystemId() string {
 	}
 	// The AwsNfsVolume.Status.Server contains the EFS filesystem DNS name
 	// Format: fs-<id>.efs.<region>.amazonaws.com
-	// Extract the filesystem ID (fs-<id>)
+	// Extract the filesystem ID (fs-<id>) using regex
 	server := s.skrAwsNfsVolume.Status.Server
 	if server == "" {
 		return ""
 	}
-	// Extract "fs-xxxxx" from "fs-xxxxx.efs.region.amazonaws.com"
-	parts := strings.Split(server, ".")
-	if len(parts) > 0 {
-		fsId := parts[0]
-		// Validate EFS filesystem ID format
-		if efsFileSystemIdRegex.MatchString(fsId) {
-			return fsId
-		}
+	// Extract and validate filesystem ID directly from DNS name
+	matches := efsFileSystemIdRegex.FindStringSubmatch(server)
+	if len(matches) > 1 {
+		return matches[1]
 	}
 	return ""
 }

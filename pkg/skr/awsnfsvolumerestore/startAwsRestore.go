@@ -54,9 +54,6 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state)
 	}
 
-	// Log the metadata we received from AWS
-	logger.Info("Restore metadata from AWS", "metadata", restoreMetadataOut.RestoreMetadata)
-
 	// AWS returns metadata that may include parameters for creating a NEW filesystem
 	// We need to restore to the EXISTING filesystem, so set both file-system-id and newFileSystem
 	// References: https://docs.aws.amazon.com/aws-backup/latest/devguide/restoring-efs.html
@@ -82,7 +79,9 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 	restoreMetadataOut.RestoreMetadata["file-system-id"] = fileSystemId
 	restoreMetadataOut.RestoreMetadata["newFileSystem"] = "false"
 
-	logger.Info("Modified restore metadata for existing filesystem", "metadata", restoreMetadataOut.RestoreMetadata, "fileSystemId", fileSystemId)
+	// Create a logger with restore metadata for this mutating operation
+	logger = logger.WithValues("fileSystemId", fileSystemId, "metadata", restoreMetadataOut.RestoreMetadata)
+	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	//Create a Restore Job
 	restoreJobOutput, err := state.awsClient.StartRestoreJob(ctx, &client.StartRestoreJobInput{
@@ -95,8 +94,9 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 	if err != nil {
 		// If idempotency token was already used, the restore job was created but we lost the JobId
 		// (e.g., pod crashed after StartRestoreJob but before status patch succeeded)
-		// We cannot recover the JobId without ListRestoreJobs permission, so we'll fail
-		// and require manual cleanup or CR recreation
+		// We cannot recover the JobId without ListRestoreJobs permission.
+		// ListRestoreJobs requires additional IAM permissions and pagination logic,
+		// so we fail fast and require CR recreation to keep the implementation simple.
 		if awsmeta.IsInvalidParameter(err) {
 			restore.Status.State = cloudresourcesv1beta1.JobStateError
 			return composed.PatchStatus(restore).

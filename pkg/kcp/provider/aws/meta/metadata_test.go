@@ -2,10 +2,11 @@ package meta
 
 import (
 	"errors"
+	"testing"
+
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/aws/smithy-go"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestIsNotFoundResponseError(t *testing.T) {
