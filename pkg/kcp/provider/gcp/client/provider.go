@@ -111,7 +111,10 @@ func loadCredentials(ctx context.Context, credentialsFile string, scopes ...stri
 	if err != nil {
 		return nil, fmt.Errorf("error reading credentials file: [%w]", err)
 	}
-	credentials, err := google.CredentialsFromJSON(ctx, credentialsData, scopes...)
+	params := google.CredentialsParams{
+		Scopes: scopes,
+	}
+	credentials, err := google.CredentialsFromJSONWithParams(ctx, credentialsData, params)
 	if err != nil {
 		return nil, fmt.Errorf("error loading credentials: [%w]", err)
 	}
