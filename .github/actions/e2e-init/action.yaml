@@ -33,16 +33,20 @@ runs:
     - name: Write e2e config file
       shell: bash
       run: |
+        # Sanitize label values to be Kubernetes-compliant (replace spaces with dashes)
+        WORKFLOW_LABEL=$(echo "${{ github.workflow }}" | tr ' ' '-')
+        ACTOR_LABEL=$(echo "${{ github.actor }}" | tr ' ' '-')
+        
         cat <<EOF > e2e-config.yaml
         gardenKubeconfig: $PWD/kubeconfig-garden.yaml
         shootPrefix: cm
         shootLabels:
-          cloud-manager.kyma-project.io/created-by: "${{ github.actor }}"
+          cloud-manager.kyma-project.io/created-by: "${ACTOR_LABEL}"
           cloud-manager.kyma-project.io/run-type: "e2e"
           cloud-manager.kyma-project.io/team: "cloud-manager"
           cloud-manager.kyma-project.io/ci-run-id: "${{ github.run_id }}"
           cloud-manager.kyma-project.io/pr-number: "${{ github.event.pull_request.number || 'none' }}"
-          cloud-manager.kyma-project.io/workflow: "${{ github.workflow }}"
+          cloud-manager.kyma-project.io/workflow: "${WORKFLOW_LABEL}"
         kcpNamespace: kcp-system
         gardenNamespace: garden-spm-test01
         skrNamespace: default
