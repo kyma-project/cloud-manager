@@ -197,10 +197,19 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", Ordered, func() {
 		)
 
 		canNotCreateSkr(
-			"GcpNfsVolumeBackup with AccessibleFrom type Specific without targets",
+			"GcpNfsVolumeBackup with AccessibleFrom type Specific with empty targets",
 			newTestGcpNfsVolumeBackupBuilder().WithAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
 				Type:    cloudresourcesv1beta1.AccessibleFromTypeSpecific,
 				Targets: []string{},
+			}),
+			"targets required when type is Specific",
+		)
+
+		canNotCreateSkr(
+			"GcpNfsVolumeBackup with AccessibleFrom type Specific with nil targets",
+			newTestGcpNfsVolumeBackupBuilder().WithAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+				Type:    cloudresourcesv1beta1.AccessibleFromTypeSpecific,
+				Targets: nil,
 			}),
 			"targets required when type is Specific",
 		)
