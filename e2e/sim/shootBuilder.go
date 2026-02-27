@@ -82,7 +82,6 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 	b.obj.Name = rt.Spec.Shoot.Name
 	b.obj.Namespace = b.config.GardenNamespace
 
-	// Initialize labels map if nil
 	if b.obj.Labels == nil {
 		b.obj.Labels = make(map[string]string)
 	}
