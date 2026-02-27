@@ -124,7 +124,7 @@ func defaultCreateOptions() []CreateOption {
 		WithPodsRange("10.96.0.0/13"),
 		WithServicesRange("10.104.0.0/13"),
 		WithInterval(time.Second),
-		WithTimeout(5 * time.Minute), // Wait up to 5 minutes for shoot object to be created in garden cluster
+		WithTimeout(5 * time.Minute),
 	}
 }
 
