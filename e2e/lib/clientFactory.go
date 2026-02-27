@@ -156,8 +156,10 @@ func (f *gardenClientFactory) getRestConfig(ctx context.Context) (*rest.Config, 
 		return nil, fmt.Errorf("error creating gardener rest client config: %w", err)
 	}
 
-	restConfig.QPS = 100
-	restConfig.Burst = 150
+	// Set very high rate limits for e2e Garden client to avoid throttling during shoot status polling
+	// e2e operations need unrestricted API access for reliable test execution
+	restConfig.QPS = 1000
+	restConfig.Burst = 2000
 
 	return restConfig, nil
 }
