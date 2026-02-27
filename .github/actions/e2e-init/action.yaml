@@ -43,10 +43,8 @@ runs:
         shootLabels:
           cloud-manager.kyma-project.io/created-by: "${ACTOR_LABEL}"
           cloud-manager.kyma-project.io/run-type: "e2e"
-          cloud-manager.kyma-project.io/team: "cloud-manager"
+          cloud-manager.kyma-project.io/team: "phoenix"
           cloud-manager.kyma-project.io/ci-run-id: "${{ github.run_id }}"
-          cloud-manager.kyma-project.io/pr-number: "${{ github.event.pull_request.number || 'none' }}"
-          cloud-manager.kyma-project.io/workflow: "${WORKFLOW_LABEL}"
         kcpNamespace: kcp-system
         gardenNamespace: garden-spm-test01
         skrNamespace: default
