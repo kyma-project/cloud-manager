@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
+	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 
 	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -126,6 +127,14 @@ func IsNotFound(err error) bool {
 		}
 	}
 	return false
+}
+
+func IsInvalidParameter(err error) bool {
+	if err == nil {
+		return false
+	}
+	var invalidParameterValueException *backuptypes.InvalidParameterValueException
+	return errors.As(err, &invalidParameterValueException)
 }
 
 func NewHttpNotFoundError(err error) error {
