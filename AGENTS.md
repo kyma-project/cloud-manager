@@ -1,7 +1,31 @@
 # Cloud Manager - AI Agent Instructions
 
-**Target Audience**: LLM coding agents  
+**Target Audience**: LLM coding agents
 **Last Updated**: 2025-01-24
+
+## Available Skills
+
+Use these slash commands for task-specific guidance:
+
+| Command | Description |
+|---------|-------------|
+| `/add-kcp-reconciler` | Create a new KCP reconciler for cloud provider resources |
+| `/add-skr-reconciler` | Create a new SKR reconciler for user-facing resources |
+| `/write-tests` | Write controller tests using Ginkgo/Gomega |
+| `/create-mocks` | Create mock implementations for cloud provider APIs |
+| `/fix-bug` | Debug and fix issues in reconcilers |
+| `/understand-codebase` | Navigate and understand project structure |
+| `/api-validation` | Test CRD validation rules |
+| `/feature-flags` | Work with feature flags |
+| `/gcp-client` | Implement GCP cloud provider clients |
+| `/azure-client` | Implement Azure cloud provider clients |
+| `/aws-client` | Implement AWS cloud provider clients |
+| `/modify-api` | Modify existing CRD APIs |
+| `/crd-evolution` | Understand NEW vs OLD patterns |
+
+Skills auto-load based on your task. Use `/skill-name` for manual invocation.
+
+---
 
 ## Repository Identity
 
