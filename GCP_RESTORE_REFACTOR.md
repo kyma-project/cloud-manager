@@ -20,7 +20,7 @@ This is an **SKR-only component** (no backing KCP resource). It directly calls G
 
 - [x] Step 1: Create Feature Flag `gcpNfsRestoreV2`
 - [x] Step 2: Create v2 Restore Client
-- [ ] Step 3: Move Current Restore Implementation to v1
+- [x] Step 3: Move Current Restore Implementation to v1
 - [ ] Step 4: Create v2 Restore Implementation
 - [ ] Step 5: Create v2 Restore Mock
 - [ ] Step 6: Update Controller

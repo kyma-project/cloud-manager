@@ -1,12 +1,13 @@
-package gcpnfsvolumerestore
+package v1
 
 import (
 	"context"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"

@@ -1,4 +1,4 @@
-package gcpnfsvolumerestore
+package v1
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"k8s.io/api/coordination/v1"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -47,7 +47,7 @@ func (s *acquireLeaseSuite) TestAcquireLease_Acquire() {
 	assert.Nil(s.T(), err)
 	err, _ = acquireLease(ctx, state)
 	assert.Nil(s.T(), err)
-	lease := &v1.Lease{}
+	lease := &coordinationv1.Lease{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name), Namespace: state.GcpNfsVolume.Namespace}, lease)
 	assert.Nil(s.T(), err)
 	s.Equal(*lease.Spec.HolderIdentity, fmt.Sprintf("%s/%s", obj.Namespace, obj.Name))
@@ -71,7 +71,7 @@ func (s *acquireLeaseSuite) TestAcquireLease_Renew() {
 	state.GcpNfsVolume = gcpNfsVolume.DeepCopy()
 	err, _ = acquireLease(ctx, state)
 	assert.Nil(s.T(), err)
-	lease := &v1.Lease{}
+	lease := &coordinationv1.Lease{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name), Namespace: state.GcpNfsVolume.Namespace}, lease)
 	assert.Nil(s.T(), err)
 	s.Equal(*lease.Spec.HolderIdentity, fmt.Sprintf("%s/%s", obj.Namespace, obj.Name))
@@ -103,12 +103,12 @@ func (s *acquireLeaseSuite) TestAcquireLease_OtherLeased() {
 	leaseDuration := new(int32)
 	*leaseDuration = 600
 	otherOwner := "otherns/other"
-	err = factory.skrCluster.K8sClient().Create(ctx, &v1.Lease{
+	err = factory.skrCluster.K8sClient().Create(ctx, &coordinationv1.Lease{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name),
 			Namespace: state.GcpNfsVolume.Namespace,
 		},
-		Spec: v1.LeaseSpec{
+		Spec: coordinationv1.LeaseSpec{
 			HolderIdentity:       &otherOwner,
 			LeaseDurationSeconds: leaseDuration,
 			AcquireTime:          &metav1.MicroTime{Time: time.Now()},
@@ -118,7 +118,7 @@ func (s *acquireLeaseSuite) TestAcquireLease_OtherLeased() {
 	assert.Nil(s.T(), err)
 	err, _ = acquireLease(ctx, state)
 	assert.Equal(s.T(), composed.StopWithRequeueDelay(util.Timing.T10000ms()), err)
-	lease := &v1.Lease{}
+	lease := &coordinationv1.Lease{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name), Namespace: state.GcpNfsVolume.Namespace}, lease)
 	assert.Nil(s.T(), err)
 	s.Equal(*lease.Spec.HolderIdentity, otherOwner)
@@ -143,7 +143,7 @@ func (s *acquireLeaseSuite) TestDoNotAcquireLeaseOnDeletingObject() {
 
 	err, _ = acquireLease(ctx, state)
 	assert.Nil(s.T(), err)
-	lease := &v1.Lease{}
+	lease := &coordinationv1.Lease{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Name: fmt.Sprintf("restore-%s", state.GcpNfsVolume.Name), Namespace: state.GcpNfsVolume.Namespace}, lease)
 	assert.NotNil(s.T(), err)
 	assert.True(s.T(), apierrors.IsNotFound(err))

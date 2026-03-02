@@ -25,7 +25,7 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
-	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumerestore"
+	gcpnfsvolumerestorev1 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumerestore/v1"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -35,7 +35,7 @@ import (
 
 // GcpNfsVolumeRestoreReconciler reconciles a GcpNfsVolumeRestore object
 type GcpNfsVolumeRestoreReconciler struct {
-	Reconciler gcpnfsvolumerestore.Reconciler
+	Reconciler gcpnfsvolumerestorev1.Reconciler
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsvolumerestores,verbs=get;list;watch;create;update;patch;delete
@@ -63,7 +63,7 @@ type GcpNfsVolumeRestoreReconcilerFactory struct {
 
 func (f *GcpNfsVolumeRestoreReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &GcpNfsVolumeRestoreReconciler{
-		Reconciler: gcpnfsvolumerestore.NewReconciler(
+		Reconciler: gcpnfsvolumerestorev1.NewReconciler(
 			args.KymaRef,
 			args.KcpCluster,
 			args.SkrCluster,

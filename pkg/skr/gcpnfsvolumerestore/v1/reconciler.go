@@ -1,4 +1,4 @@
-package gcpnfsvolumerestore
+package v1
 
 import (
 	"context"
@@ -23,6 +23,9 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	if Ignore.ShouldIgnoreKey(req) {
+		return ctrl.Result{}, nil
+	}
 	logger := composed.LoggerFromCtx(ctx)
 
 	//Create state object

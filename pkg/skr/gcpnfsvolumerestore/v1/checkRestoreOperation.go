@@ -1,9 +1,10 @@
-package gcpnfsvolumerestore
+package v1
 
 import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	"google.golang.org/api/googleapi"

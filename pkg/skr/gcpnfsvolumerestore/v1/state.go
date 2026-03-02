@@ -1,4 +1,4 @@
-package gcpnfsvolumerestore
+package v1
 
 import (
 	"context"
