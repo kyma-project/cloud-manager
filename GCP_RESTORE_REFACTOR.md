@@ -16,6 +16,21 @@ This is an **SKR-only component** (no backing KCP resource). It directly calls G
 - Restore uses a **lease mechanism** to prevent concurrent restores to the same NFS volume.
 - The v2 backup client (`pkg/kcp/provider/gcp/nfsbackup/client/v2`) already exists and can be reused for backup loading.
 
+## Progress Checklist
+
+- [x] Step 1: Create Feature Flag `gcpNfsRestoreV2`
+- [ ] Step 2: Create v2 Restore Client
+- [ ] Step 3: Move Current Restore Implementation to v1
+- [ ] Step 4: Create v2 Restore Implementation
+- [ ] Step 5: Create v2 Restore Mock
+- [ ] Step 6: Update Controller
+- [ ] Step 7: Update `cmd/main.go`
+- [ ] Step 8: Update Test Suite Setup
+- [ ] Step 9: Update Existing Controller Tests
+- [ ] Step 10: Create v2 Controller Tests
+- [ ] Step 11: Update Import References Across Codebase
+- [ ] Step 12: Verify & Clean Up
+
 ---
 
 ## Step 1: Create Feature Flag `gcpNfsRestoreV2`
