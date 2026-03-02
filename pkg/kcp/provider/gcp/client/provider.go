@@ -106,18 +106,13 @@ func renewCachedHttpClientPeriodically(ctx context.Context, credentialsFile stri
 }
 
 func newHttpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
-	credentialsData, err := os.ReadFile(credentialsFile)
-	if err != nil {
-		return nil, fmt.Errorf("error reading credentials file: [%w]", err)
-	}
-
 	scopes := []string{
 		"https://www.googleapis.com/auth/compute",
 		"https://www.googleapis.com/auth/cloud-platform",
 	}
 
 	client, _, err := transport.NewHTTPClient(ctx,
-		option.WithCredentialsJSON(credentialsData),
+		option.WithAuthCredentialsFile(option.ServiceAccount, credentialsFile),
 		option.WithScopes(scopes...))
 	if err != nil {
 		return nil, fmt.Errorf("error obtaining GCP HTTP client: [%w]", err)
@@ -130,14 +125,8 @@ func newHttpClient(ctx context.Context, credentialsFile string) (*http.Client, e
 func CheckGcpAuthentication(ctx context.Context, credentialsFile string) {
 	logger := composed.LoggerFromCtx(ctx)
 
-	credentialsData, err := os.ReadFile(credentialsFile)
-	if err != nil {
-		logger.Error(err, "GCP Authentication Check - failed to read credentials file")
-		return
-	}
-
 	svc, err := oauth2.NewService(ctx,
-		option.WithCredentialsJSON(credentialsData),
+		option.WithAuthCredentialsFile(option.ServiceAccount, credentialsFile),
 		option.WithScopes(oauth2.UserinfoEmailScope))
 	if err != nil {
 		logger.Error(err, "GCP Authentication Check - error creating new oauth2.Service")
