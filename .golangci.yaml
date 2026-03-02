@@ -107,8 +107,10 @@ linters:
           alias: gcpnfsbackupclient
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/client
           alias: gcpnfsinstanceclient
-        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client
-          alias: gcpnfsrestoreclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1
+          alias: gcpnfsrestoreclientv1
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2
+          alias: gcpnfsrestoreclientv2
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client
           alias: gcpredisclusterclient
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client

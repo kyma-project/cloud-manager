@@ -12,7 +12,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"google.golang.org/api/file/v1"
 
