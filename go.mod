@@ -66,7 +66,7 @@ require (
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.1
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.35.0
 	google.golang.org/api v0.265.0
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409
 	google.golang.org/grpc v1.78.0
