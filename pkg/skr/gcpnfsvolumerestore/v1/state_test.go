@@ -14,7 +14,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
-	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
+	gcpnfsrestoreclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/option"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -149,19 +149,19 @@ type testStateFactory struct {
 	factory                   StateFactory
 	skrCluster                composed.StateCluster
 	kcpCluster                composed.StateCluster
-	fileRestoreClientProvider client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]
+	fileRestoreClientProvider client.ClientProvider[gcpnfsrestoreclientv1.FileRestoreClient]
 	env                       abstractions.Environment
 	fakeHttpServer            *httptest.Server
 }
 
-func NewFakeFileRestoreClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient] {
+func NewFakeFileRestoreClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsrestoreclientv1.FileRestoreClient] {
 	return client.NewCachedClientProvider(
-		func(ctx context.Context, credentialsFile string) (gcpnfsrestoreclient.FileRestoreClient, error) {
+		func(ctx context.Context, credentialsFile string) (gcpnfsrestoreclientv1.FileRestoreClient, error) {
 			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
 			if err != nil {
 				return nil, err
 			}
-			return gcpnfsrestoreclient.NewFileRestoreClient(fsClient), nil
+			return gcpnfsrestoreclientv1.NewFileRestoreClient(fsClient), nil
 		},
 	)
 }
