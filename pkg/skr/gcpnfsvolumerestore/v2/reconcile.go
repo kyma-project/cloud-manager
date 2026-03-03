@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
-	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
+	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
@@ -59,7 +59,7 @@ func (r *Reconciler) newAction() composed.Action {
 }
 
 func NewReconciler(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster,
-	fileRestoreClientProvider gcpclient.GcpClientProvider[v2client.FileRestoreClient],
+	fileRestoreClientProvider gcpclient.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient],
 	fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient],
 ) Reconciler {
 	compSkrCluster := composed.NewStateClusterFromCluster(skrCluster)

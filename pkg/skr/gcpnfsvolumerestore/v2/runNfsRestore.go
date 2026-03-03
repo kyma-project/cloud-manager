@@ -8,7 +8,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
-	v2restoreutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
+	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,7 +33,7 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 	dstLocation := state.GcpNfsVolume.Status.Location
 
 	nfsInstanceName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolume.Status.Id)
-	dstFullPath := v2restoreutil.GetFilestoreInstancePath(project, dstLocation, nfsInstanceName)
+	dstFullPath := gcpnfsrestoreclientv2.GetFilestoreInstancePath(project, dstLocation, nfsInstanceName)
 	dstFileShare := state.GcpNfsVolume.Spec.FileShareName
 
 	opName, err := state.fileRestoreClient.RestoreFile(ctx, project, dstFullPath, dstFileShare, state.SrcBackupFullPath)

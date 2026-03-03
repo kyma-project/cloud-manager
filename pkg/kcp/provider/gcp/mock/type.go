@@ -8,7 +8,7 @@ import (
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
-	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
+	gcpnfsrestoreclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
 	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
@@ -48,7 +48,7 @@ type Providers interface {
 	FilestoreClientProvider() client.ClientProvider[gcpnfsinstancev1client.FilestoreClient]
 	FilestoreClientProviderV2() client.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient]
 	ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient]
-	FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclient.FileRestoreClient]
+	FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclientv1.FileRestoreClient]
 	FileRestoreClientProviderV2() client.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient]
 	FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
 	FileBackupClientProviderV2() client.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]

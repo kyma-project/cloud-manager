@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
-	v2restoreutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
+	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -29,7 +29,7 @@ func findRestoreOperation(ctx context.Context, st composed.State) (error, contex
 	project := state.Scope.Spec.Scope.Gcp.Project
 	dstLocation := state.GcpNfsVolume.Status.Location
 	nfsInstanceName := fmt.Sprintf("cm-%.60s", state.GcpNfsVolume.Status.Id)
-	_ = v2restoreutil.GetFilestoreInstancePath(project, dstLocation, nfsInstanceName) // validate path construction
+	_ = gcpnfsrestoreclientv2.GetFilestoreInstancePath(project, dstLocation, nfsInstanceName) // validate path construction
 
 	op, err := state.fileRestoreClient.FindRestoreOperation(ctx, project, dstLocation, nfsInstanceName)
 	if err != nil {

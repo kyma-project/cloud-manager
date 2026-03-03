@@ -10,7 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
-	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
+	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/klog/v2"
 )
@@ -28,7 +28,7 @@ type State struct {
 
 	fileBackup *filestorepb.Backup // Modern protobuf type (for permission checks)
 
-	fileRestoreClient v2client.FileRestoreClient
+	fileRestoreClient gcpnfsrestoreclientv2.FileRestoreClient
 	fileBackupClient  gcpnfsbackupclientv2.FileBackupClient
 }
 
@@ -40,7 +40,7 @@ func NewStateFactory(
 	kymaRef klog.ObjectRef,
 	kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster,
-	fileRestoreClientProvider gcpclient.GcpClientProvider[v2client.FileRestoreClient],
+	fileRestoreClientProvider gcpclient.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient],
 	fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient],
 ) StateFactory {
 	return &stateFactory{
@@ -56,7 +56,7 @@ type stateFactory struct {
 	kymaRef                   klog.ObjectRef
 	kcpCluster                composed.StateCluster
 	skrCluster                composed.StateCluster
-	fileRestoreClientProvider gcpclient.GcpClientProvider[v2client.FileRestoreClient]
+	fileRestoreClientProvider gcpclient.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient]
 	fileBackupClientProvider  gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
 }
 
