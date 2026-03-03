@@ -106,8 +106,8 @@ var _ = BeforeSuite(func() {
 	// GcpNfsVolume
 	Expect(SetupGcpNfsVolumeReconciler(infra.Registry(), infra.GcpMock().FileBackupClientProvider(), env)).
 		NotTo(HaveOccurred())
-	// GcpNfsVolumeRestore
-	Expect(SetupGcpNfsVolumeRestoreReconciler(infra.Registry(), infra.GcpMock().FilerestoreClientProvider(), infra.GcpMock().FileBackupClientProvider(), env, testSetupLog)).
+	// GcpNfsVolumeRestore (v1 and v2 providers)
+	Expect(SetupGcpNfsVolumeRestoreReconciler(infra.Registry(), infra.GcpMock().FilerestoreClientProvider(), infra.GcpMock().FileBackupClientProvider(), infra.GcpMock().FileRestoreClientProviderV2(), infra.GcpMock().FileBackupClientProviderV2(), env)).
 		NotTo(HaveOccurred())
 	// GcpNfsVolumeBackup (v1 and v2 providers)
 	Expect(SetupGcpNfsVolumeBackupReconciler(infra.Registry(), infra.GcpMock().FileBackupClientProvider(), infra.GcpMock().FileBackupClientProviderV2(), env)).

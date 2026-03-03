@@ -24,8 +24,8 @@ This is an **SKR-only component** (no backing KCP resource). It directly calls G
 - [x] Step 4: Create v2 Restore Implementation
 - [x] Step 5: Create v2 Restore Mock
 - [x] Step 6: Update Controller
-- [ ] Step 7: Update `cmd/main.go`
-- [ ] Step 8: Update Test Suite Setup
+- [x] Step 7: Update `cmd/main.go`
+- [x] Step 8: Update Test Suite Setup
 - [ ] Step 9: Update Existing Controller Tests
 - [ ] Step 10: Create v2 Controller Tests
 - [ ] Step 11: Update Import References Across Codebase
