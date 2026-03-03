@@ -26,7 +26,7 @@ This is an **SKR-only component** (no backing KCP resource). It directly calls G
 - [x] Step 6: Update Controller
 - [x] Step 7: Update `cmd/main.go`
 - [x] Step 8: Update Test Suite Setup
-- [ ] Step 9: Update Existing Controller Tests
+- [x] Step 9: Update Existing Controller Tests
 - [ ] Step 10: Create v2 Controller Tests
 - [ ] Step 11: Update Import References Across Codebase
 - [ ] Step 12: Verify & Clean Up
