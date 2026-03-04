@@ -41,6 +41,7 @@ func NewShootBuilder(cpr e2elib.CloudProfileRegistry, config *e2econfig.ConfigTy
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   config.GardenNamespace,
 				Annotations: config.ShootAnnotations,
+				Labels:      config.ShootLabels,
 			},
 		},
 	}
@@ -81,11 +82,13 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 	b.obj.Name = rt.Spec.Shoot.Name
 	b.obj.Namespace = b.config.GardenNamespace
 
-	b.obj.Labels = map[string]string{
-		gardenerconstants.LabelExtensionProviderTypePrefix + rt.Spec.Shoot.Provider.Type: "true",
-		"extensions.extensions.gardener.cloud/shoot-oidc-service":                        "true",
-		"operatingsystemconfig.extensions.gardener.cloud/gardenlinux":                    "true",
+	if b.obj.Labels == nil {
+		b.obj.Labels = make(map[string]string)
 	}
+	// Merge in required Gardener labels (preserves custom labels from config)
+	b.obj.Labels[gardenerconstants.LabelExtensionProviderTypePrefix+rt.Spec.Shoot.Provider.Type] = "true"
+	b.obj.Labels["extensions.extensions.gardener.cloud/shoot-oidc-service"] = "true"
+	b.obj.Labels["operatingsystemconfig.extensions.gardener.cloud/gardenlinux"] = "true"
 
 	//nolint:staticcheck
 	//b.obj.Spec.CloudProfileName = ptr.To(cloudProfileName)
