@@ -23,14 +23,14 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 			Skip("Skipping v2 GcpNfsVolumeRestore tests because gcpNfsRestoreV2 feature flag is disabled")
 		}
 
-		skrGcpNfsVolumeName := "a1b2c3d4-1111-2222-3333-444455556601"
+		skrGcpNfsVolumeName := "3ec6e249-de2f-42fc-9c2f-5334114a1537"
 		skrGcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
-		skrIpRangeName := "a1b2c3d4-1111-2222-3333-444455556602"
-		skrGcpNfsBackupName := "a1b2c3d4-1111-2222-3333-444455556603"
+		skrIpRangeName := "da5f0c69-6e3b-4b81-a9a9-4152869f2611"
+		skrGcpNfsBackupName := "3e9ae34a-b225-4dd7-8d88-ba4527d816e2"
 		skrGcpNfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
 		scope := &cloudcontrolv1beta1.Scope{}
 		gcpNfsVolumeRestore := &cloudresourcesv1beta1.GcpNfsVolumeRestore{}
-		gcpNfsVolumeRestoreName := "a1b2c3d4-1111-2222-3333-444455556604"
+		gcpNfsVolumeRestoreName := "9a63bc2b-055c-45c9-9128-37863cd2f00a"
 
 		By("Given KCP Scope exists", func() {
 			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
@@ -122,14 +122,14 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 			Skip("Skipping v2 GcpNfsVolumeRestore tests because gcpNfsRestoreV2 feature flag is disabled")
 		}
 
-		skrGcpNfsVolumeName := "b2c3d4e5-1111-2222-3333-444455556601"
+		skrGcpNfsVolumeName := "6e854f96-d730-4333-8263-a752346b4c89"
 		skrGcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
-		skrIpRangeName := "b2c3d4e5-1111-2222-3333-444455556602"
-		skrGcpNfsBackupName := "b2c3d4e5-1111-2222-3333-444455556603"
+		skrIpRangeName := "920ea8af-c458-4c55-9c6b-6112dfe0ae20"
+		skrGcpNfsBackupName := "5ab6d98d-77a0-4747-a30f-ac8d716ffd08"
 		skrGcpNfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
 		scope := &cloudcontrolv1beta1.Scope{}
 		gcpNfsVolumeRestore := &cloudresourcesv1beta1.GcpNfsVolumeRestore{}
-		gcpNfsVolumeRestoreName := "b2c3d4e5-1111-2222-3333-444455556604"
+		gcpNfsVolumeRestoreName := "9f65425d-c7b4-4139-b916-4c7e091f28c0"
 
 		By("Given KCP Scope exists", func() {
 			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
@@ -212,14 +212,14 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 			Skip("Skipping v2 GcpNfsVolumeRestore tests because gcpNfsRestoreV2 feature flag is disabled")
 		}
 
-		skrGcpNfsVolumeName := "c3d4e5f6-1111-2222-3333-444455556601"
+		skrGcpNfsVolumeName := "c3d310f8-b26b-4852-b2f1-b46294fdaae0"
 		skrGcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
-		skrIpRangeName := "c3d4e5f6-1111-2222-3333-444455556602"
-		skrGcpNfsBackupName := "c3d4e5f6-1111-2222-3333-444455556603"
+		skrIpRangeName := "dd5b1196-7419-4b19-a8d8-4b373c755c1d"
+		skrGcpNfsBackupName := "3a314877-9924-4977-b91e-297a4851a1cc"
 		skrGcpNfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
 		scope := &cloudcontrolv1beta1.Scope{}
 		gcpNfsVolumeRestore := &cloudresourcesv1beta1.GcpNfsVolumeRestore{}
-		gcpNfsVolumeRestoreName := "c3d4e5f6-1111-2222-3333-444455556604"
+		gcpNfsVolumeRestoreName := "6e5efcc7-692e-4a1c-9638-9e8a879a3544"
 
 		By("Given KCP Scope exists", func() {
 			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
