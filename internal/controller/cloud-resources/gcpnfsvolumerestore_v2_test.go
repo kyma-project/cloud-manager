@@ -89,6 +89,20 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 				).Should(Succeed())
 		})
 
+		By("Then GcpNfsVolumeRestore reaches InProgress state", func() {
+			Eventually(func() (bool, error) {
+				err := infra.SKR().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsVolumeRestore), gcpNfsVolumeRestore)
+				if err != nil {
+					return false, err
+				}
+				return gcpNfsVolumeRestore.Status.State == cloudresourcesv1beta1.JobStateInProgress, nil
+			}).Should(BeTrue(), "expected GcpNfsVolumeRestore to reach InProgress state")
+		})
+
+		By("And When the GCP restore operation completes", func() {
+			infra.GcpMock().SetRestoreOperationDoneV2(gcpNfsVolumeRestore.Status.OpIdentifier)
+		})
+
 		By("Then GcpNfsVolumeRestore has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
@@ -177,7 +191,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 				).Should(Succeed())
 		})
 
-		By("And Given GcpNfsVolumeRestore is created and reaches Done state", func() {
+		By("And Given GcpNfsVolumeRestore is created", func() {
 			Eventually(CreateGcpNfsVolumeRestore).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeRestore,
@@ -185,7 +199,21 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 					WithRestoreSourceBackup(skrGcpNfsBackupName),
 					WithRestoreDestinationVolume(skrGcpNfsVolumeName),
 				).Should(Succeed())
+		})
 
+		By("And Given the GCP restore operation completes", func() {
+			Eventually(func() (bool, error) {
+				err := infra.SKR().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsVolumeRestore), gcpNfsVolumeRestore)
+				if err != nil {
+					return false, err
+				}
+				return gcpNfsVolumeRestore.Status.State == cloudresourcesv1beta1.JobStateInProgress, nil
+			}).Should(BeTrue(), "expected GcpNfsVolumeRestore to reach InProgress state")
+
+			infra.GcpMock().SetRestoreOperationDoneV2(gcpNfsVolumeRestore.Status.OpIdentifier)
+		})
+
+		By("And Given GcpNfsVolumeRestore reaches Done state", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeRestore,
