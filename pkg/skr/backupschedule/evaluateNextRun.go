@@ -7,6 +7,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -51,7 +52,7 @@ func EvaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	//If it still not time to run, reconcile with delay
 	if timeLeft := calc.GetRemainingTime(nextRunTime); timeLeft > 0 {
 		logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next Run in : %s", timeLeft))
-		return composed.StopWithRequeueDelay(timeLeft), nil
+		return composed.StopWithRequeueDelay(min(timeLeft, util.Timing.T10000ms())), nil
 	}
 
 	//Set the state attributes
@@ -72,7 +73,7 @@ func EvaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 		if timeLeft := calc.GetRemainingTimeWithTolerance(nextRunTime, 0); timeLeft > 0 {
 			logger.WithValues("BackupSchedule", schedule.GetName()).Info(
 				fmt.Sprintf("Run already completed for %s. Requeueing with delay : %s", nextRunTime, timeLeft))
-			return composed.StopWithRequeueDelay(timeLeft), nil
+			return composed.StopWithRequeueDelay(min(timeLeft, util.Timing.T10000ms())), nil
 		}
 
 		schedule.SetNextRunTimes(nil)
