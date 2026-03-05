@@ -811,4 +811,4 @@ Steps 1 and 2 should be done first and verified independently (`make build && ma
 | 5 | Wire v2 into GCP controller via feature flag | Yes |
 | 6 | Controller tests for v2 | Yes |
 | 7 | Update CI pipeline | Yes |
-| 8 | Cleanup and documentation | |
+| 8 | Cleanup and documentation | Yes |

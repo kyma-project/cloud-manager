@@ -2,53 +2,80 @@
 
 **Target Audience**: LLM coding agents  
 **Prerequisites**: [ADD_KCP_RECONCILER.md](ADD_KCP_RECONCILER.md), [STATE_PATTERN.md](../architecture/STATE_PATTERN.md), [ACTION_COMPOSITION.md](../architecture/ACTION_COMPOSITION.md)  
-**Purpose**: Step-by-step guide to create user-facing SKR reconciler that maps to KCP resources  
-**Context**: SKR reconcilers run in user clusters, create/manage corresponding KCP resources in control plane
+**Purpose**: Step-by-step guide to create user-facing SKR reconcilers  
+**Context**: SKR reconcilers run in user clusters. Two categories exist:
+- **SKR→KCP**: Creates/manages a corresponding KCP resource in the control plane (e.g., `GcpRedisCluster` creates KCP `GcpRedisCluster`)
+- **SKR-only**: Manages resources entirely within the SKR cluster with no backing KCP resource (e.g., `GcpNfsBackupSchedule` creates `GcpNfsVolumeBackup` objects)
 
 ## Authority: SKR Reconciler Requirements
 
-### MUST
+### MUST (all SKR reconcilers)
 
-- **ALWAYS extend `common.State`**: SKR state pattern uses common base, not focal.State
+- **MUST use NEW pattern**: Provider-specific CRD names REQUIRED for all new code
+- **MUST add finalizer**: Required for resources needing deletion cleanup
+- **MUST implement deletion flow**: Clean up child/KCP resources, wait for completion, remove finalizer
+- **MUST end with StopAndForget**: Successful flows return `composed.StopAndForget, nil`
+- **MUST check feature flags**: Use `feature.LoadFeatureContextFromObj()` in action composition
+- **MUST use type-safe getters**: Use `state.ObjAsGcpRedisCluster()` not `state.Obj().(*Type)`
+- **MUST use `IfElse` for create/delete branching**: Use `composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate), createFlow, deleteFlow)` — do NOT check `MarkedForDeletion` inside individual actions
+- **MUST validate state factory errors**: Check error from `NewState()` before proceeding
+
+### MUST (SKR→KCP only)
+
+- **MUST extend `common.State`**: SKR→KCP state uses common base, not focal.State
 - **MUST generate unique ID**: Use UUID-based ID in Status.Id before creating KCP resource
 - **MUST set KCP annotations**: LabelKymaName, LabelRemoteName, LabelRemoteNamespace REQUIRED on all KCP resources
 - **MUST sync status from KCP**: Copy State, Conditions, and user-relevant fields from KCP to SKR status
 - **MUST wait for KCP deletion**: Delete flow waits for KCP resource deletion BEFORE removing finalizer
-- **MUST use NEW pattern**: NEW Pattern (provider-specific SKR → provider-specific KCP) REQUIRED for all new code
-- **MUST add finalizer**: Required for resources needing deletion cleanup
-- **MUST implement deletion flow**: Delete KCP resource, wait for deletion, remove finalizer
+
+### MUST (SKR-only with shared logic)
+
+- **MUST implement shared interface**: Provider state implements the shared package's interface (e.g., `backupschedule.ScheduleState`)
+- **MUST use concrete types**: Provider actions use concrete GCP/AWS/Azure types — no strategy/impl interfaces
+- **MUST inject clock**: Use `clock.Clock` parameter, never call `time.Now()` directly
+- **MUST compose common + provider actions**: Common actions (from shared package) first, then provider-specific actions
 
 ### MUST NOT
 
-- **NEVER use OLD pattern**: OLD Pattern (provider-specific SKR → multi-provider KCP) FORBIDDEN for new code
-- **NEVER create KCP without ID**: Status.Id MUST be set before creating KCP resource
-- **NEVER skip KCP wait on delete**: Removing finalizer before KCP deletion causes orphaned cloud resources
-- **NEVER mutate KCP spec directly**: SKR reconciler creates/deletes KCP resources, never modifies spec after creation
+- **NEVER use OLD pattern**: Multi-provider CRDs FORBIDDEN for new code
+- **NEVER create KCP without ID** (SKR→KCP): Status.Id MUST be set before creating KCP resource
+- **NEVER skip KCP wait on delete** (SKR→KCP): Removing finalizer before KCP deletion causes orphaned cloud resources
+- **NEVER mutate KCP spec directly** (SKR→KCP): SKR reconciler creates/deletes KCP resources, never modifies spec after creation
 - **NEVER hardcode Kyma namespace**: Always use state.KymaRef.Namespace from reconciler configuration
-
-### ALWAYS
-
-- **ALWAYS end with StopAndForget**: Successful flows return `composed.StopAndForget, nil`
-- **ALWAYS check feature flags**: Use `feature.LoadFeatureContextFromObj()` in action composition
-- **ALWAYS use type-safe getters**: Use `state.ObjAsGcpRedisCluster()` not `state.Obj().(*Type)`
-- **ALWAYS validate state factory errors**: Check error from `NewState()` before proceeding
+- **NEVER use `backupImpl`-style strategy interfaces**: Provider actions use concrete types directly
+- **NEVER call `time.Now()` directly**: Use injected `clock.Clock` via `ScheduleCalculator` or equivalent
 
 ### NEVER
 
-- **NEVER sync from SKR to KCP after creation**: KCP spec is set ONCE during creation, never updated
-- **NEVER create multiple KCP resources**: One SKR resource maps to EXACTLY one KCP resource
+- **NEVER sync from SKR to KCP after creation** (SKR→KCP): KCP spec is set ONCE during creation, never updated
 - **NEVER skip error handling**: All API calls MUST check errors and return appropriate error+context
 
-## Pattern Selection: NEW vs OLD
+## Pattern Selection
 
-### Decision Rule
+### Decision Tree
 
 ```
 Are you creating NEW SKR reconciler (post-2024)?
-├─ YES: MUST use NEW Pattern
-│  ├─ Provider-specific SKR → Provider-specific KCP
-│  ├─ Example: GcpRedisCluster (SKR) → GcpRedisCluster (KCP)
-│  └─ 1:1 mapping, clean separation
+├─ YES: Determine reconciler type:
+│  │
+│  ├─ Does this resource create a corresponding cloud resource via KCP?
+│  │  └─ YES → SKR→KCP pattern
+│  │     ├─ Provider-specific SKR → Provider-specific KCP
+│  │     ├─ Example: GcpRedisCluster (SKR) → GcpRedisCluster (KCP)
+│  │     └─ 1:1 mapping, clean separation
+│  │
+│  └─ Does this resource manage other SKR resources locally (no KCP)?
+│     └─ YES → SKR-only pattern
+│        ├─ Is there shared logic across providers (e.g., cron scheduling)?
+│        │  ├─ YES → Shared package + provider-specific reconciler
+│        │  │  ├─ Common: pkg/skr/<shared>/  (reusable actions + interface)
+│        │  │  ├─ Provider: pkg/skr/<provider><resource>/  (concrete types)
+│        │  │  └─ Example: backupschedule/ + gcpnfsbackupschedule/
+│        │  │
+│        │  └─ NO → Single provider-specific reconciler
+│        │     └─ pkg/skr/<provider><resource>/
+│        │
+│        └─ Feature flag gating: factory checks flag to select v1 or v2
 │
 └─ NO: Maintaining existing?
    └─ GcpRedisInstance → RedisInstance (OLD Pattern)
@@ -649,6 +676,137 @@ func (r *reconciler) SetupWithManager(mgr ctrl.Manager) error {
         For(&cloudresourcesv1beta1.GcpRedisCluster{}).
         Complete(r)
 }
+```
+
+## SKR-Only Reconciler Pattern (No Backing KCP Resource)
+
+Some SKR reconcilers manage resources entirely within the SKR cluster and do not create a KCP resource. Example: `GcpNfsBackupSchedule` creates `GcpNfsVolumeBackup` objects on a cron schedule.
+
+### When to Use
+
+- The resource does NOT provision cloud infrastructure via KCP
+- The resource manages other SKR-level objects (backups, snapshots, schedules)
+- Multiple providers share identical business logic (e.g., cron scheduling)
+
+### Architecture: Shared Package + Provider-Specific Reconciler
+
+**Shared package** (`pkg/skr/backupschedule/`) exports:
+- `ScheduleState` interface — minimal contract for common actions
+- `ScheduleCalculator` — cron/time logic with injected `clock.Clock`
+- Reusable composed actions — operate on `ScheduleState`, no provider awareness
+
+**Provider package** (`pkg/skr/gcpnfsbackupschedule/`) provides:
+- `State` struct implementing `ScheduleState` with concrete GCP types
+- Provider-specific actions (loadScope, loadSource, createBackup, etc.)
+- No `backupImpl`-style interfaces — direct types only
+
+### State Definition (SKR-Only)
+
+```go
+package gcpnfsbackupschedule
+
+type State struct {
+    composed.State
+    KymaRef    klog.ObjectRef
+    KcpCluster composed.StateCluster
+    SkrCluster composed.StateCluster
+
+    // Common scheduling (implements backupschedule.ScheduleState)
+    Scheduler      *backupschedule.ScheduleCalculator
+    cronExpression *cronexpr.Expression
+    nextRunTime    time.Time
+    createRunDone  bool
+    deleteRunDone  bool
+
+    // GCP-specific — concrete types, no interfaces
+    Scope     *cloudcontrolv1beta1.Scope
+    SourceRef *cloudresourcesv1beta1.GcpNfsVolume
+    Backups   []*cloudresourcesv1beta1.GcpNfsVolumeBackup
+}
+
+// Implement backupschedule.ScheduleState interface
+func (s *State) ObjAsBackupSchedule() backupschedule.BackupSchedule { ... }
+func (s *State) GetScheduleCalculator() *backupschedule.ScheduleCalculator { ... }
+func (s *State) GetCronExpression() *cronexpr.Expression { ... }
+func (s *State) SetCronExpression(e *cronexpr.Expression) { ... }
+// ... etc
+```
+
+### Action Composition (SKR-Only)
+
+```go
+func (r *Reconciler) newAction() composed.Action {
+    return composed.ComposeActions(
+        "gcpNfsBackupScheduleV2",
+        feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsBackupSchedule{}),
+        composed.LoadObj,
+        actions.AddCommonFinalizer(),
+        // MUST: IfElse for create/delete branching
+        composed.IfElse(
+            composed.Not(composed.MarkedForDeletionPredicate),
+            composed.ComposeActions(
+                "main",
+                // Common scheduling actions (from shared package)
+                backupschedule.CheckCompleted,
+                backupschedule.CheckSuspension,
+                backupschedule.ValidateSchedule,
+                backupschedule.ValidateTimes,
+                backupschedule.CalculateOnetimeSchedule,
+                backupschedule.CalculateRecurringSchedule,
+                backupschedule.EvaluateNextRun,
+                // Provider-specific actions (GCP concrete types)
+                loadScope,
+                loadSource,
+                loadBackups,
+                createBackup,
+                deleteBackups,
+                updateStatus,
+            ),
+            composed.ComposeActions(
+                "delete",
+                loadBackups,
+                deleteCascade,
+                actions.RemoveCommonFinalizer(),
+            ),
+        ),
+        composed.StopAndForgetAction,
+    )
+}
+```
+
+### Feature Flag Gating (v1/v2 Factory Pattern)
+
+The controller factory checks a feature flag to select v1 or v2 reconciler. Same pattern as `gcpnfsvolumebackup_controller.go`:
+
+```go
+func (f *GcpNfsBackupScheduleReconcilerFactory) New(args ReconcilerArguments) reconcile.Reconciler {
+    if feature.BackupScheduleV2.Value(context.Background()) {
+        reconciler := gcpnfsbackupschedule.NewReconciler(
+            args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, f.clk,
+        )
+        return &GcpNfsBackupScheduleReconciler{reconciler: &reconciler}
+    }
+    // v1 fallback
+    reconciler := backupschedulev1.NewReconciler(...)
+    return &GcpNfsBackupScheduleReconciler{reconciler: &reconciler}
+}
+```
+
+### Clock Injection
+
+**Production**: `clock.RealClock{}` passed to reconciler factory  
+**Tests**: `clock.NewFakeClock(fixedTime)` — tests call `fakeClock.Step(duration)` to advance time deterministically
+
+```go
+// In suite_test.go
+var testFakeClock *clock.FakeClock
+
+// In BeforeSuite
+testFakeClock = clock.NewFakeClock(time.Now())
+Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env, testFakeClock)).NotTo(HaveOccurred())
+
+// In test
+testFakeClock.Step(2 * time.Minute)  // Advance past scheduled run time
 ```
 
 ## Common Pitfalls
