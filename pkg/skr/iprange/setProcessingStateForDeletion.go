@@ -12,15 +12,15 @@ func setProcessingStateForDeletion(ctx context.Context, st composed.State) (erro
 
 	if !composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR IpRange is NOT marked for deletion, do not delete mirror in KCP
-		return nil, nil
+		return nil, ctx
 	}
 	if state.KcpIpRange == nil || composed.IsMarkedForDeletion(state.KcpIpRange) {
-		return nil, nil // KCP IpRange is already marked for deletion, so it already passed Processing state
+		return nil, ctx // KCP IpRange is already marked for deletion, so it already passed Processing state
 	}
 
 	// Only update status if not already in Processing state to avoid unnecessary updates and conflicts
 	if state.ObjAsIpRange().Status.State == cloudresourcesv1beta1.StateProcessing {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.ObjAsIpRange().SetState(cloudresourcesv1beta1.StateProcessing)
@@ -28,5 +28,5 @@ func setProcessingStateForDeletion(ctx context.Context, st composed.State) (erro
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating SKR IpRange status with Processing state", composed.StopWithRequeue, ctx)
 	}
-	return nil, nil
+	return nil, ctx
 }
