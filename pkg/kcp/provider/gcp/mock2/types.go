@@ -25,8 +25,15 @@ type Providers interface {
 	// all others feature's providers as they are refactored to switch using these new GCP clients
 }
 
+type Configs interface {
+	FileStoreOperationsConfig
+	RedisInstanceOperationsConfig
+}
+
 type Store interface {
 	Clients
+
+	Configs
 }
 
 type Subscription interface {

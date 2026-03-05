@@ -9,11 +9,11 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
-func (s *store) CreateServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.CreateServiceConnectionPolicyRequest, _ ...gax.CallOption) (gcpclient.WaitableOperationWithResult[*networkconnectivitypb.ServiceConnectionPolicy], error) {
+func (s *store) CreateServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.CreateServiceConnectionPolicyRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*networkconnectivitypb.ServiceConnectionPolicy], error) {
 	panic("implement me")
 }
 
-func (s *store) UpdateServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.UpdateServiceConnectionPolicyRequest, _ ...gax.CallOption) (gcpclient.WaitableOperationWithResult[*networkconnectivitypb.ServiceConnectionPolicy], error) {
+func (s *store) UpdateServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.UpdateServiceConnectionPolicyRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*networkconnectivitypb.ServiceConnectionPolicy], error) {
 	panic("implement me")
 }
 
@@ -21,7 +21,7 @@ func (s *store) GetServiceConnectionPolicy(ctx context.Context, req *networkconn
 	panic("implement me")
 }
 
-func (s *store) DeleteServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.DeleteServiceConnectionPolicyRequest, _ ...gax.CallOption) (gcpclient.WaitableVoidOperation, error) {
+func (s *store) DeleteServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.DeleteServiceConnectionPolicyRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	panic("implement me")
 }
 

@@ -17,14 +17,14 @@ import (
 
 func (s *store) getSubnetNoLock(project, region, subnet string) (*computepb.Subnetwork, error) {
 	nd := gcputil.NewSubnetworkName(project, region, subnet)
-	result, found := s.subnets.findByName(nd)
+	result, found := s.subnets.FindByName(nd)
 	if !found {
 		return nil, gcpmeta.NewNotFoundError("subnet %s not found", gcputil.NewSubnetworkName(project, region, subnet).String())
 	}
 	return result, nil
 }
 
-func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetworkRequest, _ ...gax.CallOption) (gcpclient.WaitableVoidOperation, error) {
+func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetworkRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
@@ -56,7 +56,7 @@ func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetwor
 
 	// cidr & network address space checks
 
-	addressSpace, ok := s.addressSpaces[net.GetSelfLink()]
+	addressSpace, ok := s.addressSpaces[networkName.String()]
 	if !ok {
 		return nil, fmt.Errorf("%w address space for network %s not found", common.ErrLogical, net.GetSelfLink())
 	}
@@ -85,10 +85,12 @@ func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetwor
 	if err := addressSpace.Reserve(subnetRanges...); err != nil {
 		return nil, fmt.Errorf("%w failed to add already verified subnet ranges: %w", common.ErrLogical, err)
 	}
-	s.subnets.add(subnet, name)
+	s.subnets.Add(subnet, name)
 
 	op := s.createComputeOperationNoLock(req.Project, req.Region, "insert", ptr.Deref(subnet.SelfLink, ""), id)
-	return newVoidOperationFromComputeOperation(op), nil
+	op.Status = ptr.To(computepb.Operation_DONE)
+
+	return newComputeOperation(op), nil
 }
 
 func (s *store) GetSubnet(ctx context.Context, req *computepb.GetSubnetworkRequest, _ ...gax.CallOption) (*computepb.Subnetwork, error) {
@@ -121,7 +123,7 @@ func (s *store) GetSubnet(ctx context.Context, req *computepb.GetSubnetworkReque
 	return cpy, nil
 }
 
-func (s *store) DeleteSubnet(ctx context.Context, req *computepb.DeleteSubnetworkRequest, _ ...gax.CallOption) (gcpclient.WaitableVoidOperation, error) {
+func (s *store) DeleteSubnet(ctx context.Context, req *computepb.DeleteSubnetworkRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
@@ -143,10 +145,12 @@ func (s *store) DeleteSubnet(ctx context.Context, req *computepb.DeleteSubnetwor
 
 	// remove the subnet
 
-	s.subnets = s.subnets.filterNotByCallback(func(item listItem[*computepb.Subnetwork]) bool {
-		return item.name.Equal(nd)
+	s.subnets = s.subnets.FilterNotByCallback(func(item FilterableListItem[*computepb.Subnetwork]) bool {
+		return item.Name.Equal(nd)
 	})
 
 	compOp := s.createComputeOperationNoLock(req.Project, req.Region, "delete", nd.PrefixWithGoogleApisComputeV1(), ptr.Deref(sub.Id, 0))
-	return newVoidOperationFromComputeOperation(compOp), nil
+	compOp.Status = ptr.To(computepb.Operation_DONE)
+
+	return newComputeOperation(compOp), nil
 }

@@ -17,10 +17,27 @@ import (
 	"k8s.io/utils/ptr"
 )
 
+/*
+address: 10.250.4.0
+addressType: INTERNAL
+creationTimestamp: '2026-08-30T13:41:08.211-07:00'
+description: Some description
+id: '7345678901234568267'
+kind: compute#address
+labelFingerprint: 41XnOqCrTeU=
+name: my-address
+network: https://www.googleapis.com/compute/v1/projects/my-project/global/networks/my-network
+networkTier: PREMIUM
+prefixLength: 22
+purpose: VPC_PEERING
+selfLink: https://www.googleapis.com/compute/v1/projects/my-project/global/addresses/my-address
+status: RESERVED
+*/
+
 func (s *store) getAddressNoLock(project, region, address string) (*computepb.Address, error) {
 	for _, a := range s.addresses.items {
-		if a.name.ProjectId() == project && a.name.LocationRegionId() == region && a.name.ResourceId() == address {
-			return a.obj, nil
+		if a.Name.ProjectId() == project && a.Name.LocationRegionId() == region && a.Name.ResourceId() == address {
+			return a.Obj, nil
 		}
 	}
 	if region == "" {
@@ -77,23 +94,32 @@ func (s *store) DeleteGlobalAddress(ctx context.Context, req *computepb.DeleteGl
 	// check if address is used
 
 	for _, item := range s.filestores.items {
-		for _, nfsNet := range item.obj.Networks {
-			if nfsNet.ReservedIpRange == req.GetAddress() {
-				return nil, gcpmeta.NewBadRequestError("address %s is in use by filestore %s", addrName.String(), item.name.String())
+		for _, nfsNet := range item.Obj.Networks {
+			if addrName.EqualString(nfsNet.ReservedIpRange) {
+				return nil, gcpmeta.NewBadRequestError("address %s is in use by filestore %s", addrName.String(), item.Name.String())
 			}
 		}
 	}
+	for _, item := range s.redisInstances.items {
+		if addrName.EqualString(item.Obj.ReservedIpRange) {
+			return nil, gcpmeta.NewBadRequestError("address %s is in use by redisInstance %s", addrName.String(), item.Name.String())
+		}
+	}
+
+	// release the range from address space
 
 	if err := addressSpace.Release(addr.GetAddress()); err != nil {
 		return nil, gcpmeta.NewInternalServerError("%v failed to release address space: %v", common.ErrLogical, err)
 	}
 
-	s.addresses = s.addresses.filterNotByCallback(func(item listItem[*computepb.Address]) bool {
-		return item.name.Equal(addrName)
+	s.addresses = s.addresses.FilterNotByCallback(func(item FilterableListItem[*computepb.Address]) bool {
+		return item.Name.Equal(addrName)
 	})
 
 	op := s.createComputeOperationNoLock(addrName.ProjectId(), "", "delete", addr.GetSelfLink(), addr.GetId())
-	return newVoidOperationFromComputeOperation(op), nil
+	op.Status = ptr.To(computepb.Operation_DONE)
+
+	return newComputeOperation(op), nil
 }
 
 func (s *store) InsertGlobalAddress(ctx context.Context, req *computepb.InsertGlobalAddressRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
@@ -157,12 +183,14 @@ func (s *store) InsertGlobalAddress(ctx context.Context, req *computepb.InsertGl
 	addr.Id = ptr.To(id)
 	addr.SelfLink = ptr.To(name.PrefixWithGoogleApisComputeV1())
 	addr.Kind = ptr.To("compute#address")
-	addr.Address = ptr.To(c)
+	addr.Status = ptr.To(computepb.Address_RESERVED.String())
 
-	s.addresses.add(addr, name)
+	s.addresses.Add(addr, name)
 
 	op := s.createComputeOperationNoLock(name.ProjectId(), "", "insert", addr.GetSelfLink(), addr.GetId())
-	return newVoidOperationFromComputeOperation(op), nil
+	op.Status = ptr.To(computepb.Operation_DONE)
+
+	return newComputeOperation(op), nil
 }
 
 func (s *store) ListGlobalAddresses(ctx context.Context, req *computepb.ListGlobalAddressesRequest, _ ...gax.CallOption) gcpclient.Iterator[*computepb.Address] {
@@ -174,17 +202,17 @@ func (s *store) ListGlobalAddresses(ctx context.Context, req *computepb.ListGlob
 
 	list := s.addresses
 	if req.Project != "" {
-		list = s.addresses.filterByCallback(func(l listItem[*computepb.Address]) bool {
-			return l.name.ProjectId() == req.Project && l.name.LocationRegionId() == ""
+		list = s.addresses.FilterByCallback(func(l FilterableListItem[*computepb.Address]) bool {
+			return l.Name.ProjectId() == req.Project && l.Name.LocationRegionId() == ""
 		})
 	}
 	var err error
-	list, err = list.filterByExpression(req.Filter)
+	list, err = list.FilterByExpression(req.Filter)
 	if err != nil {
 		return &iteratorMocked[*computepb.Address]{err: gcpmeta.NewBadRequestError("invalid filter: %v", err)}
 	}
 
-	return list.toIterator()
+	return list.ToIterator()
 }
 
 // RegionalAddressesClient methods =======================================================================
@@ -198,26 +226,26 @@ func (s *store) ListAddresses(ctx context.Context, req *computepb.ListAddressesR
 
 	list := s.addresses
 	if req.Project != "" {
-		list = s.addresses.filterByCallback(func(l listItem[*computepb.Address]) bool {
-			return l.name.ProjectId() == req.Project
+		list = s.addresses.FilterByCallback(func(l FilterableListItem[*computepb.Address]) bool {
+			return l.Name.ProjectId() == req.Project
 		})
 	}
 	if req.Region != "" {
-		list = s.addresses.filterByCallback(func(l listItem[*computepb.Address]) bool {
-			return l.name.LocationRegionId() == req.Region
+		list = s.addresses.FilterByCallback(func(l FilterableListItem[*computepb.Address]) bool {
+			return l.Name.LocationRegionId() == req.Region
 		})
 	} else {
-		list = s.addresses.filterByCallback(func(l listItem[*computepb.Address]) bool {
-			return l.name.LocationRegionId() != ""
+		list = s.addresses.FilterByCallback(func(l FilterableListItem[*computepb.Address]) bool {
+			return l.Name.LocationRegionId() != ""
 		})
 	}
 	var err error
-	list, err = list.filterByExpression(req.Filter)
+	list, err = list.FilterByExpression(req.Filter)
 	if err != nil {
 		return &iteratorMocked[*computepb.Address]{err: gcpmeta.NewBadRequestError("invalid filter: %v", err)}
 	}
 
-	return list.toIterator()
+	return list.ToIterator()
 }
 
 // Higher level RegionalAddressesClient functions --------------------------------------------------------

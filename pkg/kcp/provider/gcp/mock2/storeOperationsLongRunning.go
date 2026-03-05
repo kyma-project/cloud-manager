@@ -1,81 +1,71 @@
 package mock2
 
 import (
-	"context"
+	"fmt"
 
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
-	"github.com/googleapis/gax-go/v2"
+	"github.com/google/uuid"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
+	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
 )
 
-/*
-done: true
-metadata:
-  '@type': type.googleapis.com/google.cloud.common.OperationMetadata
-  apiVersion: v1
-  cancelRequested: false
-  createTime: '2026-02-19T15:16:20.607255509Z'
-  endTime: '2026-02-19T15:19:15.207802363Z'
-  target: projects/my-project/locations/us-east1-c/instances/cm-f6001aaa-9a9e-4aa9-b67b-400a000800b7
-  verb: create
-name: projects/my-project/locations/us-east1-c/operations/operation-1700014000790-6aa0aa0000dcc-04dec372-0a74207c
-response:
-  '@type': type.googleapis.com/google.cloud.filestore.v1.Instance
-  createTime: '2026-02-19T15:16:20.602902646Z'
-  description: f6001aaa-9a9e-4aa9-b67b-400a000800b7
-  fileShares:
-  - capacityGb: '1024'
-    name: vol1
-  name: projects/my-project/locations/us-east1-c/instances/cm-f6001aaa-9a9e-4aa9-b67b-400a000800b7
-  networks:
-  - connectMode: PRIVATE_SERVICE_ACCESS
-    ipAddresses:
-    - 10.251.0.2
-    modes:
-    - MODE_IPV4
-    network: projects/my-project/global/networks/shoot--spm-test01--pp-63a0ba
-    reservedIpRange: 10.251.0.0/29
-  performanceLimits:
-    maxIops: '600'
-    maxReadIops: '600'
-    maxReadThroughputBps: '104857600'
-    maxWriteIops: '1000'
-    maxWriteThroughputBps: '104857600'
-  satisfiesPzs: false
-  state: READY
-  tier: BASIC_HDD
-*/
+func (s *store) newLongRunningOperationName(projectId string) gcputil.NameDetail {
+	return gcputil.NewOperationName(projectId, fmt.Sprintf("operation-%s", uuid.NewString()))
+}
 
-func (s *store) createLongRunningOperationNoLock(projectId, locationId string) *longrunningpb.Operation {
-	op := &longrunningpb.Operation{
-		Name: "operations/" + util.GenerateRandomString(10),
+// base generic get&list methods =====================================================
+
+func (s *store) getLongRunningOperationNoLock(name string) (*longrunningpb.Operation, error) {
+	nd, err := gcputil.ParseNameDetail(name)
+	if err != nil {
+		return nil, gcpmeta.NewBadRequestError("invalid operation name: %v", err)
 	}
-	s.longRunningOperations.add(op)
-	return op
+	op, found := s.longRunningOperations.FindByName(nd)
+	if !found {
+		return nil, gcpmeta.NewNotFoundError("operation %s not found", name)
+	}
+	return op.GetOperationPB(), nil
 }
 
-// Client Interface implementations ===================================================
-
-func (s *store) GetFilestoreOperation(ctx context.Context, req *longrunningpb.GetOperationRequest, _ ...gax.CallOption) (*longrunningpb.Operation, error) {
-	panic("implement me")
+func (s *store) longRunningOperationsProjected() (*FilterableList[*longrunningpb.Operation], error) {
+	result, err := MapFilterableList[*OperationLongRunningBuilder, *longrunningpb.Operation](
+		s.longRunningOperations,
+		func(a *OperationLongRunningBuilder) *longrunningpb.Operation {
+			return a.GetOperationPB()
+		},
+		nil,
+	)
+	return result, err
 }
 
-func (s *store) ListFilestoreOperations(ctx context.Context, req *longrunningpb.ListOperationsRequest, _ ...gax.CallOption) gcpclient.Iterator[*longrunningpb.Operation] {
-	panic("implement me")
-}
+func (s *store) listLongRunningOperationsNoLock(parentName, filter string) gcpclient.Iterator[*longrunningpb.Operation] {
+	result, err := s.longRunningOperationsProjected()
+	if err != nil {
+		return &iteratorMocked[*longrunningpb.Operation]{
+			err: gcpmeta.NewBadRequestError("%v: failed to map builders to operations", err),
+		}
+	}
 
-func (s *store) GetRedisClusterOperation(ctx context.Context, req *longrunningpb.GetOperationRequest, _ ...gax.CallOption) (*longrunningpb.Operation, error) {
-	panic("implement me")
-}
+	if parentName != "" {
+		parentNd, err := gcputil.ParseNameDetail(parentName)
+		if err != nil {
+			return &iteratorMocked[*longrunningpb.Operation]{
+				err: gcpmeta.NewBadRequestError("invalid parent name: %v", err),
+			}
+		}
+		result = result.FilterByParent(parentNd)
+	}
 
-func (s *store) ListRedisClusterOperations(ctx context.Context, req *longrunningpb.ListOperationsRequest, _ ...gax.CallOption) gcpclient.Iterator[*longrunningpb.Operation] {
-	panic("implement me")
-}
+	if filter != "" {
+		var err error
+		result, err = result.FilterByExpression(&filter)
+		if err != nil {
+			return &iteratorMocked[*longrunningpb.Operation]{
+				err: gcpmeta.NewBadRequestError("invalid filter: %v", err),
+			}
+		}
+	}
 
-func (s *store) GetRedisInstanceOperation(ctx context.Context, req *longrunningpb.GetOperationRequest, _ ...gax.CallOption) (*longrunningpb.Operation, error) {
-	panic("implement me")
-}
-
-func (s *store) ListRedisInstanceOperations(ctx context.Context, req *longrunningpb.ListOperationsRequest, _ ...gax.CallOption) gcpclient.Iterator[*longrunningpb.Operation] {
-	panic("implement me")
+	return result.ToIterator()
 }

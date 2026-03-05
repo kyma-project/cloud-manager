@@ -20,12 +20,14 @@ var _ gcpclient.NetworkClient = (*store)(nil)
 
 func (s *store) getNetworkNoLock(project, network string) (*computepb.Network, error) {
 	for _, n := range s.networks.items {
-		if n.name.ProjectId() == project && n.name.ResourceId() == network {
-			return n.obj, nil
+		if n.Name.ProjectId() == project && n.Name.ResourceId() == network {
+			return n.Obj, nil
 		}
 	}
 	return nil, gcpmeta.NewNotFoundError("network %s not found", gcputil.NewGlobalNetworkName(project, network).String())
 }
+
+// NetworkClient interface methods ============================================================
 
 func (s *store) GetNetwork(ctx context.Context, req *computepb.GetNetworkRequest, _ ...gax.CallOption) (*computepb.Network, error) {
 	s.m.Lock()
@@ -45,7 +47,7 @@ func (s *store) GetNetwork(ctx context.Context, req *computepb.GetNetworkRequest
 	return cpy.(*computepb.Network), nil
 }
 
-func (s *store) InsertNetwork(ctx context.Context, req *computepb.InsertNetworkRequest, _ ...gax.CallOption) (gcpclient.WaitableVoidOperation, error) {
+func (s *store) InsertNetwork(ctx context.Context, req *computepb.InsertNetworkRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
@@ -80,12 +82,13 @@ func (s *store) InsertNetwork(ctx context.Context, req *computepb.InsertNetworkR
 	net.SelfLinkWithId = ptr.To(gcputil.NewGlobalNetworkName(req.Project, fmt.Sprintf("%d", id)).PrefixWithGoogleApisComputeV1())
 	net.Kind = ptr.To("compute#network")
 
-	s.addressSpaces[net.GetSelfLink()] = newAddressSpace()
-	s.networks.add(net, name)
+	s.addressSpaces[name.String()] = newAddressSpace()
+	s.networks.Add(net, name)
 
 	compOp := s.createComputeOperationNoLock(req.Project, "", "insert", net.GetSelfLink(), id)
+	compOp.Status = ptr.To(computepb.Operation_DONE)
 
-	return newVoidOperationFromComputeOperation(compOp), nil
+	return newComputeOperation(compOp), nil
 }
 
 func (s *store) ListNetworks(ctx context.Context, req *computepb.ListNetworksRequest, _ ...gax.CallOption) gcpclient.Iterator[*computepb.Network] {
@@ -97,20 +100,20 @@ func (s *store) ListNetworks(ctx context.Context, req *computepb.ListNetworksReq
 
 	list := s.networks
 	if req.Project != "" {
-		list = s.networks.filterByCallback(func(l listItem[*computepb.Network]) bool {
-			return l.name.ProjectId() == req.Project
+		list = s.networks.FilterByCallback(func(l FilterableListItem[*computepb.Network]) bool {
+			return l.Name.ProjectId() == req.Project
 		})
 	}
 	var err error
-	list, err = list.filterByExpression(req.Filter)
+	list, err = list.FilterByExpression(req.Filter)
 	if err != nil {
 		return &iteratorMocked[*computepb.Network]{err: fmt.Errorf("failed to filter networks by expression: %w", err)}
 	}
 
-	return list.toIterator()
+	return list.ToIterator()
 }
 
-func (s *store) DeleteNetwork(ctx context.Context, req *computepb.DeleteNetworkRequest, _ ...gax.CallOption) (gcpclient.WaitableVoidOperation, error) {
+func (s *store) DeleteNetwork(ctx context.Context, req *computepb.DeleteNetworkRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
@@ -127,29 +130,31 @@ func (s *store) DeleteNetwork(ctx context.Context, req *computepb.DeleteNetworkR
 
 	// check if network contains some resources
 
-	for _, subnet := range s.subnets.items {
-		if strings.Contains(subnet.obj.GetNetwork(), ndTxt) {
-			return nil, gcpmeta.NewBadRequestError("network %s cannot be deleted because it has subnet %s", nd.String(), subnet.obj.GetSelfLink())
+	for _, item := range s.subnets.items {
+		if strings.Contains(item.Obj.GetNetwork(), ndTxt) {
+			return nil, gcpmeta.NewBadRequestError("network %s cannot be deleted because it has subnet %s", nd.String(), gcputil.MustParseNameDetail(item.Obj.GetSelfLink()).String())
 		}
 	}
-	for _, router := range s.routers.items {
-		if strings.Contains(router.obj.GetNetwork(), ndTxt) {
-			return nil, gcpmeta.NewBadRequestError("network %s cannot be deleted because it has router %s", nd.String(), router.obj.GetSelfLink())
+	for _, item := range s.routers.items {
+		if strings.Contains(item.Obj.GetNetwork(), ndTxt) {
+			return nil, gcpmeta.NewBadRequestError("network %s cannot be deleted because it has router %s", nd.String(), gcputil.MustParseNameDetail(item.Obj.GetSelfLink()).String())
 		}
 	}
-	for _, router := range s.addresses.items {
-		if strings.Contains(router.obj.GetNetwork(), ndTxt) {
-			return nil, gcpmeta.NewBadRequestError("network %s cannot be deleted because it has address %s", nd.String(), router.obj.GetSelfLink())
+	for _, item := range s.addresses.items {
+		if strings.Contains(item.Obj.GetNetwork(), ndTxt) {
+			return nil, gcpmeta.NewBadRequestError("network %s cannot be deleted because it has address %s", nd.String(), gcputil.MustParseNameDetail(item.Obj.GetSelfLink()).String())
 		}
 	}
 
 	// remove the network
 
-	s.networks = s.networks.filterNotByCallback(func(item listItem[*computepb.Network]) bool {
-		return item.name.Equal(nd)
+	s.networks = s.networks.FilterNotByCallback(func(item FilterableListItem[*computepb.Network]) bool {
+		return item.Name.Equal(nd)
 	})
 	delete(s.addressSpaces, ndTxt)
 
 	compOp := s.createComputeOperationNoLock(req.Project, "", "delete", nd.PrefixWithGoogleApisComputeV1(), ptr.Deref(net.Id, 0))
-	return newVoidOperationFromComputeOperation(compOp), nil
+	compOp.Status = ptr.To(computepb.Operation_DONE)
+
+	return newComputeOperation(compOp), nil
 }

@@ -8,7 +8,7 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
-func (s *store) CreateRedisCluster(ctx context.Context, req *clusterpb.CreateClusterRequest, _ ...gax.CallOption) (gcpclient.WaitableOperationWithResult[*clusterpb.Cluster], error) {
+func (s *store) CreateRedisCluster(ctx context.Context, req *clusterpb.CreateClusterRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*clusterpb.Cluster], error) {
 	panic("implement me")
 }
 
@@ -20,10 +20,10 @@ func (s *store) GetRedisClusterCertificateAuthority(ctx context.Context, req *cl
 	panic("implement me")
 }
 
-func (s *store) UpdateRedisCluster(ctx context.Context, req *clusterpb.UpdateClusterRequest, _ ...gax.CallOption) (gcpclient.WaitableOperationWithResult[*clusterpb.Cluster], error) {
+func (s *store) UpdateRedisCluster(ctx context.Context, req *clusterpb.UpdateClusterRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*clusterpb.Cluster], error) {
 	panic("implement me")
 }
 
-func (s *store) DeleteRedisCluster(ctx context.Context, req *clusterpb.DeleteClusterRequest, _ ...gax.CallOption) (gcpclient.WaitableVoidOperation, error) {
+func (s *store) DeleteRedisCluster(ctx context.Context, req *clusterpb.DeleteClusterRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	panic("implement me")
 }

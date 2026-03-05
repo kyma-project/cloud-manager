@@ -55,7 +55,15 @@ func NewNameFromRedisCluster(rc *clusterpb.Cluster) NameDetail {
 // new name from primitives ---------------------------------------------
 
 func NewGlobalOperationName(projectId, operationId string) NameDetail {
-	return newNameDetail(ResourceTypeGlobalNetwork, nameDefnProject.Value(projectId), nameDefnOperation.Value(operationId))
+	return newNameDetail(ResourceTypeGlobalOperation, nameDefnProject.Value(projectId), nameDefnGlobalOperation.Value(operationId))
+}
+
+func NewOperationName(projectId, operationId string) NameDetail {
+	return newNameDetail(ResourceTypeOperation, nameDefnProject.Value(projectId), nameDefnOperation.Value(operationId))
+}
+
+func NewLocationalOperationName(projectId, regionId, operationId string) NameDetail {
+	return newNameDetail(ResourceTypeLocationalOperation, nameDefnProject.Value(projectId), nameDefnLocation.Value(regionId), nameDefnOperation.Value(operationId))
 }
 
 func NewGlobalNetworkName(projectId, networkId string) NameDetail {
@@ -96,10 +104,6 @@ func NewRouterName(projectId, regionId, routerId string) NameDetail {
 
 func NewRegionalAddressName(projectId, regionId, addressId string) NameDetail {
 	return newNameDetail(ResourceTypeRegionalAddress, nameDefnProject.Value(projectId), nameDefnRegion.Value(regionId), nameDefnAddresses.Value(addressId))
-}
-
-func NewRegionalOperationName(projectId, regionId, operationId string) NameDetail {
-	return newNameDetail(ResourceTypeGlobalNetwork, nameDefnProject.Value(projectId), nameDefnRegion.Value(regionId), nameDefnOperation.Value(operationId))
 }
 
 func NewSubnetworkName(projectId, regionId, subnetworkId string) NameDetail {
@@ -171,6 +175,18 @@ func newNameDetail(resourceType ResourceType, parts ...namePart) NameDetail {
 	}
 }
 
+func (n NameDetail) StartsWith(prefix NameDetail) bool {
+	if len(n.parts) < len(prefix.parts) {
+		return false
+	}
+	for i := range prefix.parts {
+		if n.parts[i].defn.format != prefix.parts[i].defn.format || n.parts[i].value != prefix.parts[i].value {
+			return false
+		}
+	}
+	return true
+}
+
 func (n NameDetail) Equal(other NameDetail) bool {
 	if n.resourceType != other.resourceType {
 		return false
@@ -184,6 +200,14 @@ func (n NameDetail) Equal(other NameDetail) bool {
 		}
 	}
 	return true
+}
+
+func (n NameDetail) EqualString(other string) bool {
+	otherNd, err := ParseNameDetail(other)
+	if err != nil {
+		return false
+	}
+	return n.Equal(otherNd)
 }
 
 // ProjectId returns the project id of the name. It is the value of the part with format projects/%s.
@@ -212,6 +236,9 @@ func (n NameDetail) ResourceId() string {
 	return n.parts[len(n.parts)-1].value
 }
 
+// projects/%s/global/operations/%s
+// projects/%s/operations/%s
+// projects/%s/locations/%s/operations/%s
 // projects/%s/global/networks/%s
 // projects/%s/locations/%s
 // projects/%s/locations/%s/instances/%s
@@ -227,19 +254,21 @@ func (n NameDetail) ResourceId() string {
 type ResourceType string
 
 const (
-	ResourceTypeGlobalNetwork     ResourceType = "globalNetwork"
-	ResourceTypeGlobalOperation   ResourceType = "globalOperation"
-	ResourceTypeRegionalOperation ResourceType = "regionalOperation"
-	ResourceTypeLocation          ResourceType = "location"
-	ResourceTypeInstance          ResourceType = "instance"
-	ResourceTypeBackup            ResourceType = "backup"
-	ResourceTypeCluster           ResourceType = "cluster"
-	ResourceTypeGlobalAddress     ResourceType = "globalAddress"
-	ResourceTypeService           ResourceType = "service"
-	ResourceTypeRegion            ResourceType = "region"
-	ResourceTypeRouter            ResourceType = "router"
-	ResourceTypeRegionalAddress   ResourceType = "regionalAddress"
-	ResourceTypeSubnetwork        ResourceType = "subnetwork"
+	ResourceTypeProject ResourceType = "project"
+	ResourceTypeGlobalNetwork       ResourceType = "globalNetwork"
+	ResourceTypeGlobalOperation     ResourceType = "globalOperation"
+	ResourceTypeOperation           ResourceType = "operation"
+	ResourceTypeLocationalOperation ResourceType = "locationalOperation"
+	ResourceTypeLocation            ResourceType = "location"
+	ResourceTypeInstance            ResourceType = "instance"
+	ResourceTypeBackup              ResourceType = "backup"
+	ResourceTypeCluster             ResourceType = "cluster"
+	ResourceTypeGlobalAddress       ResourceType = "globalAddress"
+	ResourceTypeService             ResourceType = "service"
+	ResourceTypeRegion              ResourceType = "region"
+	ResourceTypeRouter              ResourceType = "router"
+	ResourceTypeRegionalAddress     ResourceType = "regionalAddress"
+	ResourceTypeSubnetwork          ResourceType = "subnetwork"
 )
 
 func (n NameDetail) ResourceType() ResourceType {
@@ -309,25 +338,27 @@ func (n namePartDefn) Value(val string) namePart {
 }
 
 var (
-	nameDefnProject       = newNamePartDefn("projects/%s")
-	nameDefnGlobalNetwork = newNamePartDefn("global/networks/%s")
-	nameDefnOperation     = newNamePartDefn("operations/%s")
-	nameDefnLocation      = newNamePartDefn("locations/%s")
-	nameDefnInstance      = newNamePartDefn("instances/%s")
-	nameDefnBackup        = newNamePartDefn("backups/%s")
-	nameDefnCluster       = newNamePartDefn("clusters/%s")
-	nameDefnAddress       = newNamePartDefn("address/%s")
-	nameDefnAddresses     = newNamePartDefn("addresses/%s")
-	nameDefnService       = newNamePartDefn("services/%s")
-	nameDefnRegion        = newNamePartDefn("regions/%s")
-	nameDefnRouter        = newNamePartDefn("routers/%s")
-	nameDefnSubnetwork    = newNamePartDefn("subnetworks/%s")
+	nameDefnProject         = newNamePartDefn("projects/%s")
+	nameDefnGlobalNetwork   = newNamePartDefn("global/networks/%s")
+	nameDefnOperation       = newNamePartDefn("operations/%s")
+	nameDefnGlobalOperation = newNamePartDefn("global/operations/%s")
+	nameDefnLocation        = newNamePartDefn("locations/%s")
+	nameDefnInstance        = newNamePartDefn("instances/%s")
+	nameDefnBackup          = newNamePartDefn("backups/%s")
+	nameDefnCluster         = newNamePartDefn("clusters/%s")
+	nameDefnAddress         = newNamePartDefn("address/%s")
+	nameDefnAddresses       = newNamePartDefn("addresses/%s")
+	nameDefnService         = newNamePartDefn("services/%s")
+	nameDefnRegion          = newNamePartDefn("regions/%s")
+	nameDefnRouter          = newNamePartDefn("routers/%s")
+	nameDefnSubnetwork      = newNamePartDefn("subnetworks/%s")
 )
 
 var allNamePartDefns = []namePartDefn{
 	nameDefnProject,
 	nameDefnGlobalNetwork,
 	nameDefnOperation,
+	nameDefnGlobalOperation,
 	nameDefnLocation,
 	nameDefnInstance,
 	nameDefnBackup,
@@ -340,6 +371,7 @@ var allNamePartDefns = []namePartDefn{
 	nameDefnSubnetwork,
 }
 
+// projects/%s
 // projects/%s/global/networks/%s
 // projects/%s/locations/%s
 // projects/%s/locations/%s/instances/%s
@@ -354,19 +386,21 @@ var allNamePartDefns = []namePartDefn{
 // projects/%s/operations/%s
 
 var validSequences = map[ResourceType][]namePartDefn{
-	ResourceTypeGlobalNetwork:     {nameDefnProject, nameDefnGlobalNetwork},
-	ResourceTypeGlobalOperation:   {nameDefnProject, nameDefnOperation},
-	ResourceTypeRegionalOperation: {nameDefnProject, nameDefnRegion, nameDefnOperation},
-	ResourceTypeLocation:          {nameDefnProject, nameDefnLocation},
-	ResourceTypeInstance:          {nameDefnProject, nameDefnLocation, nameDefnInstance},
-	ResourceTypeBackup:            {nameDefnProject, nameDefnLocation, nameDefnBackup},
-	ResourceTypeCluster:           {nameDefnProject, nameDefnLocation, nameDefnCluster},
-	ResourceTypeGlobalAddress:     {nameDefnProject, nameDefnAddress},
-	ResourceTypeService:           {nameDefnProject, nameDefnService},
-	ResourceTypeRegion:            {nameDefnProject, nameDefnRegion},
-	ResourceTypeRouter:            {nameDefnProject, nameDefnRegion, nameDefnRouter},
-	ResourceTypeRegionalAddress:   {nameDefnProject, nameDefnRegion, nameDefnAddresses},
-	ResourceTypeSubnetwork:        {nameDefnProject, nameDefnRegion, nameDefnSubnetwork},
+	ResourceTypeProject:             {nameDefnProject},
+	ResourceTypeGlobalNetwork:       {nameDefnProject, nameDefnGlobalNetwork},
+	ResourceTypeGlobalOperation:     {nameDefnProject, nameDefnGlobalOperation},
+	ResourceTypeOperation:           {nameDefnProject, nameDefnOperation},
+	ResourceTypeLocationalOperation: {nameDefnProject, nameDefnRegion, nameDefnOperation},
+	ResourceTypeLocation:            {nameDefnProject, nameDefnLocation},
+	ResourceTypeInstance:            {nameDefnProject, nameDefnLocation, nameDefnInstance},
+	ResourceTypeBackup:              {nameDefnProject, nameDefnLocation, nameDefnBackup},
+	ResourceTypeCluster:             {nameDefnProject, nameDefnLocation, nameDefnCluster},
+	ResourceTypeGlobalAddress:       {nameDefnProject, nameDefnAddress},
+	ResourceTypeService:             {nameDefnProject, nameDefnService},
+	ResourceTypeRegion:              {nameDefnProject, nameDefnRegion},
+	ResourceTypeRouter:              {nameDefnProject, nameDefnRegion, nameDefnRouter},
+	ResourceTypeRegionalAddress:     {nameDefnProject, nameDefnRegion, nameDefnAddresses},
+	ResourceTypeSubnetwork:          {nameDefnProject, nameDefnRegion, nameDefnSubnetwork},
 }
 
 // name part =========================================================

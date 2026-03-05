@@ -18,8 +18,8 @@ import (
 
 func (s *store) getRouterNoLock(project, region, router string) (*computepb.Router, error) {
 	for _, r := range s.routers.items {
-		if r.name.ProjectId() == project && r.name.LocationRegionId() == region && r.name.ResourceId() == router {
-			return r.obj, nil
+		if r.Name.ProjectId() == project && r.Name.LocationRegionId() == region && r.Name.ResourceId() == router {
+			return r.Obj, nil
 		}
 	}
 	return nil, gcpmeta.NewNotFoundError("router %s not found", gcputil.NewRouterName(project, region, router).String())
@@ -36,22 +36,22 @@ func (s *store) ListRouters(ctx context.Context, req *computepb.ListRoutersReque
 
 	list := s.routers
 	if req.Project != "" {
-		list = list.filterByCallback(func(item listItem[*computepb.Router]) bool {
-			return item.name.ProjectId() == req.Project
+		list = list.FilterByCallback(func(item FilterableListItem[*computepb.Router]) bool {
+			return item.Name.ProjectId() == req.Project
 		})
 	}
 	if req.Region != "" {
-		list = list.filterByCallback(func(item listItem[*computepb.Router]) bool {
-			return item.name.LocationRegionId() == req.Region
+		list = list.FilterByCallback(func(item FilterableListItem[*computepb.Router]) bool {
+			return item.Name.LocationRegionId() == req.Region
 		})
 	}
 	var err error
-	list, err = list.filterByExpression(req.Filter)
+	list, err = list.FilterByExpression(req.Filter)
 	if err != nil {
 		return &iteratorMocked[*computepb.Router]{err: err}
 	}
 
-	return list.toIterator()
+	return list.ToIterator()
 }
 
 func (s *store) GetRouter(ctx context.Context, req *computepb.GetRouterRequest, opts ...gax.CallOption) (*computepb.Router, error) {
@@ -72,7 +72,7 @@ func (s *store) GetRouter(ctx context.Context, req *computepb.GetRouterRequest, 
 	return cpy.(*computepb.Router), nil
 }
 
-func (s *store) InsertRouter(ctx context.Context, req *computepb.InsertRouterRequest, opts ...gax.CallOption) (gcpclient.WaitableVoidOperation, error) {
+func (s *store) InsertRouter(ctx context.Context, req *computepb.InsertRouterRequest, opts ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
@@ -112,13 +112,13 @@ func (s *store) InsertRouter(ctx context.Context, req *computepb.InsertRouterReq
 	router.Id = ptr.To(id)
 	router.SelfLink = ptr.To(name.PrefixWithGoogleApisComputeV1())
 
-	s.routers.add(router, name)
+	s.routers.Add(router, name)
 
 	op := s.createComputeOperationNoLock(req.Project, req.Region, "insert", ptr.Deref(router.SelfLink, ""), id)
-	return newVoidOperationFromComputeOperation(op), nil
+	return newComputeOperation(op), nil
 }
 
-func (s *store) DeleteRouter(ctx context.Context, req *computepb.DeleteRouterRequest, opts ...gax.CallOption) (gcpclient.WaitableVoidOperation, error) {
+func (s *store) DeleteRouter(ctx context.Context, req *computepb.DeleteRouterRequest, opts ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
@@ -133,12 +133,12 @@ func (s *store) DeleteRouter(ctx context.Context, req *computepb.DeleteRouterReq
 
 	// TODO: check if router is used???
 
-	s.routers = s.routers.filterNotByCallback(func(item listItem[*computepb.Router]) bool {
-		return item.name.Equal(name)
+	s.routers = s.routers.FilterNotByCallback(func(item FilterableListItem[*computepb.Router]) bool {
+		return item.Name.Equal(name)
 	})
 
 	op := s.createComputeOperationNoLock(req.Project, req.Region, "delete", name.PrefixWithGoogleApisComputeV1(), ptr.Deref(router.Id, 0))
-	return newVoidOperationFromComputeOperation(op), nil
+	return newComputeOperation(op), nil
 }
 
 // Higher level methods =======================================================================
