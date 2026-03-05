@@ -73,7 +73,8 @@ import (
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
-	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	gcpnfsrestoreclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
+	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
@@ -256,10 +257,12 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupGcpNfsVolumeRestoreReconciler(
 		skrRegistry,
-		gcpnfsrestoreclient.NewFileRestoreClientProvider(),
+		gcpnfsrestoreclientv1.NewFileRestoreClientProvider(),
 		gcpnfsbackupclientv1.NewFileBackupClientProvider(),
+		gcpnfsrestoreclientv2.NewFileRestoreClientProvider(gcpClients),
+		gcpnfsbackupclientv2.NewFileBackupClientProvider(gcpClients),
 		env,
-		setupLog); err != nil {
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeRestore")
 		os.Exit(1)
 	}
