@@ -797,3 +797,18 @@ All files currently in `pkg/skr/backupschedule/` (they become `pkg/skr/backupsch
 | 8 | Cleanup and docs | Steps 1-7 | Low |
 
 Steps 1 and 2 should be done first and verified independently (`make build && make test`). Step 3 creates the common package with unit tests. Steps 4-6 form the core v2 implementation. Steps 7-8 are finalization.
+
+---
+
+## Progress Tracker
+
+| # | Step | Complete |
+|---|------|----------|
+| 1 | Create feature flag `backupScheduleV2` | Yes |
+| 2 | Move current implementation to `v1/` | |
+| 3 | Create common scheduling package | |
+| 4 | Create v2 GCP-specific reconciler | |
+| 5 | Wire v2 into GCP controller via feature flag | |
+| 6 | Controller tests for v2 | |
+| 7 | Update CI pipeline | Yes |
+| 8 | Cleanup and documentation | |
