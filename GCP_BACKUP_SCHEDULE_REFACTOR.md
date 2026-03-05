@@ -805,7 +805,7 @@ Steps 1 and 2 should be done first and verified independently (`make build && ma
 | # | Step | Complete |
 |---|------|----------|
 | 1 | Create feature flag `backupScheduleV2` | Yes |
-| 2 | Move current implementation to `v1/` | |
+| 2 | Move current implementation to `v1/` | Yes |
 | 3 | Create common scheduling package | |
 | 4 | Create v2 GCP-specific reconciler | |
 | 5 | Wire v2 into GCP controller via feature flag | |
