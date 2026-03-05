@@ -35,7 +35,7 @@ func ValidateTimes(ctx context.Context, st composed.State) (error, context.Conte
 	if start != nil && !start.IsZero() &&
 		calc.GetRemainingTimeWithTolerance(refTime, 0) > calc.GetRemainingTimeWithTolerance(start.Time, 0) {
 		// start is before refTime
-		remaining := refTime.Unix() - start.Time.Unix()
+		remaining := refTime.Unix() - start.Unix()
 		if remaining > 0 {
 			logger.Info(fmt.Sprintf("Invalid start time : %s before %s", start, refTime))
 

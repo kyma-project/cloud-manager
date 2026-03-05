@@ -54,7 +54,6 @@ func (s *State) SetCreateRunCompleted(v bool)             { s.createRunDone = v 
 func (s *State) IsDeleteRunCompleted() bool               { return s.deleteRunDone }
 func (s *State) SetDeleteRunCompleted(v bool)             { s.deleteRunDone = v }
 
-// GCP-specific getter
 func (s *State) ObjAsGcpNfsBackupSchedule() *cloudresourcesv1beta1.GcpNfsBackupSchedule {
 	return s.Obj().(*cloudresourcesv1beta1.GcpNfsBackupSchedule)
 }
