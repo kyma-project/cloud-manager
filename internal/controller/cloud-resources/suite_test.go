@@ -20,6 +20,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -35,6 +36,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
+	clocktesting "k8s.io/utils/clock/testing"
 
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -47,6 +49,10 @@ import (
 var infra testinfra.Infra
 
 var addressSpace = util.Must(iprangeallocate.NewAddressSpace("10.0.0.0/8"))
+
+// testFakeClock is a fake clock shared across controller tests.
+// v2 backup schedule tests use it to advance time deterministically.
+var testFakeClock = clocktesting.NewFakeClock(time.Now())
 
 func TestControllers(t *testing.T) {
 	if len(os.Getenv("PROJECTROOT")) == 0 {
@@ -134,7 +140,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupAzureRedisClusterReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
 	// NfsBackupSchedule
-	Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env)).NotTo(HaveOccurred())
+	Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env, testFakeClock)).NotTo(HaveOccurred())
 
 	// AzureVpcPeering
 	Expect(SetupAzureVpcPeeringReconciler(infra.Registry()))
