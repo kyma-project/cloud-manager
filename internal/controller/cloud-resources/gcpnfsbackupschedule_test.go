@@ -1,11 +1,13 @@
 package cloudresources
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+	backupschedule "github.com/kyma-project/cloud-manager/pkg/skr/backupschedule/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -31,6 +33,11 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
 	scope := &cloudcontrolv1beta1.Scope{}
 
 	BeforeEach(func() {
+		// Skip if v2 feature flag is enabled - these are v1 tests
+		if feature.BackupScheduleV2.Value(context.Background()) {
+			Skip("Skipping v1 GcpNfsBackupSchedule tests because backupScheduleV2 feature flag is enabled")
+		}
+
 		By("Given KCP Scope exists", func() {
 
 			// Given Scope exists

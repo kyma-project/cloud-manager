@@ -325,6 +325,8 @@ if feature.CustomFlag.Value(ctx) {
 | `api/cloud-resources/v1beta1/` | SKR CRD definitions | Adding/modifying SKR resources |
 | `pkg/kcp/provider/<provider>/<resource>/` | KCP reconcilers (NEW pattern) | Implementing cloud resource reconciliation |
 | `pkg/skr/<resource>/` | SKR reconcilers | Implementing user-facing reconciliation |
+| `pkg/skr/backupschedule/` | Shared scheduling logic (calculator, common actions) | Adding provider backup schedule reconciler |
+| `pkg/skr/gcpnfsbackupschedule/` | GCP NFS backup schedule v2 reconciler | GCP-specific backup schedule logic |
 | `pkg/composed/` | Action composition framework | Understanding action patterns |
 | `pkg/common/actions/` | Shared actions | Reusing common reconciliation logic |
 | `pkg/common/actions/focal/` | Scope management | Loading Scope in KCP reconcilers |
@@ -375,7 +377,7 @@ if feature.CustomFlag.Value(ctx) {
 
 ## Pattern Recognition Cheatsheet
 
-### Identifying NEW vs OLD Pattern
+### Identifying NEW vs OLD Pattern (KCP)
 
 | Characteristic | NEW Pattern | OLD Pattern |
 |---------------|-------------|-------------|
@@ -385,6 +387,17 @@ if feature.CustomFlag.Value(ctx) {
 | **Location** | `pkg/kcp/provider/<provider>/<resource>/` | `pkg/kcp/<resource>/` + `pkg/kcp/provider/` |
 | **Reconciler** | Direct action composition | Provider switching with `BuildSwitchAction` |
 | **When to Use** | All new resources (post-2024) | Only maintain existing (RedisInstance, IpRange) |
+
+### Identifying SKR Reconciler Type
+
+| Characteristic | SKR→KCP | SKR-Only (Shared + Provider) |
+|---------------|---------|------------------------------|
+| **Creates KCP resource** | Yes (1:1 mapping) | No |
+| **State base** | `common.State` | `composed.State` |
+| **Shared logic package** | None | Yes (e.g., `pkg/skr/backupschedule/`) |
+| **Clock injection** | Not needed | Required (`clock.Clock`) |
+| **Feature flag gating** | Optional | At factory level (v1/v2) |
+| **Reference** | `pkg/skr/gcpnfsvolume/` | `pkg/skr/gcpnfsbackupschedule/` |
 
 ### Identifying GCP Client Pattern
 

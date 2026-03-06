@@ -2,33 +2,28 @@ package backupschedule
 
 import (
 	"context"
+
 	"github.com/gorhill/cronexpr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func validateSchedule(ctx context.Context, st composed.State) (error, context.Context) {
-	logger := composed.LoggerFromCtx(ctx)
-	state := st.(*State)
+func ValidateSchedule(ctx context.Context, st composed.State) (error, context.Context) {
+	state := st.(ScheduleState)
 	schedule := state.ObjAsBackupSchedule()
+	logger := composed.LoggerFromCtx(ctx)
 
-	//If marked for deletion, continue
-	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
-	}
-
-	ctx = composed.LoggerIntoCtx(ctx, logger)
 	logger.Info("Validating BackupSchedule - Cron Expression")
 
 	sch := schedule.GetSchedule()
 
-	//If schedule is empty, continue
+	//If schedule is empty, continue (one-time schedule)
 	if sch == "" {
 		return nil, nil
 	}
-	expr, err := cronexpr.Parse(sch)
 
+	expr, err := cronexpr.Parse(sch)
 	if err != nil {
 		logger.Error(err, "Invalid cron expression")
 
@@ -46,7 +41,7 @@ func validateSchedule(ctx context.Context, st composed.State) (error, context.Co
 
 	logger.Info("Validated Cron Expression")
 
-	state.cronExpression = expr
+	state.SetCronExpression(expr)
 
 	return nil, ctx
 }

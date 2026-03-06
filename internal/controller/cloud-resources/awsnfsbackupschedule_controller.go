@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
+	backupschedule "github.com/kyma-project/cloud-manager/pkg/skr/backupschedule/v1"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
