@@ -121,7 +121,7 @@ func WithGcpNfsVolumeBackupLocation(location string) ObjAction {
 	}
 }
 
-func WithGcpNfsVolumeBackupAccessibleFrom(accessibleFrom []string) ObjAction {
+func WithGcpNfsVolumeBackupAccessibleFrom(accessibleFrom *cloudresourcesv1beta1.AccessibleFrom) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup); ok {
@@ -131,6 +131,21 @@ func WithGcpNfsVolumeBackupAccessibleFrom(accessibleFrom []string) ObjAction {
 			panic(fmt.Errorf("unhandled type %T in WithGcpNfsVolumeBackupAccessibleFrom", obj))
 		},
 	}
+}
+
+// WithGcpNfsVolumeBackupAccessibleFromAll sets AccessibleFrom to Type=All
+func WithGcpNfsVolumeBackupAccessibleFromAll() ObjAction {
+	return WithGcpNfsVolumeBackupAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+		Type: cloudresourcesv1beta1.AccessibleFromTypeAll,
+	})
+}
+
+// WithGcpNfsVolumeBackupAccessibleFromSpecific sets AccessibleFrom to Type=Specific with given targets
+func WithGcpNfsVolumeBackupAccessibleFromSpecific(targets ...string) ObjAction {
+	return WithGcpNfsVolumeBackupAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+		Type:    cloudresourcesv1beta1.AccessibleFromTypeSpecific,
+		Targets: targets,
+	})
 }
 
 func HavingGcpNfsVolumeBackupAccessibleFromStatus(accessibleFrom string) ObjAssertion {

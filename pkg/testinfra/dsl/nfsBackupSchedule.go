@@ -161,7 +161,7 @@ func HaveLastCreateRun(expected time.Time) ObjAssertion {
 	}
 }
 
-func WithGcpNfsBackupScheduleAccessibleFrom(accessibleFrom []string) ObjAction {
+func WithGcpNfsBackupScheduleAccessibleFrom(accessibleFrom *cloudresourcesv1beta1.AccessibleFrom) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
@@ -171,6 +171,21 @@ func WithGcpNfsBackupScheduleAccessibleFrom(accessibleFrom []string) ObjAction {
 			panic(fmt.Errorf("unhandled type %T in WithGcpNfsBackupScheduleAccessibleFrom", obj))
 		},
 	}
+}
+
+// WithGcpNfsBackupScheduleAccessibleFromAll sets AccessibleFrom to Type=All
+func WithGcpNfsBackupScheduleAccessibleFromAll() ObjAction {
+	return WithGcpNfsBackupScheduleAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+		Type: cloudresourcesv1beta1.AccessibleFromTypeAll,
+	})
+}
+
+// WithGcpNfsBackupScheduleAccessibleFromSpecific sets AccessibleFrom to Type=Specific with given targets
+func WithGcpNfsBackupScheduleAccessibleFromSpecific(targets ...string) ObjAction {
+	return WithGcpNfsBackupScheduleAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+		Type:    cloudresourcesv1beta1.AccessibleFromTypeSpecific,
+		Targets: targets,
+	})
 }
 
 func HavingStatusActive() ObjAssertion {

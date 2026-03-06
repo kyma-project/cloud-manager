@@ -33,6 +33,24 @@ func (b *testGcpNfsVolumeBackupBuilder) WithLocation(location string) *testGcpNf
 	return b
 }
 
+func (b *testGcpNfsVolumeBackupBuilder) WithAccessibleFrom(accessibleFrom *cloudresourcesv1beta1.AccessibleFrom) *testGcpNfsVolumeBackupBuilder {
+	b.instance.Spec.AccessibleFrom = accessibleFrom
+	return b
+}
+
+func (b *testGcpNfsVolumeBackupBuilder) WithAccessibleFromAll() *testGcpNfsVolumeBackupBuilder {
+	return b.WithAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+		Type: cloudresourcesv1beta1.AccessibleFromTypeAll,
+	})
+}
+
+func (b *testGcpNfsVolumeBackupBuilder) WithAccessibleFromSpecific(targets ...string) *testGcpNfsVolumeBackupBuilder {
+	return b.WithAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+		Type:    cloudresourcesv1beta1.AccessibleFromTypeSpecific,
+		Targets: targets,
+	})
+}
+
 var _ = Describe("Feature: SKR GcpNfsVolumeBackup", Ordered, func() {
 
 	Context("Scenario: Location validation", func() {
@@ -158,6 +176,59 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup", Ordered, func() {
 		canCreateSkr(
 			"GcpNfsVolumeBackup with explicitly empty location",
 			newTestGcpNfsVolumeBackupBuilder().WithLocation(""),
+		)
+	})
+
+	Context("Scenario: AccessibleFrom validation", func() {
+
+		canCreateSkr(
+			"GcpNfsVolumeBackup with AccessibleFrom type All",
+			newTestGcpNfsVolumeBackupBuilder().WithAccessibleFromAll(),
+		)
+
+		canCreateSkr(
+			"GcpNfsVolumeBackup with AccessibleFrom type Specific with targets",
+			newTestGcpNfsVolumeBackupBuilder().WithAccessibleFromSpecific("shoot-1", "shoot-2"),
+		)
+
+		canCreateSkr(
+			"GcpNfsVolumeBackup without AccessibleFrom",
+			newTestGcpNfsVolumeBackupBuilder(),
+		)
+
+		canNotCreateSkr(
+			"GcpNfsVolumeBackup with AccessibleFrom type Specific with empty targets",
+			newTestGcpNfsVolumeBackupBuilder().WithAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+				Type:    cloudresourcesv1beta1.AccessibleFromTypeSpecific,
+				Targets: []string{},
+			}),
+			"targets required when type is Specific",
+		)
+
+		canNotCreateSkr(
+			"GcpNfsVolumeBackup with AccessibleFrom type Specific with nil targets",
+			newTestGcpNfsVolumeBackupBuilder().WithAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+				Type:    cloudresourcesv1beta1.AccessibleFromTypeSpecific,
+				Targets: nil,
+			}),
+			"targets required when type is Specific",
+		)
+
+		canNotCreateSkr(
+			"GcpNfsVolumeBackup with AccessibleFrom type All with targets",
+			newTestGcpNfsVolumeBackupBuilder().WithAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+				Type:    cloudresourcesv1beta1.AccessibleFromTypeAll,
+				Targets: []string{"shoot-1"},
+			}),
+			"targets must be empty when type is All",
+		)
+
+		canNotCreateSkr(
+			"GcpNfsVolumeBackup with AccessibleFrom type invalid",
+			newTestGcpNfsVolumeBackupBuilder().WithAccessibleFrom(&cloudresourcesv1beta1.AccessibleFrom{
+				Type: "Invalid",
+			}),
+			"Unsupported value",
 		)
 	})
 })

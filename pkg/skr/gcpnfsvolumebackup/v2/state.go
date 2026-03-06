@@ -86,11 +86,34 @@ func stopAndRequeueForCapacity() error {
 	return composed.StopWithRequeueDelay(gcpclient.GcpCapacityCheckInterval)
 }
 
-func (s *State) specCommaSeparatedAccessibleFrom() string {
+// getAccessibleFromTargets returns the list of targets for accessibility labels.
+// For Type=All, returns ["all"]. For Type=Specific, returns the Targets slice.
+// Returns nil if AccessibleFrom is not set.
+func (s *State) getAccessibleFromTargets() []string {
 	backup := s.ObjAsGcpNfsVolumeBackup()
-	// Sort backup.Spec.AccessibleFrom to have a consistent label value
-	sort.Strings(backup.Spec.AccessibleFrom)
-	return strings.Join(backup.Spec.AccessibleFrom, ",")
+	accessibleFrom := backup.Spec.AccessibleFrom
+
+	if accessibleFrom == nil {
+		return nil
+	}
+
+	if accessibleFrom.Type == cloudresourcesv1beta1.AccessibleFromTypeAll {
+		return []string{"all"}
+	}
+
+	return accessibleFrom.Targets
+}
+
+func (s *State) specCommaSeparatedAccessibleFrom() string {
+	targets := s.getAccessibleFromTargets()
+	if targets == nil {
+		return ""
+	}
+	// Sort targets to have a consistent label value
+	sortedTargets := make([]string, len(targets))
+	copy(sortedTargets, targets)
+	sort.Strings(sortedTargets)
+	return strings.Join(sortedTargets, ",")
 }
 
 func (s *State) GetTargetGcpNfsVolumeNamespace() string {
@@ -144,8 +167,9 @@ func (s *State) HasProperLabels() bool {
 		return false
 	}
 
-	for _, shoot := range backup.Spec.AccessibleFrom {
-		if s.fileBackup.Labels[ConvertToAccessibleFromKey(shoot)] != util.GcpLabelBackupAccessibleFrom {
+	targets := s.getAccessibleFromTargets()
+	for _, target := range targets {
+		if s.fileBackup.Labels[ConvertToAccessibleFromKey(target)] != util.GcpLabelBackupAccessibleFrom {
 			return false
 		}
 	}
@@ -159,7 +183,7 @@ func (s *State) HasProperLabels() bool {
 			continue
 		}
 
-		if slices.Contains(backup.Spec.AccessibleFrom, StripAccessibleFromPrefix(key)) {
+		if slices.Contains(targets, StripAccessibleFromPrefix(key)) {
 			continue
 		}
 
@@ -202,8 +226,9 @@ func (s *State) HasAllStatusLabels() bool {
 		return false
 	}
 
-	for _, shoot := range backup.Spec.AccessibleFrom {
-		if backup.Status.FileStoreBackupLabels[ConvertToAccessibleFromKey(shoot)] != util.GcpLabelBackupAccessibleFrom {
+	targets := s.getAccessibleFromTargets()
+	for _, target := range targets {
+		if backup.Status.FileStoreBackupLabels[ConvertToAccessibleFromKey(target)] != util.GcpLabelBackupAccessibleFrom {
 			return false
 		}
 	}
@@ -217,7 +242,7 @@ func (s *State) HasAllStatusLabels() bool {
 			continue
 		}
 
-		if slices.Contains(backup.Spec.AccessibleFrom, StripAccessibleFromPrefix(key)) {
+		if slices.Contains(targets, StripAccessibleFromPrefix(key)) {
 			continue
 		}
 
@@ -229,6 +254,7 @@ func (s *State) HasAllStatusLabels() bool {
 
 func (s *State) SetFilestoreLabels() {
 	backup := s.ObjAsGcpNfsVolumeBackup()
+	targets := s.getAccessibleFromTargets()
 
 	if s.fileBackup.Labels == nil {
 		s.fileBackup.Labels = make(map[string]string)
@@ -240,8 +266,8 @@ func (s *State) SetFilestoreLabels() {
 	s.fileBackup.Labels[util.GcpLabelSkrBackupName] = backup.Name
 	s.fileBackup.Labels[util.GcpLabelSkrBackupNamespace] = backup.Namespace
 	s.fileBackup.Labels[util.GcpLabelShootName] = s.Scope.Spec.ShootName
-	for _, shoot := range backup.Spec.AccessibleFrom {
-		s.fileBackup.Labels[ConvertToAccessibleFromKey(shoot)] = util.GcpLabelBackupAccessibleFrom
+	for _, target := range targets {
+		s.fileBackup.Labels[ConvertToAccessibleFromKey(target)] = util.GcpLabelBackupAccessibleFrom
 	}
 
 	// delete any stale accessibleFrom labels
@@ -254,7 +280,7 @@ func (s *State) SetFilestoreLabels() {
 			continue
 		}
 
-		if slices.Contains(backup.Spec.AccessibleFrom, StripAccessibleFromPrefix(key)) {
+		if slices.Contains(targets, StripAccessibleFromPrefix(key)) {
 			continue
 		}
 
