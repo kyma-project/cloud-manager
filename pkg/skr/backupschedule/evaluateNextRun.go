@@ -17,7 +17,7 @@ func EvaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	calc := state.GetScheduleCalculator()
 	logger := composed.LoggerFromCtx(ctx)
 
-	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Evaluating next run time")
+	logger.Info("Evaluating next run time")
 
 	if len(schedule.GetNextRunTimes()) == 0 {
 		schedule.SetState(cloudresourcesv1beta1.JobStateError)
@@ -51,7 +51,7 @@ func EvaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 
 	//If it still not time to run, reconcile with delay
 	if timeLeft := calc.GetRemainingTime(nextRunTime); timeLeft > 0 {
-		logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next Run in : %s", timeLeft))
+		logger.Info(fmt.Sprintf("Next Run in : %s", timeLeft))
 		return composed.StopWithRequeueDelay(min(timeLeft, util.Timing.T10000ms())), nil
 	}
 
@@ -71,7 +71,7 @@ func EvaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 		//If we still have some time to reach the actual nextRunTime, reconcile with delay.
 		//It may happen if we used tolerance when comparing.
 		if timeLeft := calc.GetRemainingTimeWithTolerance(nextRunTime, 0); timeLeft > 0 {
-			logger.WithValues("BackupSchedule", schedule.GetName()).Info(
+			logger.Info(
 				fmt.Sprintf("Run already completed for %s. Requeueing with delay : %s", nextRunTime, timeLeft))
 			return composed.StopWithRequeueDelay(min(timeLeft, util.Timing.T10000ms())), nil
 		}
@@ -83,7 +83,7 @@ func EvaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//log details
-	logger.WithValues("BackupSchedule", schedule.GetName()).Info(
+	logger.Info(
 		fmt.Sprintf("NextRunTimes: %s. CreateRunCompleted : %t, DeleteRunCompleted : %t",
 			schedule.GetNextRunTimes(), state.IsCreateRunCompleted(), state.IsDeleteRunCompleted()))
 

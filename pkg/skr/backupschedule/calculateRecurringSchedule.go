@@ -20,11 +20,11 @@ func CalculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 		return nil, nil
 	}
 
-	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Evaluating next run time")
+	logger.Info("Evaluating next run time")
 
 	//If cron expression has not changed, and the nextRunTime is already set, continue
 	if schedule.GetSchedule() == schedule.GetActiveSchedule() && len(schedule.GetNextRunTimes()) > 0 {
-		logger.WithValues("BackupSchedule", schedule.GetName()).Info("Next RunTime is already set, continuing.")
+		logger.Info("Next RunTime is already set, continuing.")
 		return nil, nil
 	}
 
@@ -37,10 +37,10 @@ func CalculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 	}
 	nextRunTimes := calc.NextRunTimes(expr, startTime, MaxSchedules)
 
-	logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next RunTime is %v", nextRunTimes[0]))
+	logger.Info(fmt.Sprintf("Next RunTime is %v", nextRunTimes[0]))
 
 	//Update the status of the schedule with the next run times
-	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Next RunTime is set. Updating status.")
+	logger.Info("Next RunTime is set. Updating status.")
 	schedule.SetState(cloudresourcesv1beta1.JobStateActive)
 	schedule.SetActiveSchedule(schedule.GetSchedule())
 

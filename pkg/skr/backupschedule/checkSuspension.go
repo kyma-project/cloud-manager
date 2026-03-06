@@ -18,7 +18,7 @@ func CheckSuspension(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//BackupSchedule is suspended, stop reconciliation
-	logger.WithValues("BackupSchedule", schedule.GetName()).Info("BackupSchedule is suspended. Stopping reconciliation.")
+	logger.Info("BackupSchedule is suspended. Stopping reconciliation.")
 	schedule.SetState(cloudresourcesv1beta1.JobStateSuspended)
 	schedule.SetNextRunTimes(nil)
 	schedule.SetNextDeleteTimes(nil)
