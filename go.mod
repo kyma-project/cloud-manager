@@ -5,7 +5,7 @@ go 1.25.7
 require (
 	cloud.google.com/go/auth v0.18.2
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/compute v1.55.0
+	cloud.google.com/go/compute v1.56.0
 	cloud.google.com/go/filestore v1.10.3
 	cloud.google.com/go/longrunning v0.8.0
 	cloud.google.com/go/networkconnectivity v1.20.0
@@ -69,7 +69,7 @@ require (
 	golang.org/x/oauth2 v0.35.0
 	google.golang.org/api v0.269.0
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.2
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.35.2
