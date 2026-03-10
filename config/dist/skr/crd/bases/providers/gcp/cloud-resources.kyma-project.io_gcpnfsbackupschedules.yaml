@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.8
+    cloud-resources.kyma-project.io/version: v0.0.9
   name: gcpnfsbackupschedules.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -53,18 +53,34 @@ spec:
               description: GcpNfsBackupScheduleSpec defines the desired state of GcpNfsBackupSchedule
               properties:
                 accessibleFrom:
-                  description: |-
-                    AccessibleFrom is an array of shootNames or subaccountIds that would have access to the backups created by this schedule for restore.
-                    "all" is also accepted as a value to allow access from all shoots in the same global account and gcp project. "all" cannot be used in combination with other values.
-                  items:
-                    type: string
-                  maxItems: 10
-                  minItems: 1
-                  type: array
-                  x-kubernetes-list-type: set
+                  description: AccessibleFrom defines the access scope for backups created by this schedule.
+                  properties:
+                    targets:
+                      description: |-
+                        Targets is an array of shootNames or subaccountIds.
+                        Required when Type is "Specific", must be empty when Type is "All".
+                      items:
+                        type: string
+                      maxItems: 10
+                      type: array
+                      x-kubernetes-list-type: set
+                    type:
+                      description: |-
+                        Type specifies the access scope.
+                        "All" allows access from all shoots in the same global account and GCP project.
+                        "Specific" requires Targets to be defined.
+                      enum:
+                        - All
+                        - Specific
+                      type: string
+                  required:
+                    - type
+                  type: object
                   x-kubernetes-validations:
-                    - message: The value 'all' cannot be combined with other values.
-                      rule: (self.all(x, x == 'all') || self.all(x, x != 'all'))
+                    - message: targets required when type is Specific
+                      rule: self.type != 'Specific' || size(self.targets) > 0
+                    - message: targets must be empty when type is All
+                      rule: self.type != 'All' || !has(self.targets) || size(self.targets) == 0
                 deleteCascade:
                   default: false
                   description: |-

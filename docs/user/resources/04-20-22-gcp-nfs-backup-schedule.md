@@ -31,6 +31,9 @@ This table lists the parameters of the given resource together with their descri
 | **maxFailedBackups**       | int                 | Optional. Maximum number of backups in `Failed` state to be retained. Default value is 5.                                                                                                                                                                                 |
 | **suspend**                 | boolean             | Optional. Specifies whether or not to suspend the schedule temporarily. Defaults to `false`.                                                                                                                                                                                          |
 | **deleteCascade**           | boolean             | Optional. Specifies whether to cascade delete the backup resources when this schedule is deleted. Defaults to `false`.                                                                                                                                                                |
+| **accessibleFrom**          | object              | Optional. Specifies access scope for cross-cluster backup sharing. All backups created by this schedule will inherit this setting.                                                                                                                                                    |
+| **accessibleFrom.type**     | string              | Required when accessibleFrom is specified. `All` allows access from all shoots in the same global account and GCP project. `Specific` requires explicit targets.                                                                                                                      |
+| **accessibleFrom.targets**  | \[\]string          | Array of shoot names or subaccount IDs granted access. Required when type is `Specific`, must be empty when type is `All`. Max 10 items.                                                                                                                                              |
 
 **Status:**
 
@@ -75,4 +78,43 @@ spec:
   maxReadyBackups: 150
   suspend: false
   deleteCascade: true
+```
+
+### Schedule with Cross-Cluster Backup Sharing
+
+Create scheduled backups that are accessible from specific clusters:
+
+```yaml
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: GcpNfsBackupSchedule
+metadata:
+  name: shared-backup-schedule
+  namespace: production
+spec:
+  nfsVolumeRef:
+    name: production-data
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  maxRetentionDays: 30
+  accessibleFrom:
+    type: Specific
+    targets:
+      - "staging-cluster-id"
+      - "dr-cluster-id"
+```
+
+### Schedule with Global Access
+
+Create scheduled backups accessible from all clusters in the same global account:
+
+```yaml
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: GcpNfsBackupSchedule
+metadata:
+  name: globally-shared-schedule
+spec:
+  nfsVolumeRef:
+    name: shared-data
+  schedule: "0 0 * * 0"  # Weekly on Sunday
+  accessibleFrom:
+    type: All
 ```

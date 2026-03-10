@@ -75,6 +75,39 @@ func (v *GcpNfsVolumeRef) ToNamespacedName(fallbackNamespace string) types.Names
 	}
 }
 
+// ===========================================================================
+// AccessibleFrom - Discriminated union for backup accessibility
+// ===========================================================================
+
+// AccessibleFromType specifies how backup access scope is determined.
+// +kubebuilder:validation:Enum=All;Specific
+type AccessibleFromType string
+
+const (
+	// AccessibleFromTypeAll allows access from all shoots in the same global account and GCP project.
+	AccessibleFromTypeAll AccessibleFromType = "All"
+	// AccessibleFromTypeSpecific requires explicit targets to be defined.
+	AccessibleFromTypeSpecific AccessibleFromType = "Specific"
+)
+
+// AccessibleFrom defines the access scope for backups.
+// +kubebuilder:validation:XValidation:rule="self.type != 'Specific' || size(self.targets) > 0", message="targets required when type is Specific"
+// +kubebuilder:validation:XValidation:rule="self.type != 'All' || !has(self.targets) || size(self.targets) == 0", message="targets must be empty when type is All"
+type AccessibleFrom struct {
+	// Type specifies the access scope.
+	// "All" allows access from all shoots in the same global account and GCP project.
+	// "Specific" requires Targets to be defined.
+	// +kubebuilder:validation:Required
+	Type AccessibleFromType `json:"type"`
+
+	// Targets is an array of shootNames or subaccountIds.
+	// Required when Type is "Specific", must be empty when Type is "All".
+	// +optional
+	// +listType=set
+	// +kubebuilder:validation:MaxItems=10
+	Targets []string `json:"targets,omitempty"`
+}
+
 // GcpNfsVolumeBackupSpec defines the desired state of GcpNfsVolumeBackup
 type GcpNfsVolumeBackupSpec struct {
 
@@ -89,14 +122,9 @@ type GcpNfsVolumeBackupSpec struct {
 	// +kubebuilder:validation:Pattern=`^$|^(africa-south1|asia-east1|asia-east2|asia-northeast1|asia-northeast2|asia-northeast3|asia-south1|asia-south2|asia-southeast1|asia-southeast2|asia-southeast3|australia-southeast1|australia-southeast2|europe-central2|europe-north1|europe-southwest1|europe-west1|europe-west10|europe-west12|europe-west2|europe-west3|europe-west4|europe-west6|europe-west8|europe-west9|me-central1|me-central2|me-west1|northamerica-northeast1|northamerica-northeast2|southamerica-east1|southamerica-west1|us-central1|us-east1|us-east4|us-east5|us-east7|us-south1|us-west1|us-west2|us-west3|us-west4|us-west8)$`
 	Location string `json:"location"`
 
-	// AccessibleFrom is an array of shootNames or subaccountIds that would have access to the backup for restore.
-	// "all" is also accepted as a value to allow access from all shoots in the same global account and gcp project. "all" cannot be used in combination with other values.
+	// AccessibleFrom defines the access scope for this backup.
 	// +optional
-	// +listType=set
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=10
-	// +kubebuilder:validation:XValidation:rule="(self.all(x, x == 'all') || self.all(x, x != 'all'))", message="The value 'all' cannot be combined with other values."
-	AccessibleFrom []string `json:"accessibleFrom,omitempty"`
+	AccessibleFrom *AccessibleFrom `json:"accessibleFrom,omitempty"`
 }
 
 // GcpNfsVolumeBackupStatus defines the observed state of GcpNfsVolumeBackup
