@@ -19,53 +19,62 @@ package cloudresources
 import (
 	"context"
 
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+	backupschedulev1 "github.com/kyma-project/cloud-manager/pkg/skr/backupschedule/v1"
+	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsbackupschedule"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
+
+// gcpNfsBackupScheduleRunner is a common interface for v1 and v2 reconcilers
+type gcpNfsBackupScheduleRunner interface {
+	Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error)
+}
 
 // GcpNfsBackupScheduleReconciler reconciles a GcpNfsBackupSchedule object
 type GcpNfsBackupScheduleReconciler struct {
-	Reconciler backupschedule.Reconciler
+	reconciler gcpNfsBackupScheduleRunner
 }
 
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsbackupschedules,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsbackupschedules/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=cloud-resources.kyma-project.io,resources=gcpnfsbackupschedules/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the GcpNfsBackupSchedule object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.0/pkg/reconcile
 func (r *GcpNfsBackupScheduleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return r.Reconciler.Run(ctx, req)
+	return r.reconciler.Run(ctx, req)
 }
 
 type GcpNfsBackupScheduleReconcilerFactory struct {
 	env abstractions.Environment
+	clk clock.Clock
 }
 
 func (f *GcpNfsBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
-	return &GcpNfsBackupScheduleReconciler{
-		Reconciler: backupschedule.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, backupschedule.GcpNfsBackupSchedule),
+	if feature.BackupScheduleV2.Value(context.Background()) {
+		reconciler := gcpnfsbackupschedule.NewReconciler(
+			args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, f.clk,
+		)
+		return &GcpNfsBackupScheduleReconciler{reconciler: &reconciler}
 	}
+
+	reconciler := backupschedulev1.NewReconciler(
+		args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, backupschedulev1.GcpNfsBackupSchedule,
+	)
+	return &GcpNfsBackupScheduleReconciler{reconciler: &reconciler}
 }
 
-func SetupGcpNfsBackupScheduleReconciler(reg skrruntime.SkrRegistry,
-	env abstractions.Environment) error {
-
+func SetupGcpNfsBackupScheduleReconciler(
+	reg skrruntime.SkrRegistry,
+	env abstractions.Environment,
+	clk clock.Clock,
+) error {
 	return reg.Register().
-		WithFactory(&GcpNfsBackupScheduleReconcilerFactory{env: env}).
+		WithFactory(&GcpNfsBackupScheduleReconcilerFactory{env: env, clk: clk}).
 		For(&cloudresourcesv1beta1.GcpNfsBackupSchedule{}).
 		Complete()
 }

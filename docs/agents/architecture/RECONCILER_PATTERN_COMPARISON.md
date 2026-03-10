@@ -348,6 +348,70 @@ type State struct {
 
 When choosing pattern:
 - [ ] Creating new code? → NEW Pattern
+- [ ] KCP reconciler? → See table above (NEW vs OLD by resource)
+- [ ] SKR reconciler creating a KCP resource? → SKR→KCP pattern (1:1 mapping)
+- [ ] SKR reconciler with no KCP backing? → SKR-only pattern
+- [ ] SKR-only with shared cross-provider logic? → Shared package + provider-specific reconciler
+
+---
+
+## SKR Pattern Comparison
+
+SKR reconcilers have two distinct patterns independent of the KCP NEW/OLD distinction:
+
+### SKR→KCP (KCP-Backed)
+
+One SKR resource creates exactly one KCP resource. KCP reconciler provisions the actual cloud infrastructure.
+
+```
+User creates SKR GcpRedisCluster
+  → SKR reconciler creates KCP GcpRedisCluster
+    → KCP reconciler provisions Redis in GCP
+      → Status propagates: GCP → KCP → SKR
+```
+
+**State**: Extends `common.State`, holds `KcpCluster` client and a reference to the KCP object.
+
+**Key files**: `createKcp<Resource>.go`, `loadKcp<Resource>.go`, `deleteKcp<Resource>.go`, `updateStatus.go`
+
+**Reference**: `pkg/skr/gcpnfsvolume/`
+
+### SKR-Only (No KCP Backing)
+
+SKR resource manages other SKR-level objects directly. No KCP resource created.
+
+```
+User creates SKR GcpNfsBackupSchedule
+  → SKR reconciler creates GcpNfsVolumeBackup objects on schedule
+  → No KCP resource involved
+```
+
+**When providers share logic**: Common package exports reusable actions + interface, provider package implements with concrete types.
+
+```
+pkg/skr/backupschedule/              # Shared: ScheduleState interface, ScheduleCalculator, common actions
+pkg/skr/gcpnfsbackupschedule/       # GCP: State implements ScheduleState, provider-specific actions
+```
+
+**State**: Extends `composed.State`, implements shared interface (e.g., `ScheduleState`), holds concrete provider types.
+
+**Key files**: `loadScope.go`, `loadSource.go`, `createBackup.go`, `deleteBackups.go`, `deleteCascade.go`, `updateStatus.go`
+
+**Reference**: `pkg/skr/gcpnfsbackupschedule/` (provider) + `pkg/skr/backupschedule/` (shared)
+
+### SKR Pattern Comparison Table
+
+| Aspect | SKR→KCP | SKR-Only (Shared + Provider) |
+|--------|---------|------------------------------|
+| Creates KCP resource | Yes (1:1) | No |
+| State base | `common.State` | `composed.State` |
+| Uses `KcpCluster` client | Yes | Optional (for Scope loading) |
+| Status sync | From KCP → SKR | Computed locally in SKR |
+| Deletion | Delete KCP → wait → remove finalizer | Delete children → remove finalizer |
+| Shared logic package | None needed | Yes (e.g., `pkg/skr/backupschedule/`) |
+| Clock injection | Not needed | Required for time-dependent logic |
+| Feature flag gating | At factory level | At factory level (v1/v2 pattern) |
+| Reference impl | `pkg/skr/gcpnfsvolume/` | `pkg/skr/gcpnfsbackupschedule/` |
 - [ ] After 2024? → NEW Pattern
 - [ ] Maintaining RedisInstance/NfsInstance/IpRange? → OLD Pattern (understand)
 - [ ] In doubt? → NEW Pattern

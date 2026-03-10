@@ -8,31 +8,27 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
-func calculateOnetimeSchedule(ctx context.Context, st composed.State) (error, context.Context) {
-	state := st.(*State)
+func CalculateOnetimeSchedule(ctx context.Context, st composed.State) (error, context.Context) {
+	state := st.(ScheduleState)
 	schedule := state.ObjAsBackupSchedule()
+	calc := state.GetScheduleCalculator()
 	logger := composed.LoggerFromCtx(ctx)
-	now := time.Now()
-
-	//If marked for deletion, continue
-	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
-	}
+	now := calc.Now()
 
 	//If not one-time schedule, continue
 	if schedule.GetSchedule() != "" {
 		return nil, nil
 	}
 
-	logger.WithValues("BackupSchedule", schedule.GetName()).Info("Evaluating one-time schedule")
+	logger.Info("Evaluating one-time schedule")
 
 	//If the nextRunTime is already set, continue
 	if len(schedule.GetNextRunTimes()) > 0 {
-		logger.WithValues("BackupSchedule", schedule.GetName()).Info("Next RunTime is already set, continuing.")
+		logger.Info("Next RunTime is already set, continuing.")
 		return nil, nil
 	}
 
-	logger.WithValues("BackupSchedule", schedule.GetName()).Info("BackupSchedule is empty and scheduling it to run.")
+	logger.Info("BackupSchedule is empty and scheduling it to run.")
 
 	var nextRunTime time.Time
 	lastCreateRun := schedule.GetLastCreateRun()

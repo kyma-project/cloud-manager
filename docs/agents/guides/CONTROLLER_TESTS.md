@@ -599,6 +599,54 @@ infra.AwsMock().SetVpcState(id, "available")
 
 ## Common Test Patterns
 
+### Pattern: Fake Clock for Time-Dependent Reconcilers
+
+Reconcilers with time-dependent logic (schedules, timeouts) MUST use `clock.Clock` injection. Tests use `clock.NewFakeClock()` for deterministic, fast execution — no real-time waits.
+
+**Setup** (in `suite_test.go`):
+```go
+var testFakeClock *clock.FakeClock
+
+// In BeforeSuite:
+testFakeClock = clock.NewFakeClock(time.Now())
+Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env, testFakeClock)).NotTo(HaveOccurred())
+```
+
+**Usage** (in test):
+```go
+It("Scenario: Recurring schedule creates backup", func() {
+    schedule := &cloudresourcesv1beta1.GcpNfsBackupSchedule{}
+
+    By("When GcpNfsBackupSchedule is created with cron", func() {
+        Eventually(CreateObj).
+            WithArguments(infra.Ctx(), infra.SKR().Client(), schedule,
+                WithCron("* * * * *"),
+            ).Should(Succeed())
+    })
+
+    By("Then schedule becomes Active", func() {
+        Eventually(LoadAndCheck).
+            WithArguments(infra.Ctx(), infra.SKR().Client(), schedule,
+                NewObjActions(), HavingState("Active"),
+            ).Should(Succeed())
+    })
+
+    By("When time advances past scheduled run", func() {
+        testFakeClock.Step(2 * time.Minute)
+    })
+
+    By("Then backup is created", func() {
+        Eventually(func() int {
+            backupList := &cloudresourcesv1beta1.GcpNfsVolumeBackupList{}
+            infra.SKR().Client().List(infra.Ctx(), backupList)
+            return len(backupList.Items)
+        }, "5s", "200ms").Should(BeNumerically(">", 0))
+    })
+})
+```
+
+**How it works**: With `util.SetSpeedyTimingForTests()` (divider=100), requeue delays shrink to ~1-100ms. After `fakeClock.Step()`, the reconciler requeues quickly, sees the clock advanced past the target time, and proceeds. No 2-minute real-time waits.
+
 ### Pattern: Wait for Condition
 
 ```go
@@ -664,6 +712,36 @@ It("test case 1", func() {
         Should(Succeed())
 })
 ```
+
+### Pattern: Feature Flag Skip Guards (v1/v2 Coexistence)
+
+When a reconciler has v1 and v2 implementations gated by a feature flag, tests for each version MUST skip when the other version's flag is active:
+
+**v1 tests** (`gcpnfsbackupschedule_test.go`):
+```go
+var _ = Describe("Feature: SKR GcpNfsBackupSchedule", func() {
+    BeforeEach(func() {
+        if feature.BackupScheduleV2.Value(context.Background()) {
+            Skip("Skipping v1 tests because backupScheduleV2 feature flag is enabled")
+        }
+    })
+    // ... v1 test scenarios
+})
+```
+
+**v2 tests** (`gcpnfsbackupschedule_v2_test.go`):
+```go
+var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
+    BeforeEach(func() {
+        if !feature.BackupScheduleV2.Value(context.Background()) {
+            Skip("Skipping v2 tests because backupScheduleV2 feature flag is disabled")
+        }
+    })
+    // ... v2 test scenarios
+})
+```
+
+CI matrix runs both configurations: flag=false (v1 runs, v2 skips) and flag=true (v2 runs, v1 skips).
 
 ## Common Pitfalls
 
@@ -895,6 +973,17 @@ Eventually(LoadAndCheck, "30s", "1s").  // 30s timeout instead of default
 - [ ] Waits for deletion timestamp on delete
 - [ ] Verifies cloud resource cleanup
 - [ ] Checks finalizer behavior
+
+### Time-Dependent Reconcilers
+- [ ] Uses `clock.Clock` injection (never `time.Now()` directly)
+- [ ] Suite creates `clock.NewFakeClock()` shared variable
+- [ ] Tests call `fakeClock.Step()` to advance time
+- [ ] Uses `util.SetSpeedyTimingForTests()` for fast requeue delays
+
+### Feature Flag v1/v2 Coexistence
+- [ ] v1 tests skip when v2 flag enabled
+- [ ] v2 tests skip when v2 flag disabled
+- [ ] CI matrix tests both flag states
 
 ### SKR Testing
 - [ ] Waits for Status.Id generation

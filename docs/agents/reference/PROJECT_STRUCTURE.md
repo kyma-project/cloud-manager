@@ -212,40 +212,109 @@ What CRD are you working with?
 
 ## SKR Reconcilers (`pkg/skr/`)
 
-**Purpose**: User-facing reconcilers that project to KCP.
+**Purpose**: User-facing reconcilers running in user clusters.
+
+### SKR Reconciler Types
+
+SKR reconcilers fall into two categories based on what they manage:
+
+| Type | Description | Example |
+|------|-------------|---------|
+| **SKR→KCP** | Creates/manages a corresponding KCP resource in the control plane | `pkg/skr/gcpnfsvolume/` → creates `KcpNfsVolume` |
+| **SKR-only** | Manages resources entirely within the SKR cluster (no backing KCP resource) | `pkg/skr/gcpnfsbackupschedule/` → creates `GcpNfsVolumeBackup` objects |
 
 ### Structure
 
 ```
 pkg/skr/
-├── runtime/                    # SKR runtime management
+├── runtime/                        # SKR runtime management
 │   ├── reconciler.go
 │   └── skr.go
 │
-├── gcpnfsvolume/               # NEW: Provider-specific SKR
+├── gcpnfsvolume/                   # SKR→KCP: Provider-specific, creates KCP resource
 │   ├── reconciler.go
 │   ├── state.go
-│   ├── createKcpNfsVolume.go   # Create corresponding KCP resource
-│   ├── loadKcpNfsVolume.go     # Load KCP resource
-│   ├── deleteKcpNfsVolume.go   # Delete KCP resource
-│   └── updateStatus.go         # Sync status from KCP
+│   ├── createKcpNfsVolume.go
+│   ├── loadKcpNfsVolume.go
+│   ├── deleteKcpNfsVolume.go
+│   └── updateStatus.go
 │
-└── gcpredisinstance/           # OLD: Creates multi-provider KCP
+├── backupschedule/                 # Shared scheduling logic (common package)
+│   ├── backupschedule.go           # BackupSchedule interface (CRD types implement this)
+│   ├── schedule_state.go           # ScheduleState interface for common actions
+│   ├── calculator.go               # ScheduleCalculator with clock.Clock injection
+│   ├── calculator_test.go          # Unit tests for cron/time logic
+│   ├── checkCompleted.go           # Reusable composed action
+│   ├── checkSuspension.go          # Reusable composed action
+│   ├── validateSchedule.go         # Reusable composed action
+│   ├── validateTimes.go            # Reusable composed action
+│   ├── calculateOnetimeSchedule.go # Reusable composed action
+│   ├── calculateRecurringSchedule.go # Reusable composed action
+│   ├── evaluateNextRun.go          # Reusable composed action
+│   └── v1/                         # Legacy multi-provider reconciler (deprecated)
+│
+├── gcpnfsbackupschedule/           # SKR-only: Provider-specific, uses shared scheduling
+│   ├── reconciler.go               # GCP-specific reconciler (v2)
+│   ├── state.go                    # Implements backupschedule.ScheduleState
+│   ├── loadScope.go                # GCP-specific action
+│   ├── loadSource.go               # GCP-specific action
+│   ├── loadBackups.go              # GCP-specific action
+│   ├── createBackup.go             # GCP-specific action
+│   ├── deleteBackups.go            # GCP-specific action
+│   ├── deleteCascade.go            # GCP-specific action
+│   └── updateStatus.go             # GCP-specific action
+│
+└── gcpredisinstance/               # OLD: Creates multi-provider KCP resource
     ├── reconciler.go
     ├── createKcpRedisInstance.go
     └── ...
 ```
 
-### SKR File Organization
+### Shared + Provider-Specific Pattern (Backup Schedule)
+
+When multiple providers share identical business logic (e.g., cron scheduling), the pattern is:
+
+1. **Common package** (`pkg/skr/backupschedule/`) exports reusable composed actions and a `ScheduleState` interface
+2. **Provider package** (`pkg/skr/gcpnfsbackupschedule/`) implements `ScheduleState` with concrete types and adds provider-specific actions
+
+**Action composition in provider reconciler**:
+```
+Common actions          → checkCompleted, checkSuspension, validateSchedule,
+(from backupschedule/)     validateTimes, calculateOnetimeSchedule,
+                           calculateRecurringSchedule, evaluateNextRun
+
+Provider actions        → loadScope, loadSource, loadBackups,
+(from gcpnfsbackupschedule/)  createBackup, deleteBackups, updateStatus
+```
+
+**Clock injection**: `ScheduleCalculator` accepts `clock.Clock` — production uses `clock.RealClock{}`, tests use `clock.NewFakeClock()` for deterministic time control.
+
+**Feature flag gating**: Controller factory checks `feature.BackupScheduleV2` to select v1 or v2 reconciler. Same pattern as `gcpnfsvolumebackup_controller.go`.
+
+### SKR→KCP File Organization
 
 | File | Purpose | Key Logic |
 |------|---------|-----------|
 | `reconciler.go` | Reconciler setup | SetupWithManager, feature flag loading |
 | `state.go` | State with SKR+KCP access | SKR client, KCP client |
-| `createKcpNfsVolume.go` | Create KCP resource | UUID generation, KCP annotation |
-| `loadKcpNfsVolume.go` | Load KCP resource | Find by KCP annotation |
-| `deleteKcpNfsVolume.go` | Delete KCP resource | Remove KCP resource |
+| `createKcp<Resource>.go` | Create KCP resource | UUID generation, KCP annotations |
+| `loadKcp<Resource>.go` | Load KCP resource | Find by KCP annotation |
+| `deleteKcp<Resource>.go` | Delete KCP resource | Remove KCP resource |
 | `updateStatus.go` | Sync status | Copy KCP status to SKR |
+
+### SKR-Only File Organization
+
+| File | Purpose | Key Logic |
+|------|---------|-----------|
+| `reconciler.go` | Reconciler setup | Action composition with common + provider actions |
+| `state.go` | State implementing shared interface | Concrete provider types, no `backupImpl` indirection |
+| `loadScope.go` | Load Scope | Provider-specific Scope loading |
+| `loadSource.go` | Load source resource | Concrete type (e.g., `*GcpNfsVolume`) |
+| `loadBackups.go` | Load child resources | Concrete type list (e.g., `[]*GcpNfsVolumeBackup`) |
+| `createBackup.go` | Create child resource | Direct construction, no interface indirection |
+| `deleteBackups.go` | Delete old backups | Retention-based cleanup |
+| `deleteCascade.go` | Cascade delete on parent removal | Runs only in delete branch (`IfElse`) |
+| `updateStatus.go` | Update schedule status | BackupIndex, BackupCount, LastCreateRun |
 
 ---
 
@@ -385,7 +454,8 @@ if err = gcpsubnet.NewGcpSubnetReconciler(
 |---------------|---------|-----------|
 | KCP | NEW | `pkg/kcp/provider/<provider>/<resource>/` |
 | KCP | OLD | `pkg/kcp/<resource>/` + `pkg/kcp/provider/<provider>/<resource>/` |
-| SKR | Any | `pkg/skr/<resource>/` |
+| SKR | SKR→KCP | `pkg/skr/<resource>/` |
+| SKR | SKR-only (shared + provider) | Common: `pkg/skr/<shared>/` + Provider: `pkg/skr/<provider><resource>/` |
 
 **Step 4**: Find key files
 - `reconcile.go` - Entry point
