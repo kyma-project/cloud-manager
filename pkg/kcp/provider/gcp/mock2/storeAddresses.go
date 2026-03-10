@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2"
@@ -13,7 +14,6 @@ import (
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"github.com/mitchellh/copystructure"
 	"k8s.io/utils/ptr"
 )
 
@@ -59,11 +59,7 @@ func (s *store) GetGlobalAddress(ctx context.Context, req *computepb.GetGlobalAd
 	if err != nil {
 		return nil, err
 	}
-	cpy, err := copystructure.Copy(addr)
-	if err != nil {
-		return nil, err
-	}
-	return cpy.(*computepb.Address), nil
+	return util.Clone(addr)
 }
 
 func (s *store) DeleteGlobalAddress(ctx context.Context, req *computepb.DeleteGlobalAddressRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
@@ -118,6 +114,8 @@ func (s *store) DeleteGlobalAddress(ctx context.Context, req *computepb.DeleteGl
 
 	op := s.createComputeOperationNoLock(addrName.ProjectId(), "", "delete", addr.GetSelfLink(), addr.GetId())
 	op.Status = ptr.To(computepb.Operation_DONE)
+	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
+	op.Progress = ptr.To(int32(100))
 
 	return newComputeOperation(op), nil
 }
@@ -189,6 +187,8 @@ func (s *store) InsertGlobalAddress(ctx context.Context, req *computepb.InsertGl
 
 	op := s.createComputeOperationNoLock(name.ProjectId(), "", "insert", addr.GetSelfLink(), addr.GetId())
 	op.Status = ptr.To(computepb.Operation_DONE)
+	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
+	op.Progress = ptr.To(int32(100))
 
 	return newComputeOperation(op), nil
 }

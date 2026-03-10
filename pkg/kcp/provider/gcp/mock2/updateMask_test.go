@@ -38,7 +38,7 @@ func TestUpdateMask(t *testing.T) {
 		}
 
 		update := &filestorepb.Instance{
-			Name: "instance-name-2",
+			Name:        "instance-name-2",
 			Description: "instance description-2",
 			FileShares: []*filestorepb.FileShareConfig{
 				{
@@ -48,7 +48,7 @@ func TestUpdateMask(t *testing.T) {
 		}
 
 		updateMask := &fieldmaskpb.FieldMask{
-			Paths: []string{"name", "fileShares"},
+			Paths: []string{"name", "file_shares"},
 		}
 
 		assert.NoError(t, UpdateMask(instance, update, updateMask))
@@ -81,7 +81,7 @@ func TestUpdateMask(t *testing.T) {
 			MemorySizeGb: 8,
 			ReplicaCount: 3,
 			RedisConfigs: map[string]string{
-				"maxmemory-policy": "volatile-lru",
+				"maxmemory-policy":       "volatile-lru",
 				"notify-keyspace-events": "Ex",
 			},
 			MaintenancePolicy: &redispb.MaintenancePolicy{
@@ -90,7 +90,7 @@ func TestUpdateMask(t *testing.T) {
 		}
 
 		updateMask := &fieldmaskpb.FieldMask{
-			Paths: []string{"authEnabled", "maintenancePolicy", "memorySizeGb", "redisConfigs", "replicaCount"},
+			Paths: []string{"auth_enabled", "maintenance_policy", "memory_size_gb", "redis_configs", "replica_count"},
 		}
 
 		assert.NoError(t, UpdateMask(instance, update, updateMask))
@@ -131,7 +131,7 @@ func TestUpdateMask(t *testing.T) {
 		}
 
 		updateMask := &fieldmaskpb.FieldMask{
-			Paths: []string{"nodeType", "redisConfigs", "replicaCount", "shardCount"},
+			Paths: []string{"node_type", "redis_configs", "replica_count", "shard_count"},
 		}
 
 		assert.NoError(t, UpdateMask(cluster, update, updateMask))

@@ -11,6 +11,7 @@ import (
 type SubnetClient interface {
 	InsertSubnet(ctx context.Context, req *computepb.InsertSubnetworkRequest, opts ...gax.CallOption) (VoidOperation, error)
 	GetSubnet(ctx context.Context, req *computepb.GetSubnetworkRequest, opts ...gax.CallOption) (*computepb.Subnetwork, error)
+	ListSubnets(ctx context.Context, req *computepb.ListSubnetworksRequest, opts ...gax.CallOption) Iterator[*computepb.Subnetwork]
 	DeleteSubnet(ctx context.Context, req *computepb.DeleteSubnetworkRequest, opts ...gax.CallOption) (VoidOperation, error)
 }
 
@@ -26,6 +27,10 @@ func (c *subnetClient) InsertSubnet(ctx context.Context, req *computepb.InsertSu
 
 func (c *subnetClient) GetSubnet(ctx context.Context, req *computepb.GetSubnetworkRequest, opts ...gax.CallOption) (*computepb.Subnetwork, error) {
 	return c.inner.Get(ctx, req, opts...)
+}
+
+func (c *subnetClient) ListSubnets(ctx context.Context, req *computepb.ListSubnetworksRequest, opts ...gax.CallOption) Iterator[*computepb.Subnetwork] {
+	return c.inner.List(ctx, req, opts...)
 }
 
 func (c *subnetClient) DeleteSubnet(ctx context.Context, req *computepb.DeleteSubnetworkRequest, opts ...gax.CallOption) (VoidOperation, error) {

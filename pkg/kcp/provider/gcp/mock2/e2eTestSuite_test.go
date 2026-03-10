@@ -6,12 +6,15 @@ import (
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
+	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"cloud.google.com/go/redis/apiv1/redispb"
+	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/genproto/protobuf/field_mask"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"k8s.io/utils/ptr"
 )
 
@@ -64,6 +67,145 @@ func (s *e2eTestSuite) deleteNetwork(networkName string) (gcpclient.VoidOperatio
 	})
 }
 
+func (s *e2eTestSuite) deleteNetworkOK(networkName string) {
+	op, err := s.deleteNetwork(networkName)
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+	require.NoError(s.t, op.Wait(s.ctx))
+
+	_, err = s.mock.GetNetwork(s.ctx, &computepb.GetNetworkRequest{
+		Project: s.mock.ProjectId(),
+		Network: networkName,
+	})
+	require.Error(s.t, err)
+}
+
+// Subnet ==================================================================================
+
+func (s *e2eTestSuite) createSubnet(region, networkName, subnetId, ipCidrRange string) (gcpclient.VoidOperation, error) {
+	return s.mock.InsertSubnet(s.ctx, &computepb.InsertSubnetworkRequest{
+		Project: s.mock.ProjectId(),
+		Region:  region,
+		SubnetworkResource: &computepb.Subnetwork{
+			Name:        ptr.To(subnetId),
+			IpCidrRange: ptr.To(ipCidrRange),
+			Network:     ptr.To(networkName),
+			Region:      ptr.To(region),
+		},
+	})
+}
+
+func (s *e2eTestSuite) createSubnetOK(region, networkName, subnetId, ipCidrRange string) *computepb.Subnetwork {
+	op, err := s.createSubnet(region, networkName, subnetId, ipCidrRange)
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+
+	sub, err := s.mock.GetSubnet(s.ctx, &computepb.GetSubnetworkRequest{
+		Project:    s.mock.ProjectId(),
+		Region:     region,
+		Subnetwork: subnetId,
+	})
+	require.NoError(s.t, err)
+	require.Equal(s.t, computepb.Subnetwork_READY.String(), sub.GetState())
+
+	ndSubnet, err := gcputil.ParseNameDetail(sub.GetSelfLink())
+	require.NoError(s.t, err)
+	require.Equal(s.t, s.mock.ProjectId(), ndSubnet.ProjectId())
+	require.Equal(s.t, region, ndSubnet.LocationRegionId())
+	require.Equal(s.t, subnetId, ndSubnet.ResourceId())
+	require.Equal(s.t, gcputil.ResourceTypeSubnetwork, ndSubnet.ResourceType())
+
+	return sub
+}
+
+func (s *e2eTestSuite) deleteSubnet(region, subnetId string) (gcpclient.VoidOperation, error) {
+	return s.mock.DeleteSubnet(s.ctx, &computepb.DeleteSubnetworkRequest{
+		Project:    s.mock.ProjectId(),
+		Region:     region,
+		Subnetwork: subnetId,
+	})
+}
+
+func (s *e2eTestSuite) deleteSubnetOK(region, subnetId string) {
+	op, err := s.deleteSubnet(region, subnetId)
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+
+	_, err = s.mock.GetSubnet(s.ctx, &computepb.GetSubnetworkRequest{
+		Project:    s.mock.ProjectId(),
+		Region:     region,
+		Subnetwork: subnetId,
+	})
+	require.Error(s.t, err)
+}
+
+// Router ================================================================================
+
+func (s *e2eTestSuite) createRouter(region, networkName, routerId string, subnetNames []string) (gcpclient.VoidOperation, error) {
+	req := &computepb.InsertRouterRequest{
+		Project: s.mock.ProjectId(),
+		Region:  region,
+		RouterResource: &computepb.Router{
+			Name:    ptr.To(routerId),
+			Network: ptr.To(networkName),
+			Region:  ptr.To(region),
+			Nats: []*computepb.RouterNat{
+				{
+					Name:                          ptr.To(routerId),
+					NatIpAllocateOption:           ptr.To(computepb.RouterNat_AUTO_ONLY.String()),
+					SourceSubnetworkIpRangesToNat: ptr.To(computepb.RouterNat_LIST_OF_SUBNETWORKS.String()),
+				},
+			},
+		},
+	}
+	for _, subNameTxt := range subnetNames {
+		ss := &computepb.RouterNatSubnetworkToNat{
+			Name:                ptr.To(subNameTxt),
+			SourceIpRangesToNat: []string{computepb.RouterNat_ALL_SUBNETWORKS_ALL_IP_RANGES.String()},
+		}
+		req.RouterResource.Nats[0].Subnetworks = append(req.RouterResource.Nats[0].Subnetworks, ss)
+	}
+	return s.mock.InsertRouter(s.ctx, req)
+}
+
+func (s *e2eTestSuite) createRouterOK(region, networkName, routerId string, subnetNames []string) *computepb.Router {
+	op, err := s.createRouter(region, networkName, routerId, subnetNames)
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+
+	rt, err := s.mock.GetRouter(s.ctx, &computepb.GetRouterRequest{
+		Project: s.mock.ProjectId(),
+		Region:  region,
+		Router:  routerId,
+	})
+	require.NoError(s.t, err)
+
+	return rt
+}
+
+func (s *e2eTestSuite) deleteRouter(region, routerId string) (gcpclient.VoidOperation, error) {
+	return s.mock.DeleteRouter(s.ctx, &computepb.DeleteRouterRequest{
+		Project: s.mock.ProjectId(),
+		Region:  region,
+		Router:  routerId,
+	})
+}
+
+func (s *e2eTestSuite) deleteRouterOK(region, routerId string) {
+	op, err := s.deleteRouter(region, routerId)
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+
+	_, err = s.mock.GetRouter(s.ctx, &computepb.GetRouterRequest{
+		Project: s.mock.ProjectId(),
+		Region:  region,
+		Router:  routerId,
+	})
+	require.Error(s.t, err)
+}
+
+// PSA IP Range ============================================================================
+
 func (s *e2eTestSuite) createPsaRange(networkSelfLink string, addressName string, addressIp string, prefix int32) (gcpclient.VoidOperation, error) {
 	return s.mock.InsertGlobalAddress(s.ctx, &computepb.InsertGlobalAddressRequest{
 		Project: s.mock.ProjectId(),
@@ -111,6 +253,8 @@ func (s *e2eTestSuite) deleteAddressOK(addressName string) {
 	require.NoError(s.t, op.Wait(s.ctx))
 }
 
+// Filestore =====================================================================================
+
 func (s *e2eTestSuite) createFilestore(parent string, instanceId string, networkSelfLink string, addressSelfLink string, capacityGb int64) (gcpclient.ResultOperation[*filestorepb.Instance], error) {
 	return s.mock.CreateFilestoreInstance(s.ctx, &filestorepb.CreateInstanceRequest{
 		Parent:     parent,
@@ -138,7 +282,6 @@ func (s *e2eTestSuite) createFilestore(parent string, instanceId string, network
 func (s *e2eTestSuite) createFilestoreOK(parent string, instanceId string, networkSelfLink string, addressSelfLink string, capacityGb int64) *filestorepb.Instance {
 	opFS, err := s.createFilestore(parent, instanceId, networkSelfLink, addressSelfLink, capacityGb)
 	require.NoError(s.t, err)
-
 	require.False(s.t, opFS.Done())
 
 	parentName, err := gcputil.ParseNameDetail(parent)
@@ -295,4 +438,143 @@ func (s *e2eTestSuite) deleteRedisInstanceOK(instanceName string) {
 		Name: instanceName,
 	})
 	require.True(s.t, gcpmeta.IsNotFound(err))
+}
+
+// ServiceConnectionPolicy ==========================================================
+
+func (s *e2eTestSuite) createServiceConnectionPolicy(parent, serviceConnectionPolicyId, network string, subnetworks []string) (gcpclient.ResultOperation[*networkconnectivitypb.ServiceConnectionPolicy], error) {
+	return s.mock.CreateServiceConnectionPolicy(s.ctx, &networkconnectivitypb.CreateServiceConnectionPolicyRequest{
+		Parent:                    parent,
+		ServiceConnectionPolicyId: serviceConnectionPolicyId,
+		ServiceConnectionPolicy: &networkconnectivitypb.ServiceConnectionPolicy{
+			Network:      network,
+			ServiceClass: "gcp-memorystore-redis",
+			PscConfig: &networkconnectivitypb.ServiceConnectionPolicy_PscConfig{
+				Subnetworks: subnetworks,
+			},
+		},
+	})
+}
+
+func (s *e2eTestSuite) createServiceConnectionPolicyOK(parent, serviceConnectionPolicyId, network string, subnetworks []string) *networkconnectivitypb.ServiceConnectionPolicy {
+	parentName, err := gcputil.ParseNameDetail(parent)
+	require.NoError(s.t, err)
+	require.Equal(s.t, gcputil.ResourceTypeLocation, parentName.ResourceType())
+
+	scpName := gcputil.NewServiceConnectionPolicyName(parentName.ProjectId(), parentName.LocationRegionId(), serviceConnectionPolicyId)
+
+	op, err := s.createServiceConnectionPolicy(parent, serviceConnectionPolicyId, network, subnetworks)
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+
+	scp, err := op.Wait(s.ctx)
+	require.NoError(s.t, err)
+	scpNetworkName, err := gcputil.ParseNameDetail(scp.Network)
+	require.NoError(s.t, err)
+	require.Equal(s.t, gcputil.ResourceTypeGlobalNetwork, scpNetworkName.ResourceType())
+	require.True(s.t, scpNetworkName.EqualString(network))
+
+	require.Equal(s.t, len(subnetworks), len(scp.PscConfig.Subnetworks))
+	for _, subnetTxt := range scp.PscConfig.Subnetworks {
+		subnetName, err := gcputil.ParseNameDetail(subnetTxt)
+		require.NoError(s.t, err)
+		require.Equal(s.t, gcputil.ResourceTypeSubnetwork, subnetName.ResourceType())
+		match := false
+		for _, s := range subnetworks {
+			if subnetName.EqualString(s) {
+				match = true
+				break
+			}
+		}
+		require.True(s.t, match, "subnet %s not found", subnetTxt)
+	}
+	require.Equal(s.t, subnetworks, scp.PscConfig.Subnetworks)
+
+	scp, err = s.mock.GetServiceConnectionPolicy(s.ctx, &networkconnectivitypb.GetServiceConnectionPolicyRequest{
+		Name: scpName.String(),
+	})
+	require.NoError(s.t, err)
+	scpNetworkName, err = gcputil.ParseNameDetail(scp.Network)
+	require.NoError(s.t, err)
+	require.Equal(s.t, gcputil.ResourceTypeGlobalNetwork, scpNetworkName.ResourceType())
+	require.True(s.t, scpNetworkName.EqualString(network))
+
+	require.Equal(s.t, len(subnetworks), len(scp.PscConfig.Subnetworks))
+
+	return scp
+}
+
+func (s *e2eTestSuite) updateServiceConnectionPolicy(scp *networkconnectivitypb.ServiceConnectionPolicy, updateMask []string) (gcpclient.ResultOperation[*networkconnectivitypb.ServiceConnectionPolicy], error) {
+	return s.mock.UpdateServiceConnectionPolicy(s.ctx, &networkconnectivitypb.UpdateServiceConnectionPolicyRequest{
+		ServiceConnectionPolicy: scp,
+		UpdateMask: &fieldmaskpb.FieldMask{
+			Paths: updateMask,
+		},
+	})
+}
+
+func (s *e2eTestSuite) updateServiceConnectionPolicyOK(scp *networkconnectivitypb.ServiceConnectionPolicy, updateMask []string) *networkconnectivitypb.ServiceConnectionPolicy {
+	op, err := s.updateServiceConnectionPolicy(scp, updateMask)
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+
+	scp, err = op.Wait(s.ctx)
+	require.NoError(s.t, err)
+	require.NotNil(s.t, scp)
+
+	scp, err = s.mock.GetServiceConnectionPolicy(s.ctx, &networkconnectivitypb.GetServiceConnectionPolicyRequest{
+		Name: scp.Name,
+	})
+	require.NoError(s.t, err)
+	require.NotNil(s.t, scp)
+	return scp
+}
+
+func (s *e2eTestSuite) deleteServiceConnectionPolicy(serviceConnectionPolicyName string) (gcpclient.VoidOperation, error) {
+	return s.mock.DeleteServiceConnectionPolicy(s.ctx, &networkconnectivitypb.DeleteServiceConnectionPolicyRequest{
+		Name: serviceConnectionPolicyName,
+	})
+}
+
+func (s *e2eTestSuite) deleteServiceConnectionPolicyOK(serviceConnectionPolicyName string) {
+	op, err := s.deleteServiceConnectionPolicy(serviceConnectionPolicyName)
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+
+	_, err = s.mock.GetServiceConnectionPolicy(s.ctx, &networkconnectivitypb.GetServiceConnectionPolicyRequest{
+		Name: serviceConnectionPolicyName,
+	})
+	require.Error(s.t, err)
+	require.True(s.t, gcpmeta.IsNotFound(err))
+}
+
+// redis cluster ======================================================================
+
+func (s *e2eTestSuite) createRedisCluster(parent, network, clusterId string, replicaCount, shardCount int32, redisConfigs map[string]string) (gcpclient.ResultOperation[*clusterpb.Cluster], error) {
+	return s.mock.CreateRedisCluster(s.ctx, &clusterpb.CreateClusterRequest{
+		Parent:    parent,
+		ClusterId: clusterId,
+		Cluster: &clusterpb.Cluster{
+			ReplicaCount: ptr.To(replicaCount),
+			ShardCount:   ptr.To(shardCount),
+			NodeType:     clusterpb.NodeType_REDIS_STANDARD_SMALL,
+			PscConfigs: []*clusterpb.PscConfig{{
+				Network: network,
+			}},
+			RedisConfigs:              redisConfigs,
+			PersistenceConfig:         &clusterpb.ClusterPersistenceConfig{Mode: clusterpb.ClusterPersistenceConfig_DISABLED},
+			AuthorizationMode:         clusterpb.AuthorizationMode_AUTH_MODE_DISABLED,
+			TransitEncryptionMode:     clusterpb.TransitEncryptionMode_TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION,
+			ZoneDistributionConfig:    &clusterpb.ZoneDistributionConfig{Mode: clusterpb.ZoneDistributionConfig_MULTI_ZONE},
+			DeletionProtectionEnabled: ptr.To(false),
+		},
+	})
+}
+
+func (s *e2eTestSuite) createRedisClusterOK(parent, network, clusterId string, replicaCount, shardCount int32, redisConfigs map[string]string) gcpclient.ResultOperation[*clusterpb.Cluster] {
+	op, err := s.createRedisCluster(parent, network, clusterId, replicaCount, shardCount, redisConfigs)
+	require.NoError(s.t, err)
+	require.False(s.t, op.Done())
+
+	s.mock.ResolveRedisInstanceOperation()
 }

@@ -37,7 +37,7 @@ func TestE2ERedisInstance(t *testing.T) {
 
 		require.Equal(t, gcputil.NewInstanceName(s.mock.ProjectId(), location, "test-instance").String(), ri.GetName())
 		require.Equal(t, "10.251.0.0", ri.Host)
-		require.EqualValues(t, 6379, ri.Port)
+	require.EqualValues(t, 6379, ri.Port)
 
 		// update instance
 

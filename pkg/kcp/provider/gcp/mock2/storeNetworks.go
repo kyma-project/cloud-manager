@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2"
@@ -12,7 +13,6 @@ import (
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"github.com/mitchellh/copystructure"
 	"k8s.io/utils/ptr"
 )
 
@@ -40,11 +40,7 @@ func (s *store) GetNetwork(ctx context.Context, req *computepb.GetNetworkRequest
 	if err != nil {
 		return nil, err
 	}
-	cpy, err := copystructure.Copy(net)
-	if err != nil {
-		return nil, fmt.Errorf("failed to copy network: %w", err)
-	}
-	return cpy.(*computepb.Network), nil
+	return util.Clone(net)
 }
 
 func (s *store) InsertNetwork(ctx context.Context, req *computepb.InsertNetworkRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
@@ -87,6 +83,8 @@ func (s *store) InsertNetwork(ctx context.Context, req *computepb.InsertNetworkR
 
 	compOp := s.createComputeOperationNoLock(req.Project, "", "insert", net.GetSelfLink(), id)
 	compOp.Status = ptr.To(computepb.Operation_DONE)
+	compOp.EndTime = ptr.To(time.Now().Format(time.RFC3339))
+	compOp.Progress = ptr.To(int32(100))
 
 	return newComputeOperation(compOp), nil
 }
@@ -155,6 +153,8 @@ func (s *store) DeleteNetwork(ctx context.Context, req *computepb.DeleteNetworkR
 
 	compOp := s.createComputeOperationNoLock(req.Project, "", "delete", nd.PrefixWithGoogleApisComputeV1(), ptr.Deref(net.Id, 0))
 	compOp.Status = ptr.To(computepb.Operation_DONE)
+	compOp.EndTime = ptr.To(time.Now().Format(time.RFC3339))
+	compOp.Progress = ptr.To(int32(100))
 
 	return newComputeOperation(compOp), nil
 }

@@ -5,7 +5,9 @@ import (
 	"reflect"
 
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
+	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"cloud.google.com/go/redis/apiv1/redispb"
+	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
@@ -93,6 +95,24 @@ func (b *OperationLongRunningBuilder) WithCommonMetadata(targetName gcputil.Name
 
 func (b *OperationLongRunningBuilder) WithRedisInstanceMetadata(targetName gcputil.NameDetail, verb string) error {
 	return b.WithMetadata(&redispb.OperationMetadata{
+		CreateTime: timestamppb.Now(),
+		Target:     targetName.String(),
+		Verb:       verb,
+		ApiVersion: "v1",
+	})
+}
+
+func (b *OperationLongRunningBuilder) WithRedisClusterMetadata(targetName gcputil.NameDetail, verb string) error {
+	return b.WithMetadata(&clusterpb.OperationMetadata{
+		CreateTime: timestamppb.Now(),
+		Target:     targetName.String(),
+		Verb:       verb,
+		ApiVersion: "v1",
+	})
+}
+
+func (b *OperationLongRunningBuilder) WithNetworkConnectivityMetadata(targetName gcputil.NameDetail, verb string) error {
+	return b.WithMetadata(&networkconnectivitypb.OperationMetadata{
 		CreateTime: timestamppb.Now(),
 		Target:     targetName.String(),
 		Verb:       verb,

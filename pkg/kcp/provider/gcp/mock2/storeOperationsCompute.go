@@ -13,7 +13,6 @@ import (
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"github.com/mitchellh/copystructure"
 	"k8s.io/utils/ptr"
 )
 
@@ -64,7 +63,11 @@ func (s *store) GetComputeGlobalOperation(ctx context.Context, req *computepb.Ge
 		return nil, gcpmeta.NewBadRequestError("operation is required")
 	}
 
-	return s.getComputeOperationNoLock(gcputil.NewGlobalOperationName(req.Project, req.Operation))
+	op, err := s.getComputeOperationNoLock(gcputil.NewGlobalOperationName(req.Project, req.Operation))
+	if err != nil {
+		return nil, err
+	}
+	return util.Clone(op)
 }
 
 func (s *store) ListComputeGlobalOperations(ctx context.Context, req *computepb.ListGlobalOperationsRequest, _ ...gax.CallOption) gcpclient.Iterator[*computepb.Operation] {
@@ -107,11 +110,7 @@ func (s *store) GetComputeRegionalOperation(ctx context.Context, req *computepb.
 	if err != nil {
 		return nil, err
 	}
-	cpy, err := copystructure.Copy(op)
-	if err != nil {
-		return nil, fmt.Errorf("failed to copy operation: %w", err)
-	}
-	return cpy.(*computepb.Operation), nil
+	return util.Clone(op)
 }
 
 func (s *store) ListComputeRegionalOperations(ctx context.Context, req *computepb.ListRegionOperationsRequest, _ ...gax.CallOption) gcpclient.Iterator[*computepb.Operation] {

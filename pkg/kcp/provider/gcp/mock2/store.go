@@ -5,6 +5,7 @@ import (
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
+	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"cloud.google.com/go/redis/apiv1/redispb"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -19,6 +20,8 @@ func newStore() Store {
 		subnets:       MustNewFilterableList[*computepb.Subnetwork](),
 		routers:       MustNewFilterableList[*computepb.Router](),
 		addresses:     MustNewFilterableList[*computepb.Address](),
+
+		serviceConnectionPolicies: MustNewFilterableList[*networkconnectivitypb.ServiceConnectionPolicy](),
 
 		longRunningOperations: MustNewFilterableList[*OperationLongRunningBuilder](WithoutFilter),
 
@@ -42,6 +45,8 @@ type store struct {
 	subnets       *FilterableList[*computepb.Subnetwork]
 	routers       *FilterableList[*computepb.Router]
 	addresses     *FilterableList[*computepb.Address]
+
+	serviceConnectionPolicies *FilterableList[*networkconnectivitypb.ServiceConnectionPolicy]
 
 	longRunningOperations *FilterableList[*OperationLongRunningBuilder]
 

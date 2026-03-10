@@ -89,6 +89,10 @@ func MapFilterableList[A any, B any](in *FilterableList[A], objMapping func(A) B
 	return result, nil
 }
 
+func (l *FilterableList[T]) Len() int {
+	return len(l.items)
+}
+
 func (l *FilterableList[T]) Add(obj T, name gcputil.NameDetail) {
 	l.items = append(l.items, FilterableListItem[T]{
 		Obj:  obj,

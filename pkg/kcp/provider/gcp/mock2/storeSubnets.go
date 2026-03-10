@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand/v2"
+	"time"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2"
@@ -31,6 +32,12 @@ func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetwor
 		return nil, ctx.Err()
 	}
 
+	if req.Project == "" {
+		return nil, gcpmeta.NewBadRequestError("project is required")
+	}
+	if req.Region == "" {
+		return nil, gcpmeta.NewBadRequestError("region is required")
+	}
 	if req.SubnetworkResource == nil {
 		return nil, gcpmeta.NewBadRequestError("subnetwork resource is required")
 	}
@@ -42,12 +49,15 @@ func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetwor
 	}
 
 	// network
-	if ptr.Deref(req.SubnetworkResource.Network, "") == "" {
+	if req.SubnetworkResource.GetNetwork() == "" {
 		return nil, gcpmeta.NewBadRequestError("network is required for subnetwork creation")
 	}
-	networkName, err := gcputil.ParseNameDetail(ptr.Deref(req.SubnetworkResource.Network, ""))
+	networkName, err := gcputil.ParseNameDetail(req.SubnetworkResource.GetNetwork())
 	if err != nil {
-		return nil, gcpmeta.NewBadRequestError("invalid network name: %v", err)
+		networkName = gcputil.NewGlobalNetworkName(req.Project, req.SubnetworkResource.GetNetwork())
+	}
+	if networkName.ResourceType() != gcputil.ResourceTypeGlobalNetwork {
+		return nil, gcpmeta.NewBadRequestError("invalid subnet network name type")
 	}
 	net, err := s.getNetworkNoLock(networkName.ProjectId(), networkName.ResourceId())
 	if err != nil {
@@ -79,16 +89,20 @@ func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetwor
 	subnet.Id = ptr.To(id)
 	subnet.Kind = ptr.To("compute#subnetwork")
 	subnet.SelfLink = ptr.To(name.PrefixWithGoogleApisComputeV1())
+	subnet.Region = ptr.To(req.Region)
+	subnet.State = ptr.To(computepb.Subnetwork_READY.String())
 
-	net.Subnetworks = append(net.Subnetworks, ptr.Deref(subnet.SelfLink, ""))
+	net.Subnetworks = append(net.Subnetworks, subnet.GetSelfLink())
 
 	if err := addressSpace.Reserve(subnetRanges...); err != nil {
 		return nil, fmt.Errorf("%w failed to add already verified subnet ranges: %w", common.ErrLogical, err)
 	}
 	s.subnets.Add(subnet, name)
 
-	op := s.createComputeOperationNoLock(req.Project, req.Region, "insert", ptr.Deref(subnet.SelfLink, ""), id)
+	op := s.createComputeOperationNoLock(req.Project, req.Region, "insert", subnet.GetSelfLink(), id)
 	op.Status = ptr.To(computepb.Operation_DONE)
+	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
+	op.Progress = ptr.To(int32(100))
 
 	return newComputeOperation(op), nil
 }
@@ -123,6 +137,40 @@ func (s *store) GetSubnet(ctx context.Context, req *computepb.GetSubnetworkReque
 	return cpy, nil
 }
 
+func (s *store) ListSubnets(ctx context.Context, req *computepb.ListSubnetworksRequest, _ ...gax.CallOption) gcpclient.Iterator[*computepb.Subnetwork] {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return &iteratorMocked[*computepb.Subnetwork]{
+			err: ctx.Err(),
+		}
+	}
+
+	var err error
+
+	list := s.subnets
+	if req.Project != "" {
+		list = list.FilterNotByCallback(func(item FilterableListItem[*computepb.Subnetwork]) bool {
+			return item.Name.ProjectId() == req.Project
+		})
+	}
+	if req.Region != "" {
+		list = list.FilterNotByCallback(func(item FilterableListItem[*computepb.Subnetwork]) bool {
+			return item.Name.LocationRegionId() == req.Region
+		})
+	}
+	if req.Filter != nil {
+		list, err = list.FilterByExpression(req.Filter)
+		if err != nil {
+			return &iteratorMocked[*computepb.Subnetwork]{
+				err: gcpmeta.NewBadRequestError("failed to filter by expression: %w", err),
+			}
+		}
+	}
+
+	return list.ToIterator()
+}
+
 func (s *store) DeleteSubnet(ctx context.Context, req *computepb.DeleteSubnetworkRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -130,27 +178,47 @@ func (s *store) DeleteSubnet(ctx context.Context, req *computepb.DeleteSubnetwor
 		return nil, ctx.Err()
 	}
 
+	subNd := gcputil.NewSubnetworkName(req.Project, req.Region, req.Subnetwork)
+
 	sub, err := s.getSubnetNoLock(req.Project, req.Region, req.Subnetwork)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: check for existing resources using this subnet
-
-	nd := gcputil.NewSubnetworkName(req.Project, req.Region, req.Subnetwork)
-	//ndTxt := nd.String()
-
-	// not sure how to check if there are redis clusters using this subnet, they need a PSC connection and a policy linked to the subnet
-	// TODO: implement the check if subnet is used by PSC connection policy
+	for _, item := range s.routers.items {
+		for _, nats := range item.Obj.Nats {
+			for _, natSub := range nats.Subnetworks {
+				if subNd.EqualString(natSub.GetName()) {
+					return nil, gcpmeta.NewBadRequestError("subnet %s is attached to router %s", subNd.String(), item.Name.String())
+				}
+			}
+		}
+	}
+	for _, item := range s.serviceConnectionPolicies.items {
+		if item.Obj.PscConfig != nil {
+			for _, subTxt := range item.Obj.PscConfig.Subnetworks {
+				scpSubnetName, err := gcputil.ParseNameDetail(subTxt)
+				if err != nil {
+					return nil, fmt.Errorf("%w: SCP %s subnet has invalid name %s: %w", common.ErrLogical, item.Name.String(), subTxt, err)
+				}
+				if scpSubnetName.Equal(subNd) {
+					return nil, gcpmeta.NewBadRequestError("subnet %s is attached to SCP %s", scpSubnetName.String(), item.Name.String())
+				}
+			}
+		}
+	}
+	// add additional checks for other existing resources using this subnet
 
 	// remove the subnet
 
 	s.subnets = s.subnets.FilterNotByCallback(func(item FilterableListItem[*computepb.Subnetwork]) bool {
-		return item.Name.Equal(nd)
+		return item.Name.Equal(subNd)
 	})
 
-	compOp := s.createComputeOperationNoLock(req.Project, req.Region, "delete", nd.PrefixWithGoogleApisComputeV1(), ptr.Deref(sub.Id, 0))
+	compOp := s.createComputeOperationNoLock(req.Project, req.Region, "delete", subNd.PrefixWithGoogleApisComputeV1(), sub.GetId())
 	compOp.Status = ptr.To(computepb.Operation_DONE)
+	compOp.EndTime = ptr.To(time.Now().Format(time.RFC3339))
+	compOp.Progress = ptr.To(int32(100))
 
 	return newComputeOperation(compOp), nil
 }

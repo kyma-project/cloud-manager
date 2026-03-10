@@ -25,13 +25,20 @@ func UpdateMask[T protoadapt.MessageV1](instance T, update T, updateMask *fieldm
 	updateV2 := protoadapt.MessageV2Of(update)
 
 	// Marshal both to JSON as unstructured maps
-	marshaler := protojson.MarshalOptions{EmitUnpopulated: false}
+	marshaler := protojson.MarshalOptions{EmitUnpopulated: false, UseProtoNames: true}
 
 	instanceBytes, err := marshaler.Marshal(instanceV2)
 	if err != nil {
 		return fmt.Errorf("failed to marshal instance to JSON: %w", err)
 	}
 
+	//fmt.Println(updateV2.ProtoReflect().Descriptor().FullName())
+	//ff := updateV2.ProtoReflect().Descriptor().Fields()
+	//for i := 0; i < ff.Len(); i++ {
+	//	field := ff.Get(i)
+	//	fmt.Printf("%s %s\n", field.Name(), field.JSONName())
+	//}
+	//
 	updateBytes, err := marshaler.Marshal(updateV2)
 	if err != nil {
 		return fmt.Errorf("failed to marshal update to JSON: %w", err)

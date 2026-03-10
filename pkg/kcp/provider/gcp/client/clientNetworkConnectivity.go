@@ -13,6 +13,7 @@ type NetworkConnectivityClient interface {
 	CreateServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.CreateServiceConnectionPolicyRequest, opts ...gax.CallOption) (ResultOperation[*networkconnectivitypb.ServiceConnectionPolicy], error)
 	UpdateServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.UpdateServiceConnectionPolicyRequest, opts ...gax.CallOption) (ResultOperation[*networkconnectivitypb.ServiceConnectionPolicy], error)
 	GetServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.GetServiceConnectionPolicyRequest, opts ...gax.CallOption) (*networkconnectivitypb.ServiceConnectionPolicy, error)
+	ListServiceConnectionPolicies(ctx context.Context, req *networkconnectivitypb.ListServiceConnectionPoliciesRequest, opts ...gax.CallOption) Iterator[*networkconnectivitypb.ServiceConnectionPolicy]
 	DeleteServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.DeleteServiceConnectionPolicyRequest, opts ...gax.CallOption) (VoidOperation, error)
 
 	GetNetworkConnectivityOperation(ctx context.Context, req *longrunningpb.GetOperationRequest, opts ...gax.CallOption) (*longrunningpb.Operation, error)
@@ -35,6 +36,10 @@ func (c *networkConnectivityClient) UpdateServiceConnectionPolicy(ctx context.Co
 
 func (c *networkConnectivityClient) GetServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.GetServiceConnectionPolicyRequest, opts ...gax.CallOption) (*networkconnectivitypb.ServiceConnectionPolicy, error) {
 	return c.inner.GetServiceConnectionPolicy(ctx, req, opts...)
+}
+
+func (c *networkConnectivityClient) ListServiceConnectionPolicies(ctx context.Context, req *networkconnectivitypb.ListServiceConnectionPoliciesRequest, opts ...gax.CallOption) Iterator[*networkconnectivitypb.ServiceConnectionPolicy] {
+	return c.inner.ListServiceConnectionPolicies(ctx, req, opts...)
 }
 
 func (c *networkConnectivityClient) DeleteServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.DeleteServiceConnectionPolicyRequest, opts ...gax.CallOption) (VoidOperation, error) {

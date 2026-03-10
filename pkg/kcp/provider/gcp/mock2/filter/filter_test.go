@@ -39,6 +39,15 @@ func TestFilter(t *testing.T) {
 			{`name eq non-existing-network`, false, ""},
 			{`invalid filter`, false, "Syntax error"},
 
+			// partial string match
+			{ `name:"test"`, true, ""},
+			{ `name:"network"`, true, ""},
+			{ `name:"foobarbaz"`, false, ""},
+
+			// list contains
+			{ `subnetworks:("test-subnetwork-1")`, true, ""},
+			{ `subnetworks:("foobarbaz")`, false, ""},
+
 			// AIP-160 explicit AND - match
 			{`name = "test-network" AND self_link = "https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-network"`, true, ""},
 			// AIP-160 explicit AND - miss
@@ -123,4 +132,56 @@ func TestFilter(t *testing.T) {
 		}
 
 	})
+
+	t.Run("computepb.Address", func(t *testing.T) {
+		// (purpose=NAT_AUTO)(users:(routers/shoot--kyma-dev--c-82be022-cloud-router))
+		fe, err := NewFilterEngine[*computepb.Address]()
+		assert.NoError(t, err)
+
+		obj := &computepb.Address{
+			Address:      ptr.To("10.250.0.0"),
+			PrefixLength: ptr.To(int32(16)),
+			Id:           ptr.To(uint64(1358567327454931553)),
+			Kind:         ptr.To("compute#address"),
+			Name:         ptr.To("test-address"),
+			Region:       ptr.To("https://www.googleapis.com/compute/v1/projects/my-project/regions/europe-west3"),
+			SelfLink:     ptr.To("https://www.googleapis.com/compute/v1/projects/my-project/regions/europe-west3/addresses/test-address"),
+			Status:       ptr.To("IN_USE"),
+			Purpose:      ptr.To("NAT_AUTO"),
+			NetworkTier:  ptr.To("PREMIUM"),
+			Users: []string{
+				"https://www.googleapis.com/compute/v1/projects/my-project/regions/europe-west3/routers/my-router",
+			},
+		}
+
+		testCases := []struct {
+			filter string
+			match  bool
+		}{
+			{`purpose="NAT_AUTO"`, true},
+			{`purpose="FOO"`, false},
+
+			{`(purpose="NAT_AUTO")(name="test-address")`, true},
+			{`(purpose="NAT_AUTO")(name="foo")`, false},
+
+			{`users:(routers/my-router)`, true},
+			{`(users:(routers/my-router))`, true},
+			{`users:routers/my-router`, true},
+			{`(users:(routers/foo))`, false},
+
+			{`(users:(routers/my-router))(purpose="NAT_AUTO")(name="test-address")`, true},
+			{`(users:(routers/foo))(purpose="NAT_AUTO")(name="test-address")`, false},
+			{`(users:(routers/my-router))(purpose="FOO")(name="test-address")`, false},
+			{`(users:(routers/my-router))(purpose="NAT_AUTO")(name="foo")`, false},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.filter, func(t *testing.T) {
+				ok, err := fe.Match(tc.filter, obj)
+				assert.NoError(t, err)
+				assert.Equal(t, tc.match, ok)
+			})
+		}
+	})
+
 }

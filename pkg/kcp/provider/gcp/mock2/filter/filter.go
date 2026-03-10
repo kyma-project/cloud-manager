@@ -82,6 +82,7 @@ func NewFilterEngine[T any]() (*FilterEngine[T], error) {
 		opts = []cel.EnvOption{
 			cel.Types(msg),
 			ext.Strings(),
+			ext.Sets(),
 			cel.DeclareContextProto(md),
 		}
 		ap = func(obj T) (interpreter.Activation, error) {
@@ -96,7 +97,10 @@ func NewFilterEngine[T any]() (*FilterEngine[T], error) {
 		if err != nil {
 			return nil, err
 		}
-		opts = append([]cel.EnvOption{ext.Strings()}, o...)
+		opts = append([]cel.EnvOption{
+			ext.Strings(),
+			ext.Sets(),
+		}, o...)
 		ap = func(obj T) (interpreter.Activation, error) {
 			return &anyActivation{
 				obj:         obj,
@@ -228,9 +232,21 @@ func translateAIP160(s string) string {
 	s = strings.ReplaceAll(s, " = ", " == ")
 	s = strings.ReplaceAll(s, " != ", " != ")
 
+	// field=value → field == value
+	re := regexp.MustCompile(`\)\s*\(`)
+	s = re.ReplaceAllString(s, ") && (")
+
 	// labels.owner:*  →  has(labels["owner"])
-	re := regexp.MustCompile(`labels\.([a-zA-Z0-9_-]+):\*`)
+	re = regexp.MustCompile(`labels\.([a-zA-Z0-9_-]+):\*`)
 	s = re.ReplaceAllString(s, `has(labels["$1"])`)
+
+	// network:"something" → network.contains("something")
+	re = regexp.MustCompile(`([a-zA-Z0-9_-]+):("[/a-zA-Z0-9_-]+")`)
+	s = re.ReplaceAllString(s, `$1.contains($2)`)
+
+	// users:(something)  →  users.exists(x, x.contains("something"))
+	re = regexp.MustCompile(`([a-zA-Z0-9_-]+):\(?([/a-zA-Z0-9_-]+)\)?`)
+	s = re.ReplaceAllString(s, `$1.exists(x, x.contains("$2"))`)
 
 	return s
 }

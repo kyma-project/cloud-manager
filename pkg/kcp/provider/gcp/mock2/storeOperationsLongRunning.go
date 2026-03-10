@@ -14,6 +14,27 @@ func (s *store) newLongRunningOperationName(projectId string) gcputil.NameDetail
 	return gcputil.NewOperationName(projectId, fmt.Sprintf("operation-%s", uuid.NewString()))
 }
 
+// OperationOptionCall & WithOperation*Error
+// for operation resolution that doesn't mutate target
+// otherwise, if resolution has to mutate target use/make custom type func that receive that target as well
+// like RedisInstanceOperationOptionCall, FilestoreOperationOptionCall...
+
+type OperationOptionCall func(opBuilder *OperationLongRunningBuilder) error
+
+func WithOperationSimpleError(code int32, message string) OperationOptionCall {
+	return func(opBuilder *OperationLongRunningBuilder) error {
+		opBuilder.WithSimpleError(code, message)
+		return nil
+	}
+}
+
+func WithOperationError(err *longrunningpb.Operation_Error) OperationOptionCall {
+	return func(opBuilder *OperationLongRunningBuilder) error {
+		opBuilder.WithOperationError(err)
+		return nil
+	}
+}
+
 // base generic get&list methods =====================================================
 
 func (s *store) getLongRunningOperationNoLock(name string) (*longrunningpb.Operation, error) {

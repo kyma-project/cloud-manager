@@ -88,7 +88,7 @@ func (s *store) CreateRedisInstance(ctx context.Context, req *redispb.CreateInst
 		return nil, gcpmeta.NewBadRequestError("instanceId is required")
 	}
 	riName := gcputil.NewInstanceName(parentName.ProjectId(), parentName.LocationRegionId(), req.InstanceId)
-	_, err = s.getFilestoreNoLock(riName.String())
+	_, err = s.getRedisInstanceNoLock(riName.String())
 	if err == nil {
 		return nil, gcpmeta.NewBadRequestError("redisInstance %s already exists", riName.String())
 	}
@@ -173,11 +173,7 @@ func (s *store) GetRedisInstance(ctx context.Context, req *redispb.GetInstanceRe
 	if err != nil {
 		return nil, err
 	}
-	cpy, err := util.Clone(ri)
-	if err != nil {
-		return nil, fmt.Errorf("failed to copy redisInstance: %w", err)
-	}
-	return cpy, nil
+	return util.Clone(ri)
 }
 
 func (s *store) UpdateRedisInstance(ctx context.Context, req *redispb.UpdateInstanceRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*redispb.Instance], error) {

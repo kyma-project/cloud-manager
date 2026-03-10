@@ -64,11 +64,7 @@ func (s *store) GetFilestoreInstance(ctx context.Context, req *filestorepb.GetIn
 	if err != nil {
 		return nil, err
 	}
-	cpy, err := util.Clone(fs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to copy filestore: %w", err)
-	}
-	return cpy, nil
+	return util.Clone(fs)
 }
 
 func (s *store) CreateFilestoreInstance(ctx context.Context, req *filestorepb.CreateInstanceRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*filestorepb.Instance], error) {
