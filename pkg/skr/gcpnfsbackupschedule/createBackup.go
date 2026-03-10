@@ -19,13 +19,16 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	schedule := state.ObjAsBackupSchedule()
 	logger := composed.LoggerFromCtx(ctx)
 
-	// If the creation for the nextRunTime is already done, return
+	if state.Source == nil {
+		logger.Error(fmt.Errorf("source not loaded"), "Source is nil")
+		return composed.StopWithRequeue, nil
+	}
+
 	if state.createRunDone {
 		logger.Info(fmt.Sprintf("Creation already completed for %s ", state.nextRunTime))
 		return nil, nil
 	}
 
-	// Check next run time. If it is not time to run, return
 	if state.Scheduler.GetRemainingTime(state.nextRunTime) > 0 {
 		return nil, nil
 	}
@@ -55,8 +58,8 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 			Location: gcpSchedule.Spec.Location,
 			Source: cloudresourcesv1beta1.GcpNfsVolumeBackupSource{
 				Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
-					Name:      schedule.GetSourceRef().Name,
-					Namespace: schedule.GetSourceRef().Namespace,
+					Name:      state.Source.Name,
+					Namespace: state.Source.Namespace,
 				},
 			},
 			AccessibleFrom: gcpSchedule.Spec.AccessibleFrom,
@@ -86,7 +89,6 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	// Update the status of the schedule with the latest backup details
 	schedule.SetState(cloudresourcesv1beta1.JobStateActive)
 	schedule.SetBackupIndex(index)
 	schedule.SetBackupCount(len(state.Backups) + 1)

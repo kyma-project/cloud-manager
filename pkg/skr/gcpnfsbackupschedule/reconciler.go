@@ -71,7 +71,7 @@ func (r *Reconciler) newAction() composed.Action {
 				loadSource,
 				createBackup,
 				deleteBackups,
-				updateStatus,
+				setStatusToActive,
 			),
 			// Delete path
 			composed.ComposeActions(

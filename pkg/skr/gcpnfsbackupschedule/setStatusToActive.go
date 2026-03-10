@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
-func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
+func setStatusToActive(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	schedule := state.ObjAsBackupSchedule()
 
