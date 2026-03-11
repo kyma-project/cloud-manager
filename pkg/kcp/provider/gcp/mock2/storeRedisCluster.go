@@ -117,7 +117,7 @@ func (s *store) CreateRedisCluster(ctx context.Context, req *clusterpb.CreateClu
 	if req.ClusterId == "" {
 		return nil, gcpmeta.NewBadRequestError("clusterId is required")
 	}
-	rcName := gcputil.NewInstanceName(parentName.ProjectId(), parentName.LocationRegionId(), req.ClusterId)
+	rcName := gcputil.NewClusterName(parentName.ProjectId(), parentName.LocationRegionId(), req.ClusterId)
 	_, err = s.getRedisClusterNoLock(rcName.String())
 	if err == nil {
 		return nil, gcpmeta.NewBadRequestError("redisCluster %s already exists", rcName.String())
@@ -163,7 +163,7 @@ func (s *store) CreateRedisCluster(ctx context.Context, req *clusterpb.CreateClu
 				subnetItem.Name.String(),
 			)))
 			if err != nil {
-				return nil, gcpmeta.NewBadRequestError("%v: failed filtering scp using subnetwork: %v", err)
+				return nil, gcpmeta.NewBadRequestError("%v: failed filtering scp using subnetwork: %v", common.ErrLogical, err)
 			}
 			if scpList.Len() > 0 {
 				// simplified, taking first ip of the subnet cidr range

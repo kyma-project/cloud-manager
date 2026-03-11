@@ -93,7 +93,11 @@ func (s *store) GetFilestoreOperation(ctx context.Context, req *longrunningpb.Ge
 		return nil, ctx.Err()
 	}
 
-	return s.getLongRunningOperationNoLock(req.Name)
+	op, err := s.getLongRunningOperationNoLock(req.Name)
+	if err != nil {
+		return nil, err
+	}
+	return util.Clone(op)
 }
 
 func (s *store) ListFilestoreOperations(ctx context.Context, req *longrunningpb.ListOperationsRequest, _ ...gax.CallOption) gcpclient.Iterator[*longrunningpb.Operation] {

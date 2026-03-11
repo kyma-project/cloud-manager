@@ -6,12 +6,14 @@ import (
 	"slices"
 
 	"cloud.google.com/go/redis/apiv1/redispb"
+	"github.com/elliotchance/pie/v2"
 	"github.com/googleapis/gax-go/v2"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"google.golang.org/api/servicenetworking/v1"
 )
 
 /*
@@ -136,6 +138,17 @@ func (s *store) CreateRedisInstance(ctx context.Context, req *redispb.CreateInst
 	}
 	if addr.GetPurpose() != "VPC_PEERING" {
 		return nil, gcpmeta.NewBadRequestError("only address range of purpose VPC_PEERING can be used, but got %q", addr.GetPurpose())
+	}
+
+	serviceConnections := s.serviceConnections.
+		FilterByCallback(func(item FilterableListItem[*servicenetworking.Connection]) bool {
+			return netName.EqualString(item.Obj.Network)
+		}).
+		FilterByCallback(func(item FilterableListItem[*servicenetworking.Connection]) bool {
+			return pie.Contains(item.Obj.ReservedPeeringRanges, addr.GetSelfLink())
+		})
+	if serviceConnections.Len() == 0 {
+		return nil, gcpmeta.NewNotFoundError("service connection in network %s linked to address %s not found", netName.String(), addr.GetSelfLink())
 	}
 
 	// create redis instance

@@ -232,7 +232,7 @@ func translateAIP160(s string) string {
 	s = strings.ReplaceAll(s, " = ", " == ")
 	s = strings.ReplaceAll(s, " != ", " != ")
 
-	// field=value → field == value
+	// )(  →  ) && (
 	re := regexp.MustCompile(`\)\s*\(`)
 	s = re.ReplaceAllString(s, ") && (")
 
@@ -240,12 +240,21 @@ func translateAIP160(s string) string {
 	re = regexp.MustCompile(`labels\.([a-zA-Z0-9_-]+):\*`)
 	s = re.ReplaceAllString(s, `has(labels["$1"])`)
 
-	// network:"something" → network.contains("something")
-	re = regexp.MustCompile(`([a-zA-Z0-9_-]+):("[/a-zA-Z0-9_-]+")`)
-	s = re.ReplaceAllString(s, `$1.contains($2)`)
+	// field:("quoted-value")  →  field.exists(x, x.contains("quoted-value"))
+	// Must come before the unquoted exists rule.
+	re = regexp.MustCompile(`([a-zA-Z0-9_-]+):\("([^"]+)"\)`)
+	s = re.ReplaceAllString(s, `$1.exists(x, x.contains("$2"))`)
 
-	// users:(something)  →  users.exists(x, x.contains("something"))
-	re = regexp.MustCompile(`([a-zA-Z0-9_-]+):\(?([/a-zA-Z0-9_-]+)\)?`)
+	// field:"value"  →  field.contains("value")
+	// Only matches when the field:  token is not already inside a quoted string,
+	// i.e. the field name appears at a word boundary before the colon.
+	re = regexp.MustCompile(`\b([a-zA-Z0-9_-]+):"([^"]+)"`)
+	s = re.ReplaceAllString(s, `$1.contains("$2")`)
+
+	// field:(unquoted/value)  or  field:unquoted/value  →  field.exists(x, x.contains("value"))
+	// Restricted to tokens not inside double-quoted strings by anchoring on a word boundary
+	// and excluding characters that appear inside string literals (", space, =).
+	re = regexp.MustCompile(`\b([a-zA-Z0-9_-]+):\(?([/a-zA-Z0-9_.-]+)\)?`)
 	s = re.ReplaceAllString(s, `$1.exists(x, x.contains("$2"))`)
 
 	return s

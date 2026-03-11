@@ -106,7 +106,11 @@ func (s *store) GetRedisClusterOperation(ctx context.Context, req *longrunningpb
 		return nil, ctx.Err()
 	}
 
-	return s.getLongRunningOperationNoLock(req.Name)
+	op, err := s.getLongRunningOperationNoLock(req.Name)
+	if err != nil {
+		return nil, err
+	}
+	return util.Clone(op)
 }
 
 func (s *store) ListRedisClusterOperations(ctx context.Context, req *longrunningpb.ListOperationsRequest, _ ...gax.CallOption) gcpclient.Iterator[*longrunningpb.Operation] {

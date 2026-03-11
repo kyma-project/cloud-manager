@@ -104,7 +104,7 @@ func (s *store) DeleteGlobalAddress(ctx context.Context, req *computepb.DeleteGl
 
 	// release the range from address space
 
-	if err := addressSpace.Release(addr.GetAddress()); err != nil {
+	if err := addressSpace.Release(fmt.Sprintf("%s/%d", addr.GetAddress(), addr.GetPrefixLength())); err != nil {
 		return nil, gcpmeta.NewInternalServerError("%v failed to release address space: %v", common.ErrLogical, err)
 	}
 

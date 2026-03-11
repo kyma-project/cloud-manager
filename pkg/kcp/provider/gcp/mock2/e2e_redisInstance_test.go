@@ -8,6 +8,7 @@ import (
 
 	"cloud.google.com/go/redis/apiv1/redispb"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,6 +29,7 @@ func TestE2ERedisInstance(t *testing.T) {
 		// create PSA range
 
 		addr := s.createPsaRangeOK(net.GetSelfLink(), "test-address", "10.251.0.0", 16)
+		_ = s.createPsaConnectionOK(net.GetSelfLink(), addr.GetSelfLink())
 
 		// crete instance
 
@@ -35,9 +37,13 @@ func TestE2ERedisInstance(t *testing.T) {
 
 		// assert create fs instance properties
 
+		riName, err := gcputil.ParseNameDetail(ri.Name)
+		assert.NoError(s.t, err)
+		assert.Equal(t, gcputil.ResourceTypeInstance, riName.ResourceType())
+
 		require.Equal(t, gcputil.NewInstanceName(s.mock.ProjectId(), location, "test-instance").String(), ri.GetName())
 		require.Equal(t, "10.251.0.0", ri.Host)
-	require.EqualValues(t, 6379, ri.Port)
+		require.EqualValues(t, 6379, ri.Port)
 
 		// update instance
 
@@ -55,6 +61,8 @@ func TestE2ERedisInstance(t *testing.T) {
 		// delete fs instance
 
 		s.deleteRedisInstanceOK(ri.Name)
+		s.deleteAddressOK(addr.GetName())
+		s.deleteNetworkOK(net.GetName())
 	})
 
 	t.Run("PSA address range can not be deleted if used by redisInstance", func(t *testing.T) {
@@ -64,6 +72,7 @@ func TestE2ERedisInstance(t *testing.T) {
 		s := newE2ETestSuite(ctx, t)
 		net := s.createNetworkOK("test-net")
 		addr := s.createPsaRangeOK(net.GetSelfLink(), "test-address", "10.251.0.0", 16)
+		_ = s.createPsaConnectionOK(net.GetSelfLink(), addr.GetSelfLink())
 		_ = s.createRedisInstanceOK(gcputil.NewLocationName(s.mock.ProjectId(), "us-east1").String(), "test-instance", net.GetSelfLink(), addr.GetSelfLink(), 1)
 
 		opVoid, err := s.deleteAddress(addr.GetName())

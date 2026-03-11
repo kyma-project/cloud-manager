@@ -16,6 +16,30 @@ import (
 	"k8s.io/utils/ptr"
 )
 
+/*
+allowSubnetCidrRoutesOverlap: false
+creationTimestamp: '2019-07-16T01:28:03.808-07:00'
+enableFlowLogs: true
+fingerprint: Z1234gLxMMQ=
+gatewayAddress: 10.128.0.1
+id: '812349123460231412'
+ipCidrRange: 10.128.0.0/20
+kind: compute#subnetwork
+logConfig:
+  aggregationInterval: INTERVAL_5_SEC
+  enable: true
+  flowSampling: 0.5
+  metadata: INCLUDE_ALL_METADATA
+name: my-subnet
+network: https://www.googleapis.com/compute/v1/projects/my-network/global/networks/my-subnet
+privateIpGoogleAccess: true
+privateIpv6GoogleAccess: DISABLE_GOOGLE_ACCESS
+purpose: PRIVATE
+region: https://www.googleapis.com/compute/v1/projects/my-network/regions/us-central1
+selfLink: https://www.googleapis.com/compute/v1/projects/my-network/regions/us-central1/subnetworks/my-subnet
+stackType: IPV4_ONLY
+ */
+
 func (s *store) getSubnetNoLock(project, region, subnet string) (*computepb.Subnetwork, error) {
 	nd := gcputil.NewSubnetworkName(project, region, subnet)
 	result, found := s.subnets.FindByName(nd)
@@ -91,6 +115,7 @@ func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetwor
 	subnet.SelfLink = ptr.To(name.PrefixWithGoogleApisComputeV1())
 	subnet.Region = ptr.To(req.Region)
 	subnet.State = ptr.To(computepb.Subnetwork_READY.String())
+	subnet.Network = ptr.To(networkName.PrefixWithGoogleApisComputeV1())
 
 	net.Subnetworks = append(net.Subnetworks, subnet.GetSelfLink())
 
@@ -163,7 +188,7 @@ func (s *store) ListSubnets(ctx context.Context, req *computepb.ListSubnetworksR
 		list, err = list.FilterByExpression(req.Filter)
 		if err != nil {
 			return &iteratorMocked[*computepb.Subnetwork]{
-				err: gcpmeta.NewBadRequestError("failed to filter by expression: %w", err),
+				err: gcpmeta.NewBadRequestError("failed to filter by expression: %v", err),
 			}
 		}
 	}

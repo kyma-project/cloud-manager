@@ -5,12 +5,15 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
+	"github.com/elliotchance/pie/v2"
 	"github.com/googleapis/gax-go/v2"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"google.golang.org/api/servicenetworking/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 /*
@@ -113,6 +116,7 @@ func (s *store) CreateFilestoreInstance(ctx context.Context, req *filestorepb.Cr
 	if req.Instance.Networks[0].ReservedIpRange == "" {
 		return nil, gcpmeta.NewBadRequestError("reserved ip range is required")
 	}
+
 	addrName, err := gcputil.ParseNameDetail(req.Instance.Networks[0].ReservedIpRange)
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("invalid reserved ip range: %v", err)
@@ -127,6 +131,19 @@ func (s *store) CreateFilestoreInstance(ctx context.Context, req *filestorepb.Cr
 	if addr.GetPurpose() != "VPC_PEERING" {
 		return nil, gcpmeta.NewBadRequestError("only address range of purpose VPC_PEERING can be used, but got %q", addr.GetPurpose())
 	}
+
+	serviceConnections := s.serviceConnections.
+		FilterByCallback(func(item FilterableListItem[*servicenetworking.Connection]) bool {
+			return netName.EqualString(item.Obj.Network)
+		}).
+		FilterByCallback(func(item FilterableListItem[*servicenetworking.Connection]) bool {
+			return pie.Contains(item.Obj.ReservedPeeringRanges, addr.GetSelfLink())
+		})
+	if serviceConnections.Len() == 0 {
+		return nil, gcpmeta.NewNotFoundError("service connection in network %s linked to address %s not found", netName.String(), addr.GetSelfLink())
+	}
+
+	// validate file shares
 
 	if len(req.Instance.FileShares) != 1 {
 		return nil, gcpmeta.NewBadRequestError("only one file share specification is required")
@@ -239,22 +256,201 @@ func (s *store) DeleteFilestoreInstance(ctx context.Context, req *filestorepb.De
 
 // Backup =====================================================================================
 
+func (s *store) getFilestoreBackupNoLock(backupName string) (*filestorepb.Backup, error) {
+	nd, err := gcputil.ParseNameDetail(backupName)
+	if err != nil {
+		return nil, gcpmeta.NewBadRequestError("invalid file store backup name: %v", err)
+	}
+	b, found := s.backups.FindByName(nd)
+	if !found {
+		return nil, gcpmeta.NewNotFoundError("file store backup %s not found", nd.String())
+	}
+	return b, nil
+}
+
 func (s *store) UpdateFilestoreBackup(ctx context.Context, req *filestorepb.UpdateBackupRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*filestorepb.Backup], error) {
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return nil, ctx.Err()
+	}
+
+	if req.Backup == nil {
+		return nil, gcpmeta.NewBadRequestError("backup is required")
+	}
+	if req.UpdateMask == nil || len(req.UpdateMask.Paths) == 0 {
+		return nil, gcpmeta.NewBadRequestError("update mask is required")
+	}
+
+	backupNd, err := gcputil.ParseNameDetail(req.Backup.Name)
+	if err != nil {
+		return nil, gcpmeta.NewBadRequestError("invalid file store backup backup name: %v", err)
+	}
+	backup, found := s.backups.FindByName(backupNd)
+	if !found {
+		return nil, gcpmeta.NewNotFoundError("backup %s not found", req.Backup.Name)
+	}
+
+	err = UpdateMask(backup, req.Backup, req.UpdateMask)
+	if err != nil {
+		return nil, gcpmeta.NewInternalServerError("filestore %s update failed: %v", req.Backup.Name, err)
+	}
+
+	opName := s.newLongRunningOperationName(backupNd.ProjectId())
+	b := NewOperationLongRunningBuilder(opName.String(), backupNd)
+	if err := b.WithCommonMetadata(backupNd, "update"); err != nil {
+		return nil, fmt.Errorf("%w: failed setting update filestore backup operation metadata: %w", common.ErrLogical, err)
+	}
+	b.WithDone(true)
+
+	s.longRunningOperations.Add(b, opName)
+
+	return NewResultOperation[*filestorepb.Backup](b.GetOperationPB()), nil
 }
 
 func (s *store) GetFilestoreBackup(ctx context.Context, req *filestorepb.GetBackupRequest, _ ...gax.CallOption) (*filestorepb.Backup, error) {
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return nil, ctx.Err()
+	}
+
+	b, err := s.getFilestoreBackupNoLock(req.Name)
+	if err != nil {
+		return nil, err
+	}
+	return util.Clone(b)
 }
 
 func (s *store) ListFilestoreBackups(ctx context.Context, req *filestorepb.ListBackupsRequest, _ ...gax.CallOption) gcpclient.Iterator[*filestorepb.Backup] {
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return &iteratorMocked[*filestorepb.Backup]{
+			err: ctx.Err(),
+		}
+	}
+
+	var err error
+
+	list := s.backups
+	if req.Parent != "" {
+		parentNd, err := gcputil.ParseNameDetail(req.Parent)
+		if err != nil {
+			return &iteratorMocked[*filestorepb.Backup]{
+				err: gcpmeta.NewBadRequestError("invalid file store backup parent name: %v", err),
+			}
+		}
+		list = list.FilterByCallback(func(item FilterableListItem[*filestorepb.Backup]) bool {
+			return item.Name.ProjectId() == parentNd.ProjectId() && item.Name.LocationRegionId() == parentNd.LocationRegionId()
+		})
+	}
+	if req.Filter != "" {
+		list, err = list.FilterByExpression(&req.Filter)
+		if err != nil {
+			return &iteratorMocked[*filestorepb.Backup]{
+				err: gcpmeta.NewBadRequestError("invalid file store backup filter: %v", err),
+			}
+		}
+	}
+
+	return list.ToIterator()
 }
 
 func (s *store) CreateFilestoreBackup(ctx context.Context, req *filestorepb.CreateBackupRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*filestorepb.Backup], error) {
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return nil, ctx.Err()
+	}
+
+	parentNd, err := gcputil.ParseNameDetail(req.Parent)
+	if err != nil {
+		return nil, gcpmeta.NewBadRequestError("invalid file store backup parent name: %v", err)
+	}
+	if parentNd.ResourceType() != gcputil.ResourceTypeLocation && parentNd.ResourceType() != gcputil.ResourceTypeRegion {
+		return nil, gcpmeta.NewBadRequestError("invalid file store backup parent name type %s, expected location or region", parentNd.ResourceType())
+	}
+
+	if req.BackupId == "" {
+		return nil, gcpmeta.NewBadRequestError("backup id is required")
+	}
+
+	backupNd := gcputil.NewBackupName(parentNd.ProjectId(), parentNd.LocationRegionId(), req.BackupId)
+
+	_, found := s.backups.FindByName(backupNd)
+	if found {
+		return nil, gcpmeta.NewBadRequestError("backup %s already exists", backupNd.String())
+	}
+
+	// validate source filestore instance & its file share
+
+	if req.Backup.SourceInstance == "" {
+		return nil, gcpmeta.NewBadRequestError("backup source instance is required")
+	}
+	fs, err := s.getFilestoreNoLock(req.Backup.SourceInstance)
+	if err != nil {
+		return nil, gcpmeta.NewBadRequestError("invalid file store backup source instance: %v", err)
+	}
+	if len(fs.FileShares) != 1 {
+		return nil, gcpmeta.NewBadRequestError("%v: expected 1 file share but found %d", common.ErrLogical, len(fs.FileShares))
+	}
+	if fs.FileShares[0].Name != req.Backup.SourceFileShare {
+		return nil, gcpmeta.NewBadRequestError("invalid file store backup source file share %s", req.Backup.SourceFileShare)
+	}
+
+	backup, err := util.Clone(req.Backup)
+	if err != nil {
+		return nil, gcpmeta.NewBadRequestError("%v: failed to clone backup: %v", common.ErrLogical, err)
+	}
+
+	backup.Name = backupNd.String()
+	backup.State = filestorepb.Backup_CREATING
+	backup.CreateTime = timestamppb.Now()
+	backup.CapacityGb = fs.FileShares[0].CapacityGb
+	backup.StorageBytes = backup.CapacityGb * 1024 * 1024 / 10
+	backup.SourceInstanceTier = fs.Tier
+	backup.DownloadBytes = backup.StorageBytes
+	backup.FileSystemProtocol = fs.Protocol
+
+	s.backups.Add(backup, backupNd)
+
+	opName := s.newLongRunningOperationName(backupNd.ProjectId())
+	b := NewOperationLongRunningBuilder(opName.String(), backupNd)
+	if err := b.WithCommonMetadata(backupNd, "create"); err != nil {
+		return nil, fmt.Errorf("%w: failed setting create filestore backup operation metadata: %w", common.ErrLogical, err)
+	}
+
+	s.longRunningOperations.Add(b, opName)
+
+	return NewResultOperation[*filestorepb.Backup](b.GetOperationPB()), nil
 }
 
 func (s *store) DeleteFilestoreBackup(ctx context.Context, req *filestorepb.DeleteBackupRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
-	panic("implement me")
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return nil, ctx.Err()
+	}
+
+	backupNd, err := gcputil.ParseNameDetail(req.Name)
+	if err != nil {
+		return nil, gcpmeta.NewBadRequestError("invalid file store backup backup name: %v", err)
+	}
+	backup, found := s.backups.FindByName(backupNd)
+	if !found {
+		return nil, gcpmeta.NewNotFoundError("backup %s not found", req.Name)
+	}
+
+	backup.State = filestorepb.Backup_DELETING
+
+	opName := s.newLongRunningOperationName(backupNd.ProjectId())
+	b := NewOperationLongRunningBuilder(opName.String(), backupNd)
+	if err := b.WithCommonMetadata(backupNd, "delete"); err != nil {
+		return nil, fmt.Errorf("%w: failed setting delete filestore backup operation metadata: %w", common.ErrLogical, err)
+	}
+
+	s.longRunningOperations.Add(b, opName)
+
+	return b.BuildVoidOperation(), nil
 }

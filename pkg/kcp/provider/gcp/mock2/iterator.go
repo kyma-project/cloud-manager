@@ -10,6 +10,17 @@ import (
 	otherit "google.golang.org/api/iterator"
 )
 
+func IteratorToSlice[T any](it iter.Seq2[T, error]) ([]T, error) {
+	var result []T
+	for obj, err := range it {
+		if err != nil {
+			return result, err
+		}
+		result = append(result, obj)
+	}
+	return result, nil
+}
+
 type iteratorMocked[T any] struct {
 	items []T
 	err   error

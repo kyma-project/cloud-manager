@@ -13,6 +13,7 @@ import (
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/api/servicenetworking/v1"
 	"google.golang.org/genproto/protobuf/field_mask"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"k8s.io/utils/ptr"
@@ -253,6 +254,40 @@ func (s *e2eTestSuite) deleteAddressOK(addressName string) {
 	require.NoError(s.t, op.Wait(s.ctx))
 }
 
+// PSA connection ==========================================================================
+
+func (s *e2eTestSuite) createPsaConnectionOK(networkLink, addrLink string) *servicenetworking.Connection {
+	netNd, err := gcputil.ParseNameDetail(networkLink)
+	require.NoError(s.t, err)
+
+	addrNd, err := gcputil.ParseNameDetail(addrLink)
+	require.NoError(s.t, err)
+
+	op, err := s.mock.CreateServiceConnection(s.ctx, netNd.ProjectId(), netNd.ResourceId(), []string{addrNd.ResourceId()})
+
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done)
+
+	arr, err := s.mock.ListServiceConnections(s.ctx, netNd.ProjectId(), netNd.ResourceId())
+	require.NoError(s.t, err)
+	require.Len(s.t, arr, 1)
+
+	return arr[0]
+}
+
+func (s *e2eTestSuite) deletePsaConnectionOK(networkLink string) {
+	netNd, err := gcputil.ParseNameDetail(networkLink)
+	require.NoError(s.t, err)
+
+	op, err := s.mock.DeleteServiceConnection(s.ctx, netNd.ProjectId(), netNd.ResourceId())
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done)
+
+	arr, err := s.mock.ListServiceConnections(s.ctx, s.mock.ProjectId(), netNd.ResourceId())
+	require.NoError(s.t, err)
+	require.Len(s.t, arr, 0)
+}
+
 // Filestore =====================================================================================
 
 func (s *e2eTestSuite) createFilestore(parent string, instanceId string, networkSelfLink string, addressSelfLink string, capacityGb int64) (gcpclient.ResultOperation[*filestorepb.Instance], error) {
@@ -350,6 +385,106 @@ func (s *e2eTestSuite) deleteFilestoreOK(instanceName string) {
 	_, err = s.mock.GetFilestoreInstance(s.ctx, &filestorepb.GetInstanceRequest{
 		Name: instanceName,
 	})
+	require.True(s.t, gcpmeta.IsNotFound(err))
+}
+
+// filestore backup ====================================================================
+
+func (s *e2eTestSuite) createFilestoreBackup(parent, backupId, sourceInstance, sourceFileShare string, labels map[string]string) (gcpclient.ResultOperation[*filestorepb.Backup], error) {
+	return s.mock.CreateFilestoreBackup(s.ctx, &filestorepb.CreateBackupRequest{
+		Parent:   parent,
+		BackupId: backupId,
+		Backup: &filestorepb.Backup{
+			Labels:          labels,
+			SourceInstance:  sourceInstance,
+			SourceFileShare: sourceFileShare,
+		},
+	})
+}
+
+func (s *e2eTestSuite) createFilestoreBackupOK(parent, backupId, sourceInstance, sourceFileShare string, labels map[string]string) *filestorepb.Backup {
+	op, err := s.createFilestoreBackup(parent, backupId, sourceInstance, sourceFileShare, labels)
+	require.NoError(s.t, err)
+	require.False(s.t, op.Done())
+
+	parentNd, err := gcputil.ParseNameDetail(parent)
+	require.NoError(s.t, err)
+
+	backupNd := gcputil.NewBackupName(parentNd.ProjectId(), parentNd.LocationRegionId(), backupId)
+
+	backup, err := s.mock.GetFilestoreBackup(s.ctx, &filestorepb.GetBackupRequest{
+		Name: backupNd.String(),
+	})
+	require.NoError(s.t, err)
+	require.Equal(s.t, filestorepb.Backup_CREATING, backup.State)
+
+	err = s.mock.ResolveFilestoreBackupOperation(s.ctx, op.Name())
+	require.NoError(s.t, err)
+
+	backup, err = op.Wait(s.ctx)
+	require.NoError(s.t, err)
+	require.Equal(s.t, filestorepb.Backup_READY, backup.State)
+
+	backup, err = s.mock.GetFilestoreBackup(s.ctx, &filestorepb.GetBackupRequest{
+		Name: backupNd.String(),
+	})
+	require.NoError(s.t, err)
+	require.Equal(s.t, filestorepb.Backup_READY, backup.State)
+	require.Equal(s.t, labels, backup.Labels)
+
+	require.Equal(s.t, backupNd.String(), backup.Name)
+
+	return backup
+}
+
+func (s *e2eTestSuite) updateFilestoreBackupLabels(backupName string, labels map[string]string) (gcpclient.ResultOperation[*filestorepb.Backup], error) {
+	return s.mock.UpdateFilestoreBackup(s.ctx, &filestorepb.UpdateBackupRequest{
+		Backup: &filestorepb.Backup{
+			Name:   backupName,
+			Labels: labels,
+		},
+		UpdateMask: &field_mask.FieldMask{Paths: []string{"labels"}},
+	})
+}
+
+func (s *e2eTestSuite) updateFilestoreBackupLabelsOK(backupName string, labels map[string]string) *filestorepb.Backup {
+	op, err := s.updateFilestoreBackupLabels(backupName, labels)
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+
+	backup, err := s.mock.GetFilestoreBackup(s.ctx, &filestorepb.GetBackupRequest{
+		Name: backupName,
+	})
+	require.NoError(s.t, err)
+	require.Equal(s.t, labels, backup.Labels)
+
+	return backup
+}
+
+func (s *e2eTestSuite) deleteFilestoreBackup(backupName string) (gcpclient.VoidOperation, error) {
+	return s.mock.DeleteFilestoreBackup(s.ctx, &filestorepb.DeleteBackupRequest{
+		Name: backupName,
+	})
+}
+
+func (s *e2eTestSuite) deleteFilestoreBackupOK(backupName string) {
+	op, err := s.deleteFilestoreBackup(backupName)
+	require.NoError(s.t, err)
+	require.False(s.t, op.Done())
+
+	backup, err := s.mock.GetFilestoreBackup(s.ctx, &filestorepb.GetBackupRequest{
+		Name: backupName,
+	})
+	require.NoError(s.t, err)
+	require.Equal(s.t, filestorepb.Backup_DELETING, backup.State)
+
+	err = s.mock.ResolveFilestoreBackupOperation(s.ctx, op.Name())
+	require.NoError(s.t, err)
+
+	_, err = s.mock.GetFilestoreBackup(s.ctx, &filestorepb.GetBackupRequest{
+		Name: backupName,
+	})
+	require.Error(s.t, err)
 	require.True(s.t, gcpmeta.IsNotFound(err))
 }
 
@@ -571,10 +706,56 @@ func (s *e2eTestSuite) createRedisCluster(parent, network, clusterId string, rep
 	})
 }
 
-func (s *e2eTestSuite) createRedisClusterOK(parent, network, clusterId string, replicaCount, shardCount int32, redisConfigs map[string]string) gcpclient.ResultOperation[*clusterpb.Cluster] {
+func (s *e2eTestSuite) createRedisClusterOK(parent, network, clusterId string, replicaCount, shardCount int32, redisConfigs map[string]string) *clusterpb.Cluster {
 	op, err := s.createRedisCluster(parent, network, clusterId, replicaCount, shardCount, redisConfigs)
 	require.NoError(s.t, err)
 	require.False(s.t, op.Done())
 
-	s.mock.ResolveRedisInstanceOperation()
+	parentName, err := gcputil.ParseNameDetail(parent)
+	require.NoError(s.t, err)
+
+	rcName := gcputil.NewClusterName(parentName.ProjectId(), parentName.LocationRegionId(), clusterId)
+	rc, err := s.mock.GetRedisCluster(s.ctx, &clusterpb.GetClusterRequest{
+		Name: rcName.String(),
+	})
+	require.NoError(s.t, err)
+	require.Equal(s.t, clusterpb.Cluster_CREATING, rc.State)
+
+	err = s.mock.ResolveRedisClusterOperation(s.ctx, op.Name())
+	require.NoError(s.t, err)
+
+	rc, err = op.Wait(s.ctx)
+	require.NoError(s.t, err)
+	require.Equal(s.t, clusterpb.Cluster_ACTIVE, rc.State)
+
+	rc, err = s.mock.GetRedisCluster(s.ctx, &clusterpb.GetClusterRequest{
+		Name: rcName.String(),
+	})
+	require.NoError(s.t, err)
+	require.Equal(s.t, clusterpb.Cluster_ACTIVE, rc.State)
+
+	return rc
+}
+
+func (s *e2eTestSuite) deleteRedisClusterOK(clusterName string) {
+	op, err := s.mock.DeleteRedisCluster(s.ctx, &clusterpb.DeleteClusterRequest{
+		Name: clusterName,
+	})
+	require.NoError(s.t, err)
+	require.False(s.t, op.Done())
+
+	rc, err := s.mock.GetRedisCluster(s.ctx, &clusterpb.GetClusterRequest{
+		Name: clusterName,
+	})
+	require.NoError(s.t, err)
+	require.Equal(s.t, clusterpb.Cluster_DELETING, rc.State)
+
+	err = s.mock.ResolveRedisClusterOperation(s.ctx, op.Name())
+	require.NoError(s.t, err)
+
+	_, err = s.mock.GetRedisCluster(s.ctx, &clusterpb.GetClusterRequest{
+		Name: clusterName,
+	})
+	require.Error(s.t, err)
+	require.True(s.t, gcpmeta.IsNotFound(err))
 }

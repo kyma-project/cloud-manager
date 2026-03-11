@@ -40,7 +40,7 @@ func (s *store) getServiceConnectionPolicyNoLock(scpFullName string) (*networkco
 
 func (s *store) CreateServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.CreateServiceConnectionPolicyRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*networkconnectivitypb.ServiceConnectionPolicy], error) {
 	s.m.Lock()
-	s.m.Unlock()
+	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
 		return nil, ctx.Err()
 	}
@@ -136,7 +136,7 @@ func (s *store) CreateServiceConnectionPolicy(ctx context.Context, req *networkc
 
 func (s *store) UpdateServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.UpdateServiceConnectionPolicyRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*networkconnectivitypb.ServiceConnectionPolicy], error) {
 	s.m.Lock()
-	s.m.Unlock()
+	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
 		return nil, ctx.Err()
 	}
@@ -209,7 +209,7 @@ func (s *store) UpdateServiceConnectionPolicy(ctx context.Context, req *networkc
 
 func (s *store) GetServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.GetServiceConnectionPolicyRequest, _ ...gax.CallOption) (*networkconnectivitypb.ServiceConnectionPolicy, error) {
 	s.m.Lock()
-	s.m.Unlock()
+	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
 		return nil, ctx.Err()
 	}
@@ -227,7 +227,7 @@ func (s *store) GetServiceConnectionPolicy(ctx context.Context, req *networkconn
 
 func (s *store) ListServiceConnectionPolicies(ctx context.Context, req *networkconnectivitypb.ListServiceConnectionPoliciesRequest, _ ...gax.CallOption) gcpclient.Iterator[*networkconnectivitypb.ServiceConnectionPolicy] {
 	s.m.Lock()
-	s.m.Unlock()
+	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
 		return &iteratorMocked[*networkconnectivitypb.ServiceConnectionPolicy]{
 			err: ctx.Err(),
@@ -262,7 +262,7 @@ func (s *store) ListServiceConnectionPolicies(ctx context.Context, req *networkc
 
 func (s *store) DeleteServiceConnectionPolicy(ctx context.Context, req *networkconnectivitypb.DeleteServiceConnectionPolicyRequest, _ ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	s.m.Lock()
-	s.m.Unlock()
+	defer s.m.Unlock()
 	if util.IsContextDone(ctx) {
 		return nil, ctx.Err()
 	}

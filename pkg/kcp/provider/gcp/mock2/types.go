@@ -27,7 +27,9 @@ type Providers interface {
 
 type Configs interface {
 	FileStoreOperationsConfig
+	FileStoreBackupOperationsConfig
 	RedisInstanceOperationsConfig
+	RedisClusterOperationsConfig
 	ServiceConnectionPolicyOperationsConfig
 }
 

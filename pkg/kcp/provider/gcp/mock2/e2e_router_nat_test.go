@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,6 +22,10 @@ func TestE2ERouterNat(t *testing.T) {
 		net := s.createNetworkOK("test-net")
 		sub := s.createSubnetOK(region, net.GetSelfLink(), subnetName, "10.250.0.0/16")
 		rt := s.createRouterOK(region, net.GetSelfLink(), "my-router", []string{sub.GetSelfLink()})
+
+		rtName, err := gcputil.ParseNameDetail(rt.GetSelfLink())
+		assert.NoError(s.t, err)
+		assert.Equal(t, gcputil.ResourceTypeRouter, rtName.ResourceType())
 
 		require.Len(s.t, rt.Nats, 1)
 		require.Len(s.t, rt.Nats[0].Subnetworks, 1)

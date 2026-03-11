@@ -8,6 +8,7 @@ import (
 
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,9 +30,15 @@ func TestE2EFilestore(t *testing.T) {
 
 		addr := s.createPsaRangeOK(net.GetSelfLink(), "test-address", "10.251.0.0", 16)
 
+		_ = s.createPsaConnectionOK(net.GetSelfLink(), addr.GetSelfLink())
+
 		// crete instance
 
 		fs := s.createFilestoreOK(gcputil.NewLocationName(s.mock.ProjectId(), location).String(), "test-instance", net.GetSelfLink(), addr.GetSelfLink(), 1024)
+
+		fsName, err := gcputil.ParseNameDetail(fs.Name)
+		assert.NoError(s.t, err)
+		assert.Equal(t, gcputil.ResourceTypeInstance, fsName.ResourceType())
 
 		// assert create fs instance properties
 
@@ -56,7 +63,10 @@ func TestE2EFilestore(t *testing.T) {
 
 		// delete fs instance
 
+		s.deletePsaConnectionOK(net.GetSelfLink())
 		s.deleteFilestoreOK(fs.Name)
+		s.deleteAddressOK(addr.GetName())
+		s.deleteNetworkOK(net.GetName())
 	})
 
 	t.Run("PSA address range can not be deleted if used by filestore", func(t *testing.T) {
@@ -66,6 +76,7 @@ func TestE2EFilestore(t *testing.T) {
 		s := newE2ETestSuite(ctx, t)
 		net := s.createNetworkOK("test-net")
 		addr := s.createPsaRangeOK(net.GetSelfLink(), "test-address", "10.251.0.0", 16)
+		_ = s.createPsaConnectionOK(net.GetSelfLink(), addr.GetSelfLink())
 		_ = s.createFilestoreOK(gcputil.NewLocationName(s.mock.ProjectId(), "us-east1").String(), "test-instance", net.GetSelfLink(), addr.GetSelfLink(), 1024)
 
 		opVoid, err := s.deleteAddress(addr.GetName())

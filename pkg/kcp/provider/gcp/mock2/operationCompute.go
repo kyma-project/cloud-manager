@@ -37,6 +37,8 @@ type operationCompute struct {
 	proto *computepb.Operation
 }
 
+var _ gcpclient.VoidOperation = (*operationCompute)(nil)
+
 func (o *operationCompute) Name() string {
 	return o.proto.GetName()
 }
@@ -80,8 +82,6 @@ func (o *operationCompute) Wait(ctx context.Context, opts ...gax.CallOption) err
 		}
 	}
 }
-
-var _ gcpclient.VoidOperation = (*operationCompute)(nil)
 
 func newComputeOperation(proto *computepb.Operation) *operationCompute {
 	return &operationCompute{proto: proto}

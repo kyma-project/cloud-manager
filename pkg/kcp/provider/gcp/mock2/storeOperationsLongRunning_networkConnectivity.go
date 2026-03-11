@@ -94,7 +94,11 @@ func (s *store) GetNetworkConnectivityOperation(ctx context.Context, req *longru
 		return nil, ctx.Err()
 	}
 
-	return s.getLongRunningOperationNoLock(req.Name)
+	op, err := s.getLongRunningOperationNoLock(req.Name)
+	if err != nil {
+		return nil, err
+	}
+	return util.Clone(op)
 }
 
 func (s *store) ListNetworkConnectivityOperations(ctx context.Context, req *longrunningpb.ListOperationsRequest, _ ...gax.CallOption) gcpclient.Iterator[*longrunningpb.Operation] {

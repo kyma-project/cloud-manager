@@ -6,6 +6,7 @@ import (
 	"time"
 
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -52,6 +53,10 @@ func TestE2EServiceConnectionPolicy(t *testing.T) {
 		parentNd := gcputil.NewLocationName(s.mock.ProjectId(), region)
 		sub1 := s.createSubnetOK(region, net.GetSelfLink(), "test-subnet", "10.250.0.0/16")
 		scp := s.createServiceConnectionPolicyOK(parentNd.String(), "test-policy", net.GetSelfLink(), []string{sub1.GetSelfLink()})
+
+		scpName, err := gcputil.ParseNameDetail(scp.Name)
+		assert.NoError(s.t, err)
+		assert.Equal(t, gcputil.ResourceTypeServiceConnectionPolicy, scpName.ResourceType())
 
 		op, err := s.deleteSubnet(sub1.GetRegion(), sub1.GetName())
 		require.Error(t, err)
