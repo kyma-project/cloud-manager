@@ -39,6 +39,9 @@ resources:
 - bases/cloud-control.kyma-project.io_vpcnetworks.yaml
 - bases/cloud-control.kyma-project.io_subscriptions.yaml
 - bases/cloud-resources.kyma-project.io_gcpnfsvolumebackupdiscoveries.yaml
+- bases/cloud-resources.kyma-project.io_azureredisinstances.yaml
+- bases/cloud-resources.kyma-project.io_azureredisclusters.yaml
+- bases/cloud-resources.kyma-project.io_gcpvpcpeerings.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
