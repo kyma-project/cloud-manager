@@ -25,7 +25,7 @@ metadata:
   target: projects/sap-sc-learn/locations/us-central1/clusters/test-tmp
   verb: create
 name: projects/sap-sc-learn/locations/us-central1/operations/operation-1773058722854-64c966757756d-94a8b4ad-1276e7f3
- */
+*/
 
 type RedisClusterOperationsConfig interface {
 	ResolveRedisClusterOperation(ctx context.Context, operationName string, opts ...RedisClusterOperationOptionCall) error

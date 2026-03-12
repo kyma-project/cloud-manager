@@ -7,7 +7,6 @@ import (
 	"time"
 
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,8 +20,8 @@ func TestE2ENetwork(t *testing.T) {
 		net := s.createNetworkOK("test-net")
 
 		netName, err := gcputil.ParseNameDetail(net.GetSelfLink())
-		assert.NoError(s.t, err)
-		assert.Equal(t, gcputil.ResourceTypeGlobalNetwork, netName.ResourceType())
+		require.NoError(s.t, err)
+		require.Equal(t, gcputil.ResourceTypeGlobalNetwork, netName.ResourceType())
 
 		s.deleteNetworkOK(net.GetName())
 	})

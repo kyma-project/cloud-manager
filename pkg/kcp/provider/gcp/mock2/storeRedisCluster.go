@@ -199,7 +199,7 @@ func (s *store) CreateRedisCluster(ctx context.Context, req *clusterpb.CreateClu
 
 	s.redisClusters.Add(rc, rcName)
 
-	opName := s.newLongRunningOperationName(rcName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), rcName)
 	if err := b.WithRedisClusterMetadata(rcName, "create"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting create redisCluster operation metadata: %w", common.ErrLogical, err)
@@ -280,7 +280,7 @@ func (s *store) UpdateRedisCluster(ctx context.Context, req *clusterpb.UpdateClu
 	}
 	rc.State = clusterpb.Cluster_UPDATING
 
-	opName := s.newLongRunningOperationName(rcName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), rcName)
 	if err := b.WithRedisClusterMetadata(rcName, "update"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting update redisCluster operation metadata: %w", common.ErrLogical, err)
@@ -314,7 +314,7 @@ func (s *store) DeleteRedisCluster(ctx context.Context, req *clusterpb.DeleteClu
 	}
 	rc.State = clusterpb.Cluster_DELETING
 
-	opName := s.newLongRunningOperationName(rcName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), rcName)
 	if err := b.WithRedisClusterMetadata(rcName, "delete"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting delete redisCluster operation metadata: %v", common.ErrLogical, err)

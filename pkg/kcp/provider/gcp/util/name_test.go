@@ -16,125 +16,147 @@ func TestNames(t *testing.T) {
 	t.Run("ParseNameDetail", func(t *testing.T) {
 
 		testCases := []struct {
-			path             string
-			defns            []*namePartDefn
-			values           []string
-			rt               ResourceType
-			projectId        string
-			locationRegionId string
-			resourceId       string
+			path               string
+			defns              []*namePartDefn
+			values             []string
+			rt                 ResourceType
+			projectId          string
+			locationRegionId   string
+			tagBindingParentId string
+			resourceId         string
 		}{
-			//{
-			//	"projects/my-project",
-			//	[]*namePartDefn{&nameDefnProject},
-			//	[]string{"my-project"},
-			//	ResourceTypeProject,
-			//	"my-project", "", "my-project",
-			//},
-			//{
-			//	"projects/my-project/global/networks/my-network",
-			//	[]*namePartDefn{&nameDefnProject, &nameDefnGlobalNetwork},
-			//	[]string{"my-project", "my-network"},
-			//	ResourceTypeGlobalNetwork,
-			//	"my-project", "", "my-network",
-			//},
-			//{
-			//	"projects/my-project/global/operations/my-operation",
-			//	[]*namePartDefn{&nameDefnProject, &nameDefnGlobalOperation},
-			//	[]string{"my-project", "my-operation"},
-			//	ResourceTypeGlobalOperation,
-			//	"my-project", "", "my-operation",
-			//},
-			//{
-			//	"projects/my-project/operations/my-operation",
-			//	[]*namePartDefn{&nameDefnProject, &nameDefnOperation},
-			//	[]string{"my-project", "my-operation"},
-			//	ResourceTypeOperation,
-			//	"my-project", "", "my-operation",
-			//},
-			//{
-			//	"projects/my-project/regions/my-region/operations/my-operation",
-			//	[]*namePartDefn{&nameDefnProject, &nameDefnRegion, &nameDefnOperation},
-			//	[]string{"my-project", "my-region", "my-operation"},
-			//	ResourceTypeLocationalOperation,
-			//	"my-project", "my-region", "my-operation",
-			//},
-			//{
-			//	"projects/my-project/locations/my-location",
-			//	[]*namePartDefn{&nameDefnProject, &nameDefnLocation},
-			//	[]string{"my-project", "my-location"},
-			//	ResourceTypeLocation,
-			//	"my-project", "my-location", "my-location",
-			//},
-			//{
-			//	"projects/my-project/locations/my-location/instances/my-instance",
-			//	[]*namePartDefn{&nameDefnProject, &nameDefnLocation, &nameDefnInstance},
-			//	[]string{"my-project", "my-location", "my-instance"},
-			//	ResourceTypeInstance,
-			//	"my-project", "my-location", "my-instance",
-			//},
-			//{
-			//	"projects/my-project/locations/my-location/backups/my-backup",
-			//	[]*namePartDefn{&nameDefnProject, &nameDefnLocation, &nameDefnBackup},
-			//	[]string{"my-project", "my-location", "my-backup"},
-			//	ResourceTypeBackup,
-			//	"my-project", "my-location", "my-backup",
-			//},
-			//{
-			//	"projects/my-project/locations/my-location/clusters/my-cluster",
-			//	[]*namePartDefn{&nameDefnProject, &nameDefnLocation, &nameDefnCluster},
-			//	[]string{"my-project", "my-location", "my-cluster"},
-			//	ResourceTypeCluster,
-			//	"my-project", "my-location", "my-cluster",
-			//},
+			{
+				"projects/my-project",
+				[]*namePartDefn{&nameDefnProject},
+				[]string{"my-project"},
+				ResourceTypeProject,
+				"my-project", "", "", "my-project",
+			},
+			{
+				"projects/my-project/global/networks/my-network",
+				[]*namePartDefn{&nameDefnProject, &nameDefnGlobalNetwork},
+				[]string{"my-project", "my-network"},
+				ResourceTypeGlobalNetwork,
+				"my-project", "", "", "my-network",
+			},
+			{
+				"projects/my-project/global/operations/my-operation",
+				[]*namePartDefn{&nameDefnProject, &nameDefnGlobalOperation},
+				[]string{"my-project", "my-operation"},
+				ResourceTypeGlobalOperation,
+				"my-project", "", "", "my-operation",
+			},
+			{
+				"projects/my-project/operations/my-operation",
+				[]*namePartDefn{&nameDefnProject, &nameDefnOperation},
+				[]string{"my-project", "my-operation"},
+				ResourceTypeOperation,
+				"my-project", "", "", "my-operation",
+			},
+			{
+				"projects/my-project/regions/my-region/operations/my-operation",
+				[]*namePartDefn{&nameDefnProject, &nameDefnRegion, &nameDefnOperation},
+				[]string{"my-project", "my-region", "my-operation"},
+				ResourceTypeLocationalOperation,
+				"my-project", "my-region", "", "my-operation",
+			},
+			{
+				"projects/my-project/locations/my-location",
+				[]*namePartDefn{&nameDefnProject, &nameDefnLocation},
+				[]string{"my-project", "my-location"},
+				ResourceTypeLocation,
+				"my-project", "my-location", "", "my-location",
+			},
+			{
+				"projects/my-project/locations/my-location/instances/my-instance",
+				[]*namePartDefn{&nameDefnProject, &nameDefnLocation, &nameDefnInstance},
+				[]string{"my-project", "my-location", "my-instance"},
+				ResourceTypeInstance,
+				"my-project", "my-location", "", "my-instance",
+			},
+			{
+				"projects/my-project/locations/my-location/backups/my-backup",
+				[]*namePartDefn{&nameDefnProject, &nameDefnLocation, &nameDefnBackup},
+				[]string{"my-project", "my-location", "my-backup"},
+				ResourceTypeBackup,
+				"my-project", "my-location", "", "my-backup",
+			},
+			{
+				"projects/my-project/locations/my-location/clusters/my-cluster",
+				[]*namePartDefn{&nameDefnProject, &nameDefnLocation, &nameDefnCluster},
+				[]string{"my-project", "my-location", "my-cluster"},
+				ResourceTypeCluster,
+				"my-project", "my-location", "", "my-cluster",
+			},
 			{
 				"projects/my-project/locations/my-location/serviceConnectionPolicies/my-policy",
 				[]*namePartDefn{&nameDefnProject, &nameDefnLocation, &nameDefnServiceConnectionPolicy},
 				[]string{"my-project", "my-location", "my-policy"},
 				ResourceTypeServiceConnectionPolicy,
-				"my-project", "my-location", "my-policy",
+				"my-project", "my-location", "", "my-policy",
 			},
 			{
 				"projects/my-project/address/my-address",
 				[]*namePartDefn{&nameDefnProject, &nameDefnAddress},
 				[]string{"my-project", "my-address"},
 				ResourceTypeGlobalAddress,
-				"my-project", "", "my-address",
+				"my-project", "", "", "my-address",
 			},
 			{
 				"projects/my-project/services/my-service",
 				[]*namePartDefn{&nameDefnProject, &nameDefnService},
 				[]string{"my-project", "my-service"},
 				ResourceTypeService,
-				"my-project", "", "my-service",
+				"my-project", "", "", "my-service",
 			},
 			{
 				"projects/my-project/regions/my-region",
 				[]*namePartDefn{&nameDefnProject, &nameDefnRegion},
 				[]string{"my-project", "my-region"},
 				ResourceTypeRegion,
-				"my-project", "my-region", "my-region",
+				"my-project", "my-region", "", "my-region",
 			},
 			{
 				"projects/my-project/regions/my-region/routers/my-router",
 				[]*namePartDefn{&nameDefnProject, &nameDefnRegion, &nameDefnRouter},
 				[]string{"my-project", "my-region", "my-router"},
 				ResourceTypeRouter,
-				"my-project", "my-region", "my-router",
+				"my-project", "my-region", "", "my-router",
 			},
 			{
 				"projects/my-project/regions/my-region/addresses/my-address",
 				[]*namePartDefn{&nameDefnProject, &nameDefnRegion, &nameDefnAddresses},
 				[]string{"my-project", "my-region", "my-address"},
 				ResourceTypeRegionalAddress,
-				"my-project", "my-region", "my-address",
+				"my-project", "my-region", "", "my-address",
 			},
 			{
 				"projects/my-project/regions/my-region/subnetworks/my-subnetwork",
 				[]*namePartDefn{&nameDefnProject, &nameDefnRegion, &nameDefnSubnetwork},
 				[]string{"my-project", "my-region", "my-subnetwork"},
 				ResourceTypeSubnetwork,
-				"my-project", "my-region", "my-subnetwork",
+				"my-project", "my-region", "", "my-subnetwork",
+			},
+			{
+				"tagKeys/1234567890",
+				[]*namePartDefn{&nameDefnTagKey},
+				[]string{"1234567890"},
+				ResourceTypeTagKey,
+				"", "", "", "1234567890",
+			},
+			{
+				"tagValues/1234567890",
+				[]*namePartDefn{&nameDefnTagValue},
+				[]string{"1234567890"},
+				ResourceTypeTagValue,
+				"", "", "", "1234567890",
+			},
+			{
+				"tagBindings/%2F%2Fcompute.googleapis.com%2Fprojects%2F812343123418%2Fglobal%2Fnetworks%2F6812341912344012340/tagValues/212346412347300",
+				[]*namePartDefn{&nameDefnTagBinding, &nameDefnTagValue},
+				[]string{"%2F%2Fcompute.googleapis.com%2Fprojects%2F812343123418%2Fglobal%2Fnetworks%2F6812341912344012340", "212346412347300"},
+				ResourceTypeTagBinding,
+				"", "", "//compute.googleapis.com/projects/812343123418/global/networks/6812341912344012340", "212346412347300",
 			},
 
 			// with prefix
@@ -143,26 +165,26 @@ func TestNames(t *testing.T) {
 				[]*namePartDefn{&nameDefnProject, &nameDefnGlobalNetwork},
 				[]string{"my-project", "my-network"},
 				ResourceTypeGlobalNetwork,
-				"my-project", "", "my-network",
+				"my-project", "", "", "my-network",
 			},
 			{
 				"https://example.com/something/projects/my-project/global/networks/my-network",
 				[]*namePartDefn{&nameDefnProject, &nameDefnGlobalNetwork},
 				[]string{"my-project", "my-network"},
 				ResourceTypeGlobalNetwork,
-				"my-project", "", "my-network",
+				"my-project", "", "", "my-network",
 			},
 
 			// negative test cases
 			{
 				// syntax error: missing network id
 				"projects/my-project/global/networks",
-				nil, nil, ResourceType(""), "", "", "",
+				nil, nil, ResourceType(""), "", "", "", "",
 			},
 			{
 				// sequence error: project and network are in wrong order
 				"global/networks/my-network/projects/my-project",
-				nil, nil, ResourceType(""), "", "", "",
+				nil, nil, ResourceType(""), "", "", "", "",
 			},
 		}
 
@@ -208,12 +230,13 @@ func TestNames(t *testing.T) {
 			expectedString string
 			expectedType   ResourceType
 		}{
+			{NewProjectName, []string{"my-project"}, "projects/my-project", ResourceTypeProject},
 			{NewGlobalNetworkName, []string{"my-project", "my-network"}, "projects/my-project/global/networks/my-network", ResourceTypeGlobalNetwork},
 			{NewLocationName, []string{"my-project", "my-location"}, "projects/my-project/locations/my-location", ResourceTypeLocation},
 			{NewInstanceName, []string{"my-project", "my-location", "my-instance"}, "projects/my-project/locations/my-location/instances/my-instance", ResourceTypeInstance},
 			{NewBackupName, []string{"my-project", "my-location", "my-backup"}, "projects/my-project/locations/my-location/backups/my-backup", ResourceTypeBackup},
 			{NewClusterName, []string{"my-project", "my-location", "my-cluster"}, "projects/my-project/locations/my-location/clusters/my-cluster", ResourceTypeCluster},
-			{ NewServiceConnectionPolicyName, []string{"my-project", "my-location", "my-policy"}, "projects/my-project/locations/my-location/serviceConnectionPolicies/my-policy", ResourceTypeServiceConnectionPolicy},
+			{NewServiceConnectionPolicyName, []string{"my-project", "my-location", "my-policy"}, "projects/my-project/locations/my-location/serviceConnectionPolicies/my-policy", ResourceTypeServiceConnectionPolicy},
 			{NewGlobalAddressName, []string{"my-project", "my-address"}, "projects/my-project/address/my-address", ResourceTypeGlobalAddress},
 			{NewServiceName, []string{"my-project", "my-service"}, "projects/my-project/services/my-service", ResourceTypeService},
 			{NewRegionName, []string{"my-project", "my-region"}, "projects/my-project/regions/my-region", ResourceTypeRegion},
@@ -223,6 +246,9 @@ func TestNames(t *testing.T) {
 			{NewLocationalOperationName, []string{"my-project", "my-location", "my-operation"}, "projects/my-project/locations/my-location/operations/my-operation", ResourceTypeLocationalOperation},
 			{NewOperationName, []string{"my-project", "my-operation"}, "projects/my-project/operations/my-operation", ResourceTypeOperation},
 			{NewGlobalOperationName, []string{"my-project", "my-operation"}, "projects/my-project/global/operations/my-operation", ResourceTypeGlobalOperation},
+			{NewTagKeyName, []string{"1234567890"}, "tagKeys/1234567890", ResourceTypeTagKey},
+			{NewTagValueName, []string{"1234567890"}, "tagValues/1234567890", ResourceTypeTagValue},
+			{NewTagBindingName, []string{"//compute.googleapis.com/projects/812343123418/global/networks/6812341912344012340", "1234567890"}, "tagBindings/%2F%2Fcompute.googleapis.com%2Fprojects%2F812343123418%2Fglobal%2Fnetworks%2F6812341912344012340/tagValues/1234567890", ResourceTypeTagBinding},
 		}
 
 		for _, tc := range testCases {
@@ -248,6 +274,15 @@ func TestNames(t *testing.T) {
 		assert.Equal(t, "projects/my-project/locations/my-location/instances/my-instance", name.String())
 		nameWithPrefix := name.PrefixWithGoogleApisComputeV1()
 		assert.Equal(t, prefixGoogleApisComputeV1+"projects/my-project/locations/my-location/instances/my-instance", nameWithPrefix)
+	})
+
+	t.Run("WithPrefixForTags", func(t *testing.T) {
+		name := NewGlobalNetworkName("my-project", "my-network")
+		assert.Equal(t, "//compute.googleapis.com/projects/my-project/global/networks/my-network", name.WithPrefixForTags("//compute.googleapis.com/"))
+		assert.Equal(t, "//compute.googleapis.com/projects/my-project/global/networks/my-network", name.WithPrefixForTags("compute.googleapis.com/"))
+		assert.Equal(t, "//compute.googleapis.com/projects/my-project/global/networks/my-network", name.WithPrefixForTags("//compute.googleapis.com"))
+		assert.Equal(t, "//compute.googleapis.com/projects/my-project/global/networks/my-network", name.WithPrefixForTags("compute.googleapis.com"))
+		assert.Equal(t, "//compute.googleapis.com/projects/my-project/global/networks/my-network", name.WithPrefixForTags("compute"))
 	})
 
 	t.Run("Equal", func(t *testing.T) {

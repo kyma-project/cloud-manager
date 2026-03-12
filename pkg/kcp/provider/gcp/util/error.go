@@ -36,4 +36,3 @@ func (e ErrInvalidNameSequence) Error() string {
 func IsInvalidSequence(err error) bool {
 	return errors.Is(err, &ErrInvalidNameSequence{})
 }
-

@@ -44,7 +44,7 @@ func (s *store) PatchServiceConnection(ctx context.Context, projectId, vpcId str
 	con.ReservedPeeringRanges = reservedPeeringRanges
 
 	// don't know the exact operation name format, this will do
-	opName := s.newLongRunningOperationName(projectId)
+	opName := s.newLongRunningOperationName()
 	op := &servicenetworking.Operation{
 		Done: true,
 		Name: opName.String(),
@@ -67,7 +67,7 @@ func (s *store) DeleteServiceConnection(ctx context.Context, projectId, vpcId st
 	})
 
 	// don't know the exact operation name format, this will do
-	opName := s.newLongRunningOperationName(projectId)
+	opName := s.newLongRunningOperationName()
 	op := &servicenetworking.Operation{
 		Done: true,
 		Name: opName.String(),
@@ -134,7 +134,7 @@ func (s *store) CreateServiceConnection(ctx context.Context, projectId, vpcId st
 	s.serviceConnections.Add(con, netNd)
 
 	// don't know the exact operation name format, this will do
-	opName := s.newLongRunningOperationName(projectId)
+	opName := s.newLongRunningOperationName()
 	op := &servicenetworking.Operation{
 		Done: true,
 		Name: opName.String(),

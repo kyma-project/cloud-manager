@@ -18,6 +18,7 @@ type Clients interface {
 	gcpclient.RoutersClient
 	gcpclient.ServiceNetworkingClient
 	gcpclient.SubnetClient
+	gcpclient.ResourceManagerClient
 }
 
 type Providers interface {
@@ -31,9 +32,12 @@ type Configs interface {
 	RedisInstanceOperationsConfig
 	RedisClusterOperationsConfig
 	ServiceConnectionPolicyOperationsConfig
+	ResourceManagerConfig
 }
 
 type Store interface {
+	ProjectId() string
+
 	Clients
 
 	Configs

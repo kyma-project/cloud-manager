@@ -165,7 +165,7 @@ func (s *store) CreateRedisInstance(ctx context.Context, req *redispb.CreateInst
 
 	s.redisInstances.Add(ri, riName)
 
-	opName := s.newLongRunningOperationName(riName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), riName)
 	if err := b.WithRedisInstanceMetadata(riName, "create"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting create redisInstance operation metadata: %w", common.ErrLogical, err)
@@ -218,7 +218,7 @@ func (s *store) UpdateRedisInstance(ctx context.Context, req *redispb.UpdateInst
 		return nil, gcpmeta.NewBadRequestError("redisInstance %s update failed: %v", riName.String(), err)
 	}
 
-	opName := s.newLongRunningOperationName(riName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), riName)
 	if err := b.WithRedisInstanceMetadata(riName, "update"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting update redisInstance operation metadata: %w", common.ErrLogical, err)
@@ -248,7 +248,7 @@ func (s *store) UpgradeRedisInstance(ctx context.Context, req *redispb.UpgradeIn
 	ri.RedisVersion = req.RedisVersion
 	ri.State = redispb.Instance_MAINTENANCE
 
-	opName := s.newLongRunningOperationName(riName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), riName)
 	if err := b.WithRedisInstanceMetadata(riName, "upgrade"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting upgrade redisInstance operation metadata: %w", common.ErrLogical, err)
@@ -277,7 +277,7 @@ func (s *store) DeleteRedisInstance(ctx context.Context, req *redispb.DeleteInst
 
 	ri.State = redispb.Instance_DELETING
 
-	opName := s.newLongRunningOperationName(riName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), riName)
 	if err := b.WithRedisInstanceMetadata(riName, "delete"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting delete redisInstance operation metadata: %w", common.ErrLogical, err)

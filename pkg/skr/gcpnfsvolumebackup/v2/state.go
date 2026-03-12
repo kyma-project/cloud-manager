@@ -29,8 +29,10 @@ type State struct {
 	Scope        *cloudcontrolv1beta1.Scope
 	GcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
 
-	fileBackup       *filestorepb.Backup // Modern protobuf type
-	fileBackupClient v2client.FileBackupClient
+	fileBackup *filestorepb.Backup // Modern protobuf type
+
+	fileBackupClientProvider gcpclient.GcpClientProvider[v2client.FileBackupClient]
+	fileBackupClient         v2client.FileBackupClient
 }
 
 type StateFactory interface {
@@ -60,11 +62,10 @@ type stateFactory struct {
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
 	return &State{
-		State:            baseState,
-		KymaRef:          f.kymaRef,
-		KcpCluster:       f.kcpCluster,
-		SkrCluster:       f.skrCluster,
-		fileBackupClient: f.fileBackupClientProvider(),
+		State:      baseState,
+		KymaRef:    f.kymaRef,
+		KcpCluster: f.kcpCluster,
+		SkrCluster: f.skrCluster,
 	}, nil
 }
 

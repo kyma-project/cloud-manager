@@ -40,13 +40,13 @@ func TestFilter(t *testing.T) {
 			{`invalid filter`, false, "Syntax error"},
 
 			// partial string match
-			{ `name:"test"`, true, ""},
-			{ `name:"network"`, true, ""},
-			{ `name:"foobarbaz"`, false, ""},
+			{`name:"test"`, true, ""},
+			{`name:"network"`, true, ""},
+			{`name:"foobarbaz"`, false, ""},
 
 			// list contains
-			{ `subnetworks:("test-subnetwork-1")`, true, ""},
-			{ `subnetworks:("foobarbaz")`, false, ""},
+			{`subnetworks:("test-subnetwork-1")`, true, ""},
+			{`subnetworks:("foobarbaz")`, false, ""},
 
 			// AIP-160 explicit AND - match
 			{`name = "test-network" AND self_link = "https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-network"`, true, ""},

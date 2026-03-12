@@ -38,7 +38,7 @@ purpose: PRIVATE
 region: https://www.googleapis.com/compute/v1/projects/my-network/regions/us-central1
 selfLink: https://www.googleapis.com/compute/v1/projects/my-network/regions/us-central1/subnetworks/my-subnet
 stackType: IPV4_ONLY
- */
+*/
 
 func (s *store) getSubnetNoLock(project, region, subnet string) (*computepb.Subnetwork, error) {
 	nd := gcputil.NewSubnetworkName(project, region, subnet)

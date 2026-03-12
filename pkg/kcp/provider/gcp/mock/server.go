@@ -253,7 +253,7 @@ func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupcl
 }
 
 func (s *server) FileBackupClientProviderV2() client.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient] {
-	return func() gcpnfsbackupclientv2.FileBackupClient {
+	return func(_ string) gcpnfsbackupclientv2.FileBackupClient {
 		return s.nfsBackupStoreV2
 	}
 }

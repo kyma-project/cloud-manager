@@ -172,7 +172,7 @@ func (s *store) CreateFilestoreInstance(ctx context.Context, req *filestorepb.Cr
 	// Do not put the result right away in the op, since it's a marshaled copy into pb.Any, so further mutations
 	// on the filestore instance will not get reflected to the operation result. Instead, when operation
 	// is mutated to done with reactor, also mutate the filestore instance in the mock and only then put it to the op
-	opName := s.newLongRunningOperationName(fsName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), fsName)
 	if err := b.WithCommonMetadata(fsName, "create"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting create filestore operation metadata: %w", common.ErrLogical, err)
@@ -211,7 +211,7 @@ func (s *store) UpdateFilestoreInstance(ctx context.Context, req *filestorepb.Up
 		return nil, gcpmeta.NewInternalServerError("filestore %s update failed: %v", req.Instance.Name, err)
 	}
 
-	opName := s.newLongRunningOperationName(fsName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), fsName)
 	if err := b.WithCommonMetadata(fsName, "update"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting update filestore operation metadata: %w", common.ErrLogical, err)
@@ -243,7 +243,7 @@ func (s *store) DeleteFilestoreInstance(ctx context.Context, req *filestorepb.De
 
 	fs.State = filestorepb.Instance_DELETING
 
-	opName := s.newLongRunningOperationName(fsName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), fsName)
 	if err := b.WithCommonMetadata(fsName, "delete"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting delete filestore operation metadata: %w", common.ErrLogical, err)
@@ -296,7 +296,7 @@ func (s *store) UpdateFilestoreBackup(ctx context.Context, req *filestorepb.Upda
 		return nil, gcpmeta.NewInternalServerError("filestore %s update failed: %v", req.Backup.Name, err)
 	}
 
-	opName := s.newLongRunningOperationName(backupNd.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), backupNd)
 	if err := b.WithCommonMetadata(backupNd, "update"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting update filestore backup operation metadata: %w", common.ErrLogical, err)
@@ -415,7 +415,7 @@ func (s *store) CreateFilestoreBackup(ctx context.Context, req *filestorepb.Crea
 
 	s.backups.Add(backup, backupNd)
 
-	opName := s.newLongRunningOperationName(backupNd.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), backupNd)
 	if err := b.WithCommonMetadata(backupNd, "create"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting create filestore backup operation metadata: %w", common.ErrLogical, err)
@@ -444,7 +444,7 @@ func (s *store) DeleteFilestoreBackup(ctx context.Context, req *filestorepb.Dele
 
 	backup.State = filestorepb.Backup_DELETING
 
-	opName := s.newLongRunningOperationName(backupNd.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), backupNd)
 	if err := b.WithCommonMetadata(backupNd, "delete"); err != nil {
 		return nil, fmt.Errorf("%w: failed setting delete filestore backup operation metadata: %w", common.ErrLogical, err)

@@ -45,8 +45,8 @@ func (r *rng) clone() *rng {
 	}
 
 	result := &rng{
-		s: r.s,
-		n: &net.IPNet{},
+		s:     r.s,
+		n:     &net.IPNet{},
 		first: new(big.Int).Set(r.first),
 		last:  new(big.Int).Set(r.last),
 	}

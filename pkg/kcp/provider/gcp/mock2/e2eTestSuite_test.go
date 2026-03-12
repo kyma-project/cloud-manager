@@ -2,6 +2,7 @@ package mock2
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -9,6 +10,7 @@ import (
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"cloud.google.com/go/redis/apiv1/redispb"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
+	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
@@ -758,4 +760,133 @@ func (s *e2eTestSuite) deleteRedisClusterOK(clusterName string) {
 	})
 	require.Error(s.t, err)
 	require.True(s.t, gcpmeta.IsNotFound(err))
+}
+
+// resource manager tags ==========================================================
+
+func (s *e2eTestSuite) createTagKey(keyShortName string) *resourcemanagerpb.TagKey {
+	parentNd := gcputil.NewProjectName(s.mock.ProjectId())
+	op, err := s.mock.CreateTagKey(s.ctx, &resourcemanagerpb.CreateTagKeyRequest{
+		TagKey: &resourcemanagerpb.TagKey{
+			Parent:    parentNd.String(),
+			ShortName: keyShortName,
+		},
+	})
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+	key, err := op.Wait(s.ctx)
+	require.NoError(s.t, err)
+	require.NotNil(s.t, key)
+	require.Equal(s.t, keyShortName, key.ShortName)
+
+	k := s.mock.GetTagKeyByShortNameNoLock(keyShortName)
+	require.NotNil(s.t, k)
+	require.Equal(s.t, k.ShortName, key.ShortName)
+	require.Equal(s.t, k.Parent, key.Parent)
+	require.Equal(s.t, k.Name, key.Name)
+	require.Equal(s.t, fmt.Sprintf("%s/%s", s.mock.ProjectId(), keyShortName), key.NamespacedName)
+
+	return key
+}
+
+func (s *e2eTestSuite) deleteTagKey(keyFullName string) *resourcemanagerpb.TagKey {
+	op, err := s.mock.DeleteTagKey(s.ctx, &resourcemanagerpb.DeleteTagKeyRequest{
+		Name: keyFullName,
+	})
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+	key, err := op.Wait(s.ctx)
+	require.NoError(s.t, err)
+	require.NotNil(s.t, key)
+	require.Equal(s.t, keyFullName, key.Name)
+	require.Equal(s.t, fmt.Sprintf("%s/%s", s.mock.ProjectId(), key.ShortName), key.NamespacedName)
+
+	k := s.mock.GetTagKeyByShortNameNoLock(key.ShortName)
+	require.Nil(s.t, k)
+
+	return key
+}
+
+func (s *e2eTestSuite) createTagValue(keyShortName, valueShortName string) *resourcemanagerpb.TagValue {
+	key := s.mock.GetTagKeyByShortNameNoLock(keyShortName)
+	require.NotNil(s.t, key)
+
+	op, err := s.mock.CreateTagValue(s.ctx, &resourcemanagerpb.CreateTagValueRequest{
+		TagValue: &resourcemanagerpb.TagValue{
+			Parent:    key.Name,
+			ShortName: valueShortName,
+		},
+	})
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+	value, err := op.Wait(s.ctx)
+	require.NoError(s.t, err)
+	require.NotNil(s.t, value)
+	require.Equal(s.t, key.Name, value.Parent)
+	require.Equal(s.t, valueShortName, value.ShortName)
+	require.Equal(s.t, fmt.Sprintf("%s/%s/%s", s.mock.ProjectId(), key.ShortName, value.ShortName), value.NamespacedName)
+
+	v := s.mock.GetTagValueByShortNameNoLock(key.Name, value.ShortName)
+	require.NotNil(s.t, v)
+	require.Equal(s.t, value.Name, v.Name)
+
+	return value
+}
+
+func (s *e2eTestSuite) deleteTagValue(valueFullName string) {
+	op, err := s.mock.DeleteTagValue(s.ctx, &resourcemanagerpb.DeleteTagValueRequest{
+		Name: valueFullName,
+	})
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+	value, err := op.Wait(s.ctx)
+	require.NoError(s.t, err)
+	require.NotNil(s.t, value)
+	require.Equal(s.t, valueFullName, value.Name)
+
+	v := s.mock.GetTagValueByFullNameNoLock(value.Name)
+	require.Nil(s.t, v)
+}
+
+func (s *e2eTestSuite) createTagBinding(target, valueFullName string) *resourcemanagerpb.TagBinding {
+	value := s.mock.GetTagValueByFullNameNoLock(valueFullName)
+	require.NotNilf(s.t, value, "tag value %s does not exist", valueFullName)
+	key, err := s.mock.GetTagKey(s.ctx, &resourcemanagerpb.GetTagKeyRequest{
+		Name: value.Parent,
+	})
+	require.NoError(s.t, err)
+
+	op, err := s.mock.CreateTagBinding(s.ctx, &resourcemanagerpb.CreateTagBindingRequest{
+		TagBinding: &resourcemanagerpb.TagBinding{
+			Parent:   target,
+			TagValue: valueFullName,
+		},
+	})
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+	binding, err := op.Wait(s.ctx)
+	require.NoError(s.t, err)
+	require.NotNil(s.t, binding)
+	require.Equal(s.t, target, binding.Parent)
+	require.Equal(s.t, valueFullName, binding.TagValue)
+	require.Equal(s.t, fmt.Sprintf("%s/%s/%s", s.mock.ProjectId(), key.ShortName, value.ShortName), binding.TagValueNamespacedName)
+
+	b := s.mock.GetTagBindingNoLock(binding.Name)
+	require.NotNil(s.t, b)
+
+	return binding
+}
+
+func (s *e2eTestSuite) deleteTagBinding(bindingName string) {
+	binding := s.mock.GetTagBindingNoLock(bindingName)
+	require.NotNil(s.t, binding)
+
+	op, err := s.mock.DeleteTagBinding(s.ctx, &resourcemanagerpb.DeleteTagBindingRequest{
+		Name: bindingName,
+	})
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+
+	binding = s.mock.GetTagBindingNoLock(binding.Name)
+	require.Nil(s.t, binding)
 }

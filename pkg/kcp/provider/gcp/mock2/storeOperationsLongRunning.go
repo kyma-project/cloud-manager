@@ -10,8 +10,8 @@ import (
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
 )
 
-func (s *store) newLongRunningOperationName(projectId string) gcputil.NameDetail {
-	return gcputil.NewOperationName(projectId, fmt.Sprintf("operation-%s", uuid.NewString()))
+func (s *store) newLongRunningOperationName() gcputil.NameDetail {
+	return gcputil.NewOperationName(s.ProjectId(), fmt.Sprintf("operation-%s", uuid.NewString()))
 }
 
 // OperationOptionCall & WithOperation*Error

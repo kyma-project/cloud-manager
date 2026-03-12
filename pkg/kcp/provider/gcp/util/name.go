@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -29,19 +30,19 @@ func NewNameFromOperation(op *longrunningpb.Operation) NameDetail {
 }
 
 func NewNameFromNetwork(network *computepb.Network) NameDetail {
-	return MustParseNameDetail(ptr.Deref(network.SelfLink, ""))
+	return MustParseNameDetail(network.GetSelfLink())
 }
 
 func NewNameFromSubnetwork(subnetwork *computepb.Subnetwork) NameDetail {
-	return MustParseNameDetail(ptr.Deref(subnetwork.SelfLink, ""))
+	return MustParseNameDetail(subnetwork.GetSelfLink())
 }
 
 func NewNameFromAddress(address *computepb.Address) NameDetail {
-	return MustParseNameDetail(ptr.Deref(address.SelfLink, ""))
+	return MustParseNameDetail(address.GetSelfLink())
 }
 
 func NewNameFromFilestoreInstance(filestore *computepb.Instance) NameDetail {
-	return MustParseNameDetail(ptr.Deref(filestore.SelfLink, ""))
+	return MustParseNameDetail(filestore.GetSelfLink())
 }
 
 func NewNameFromRedisInstance(redis *redispb.Instance) NameDetail {
@@ -53,6 +54,10 @@ func NewNameFromRedisCluster(rc *clusterpb.Cluster) NameDetail {
 }
 
 // new name from primitives ---------------------------------------------
+
+func NewProjectName(projectId string) NameDetail {
+	return newNameDetail(ResourceTypeProject, nameDefnProject.Value(projectId))
+}
 
 func NewGlobalOperationName(projectId, operationId string) NameDetail {
 	return newNameDetail(ResourceTypeGlobalOperation, nameDefnProject.Value(projectId), nameDefnGlobalOperation.Value(operationId))
@@ -112,6 +117,18 @@ func NewRegionalAddressName(projectId, regionId, addressId string) NameDetail {
 
 func NewSubnetworkName(projectId, regionId, subnetworkId string) NameDetail {
 	return newNameDetail(ResourceTypeSubnetwork, nameDefnProject.Value(projectId), nameDefnRegion.Value(regionId), nameDefnSubnetwork.Value(subnetworkId))
+}
+
+func NewTagKeyName(tagKeyId string) NameDetail {
+	return newNameDetail(ResourceTypeTagKey, nameDefnTagKey.Value(tagKeyId))
+}
+
+func NewTagValueName(tagValueId string) NameDetail {
+	return newNameDetail(ResourceTypeTagValue, nameDefnTagValue.Value(tagValueId))
+}
+
+func NewTagBindingName(parentId, tagValueId string) NameDetail {
+	return newNameDetail(ResourceTypeTagBinding, nameDefnTagBinding.Value(url.PathEscape(parentId)), nameDefnTagValue.Value(tagValueId))
 }
 
 // parse ---------------------------------------------------------------
@@ -235,6 +252,19 @@ func (n NameDetail) LocationRegionId() string {
 	return ""
 }
 
+func (n NameDetail) TagBindingParentId() string {
+	for _, p := range n.parts {
+		if p.defn.format == nameDefnTagBinding.format {
+			v, err := url.PathUnescape(p.value)
+			if err != nil {
+				return "invalid: " + err.Error()
+			}
+			return v
+		}
+	}
+	return ""
+}
+
 // ResourceId returns the id of the resource, ie network id, location id, instance id, etc. It is the value of the last part of the name.
 func (n NameDetail) ResourceId() string {
 	return n.parts[len(n.parts)-1].value
@@ -255,6 +285,9 @@ func (n NameDetail) ResourceId() string {
 // projects/%s/regions/%s/routers/%s
 // projects/%s/regions/%s/addresses/%s
 // projects/%s/regions/%s/subnetworks/%s
+// tagKeys/281234912342923
+// tagValues/212346412347300
+// tagBindings/PathEscape(parent)/tagValues/212346412347300
 
 type ResourceType string
 
@@ -275,6 +308,9 @@ const (
 	ResourceTypeRegionalAddress         ResourceType = "regionalAddress"
 	ResourceTypeSubnetwork              ResourceType = "subnetwork"
 	ResourceTypeServiceConnectionPolicy ResourceType = "serviceConnectionPolicy"
+	ResourceTypeTagKey                  ResourceType = "tagKey"
+	ResourceTypeTagValue                ResourceType = "tagValue"
+	ResourceTypeTagBinding              ResourceType = "tagBinding"
 )
 
 func (n NameDetail) ResourceType() ResourceType {
@@ -290,6 +326,27 @@ const prefixGoogleApisComputeV1 = "https://www.googleapis.com/compute/v1/"
 
 func (n NameDetail) PrefixWithGoogleApisComputeV1() string {
 	return n.PrefixWith(prefixGoogleApisComputeV1)
+}
+
+// WithPrefixForTags returns name prefixed with given service, used for resource manager tags.
+// If svc does not contain .googleapis.com, it will be added.
+// If svc does not start with //, it will be added.
+// If svc does not end with /, it will be added.
+// Examples:
+// - //compute.googleapis.com/ => //compute.googleapis.com/
+// - compute.googleapis.com    => //compute.googleapis.com/
+// - compute                   => //compute.googleapis.com/
+func (b NameDetail) WithPrefixForTags(svc string) string {
+	if !strings.Contains(svc,".googleapis.com") {
+		svc = fmt.Sprintf("%s.googleapis.com", svc)
+	}
+	if !strings.HasPrefix(svc, "//") {
+		svc = fmt.Sprintf("//%s", svc)
+	}
+	if !strings.HasSuffix(svc, "/") {
+		svc = fmt.Sprintf("%s/", svc)
+	}
+	return b.PrefixWith(svc)
 }
 
 func (n NameDetail) String() string {
@@ -336,6 +393,8 @@ func (n namePartDefn) Match(parts []string) *namePart {
 	}
 }
 
+// Value makes new namePart for this definition with the given value. The value is stored in the created nameParent
+// as provided, and nothing is encoded (ie for tagBiding). The caller must provide already encoded value if needed.
 func (n namePartDefn) Value(val string) namePart {
 	return namePart{
 		defn:  &n,
@@ -359,6 +418,10 @@ var (
 	nameDefnRouter                  = newNamePartDefn("routers/%s")
 	nameDefnSubnetwork              = newNamePartDefn("subnetworks/%s")
 	nameDefnServiceConnectionPolicy = newNamePartDefn("serviceConnectionPolicies/%s")
+
+	nameDefnTagKey     = newNamePartDefn("tagKeys/%s")
+	nameDefnTagValue   = newNamePartDefn("tagValues/%s")
+	nameDefnTagBinding = newNamePartDefn("tagBindings/%s")
 )
 
 var allNamePartDefns = []namePartDefn{
@@ -377,6 +440,9 @@ var allNamePartDefns = []namePartDefn{
 	nameDefnRegion,
 	nameDefnRouter,
 	nameDefnSubnetwork,
+	nameDefnTagKey,
+	nameDefnTagValue,
+	nameDefnTagBinding,
 }
 
 // projects/%s
@@ -393,6 +459,9 @@ var allNamePartDefns = []namePartDefn{
 // projects/%s/regions/%s/addresses/%s
 // projects/%s/regions/%s/subnetworks/%s
 // projects/%s/operations/%s
+// tagKeys/281234912342923
+// tagValues/212346412347300
+// tagBindings/PathEscape(parent)/tagValues/212346412347300
 
 var validSequences = map[ResourceType][]namePartDefn{
 	ResourceTypeProject:                 {nameDefnProject},
@@ -411,6 +480,10 @@ var validSequences = map[ResourceType][]namePartDefn{
 	ResourceTypeRouter:                  {nameDefnProject, nameDefnRegion, nameDefnRouter},
 	ResourceTypeRegionalAddress:         {nameDefnProject, nameDefnRegion, nameDefnAddresses},
 	ResourceTypeSubnetwork:              {nameDefnProject, nameDefnRegion, nameDefnSubnetwork},
+
+	ResourceTypeTagKey:     {nameDefnTagKey},
+	ResourceTypeTagValue:   {nameDefnTagValue},
+	ResourceTypeTagBinding: {nameDefnTagBinding, nameDefnTagValue},
 }
 
 // name part =========================================================

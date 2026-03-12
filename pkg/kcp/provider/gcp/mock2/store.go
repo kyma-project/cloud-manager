@@ -8,12 +8,15 @@ import (
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"cloud.google.com/go/redis/apiv1/redispb"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
+	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/servicenetworking/v1"
 )
 
-func newStore() Store {
+func newStore(projectId string) Store {
 	result := &store{
+		projectId: projectId,
+
 		computeOperations: MustNewFilterableList[*computepb.Operation](),
 
 		addressSpaces: make(map[string]*AddressSpace),
@@ -34,6 +37,10 @@ func newStore() Store {
 
 		serviceNetworkingOperations: MustNewFilterableList[*servicenetworking.Operation](),
 		serviceConnections:          MustNewFilterableList[*servicenetworking.Connection](),
+
+		tagKeys:     MustNewFilterableList[*resourcemanagerpb.TagKey](),
+		tagValues:   MustNewFilterableList[*resourcemanagerpb.TagValue](),
+		tagBindings: MustNewFilterableList[*resourcemanagerpb.TagBinding](),
 	}
 
 	return result
@@ -43,6 +50,8 @@ var _ Store = (*store)(nil)
 
 type store struct {
 	m sync.Mutex
+
+	projectId string
 
 	computeOperations *FilterableList[*computepb.Operation]
 
@@ -64,6 +73,10 @@ type store struct {
 
 	serviceNetworkingOperations *FilterableList[*servicenetworking.Operation]
 	serviceConnections          *FilterableList[*servicenetworking.Connection]
+
+	tagKeys     *FilterableList[*resourcemanagerpb.TagKey]
+	tagValues   *FilterableList[*resourcemanagerpb.TagValue]
+	tagBindings *FilterableList[*resourcemanagerpb.TagBinding]
 }
 
 var _ gcpclient.ComputeRegionalOperationsClient = (*store)(nil)
@@ -77,3 +90,8 @@ var _ gcpclient.FilestoreClient = (*store)(nil)
 var _ gcpclient.RedisInstanceClient = (*store)(nil)
 var _ gcpclient.RedisClusterClient = (*store)(nil)
 var _ gcpclient.NetworkConnectivityClient = (*store)(nil)
+var _ gcpclient.ResourceManagerClient = (*store)(nil)
+
+func (s *store) ProjectId() string {
+	return s.projectId
+}

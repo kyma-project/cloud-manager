@@ -120,7 +120,7 @@ func (s *store) CreateServiceConnectionPolicy(ctx context.Context, req *networkc
 
 	s.serviceConnectionPolicies.Add(scp, scpName)
 
-	opName := s.newLongRunningOperationName(scpName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), scpName)
 	b.WithDone(true)
 	if err := b.WithResult(scp); err != nil {
@@ -193,7 +193,7 @@ func (s *store) UpdateServiceConnectionPolicy(ctx context.Context, req *networkc
 		return nil, gcpmeta.NewInternalServerError("service connection policy %s update failed: %v", scpName.String(), err)
 	}
 
-	opName := s.newLongRunningOperationName(scpName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), scpName)
 	b.WithDone(true)
 	if err := b.WithResult(scp); err != nil {
@@ -287,7 +287,7 @@ func (s *store) DeleteServiceConnectionPolicy(ctx context.Context, req *networkc
 		return item.Name.Equal(scpName)
 	})
 
-	opName := s.newLongRunningOperationName(scpName.ProjectId())
+	opName := s.newLongRunningOperationName()
 	b := NewOperationLongRunningBuilder(opName.String(), scpName)
 	b.WithDone(true)
 	if err := b.WithNetworkConnectivityMetadata(scpName, "update"); err != nil {
