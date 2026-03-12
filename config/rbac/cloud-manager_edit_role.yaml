@@ -1,0 +1,124 @@
+# Aggregated edit role for cloud-manager module.
+# Grants read/write access to all cloud-manager CRDs.
+# Automatically aggregated into the standard "edit" and "admin" ClusterRoles.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+  name: kyma-cloud-manager-edit
+rules:
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - awsnfsbackupschedules
+  - awsnfsvolumebackups
+  - awsnfsvolumerestores
+  - awsnfsvolumes
+  - awsredisclusters
+  - awsredisinstances
+  - awsvpcpeerings
+  - azureredisclusters
+  - azureredisinstances
+  - azurerwxbackupschedules
+  - azurerwxvolumebackups
+  - azurerwxvolumerestores
+  - azurevpcdnslinks
+  - azurevpcpeerings
+  - cloudresources
+  - gcpnfsbackupschedules
+  - gcpnfsvolumebackupdiscoveries
+  - gcpnfsvolumebackups
+  - gcpnfsvolumerestores
+  - gcpnfsvolumes
+  - gcpredisclusters
+  - gcpredisinstances
+  - gcpsubnets
+  - gcpvpcpeerings
+  - ipranges
+  - sapnfsvolumes
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+  - deletecollection
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - awsnfsbackupschedules/status
+  - awsnfsvolumebackups/status
+  - awsnfsvolumerestores/status
+  - awsnfsvolumes/status
+  - awsredisclusters/status
+  - awsredisinstances/status
+  - awsvpcpeerings/status
+  - azureredisclusters/status
+  - azureredisinstances/status
+  - azurerwxbackupschedules/status
+  - azurerwxvolumebackups/status
+  - azurerwxvolumerestores/status
+  - azurevpcdnslinks/status
+  - azurevpcpeerings/status
+  - cloudresources/status
+  - gcpnfsbackupschedules/status
+  - gcpnfsvolumebackupdiscoveries/status
+  - gcpnfsvolumebackups/status
+  - gcpnfsvolumerestores/status
+  - gcpnfsvolumes/status
+  - gcpredisclusters/status
+  - gcpredisinstances/status
+  - gcpsubnets/status
+  - gcpvpcpeerings/status
+  - ipranges/status
+  - sapnfsvolumes/status
+  verbs:
+  - get
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - azurevnetlinks
+  - gcpredisclusters
+  - gcpsubnets
+  - ipranges
+  - networks
+  - nfsinstances
+  - nukes
+  - redisclusters
+  - redisinstances
+  - scopes
+  - skrstatuses
+  - subscriptions
+  - vpcnetworks
+  - vpcpeerings
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+  - deletecollection
+- apiGroups:
+  - cloud-control.kyma-project.io
+  resources:
+  - azurevnetlinks/status
+  - gcpredisclusters/status
+  - gcpsubnets/status
+  - ipranges/status
+  - networks/status
+  - nfsinstances/status
+  - nukes/status
+  - redisclusters/status
+  - redisinstances/status
+  - scopes/status
+  - skrstatuses/status
+  - subscriptions/status
+  - vpcnetworks/status
+  - vpcpeerings/status
+  verbs:
+  - get
