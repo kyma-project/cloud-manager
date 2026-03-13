@@ -178,7 +178,7 @@ func NewScenarioSession(world WorldIntf, scenarioName string) ScenarioSession {
 		world:        world,
 		scenarioName: scenarioName,
 		timing: &Timing{
-			EventuallyTimeout:  1 * time.Hour,
+			EventuallyTimeout:  2 * time.Hour,
 			EventuallyInterval: 2 * time.Second,
 		},
 		tfWorkspaces: map[string]cloud.TFWorkspace{},

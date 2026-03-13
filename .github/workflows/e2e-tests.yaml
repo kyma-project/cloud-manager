@@ -1,4 +1,15 @@
 name: E2E tests
+run-name: E2E tests ${{ inputs.provider || 'azure' }}
+
+# Required GitHub Repository Configuration:
+#
+# Secrets (Settings > Secrets and variables > Actions > Secrets):
+#   GARDENER_KUBECONFIG          - Kubeconfig for Gardener cluster access (contains auth token)
+#
+# Variables (Settings > Secrets and variables > Actions > Variables):
+#   OIDC_CLIENT_ID               - Gardener OIDC client identifier
+#   OIDC_ISSUER_URL              - Gardener OIDC issuer endpoint (e.g., https://dex.canary.gardener.cloud.sap)
+
 on:
   workflow_dispatch:
     inputs:
@@ -11,12 +22,35 @@ on:
           - azure
         description: Choose the cloud provider for the shared instance
         default: azure
+      feature_flags:
+        type: string
+        required: false
+        description: 'Feature flag file: ff_edge.yaml (default, with backup) | ff_ga.yaml (GA only)'
+        default: ./pkg/feature/ff_edge.yaml
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      AWS_ROLE_NAME: CloudManagerRole
+      AWS_PEERING_ROLE_NAME: CloudManagerPeeringRole
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Validate required configuration
+        shell: bash
+        run: |
+          MISSING=""
+          [ -z "${{ vars.OIDC_CLIENT_ID }}" ] && MISSING="$MISSING OIDC_CLIENT_ID"
+          [ -z "${{ vars.OIDC_ISSUER_URL }}" ] && MISSING="$MISSING OIDC_ISSUER_URL"
+          [ -z "${{ secrets.GARDENER_KUBECONFIG }}" ] && MISSING="$MISSING GARDENER_KUBECONFIG"
+          
+          if [ -n "$MISSING" ]; then
+            echo "::error::❌ Missing required configuration:$MISSING"
+            echo "::error::Please configure these in Settings > Secrets and variables > Actions"
+            echo "::error::See workflow comments for details"
+            exit 1
+          fi
+          echo "✅ All required configuration variables are set"
       - name: Set provider env var
         run: |
           PROVIDER=${{ inputs.provider }}
@@ -25,3 +59,51 @@ jobs:
       - name: Break if provider is empty
         if: ${{ env.PROVIDER == '' }}
         run: echo "PROVIDER is missing or empty!" && exit 1
+      - name: Initialize E2E environment
+        uses: ./.github/actions/e2e-init
+        id: e2e-init
+        with:
+          gardener_kubeconfig: ${{ secrets.GARDENER_KUBECONFIG }}
+          oidc_client_id: ${{ vars.OIDC_CLIENT_ID }}
+          oidc_issuer_url: ${{ vars.OIDC_ISSUER_URL }}
+          feature_flag_file: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
+      - name: Create shared instance
+        env:
+          KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
+        run: |
+          go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -t 30m -w
+      - name: Add module to shared instance
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+        run: |
+          go run ./e2e/cmd instance modules add -m  cloud-manager -a shared-$PROVIDER
+          sleep 60
+      - name: run e2e tests
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+        run: |
+          echo $KUBECONFIG
+          ls -la ./tmp
+          RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "@skr && @$PROVIDER"
+      - name: Clean up orphaned SKR resources
+        if: always()
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+        run: |
+          echo "Cleaning up orphaned cloud resources from SKR instance..."
+          echo "This runs after tests (pass or fail) while SIM and CM are still active"
+          go run ./e2e/cmd instance clean -a shared-$PROVIDER --verbose || {
+            echo "⚠️  Cleanup failed, but continuing with instance deletion..."
+          }
+          sleep 60
+      - name: Delete shared instance
+        if: always()
+        env:
+          KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
+        run: |
+          go run ./e2e/cmd instance delete -a shared-$PROVIDER -t 60m -w
+          sleep 60
+      - name: Destroy E2E environment
+        if: always()
+        uses: ./.github/actions/e2e-destroy
+        id: e2e-destroy

@@ -116,6 +116,18 @@ func WithRetentionDays(days int) ObjAction {
 	}
 }
 
+func WithBackupScheduleSuspend(suspend bool) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(backupschedule.BackupSchedule); ok {
+				x.SetSuspend(suspend)
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithSuspend", obj))
+		},
+	}
+}
+
 func HaveNextRunTimes(expectedTimes []time.Time) ObjAssertion {
 	return func(obj client.Object) error {
 		if x, ok := obj.(backupschedule.BackupSchedule); ok {

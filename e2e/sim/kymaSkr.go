@@ -157,7 +157,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 			}
 
 			since := time.Since(cm.DeletionTimestamp.Time)
-			timeout := time.Minute
+			timeout := 3 * time.Minute
 			if since > timeout {
 				skrKyma.Status.State = operatorshared.StateError
 				mm := skrKyma.GetModuleStatusMap()

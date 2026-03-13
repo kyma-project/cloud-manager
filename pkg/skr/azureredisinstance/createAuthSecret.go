@@ -2,7 +2,6 @@ package azureredisinstance
 
 import (
 	"context"
-
 	"github.com/kyma-project/cloud-manager/api"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -21,9 +20,9 @@ func createAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:   state.Obj().GetNamespace(),
-			Name:        getAuthSecretName(state),
-			Labels:      getAuthSecretLabels(state),
-			Annotations: getAuthSecretAnnotations(state),
+			Name:        getAuthSecretName(state.ObjAsAzureRedisInstance()),
+			Labels:      getAuthSecretLabels(state.ObjAsAzureRedisInstance()),
+			Annotations: getAuthSecretAnnotations(state.ObjAsAzureRedisInstance()),
 			Finalizers: []string{
 				api.CommonFinalizerDeletionHook,
 			},

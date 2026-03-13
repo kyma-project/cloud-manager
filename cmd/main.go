@@ -73,7 +73,8 @@ import (
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
-	gcpnfsrestoreclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client"
+	gcpnfsrestoreclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
+	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
@@ -88,6 +89,7 @@ import (
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/utils/clock"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -256,10 +258,12 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupGcpNfsVolumeRestoreReconciler(
 		skrRegistry,
-		gcpnfsrestoreclient.NewFileRestoreClientProvider(),
+		gcpnfsrestoreclientv1.NewFileRestoreClientProvider(),
 		gcpnfsbackupclientv1.NewFileBackupClientProvider(),
+		gcpnfsrestoreclientv2.NewFileRestoreClientProvider(gcpClients),
+		gcpnfsbackupclientv2.NewFileBackupClientProvider(gcpClients),
 		env,
-		setupLog); err != nil {
+	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolumeRestore")
 		os.Exit(1)
 	}
@@ -309,7 +313,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupGcpNfsBackupScheduleReconciler(skrRegistry, env); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsBackupScheduleReconciler(skrRegistry, env, clock.RealClock{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsBackupSchedule")
 		os.Exit(1)
 	}

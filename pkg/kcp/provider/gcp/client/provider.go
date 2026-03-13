@@ -12,7 +12,6 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
@@ -106,27 +105,15 @@ func renewCachedHttpClientPeriodically(ctx context.Context, credentialsFile stri
 	}
 }
 
-func loadCredentials(ctx context.Context, credentialsFile string, scopes ...string) (*google.Credentials, error) {
-	credentialsData, err := os.ReadFile(credentialsFile)
-	if err != nil {
-		return nil, fmt.Errorf("error reading credentials file: [%w]", err)
-	}
-	credentials, err := google.CredentialsFromJSON(ctx, credentialsData, scopes...)
-	if err != nil {
-		return nil, fmt.Errorf("error loading credentials: [%w]", err)
-	}
-	return credentials, nil
-}
-
 func newHttpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
-	credentials, err := loadCredentials(ctx, credentialsFile,
+	scopes := []string{
 		"https://www.googleapis.com/auth/compute",
-		"https://www.googleapis.com/auth/cloud-platform")
-	if err != nil {
-		return nil, err
+		"https://www.googleapis.com/auth/cloud-platform",
 	}
 
-	client, _, err := transport.NewHTTPClient(ctx, option.WithTokenSource(credentials.TokenSource))
+	client, _, err := transport.NewHTTPClient(ctx,
+		option.WithAuthCredentialsFile(option.ServiceAccount, credentialsFile),
+		option.WithScopes(scopes...))
 	if err != nil {
 		return nil, fmt.Errorf("error obtaining GCP HTTP client: [%w]", err)
 	}
@@ -138,13 +125,9 @@ func newHttpClient(ctx context.Context, credentialsFile string) (*http.Client, e
 func CheckGcpAuthentication(ctx context.Context, credentialsFile string) {
 	logger := composed.LoggerFromCtx(ctx)
 
-	credentials, err := loadCredentials(ctx, credentialsFile, oauth2.UserinfoEmailScope)
-	if err != nil {
-		logger.Error(err, "GCP Authentication Check - failed to load credentials")
-		return
-	}
-
-	svc, err := oauth2.NewService(ctx, option.WithTokenSource(credentials.TokenSource))
+	svc, err := oauth2.NewService(ctx,
+		option.WithAuthCredentialsFile(option.ServiceAccount, credentialsFile),
+		option.WithScopes(oauth2.UserinfoEmailScope))
 	if err != nil {
 		logger.Error(err, "GCP Authentication Check - error creating new oauth2.Service")
 		return

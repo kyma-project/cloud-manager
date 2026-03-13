@@ -1029,11 +1029,6 @@ func (in *AzureRedisClusterSpec) DeepCopyInto(out *AzureRedisClusterSpec) {
 		*out = new(RedisAuthSecretSpec)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.Volume != nil {
-		in, out := &in.Volume, &out.Volume
-		*out = new(RedisAuthSecretSpec)
-		(*in).DeepCopyInto(*out)
-	}
 	out.IpRange = in.IpRange
 }
 
@@ -1134,11 +1129,6 @@ func (in *AzureRedisInstanceSpec) DeepCopyInto(out *AzureRedisInstanceSpec) {
 	out.RedisConfiguration = in.RedisConfiguration
 	if in.AuthSecret != nil {
 		in, out := &in.AuthSecret, &out.AuthSecret
-		*out = new(RedisAuthSecretSpec)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.Volume != nil {
-		in, out := &in.Volume, &out.Volume
 		*out = new(RedisAuthSecretSpec)
 		(*in).DeepCopyInto(*out)
 	}
