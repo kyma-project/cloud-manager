@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,12 +15,12 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	obj := state.ObjAsVpcPeering()
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.kymaVpcPeering == nil {
-		logger.Info("VPC Peering is not loaded")
+	if state.localVpcPeering == nil {
+		logger.Info("Local VPC Peering is not loaded ", "localVpcPeering", state.getKymaVpcPeeringName())
 		return nil, nil
 	}
 
-	logger.Info("Deleting GCP VPC Peering " + obj.Spec.Details.PeeringName)
+	logger.Info("Deleting GCP VPC Peering", "gcpVpcPeering", obj.Spec.Details.PeeringName)
 
 	err := state.client.DeleteVpcPeering(
 		ctx,
@@ -43,5 +44,5 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 			Run(ctx, state)
 	}
 
-	return nil, nil
+	return nil, ctx
 }
