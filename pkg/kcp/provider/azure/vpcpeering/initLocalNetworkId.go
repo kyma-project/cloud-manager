@@ -14,7 +14,7 @@ func initLocalNetworkId(ctx context.Context, st composed.State) (error, context.
 
 	logger := composed.LoggerFromCtx(ctx)
 
-	logger.WithValues(
+	logger = logger.WithValues(
 		"localNetworkAzureId", state.localNetworkId.String(),
 	)
 
