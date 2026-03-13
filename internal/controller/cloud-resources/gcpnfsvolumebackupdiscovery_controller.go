@@ -19,11 +19,9 @@ package cloudresources
 import (
 	"context"
 
-	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -55,21 +53,19 @@ func (r *GcpNfsVolumeBackupDiscoveryReconciler) Reconcile(ctx context.Context, r
 }
 
 type GcpNfsVolumeBackupDiscoveryReconcilerFactory struct {
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
-	env                      abstractions.Environment
+	fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
 }
 
 func (f *GcpNfsVolumeBackupDiscoveryReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &GcpNfsVolumeBackupDiscoveryReconciler{
-		Reconciler: gcpnfsvolumebackupdiscovery.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.fileBackupClientProvider, f.env),
+		Reconciler: gcpnfsvolumebackupdiscovery.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.fileBackupClientProvider),
 	}
 }
 
-func SetupGcpNfsVolumeBackupDiscoveryReconciler(reg skrruntime.SkrRegistry, fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
-	env abstractions.Environment, logger logr.Logger) error {
+func SetupGcpNfsVolumeBackupDiscoveryReconciler(reg skrruntime.SkrRegistry, fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]) error {
 
 	return reg.Register().
-		WithFactory(&GcpNfsVolumeBackupDiscoveryReconcilerFactory{fileBackupClientProvider: fileBackupClientProvider, env: env}).
+		WithFactory(&GcpNfsVolumeBackupDiscoveryReconcilerFactory{fileBackupClientProvider: fileBackupClientProvider}).
 		For(&cloudresourcesv1beta1.GcpNfsVolumeBackupDiscovery{}).
 		Complete()
 }

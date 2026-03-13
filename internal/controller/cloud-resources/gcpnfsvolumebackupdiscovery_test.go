@@ -3,13 +3,16 @@ package cloudresources
 import (
 	"fmt"
 
+	"time"
+
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"google.golang.org/api/file/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
@@ -27,14 +30,14 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 		})
 
 		By("And Given shared backups exist for shoot", func() {
-			infra.GcpMock().CreateFakeBackup(&file.Backup{
+			infra.GcpMock().CreateFakeBackupV2(&filestorepb.Backup{
 				Name:               fmt.Sprintf("projects/kyma/locations/us-central1-a/backups/%s-backup-1", name),
 				Description:        fmt.Sprintf("Test NFS volume backup 1 for %s", name),
-				State:              "READY",
-				CreateTime:         "2024-10-30T10:00:00Z",
+				State:              filestorepb.Backup_READY,
+				CreateTime:         timestamppb.New(time.Date(2024, 10, 30, 10, 0, 0, 0, time.UTC)),
 				SourceFileShare:    fmt.Sprintf("%s-share-1", name),
 				SourceInstance:     fmt.Sprintf("projects/kyma/locations/us-central1-a/instances/%s-instance-1", name),
-				SourceInstanceTier: "STANDARD",
+				SourceInstanceTier: filestorepb.Instance_STANDARD,
 				Labels: map[string]string{
 					"managed-by":                          "cloud-manager",
 					"scope-name":                          scopeName,
@@ -48,14 +51,14 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 				CapacityGb:   100,
 				StorageBytes: 107374182400, // 100 GB in bytes
 			})
-			infra.GcpMock().CreateFakeBackup(&file.Backup{
+			infra.GcpMock().CreateFakeBackupV2(&filestorepb.Backup{
 				Name:               fmt.Sprintf("projects/kyma/locations/us-central1-a/backups/%s-backup-2", name),
 				Description:        fmt.Sprintf("Test NFS volume backup 2 for %s", name),
-				State:              "READY",
-				CreateTime:         "2024-10-30T11:00:00Z",
+				State:              filestorepb.Backup_READY,
+				CreateTime:         timestamppb.New(time.Date(2024, 10, 30, 11, 0, 0, 0, time.UTC)),
 				SourceFileShare:    fmt.Sprintf("%s-share-2", name),
 				SourceInstance:     fmt.Sprintf("projects/kyma/locations/us-central1-a/instances/%s-instance-2", name),
-				SourceInstanceTier: "PREMIUM",
+				SourceInstanceTier: filestorepb.Instance_PREMIUM,
 				Labels: map[string]string{
 					"managed-by":                          "cloud-manager",
 					"scope-name":                          scopeName,
