@@ -3,14 +3,16 @@ package awsnfsvolumerestore
 import (
 	"context"
 	"fmt"
+	"time"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func startAwsRestore(ctx context.Context, st composed.State) (error, context.Context) {
@@ -51,7 +53,35 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)
 	}
+
+	// AWS returns metadata that may include parameters for creating a NEW filesystem
+	// We need to restore to the EXISTING filesystem, so set both file-system-id and newFileSystem
+	// References: https://docs.aws.amazon.com/aws-backup/latest/devguide/restoring-efs.html
+	fileSystemId := state.GetFileSystemId()
+	if fileSystemId == "" {
+		restore.Status.State = cloudresourcesv1beta1.JobStateError
+		return composed.PatchStatus(restore).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ConditionTypeError,
+				Message: "Cannot determine EFS filesystem ID from NFS volume",
+			}).
+			SuccessLogMsg("Missing filesystem ID").
+			SuccessError(composed.StopAndForget).
+			Run(ctx, state)
+	}
+
+	// Set metadata to restore to existing filesystem
+	// newFileSystem=false tells AWS to restore to existing EFS
+	// AWS Backup will restore to a timestamped subdirectory by default
+	// Modify existing metadata to preserve AWS-provided parameters like PerformanceMode
+	restoreMetadataOut.RestoreMetadata["file-system-id"] = fileSystemId
 	restoreMetadataOut.RestoreMetadata["newFileSystem"] = "false"
+
+	// Create a logger with restore metadata for this mutating operation
+	logger = logger.WithValues("fileSystemId", fileSystemId, "metadata", restoreMetadataOut.RestoreMetadata)
+	ctx = composed.LoggerIntoCtx(ctx, logger)
 
 	//Create a Restore Job
 	restoreJobOutput, err := state.awsClient.StartRestoreJob(ctx, &client.StartRestoreJobInput{
@@ -62,7 +92,25 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 		RestoreMetadata:  restoreMetadataOut.RestoreMetadata,
 	})
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error starting AWS Restore ", composed.StopWithRequeueDelay(time.Second), ctx)
+		// If idempotency token was already used, the restore job was created but we lost the JobId
+		// (e.g., pod crashed after StartRestoreJob but before status patch succeeded)
+		// We cannot recover the JobId without ListRestoreJobs permission.
+		// ListRestoreJobs requires additional IAM permissions and pagination logic,
+		// so we fail fast and require CR recreation to keep the implementation simple.
+		if awsmeta.IsInvalidParameter(err) {
+			restore.Status.State = cloudresourcesv1beta1.JobStateError
+			return composed.PatchStatus(restore).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudresourcesv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudcontrolv1beta1.ConditionTypeError,
+					Message: "Idempotency token collision detected - restore job exists in AWS but JobId was lost. Please delete this CR and create a new one.",
+				}).
+				SuccessLogMsg("Idempotency token collision - cannot recover JobId").
+				SuccessError(composed.StopAndForget).
+				Run(ctx, state)
+		}
+		return composed.LogErrorAndReturn(err, "Error starting AWS Restore", composed.StopWithRequeueDelay(time.Second), ctx)
 	}
 	//Update the status with details.
 	restore.Status.JobId = ptr.Deref(restoreJobOutput.RestoreJobId, "")

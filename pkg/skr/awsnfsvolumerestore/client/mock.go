@@ -3,25 +3,23 @@ package client
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 var (
 	MockAwsAccount = "some-aws-account"
 
-	mock = &mockClient{
-		localClient: *newLocalClient(),
-	}
+	mock = &mockClient{}
 )
 
 type mockClient struct {
-	localClient
 	restoreJobs []backup.DescribeRestoreJobOutput
 }
 
@@ -61,8 +59,11 @@ func (m *mockClient) GetRecoveryPointRestoreMetadata(_ context.Context, _, backu
 	return &backup.GetRecoveryPointRestoreMetadataOutput{
 		BackupVaultArn:   ptr.To(backupVaultName),
 		RecoveryPointArn: ptr.To(recoveryPointArn),
-		RestoreMetadata:  map[string]string{},
-		ResourceType:     ptr.To("EFS"),
+		RestoreMetadata: map[string]string{
+			"file-system-id":  "fs-abcd1234",
+			"PerformanceMode": "generalPurpose",
+		},
+		ResourceType: ptr.To("EFS"),
 	}, nil
 }
 

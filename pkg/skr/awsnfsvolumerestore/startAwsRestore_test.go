@@ -78,7 +78,7 @@ func (s *startAwsRestoreSuite) TestStartAwsRestoreWithoutJobId() {
 
 	err, _ctx := startAwsRestore(ctx, state)
 	s.Equal(composed.StopWithRequeueDelay(util.Timing.T1000ms()), err)
-	s.Equal(ctx, _ctx)
+	s.NotNil(_ctx)
 	result := &cloudresourcesv1beta1.AwsNfsVolumeRestore{}
 	err = factory.skrCluster.K8sClient().Get(ctx, types.NamespacedName{Namespace: obj.Namespace, Name: obj.Name}, result)
 	s.Nil(err)

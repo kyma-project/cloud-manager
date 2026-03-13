@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -210,6 +211,18 @@ func WithAwsNfsVolumeStatusId(id string) ObjStatusAction {
 			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume); ok {
 				if len(x.Status.Id) == 0 {
 					x.Status.Id = id
+				}
+			}
+		},
+	}
+}
+
+func WithAwsNfsVolumeStatusServer(server string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume); ok {
+				if len(x.Status.Server) == 0 {
+					x.Status.Server = server
 				}
 			}
 		},
