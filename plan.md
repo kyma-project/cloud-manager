@@ -201,15 +201,15 @@ Migrate `pkg/skr/gcpnfsvolumebackupdiscovery` from the legacy v1 backup client
 
 ## Progress Tracker
 
-- [ ] Step 1: `pkg/skr/gcpnfsvolumebackupdiscovery/state.go`
-- [ ] Step 2: `pkg/skr/gcpnfsvolumebackupdiscovery/loadAvailableBackups.go`
-- [ ] Step 3: `pkg/skr/gcpnfsvolumebackupdiscovery/updateStatus.go`
-- [ ] Step 4: `pkg/skr/gcpnfsvolumebackupdiscovery/reconciler.go`
-- [ ] Step 5: `internal/controller/cloud-resources/gcpnfsvolumebackupdiscovery_controller.go`
-- [ ] Step 6: `cmd/main.go`
-- [ ] Step 7: `internal/controller/cloud-resources/suite_test.go`
-- [ ] Step 8: `internal/controller/cloud-resources/gcpnfsvolumebackupdiscovery_test.go`
-- [ ] Step 9: `make build`
+- [x] Step 1: `pkg/skr/gcpnfsvolumebackupdiscovery/state.go`
+- [x] Step 2: `pkg/skr/gcpnfsvolumebackupdiscovery/loadAvailableBackups.go`
+- [x] Step 3: `pkg/skr/gcpnfsvolumebackupdiscovery/updateStatus.go`
+- [x] Step 4: `pkg/skr/gcpnfsvolumebackupdiscovery/reconciler.go`
+- [x] Step 5: `internal/controller/cloud-resources/gcpnfsvolumebackupdiscovery_controller.go`
+- [x] Step 6: `cmd/main.go`
+- [x] Step 7: `internal/controller/cloud-resources/suite_test.go`
+- [x] Step 8: `internal/controller/cloud-resources/gcpnfsvolumebackupdiscovery_test.go`
+- [x] Step 9: `make build`
 - [ ] Step 10: Controller tests pass
 
 ---
