@@ -48,7 +48,7 @@ func NewStateFactory(
 
 func (statefactory *stateFactory) NewState(ctx context.Context, focalState focal.State) (*State, error) {
 
-	memorystoreClient := statefactory.memorystoreClientProvider()
+	memorystoreClient := statefactory.memorystoreClientProvider(focalState.Scope().Spec.Scope.Gcp.Project)
 
 	return newState(focalState, memorystoreClient), nil
 }

@@ -42,7 +42,7 @@ type FileBackupClient interface {
 // NewFileBackupClientProvider creates a provider function for FileBackupClient instances.
 // Follows the NEW pattern - accesses clients from GcpClients singleton.
 func NewFileBackupClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[FileBackupClient] {
-	return func() FileBackupClient {
+	return func(_ string) FileBackupClient {
 		return NewFileBackupClient(gcpClients)
 	}
 }

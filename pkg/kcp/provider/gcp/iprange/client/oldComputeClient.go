@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/metrics"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
 )
@@ -38,7 +39,7 @@ func NewOldComputeClientProviderV2(gcpClients *gcpclient.GcpClients) gcpclient.C
 				return nil, fmt.Errorf("error obtaining GCP HTTP Client: %w", err)
 			}
 
-			httpClient := gcpclient.NewMetricsHTTPClient(baseClient.Transport)
+			httpClient := metrics.NewMetricsHTTPClient(baseClient.Transport)
 
 			computeService, err := compute.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {

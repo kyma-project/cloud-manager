@@ -88,4 +88,22 @@ func TestAddressSpace(t *testing.T) {
 		assert.Equal(t, "10.250.0.2", ip)
 	})
 
+	t.Run("reserve fails on overlap", func(t *testing.T) {
+		as, err := NewAddressSpace("10.0.0.0/8")
+		assert.NoError(t, err)
+
+		err = as.Reserve("10.128.0.0/17")
+		assert.NoError(t, err)
+		err = as.Reserve("10.128.127.0/24")
+		assert.Error(t, err)
+	})
+
+	t.Run("reserve fails on out of valid ranges", func(t *testing.T) {
+		as, err := NewAddressSpace("10.10.0.0/16", "10.20.0.0/16")
+		assert.NoError(t, err)
+
+		err = as.Reserve("10.15.0.0/16")
+		assert.Error(t, err)
+		assert.Equal(t, err.Error(), "range 10.15.0.0/16 is out of address space 10.10.0.0/16 10.20.0.0/16")
+	})
 }

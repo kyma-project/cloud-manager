@@ -27,7 +27,7 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState scopetypes.State) (composed.State, error) {
-	gcpClient := f.gcpProvider()
+	gcpClient := f.gcpProvider(baseState.ObjAsScope().Spec.Scope.Gcp.Project)
 
 	return &State{
 		State:     baseState,
