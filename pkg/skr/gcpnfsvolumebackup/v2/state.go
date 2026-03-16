@@ -62,10 +62,11 @@ type stateFactory struct {
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
 	return &State{
-		State:      baseState,
-		KymaRef:    f.kymaRef,
-		KcpCluster: f.kcpCluster,
-		SkrCluster: f.skrCluster,
+		State:                    baseState,
+		KymaRef:                  f.kymaRef,
+		KcpCluster:               f.kcpCluster,
+		SkrCluster:               f.skrCluster,
+		fileBackupClientProvider: f.fileBackupClientProvider,
 	}, nil
 }
 
