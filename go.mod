@@ -47,7 +47,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.26.1
 	github.com/google/uuid v1.6.0
-	github.com/googleapis/gax-go/v2 v2.17.0
+	github.com/googleapis/gax-go/v2 v2.18.0
 	github.com/gophercloud/gophercloud/v2 v2.10.0
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/hashicorp/go-multierror v1.1.1
@@ -71,7 +71,7 @@ require (
 	go.uber.org/zap v1.27.1
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.270.0
-	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409
+	google.golang.org/genproto v0.0.0-20260217215200-42d3e9bedb6d
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171
 	google.golang.org/grpc v1.79.2
 	google.golang.org/protobuf v1.36.11
