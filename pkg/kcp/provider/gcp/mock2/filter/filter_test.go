@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/googleapi"
 	"k8s.io/utils/ptr"
@@ -54,8 +55,8 @@ func TestFilter(t *testing.T) {
 			{`name = "foo" AND self_link = "https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-network"`, false, ""},
 			// AIP-160 explicit AND with parentheses - match
 			{`(name = "test-network") AND (self_link = "https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-network")`, true, ""},
-			// AIP-160 implicit AND with parentheses - match - TODO: not yet supported, though it's a valid GCP filter
-			{`(name = "test-network") (self_link = "https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-network")`, false, "Syntax error"},
+			// AIP-160 implicit AND with parentheses - match
+			{`(name = "test-network") (self_link = "https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-network")`, true, ""},
 
 			// AIP-160 explicit OR - match, both true
 			{`name = "test-network" OR self_link = "https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-network"`, true, ""},
@@ -69,7 +70,7 @@ func TestFilter(t *testing.T) {
 			t.Run(tc.filter, func(t *testing.T) {
 				ok, err := fe.Match(tc.filter, obj)
 				if tc.err != "" {
-					assert.Error(t, err)
+					require.Error(t, err, fe.TranslatedExpression())
 					assert.Contains(t, err.Error(), tc.err)
 					return
 				}
@@ -164,15 +165,15 @@ func TestFilter(t *testing.T) {
 			{`(purpose="NAT_AUTO")(name="test-address")`, true},
 			{`(purpose="NAT_AUTO")(name="foo")`, false},
 
-			{`users:(routers/my-router)`, true},
-			{`(users:(routers/my-router))`, true},
-			{`users:routers/my-router`, true},
-			{`(users:(routers/foo))`, false},
+			{`users:("routers/my-router")`, true},
+			{`(users:("routers/my-router"))`, true},
+			{`users:"routers/my-router"`, true},
+			{`(users:("routers/foo"))`, false},
 
-			{`(users:(routers/my-router))(purpose="NAT_AUTO")(name="test-address")`, true},
-			{`(users:(routers/foo))(purpose="NAT_AUTO")(name="test-address")`, false},
-			{`(users:(routers/my-router))(purpose="FOO")(name="test-address")`, false},
-			{`(users:(routers/my-router))(purpose="NAT_AUTO")(name="foo")`, false},
+			{`(users:("routers/my-router"))(purpose="NAT_AUTO")(name="test-address")`, true},
+			{`(users:("routers/foo"))(purpose="NAT_AUTO")(name="test-address")`, false},
+			{`(users:("routers/my-router"))(purpose="FOO")(name="test-address")`, false},
+			{`(users:("routers/my-router"))(purpose="NAT_AUTO")(name="foo")`, false},
 		}
 
 		for _, tc := range testCases {

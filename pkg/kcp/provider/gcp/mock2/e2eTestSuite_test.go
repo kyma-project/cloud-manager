@@ -24,14 +24,20 @@ import (
 type e2eTestSuite struct {
 	ctx  context.Context
 	t    *testing.T
-	mock Subscription
+	mock Store
 }
 
-func newE2ETestSuite(ctx context.Context, t *testing.T) *e2eTestSuite {
+func newE2ETestSuite(ctx context.Context, t *testing.T, mocks ...Server) *e2eTestSuite {
+	var mock Server
+	if len(mocks) > 0 {
+		mock = mocks[0]
+	} else {
+		mock = New()
+	}
 	return &e2eTestSuite{
 		ctx:  ctx,
 		t:    t,
-		mock: New().NewSubscription("e2e-"),
+		mock: mock.NewSubscription("e2e-"),
 	}
 }
 
@@ -81,6 +87,83 @@ func (s *e2eTestSuite) deleteNetworkOK(networkName string) {
 		Network: networkName,
 	})
 	require.Error(s.t, err)
+}
+
+// Peering ==================================================================================
+
+func (s *e2eTestSuite) addPeeringOK(localNetwork, peeringName, remoteNetwork string) *computepb.NetworkPeering {
+	netNd, err := gcputil.ParseNameDetail(localNetwork)
+	require.NoError(s.t, err)
+
+	op, err := s.mock.AddPeering(s.ctx, &computepb.AddPeeringNetworkRequest{
+		Network: netNd.ResourceId(),
+		Project: s.mock.ProjectId(),
+		NetworksAddPeeringRequestResource: &computepb.NetworksAddPeeringRequest{
+			NetworkPeering: &computepb.NetworkPeering{
+				Name:    ptr.To(peeringName),
+				Network: ptr.To(remoteNetwork),
+			},
+		},
+	})
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+	require.NoError(s.t, op.Wait(s.ctx))
+
+	peering := s.getPeering(netNd.String(), peeringName)
+	require.NotNil(s.t, peering)
+
+	return peering
+}
+
+func (s *e2eTestSuite) removePeeringOK(localNetwork, peeringName string) {
+	netNd, err := gcputil.ParseNameDetail(localNetwork)
+	require.NoError(s.t, err)
+
+	op, err := s.mock.RemovePeering(s.ctx, &computepb.RemovePeeringNetworkRequest{
+		Project: s.mock.ProjectId(),
+		Network: netNd.ResourceId(),
+		NetworksRemovePeeringRequestResource: &computepb.NetworksRemovePeeringRequest{
+			Name: ptr.To(peeringName),
+		},
+	})
+	require.NoError(s.t, err)
+	require.True(s.t, op.Done())
+	require.NoError(s.t, op.Wait(s.ctx))
+
+	net, err := s.mock.GetNetwork(s.ctx, &computepb.GetNetworkRequest{
+		Project: s.mock.ProjectId(),
+		Network: netNd.ResourceId(),
+	})
+	require.NoError(s.t, err)
+	require.NotNil(s.t, net)
+
+	peeringFound := false
+	for _, p := range net.GetPeerings() {
+		if p.GetName() == peeringName {
+			peeringFound = true
+			break
+		}
+	}
+	require.False(s.t, peeringFound)
+}
+
+func (s *e2eTestSuite) getPeering(network, peering string) *computepb.NetworkPeering {
+	netNd, err := gcputil.ParseNameDetail(network)
+	require.NoError(s.t, err)
+
+	net, err := s.mock.GetNetwork(s.ctx, &computepb.GetNetworkRequest{
+		Project: s.mock.ProjectId(),
+		Network: netNd.ResourceId(),
+	})
+	require.NoError(s.t, err)
+	require.NotNil(s.t, net)
+
+	for _, p := range net.GetPeerings() {
+		if p.GetName() == peering {
+			return p
+		}
+	}
+	return nil
 }
 
 // Subnet ==================================================================================

@@ -29,7 +29,6 @@ type ResourceManagerClient interface {
 	DeleteTagBinding(ctx context.Context, req *resourcemanagerpb.DeleteTagBindingRequest, opts ...gax.CallOption) (VoidOperation, error)
 	ListTagBindings(ctx context.Context, req *resourcemanagerpb.ListTagBindingsRequest, opts ...gax.CallOption) Iterator[*resourcemanagerpb.TagBinding]
 	ListEffectiveTags(ctx context.Context, req *resourcemanagerpb.ListEffectiveTagsRequest, opts ...gax.CallOption) Iterator[*resourcemanagerpb.EffectiveTag]
-
 }
 
 type resourceManagerClient struct {

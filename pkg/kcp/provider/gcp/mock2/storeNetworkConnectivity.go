@@ -75,7 +75,7 @@ func (s *store) CreateServiceConnectionPolicy(ctx context.Context, req *networkc
 		return nil, gcpmeta.NewBadRequestError("network name type expected global network, but got %s", netName.ResourceType())
 	}
 
-	_, err = s.getNetworkNoLock(netName.ProjectId(), netName.ResourceId())
+	_, err = s.GetNetworkNoLock(netName.ProjectId(), netName.ResourceId())
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("network %s does not exist: %v", netName.String(), err)
 	}

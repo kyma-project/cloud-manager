@@ -104,7 +104,7 @@ func (s *store) CreateFilestoreInstance(ctx context.Context, req *filestorepb.Cr
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("invalid network specification: %v", err)
 	}
-	_, err = s.getNetworkNoLock(netName.ProjectId(), netName.ResourceId())
+	_, err = s.GetNetworkNoLock(netName.ProjectId(), netName.ResourceId())
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("network %s not found: %v", netName.String(), err)
 	}

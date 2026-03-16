@@ -16,6 +16,40 @@ import (
 	"k8s.io/utils/ptr"
 )
 
+/*
+
+endTime: '2026-03-16T01:40:42.904-07:00'
+id: '65472920581234084321'
+insertTime: '2026-03-16T01:40:29.135-07:00'
+kind: compute#operation
+name: operation-17736504212343-64d1234c41234-69812342-374b1234
+operationType: insert
+progress: 100
+selfLink: https://www.googleapis.com/compute/v1/projects/my-project/global/operations/operation-17736504212343-64d1234c41234-69812342-374b1234
+startTime: '2026-03-16T01:40:29.138-07:00'
+status: DONE
+targetId: '90102244315434612340'
+targetLink: https://www.googleapis.com/compute/v1/projects/my-project/global/networks/my-network
+user: someone@sap.com
+
+---
+
+endTime: '2026-03-02T02:49:16.801-08:00'
+id: '4469345956290680260'
+insertTime: '2026-03-02T02:49:15.504-08:00'
+kind: compute#operation
+name: operation-1123448555089-64c085612343c-00d51234-e1cb1234
+operationType: addPeering
+progress: 100
+selfLink: https://www.googleapis.com/compute/v1/projects/my-project/global/operations/operation-1123448555089-64c085612343c-00d51234-e1cb1234
+startTime: '2026-03-02T02:49:15.507-08:00'
+status: DONE
+targetId: '6922114947784171892'
+targetLink: https://www.googleapis.com/compute/v1/projects/my-project/global/networks/my-network
+user: someone@my-project.iam.gserviceaccount.com
+
+*/
+
 func NewSimpleComputeOperationError(code, message string) *computepb.Error {
 	return &computepb.Error{
 		Errors: []*computepb.Errors{

@@ -8,7 +8,7 @@ import (
 type Clients interface {
 	gcpclient.ComputeGlobalOperationsClient
 	gcpclient.ComputeRegionalOperationsClient
-	gcpclient.NetworkClient
+	gcpclient.VpcNetworkClient
 	gcpclient.FilestoreClient
 	gcpclient.GlobalAddressesClient
 	gcpclient.NetworkConnectivityClient
@@ -27,6 +27,7 @@ type Providers interface {
 }
 
 type Configs interface {
+	VpcNetworkConfig
 	FileStoreOperationsConfig
 	FileStoreBackupOperationsConfig
 	RedisInstanceOperationsConfig
@@ -37,17 +38,11 @@ type Configs interface {
 
 type Store interface {
 	ProjectId() string
+	Delete()
 
 	Clients
 
 	Configs
-}
-
-type Subscription interface {
-	Store
-
-	ProjectId() string
-	Delete()
 }
 
 type Server interface {
@@ -56,13 +51,13 @@ type Server interface {
 	// NewSubscription creates new subscription with a random projectId and given prefix. Each test scenario should
 	// at the beginning create subscription and defer delete it at the end of the test scenario. For the prefix use
 	// whole or part of the scenario name, which would make it easier to identify resources created by the test scenario.
-	NewSubscription(prefix string) Subscription
+	NewSubscription(prefix string) Store
 
 	// GetSubscription is used from the providers methods and there's no need for direct usage.
 	// It returns previously created subscription with the given projectId. If there is no subscription with
 	// such projectId, nil is returned, intentionally so that reconciler fails, which would indicate invalid test setup
 	// and a signal to developer to create the subscription at the beginning of the test.
-	GetSubscription(projectId string) Subscription
+	GetSubscription(projectId string) Store
 
 	// DeleteSubscription deletes subscription with the given projectId from the mock server. Each test scenario should
 	// at the beginning create subscription and defer delete it at the end of the test scenario.

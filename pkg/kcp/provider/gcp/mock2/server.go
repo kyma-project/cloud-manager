@@ -17,7 +17,7 @@ func New() Server {
 type server struct {
 	m sync.Mutex
 
-	subscriptions []Subscription
+	subscriptions []Store
 }
 
 // Providers START - add new provider methods below ====================================================
@@ -30,7 +30,7 @@ func (s *server) ExposedDataProvider() gcpclient.GcpClientProvider[gcpexposeddat
 
 // Providers END - add new provider methods above ===========================================
 
-func (s *server) NewSubscription(prefix string) Subscription {
+func (s *server) NewSubscription(prefix string) Store {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -39,7 +39,7 @@ func (s *server) NewSubscription(prefix string) Subscription {
 	}
 	name := fmt.Sprintf("%s-%s", prefix, util.RandomString(10))
 
-	sub := NewSubscription(s, name)
+	sub := newStore(name, s)
 	s.subscriptions = append(s.subscriptions, sub)
 
 	return sub
@@ -48,7 +48,7 @@ func (s *server) NewSubscription(prefix string) Subscription {
 // GetSubscription returns previously created subscription with the given projectId. If there is no subscription with
 // such projectId, nil is returned, intentionally so that reconciler fails, which would indicate invalid test setup
 // and a signal to developer to create the subscription at the beginning of the test.
-func (s *server) GetSubscription(projectId string) Subscription {
+func (s *server) GetSubscription(projectId string) Store {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -64,7 +64,7 @@ func (s *server) DeleteSubscription(projectId string) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	s.subscriptions = pie.FilterNot(s.subscriptions, func(s Subscription) bool {
+	s.subscriptions = pie.FilterNot(s.subscriptions, func(s Store) bool {
 		return s.ProjectId() == projectId
 	})
 }

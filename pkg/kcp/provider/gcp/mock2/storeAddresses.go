@@ -146,7 +146,7 @@ func (s *store) InsertGlobalAddress(ctx context.Context, req *computepb.InsertGl
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("invalid network reference in address resource: %v", err)
 	}
-	_, err = s.getNetworkNoLock(netNd.ProjectId(), netNd.ResourceId())
+	_, err = s.GetNetworkNoLock(netNd.ProjectId(), netNd.ResourceId())
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("network %s not found for address resource", netNd.String())
 	}

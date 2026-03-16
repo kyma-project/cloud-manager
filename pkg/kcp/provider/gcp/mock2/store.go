@@ -13,9 +13,11 @@ import (
 	"google.golang.org/api/servicenetworking/v1"
 )
 
-func newStore(projectId string) Store {
+func newStore(projectId string, server Server) Store {
 	result := &store{
 		projectId: projectId,
+
+		server: server,
 
 		computeOperations: MustNewFilterableList[*computepb.Operation](),
 
@@ -51,6 +53,8 @@ var _ Store = (*store)(nil)
 type store struct {
 	m sync.Mutex
 
+	server Server
+
 	projectId string
 
 	computeOperations *FilterableList[*computepb.Operation]
@@ -81,7 +85,7 @@ type store struct {
 
 var _ gcpclient.ComputeRegionalOperationsClient = (*store)(nil)
 var _ gcpclient.ComputeGlobalOperationsClient = (*store)(nil)
-var _ gcpclient.NetworkClient = (*store)(nil)
+var _ gcpclient.VpcNetworkClient = (*store)(nil)
 var _ gcpclient.SubnetClient = (*store)(nil)
 var _ gcpclient.RoutersClient = (*store)(nil)
 var _ gcpclient.GlobalAddressesClient = (*store)(nil)
@@ -94,4 +98,8 @@ var _ gcpclient.ResourceManagerClient = (*store)(nil)
 
 func (s *store) ProjectId() string {
 	return s.projectId
+}
+
+func (s *store) Delete() {
+	s.server.DeleteSubscription(s.projectId)
 }

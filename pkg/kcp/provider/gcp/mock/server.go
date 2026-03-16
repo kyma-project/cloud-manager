@@ -248,7 +248,7 @@ func (s *server) FilerestoreClientProvider() client.ClientProvider[gcpnfsrestore
 }
 
 func (s *server) FileRestoreClientProviderV2() client.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient] {
-	return func() gcpnfsrestoreclientv2.FileRestoreClient {
+	return func(_ string) gcpnfsrestoreclientv2.FileRestoreClient {
 		return s.nfsRestoreStoreV2
 	}
 }

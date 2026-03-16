@@ -130,7 +130,7 @@ func (s *store) InsertRouter(ctx context.Context, req *computepb.InsertRouterReq
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("invalid network reference in router resource: %v", err)
 	}
-	_, err = s.getNetworkNoLock(networkNd.ProjectId(), networkNd.ResourceId())
+	_, err = s.GetNetworkNoLock(networkNd.ProjectId(), networkNd.ResourceId())
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("network %s not found for router resource", networkNd.String())
 	}

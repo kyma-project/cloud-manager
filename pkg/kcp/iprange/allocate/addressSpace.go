@@ -16,6 +16,7 @@ var PrivateRanges = [...]string{
 }
 
 type AddressSpace interface {
+	Overlaps(otherAddressSpace AddressSpace) bool
 	Reserve(arr ...string) error
 	Release(r string) error
 	ReleaseIpAddress(ip string) error
@@ -57,6 +58,19 @@ func (as *addressSpace) Clone() AddressSpace {
 		validSpace: as.validSpace.clone(),
 		occupied:   as.occupied.clone(),
 	}
+}
+
+func (as *addressSpace) Overlaps(otherAddressSpace AddressSpace) bool {
+	if as == nil || otherAddressSpace == nil {
+		return false
+	}
+	other := otherAddressSpace.(*addressSpace)
+	for _, rr := range other.occupied.items {
+		if as.occupied.overlaps(rr) {
+			return true
+		}
+	}
+	return false
 }
 
 func (as *addressSpace) Reserve(arr ...string) error {
@@ -141,5 +155,17 @@ func (as *addressSpace) allocateInternal(startAtRange string) (string, error) {
 }
 
 func (as *addressSpace) String() string {
-	return fmt.Sprintf("%s(%s)", as.validSpace.String(), as.occupied.String())
+	includeValidSpace := false
+	if len(as.validSpace.items) > 1 {
+		includeValidSpace = true
+	}
+	if len(as.validSpace.items) == 1 {
+		if as.validSpace.items[0].String() != "0.0.0.0/0" {
+			includeValidSpace = true
+		}
+	}
+	if includeValidSpace {
+		return fmt.Sprintf("%s(%s)", as.validSpace.String(), as.occupied.String())
+	}
+	return fmt.Sprintf("%s", as.occupied.String())
 }

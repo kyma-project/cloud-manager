@@ -83,7 +83,7 @@ func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetwor
 	if networkName.ResourceType() != gcputil.ResourceTypeGlobalNetwork {
 		return nil, gcpmeta.NewBadRequestError("invalid subnet network name type")
 	}
-	net, err := s.getNetworkNoLock(networkName.ProjectId(), networkName.ResourceId())
+	net, err := s.GetNetworkNoLock(networkName.ProjectId(), networkName.ResourceId())
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("network %s not found", networkName.String())
 	}

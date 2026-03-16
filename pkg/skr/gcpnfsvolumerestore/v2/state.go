@@ -28,6 +28,9 @@ type State struct {
 
 	fileBackup *filestorepb.Backup // Modern protobuf type (for permission checks)
 
+	fileRestoreClientProvider gcpclient.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient]
+	fileBackupClientProvider  gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
+
 	fileRestoreClient gcpnfsrestoreclientv2.FileRestoreClient
 	fileBackupClient  gcpnfsbackupclientv2.FileBackupClient
 }
@@ -62,12 +65,12 @@ type stateFactory struct {
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
 	return &State{
-		State:             baseState,
-		KymaRef:           f.kymaRef,
-		KcpCluster:        f.kcpCluster,
-		SkrCluster:        f.skrCluster,
-		fileRestoreClient: f.fileRestoreClientProvider(),
-		fileBackupClient:  f.fileBackupClientProvider(),
+		State:                     baseState,
+		KymaRef:                   f.kymaRef,
+		KcpCluster:                f.kcpCluster,
+		SkrCluster:                f.skrCluster,
+		fileRestoreClientProvider: f.fileRestoreClientProvider,
+		fileBackupClientProvider:  f.fileBackupClientProvider,
 	}, nil
 }
 

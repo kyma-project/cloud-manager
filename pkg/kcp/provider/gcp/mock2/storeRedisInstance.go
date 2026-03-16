@@ -113,7 +113,7 @@ func (s *store) CreateRedisInstance(ctx context.Context, req *redispb.CreateInst
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("invalid authorized network name: %v", err)
 	}
-	_, err = s.getNetworkNoLock(netName.ProjectId(), netName.ResourceId())
+	_, err = s.GetNetworkNoLock(netName.ProjectId(), netName.ResourceId())
 	if err != nil {
 		return nil, gcpmeta.NewNotFoundError("authorized network %s not found", netName.String())
 	}

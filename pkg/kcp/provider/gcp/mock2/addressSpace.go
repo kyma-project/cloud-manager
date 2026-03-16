@@ -25,6 +25,13 @@ func (as *AddressSpace) Clone() *AddressSpace {
 	}
 }
 
+func (as *AddressSpace) Overlaps(otherAddressSpace *AddressSpace) bool {
+	if as == nil || otherAddressSpace == nil {
+		return false
+	}
+	return as.AddressSpace.Overlaps(otherAddressSpace.AddressSpace)
+}
+
 func (as *AddressSpace) AddSubnet(subnet *computepb.Subnetwork) ([]string, error) {
 	var added []string
 	ar := ptr.Deref(subnet.IpCidrRange, "")

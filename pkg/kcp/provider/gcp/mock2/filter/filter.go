@@ -5,9 +5,13 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/common/types"
+	"github.com/google/cel-go/common/types/ref"
+	"github.com/google/cel-go/common/types/traits"
 	"github.com/google/cel-go/ext"
 	"github.com/google/cel-go/interpreter"
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -71,6 +75,59 @@ type FilterEngine[T any] struct {
 	activationProvider func(obj T) (interpreter.Activation, error)
 	//cache              sync.Map // map[string]cel.Program
 	cache *lru.Cache[string, cel.Program]
+
+	translatedExpression string
+}
+
+func anyToInt(v any) int {
+	switch n := v.(type) {
+	case int:
+		return n
+	case int8:
+		return int(n)
+	case int16:
+		return int(n)
+	case int32:
+		return int(n)
+	case int64:
+		return int(n)
+	case float32:
+		return int(n) // Note: Truncates decimal part
+	case float64:
+		return int(n) // Note: Truncates decimal part
+	default:
+		x, err := strconv.Atoi(fmt.Sprintf("%v", n))
+		if err != nil {
+			return 0
+		}
+		return x
+	}
+}
+
+func extListStringContains() cel.EnvOption {
+	return cel.Function(
+		"contains",
+		cel.MemberOverload(
+			"list_contains_string",
+			[]*cel.Type{cel.ListType(cel.StringType), cel.StringType},
+			cel.BoolType,
+			cel.FunctionBinding(func(values ...ref.Val) ref.Val {
+				target := string(values[1].(types.String))
+				var result ref.Val = types.False
+				lister := values[0].(traits.Lister)
+				for i := 0; i < anyToInt(lister.Size()); i++ {
+					v := lister.Get(types.Int(i))
+					s := string(v.(types.String))
+					ok := strings.Contains(s, target)
+					if ok {
+						result = types.Bool(ok)
+						break
+					}
+				}
+				return result
+			}),
+		),
+	)
 }
 
 func NewFilterEngine[T any]() (*FilterEngine[T], error) {
@@ -108,6 +165,7 @@ func NewFilterEngine[T any]() (*FilterEngine[T], error) {
 			}, nil
 		}
 	}
+	opts = append(opts, extListStringContains())
 	env, err := cel.NewEnv(opts...)
 	if err != nil {
 		return nil, err
@@ -124,6 +182,10 @@ func NewFilterEngine[T any]() (*FilterEngine[T], error) {
 	}, nil
 }
 
+func (f *FilterEngine[T]) TranslatedExpression() string {
+	return f.translatedExpression
+}
+
 func (f *FilterEngine[T]) Match(filter string, obj T) (bool, error) {
 	if strings.TrimSpace(filter) == "" {
 		return true, nil
@@ -135,6 +197,7 @@ func (f *FilterEngine[T]) Match(filter string, obj T) (bool, error) {
 	}
 
 	celExpr, err := translate(filter, mode)
+	f.translatedExpression = celExpr
 	if err != nil {
 		return false, err
 	}
@@ -254,8 +317,8 @@ func translateAIP160(s string) string {
 	// field:(unquoted/value)  or  field:unquoted/value  →  field.exists(x, x.contains("value"))
 	// Restricted to tokens not inside double-quoted strings by anchoring on a word boundary
 	// and excluding characters that appear inside string literals (", space, =).
-	re = regexp.MustCompile(`\b([a-zA-Z0-9_-]+):\(?([/a-zA-Z0-9_.-]+)\)?`)
-	s = re.ReplaceAllString(s, `$1.exists(x, x.contains("$2"))`)
+	//re = regexp.MustCompile(`\b([a-zA-Z0-9_-]+):\(?([/a-zA-Z0-9_.-]+)\)?`)
+	//s = re.ReplaceAllString(s, `$1.exists(x, x.contains("$2"))`)
 
 	return s
 }

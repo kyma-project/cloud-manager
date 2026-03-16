@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAddressSpace(t *testing.T) {
@@ -105,5 +106,32 @@ func TestAddressSpace(t *testing.T) {
 		err = as.Reserve("10.15.0.0/16")
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "range 10.15.0.0/16 is out of address space 10.10.0.0/16 10.20.0.0/16")
+	})
+
+	t.Run("overlaps", func(t *testing.T) {
+		testCases := []struct {
+			cidrsA   []string
+			cidrsB   []string
+			expected bool
+		}{
+			{[]string{}, []string{}, false},
+			{[]string{"10.250.0.0/16"}, []string{"10.251.0.0/16"}, false},
+			{[]string{"10.250.0.0/16"}, []string{"10.250.8.0/24"}, true},
+		}
+
+		for _, tc := range testCases {
+			t.Run(fmt.Sprintf("%v - %v", tc.cidrsA, tc.cidrsB), func(t *testing.T) {
+				first, _ := NewAddressSpace()
+				err := first.Reserve(tc.cidrsA...)
+				require.NoError(t, err)
+
+				second, _ := NewAddressSpace()
+				err = second.Reserve(tc.cidrsB...)
+				require.NoError(t, err)
+
+				actual := first.Overlaps(second)
+				assert.Equal(t, tc.expected, actual)
+			})
+		}
 	})
 }

@@ -20,7 +20,7 @@ func (s *store) PatchServiceConnection(ctx context.Context, projectId, vpcId str
 
 	netNd := gcputil.NewGlobalNetworkName(projectId, vpcId)
 
-	_, err := s.getNetworkNoLock(projectId, vpcId)
+	_, err := s.GetNetworkNoLock(projectId, vpcId)
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("network %s not found", netNd.String())
 	}
@@ -107,7 +107,7 @@ func (s *store) CreateServiceConnection(ctx context.Context, projectId, vpcId st
 	}
 
 	netNd := gcputil.NewGlobalNetworkName(projectId, vpcId)
-	net, err := s.getNetworkNoLock(projectId, vpcId)
+	net, err := s.GetNetworkNoLock(projectId, vpcId)
 	if err != nil {
 		return nil, gcpmeta.NewBadRequestError("network %s not found", netNd.String())
 	}
