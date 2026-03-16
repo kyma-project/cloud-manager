@@ -41,3 +41,5 @@ e2e-config.yaml
 .runtimes.yaml
 kubeconfig
 kubeconfig*.*
+
+.claude/**/*.local.*

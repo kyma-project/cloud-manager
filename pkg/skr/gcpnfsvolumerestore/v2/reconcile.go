@@ -76,6 +76,7 @@ func composeActions() composed.Action {
 	return composed.ComposeActions(
 		"gcpNfsVolumeRestoreV2",
 		loadScope,
+		clientCreate,
 		shortCircuitCompleted,
 		actions.AddCommonFinalizer(),
 

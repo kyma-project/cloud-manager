@@ -30,7 +30,7 @@ type FileRestoreClient interface {
 // NewFileRestoreClientProvider creates a provider function for FileRestoreClient instances.
 // Follows the NEW pattern - accesses clients from GcpClients singleton.
 func NewFileRestoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[FileRestoreClient] {
-	return func() FileRestoreClient {
+	return func(_ string) FileRestoreClient {
 		return NewFileRestoreClient(gcpClients)
 	}
 }

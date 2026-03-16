@@ -19,7 +19,7 @@ type RegionOperationsClient interface {
 }
 
 func NewRegionOperationsClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[RegionOperationsClient] {
-	return func() RegionOperationsClient {
+	return func(_ string) RegionOperationsClient {
 		return NewRegionOperationsClient(gcpClients)
 	}
 }

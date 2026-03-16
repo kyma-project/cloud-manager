@@ -25,7 +25,7 @@ type ComputeClient interface {
 // NewComputeClientProvider returns a provider function that creates ComputeClient instances.
 // Uses NEW pattern - accesses clients from GcpClients singleton.
 func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
-	return func() ComputeClient {
+	return func(_ string) ComputeClient {
 		return NewComputeClient(gcpClients)
 	}
 }

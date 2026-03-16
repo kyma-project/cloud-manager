@@ -40,7 +40,7 @@ func NewStateFactory(memorystoreClientProvider gcpclient.GcpClientProvider[clien
 
 func (statefactory *stateFactory) NewState(ctx context.Context, redisInstanceState types.State) (*State, error) {
 
-	memorystoreClient := statefactory.memorystoreClientProvider()
+	memorystoreClient := statefactory.memorystoreClientProvider(redisInstanceState.Scope().Spec.Scope.Gcp.Project)
 
 	return newState(redisInstanceState, memorystoreClient), nil
 }

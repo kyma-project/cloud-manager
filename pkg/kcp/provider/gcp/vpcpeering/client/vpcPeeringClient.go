@@ -35,7 +35,7 @@ import (
 )
 
 func NewClientProvider(gcpClients *client.GcpClients) client.GcpClientProvider[VpcPeeringClient] {
-	return func() VpcPeeringClient { return NewVpcPeeringClient(gcpClients) }
+	return func(_ string) VpcPeeringClient { return NewVpcPeeringClient(gcpClients) }
 }
 
 func NewVpcPeeringClient(gcpClients *client.GcpClients) VpcPeeringClient {

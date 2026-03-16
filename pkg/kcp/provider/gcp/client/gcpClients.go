@@ -13,13 +13,14 @@ import (
 	redisinstance "cloud.google.com/go/redis/apiv1"
 	rediscluster "cloud.google.com/go/redis/cluster/apiv1"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/metrics"
 
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/oauth2"
-	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
-	servicenetworking "google.golang.org/api/servicenetworking/v1"
+	"google.golang.org/api/servicenetworking/v1"
 	"google.golang.org/grpc"
 )
 
@@ -70,7 +71,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	computeTokenSource := oauth2adapt.TokenSourceFromTokenProvider(computeTokenProvider)
 
 	// Compute clients use REST protocol, wrap with metrics middleware
-	computeHTTPClient := NewMetricsHTTPClient(oauth2.NewClient(ctx, computeTokenSource).Transport)
+	computeHTTPClient := metrics.NewMetricsHTTPClient(oauth2.NewClient(ctx, computeTokenSource).Transport)
 
 	computeNetworks, err := compute.NewNetworksRESTClient(ctx,
 		option.WithHTTPClient(computeHTTPClient))
@@ -124,7 +125,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 
 	ncDialOpts := []option.ClientOption{
 		option.WithTokenSource(networkConnectivityTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor())),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(metrics.UnaryClientInterceptor())),
 	}
 	ncCrossNetworkAutomation, err := networkconnectivity.NewCrossNetworkAutomationClient(ctx, ncDialOpts...)
 	if err != nil {
@@ -140,7 +141,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	redisClusterTokenSource := oauth2adapt.TokenSourceFromTokenProvider(redisClusterTokenProvider)
 	redisClusterDialOpts := []option.ClientOption{
 		option.WithTokenSource(redisClusterTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor())),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(metrics.UnaryClientInterceptor())),
 	}
 	redisCluster, err := rediscluster.NewCloudRedisClusterClient(ctx, redisClusterDialOpts...)
 	if err != nil {
@@ -155,7 +156,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	redisInstanceTokenSource := oauth2adapt.TokenSourceFromTokenProvider(redisInstanceTokenProvider)
 	redisInstanceDialOpts := []option.ClientOption{
 		option.WithTokenSource(redisInstanceTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor())),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(metrics.UnaryClientInterceptor())),
 	}
 	redisInstance, err := redisinstance.NewCloudRedisClient(ctx, redisInstanceDialOpts...)
 	if err != nil {
@@ -170,7 +171,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	filestoreTokenSource := oauth2adapt.TokenSourceFromTokenProvider(filestoreTokenProvider)
 	filestoreDialOpts := []option.ClientOption{
 		option.WithTokenSource(filestoreTokenSource),
-		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(UnaryClientInterceptor())),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(metrics.UnaryClientInterceptor())),
 	}
 	filestoreClient, err := filestore.NewCloudFilestoreManagerClient(ctx, filestoreDialOpts...)
 	if err != nil {
@@ -190,8 +191,8 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	serviceNetworkingTokenSource := oauth2adapt.TokenSourceFromTokenProvider(serviceNetworkingTokenProvider)
 
 	// Wrap with metrics middleware for REST APIs
-	serviceNetworkingHTTPClient := NewMetricsHTTPClient(oauth2.NewClient(ctx, serviceNetworkingTokenSource).Transport)
-	cloudResourceManagerHTTPClient := NewMetricsHTTPClient(oauth2.NewClient(ctx, serviceNetworkingTokenSource).Transport)
+	serviceNetworkingHTTPClient := metrics.NewMetricsHTTPClient(oauth2.NewClient(ctx, serviceNetworkingTokenSource).Transport)
+	cloudResourceManagerHTTPClient := metrics.NewMetricsHTTPClient(oauth2.NewClient(ctx, serviceNetworkingTokenSource).Transport)
 
 	serviceNetworking, err := servicenetworking.NewService(ctx,
 		option.WithHTTPClient(serviceNetworkingHTTPClient))
@@ -213,7 +214,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	vpcPeeringComputeNetworksTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringComputeNetworksTokenProvider)
 
 	// VPC peering clients also use REST, wrap with metrics middleware
-	vpcPeeringHTTPClient := NewMetricsHTTPClient(oauth2.NewClient(ctx, vpcPeeringComputeNetworksTokenSource).Transport)
+	vpcPeeringHTTPClient := metrics.NewMetricsHTTPClient(oauth2.NewClient(ctx, vpcPeeringComputeNetworksTokenSource).Transport)
 
 	vpcPeeringComputeNetworks, err := compute.NewNetworksRESTClient(ctx,
 		option.WithHTTPClient(vpcPeeringHTTPClient))
@@ -231,7 +232,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 	}
 	vpcPeeringResourceManagerTokenSource := oauth2adapt.TokenSourceFromTokenProvider(vpcPeeringResourceManagerTokenProvider)
 
-	resourceManagerHTTPClient := NewMetricsHTTPClient(oauth2.NewClient(ctx, vpcPeeringResourceManagerTokenSource).Transport)
+	resourceManagerHTTPClient := metrics.NewMetricsHTTPClient(oauth2.NewClient(ctx, vpcPeeringResourceManagerTokenSource).Transport)
 
 	vpcPeeringResourceManagerTagBindings, err := resourcemanager.NewTagBindingsRESTClient(ctx,
 		option.WithHTTPClient(resourceManagerHTTPClient))
@@ -265,11 +266,21 @@ func (c *GcpClients) Close() error {
 	return reflectingClose(c)
 }
 
+// RoutersWrapped is supposed to replace usage of field ComputeRouters after the refactoring
+func (c *GcpClients) RoutersWrapped() RoutersClient {
+	return &routersClient{inner: c.ComputeRouters}
+}
+
+// AddressesWrapped is supposed to replace usage of field ComputeAddresses after the refactoring
+func (c *GcpClients) AddressesWrapped() RegionalAddressesClient {
+	return &regionalAddressesClient{inner: c.ComputeAddresses}
+}
+
 func (c *VpcPeeringClients) Close() error {
 	return reflectingClose(c)
 }
 
-type GcpClientProvider[T any] func() T
+type GcpClientProvider[T any] func(string) T
 
 // ReflectingClose ===============================
 

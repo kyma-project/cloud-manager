@@ -34,7 +34,7 @@ type NetworkConnectivityClient interface {
 }
 
 func NewNetworkConnectivityClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[NetworkConnectivityClient] {
-	return func() NetworkConnectivityClient {
+	return func(_ string) NetworkConnectivityClient {
 		return NewNetworkConnectivityClient(gcpClients)
 	}
 }

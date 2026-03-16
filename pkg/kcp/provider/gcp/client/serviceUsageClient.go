@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/metrics"
 	"google.golang.org/api/option"
 	"google.golang.org/api/serviceusage/v1"
 )
@@ -24,7 +25,7 @@ func NewServiceUsageClientProvider() ClientProvider[ServiceUsageClient] {
 				return nil, err
 			}
 
-			httpClient := NewMetricsHTTPClient(baseClient.Transport)
+			httpClient := metrics.NewMetricsHTTPClient(baseClient.Transport)
 
 			serviceUsageClient, err := serviceusage.NewService(ctx, option.WithHTTPClient(httpClient))
 			if err != nil {

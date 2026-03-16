@@ -41,7 +41,7 @@ type ComputeClient interface {
 }
 
 func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
-	return func() ComputeClient {
+	return func(_ string) ComputeClient {
 		return NewComputeClient(gcpClients)
 	}
 }
