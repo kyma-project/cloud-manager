@@ -155,17 +155,10 @@ func (as *addressSpace) allocateInternal(startAtRange string) (string, error) {
 }
 
 func (as *addressSpace) String() string {
-	includeValidSpace := false
-	if len(as.validSpace.items) > 1 {
-		includeValidSpace = true
-	}
-	if len(as.validSpace.items) == 1 {
-		if as.validSpace.items[0].String() != "0.0.0.0/0" {
-			includeValidSpace = true
-		}
-	}
+	includeValidSpace := len(as.validSpace.items) > 1 ||
+		(len(as.validSpace.items) == 1 && as.validSpace.items[0].String() != "0.0.0.0/0")
 	if includeValidSpace {
 		return fmt.Sprintf("%s(%s)", as.validSpace.String(), as.occupied.String())
 	}
-	return fmt.Sprintf("%s", as.occupied.String())
+	return as.occupied.String()
 }

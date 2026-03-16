@@ -226,16 +226,16 @@ func (s *store) ListAddresses(ctx context.Context, req *computepb.ListAddressesR
 
 	list := s.addresses
 	if req.Project != "" {
-		list = s.addresses.FilterByCallback(func(l FilterableListItem[*computepb.Address]) bool {
+		list = list.FilterByCallback(func(l FilterableListItem[*computepb.Address]) bool {
 			return l.Name.ProjectId() == req.Project
 		})
 	}
 	if req.Region != "" {
-		list = s.addresses.FilterByCallback(func(l FilterableListItem[*computepb.Address]) bool {
+		list = list.FilterByCallback(func(l FilterableListItem[*computepb.Address]) bool {
 			return l.Name.LocationRegionId() == req.Region
 		})
 	} else {
-		list = s.addresses.FilterByCallback(func(l FilterableListItem[*computepb.Address]) bool {
+		list = list.FilterByCallback(func(l FilterableListItem[*computepb.Address]) bool {
 			return l.Name.LocationRegionId() != ""
 		})
 	}

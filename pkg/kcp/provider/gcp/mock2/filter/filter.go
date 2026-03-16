@@ -226,7 +226,7 @@ func (f *FilterEngine[T]) Match(filter string, obj T) (bool, error) {
 
 func (f *FilterEngine[T]) compile(expr string) (cel.Program, error) {
 	if p, ok := f.cache.Get(expr); ok {
-		return p.(cel.Program), nil
+		return p, nil
 	}
 
 	ast, iss := f.env.Parse(expr)
@@ -384,36 +384,6 @@ func (a *anyActivation) ResolveName(name string) (any, bool) {
 
 func (a *anyActivation) Parent() interpreter.Activation {
 	return nil
-}
-
-func protoMapToGo(m protoreflect.Map, fd protoreflect.FieldDescriptor) any {
-	result := make(map[string]any)
-
-	m.Range(func(k protoreflect.MapKey, v protoreflect.Value) bool {
-		var key string
-
-		switch fd.MapKey().Kind() {
-		case protoreflect.StringKind:
-			key = k.String()
-		default:
-			key = fmt.Sprint(k.Interface())
-		}
-
-		result[key] = v.Interface()
-		return true
-	})
-
-	return result
-}
-
-func protoListToGo(l protoreflect.List, fd protoreflect.FieldDescriptor) any {
-	result := make([]any, l.Len())
-
-	for i := 0; i < l.Len(); i++ {
-		result[i] = l.Get(i).Interface()
-	}
-
-	return result
 }
 
 // envOptionsFromStruct generates CEL variable declarations

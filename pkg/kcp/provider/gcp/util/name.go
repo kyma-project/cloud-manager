@@ -336,7 +336,7 @@ func (n NameDetail) PrefixWithGoogleApisComputeV1() string {
 // - //compute.googleapis.com/ => //compute.googleapis.com/
 // - compute.googleapis.com    => //compute.googleapis.com/
 // - compute                   => //compute.googleapis.com/
-func (b NameDetail) WithPrefixForTags(svc string) string {
+func (n NameDetail) WithPrefixForTags(svc string) string {
 	if !strings.Contains(svc, ".googleapis.com") {
 		svc = fmt.Sprintf("%s.googleapis.com", svc)
 	}
@@ -346,7 +346,7 @@ func (b NameDetail) WithPrefixForTags(svc string) string {
 	if !strings.HasSuffix(svc, "/") {
 		svc = fmt.Sprintf("%s/", svc)
 	}
-	return b.PrefixWith(svc)
+	return n.PrefixWith(svc)
 }
 
 func (n NameDetail) String() string {
