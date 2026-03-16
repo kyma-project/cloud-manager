@@ -13,10 +13,11 @@ type vpcPeeringEntry struct {
 	peering *pb.NetworkPeering
 }
 type vpcPeeringStore struct {
-	m        sync.Mutex
-	items    map[string]*vpcPeeringEntry
-	errorMap map[string]error
-	tags     map[string][]string
+	m          sync.Mutex
+	items      map[string]*vpcPeeringEntry
+	operations map[string]*pb.Operation
+	errorMap   map[string]error
+	tags       map[string][]string
 }
 
 type VpcPeeringMockClientUtils interface {
@@ -30,7 +31,7 @@ func getFullNetworkUrl(project, vpc string) string {
 	return fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", project, vpc)
 }
 
-func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error {
+func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) (*pb.Operation, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	remoteNetwork := getFullNetworkUrl(remoteProject, remoteVpc)
@@ -42,9 +43,20 @@ func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeer
 		exportCustomRoutes = true
 	}
 
-	_, peeringExists := s.items[remoteNetwork]
-	if peeringExists {
-		return nil
+	if s.operations == nil {
+		s.operations = make(map[string]*pb.Operation)
+	}
+
+	if s.items == nil {
+		s.items = make(map[string]*vpcPeeringEntry)
+	}
+
+	if s.operations[remoteVpc] == nil {
+		operationpb := &pb.Operation{
+			Status: ptr.To(pb.Operation_DONE),
+			Name:   ptr.To(remoteVpc),
+		}
+		s.operations[remoteVpc] = operationpb
 	}
 
 	item := &vpcPeeringEntry{
@@ -59,10 +71,10 @@ func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeer
 	}
 	s.items[remoteNetwork] = item
 
-	return nil
+	return s.operations[remoteVpc], nil
 }
 
-func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) error {
+func (s *vpcPeeringStore) CreateLocalVpcPeering(ctx context.Context, remotePeeringName string, remoteVpc string, remoteProject string, customRoutes bool, kymaProject string, kymaVpc string) (*pb.Operation, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -72,9 +84,20 @@ func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeerin
 	exportCustomRoutes := false
 	importCustomRoutes := customRoutes
 
-	_, peeringExists := s.items[kymaNetwork]
-	if peeringExists {
-		return nil
+	if s.operations == nil {
+		s.operations = make(map[string]*pb.Operation)
+	}
+
+	if s.items == nil {
+		s.items = make(map[string]*vpcPeeringEntry)
+	}
+
+	if s.operations[kymaVpc] == nil {
+		operationpb := &pb.Operation{
+			Status: ptr.To(pb.Operation_DONE),
+			Name:   ptr.To(kymaVpc),
+		}
+		s.operations[kymaVpc] = operationpb
 	}
 
 	item := &vpcPeeringEntry{
@@ -90,7 +113,7 @@ func (s *vpcPeeringStore) CreateKymaVpcPeering(ctx context.Context, remotePeerin
 
 	s.items[kymaNetwork] = item
 
-	return nil
+	return s.operations[kymaVpc], nil
 }
 
 func (s *vpcPeeringStore) GetRemoteNetworkTags(_ context.Context, vpc string, project string) ([]string, error) {
@@ -122,6 +145,10 @@ func (s *vpcPeeringStore) GetVpcPeering(ctx context.Context, remotePeeringName s
 		s.tags = make(map[string][]string)
 	}
 
+	if s.operations == nil {
+		s.operations = make(map[string]*pb.Operation)
+	}
+
 	_, peeringExists := s.items[network]
 	if !peeringExists {
 		return nil, nil
@@ -141,6 +168,17 @@ func (s *vpcPeeringStore) DeleteVpcPeering(ctx context.Context, remotePeeringNam
 	}
 	delete(s.items, kymaNetwork)
 	return nil
+}
+
+func (s *vpcPeeringStore) GetPeeringOperation(ctx context.Context, project string, operationId string) (*pb.Operation, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, operationExists := s.operations[operationId]
+	if !operationExists {
+		return nil, fmt.Errorf("\"The resource 'projects/%s/global/operations/%s' was not found\",", project, operationId)
+	}
+	return s.operations[operationId], nil
 }
 
 // Fake client implementations to mimic google API calls

@@ -53,7 +53,7 @@ func createKcpRemoteNetwork(ctx context.Context, st composed.State) (error, cont
 	err := state.KcpCluster.K8sClient().Create(ctx, remoteNetwork)
 
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "[SKR GCP VPCPeering createKcpRemoteNetwork] Error creating GCP KCP Remote Network", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error creating GCP KCP Remote Network", composed.StopWithRequeue, ctx)
 	}
 
 	state.KcpRemoteNetwork = remoteNetwork

@@ -60,7 +60,7 @@ func peeringRemoteLoad(ctx context.Context, st composed.State) (error, context.C
 
 	if err == nil {
 		if ptr.Deref(peering.Properties.RemoteVirtualNetwork.ID, "") != state.localNetworkId.String() {
-			err = fmt.Errorf("peering with the same name already %s exists in network %s", state.ObjAsVpcPeering().Spec.Details.PeeringName, state.localNetworkId.String())
+			err = fmt.Errorf("remote peering remote network id %s does not match network id %s", state.ObjAsVpcPeering().Spec.Details.PeeringName, state.localNetworkId.String())
 			message = fmt.Sprintf("Peering with the same name %s already exists in network %s", state.ObjAsVpcPeering().Spec.Details.PeeringName, state.remoteNetworkId.String())
 			statusState = string(cloudcontrolv1beta1.StateWarning)
 		}

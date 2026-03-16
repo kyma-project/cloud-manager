@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/googleapis/gax-go/v2/apierror"
 	"google.golang.org/api/googleapi"
@@ -77,6 +78,24 @@ func IsTooManyRequests(err error) bool {
 		}
 	}
 
+	return false
+}
+
+func IsOperationInProgressError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	var googleapierror *googleapi.Error
+	if ok := errors.As(err, &googleapierror); ok {
+		if googleapierror.Code == 400 {
+			for _, e := range googleapierror.Errors {
+				if strings.Contains(e.Message, "operation in progress") {
+					return true
+				}
+			}
+		}
+	}
 	return false
 }
 

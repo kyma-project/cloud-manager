@@ -3,6 +3,7 @@ package dsl
 import (
 	"errors"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -14,7 +15,7 @@ func HavingVpcPeeringStatusId() ObjAssertion {
 			return fmt.Errorf("the object %T is not KCP VpcPeering", obj)
 		}
 		if x.Status.Id == "" {
-			return errors.New("the KCP VpcPeering .status.id not set")
+			return errors.New("the KCP VpcPeering .status.id is not set")
 		}
 		return nil
 	}
