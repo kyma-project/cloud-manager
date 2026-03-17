@@ -652,6 +652,9 @@ func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (
 	if k.config.ShootPrefix == "" {
 		return InstanceDetails{}, fmt.Errorf("required config shootPrefix not set")
 	}
+	if len(k.config.ShootPrefix) > 2 {
+		return InstanceDetails{}, fmt.Errorf("config shootPrefix can not be longer than 2 characters")
+	}
 	options := &createOptions{}
 	for _, o := range append(append([]CreateOption{}, defaultCreateOptions()...), opts...) {
 		o.ApplyOnCreate(options)
@@ -869,6 +872,12 @@ func (k *defaultKeb) GetInstanceKubeconfig(ctx context.Context, runtimeID string
 
 func (k *defaultKeb) CreateInstanceClient(ctx context.Context, runtimeID string) (client.Client, error) {
 	b, _, err := k.GetInstanceKubeconfig(ctx, runtimeID)
+	if errors.Is(err, e2elib.ErrGardenerClusterCredentialsExpired) {
+		if renewErr := k.RenewInstanceKubeconfig(ctx, runtimeID); renewErr != nil {
+			return nil, fmt.Errorf("error renewing expired instance kubeconfig: %w", renewErr)
+		}
+		b, _, err = k.GetInstanceKubeconfig(ctx, runtimeID)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("error getting instance kubeconfig: %w", err)
 	}
