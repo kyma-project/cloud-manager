@@ -48,9 +48,9 @@ var cmdInstanceList = &cobra.Command{
 		} else {
 			var tbl table.Table
 			if outputFormat == "wide" {
-				tbl = table.New("Alias", "RuntimeID", "Shoot", "Provider", "Region", "GA", "SA", "Ready", "Deleting")
+				tbl = table.New("Alias", "RuntimeID", "Shoot", "Provider", "Region", "GA", "SA", "Ready", "Deleting", "Ignored")
 			} else {
-				tbl = table.New("Alias", "RuntimeID", "Shoot", "Provider", "Region", "Ready", "Deleting")
+				tbl = table.New("Alias", "RuntimeID", "Shoot", "Provider", "Region", "Ready", "Deleting", "Ignored")
 			}
 
 			for _, id := range arr {
@@ -65,6 +65,7 @@ var cmdInstanceList = &cobra.Command{
 						id.SubAccount,
 						id.ProvisioningCompleted,
 						id.BeingDeleted,
+						id.Ignored,
 					)
 				} else {
 					tbl.AddRow(
@@ -75,6 +76,7 @@ var cmdInstanceList = &cobra.Command{
 						id.Region,
 						id.ProvisioningCompleted,
 						id.BeingDeleted,
+						id.Ignored,
 					)
 				}
 			}

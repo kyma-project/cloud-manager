@@ -3,6 +3,7 @@ package mock2
 import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
 )
 
 type Clients interface {
@@ -23,6 +24,7 @@ type Clients interface {
 
 type Providers interface {
 	ExposedDataProvider() gcpclient.GcpClientProvider[gcpexposeddataclient.Client]
+	VpcNetworkProvider() gcpclient.GcpClientProvider[gcpvpcnetworkclient.Client]
 	// all others feature's providers as they are refactored to switch using these new GCP clients
 }
 

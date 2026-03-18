@@ -18,6 +18,7 @@ import (
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
+	gcpmock2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock2"
 	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraScheme"
@@ -205,6 +206,7 @@ func StartEx(opts StartOptions) (Infra, error) {
 		activeSkrCollection: activeSkrCollection,
 		awsMock:             awsMock,
 		gcpMock:             gcpmock.New(),
+		gcpMock2:            gcpmock2.New(),
 		azureMock:           azuremock.New(),
 		sapMock:             sapmock.New(),
 		skrKymaRef: klog.ObjectRef{

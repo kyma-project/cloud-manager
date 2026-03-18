@@ -27,6 +27,7 @@ import (
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
+	gcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork"
 	sapvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/vpcnetwork"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
@@ -182,6 +183,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		awsvpcnetwork.NewStateFactory(infra.AwsMock().VpcNetworkProvider()),
 		azurevpcnetwork.NewStateFactory(infra.AzureMock().VpcNetworkProvider()),
+		gcpvpcnetwork.NewStateFactory(infra.GcpMock2().VpcNetworkProvider()),
 		sapvpcnetwork.NewStateFactory(infra.SapMock().VpcNetworkProvider()),
 	)).To(Succeed())
 	// Subscription

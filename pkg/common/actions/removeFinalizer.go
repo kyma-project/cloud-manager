@@ -3,8 +3,10 @@ package actions
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -27,7 +29,7 @@ func PatchRemoveFinalizer(f string) composed.Action {
 		}
 
 		removed, err := state.PatchObjRemoveFinalizer(ctx, f)
-		if err != nil {
+		if client.IgnoreNotFound(err) != nil {
 			return composed.LogErrorAndReturn(err, fmt.Sprintf("Error patching obj to remove finalizer: %s", f), composed.StopWithRequeue, ctx)
 		}
 

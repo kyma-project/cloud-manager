@@ -43,3 +43,4 @@ kubeconfig
 kubeconfig*.*
 
 .claude/**/*.local.*
+.env

@@ -443,6 +443,8 @@ type InstanceDetails struct {
 	Message string `json:"message" yaml:"message"`
 
 	BeingDeleted bool `json:"beingDeleted" yaml:"beingDeleted"`
+
+	Ignored bool `json:"ignored" yaml:"ignored"`
 }
 
 func (id InstanceDetails) AddLoggerValues(log logr.Logger) logr.Logger {
@@ -484,6 +486,7 @@ func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetai
 		ShootName:             rt.Spec.Shoot.Name,
 		State:                 string(rt.Status.State),
 		BeingDeleted:          rt.DeletionTimestamp != nil,
+		Ignored:               rt.Labels[e2elib.DoNotReconcile] != "",
 	}
 	errCond := meta.FindStatusCondition(rt.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	if errCond != nil && errCond.Status == metav1.ConditionTrue {

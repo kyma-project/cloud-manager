@@ -91,3 +91,17 @@ func SubscriptionPatchStatusReadyOpenStack(ctx context.Context, infra testinfra.
 		}).
 		Patch(ctx, infra.KCP().Client())
 }
+
+func SubscriptionPatchStatusReadyGcp(ctx context.Context, infra testinfra.Infra, subscription *cloudcontrolv1beta1.Subscription, gcpProjectName string) error {
+	return composed.NewStatusPatcher(subscription).
+		MutateStatus(func(sub *cloudcontrolv1beta1.Subscription) {
+			sub.Status.Provider = cloudcontrolv1beta1.ProviderGCP
+			sub.Status.SubscriptionInfo = &cloudcontrolv1beta1.SubscriptionInfo{
+				Gcp: &cloudcontrolv1beta1.SubscriptionInfoGcp{
+					Project: gcpProjectName,
+				},
+			}
+			sub.SetStatusReady()
+		}).
+		Patch(ctx, infra.KCP().Client())
+}

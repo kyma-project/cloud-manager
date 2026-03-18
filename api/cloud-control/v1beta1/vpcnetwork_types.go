@@ -35,13 +35,18 @@ const (
 type VpcNetworkSpec struct {
 	// +optional
 	// +kubebuilder:default=kyma
+	// +kubebuilder:validation:XValidation:rule=self == oldSelf, message="The type is immutable."
 	Type VpcNetworkType `json:"type,omitempty"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=self == oldSelf, message="The subscription is immutable."
+	// +kubebuilder:validation:XValidation:rule="self.size() >= 1",message="The subscription cannot be empty."
 	Subscription string `json:"subscription"`
 
-	// Region is required for AWS, Azure, and OpenStack providers.
+	// Region for the network, router, gateways...
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=self == oldSelf, message="The region is immutable."
+	// +kubebuilder:validation:XValidation:rule="self.size() >= 1",message="The region cannot be empty."
 	Region string `json:"region"`
 
 	// +kubebuilder:validation:Required

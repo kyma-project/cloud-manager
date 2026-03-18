@@ -7,6 +7,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -24,6 +25,12 @@ type server struct {
 
 func (s *server) ExposedDataProvider() gcpclient.GcpClientProvider[gcpexposeddataclient.Client] {
 	return func(projectId string) gcpexposeddataclient.Client {
+		return s.GetSubscription(projectId)
+	}
+}
+
+func (s *server) VpcNetworkProvider() gcpclient.GcpClientProvider[gcpvpcnetworkclient.Client] {
+	return func(projectId string) gcpvpcnetworkclient.Client {
 		return s.GetSubscription(projectId)
 	}
 }

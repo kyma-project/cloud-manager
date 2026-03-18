@@ -23,6 +23,7 @@ import (
 	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
+	gcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork"
 	sapvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/vpcnetwork"
 	kcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -36,6 +37,7 @@ func SetupVpcNetworkReconciler(
 	kcpManager manager.Manager,
 	awsStateFactory awsvpcnetwork.StateFactory,
 	azureStateFactory azurevpcnetwork.StateFactory,
+	gcpStateFactory gcpvpcnetwork.StateFactory,
 	sapStateFactory sapvpcnetwork.StateFactory,
 ) error {
 	return NewVpcNetworkReconciler(
@@ -44,6 +46,7 @@ func SetupVpcNetworkReconciler(
 			kcpcommonaction.NewStateFactory(),
 			awsStateFactory,
 			azureStateFactory,
+			gcpStateFactory,
 			sapStateFactory,
 		),
 	).SetupWithManager(kcpManager)

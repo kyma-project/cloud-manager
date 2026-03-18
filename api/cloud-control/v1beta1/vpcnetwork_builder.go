@@ -43,6 +43,11 @@ func (b *VpcNetworkBuilder) WithLabel(k, v string) *VpcNetworkBuilder {
 	return b
 }
 
+func (b *VpcNetworkBuilder) WithType(t VpcNetworkType) *VpcNetworkBuilder {
+	b.obj.Spec.Type = t
+	return b
+}
+
 func (b *VpcNetworkBuilder) WithSubscription(v string) *VpcNetworkBuilder {
 	b.obj.Spec.Subscription = v
 	return b
