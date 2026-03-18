@@ -47,6 +47,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
+	"k8s.io/utils/clock"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -89,12 +91,13 @@ import (
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/clock"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourceskymaprojectiov1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources.kyma-project.io/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	cloudcontrolcontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-control"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
+	cloudresourceskymaprojectiocontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources.kyma-project.io"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -106,6 +109,7 @@ var (
 
 func init() {
 	// if any added here by kubeconfig, sync them with the github.com/kyma-project/cloud-manager/pkg/common/bootstrap package
+	utilruntime.Must(cloudresourceskymaprojectiov1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -503,6 +507,13 @@ func main() {
 		subscriptionclient.NewAwsStsGardenClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Subscription")
+		os.Exit(1)
+	}
+	if err := (&cloudresourceskymaprojectiocontroller.AwsWebAclReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsWebAcl")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
