@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"testing"
 	"time"
 
 	"github.com/3th1nk/cidr"
@@ -15,7 +16,6 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	sapconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/config"
 	sapvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/vpcnetwork/client"
-	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -85,13 +85,13 @@ func (o *createInfraOptions) validate() error {
 	}
 	if o.timeout == 0 {
 		o.timeout = 5 * time.Minute
-		if debugged.IsTested() {
+		if testing.Testing() {
 			o.timeout = time.Second
 		}
 	}
 	if o.interval == 0 {
 		o.interval = time.Second
-		if debugged.IsTested() {
+		if testing.Testing() {
 			o.interval = time.Millisecond
 		}
 	}

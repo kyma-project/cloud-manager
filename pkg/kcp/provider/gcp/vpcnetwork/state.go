@@ -22,6 +22,7 @@ func NewStateFactory(
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, composed.State, error) {
+	// panic is intended if gcp is nil, controller runtime will recover and log error
 	clnt := f.gcpClientProvider(baseState.Subscription().Status.SubscriptionInfo.Gcp.Project)
 	return ctx, newState(baseState, clnt), nil
 }

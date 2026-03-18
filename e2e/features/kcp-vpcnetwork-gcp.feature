@@ -1,4 +1,4 @@
-Feature: VpcNetwork Azure
+Feature: VpcNetwork GCP
 
   @kcp @gcp @vpcnetwork
   Scenario: VpcNetwork GCP is created and deleted

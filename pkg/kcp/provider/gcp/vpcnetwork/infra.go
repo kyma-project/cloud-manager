@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
 	"time"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/elliotchance/pie/v2"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
-	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/utils/ptr"
 )
 
@@ -77,13 +77,13 @@ func (o *createInfraOptions) validate() error {
 	}
 	if o.timeout == 0 {
 		o.timeout = 5 * time.Minute
-		if debugged.IsTested() {
+		if testing.Testing() {
 			o.timeout = time.Second
 		}
 	}
 	if o.interval == 0 {
 		o.interval = time.Second
-		if debugged.IsTested() {
+		if testing.Testing() {
 			o.interval = time.Millisecond
 		}
 	}

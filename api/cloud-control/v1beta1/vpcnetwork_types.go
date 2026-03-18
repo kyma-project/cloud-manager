@@ -95,6 +95,7 @@ type VpcNetworkStatusIdentifiers struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Subscription",type="string",JSONPath=".spec.subscription"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.conditions[?(@.type=="Ready")].reason`
+// +kubebuilder:validation:XValidation:rule="size(self.metadata.name)<60",message="The name must be shorter than 60 chars"
 
 // VpcNetwork is the Schema for the vpcnetworks API.
 type VpcNetwork struct {

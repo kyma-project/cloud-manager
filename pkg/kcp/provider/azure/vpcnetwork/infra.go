@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
 	"time"
 
 	"github.com/3th1nk/cidr"
@@ -13,7 +14,6 @@ import (
 	"github.com/elliotchance/pie/v2"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azurevpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork/client"
-	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/utils/ptr"
 )
 
@@ -86,13 +86,13 @@ func (o *createInfraOptions) validateForCreateUpdate() error {
 	}
 	if o.timeout == 0 {
 		o.timeout = 5 * time.Minute
-		if debugged.IsTested() {
+		if testing.Testing() {
 			o.timeout = time.Second
 		}
 	}
 	if o.interval == 0 {
 		o.interval = time.Second
-		if debugged.IsTested() {
+		if testing.Testing() {
 			o.interval = time.Millisecond
 		}
 	}
@@ -109,13 +109,13 @@ func (o *createInfraOptions) validateForDelete() error {
 	}
 	if o.timeout == 0 {
 		o.timeout = 5 * time.Minute
-		if debugged.IsTested() {
+		if testing.Testing() {
 			o.timeout = time.Second
 		}
 	}
 	if o.interval == 0 {
 		o.interval = time.Second
-		if debugged.IsTested() {
+		if testing.Testing() {
 			o.interval = time.Millisecond
 		}
 	}

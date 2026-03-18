@@ -16,6 +16,7 @@ func infraCreateUpdate(ctx context.Context, st composed.State) (error, context.C
 	out, err := CreateInfra(
 		ctx,
 		WithName(name),
+		// panic is intended if gcp is nil, controller runtime will recover and log error
 		WithGcpProjectId(state.Subscription().Status.SubscriptionInfo.Gcp.Project),
 		WithClient(state.gcpClient),
 		WithRegion(state.ObjAsVpcNetwork().Spec.Region),
