@@ -35,13 +35,18 @@ const (
 type VpcNetworkSpec struct {
 	// +optional
 	// +kubebuilder:default=kyma
+	// +kubebuilder:validation:XValidation:rule=self == oldSelf, message="The type is immutable."
 	Type VpcNetworkType `json:"type,omitempty"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=self == oldSelf, message="The subscription is immutable."
+	// +kubebuilder:validation:XValidation:rule="self.size() >= 1",message="The subscription cannot be empty."
 	Subscription string `json:"subscription"`
 
-	// Region is required for AWS, Azure, and OpenStack providers.
+	// Region for the network, router, gateways...
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=self == oldSelf, message="The region is immutable."
+	// +kubebuilder:validation:XValidation:rule="self.size() >= 1",message="The region cannot be empty."
 	Region string `json:"region"`
 
 	// +kubebuilder:validation:Required
@@ -90,6 +95,7 @@ type VpcNetworkStatusIdentifiers struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Subscription",type="string",JSONPath=".spec.subscription"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.conditions[?(@.type=="Ready")].reason`
+// +kubebuilder:validation:XValidation:rule="size(self.metadata.name)<60",message="The name must be shorter than 60 chars"
 
 // VpcNetwork is the Schema for the vpcnetworks API.
 type VpcNetwork struct {

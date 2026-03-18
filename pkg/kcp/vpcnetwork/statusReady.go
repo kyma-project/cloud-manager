@@ -15,7 +15,7 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 			vpcNetwork.Status.CidrBlocks = state.normalizedSpecCidrs
 			vpcNetwork.SetStatusProvisioned()
 		}).
-		OnSuccess(
+		OnStatusChanged(
 			composed.Log("VpcNetwork is Ready"),
 		).
 		Run(ctx, state.Cluster().K8sClient())

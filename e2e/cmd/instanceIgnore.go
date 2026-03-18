@@ -47,6 +47,10 @@ var cmdInstanceIgnore = &cobra.Command{
 			return fmt.Errorf("failed to list runtimes: %w", err)
 		}
 
+		if len(enableAliases) > 0 {
+			ignoreAll = true
+		}
+
 		for _, rt := range rtList.Items {
 			rtAlias := rt.Labels[e2elib.AliasLabel]
 
@@ -65,6 +69,9 @@ var cmdInstanceIgnore = &cobra.Command{
 			shouldIgnore := ignoreAll
 			if pie.Contains(ignoreAliases, rtAlias) || pie.Contains(ignoreAliases, rt.Name) {
 				shouldIgnore = true
+			}
+			if pie.Contains(enableAliases, rtAlias) || pie.Contains(enableAliases, rt.Name) {
+				shouldIgnore = false
 			}
 
 			if shouldIgnore {
@@ -112,6 +119,7 @@ func init() {
 	cmdInstanceIgnore.Flags().BoolVarP(&ignoreAll, "ignore-all", "a", false, "disable reconciliation on all SKR instances")
 	cmdInstanceIgnore.Flags().BoolVarP(&ignoreNone, "ignore-none", "n", false, "enable reconciliation on all SKR instances")
 	cmdInstanceIgnore.Flags().StringSliceVarP(&ignoreAliases, "ignore", "i", nil, "disable reconciliation SKR instance alias, enable all others")
-	cmdInstanceIgnore.MarkFlagsMutuallyExclusive("list-only", "ignore-all", "ignore-none", "ignore")
-	cmdInstanceIgnore.MarkFlagsOneRequired("list-only", "ignore-all", "ignore", "ignore-none")
+	cmdInstanceIgnore.Flags().StringSliceVarP(&enableAliases, "enable", "e", nil, "enable reconciliation SKR instance alias, disable all others")
+	cmdInstanceIgnore.MarkFlagsMutuallyExclusive("list-only", "ignore-all", "ignore-none", "ignore", "enable")
+	cmdInstanceIgnore.MarkFlagsOneRequired("list-only", "ignore-all", "ignore", "ignore-none", "enable")
 }

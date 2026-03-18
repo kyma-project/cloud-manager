@@ -9,6 +9,7 @@ import (
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
+	gcpmock2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock2"
 	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/looper"
@@ -29,6 +30,7 @@ type infraEnv struct {
 	activeSkrCollection skrruntime.ActiveSkrCollection
 	awsMock             awsmock.Server
 	gcpMock             gcpmock.Server
+	gcpMock2            gcpmock2.Server
 	azureMock           azuremock.Server
 	sapMock             sapmock.Server
 	skrKymaRef          klog.ObjectRef
@@ -59,6 +61,10 @@ func (ie *infraEnv) AwsMock() awsmock.Server {
 
 func (ie *infraEnv) GcpMock() gcpmock.Server {
 	return ie.gcpMock
+}
+
+func (ie *infraEnv) GcpMock2() gcpmock2.Server {
+	return ie.gcpMock2
 }
 
 func (ie *infraEnv) AzureMock() azuremock.Server { return ie.azureMock }

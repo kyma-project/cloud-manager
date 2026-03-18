@@ -56,16 +56,29 @@ spec:
                 - message: cidrBlocks must be a list of valid CIDRs, for example '10.20.30.40/16'
                   rule: self.all(s, isCIDR(s))
               region:
-                description: Region is required for AWS, Azure, and OpenStack providers.
+                description: Region for the network, router, gateways...
                 type: string
+                x-kubernetes-validations:
+                - message: The region is immutable.
+                  rule: self == oldSelf
+                - message: The region cannot be empty.
+                  rule: self.size() >= 1
               subscription:
                 type: string
+                x-kubernetes-validations:
+                - message: The subscription is immutable.
+                  rule: self == oldSelf
+                - message: The subscription cannot be empty.
+                  rule: self.size() >= 1
               type:
                 default: kyma
                 enum:
                 - kyma
                 - gardener
                 type: string
+                x-kubernetes-validations:
+                - message: The type is immutable.
+                  rule: self == oldSelf
             required:
             - cidrBlocks
             - region
@@ -157,6 +170,9 @@ spec:
                 type: string
             type: object
         type: object
+        x-kubernetes-validations:
+        - message: The name must be shorter than 60 chars
+          rule: size(self.metadata.name)<60
     served: true
     storage: true
     subresources:

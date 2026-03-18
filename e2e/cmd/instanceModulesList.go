@@ -11,6 +11,7 @@ import (
 	"github.com/rodaine/table"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -18,11 +19,33 @@ type ModuleInfo struct {
 	Alias     string
 	RuntimeID string
 	Name      string
-	Spec      bool
+	Spec      *bool
+	Status    *bool
 	State     string
 	Message   string
-	CR        bool
 	CrState   string
+}
+
+func (mi ModuleInfo) ToTableRows() []any {
+	bts := func(b *bool) string {
+		if b == nil {
+			return ""
+		}
+		if *b {
+			return "true"
+		}
+		return "false"
+	}
+	return []any{
+		mi.Alias,
+		mi.RuntimeID,
+		mi.Name,
+		bts(mi.Spec),
+		bts(mi.Status),
+		mi.State,
+		mi.Message,
+		mi.CrState,
+	}
 }
 
 var cmdInstanceModulesList = &cobra.Command{
@@ -48,75 +71,66 @@ var cmdInstanceModulesList = &cobra.Command{
 			}
 		}
 
-		tbl := table.New("ALias", "RuntimeID", "Module", "Kyma Spec", "Kyma State", "Kyma Message", "Module CR", "CR State").WithPadding(4)
-		var data []*ModuleInfo
+		tbl := table.New("Alias", "Runtime", "Module", "Spec", "Status", "State", "Message", "CR State").WithPadding(4)
 
 		for _, rtID := range runtimeIdList {
 
 			id, err := keb.GetInstance(rootCtx, rtID)
 			if err != nil {
-				return fmt.Errorf("failed to get instance %q: %w", rtID, err)
+				tbl.AddRow("?", rtID, "", "", "", "", err.Error())
+				continue
 			}
 
-			clnt, err := keb.CreateInstanceClient(rootCtx, rtID)
+			kcpKyma := &operatorv1beta2.Kyma{}
+			err = keb.KcpClient().Get(rootCtx, types.NamespacedName{
+				Namespace: keb.Config().KcpNamespace,
+				Name:      id.RuntimeID,
+			}, kcpKyma)
 			if err != nil {
-				return err
+				tbl.AddRow(id.Alias, id.RuntimeID, "", "", "", "", err.Error())
+				continue
 			}
 
-			skrKyma := &operatorv1beta2.Kyma{}
-			err = clnt.Get(rootCtx, types.NamespacedName{
-				Namespace: "kyma-system",
-				Name:      "default",
-			}, skrKyma)
-			if err != nil {
-				return fmt.Errorf("failed to get SKR kyma: %w", err)
-			}
+			rtModules := map[string]*ModuleInfo{}
 
-			dashIt := func(s string) string {
-				if s == "" {
-					return "-"
-				}
-				return s
-			}
-
-			localData := map[string]*ModuleInfo{}
-
-			for _, m := range skrKyma.Status.Modules {
+			for _, m := range kcpKyma.Status.Modules {
 				if len(modules) > 0 && !pie.Contains(modules, m.Name) {
 					continue
 				}
-				localData[m.Name] = &ModuleInfo{
+				mi := &ModuleInfo{
 					Alias:     id.Alias,
 					RuntimeID: id.RuntimeID,
 					Name:      m.Name,
-					Spec:      false,
-					State:     dashIt(string(m.State)),
-					Message:   dashIt(m.Message),
-					CR:        false,
-					CrState:   "",
+					Status:    ptr.To(true),
+					State:     string(m.State),
+					Message:   m.Message,
 				}
+				rtModules[m.Name] = mi
 			}
-			for _, m := range skrKyma.Spec.Modules {
+			for _, m := range kcpKyma.Spec.Modules {
 				if len(modules) > 0 && !pie.Contains(modules, m.Name) {
 					continue
 				}
-				mi, ok := localData[m.Name]
+				mi, ok := rtModules[m.Name]
 				if !ok {
-					localData[m.Name] = &ModuleInfo{
-						Name:    m.Name,
-						Spec:    true,
-						State:   dashIt(""),
-						Message: dashIt(""),
-						CR:      false,
-						CrState: dashIt(""),
+					rtModules[m.Name] = &ModuleInfo{
+						Alias:     id.Alias,
+						RuntimeID: id.RuntimeID,
+						Name:      m.Name,
+						Spec:      ptr.To(true),
 					}
 				} else {
-					mi.Spec = true
+					mi.Spec = ptr.To(true)
 				}
 			}
 
-			for _, mi := range localData {
+			for _, mi := range rtModules {
 				if mi.Name == "cloud-manager" {
+					clnt, err := keb.CreateInstanceClient(rootCtx, rtID)
+					if err != nil {
+						mi.CrState = err.Error()
+						break
+					}
 					cr := &cloudresourcesv1beta1.CloudResources{}
 					err = clnt.Get(rootCtx, types.NamespacedName{
 						Namespace: "kyma-system",
@@ -126,22 +140,22 @@ var cmdInstanceModulesList = &cobra.Command{
 						continue
 					}
 					if err != nil {
-						return fmt.Errorf("failed to get CloudResources: %w", err)
+						mi.CrState = err.Error()
+						break
 					}
-					mi.CR = true
-					mi.CrState = dashIt(string(cr.Status.State))
+					mi.CrState = string(cr.Status.State)
+					break
 				}
 			}
 
-			for _, mi := range localData {
-				data = append(data, mi)
+			for _, mi := range rtModules {
+				tbl.AddRow(mi.ToTableRows()...)
+			}
+			if len(rtModules) == 0 {
+				tbl.AddRow(id.Alias, id.RuntimeID, "-")
 			}
 
 		} // for runtime
-
-		for _, mi := range data {
-			tbl.AddRow(mi.Alias, mi.RuntimeID, mi.Name, mi.Spec, mi.State, mi.Message, mi.CR, mi.CrState)
-		}
 
 		tbl.Print()
 		fmt.Println("")
