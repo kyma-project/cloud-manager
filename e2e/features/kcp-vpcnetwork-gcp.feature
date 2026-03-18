@@ -1,7 +1,7 @@
 Feature: VpcNetwork Azure
 
   @kcp @gcp @vpcnetwork
-  Scenario: VpcNetwork Azure is created and deleted
+  Scenario: VpcNetwork GCP is created and deleted
 
     Given current cluster is "kcp"
 

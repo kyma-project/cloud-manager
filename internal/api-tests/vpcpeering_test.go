@@ -29,7 +29,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 	)
 
 	canNotCreateKcp(
-		"VpcPeering with both network details and GPC info can not be created",
+		"VpcPeering with both network details and GCP info can not be created",
 		nb().WithScope("s").WithRemoteRef("ns", "n").
 			WithGcpPeering("peering", "project", "vpc", true).
 			WithDetails("loc", "loc-ns", "rem", "rem-ns", "name", true, false),

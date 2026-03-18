@@ -184,11 +184,11 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 		})
 
 		gcpRedisClusterName := "2ba3f231-fdcc-4ca4-8ddb-dbff77633995"
-		gpcRedisCluster := &cloudcontrolv1beta1.GcpRedisCluster{}
+		gcpRedisCluster := &cloudcontrolv1beta1.GcpRedisCluster{}
 		By("When GcpRedisCluster exists", func() {
 			kcpgcprediscluster.Ignore.AddName(gcpRedisClusterName)
 			Eventually(CreateKcpGcpRedisCluster).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), gpcRedisCluster,
+				WithArguments(infra.Ctx(), infra.KCP().Client(), gcpRedisCluster,
 					WithName(gcpRedisClusterName),
 					AddFinalizer(api.CommonFinalizerDeletionHook),
 					WithRemoteRef("skr-rediscluster-example"),
@@ -226,7 +226,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 			"Network":         cmNetwork,
 			"RedisInstance":   redisInstance,
 			"GcpSubnet":       gcpSubnet,
-			"GcpRedisCluster": gpcRedisCluster,
+			"GcpRedisCluster": gcpRedisCluster,
 		}
 
 		for kind, obj := range resources {

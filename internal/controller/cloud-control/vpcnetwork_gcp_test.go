@@ -79,7 +79,7 @@ var _ = Describe("Feature: VpcNetwork", func() {
 		var gcpNetwork *computepb.Network
 		var gcpRouter *computepb.Router
 
-		By("Then GPC VPC Network exists", func() {
+		By("Then GCP VPC Network exists", func() {
 			aVpc, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				Network: vpcNetwork.Status.Identifiers.Vpc,
@@ -89,7 +89,7 @@ var _ = Describe("Feature: VpcNetwork", func() {
 			gcpNetwork = aVpc
 		})
 
-		By("Then GPC Cloud Router exists", func() {
+		By("Then GCP Cloud Router exists", func() {
 			aRouter, err := gcpMock.GetRouter(infra.Ctx(), &computepb.GetRouterRequest{
 				Project: gcpMock.ProjectId(),
 				Region:  region,
