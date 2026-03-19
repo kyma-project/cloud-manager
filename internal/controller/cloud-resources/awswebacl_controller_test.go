@@ -1,0 +1,38 @@
+/*
+Copyright 2023.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package cloudresources
+
+import (
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("AwsWebAcl Controller", func() {
+	It("Scenario: SKR AwsWebAcl is created then deleted", func() {
+		awsWebAcl := &cloudresourcesv1beta1.AwsWebAcl{}
+
+		By("When AwsWebAcl is created", func() {
+			Eventually(CreateAwsWebAcl).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsWebAcl,
+					WithName("67ba9c61-8826-4349-873c-d30e9756aaec"),
+				).Should(Succeed())
+		})
+	})
+})
