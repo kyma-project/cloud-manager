@@ -34,6 +34,7 @@ const (
 	FeatureRedis        FeatureName = "redis"
 	FeatureRedisCluster FeatureName = "rediscluster"
 	FeatureVpcDnsLink   FeatureName = "vpcdnslink"
+	FeatureWAF          FeatureName = "waf"
 )
 
 type PlaneName = string

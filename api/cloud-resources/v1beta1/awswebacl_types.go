@@ -17,50 +17,31 @@ limitations under the License.
 package v1beta1
 
 import (
+	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // AwsWebAclSpec defines the desired state of AwsWebAcl
 type AwsWebAclSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
-
-	// foo is an example field of AwsWebAcl. Edit awswebacl_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
 }
 
 // AwsWebAclStatus defines the observed state of AwsWebAcl.
 type AwsWebAclStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 
-	// For Kubernetes API conventions, see:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
-
-	// conditions represent the current state of the AwsWebAcl resource.
-	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
-	//
-	// Standard condition types include:
-	// - "Available": the resource is fully functional
-	// - "Progressing": the resource is being created or updated
-	// - "Degraded": the resource failed to reach or maintain its desired state
-	//
-	// The status of each condition is one of True, False, or Unknown.
+	// List of status conditions to indicate the status of a AwsWebAcl.
+	// +optional
 	// +listType=map
 	// +listMapKey=type
-	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// +optional
+	State string `json:"state,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // AwsWebAcl is the Schema for the awswebacls API
 type AwsWebAcl struct {
@@ -68,15 +49,32 @@ type AwsWebAcl struct {
 
 	// metadata is a standard object metadata
 	// +optional
-	metav1.ObjectMeta `json:"metadata,omitzero"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// spec defines the desired state of AwsWebAcl
 	// +required
-	Spec AwsWebAclSpec `json:"spec"`
+	Spec AwsWebAclSpec `json:"spec,omitempty"`
 
 	// status defines the observed state of AwsWebAcl
 	// +optional
-	Status AwsWebAclStatus `json:"status,omitzero"`
+	Status AwsWebAclStatus `json:"status,omitempty"`
+}
+
+func (in *AwsWebAcl) Conditions() *[]metav1.Condition { return &in.Status.Conditions }
+
+func (in *AwsWebAcl) GetObjectMeta() *metav1.ObjectMeta { return &in.ObjectMeta }
+
+func (in *AwsWebAcl) SpecificToFeature() featuretypes.FeatureName {
+	return featuretypes.FeatureWAF
+}
+
+func (in *AwsWebAcl) SpecificToProviders() []string { return []string{"aws"} }
+
+func (in *AwsWebAcl) State() string {
+	return in.Status.State
+}
+func (in *AwsWebAcl) SetState(v string) {
+	in.Status.State = v
 }
 
 // +kubebuilder:object:root=true
@@ -84,7 +82,7 @@ type AwsWebAcl struct {
 // AwsWebAclList contains a list of AwsWebAcl
 type AwsWebAclList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitzero"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AwsWebAcl `json:"items"`
 }
 
