@@ -69,6 +69,14 @@ jobs:
       - name: Break if provider is empty
         if: ${{ env.PROVIDER == '' }}
         run: echo "PROVIDER is missing or empty!" && exit 1
+      - name: Setup tags
+        run: |
+          TAGS="@$PROVIDER"
+          if [ -n "${{ inputs.tags }}" ]; then
+            TAGS="${{ inputs.tags }} && @$PROVIDER"
+          fi
+          echo "Running tests with tag: $TAGS"
+          echo "TAGS=$TAGS" >> $GITHUB_ENV
       - name: Inputs OK
         run: echo "INPUTSOK='true'" >> $GITHUB_ENV
       - name: Initialize E2E environment
@@ -94,14 +102,8 @@ jobs:
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
-          echo $KUBECONFIG
+          [ -n "$DEBUG" ] && echo $KUBECONFIG
           [ -n "$DEBUG" ] && ls -la ./tmp
-          if [ -n "${{ inputs.tags }}" ]; then
-            TAGS="${{ inputs.tags }} && @$PROVIDER"
-          else
-            TAGS="@$PROVIDER"
-          fi
-          echo "Running tests with tag: $TAGS"
           RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "$TAGS"
       - name: Clean up orphaned SKR resources
         if: always() && env.INPUTSOK != ''
