@@ -29,10 +29,12 @@ on:
         description: |
           Godog tags (provider automatically appended)
       feature_flags:
-        type: string
-        required: false
+        type: choice
+        required: true
+        options:
+          - ./pkg/feature/ff_edge.yaml
+          - ./pkg/feature/ff_ga.yaml
         description: Feature flag file
-        default: ./pkg/feature/ff_edge.yaml
       debug:
         type: boolean
         description: Extra logs and prints
