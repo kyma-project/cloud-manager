@@ -49,6 +49,9 @@ runs:
           - name: gardener-sc-learn
             provider: gcp
             isDefault: true
+          - name: monsoon3-kyma-phoenix-e2e-mt
+            provider: openstack
+            isDefault: true
         networkOwner: gardener
         oidcClientId: ${{ inputs.oidc_client_id }}
         oidcIssuerUrl: ${{ inputs.oidc_issuer_url }}
