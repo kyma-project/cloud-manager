@@ -8,13 +8,19 @@ metadata:
 spec:
   group: cloud-resources.kyma-project.io
   names:
+    categories:
+    - kyma-cloud-manager
     kind: AwsWebAcl
     listKind: AwsWebAclList
     plural: awswebacls
     singular: awswebacl
   scope: Cluster
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .status.state
+      name: State
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: AwsWebAcl is the Schema for the awswebacls API
@@ -38,26 +44,13 @@ spec:
             type: object
           spec:
             description: spec defines the desired state of AwsWebAcl
-            properties:
-              foo:
-                description: foo is an example field of AwsWebAcl. Edit awswebacl_types.go
-                  to remove/update
-                type: string
             type: object
           status:
             description: status defines the observed state of AwsWebAcl
             properties:
               conditions:
-                description: |-
-                  conditions represent the current state of the AwsWebAcl resource.
-                  Each condition has a unique type and reflects the status of a specific aspect of the resource.
-
-                  Standard condition types include:
-                  - "Available": the resource is fully functional
-                  - "Progressing": the resource is being created or updated
-                  - "Degraded": the resource failed to reach or maintain its desired state
-
-                  The status of each condition is one of True, False, or Unknown.
+                description: List of status conditions to indicate the status of a
+                  AwsWebAcl.
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -116,6 +109,8 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              state:
+                type: string
             type: object
         required:
         - spec
