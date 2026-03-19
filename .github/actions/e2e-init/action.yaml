@@ -21,15 +21,19 @@ runs:
       uses: actions/setup-go@v5
       with:
         go-version-file: 'go.mod'
+
     - name: Setup OpenTofu
       uses: opentofu/setup-opentofu@v1
+
     - name: Display Go version
       shell: bash
       run: go version
+
     - name: Write KUBECONFIG to file
       shell: bash
       run: |
         echo "${{ inputs.gardener_kubeconfig }}" > kubeconfig-garden.yaml
+
     - name: Write e2e config file
       shell: bash
       run: |
@@ -80,38 +84,52 @@ runs:
             OS_APPLICATION_CREDENTIAL_ID: applicationCredentialID
             OS_APPLICATION_CREDENTIAL_NAME: applicationCredentialName
             OS_APPLICATION_CREDENTIAL_SECRET: applicationCredentialSecret
-
         EOF
+
     - name: Display e2e config file
       shell: bash
       run: cat e2e-config.yaml
+
     - name: Create tmp directory
       shell: bash
       run: mkdir ./tmp
+
     - name: List directory
       shell: bash
       run: |
         [ -n "$DEBUG" ] && ls -la || true
+
     - name: Download credentials
       shell: bash
       run: go run ./e2e/cmd credentials download
+
+    - name: OS Floating Pool Config
+      shell: bash
+      run: |
+        echo "FloatingIP-external-monsoon3-06" > ./tmp/OS_FLOATING_POOL_NETWORK
+        echo "FloatingIP-sap-monsoon3-06*" > ./tmp/OS_FLOATING_POOL_SUBNET
+
     - name: List tmp directory
       shell: bash
       run: |
         [ -n "$DEBUG" ] && ls -la ./tmp || true
+
     - name: Download setup-envtest
       shell: bash
       run: make envtest
+
     - name: Get ENVTEST_K8S_VERSION from Makefile
       shell: bash
       run: |
         ENVTEST_K8S_VERSION=$(grep "ENVTEST_K8S_VERSION = " Makefile | awk -F '[[:space:]]*=[[:space:]]*' '{print $2}')
         echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
         echo "ENVTEST_K8S_VERSION=$ENVTEST_K8S_VERSION" >> $GITHUB_ENV
+
     - name: Setup envtest
       shell: bash
       run: |
         ./bin/setup-envtest use $ENVTEST_K8S_VERSION --bin-dir $PWD/bin -p path
+
     - name: Run envtest
       shell: bash
       run: |
@@ -120,10 +138,12 @@ runs:
         echo "ENVTEST_PID=$ENVTEST_PID" >> "$GITHUB_ENV"
         echo "Waiting for envtest to start K8S cluster"
         sleep 30
+
     - name: List tmp directory after K8S start
       shell: bash
       run: |
         [ -n "$DEBUG" ] && ls -la ./tmp || true
+
     - name: Run sim
       shell: bash
       env:
@@ -134,6 +154,7 @@ runs:
         echo "SIM_PID=$SIM_PID" >> "$GITHUB_ENV"
         echo "Waiting for sim to start"
         sleep 30
+
     - name: Validate and prepare feature flags
       shell: bash
       run: |
@@ -148,6 +169,7 @@ runs:
           exit 1
         fi
         echo "✓ Using feature flags: $FF_FILE"
+
     - name: Run Cloud Manager
       shell: bash
       env:

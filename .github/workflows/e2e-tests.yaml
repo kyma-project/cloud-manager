@@ -49,6 +49,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Validate required configuration
         shell: bash
         run: |
@@ -64,13 +65,16 @@ jobs:
             exit 1
           fi
           echo "✅ All required configuration variables are set"
+
       - name: Set provider env var
         run: |
           PROVIDER=${{ inputs.provider }}
           echo "PROVIDER=$PROVIDER" >> $GITHUB_ENV
+
       - name: Break if provider is empty
         if: ${{ env.PROVIDER == '' }}
         run: echo "PROVIDER is missing or empty!" && exit 1
+
       - name: Setup tags
         run: |
           TAGS="@$PROVIDER"
@@ -79,8 +83,10 @@ jobs:
           fi
           echo "Running tests with tag: $TAGS"
           echo "TAGS=$TAGS" >> $GITHUB_ENV
+
       - name: Inputs OK
         run: echo "INPUTSOK='true'" >> $GITHUB_ENV
+
       - name: Initialize E2E environment
         uses: ./.github/actions/e2e-init
         id: e2e-init
@@ -89,17 +95,20 @@ jobs:
           oidc_client_id: ${{ vars.OIDC_CLIENT_ID }}
           oidc_issuer_url: ${{ vars.OIDC_ISSUER_URL }}
           feature_flag_file: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
+
       - name: Create shared instance
         env:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
           go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -t 30m -w
+
       - name: Add module to shared instance
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
           go run ./e2e/cmd instance modules add -m  cloud-manager -a shared-$PROVIDER
           sleep 60
+
       - name: run e2e tests
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
@@ -109,6 +118,7 @@ jobs:
           echo "Tags: $TAGS"
           echo "RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags \"$TAGS\""
           RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "$TAGS"
+
       - name: Clean up orphaned SKR resources
         if: always() && env.INPUTSOK != ''
         env:
@@ -118,6 +128,7 @@ jobs:
             go run ./e2e/cmd instance clean -a shared-$PROVIDER --verbose
             sleep 5
           fi
+
       - name: Delete shared instance
         if: always() && env.INPUTSOK != ''
         env:
@@ -127,6 +138,7 @@ jobs:
             go run ./e2e/cmd instance delete -a shared-$PROVIDER -t 60m -w
             sleep 5
           fi
+
       - name: Destroy E2E environment
         if: always() && env.INPUTSOK != ''
         uses: ./.github/actions/e2e-destroy
