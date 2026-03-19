@@ -20,6 +20,7 @@ on:
           - aws
           - gcp
           - azure
+          - openstack
         description: Choose the cloud provider for the shared instance
         default: azure
       feature_flags:
@@ -54,7 +55,6 @@ jobs:
       - name: Set provider env var
         run: |
           PROVIDER=${{ inputs.provider }}
-          PROVIDER=${PROVIDER:-"azure"}
           echo "PROVIDER=$PROVIDER" >> $GITHUB_ENV
       - name: Break if provider is empty
         if: ${{ env.PROVIDER == '' }}
