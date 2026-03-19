@@ -33,12 +33,11 @@ var cmdRoot = &cobra.Command{
 			_ = os.Setenv("CONFIG_DIR", configDir)
 		}
 		if configDir == "" && os.Getenv("CONFIG_DIR") == "" {
-			_ = os.Setenv("CONFIG_DIR", ".")
+			_ = os.Setenv("CONFIG_DIR", "./tmp")
 		}
 		config = e2econfig.LoadConfig()
 
-		cmCfg := commonconfig.CreateNewConfigAndLoad()
-		rootLogger.WithValues("config", cmCfg.PrintJson()).Info("Config dump")
+		_ = commonconfig.CreateNewConfigAndLoad()
 
 		return nil
 	},

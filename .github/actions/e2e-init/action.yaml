@@ -34,10 +34,14 @@ runs:
       run: |
         echo "${{ inputs.gardener_kubeconfig }}" > kubeconfig-garden.yaml
 
+    - name: Create tmp directory
+      shell: bash
+      run: mkdir ./tmp
+
     - name: Write e2e config file
       shell: bash
       run: |
-        cat <<EOF > e2e-config.yaml
+        cat <<EOF > ./tmp/e2e-config.yaml
         gardenKubeconfig: $PWD/kubeconfig-garden.yaml
         shootPrefix: pp
         kcpNamespace: kcp-system
@@ -86,18 +90,12 @@ runs:
             OS_APPLICATION_CREDENTIAL_SECRET: applicationCredentialSecret
         EOF
 
-    - name: Display e2e config file
-      shell: bash
-      run: cat e2e-config.yaml
-
-    - name: Create tmp directory
-      shell: bash
-      run: mkdir ./tmp
-
     - name: List directory
       shell: bash
       run: |
-        [ -n "$DEBUG" ] && ls -la || true
+        if [ -n "$DEBUG" ]; then
+          ls -la
+        fi
 
     - name: Download credentials
       shell: bash
