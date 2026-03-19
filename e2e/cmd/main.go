@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -35,6 +36,9 @@ var cmdRoot = &cobra.Command{
 			_ = os.Setenv("CONFIG_DIR", ".")
 		}
 		config = e2econfig.LoadConfig()
+
+		cmCfg := commonconfig.CreateNewConfigAndLoad()
+		rootLogger.WithValues("config", cmCfg.PrintJson()).Info("Config dump")
 
 		return nil
 	},

@@ -106,13 +106,17 @@ runs:
     - name: OS Floating Pool Config
       shell: bash
       run: |
-        echo "FloatingIP-external-monsoon3-06" > ./tmp/OS_FLOATING_POOL_NETWORK
-        echo "FloatingIP-sap-monsoon3-06*" > ./tmp/OS_FLOATING_POOL_SUBNET
+        echo -n "FloatingIP-external-monsoon3-06" > ./tmp/OS_FLOATING_POOL_NETWORK
+        echo -n "FloatingIP-sap-monsoon3-06*" > ./tmp/OS_FLOATING_POOL_SUBNET
 
     - name: List tmp directory
       shell: bash
       run: |
-        [ -n "$DEBUG" ] && ls -la ./tmp || true
+        if [ -n "$DEBUG" ]; then 
+          ls -la ./tmp
+          cat ./tmp/OS_FLOATING_POOL_NETWORK
+          cat ./tmp/OS_FLOATING_POOL_SUBNET
+        fi
 
     - name: Download setup-envtest
       shell: bash
@@ -148,6 +152,7 @@ runs:
       shell: bash
       env:
         KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
+        CONFIG_DIR: ./tmp
       run: |
         go run ./e2e/cmd sim run  > ./tmp/sim.log 2>&1 &
         SIM_PID=$!

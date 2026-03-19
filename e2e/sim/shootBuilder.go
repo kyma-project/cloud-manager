@@ -15,6 +15,7 @@ import (
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	sapconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
@@ -258,7 +259,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 				APIVersion: gardeneraopenstack.SchemeGroupVersion.String(),
 				Kind:       "InfrastructureConfig",
 			},
-			FloatingPoolName: "FloatingIP-external-kyma-01",
+			FloatingPoolName: sapconfig.SapConfig.FloatingPoolNetwork, // "FloatingIP-external-kyma-01",
 		}
 
 		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
