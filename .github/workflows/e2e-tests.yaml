@@ -15,8 +15,9 @@ on:
     inputs:
       provider:
         type: choice
-        required: false
+        required: true
         options:
+          - ''
           - aws
           - gcp
           - azure
