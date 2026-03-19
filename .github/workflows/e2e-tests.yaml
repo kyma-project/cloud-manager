@@ -22,13 +22,12 @@ on:
           - gcp
           - azure
           - openstack
-        description: Choose the cloud provider for the shared instance
+        description: Cloud provider
       tags:
         type: string
         required: false
         description: |
-          Godog tags for the test run. Always appended with " && @PROVIDER" if provided. Defaults to "@PROVIDER" if no
-          custom tags provided.
+          Godog tags (provider automatically appended)
       feature_flags:
         type: string
         required: false
@@ -97,7 +96,13 @@ jobs:
         run: |
           echo $KUBECONFIG
           [ -n "$DEBUG" ] && ls -la ./tmp
-          RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "@skr && @$PROVIDER"
+          if [ -n "${{ inputs.tags }}" ]; then
+            TAGS="${{ inputs.tags }} && @$PROVIDER"
+          else
+            TAGS="@$PROVIDER"
+          fi
+          echo "Running tests with tag: $TAGS"
+          RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "$TAGS"
       - name: Clean up orphaned SKR resources
         if: always() && env.INPUTSOK != ''
         env:
