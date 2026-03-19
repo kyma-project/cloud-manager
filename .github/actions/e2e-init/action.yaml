@@ -54,6 +54,7 @@ runs:
         oidcIssuerUrl: ${{ inputs.oidc_issuer_url }}
         administrators:
           - vladimir.andjelkoski@sap.com
+          - milos.tomic@sap.com
           - dl_623b719a6a0d2d029907bee0@global.corp.sap
         overwriteGardenerCredentials: true
         downloadGardenSecrets:
@@ -72,6 +73,10 @@ runs:
             AZURE_CLIENT_SECRET: clientSecret
             AZURE_PEERING_CLIENT_ID: clientID
             AZURE_PEERING_CLIENT_SECRET: clientSecret
+          monsoon3-kyma-phoenix-e2e-mt:
+            OS_APPLICATION_CREDENTIAL_ID: applicationCredentialID
+            OS_APPLICATION_CREDENTIAL_NAME: applicationCredentialName
+            OS_APPLICATION_CREDENTIAL_SECRET: applicationCredentialSecret
 
         EOF
     - name: Display e2e config file
