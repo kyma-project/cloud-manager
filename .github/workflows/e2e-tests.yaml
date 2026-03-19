@@ -1,5 +1,5 @@
 name: E2E tests
-run-name: E2E tests ${{ inputs.provider || 'azure' }}
+run-name: E2E tests ${{ inputs.provider }}
 
 # Required GitHub Repository Configuration:
 #
@@ -22,7 +22,6 @@ on:
           - azure
           - openstack
         description: Choose the cloud provider for the shared instance
-        default: azure
       feature_flags:
         type: string
         required: false
