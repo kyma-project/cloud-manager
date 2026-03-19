@@ -139,7 +139,7 @@ runs:
         ENVTEST_PID=$!
         echo "ENVTEST_PID=$ENVTEST_PID" >> "$GITHUB_ENV"
         echo "Waiting for envtest to start K8S cluster"
-        sleep 30
+        sleep 10
 
     - name: List tmp directory after K8S start
       shell: bash
@@ -156,7 +156,7 @@ runs:
         SIM_PID=$!
         echo "SIM_PID=$SIM_PID" >> "$GITHUB_ENV"
         echo "Waiting for sim to start"
-        sleep 30
+        sleep 10
 
     - name: Validate and prepare feature flags
       shell: bash
