@@ -14,9 +14,20 @@ type ProviderParams struct {
 
 	Username string
 	Password string
+
+	ApplicationCredentialID     string
+	ApplicationCredentialName   string
+	ApplicationCredentialSecret string
 }
 
 func NewProviderParamsFromConfig(cfg *sapconfig.SapConfigStruct) ProviderParams {
+	if cfg.ApplicationCredentialSecret != "" {
+		return ProviderParams{
+			ApplicationCredentialID:     cfg.ApplicationCredentialID,
+			ApplicationCredentialName:   cfg.ApplicationCredentialName,
+			ApplicationCredentialSecret: cfg.ApplicationCredentialSecret,
+		}
+	}
 	return ProviderParams{
 		Username: cfg.Username,
 		Password: cfg.Password,
@@ -24,12 +35,16 @@ func NewProviderParamsFromConfig(cfg *sapconfig.SapConfigStruct) ProviderParams 
 }
 
 func (pp ProviderParams) WithDomain(v string) ProviderParams {
-	pp.DomainName = v
+	if pp.ApplicationCredentialSecret == "" {
+		pp.DomainName = v
+	}
 	return pp
 }
 
 func (pp ProviderParams) WithProject(v string) ProviderParams {
-	pp.ProjectName = v
+	if pp.ApplicationCredentialSecret == "" {
+		pp.ProjectName = v
+	}
 	return pp
 }
 

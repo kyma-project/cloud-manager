@@ -22,6 +22,10 @@ func NewProviderClient(ctx context.Context, pp ProviderParams) (*ProvidedInfo, e
 		DomainName:       pp.DomainName,
 		TenantName:       pp.ProjectName,
 		AllowReauth:      true,
+
+		ApplicationCredentialID:     pp.ApplicationCredentialID,
+		ApplicationCredentialName:   pp.ApplicationCredentialName,
+		ApplicationCredentialSecret: pp.ApplicationCredentialSecret,
 	}
 
 	endpointOptions := gophercloud.EndpointOpts{
