@@ -104,25 +104,27 @@ jobs:
         run: |
           [ -n "$DEBUG" ] && echo $KUBECONFIG
           [ -n "$DEBUG" ] && ls -la ./tmp
+          echo "Tags: $TAGS"
+          echo "RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags \"$TAGS\""
           RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "$TAGS"
       - name: Clean up orphaned SKR resources
         if: always() && env.INPUTSOK != ''
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
-          echo "Cleaning up orphaned cloud resources from SKR instance..."
-          echo "This runs after tests (pass or fail) while SIM and CM are still active"
-          go run ./e2e/cmd instance clean -a shared-$PROVIDER --verbose || {
-            echo "⚠️  Cleanup failed, but continuing with instance deletion..."
-          }
-          sleep 60
+          if [ -f "$KUBECONFIG" ]; then
+            go run ./e2e/cmd instance clean -a shared-$PROVIDER --verbose
+            sleep 5
+          fi
       - name: Delete shared instance
         if: always() && env.INPUTSOK != ''
         env:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
-          go run ./e2e/cmd instance delete -a shared-$PROVIDER -t 60m -w
-          sleep 60
+          if [ -f "$KUBECONFIG" ]; then
+            go run ./e2e/cmd instance delete -a shared-$PROVIDER -t 60m -w
+            sleep 5
+          fi
       - name: Destroy E2E environment
         if: always() && env.INPUTSOK != ''
         uses: ./.github/actions/e2e-destroy
