@@ -7,7 +7,7 @@ type SapConfigStruct struct {
 	Password string `json:"password" yaml:"password"`
 
 	ApplicationCredentialID     string `json:"applicationCredentialID" yaml:"applicationCredentialID"`
-	ApplicationCredentialName string `json:"applicationCredentialName" yaml:"applicationCredentialName"`
+	ApplicationCredentialName   string `json:"applicationCredentialName" yaml:"applicationCredentialName"`
 	ApplicationCredentialSecret string `json:"applicationCredentialSecret" yaml:"applicationCredentialSecret"`
 
 	FloatingPoolNetwork string `json:"floatingPoolNetwork" yaml:"floatingPoolNetwork"`
