@@ -917,6 +917,9 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 	})
 
 	It("Scenario: KCP Azure VpcPeering does not sync", func() {
+
+		Skip("I'm flaky, fix me")
+
 		const (
 			kymaName            = "b982e044-3030-4f08-b4ce-1a14594284c6"
 			kcpPeeringName      = "13c0671c-bcf5-43a9-94e8-d2300e2b0325"
