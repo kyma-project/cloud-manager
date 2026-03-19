@@ -91,14 +91,14 @@ runs:
     - name: List directory
       shell: bash
       run: |
-        [ -n "$DEBUG" ] && ls -la
+        [ -n "$DEBUG" ] && ls -la || true
     - name: Download credentials
       shell: bash
       run: go run ./e2e/cmd credentials download
     - name: List tmp directory
       shell: bash
       run: |
-        [ -n "$DEBUG" ] && ls -la ./tmp
+        [ -n "$DEBUG" ] && ls -la ./tmp || true
     - name: Download setup-envtest
       shell: bash
       run: make envtest
@@ -123,7 +123,7 @@ runs:
     - name: List tmp directory after K8S start
       shell: bash
       run: |
-        [ -n "$DEBUG" ] && ls -la ./tmp
+        [ -n "$DEBUG" ] && ls -la ./tmp || true
     - name: Run sim
       shell: bash
       env:

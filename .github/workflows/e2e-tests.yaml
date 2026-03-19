@@ -102,8 +102,8 @@ jobs:
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
-          [ -n "$DEBUG" ] && echo $KUBECONFIG
-          [ -n "$DEBUG" ] && ls -la ./tmp
+          [ -n "$DEBUG" ] && echo $KUBECONFIG || true
+          [ -n "$DEBUG" ] && ls -la ./tmp || true
           echo "Tags: $TAGS"
           echo "RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags \"$TAGS\""
           RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "$TAGS"
