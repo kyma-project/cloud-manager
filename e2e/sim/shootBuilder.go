@@ -260,6 +260,10 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 				Kind:       "InfrastructureConfig",
 			},
 			FloatingPoolName: sapconfig.SapConfig.FloatingPoolNetwork, // "FloatingIP-external-kyma-01",
+			FloatingPoolSubnetName: ptr.To(sapconfig.SapConfig.FloatingPoolSubnet),
+		}
+		if len(sapconfig.SapConfig.FloatingPoolSubnet) < 1 {
+			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("no FloatingPoolSubnet specified in config"))
 		}
 
 		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
