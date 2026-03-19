@@ -15,24 +15,35 @@ on:
     inputs:
       provider:
         type: choice
-        required: true
+        required: false
         options:
           - aws
           - gcp
           - azure
           - openstack
         description: Choose the cloud provider for the shared instance
+      tags:
+        type: string
+        required: false
+        description: |
+          Godog tags for the test run. Always appended with " && @PROVIDER" if provided. Defaults to "@PROVIDER" if no
+          custom tags provided.
       feature_flags:
         type: string
         required: false
         description: 'Feature flag file: ff_edge.yaml (default, with backup) | ff_ga.yaml (GA only)'
         default: ./pkg/feature/ff_edge.yaml
+      debug:
+        type: boolean
+        description: Extra logs and prints
+        default: false
 jobs:
   test:
     runs-on: ubuntu-latest
     env:
       AWS_ROLE_NAME: CloudManagerRole
       AWS_PEERING_ROLE_NAME: CloudManagerPeeringRole
+      DEBUG:  ${{ inputs.debug && 'true' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -58,6 +69,8 @@ jobs:
       - name: Break if provider is empty
         if: ${{ env.PROVIDER == '' }}
         run: echo "PROVIDER is missing or empty!" && exit 1
+      - name: Inputs OK
+        run: echo "INPUTSOK='true'" >> $GITHUB_ENV
       - name: Initialize E2E environment
         uses: ./.github/actions/e2e-init
         id: e2e-init
@@ -82,10 +95,10 @@ jobs:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
           echo $KUBECONFIG
-          ls -la ./tmp
+          [ -n "$DEBUG" ] && ls -la ./tmp
           RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "@skr && @$PROVIDER"
       - name: Clean up orphaned SKR resources
-        if: always()
+        if: always() && env.INPUTSOK != ''
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
@@ -96,13 +109,13 @@ jobs:
           }
           sleep 60
       - name: Delete shared instance
-        if: always()
+        if: always() && env.INPUTSOK != ''
         env:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
           go run ./e2e/cmd instance delete -a shared-$PROVIDER -t 60m -w
           sleep 60
       - name: Destroy E2E environment
-        if: always()
+        if: always() && env.INPUTSOK != ''
         uses: ./.github/actions/e2e-destroy
         id: e2e-destroy

@@ -87,13 +87,15 @@ runs:
       run: mkdir ./tmp
     - name: List directory
       shell: bash
-      run: ls -la
+      run: |
+        [ -n "$DEBUG" ] && ls -la
     - name: Download credentials
       shell: bash
       run: go run ./e2e/cmd credentials download
     - name: List tmp directory
       shell: bash
-      run: ls -la ./tmp
+      run: |
+        [ -n "$DEBUG" ] && ls -la ./tmp
     - name: Download setup-envtest
       shell: bash
       run: make envtest
@@ -117,7 +119,8 @@ runs:
         sleep 30
     - name: List tmp directory after K8S start
       shell: bash
-      run: ls -la ./tmp
+      run: |
+        [ -n "$DEBUG" ] && ls -la ./tmp
     - name: Run sim
       shell: bash
       env:
