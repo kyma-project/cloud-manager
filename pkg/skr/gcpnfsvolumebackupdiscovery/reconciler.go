@@ -53,6 +53,7 @@ func (r *Reconciler) newAction() composed.Action {
 		setProcessing,
 		shortCircuit,
 		loadScope,
+		clientCreate,
 		loadAvailableBackups,
 		updateStatus,
 		composed.StopAndForgetAction,
