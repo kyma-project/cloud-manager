@@ -25,16 +25,9 @@ jobs:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
       - name: Build Image Locally
         uses: docker/build-push-action@v6
         with:
-          context: .
           outputs: type=cacheonly
           push: false
           tags: user/app:latest
