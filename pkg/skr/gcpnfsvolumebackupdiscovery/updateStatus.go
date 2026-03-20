@@ -5,10 +5,9 @@ import (
 	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
 
@@ -53,10 +52,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			}
 
 			// Set creation time if available
-			if b.CreateTime != "" {
-				if creationTime, err := time.Parse(time.RFC3339, b.CreateTime); err == nil {
-					availableBackup.CreationTime = ptr.To(metav1.NewTime(creationTime))
-				}
+			if b.CreateTime != nil {
+				availableBackup.CreationTime = ptr.To(metav1.NewTime(b.CreateTime.AsTime()))
 			}
 
 			backupDiscovery.Status.AvailableBackups = append(backupDiscovery.Status.AvailableBackups, availableBackup)
