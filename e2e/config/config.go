@@ -45,7 +45,6 @@ type ConfigType struct {
 	OverwriteGardenerCredentials bool `yaml:"overwriteGardenerCredentials" json:"overwriteGardenerCredentials"`
 
 	ConfigDir      string `yaml:"configDir" json:"configDir"`
-	CredentialsDir string `yaml:"credentialsDir" json:"credentialsDir"`
 	TfWorkspaceDir string `yaml:"tfWorkspaceDir" json:"tfWorkspaceDir"`
 	TfCmd          string `yaml:"tfCmd" json:"tfCmd"`
 
@@ -201,7 +200,7 @@ func LoadConfig() *ConfigType {
 		configDir = env.Get("PROJECTROOT")
 	}
 	if configDir == "" {
-		configDir = "../../../../"
+		configDir = "../../../../tmp"
 	}
 	result := &ConfigType{}
 	result.ConfigDir = configDir
@@ -211,8 +210,7 @@ func LoadConfig() *ConfigType {
 			result.ConfigDir = path.Join(wd, configDir)
 		}
 	}
-	result.CredentialsDir = path.Join(result.ConfigDir, "tmp")
-	result.TfWorkspaceDir = path.Join(result.CredentialsDir, "tf-workspaces")
+	result.TfWorkspaceDir = path.Join(result.ConfigDir, "tf-workspaces")
 	cfg.BaseDir(configDir)
 	initConfig(cfg, result)
 	cfg.Read()

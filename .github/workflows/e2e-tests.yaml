@@ -46,6 +46,7 @@ jobs:
       AWS_ROLE_NAME: CloudManagerRole
       AWS_PEERING_ROLE_NAME: CloudManagerPeeringRole
       DEBUG:  ${{ inputs.debug && 'true' || '' }}
+      CONFIG_DIR: ./tmp
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

@@ -150,7 +150,6 @@ runs:
       shell: bash
       env:
         KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
-        CONFIG_DIR: ./tmp
       run: |
         go run ./e2e/cmd sim run  > ./tmp/sim.log 2>&1 &
         SIM_PID=$!
@@ -176,7 +175,6 @@ runs:
     - name: Run Cloud Manager
       shell: bash
       env:
-        CONFIG_DIR: ./tmp
         KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         LANDSCAPE: dev
         PEERING_NETWORK_TAG: e2e
