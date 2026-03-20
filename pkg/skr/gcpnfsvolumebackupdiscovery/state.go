@@ -20,7 +20,8 @@ type State struct {
 
 	Scope *cloudcontrolv1beta1.Scope
 
-	fileBackupClient gcpnfsbackupclientv2.FileBackupClient
+	fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
+	fileBackupClient         gcpnfsbackupclientv2.FileBackupClient
 
 	backups []*filestorepb.Backup
 }
@@ -49,11 +50,11 @@ type stateFactory struct {
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
 	return &State{
-		State:            baseState,
-		KymaRef:          f.kymaRef,
-		KcpCluster:       f.kcpCluster,
-		SkrCluster:       f.skrCluster,
-		fileBackupClient: f.fileBackupClientProvider(),
+		State:                    baseState,
+		KymaRef:                  f.kymaRef,
+		KcpCluster:               f.kcpCluster,
+		SkrCluster:               f.skrCluster,
+		fileBackupClientProvider: f.fileBackupClientProvider,
 	}, nil
 }
 
