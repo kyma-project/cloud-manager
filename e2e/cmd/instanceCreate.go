@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
@@ -46,11 +47,16 @@ var cmdInstanceCreate = &cobra.Command{
 			fmt.Printf("Waiting for instance to be ready with timeout of %s...\n", timeout)
 			opts := []e2ekeb.WaitOption{e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(timeout)}
 			if verbose {
+				id2s := func(id e2ekeb.InstanceDetails) string {
+					return fmt.Sprintf("{%s %s %s}", id.Alias, id.RuntimeID, id.ShootName)
+				}
 				opts = append(opts, e2ekeb.WithProgressCallback(func(progress e2ekeb.WaitProgress) {
-					fmt.Printf("%s\n", time.Now().Format(time.RFC3339))
-					fmt.Printf("Pending: %v\n", progress.Pending)
-					fmt.Printf("WithErr: %v\n", progress.WithErr)
-					fmt.Printf("Done: %v\n", progress.Done)
+					if progress.Changed {
+						fmt.Printf("%s\n", time.Now().Format(time.RFC3339))
+						fmt.Printf("Pending: %v\n", pie.Map(progress.Pending, id2s))
+						fmt.Printf("WithErr: %v\n", pie.Map(progress.WithErr, id2s))
+						fmt.Printf("Done: %v\n", pie.Map(progress.Done, id2s))
+					}
 				}))
 			}
 			err = keb.WaitProvisioningCompleted(rootCtx, opts...)

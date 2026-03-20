@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -153,6 +154,7 @@ type WaitProgress struct {
 	Done    []InstanceDetails
 	Pending []InstanceDetails
 	WithErr []InstanceDetails
+	Changed bool
 }
 
 func (in WaitProgress) DoneAliases() []string {
@@ -191,7 +193,7 @@ func (in WaitProgress) Hash() string {
 
 var defaultWaitOptions = []WaitOption{
 	WithTimeout(15 * time.Minute),
-	WithInterval(2 * time.Second),
+	WithInterval(10 * time.Second),
 	WithProgressCallback(func(WaitProgress) {}),
 }
 
@@ -516,7 +518,9 @@ func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...Wait
 		return fmt.Errorf("waitProvisioningCompleted invalid input: %w", err)
 	}
 
-	lastNotifiedWith := "-"
+	lastNotifyHash := "-"
+
+	logger := composed.LoggerFromCtx(ctx)
 
 	err := wait.PollUntilContextTimeout(ctx, options.interval, options.timeout, false, func(ctx context.Context) (bool, error) {
 		var listOpts []ListOption
@@ -529,6 +533,12 @@ func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...Wait
 		if err != nil {
 			return false, fmt.Errorf("error listing instances in WaitProvisioningCompleted: %w", err)
 		}
+
+		b, err := json.Marshal(arr)
+		if err == nil {
+			logger.WithValues("instances", string(b)).Info("WaitProvisioningCompleted poll status")
+		}
+
 		var done []InstanceDetails
 		var pending []InstanceDetails
 		var withErr []InstanceDetails
@@ -555,12 +565,11 @@ func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...Wait
 			Pending: pending,
 			WithErr: withErr,
 		}
-		currentNotifyWith := wp.Hash()
 
-		if currentNotifyWith != lastNotifiedWith {
-			lastNotifiedWith = currentNotifyWith
-			options.progressCallback(wp)
-		}
+		currentNotifyHash := wp.Hash()
+		wp.Changed = currentNotifyHash != lastNotifyHash
+		lastNotifyHash = currentNotifyHash
+		options.progressCallback(wp)
 
 		err = nil
 		for _, id := range withErr {
