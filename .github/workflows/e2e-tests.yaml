@@ -100,7 +100,7 @@ jobs:
         env:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
-          go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -t 30m -w
+          go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -t 30m -w -v
 
       - name: Add module to shared instance
         env:
@@ -126,7 +126,7 @@ jobs:
         run: |
           if [ -f "$KUBECONFIG" ]; then
             go run ./e2e/cmd instance clean -a shared-$PROVIDER --verbose
-            sleep 5
+            sleep 30
           fi
 
       - name: Delete shared instance

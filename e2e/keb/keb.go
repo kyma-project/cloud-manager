@@ -519,7 +519,13 @@ func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...Wait
 	lastNotifiedWith := "-"
 
 	err := wait.PollUntilContextTimeout(ctx, options.interval, options.timeout, false, func(ctx context.Context) (bool, error) {
-		arr, err := k.List(ctx)
+		var listOpts []ListOption
+		for _, o := range opts {
+			if lo, ok := o.(ListOption); ok {
+				listOpts = append(listOpts, lo)
+			}
+		}
+		arr, err := k.List(ctx, listOpts...)
 		if err != nil {
 			return false, fmt.Errorf("error listing instances in WaitProvisioningCompleted: %w", err)
 		}

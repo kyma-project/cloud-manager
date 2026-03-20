@@ -45,6 +45,7 @@ var cmdRoot = &cobra.Command{
 
 func init() {
 	cmdRoot.PersistentFlags().StringVar(&configDir, "config-dir", "", "Path to the directory containing e2econfig.yaml file")
+	cmdRoot.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
 }
 
 func main() {

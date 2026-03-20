@@ -19,4 +19,5 @@ var (
 	ignoreNone    bool
 	ignoreAliases []string
 	enableAliases []string
+	verbose       bool
 )

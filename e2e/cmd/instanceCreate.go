@@ -44,7 +44,16 @@ var cmdInstanceCreate = &cobra.Command{
 
 		if waitDone {
 			fmt.Printf("Waiting for instance to be ready with timeout of %s...\n", timeout)
-			err = keb.WaitProvisioningCompleted(rootCtx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(timeout))
+			opts := []e2ekeb.WaitOption{e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(timeout)}
+			if verbose {
+				opts = append(opts, e2ekeb.WithProgressCallback(func(progress e2ekeb.WaitProgress) {
+					fmt.Printf("%s\n", time.Now().Format(time.RFC3339))
+					fmt.Printf("Pending: %v\n", progress.Pending)
+					fmt.Printf("WithErr: %v\n", progress.WithErr)
+					fmt.Printf("Done: %v\n", progress.Done)
+				}))
+			}
+			err = keb.WaitProvisioningCompleted(rootCtx, opts...)
 			if err != nil {
 				return fmt.Errorf("error waiting provisioning completed: %w", err)
 			}

@@ -9,10 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	cleanVerbose bool
-)
-
 var cmdInstanceClean = &cobra.Command{
 	Use:   "clean",
 	Short: "Clean orphaned cloud resources from an SKR instance after e2e test failures",
@@ -57,27 +53,13 @@ Examples:
 			runtimeID = idArr[0].RuntimeID
 		}
 
-		if cleanVerbose {
-			fmt.Printf("Cleaning SKR instance %s...\n", runtimeID)
-		}
-
-		instance, err := keb.GetInstance(rootCtx, runtimeID)
-		if err != nil {
-			return fmt.Errorf("failed to get instance details: %w", err)
-		}
-
-		if cleanVerbose {
-			fmt.Printf("Instance: %s (provider: %s, shoot: %s)\n", instance.Alias, instance.Provider, instance.ShootName)
-			fmt.Println("Connecting to SKR instance...")
+		if verbose {
+			rootLogger.WithValues("runtimeID", runtimeID).Info("Cleaning SKR instance")
 		}
 
 		skrClient, err := keb.CreateInstanceClient(rootCtx, runtimeID)
 		if err != nil {
 			return fmt.Errorf("failed to create SKR client: %w", err)
-		}
-
-		if cleanVerbose {
-			fmt.Println("Starting cleanup of cloud resources...")
 		}
 
 		err = e2e.CleanSkrNoWait(rootCtx, skrClient)
@@ -95,7 +77,6 @@ func init() {
 	cmdInstance.AddCommand(cmdInstanceClean)
 	cmdInstanceClean.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "Runtime ID of the instance to clean")
 	cmdInstanceClean.Flags().StringVarP(&alias, "alias", "a", "", "Alias of the instance to clean")
-	cmdInstanceClean.Flags().BoolVarP(&cleanVerbose, "verbose", "v", false, "Enable verbose logging")
 	cmdInstanceClean.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceClean.MarkFlagsOneRequired("runtime-id", "alias")
 }
