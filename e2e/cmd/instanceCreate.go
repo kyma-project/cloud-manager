@@ -45,7 +45,7 @@ var cmdInstanceCreate = &cobra.Command{
 
 		if waitDone {
 			fmt.Printf("Waiting for instance to be ready with timeout of %s...\n", timeout)
-			opts := []e2ekeb.WaitOption{e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(timeout)}
+			opts := []e2ekeb.WaitOption{e2ekeb.WithAlias(id.Alias), e2ekeb.WithTimeout(timeout)}
 			if verbose {
 				id2s := func(id e2ekeb.InstanceDetails) string {
 					return fmt.Sprintf("{%s %s %s}", id.Alias, id.RuntimeID, id.ShootName)

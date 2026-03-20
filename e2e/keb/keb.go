@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
@@ -137,6 +136,7 @@ type WaitOption interface {
 
 type waitOptions struct {
 	runtimeIds       []string
+	aliases          []string
 	timeout          time.Duration
 	interval         time.Duration
 	progressCallback func(WaitProgress)
@@ -144,8 +144,8 @@ type waitOptions struct {
 
 func (o waitOptions) validate() error {
 	var result error
-	if len(o.runtimeIds) == 0 {
-		result = multierror.Append(result, errors.New("no runtime IDs specified to wait for"))
+	if len(o.runtimeIds) == 0 && len(o.aliases) == 0 {
+		result = multierror.Append(result, errors.New("no runtimeIDs/aliases specified to wait for"))
 	}
 	return result
 }
@@ -301,6 +301,10 @@ func (o WithAlias) ApplyOnList(opt *listOptions) {
 
 func (o WithAlias) ApplyOnCreate(opt *createOptions) {
 	opt.alias = string(o)
+}
+
+func (o WithAlias) ApplyOnWait(opt *waitOptions) {
+	opt.aliases = append(opt.aliases, string(o))
 }
 
 // WithGlobalAccount =====================================================
@@ -522,16 +526,36 @@ func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...Wait
 
 	logger := composed.LoggerFromCtx(ctx)
 
+	runtimeErrorCount := map[string]int{}
+
 	err := wait.PollUntilContextTimeout(ctx, options.interval, options.timeout, false, func(ctx context.Context) (bool, error) {
+		// map wait options to list options
 		var listOpts []ListOption
+		var runtimesFilter []string
 		for _, o := range opts {
 			if lo, ok := o.(ListOption); ok {
 				listOpts = append(listOpts, lo)
 			}
+			// keep separate list of runtimes, since list doesn't support it
+			if ro, ok := o.(WithRuntime); ok {
+				runtimesFilter = append(runtimesFilter, string(ro))
+			}
+			if rso, ok := o.(WithRuntimes); ok {
+				runtimesFilter = append(runtimesFilter, []string(rso)...)
+			}
 		}
+
 		arr, err := k.List(ctx, listOpts...)
 		if err != nil {
 			return false, fmt.Errorf("error listing instances in WaitProvisioningCompleted: %w", err)
+		}
+
+		// additional filter by runtimes since list does not support it
+		runtimesFilter = pie.Unique(runtimesFilter)
+		if len(runtimesFilter) > 0 {
+			arr = pie.Filter(arr, func(instanceDetails InstanceDetails) bool {
+				return pie.Contains(runtimesFilter, instanceDetails.RuntimeID)
+			})
 		}
 
 		b, err := json.Marshal(arr)
@@ -542,21 +566,19 @@ func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...Wait
 		var done []InstanceDetails
 		var pending []InstanceDetails
 		var withErr []InstanceDetails
+
 		for _, id := range arr {
-			if !slices.Contains(options.runtimeIds, id.RuntimeID) {
-				continue
-			}
 			if id.BeingDeleted {
 				id.Message = "being deleted"
 				withErr = append(withErr, id)
 			} else if id.State == infrastructuremanagerv1.RuntimeStateFailed {
 				withErr = append(withErr, id)
+			} else if id.State == infrastructuremanagerv1.RuntimeStatePending {
+				pending = append(pending, id)
+			} else if id.ProvisioningCompleted {
+				done = append(done, id)
 			} else {
-				if id.ProvisioningCompleted {
-					done = append(done, id)
-				} else {
-					pending = append(pending, id)
-				}
+				pending = append(pending, id)
 			}
 		}
 
@@ -571,9 +593,30 @@ func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...Wait
 		lastNotifyHash = currentNotifyHash
 		options.progressCallback(wp)
 
-		err = nil
+		// increase the error count for this runtime
 		for _, id := range withErr {
-			err = multierror.Append(err, fmt.Errorf("instance %s %s has error %s", id.Alias, id.RuntimeID, id.Message))
+			v := runtimeErrorCount[id.RuntimeID]
+			v++
+			runtimeErrorCount[id.RuntimeID] = v
+		}
+
+		// go through all runtimes with error counts and make err with those crossing the threshold
+		errorCountThreshold := 5
+		err = nil
+		for runtimeID, errorCount := range runtimeErrorCount {
+			if errorCount > errorCountThreshold {
+				var id *InstanceDetails
+				for _, x := range pending {
+					if x.RuntimeID == runtimeID {
+						xx := x
+						id = &xx
+						break
+					}
+				}
+				if id != nil {
+					err = multierror.Append(err, fmt.Errorf("instance %s %s has error %s", id.Alias, id.RuntimeID, id.Message))
+				}
+			}
 		}
 
 		return len(pending) == 0, err
