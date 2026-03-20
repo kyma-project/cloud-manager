@@ -125,7 +125,8 @@ jobs:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
           if [ -f "$KUBECONFIG" ]; then
-            go run ./e2e/cmd instance clean -a shared-$PROVIDER --verbose
+            go run ./e2e/cmd instance clean -a shared-$PROVIDER -v
+            # give time to CM to pick-up and start deletion
             sleep 30
           fi
 
@@ -135,8 +136,9 @@ jobs:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
           if [ -f "$KUBECONFIG" ]; then
-            go run ./e2e/cmd instance delete -a shared-$PROVIDER -t 60m -w
-            sleep 5
+            go run ./e2e/cmd instance delete -a shared-$PROVIDER -t 60m -w -v
+            # give time to sim to pick-up and delete shoot
+            sleep 10
           fi
 
       - name: Destroy E2E environment
