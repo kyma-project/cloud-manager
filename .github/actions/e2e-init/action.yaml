@@ -135,7 +135,7 @@ runs:
     - name: Run envtest
       shell: bash
       run: |
-        go run ./e2e/cmd envtest run -v $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml > ./tmp/envtest.log 2>&1 &
+        go run ./e2e/cmd envtest run --version $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml > ./tmp/envtest.log 2>&1 &
         ENVTEST_PID=$!
         echo "ENVTEST_PID=$ENVTEST_PID" >> "$GITHUB_ENV"
         echo "Waiting for envtest to start K8S cluster"
@@ -145,6 +145,16 @@ runs:
       shell: bash
       run: |
         [ -n "$DEBUG" ] && ls -la ./tmp || true
+
+    - name: Fail if KCP kubeconfig not present
+      shell: bash
+      run: |
+        if [ ! -f ./tmp/kubeconfig-kcp.yaml ]; then
+          echo "KCP Kubeconfig is not created by envtest"
+          echo "> [!CAUTION]" >> $GITHUB_STEP_SUMMARY
+          echo "> :x: KCP Kubeconfig is not created by envtest" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
 
     - name: Run sim
       shell: bash

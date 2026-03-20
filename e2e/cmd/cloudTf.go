@@ -108,7 +108,7 @@ var cmdCloudTf = &cobra.Command{
 
 func init() {
 	cmdCloudTf.Flags().StringArrayVarP(&tfProviders, "provider", "p", nil, "tf provider, can be repeated, ie `hashicorp/aws ~> 6.0`")
-	cmdCloudTf.Flags().StringArrayVarP(&tfVariables, "var", "v", nil, "input variable, can be repeated, ie `key=\"value\"`, or `key=123`")
+	cmdCloudTf.Flags().StringArrayVarP(&tfVariables, "var", "", nil, "input variable, can be repeated, ie `key=\"value\"`, or `key=123`")
 	cmdCloudTf.Flags().StringVarP(&tfSource, "source", "s", "", "tf module source, ie `terraform-aws-modules/vpc/aws 6.5.1`")
 	cmdCloudTf.Flags().BoolVarP(&tfConfirmDelete, "confirm-delete", "c", false, "ask confirmation before destroy")
 	cmdCloud.AddCommand(cmdCloudTf)

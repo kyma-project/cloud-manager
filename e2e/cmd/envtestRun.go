@@ -68,7 +68,7 @@ var cmdEnvtestRun = &cobra.Command{
 
 func init() {
 	cmdEnvtest.AddCommand(cmdEnvtestRun)
-	cmdEnvtestRun.Flags().StringVarP(&envtestK8sVersion, "version", "v", os.Getenv("ENVTEST_K8S_VERSION"), "envtest version")
+	cmdEnvtestRun.Flags().StringVarP(&envtestK8sVersion, "version", "", os.Getenv("ENVTEST_K8S_VERSION"), "envtest version")
 	cmdEnvtestRun.Flags().StringVarP(&envtestKubeconfigOutput, "output", "o", "", "output kubeconfig file")
 	_ = cmdEnvtestRun.MarkFlagRequired("output")
 }
