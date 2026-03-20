@@ -55,6 +55,7 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 		KcpCluster:               f.kcpCluster,
 		SkrCluster:               f.skrCluster,
 		fileBackupClientProvider: f.fileBackupClientProvider,
+		asdf
 	}, nil
 }
 
