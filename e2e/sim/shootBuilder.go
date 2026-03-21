@@ -47,15 +47,20 @@ func NewShootBuilder(cpr e2elib.CloudProfileRegistry, config *e2econfig.ConfigTy
 	}
 	loc, err := time.LoadLocation("Europe/Belgrade")
 	if err == nil {
-		if time.Now().In(loc).Hour() < 18 {
-			b.obj.Spec.Hibernation = &gardenertypes.Hibernation{
-				Schedules: []gardenertypes.HibernationSchedule{
-					{
-						Start:    ptr.To("00 20 * * 1,2,3,4,5,6,0"),
-						Location: ptr.To("Europe/Belgrade"),
-					},
+		hCron := 19 // normally go to hibernation at 19h
+		// but if it's between 18 and 21h, then hibernate at current hour +2h
+		// in order to prevent shutdowns two hours after creation
+		hCurrent := time.Now().In(loc).Hour()
+		if hCurrent > 18 && hCurrent < 21 {
+			hCron = hCurrent + 2
+		}
+		b.obj.Spec.Hibernation = &gardenertypes.Hibernation{
+			Schedules: []gardenertypes.HibernationSchedule{
+				{
+					Start:    ptr.To(fmt.Sprintf("00 %d * * 1,2,3,4,5,6,0", hCron)),
+					Location: ptr.To("Europe/Belgrade"),
 				},
-			}
+			},
 		}
 	}
 	return b
@@ -259,7 +264,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 				APIVersion: gardeneraopenstack.SchemeGroupVersion.String(),
 				Kind:       "InfrastructureConfig",
 			},
-			FloatingPoolName: sapconfig.SapConfig.FloatingPoolNetwork, // "FloatingIP-external-kyma-01",
+			FloatingPoolName:       sapconfig.SapConfig.FloatingPoolNetwork, // "FloatingIP-external-kyma-01",
 			FloatingPoolSubnetName: ptr.To(sapconfig.SapConfig.FloatingPoolSubnet),
 		}
 		if len(sapconfig.SapConfig.FloatingPoolSubnet) < 1 {

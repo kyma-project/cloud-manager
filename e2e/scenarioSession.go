@@ -350,7 +350,7 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 	id := &arr[0]
 
 	if !id.ProvisioningCompleted {
-		err = s.world.Keb().WaitProvisioningCompleted(ctx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(15*time.Minute))
+		err = e2ekeb.WaitCompleted(ctx, s.world.Keb(), e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(15*time.Minute))
 		if err != nil {
 			return nil, err
 		}
@@ -388,7 +388,7 @@ func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...e2eke
 		return nil, fmt.Errorf("error creating runtime in KEB: %w", err)
 	}
 
-	err = s.world.Keb().WaitProvisioningCompleted(ctx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(15*time.Minute))
+	err = e2ekeb.WaitCompleted(ctx, s.world.Keb(), e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(15*time.Minute))
 	if err != nil {
 		return nil, err
 	}

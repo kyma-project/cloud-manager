@@ -47,7 +47,14 @@ var cmdInstanceDelete = &cobra.Command{
 
 		if waitDone {
 			fmt.Printf("Waiting for instance to be destroyed...")
-			err = keb.WaitDeleted(rootCtx, e2ekeb.WithRuntime(runtimeID), e2ekeb.WithTimeout(timeout))
+			opts := []e2ekeb.WaitOption{
+				e2ekeb.WithRuntime(runtimeID),
+				e2ekeb.WithTimeout(timeout),
+			}
+			if verbose {
+				opts = append(opts, e2ekeb.WithLogger(rootLogger), e2ekeb.WaitProgressPrint())
+			}
+			err = e2ekeb.WaitCompleted(rootCtx, keb, opts...)
 			if err != nil {
 				return fmt.Errorf("failed to wait for instance to be deleted: %w", err)
 			}
