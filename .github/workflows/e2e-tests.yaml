@@ -131,7 +131,7 @@ jobs:
           if [ -f "${pwd}/output.gherkin" ]; then
             echo "# Features"
             echo "```gherkin" >> $GITHUB_STEP_SUMMARY
-            cat ${pwd}/output.gherkin >> $GITHUB_STEP_SUMMARY
+            cat ${pwd}/output.gherkin | sed 's/\x1b\[[0-9;]*[mGKH]//g' >> $GITHUB_STEP_SUMMARY
             echo "```" >> $GITHUB_STEP_SUMMARY
           fi
 
