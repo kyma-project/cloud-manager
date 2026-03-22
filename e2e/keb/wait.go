@@ -14,6 +14,8 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 )
 
 // WaitOption ============================================================
@@ -152,8 +154,11 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 	defer cancel()
 	for {
 		arr, err := lister.List(ctx, listOpts...)
+		if apierrors.IsNotFound(err) || meta.IsNoMatchError(err) {
+			break
+		}
 		if err != nil {
-			loopErr = fmt.Errorf("error listing instances in WaitProvisioningCompleted: %w", err)
+			loopErr = fmt.Errorf("error listing instances in WaitCompleted: %w", err)
 			break
 		}
 
@@ -162,7 +167,7 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 		}
 		b, err := json.Marshal(arr)
 		if err == nil {
-			options.logger.WithValues("instances", string(b)).Info("WaitProvisioningCompleted poll status")
+			options.logger.WithValues("instances", string(b)).Info("WaitCompleted poll status")
 		}
 
 		var done []InstanceDetails
