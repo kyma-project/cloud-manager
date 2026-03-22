@@ -46,7 +46,7 @@ jobs:
       AWS_ROLE_NAME: CloudManagerRole
       AWS_PEERING_ROLE_NAME: CloudManagerPeeringRole
       DEBUG:  ${{ inputs.debug && 'true' || '' }}
-      CONFIG_DIR: ./tmp
+      RUN_E2E_TESTS: 1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -122,9 +122,9 @@ jobs:
         run: |
           [ -n "$DEBUG" ] && echo $KUBECONFIG || true
           [ -n "$DEBUG" ] && ls -la ./tmp || true
-          echo "Tags: $TAGS"
-          echo "RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags \"$TAGS\""
-          RUN_E2E_TESTS=1 PROJECTROOT=$GITHUB_WORKSPACE go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "$TAGS"
+          export RUN_E2E_TESTS=1
+          export 
+          go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "$TAGS"
 
       - name: Clean up orphaned SKR resources
         if: always() && env.INPUTSOK != ''

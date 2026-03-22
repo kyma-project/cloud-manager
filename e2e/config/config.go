@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -196,22 +197,49 @@ func LoadConfig() *ConfigType {
 	env := abstractions.NewOSEnvironment()
 	cfg := config.NewConfig(env)
 	configDir := env.Get("CONFIG_DIR")
+	fmt.Printf("configDir from CONFIG_DIR: %q\n", configDir)
 	if configDir == "" {
-		configDir = env.Get("PROJECTROOT")
+		projectRoot := env.Get("PROJECTROOT")
+		if projectRoot != "" {
+			configDir = filepath.Join(projectRoot, "tmp")
+			fmt.Printf("configDir from PROJECTROOT: %q\n", configDir)
+		}
 	}
 	if configDir == "" {
-		configDir = "../../../../tmp"
+		currentDir, err := os.Getwd()
+		if err == nil {
+			for {
+				candidateDir := filepath.Join(currentDir, "tmp")
+				stat, err := os.Stat(candidateDir)
+				if err == nil {
+					if stat.IsDir() {
+						fn := filepath.Join(candidateDir, "e2e-config.yaml")
+						stat, err = os.Stat(fn)
+						if err == nil {
+							configDir = candidateDir
+							break
+						}
+					}
+				}
+				currentDir = filepath.Dir(currentDir)
+				if currentDir == string(os.PathSeparator) || filepath.Base(currentDir) == "kyma-project" || filepath.Base(currentDir) == "github.com" {
+					break
+				}
+			}
+		}
+		if configDir == "" {
+			panic("could not find config directory, either: 1) set CONFIG_DIR environment variable pointing to the config dir itself, 2) run in or below of the cloud-manager repo for auto-detect, 3) set PROJECTROOT environment variable pointing to the root of cloud-manager repo")
+		}
+		fmt.Printf("configDir defaulted to %q\n", configDir)
+	}
+	if !strings.HasPrefix(configDir, "/") {
+		panic("configDir must be an absolute path")
 	}
 	result := &ConfigType{}
 	result.ConfigDir = configDir
-	if !strings.HasPrefix(configDir, "/") {
-		wd, err := os.Getwd()
-		if err == nil {
-			result.ConfigDir = path.Join(wd, configDir)
-		}
-	}
 	result.TfWorkspaceDir = path.Join(result.ConfigDir, "tf-workspaces")
 	cfg.BaseDir(configDir)
+	fmt.Printf("configDir final value: %q\n", configDir)
 	initConfig(cfg, result)
 	cfg.Read()
 
