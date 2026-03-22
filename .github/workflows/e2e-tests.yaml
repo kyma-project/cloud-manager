@@ -120,18 +120,19 @@ jobs:
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
+          GHERKIN_REPORT="${{ github.workspace }}/output.gherkin"
           if [ -n "$DEBUG" ]; then
             echo "$TAGS"
             echo "$KUBECONFIG"
             ls -la ./tmp
             env
           fi
-          go test ./e2e/tests -timeout 0 -v -godog.tags "$TAGS" -godog.format "pretty,pretty:${pwd}/output.gherkin"
+          go test ./e2e/tests -timeout 0 -v -godog.tags "$TAGS" -godog.format "pretty,pretty:$GHERKIN_REPORT"
 
-          if [ -f "${pwd}/output.gherkin" ]; then
+          if [ -f "$GHERKIN_REPORT" ]; then
             echo "# Features"
             echo "```gherkin" >> $GITHUB_STEP_SUMMARY
-            cat ${pwd}/output.gherkin | sed 's/\x1b\[[0-9;]*[mGKH]//g' >> $GITHUB_STEP_SUMMARY
+            cat $GHERKIN_REPORT | sed 's/\x1b\[[0-9;]*[mGKH]//g' >> $GITHUB_STEP_SUMMARY
             echo "```" >> $GITHUB_STEP_SUMMARY
           fi
 
