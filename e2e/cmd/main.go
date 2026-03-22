@@ -32,9 +32,6 @@ var cmdRoot = &cobra.Command{
 		if configDir != "" {
 			_ = os.Setenv("CONFIG_DIR", configDir)
 		}
-		if configDir == "" && os.Getenv("CONFIG_DIR") == "" {
-			_ = os.Setenv("CONFIG_DIR", "./tmp")
-		}
 		config = e2econfig.LoadConfig()
 
 		_ = commonconfig.CreateNewConfigAndLoad()

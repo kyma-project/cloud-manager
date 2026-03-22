@@ -121,11 +121,19 @@ jobs:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
           if [ -n "$DEBUG" ]; then
-            echo $KUBECONFIG
+            echo "$TAGS"
+            echo "$KUBECONFIG"
             ls -la ./tmp
             env
           fi
-          go test ./e2e/tests/skr/all/... -timeout 0 -v -godog.tags "$TAGS"
+          go test ./e2e/tests -timeout 0 -v -godog.tags "$TAGS" -godog.format "pretty,pretty:${pwd}/output.gherkin"
+
+          if [ -f "${pwd}/output.gherkin" ]; then
+            echo "# Features"
+            echo "```gherkin" >> $GITHUB_STEP_SUMMARY
+            cat ${pwd}/output.gherkin >> $GITHUB_STEP_SUMMARY
+            echo "```" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Clean up orphaned SKR resources
         if: always() && env.INPUTSOK != ''
