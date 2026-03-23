@@ -127,13 +127,13 @@ jobs:
             echo "$KUBECONFIG"
             ls -la ./tmp
           fi
-          go test ./e2e/tests -timeout 0 -v -godog.tags "$TAGS" -godog.format "pretty,pretty:$GHERKIN_REPORT"
+          go test ./e2e/tests -timeout 0 -v -race -godog.tags "$TAGS" -godog.format "pretty,pretty:$GHERKIN_REPORT"
 
           if [ -f "$GHERKIN_REPORT" ]; then
-            echo "# Features"
-            echo "```gherkin" >> $GITHUB_STEP_SUMMARY
+            echo '# Features' >> $GITHUB_STEP_SUMMARY
+            echo '```gherkin' >> $GITHUB_STEP_SUMMARY
             cat $GHERKIN_REPORT | sed 's/\x1b\[[0-9;]*[mGKH]//g' >> $GITHUB_STEP_SUMMARY
-            echo "```" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Clean up orphaned SKR resources
