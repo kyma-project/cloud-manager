@@ -15,6 +15,7 @@ import (
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -56,6 +57,7 @@ type ScenarioSession interface {
 	GetScenarioName() string
 
 	DebugLog(bool)
+	DebugDumpDeclaredResources(ctx context.Context) (string, error)
 	Logger(context.Context) logr.Logger
 
 	AddTfWorkspace(ws cloud.TFWorkspace) error
@@ -240,6 +242,25 @@ func (s *scenarioSession) DebugLog(v bool) {
 	s.loggingEnabled = v
 }
 
+func (s *scenarioSession) DebugDumpDeclaredResources(ctx context.Context) (string, error) {
+	data := map[string]interface{}{}
+	for _, c := range s.clusters {
+		for _, ri := range c.AllResources() {
+			obj, err := c.Get(ctx, ri.Alias)
+			if err != nil {
+				data[ri.Alias] = fmt.Sprintf("error: %v", err.Error())
+			} else {
+				data[ri.Alias] = obj
+			}
+		}
+	}
+	txt, err := yaml.Marshal(data)
+	if err != nil {
+		return "", fmt.Errorf("could not yaml marshal resource debug info: %w", err)
+	}
+	return string(txt), nil
+}
+
 func (s *scenarioSession) Logger(ctx context.Context) logr.Logger {
 	if s.loggingEnabled {
 		return composed.LoggerFromCtx(ctx).
@@ -297,6 +318,13 @@ func (s *scenarioSession) EventuallyValueIsOK(ctx context.Context, expression st
 		}
 		return false, nil
 	})
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		txt, dErr := s.DebugDumpDeclaredResources(ctx)
+		if dErr != nil {
+			return fmt.Errorf("%w, %w", dErr, err)
+		}
+		err = fmt.Errorf("%w:\nresources debug info:\n%s", err, txt)
+	}
 	return err
 }
 

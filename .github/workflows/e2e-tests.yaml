@@ -125,7 +125,6 @@ jobs:
             echo "$TAGS"
             echo "$KUBECONFIG"
             ls -la ./tmp
-            env
           fi
           go test ./e2e/tests -timeout 0 -v -godog.tags "$TAGS" -godog.format "pretty,pretty:$GHERKIN_REPORT"
 
