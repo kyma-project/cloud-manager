@@ -1,6 +1,6 @@
 module github.com/kyma-project/cloud-manager
 
-go 1.25.7
+go 1.26.0
 
 require (
 	cloud.google.com/go/auth v0.18.2
@@ -38,11 +38,11 @@ require (
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/gardener/gardener v1.136.2
-	github.com/gardener/gardener-extension-provider-aws v1.68.0
-	github.com/gardener/gardener-extension-provider-azure v1.58.2
-	github.com/gardener/gardener-extension-provider-gcp v1.49.4
-	github.com/gardener/gardener-extension-provider-openstack v1.52.0
+	github.com/gardener/gardener v1.136.6
+	github.com/gardener/gardener-extension-provider-aws v1.68.3
+	github.com/gardener/gardener-extension-provider-azure v1.58.4
+	github.com/gardener/gardener-extension-provider-gcp v1.49.6
+	github.com/gardener/gardener-extension-provider-openstack v1.53.1
 	github.com/go-logr/logr v1.4.3
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.27.0
@@ -175,9 +175,11 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.63.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.63.0 // indirect
-	go.opentelemetry.io/otel v1.40.0 // indirect
-	go.opentelemetry.io/otel/metric v1.40.0 // indirect
-	go.opentelemetry.io/otel/trace v1.40.0 // indirect
+	go.opentelemetry.io/otel v1.41.0 // indirect
+	go.opentelemetry.io/otel/metric v1.41.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.41.0 // indirect
+	go.opentelemetry.io/otel/sdk/metric v1.41.0 // indirect
+	go.opentelemetry.io/otel/trace v1.41.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
