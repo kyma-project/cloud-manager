@@ -215,11 +215,13 @@ func (c *config) Json() string {
 func (c *config) PrintJson() string {
 	js := c.js
 	for _, sensitivePath := range c.sensitive {
-		jsjs, err := sjson.Set(js, sensitivePath, "*****")
-		if err != nil {
-			return fmt.Sprintf("error: %s", js)
+		if len(gjson.Get(js, sensitivePath).Raw) > 0 {
+			jsjs, err := sjson.Set(js, sensitivePath, "*****")
+			if err != nil {
+				return fmt.Sprintf("error: %s", js)
+			}
+			js = jsjs
 		}
-		js = jsjs
 	}
 	return js
 }

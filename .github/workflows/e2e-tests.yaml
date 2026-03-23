@@ -47,6 +47,7 @@ jobs:
       AWS_PEERING_ROLE_NAME: CloudManagerPeeringRole
       DEBUG:  ${{ inputs.debug && 'true' || '' }}
       RUN_E2E_TESTS: 1
+      CONFIG_DIR: ${{ github.workspace }}/tmp
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
