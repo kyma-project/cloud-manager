@@ -37,7 +37,7 @@ runs:
         fi
 
     - name: Upload logs
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: logs
         path: |
