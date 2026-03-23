@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 	"time"
 
@@ -180,7 +181,7 @@ func NewScenarioSession(world WorldIntf, scenarioName string) ScenarioSession {
 		world:        world,
 		scenarioName: scenarioName,
 		timing: &Timing{
-			EventuallyTimeout:  2 * time.Hour,
+			EventuallyTimeout:  10 * time.Minute,
 			EventuallyInterval: 2 * time.Second,
 		},
 		tfWorkspaces: map[string]cloud.TFWorkspace{},
@@ -293,8 +294,36 @@ func (s *scenarioSession) EventuallyResourceDoesNotExist(ctx context.Context, al
 	return err
 }
 
-func (s *scenarioSession) EventuallyValueIsOK(ctx context.Context, expression string, arrUnless ...string) error {
-	err := wait.PollUntilContextTimeout(ctx, s.Timing().EventuallyInterval, s.Timing().EventuallyTimeout, true, func(ctx context.Context) (done bool, err error) {
+func (s *scenarioSession) EventuallyValueIsOK(ctx context.Context, expression string, arrUnlessParam ...string) error {
+
+	interval := s.Timing().EventuallyInterval
+	timeout := s.Timing().EventuallyTimeout
+
+	var arrUnless []string
+	for _, exp := range arrUnlessParam {
+		if strings.HasPrefix(exp, "#") {
+			val := strings.TrimSpace(strings.TrimPrefix(exp, "#"))
+			parts := strings.SplitN(val, "=", 2)
+			switch parts[0] {
+			case "timeout":
+				x, err := time.ParseDuration(parts[1])
+				if err != nil {
+					return fmt.Errorf("invalid timeout value in %q: %w", val, err)
+				}
+				timeout = x
+			case "interval":
+				x, err := time.ParseDuration(parts[1])
+				if err != nil {
+					return fmt.Errorf("invalid interval value in %q: %w", val, err)
+				}
+				interval = x
+			}
+		} else {
+			arrUnless = append(arrUnless, exp)
+		}
+	}
+
+	err := wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx context.Context) (done bool, err error) {
 		eval, err := s.Eval(ctx)
 		if err != nil {
 			return false, errEvalContextBuilding(err)

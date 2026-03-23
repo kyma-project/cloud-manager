@@ -421,6 +421,8 @@ func resourceIsDeleted(ctx context.Context, alias string) (context.Context, erro
 Then eventually "cm.data.foo == 'bar'" is ok, unless:
 
 	| cm.data.foo && cm.data.foo != 'bar' |
+	| # timeout=1h                        |
+	| # interval=10m                      |
 */
 func eventuallyValueIsOkUnless(ctx context.Context, expression string, unless *godog.Table) (context.Context, error) {
 	arrUnless := pie.Map(unless.Rows, func(row *messages.PickleTableRow) string {
