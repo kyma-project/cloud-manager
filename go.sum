@@ -148,10 +148,10 @@ github.com/aws/aws-sdk-go-v2/internal/ini v1.8.6 h1:qYQ4pzQ2Oz6WpQ8T3HvGHnZydA72
 github.com/aws/aws-sdk-go-v2/internal/ini v1.8.6/go.mod h1:O3h0IK87yXci+kg6flUKzJnWeziQUKciKrLjcatSNcY=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.18 h1:eZioDaZGJ0tMM4gzmkNIO2aAoQd+je7Ug7TkvAzlmkU=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.18/go.mod h1:CCXwUKAJdoWr6/NcxZ+zsiPr6oH/Q5aTooRGYieAyj4=
-github.com/aws/aws-sdk-go-v2/service/backup v1.54.9 h1:4ljBhnCcrhtpt/0dK3NOHzP4DnrdQx/yo0fQfoWzGZE=
-github.com/aws/aws-sdk-go-v2/service/backup v1.54.9/go.mod h1:WTHh7IUlJVDA2JFm4ERgQ1hQ6QXtiHVFcyjvBj+57V0=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.294.1 h1:c2BbWVkQ0hVqls6SruYCRxfN5W46qvL+hIg7VLhXpg8=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.294.1/go.mod h1:T6ndRfdhnXLIY5oKBHjYZDVj706los2zGdpThppquvA=
+github.com/aws/aws-sdk-go-v2/service/backup v1.54.10 h1:FYJPU1/WqgzeD6doEJeD8j3O1O1TNJVTeRedTY6dKiU=
+github.com/aws/aws-sdk-go-v2/service/backup v1.54.10/go.mod h1:WTHh7IUlJVDA2JFm4ERgQ1hQ6QXtiHVFcyjvBj+57V0=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.296.0 h1:98Miqj16un1WLNyM1RjVDhXYumhqZrQfAeG8i4jPG6o=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.296.0/go.mod h1:T6ndRfdhnXLIY5oKBHjYZDVj706los2zGdpThppquvA=
 github.com/aws/aws-sdk-go-v2/service/efs v1.41.13 h1:C11r13KfnzxlLuILWOjBNdSJDRsJ2HDqc8kTNGc6VcM=
 github.com/aws/aws-sdk-go-v2/service/efs v1.41.13/go.mod h1:YP65UYTCBf/NQKrZH+jfX/EHD5zFWLwioLpNoioIscU=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.12 h1:S066ajzfPRCSW4lsSHOYglne6SNi2CHt1u5omzW1RBg=
