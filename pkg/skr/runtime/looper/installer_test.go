@@ -33,6 +33,19 @@ func TestInstaller(t *testing.T) {
 		assert.NoError(t, instlr.Handle(ctx, string(provider), clstr))
 
 		checker := NewSkrStatusChecker(skrStatus).InstallerManifest()
+
+		// Assert common aggregated RBAC ClusterRoles (deployed to all providers)
+		for _, name := range []string{"kyma-cloud-manager-admin", "kyma-cloud-manager-edit", "kyma-cloud-manager-view"} {
+			checker.Obj("clusterrole.rbac.authorization.k8s.io").Name(name)
+			h := checker.Check(t)
+			if h != nil {
+				assert.Equal(t, "InstallerManifest", h.title)
+				assert.Equal(t, []string{"Creating"}, h.outcomes)
+				assert.True(t, h.ok)
+			}
+		}
+		checker.Name("")
+
 		checker.CheckAll(t, testCases)
 
 		uncheker := checker.Unchecked()
