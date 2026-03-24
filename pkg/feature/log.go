@@ -31,7 +31,7 @@ var loggerKeys = []types.Key{
 	types.KeyLandscape,
 }
 
-func attributesToLogger(attributes map[string]interface{}, logger logr.Logger) logr.Logger {
+func attributesToLogger(attributes map[string]any, logger logr.Logger) logr.Logger {
 	var loggerValues []any
 	for _, lk := range loggerKeys {
 		v, ok := attributes[lk]

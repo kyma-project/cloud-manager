@@ -1,7 +1,6 @@
 package feature
 
 import (
-	"context"
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
@@ -9,8 +8,7 @@ import (
 )
 
 func TestEmbeddedConfig(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	err := Initialize(ctx, logr.Discard(), WithStaticConfig())
 	assert.Nil(t, err)
