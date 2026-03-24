@@ -69,7 +69,7 @@ func CreateVpcPeeringRequest(ctx context.Context, remotePeeringName string, sour
 				Name:                 &remotePeeringName,
 				Network:              &destinationNetworkUrl,
 				ExportCustomRoutes:   &exportCustomRoutes,
-				ExchangeSubnetRoutes: ptr.To(true),
+				ExchangeSubnetRoutes: new(true),
 				ImportCustomRoutes:   &importCustomRoutes,
 			},
 		},

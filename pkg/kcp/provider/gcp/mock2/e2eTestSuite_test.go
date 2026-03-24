@@ -3,6 +3,7 @@ package mock2
 import (
 	"context"
 	"fmt"
+	"slices"
 	"testing"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -18,7 +19,6 @@ import (
 	"google.golang.org/api/servicenetworking/v1"
 	"google.golang.org/genproto/protobuf/field_mask"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
-	"k8s.io/utils/ptr"
 )
 
 type e2eTestSuite struct {
@@ -45,7 +45,7 @@ func (s *e2eTestSuite) createNetwork(networkName string) (gcpclient.VoidOperatio
 	return s.mock.InsertNetwork(s.ctx, &computepb.InsertNetworkRequest{
 		Project: s.mock.ProjectId(),
 		NetworkResource: &computepb.Network{
-			Name: ptr.To(networkName),
+			Name: new(networkName),
 		},
 	})
 }
@@ -100,8 +100,8 @@ func (s *e2eTestSuite) addPeeringOK(localNetwork, peeringName, remoteNetwork str
 		Project: s.mock.ProjectId(),
 		NetworksAddPeeringRequestResource: &computepb.NetworksAddPeeringRequest{
 			NetworkPeering: &computepb.NetworkPeering{
-				Name:    ptr.To(peeringName),
-				Network: ptr.To(remoteNetwork),
+				Name:    new(peeringName),
+				Network: new(remoteNetwork),
 			},
 		},
 	})
@@ -123,7 +123,7 @@ func (s *e2eTestSuite) removePeeringOK(localNetwork, peeringName string) {
 		Project: s.mock.ProjectId(),
 		Network: netNd.ResourceId(),
 		NetworksRemovePeeringRequestResource: &computepb.NetworksRemovePeeringRequest{
-			Name: ptr.To(peeringName),
+			Name: new(peeringName),
 		},
 	})
 	require.NoError(s.t, err)
@@ -173,10 +173,10 @@ func (s *e2eTestSuite) createSubnet(region, networkName, subnetId, ipCidrRange s
 		Project: s.mock.ProjectId(),
 		Region:  region,
 		SubnetworkResource: &computepb.Subnetwork{
-			Name:        ptr.To(subnetId),
-			IpCidrRange: ptr.To(ipCidrRange),
-			Network:     ptr.To(networkName),
-			Region:      ptr.To(region),
+			Name:        new(subnetId),
+			IpCidrRange: new(ipCidrRange),
+			Network:     new(networkName),
+			Region:      new(region),
 		},
 	})
 }
@@ -232,21 +232,21 @@ func (s *e2eTestSuite) createRouter(region, networkName, routerId string, subnet
 		Project: s.mock.ProjectId(),
 		Region:  region,
 		RouterResource: &computepb.Router{
-			Name:    ptr.To(routerId),
-			Network: ptr.To(networkName),
-			Region:  ptr.To(region),
+			Name:    new(routerId),
+			Network: new(networkName),
+			Region:  new(region),
 			Nats: []*computepb.RouterNat{
 				{
-					Name:                          ptr.To(routerId),
-					NatIpAllocateOption:           ptr.To(computepb.RouterNat_AUTO_ONLY.String()),
-					SourceSubnetworkIpRangesToNat: ptr.To(computepb.RouterNat_LIST_OF_SUBNETWORKS.String()),
+					Name:                          new(routerId),
+					NatIpAllocateOption:           new(computepb.RouterNat_AUTO_ONLY.String()),
+					SourceSubnetworkIpRangesToNat: new(computepb.RouterNat_LIST_OF_SUBNETWORKS.String()),
 				},
 			},
 		},
 	}
 	for _, subNameTxt := range subnetNames {
 		ss := &computepb.RouterNatSubnetworkToNat{
-			Name:                ptr.To(subNameTxt),
+			Name:                new(subNameTxt),
 			SourceIpRangesToNat: []string{computepb.RouterNat_ALL_SUBNETWORKS_ALL_IP_RANGES.String()},
 		}
 		req.RouterResource.Nats[0].Subnetworks = append(req.RouterResource.Nats[0].Subnetworks, ss)
@@ -296,12 +296,12 @@ func (s *e2eTestSuite) createPsaRange(networkSelfLink string, addressName string
 	return s.mock.InsertGlobalAddress(s.ctx, &computepb.InsertGlobalAddressRequest{
 		Project: s.mock.ProjectId(),
 		AddressResource: &computepb.Address{
-			Name:         ptr.To(addressName),
-			Address:      ptr.To(addressIp),
-			PrefixLength: ptr.To(prefix),
-			Network:      ptr.To(networkSelfLink),
-			AddressType:  ptr.To(computepb.Address_INTERNAL.String()),
-			Purpose:      ptr.To(computepb.Address_VPC_PEERING.String()),
+			Name:         new(addressName),
+			Address:      new(addressIp),
+			PrefixLength: new(prefix),
+			Network:      new(networkSelfLink),
+			AddressType:  new(computepb.Address_INTERNAL.String()),
+			Purpose:      new(computepb.Address_VPC_PEERING.String()),
 		},
 	})
 }
@@ -699,13 +699,7 @@ func (s *e2eTestSuite) createServiceConnectionPolicyOK(parent, serviceConnection
 		subnetName, err := gcputil.ParseNameDetail(subnetTxt)
 		require.NoError(s.t, err)
 		require.Equal(s.t, gcputil.ResourceTypeSubnetwork, subnetName.ResourceType())
-		match := false
-		for _, s := range subnetworks {
-			if subnetName.EqualString(s) {
-				match = true
-				break
-			}
-		}
+		match := slices.ContainsFunc(subnetworks, subnetName.EqualString)
 		require.True(s.t, match, "subnet %s not found", subnetTxt)
 	}
 	require.Equal(s.t, subnetworks, scp.PscConfig.Subnetworks)
@@ -775,8 +769,8 @@ func (s *e2eTestSuite) createRedisCluster(parent, network, clusterId string, rep
 		Parent:    parent,
 		ClusterId: clusterId,
 		Cluster: &clusterpb.Cluster{
-			ReplicaCount: ptr.To(replicaCount),
-			ShardCount:   ptr.To(shardCount),
+			ReplicaCount: new(replicaCount),
+			ShardCount:   new(shardCount),
 			NodeType:     clusterpb.NodeType_REDIS_STANDARD_SMALL,
 			PscConfigs: []*clusterpb.PscConfig{{
 				Network: network,
@@ -786,7 +780,7 @@ func (s *e2eTestSuite) createRedisCluster(parent, network, clusterId string, rep
 			AuthorizationMode:         clusterpb.AuthorizationMode_AUTH_MODE_DISABLED,
 			TransitEncryptionMode:     clusterpb.TransitEncryptionMode_TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION,
 			ZoneDistributionConfig:    &clusterpb.ZoneDistributionConfig{Mode: clusterpb.ZoneDistributionConfig_MULTI_ZONE},
-			DeletionProtectionEnabled: ptr.To(false),
+			DeletionProtectionEnabled: new(false),
 		},
 	})
 }

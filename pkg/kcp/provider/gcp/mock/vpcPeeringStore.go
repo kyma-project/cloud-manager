@@ -54,7 +54,7 @@ func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeer
 	if s.operations[remoteVpc] == nil {
 		operationpb := &pb.Operation{
 			Status: ptr.To(pb.Operation_DONE),
-			Name:   ptr.To(remoteVpc),
+			Name:   new(remoteVpc),
 		}
 		s.operations[remoteVpc] = operationpb
 	}
@@ -65,8 +65,8 @@ func (s *vpcPeeringStore) CreateRemoteVpcPeering(ctx context.Context, remotePeer
 			Network:              &kymaNetwork,
 			ImportCustomRoutes:   &importCustomRoutes,
 			ExportCustomRoutes:   &exportCustomRoutes,
-			ExchangeSubnetRoutes: ptr.To(true),
-			State:                ptr.To(pb.NetworkPeering_INACTIVE.String()),
+			ExchangeSubnetRoutes: new(true),
+			State:                new(pb.NetworkPeering_INACTIVE.String()),
 		},
 	}
 	s.items[remoteNetwork] = item
@@ -95,7 +95,7 @@ func (s *vpcPeeringStore) CreateLocalVpcPeering(ctx context.Context, remotePeeri
 	if s.operations[kymaVpc] == nil {
 		operationpb := &pb.Operation{
 			Status: ptr.To(pb.Operation_DONE),
-			Name:   ptr.To(kymaVpc),
+			Name:   new(kymaVpc),
 		}
 		s.operations[kymaVpc] = operationpb
 	}
@@ -106,8 +106,8 @@ func (s *vpcPeeringStore) CreateLocalVpcPeering(ctx context.Context, remotePeeri
 			Network:              &remoteNetwork,
 			ImportCustomRoutes:   &importCustomRoutes,
 			ExportCustomRoutes:   &exportCustomRoutes,
-			ExchangeSubnetRoutes: ptr.To(true),
-			State:                ptr.To(pb.NetworkPeering_INACTIVE.String()),
+			ExchangeSubnetRoutes: new(true),
+			State:                new(pb.NetworkPeering_INACTIVE.String()),
 		},
 	}
 

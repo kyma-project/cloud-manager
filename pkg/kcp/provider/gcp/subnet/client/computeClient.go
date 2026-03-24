@@ -7,7 +7,6 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"k8s.io/utils/ptr"
 )
 
 type CreateSubnetRequest struct {
@@ -61,13 +60,13 @@ func (computeClient *computeClient) CreateSubnet(ctx context.Context, request Cr
 		Project: request.ProjectId,
 		Region:  request.Region,
 		SubnetworkResource: &computepb.Subnetwork{
-			IpCidrRange:           ptr.To(request.Cidr),
-			Name:                  ptr.To(request.Name),
-			Network:               ptr.To(networkNameFull),
-			PrivateIpGoogleAccess: ptr.To(request.PrivateIpGoogleAccess),
-			Purpose:               ptr.To(request.Purpose),
+			IpCidrRange:           new(request.Cidr),
+			Name:                  new(request.Name),
+			Network:               new(networkNameFull),
+			PrivateIpGoogleAccess: new(request.PrivateIpGoogleAccess),
+			Purpose:               new(request.Purpose),
 		},
-		RequestId: ptr.To(request.IdempotenceId),
+		RequestId: new(request.IdempotenceId),
 	})
 
 	if err != nil {
@@ -96,7 +95,7 @@ func (computeClient *computeClient) DeleteSubnet(ctx context.Context, request De
 		Project:    request.ProjectId,
 		Region:     request.Region,
 		Subnetwork: request.Name,
-		RequestId:  ptr.To(request.IdempotenceId),
+		RequestId:  new(request.IdempotenceId),
 	})
 
 	if err != nil {

@@ -400,8 +400,7 @@ func envOptionsFromStruct(v any) ([]cel.EnvOption, map[string]string, error) {
 
 	var opts []cel.EnvOption
 
-	for i := 0; i < t.NumField(); i++ {
-		f := t.Field(i)
+	for f := range t.Fields() {
 
 		// Skip unexported fields
 		if f.PkgPath != "" {

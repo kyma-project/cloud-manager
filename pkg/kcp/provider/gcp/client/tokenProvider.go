@@ -35,7 +35,7 @@ func loadServiceAccountCredentials(credentialsFile string) (*serviceAccountCrede
 	if err != nil {
 		return nil, fmt.Errorf("failed to read credentials file %s: %w", credentialsFile, err)
 	}
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	if err := json.Unmarshal(content, &data); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal credentials file %s: %w", credentialsFile, err)
 	}

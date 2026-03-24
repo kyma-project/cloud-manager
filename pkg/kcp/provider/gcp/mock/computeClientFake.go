@@ -31,8 +31,8 @@ func (computeClientFake *computeClientFake) CreateSubnet(ctx context.Context, re
 		Region:                &request.Region,
 		IpCidrRange:           &request.Cidr,
 		Network:               &request.Network,
-		PrivateIpGoogleAccess: googleapi.Bool(request.PrivateIpGoogleAccess),
-		Purpose:               googleapi.String(request.Purpose),
+		PrivateIpGoogleAccess: new(request.PrivateIpGoogleAccess),
+		Purpose:               new(request.Purpose),
 	}
 
 	opKey := computeClientFake.operationsClientUtils.AddRegionOperation(request.Name)

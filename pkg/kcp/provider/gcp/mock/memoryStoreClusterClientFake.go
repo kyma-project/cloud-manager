@@ -7,7 +7,6 @@ import (
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	"google.golang.org/api/googleapi"
-	"k8s.io/utils/ptr"
 )
 
 type MemoryStoreClusterClientFakeUtils interface {
@@ -48,8 +47,8 @@ func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) CreateRedisClu
 		Name:         name,
 		State:        clusterpb.Cluster_CREATING,
 		RedisConfigs: options.RedisConfigs,
-		ReplicaCount: ptr.To(options.ReplicaCount),
-		ShardCount:   ptr.To(options.ShardCount),
+		ReplicaCount: new(options.ReplicaCount),
+		ShardCount:   new(options.ShardCount),
 		NodeType:     clusterpb.NodeType(clusterpb.NodeType_value[options.NodeType]),
 
 		DiscoveryEndpoints: []*clusterpb.DiscoveryEndpoint{
@@ -67,7 +66,7 @@ func (memoryStoreClusterClientFake *memoryStoreClusterClientFake) CreateRedisClu
 		TransitEncryptionMode:  clusterpb.TransitEncryptionMode_TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION,
 		ZoneDistributionConfig: &clusterpb.ZoneDistributionConfig{Mode: clusterpb.ZoneDistributionConfig_MULTI_ZONE},
 
-		DeletionProtectionEnabled: ptr.To(false),
+		DeletionProtectionEnabled: new(false),
 	}
 	memoryStoreClusterClientFake.redisClusters[name] = redisCluster
 

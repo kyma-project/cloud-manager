@@ -28,7 +28,7 @@ type State struct {
 	// GCP-specific remote resources
 	address           *computepb.Address            // Global address resource
 	serviceConnection *servicenetworking.Connection // PSA connection
-	operation         interface{}                   // Can be compute or servicenetworking operation
+	operation         any                           // Can be compute or servicenetworking operation
 
 	// GCP-specific state tracking
 	inSync          bool                            // Whether remote state matches desired state
@@ -191,11 +191,11 @@ func (s *State) SetServiceConnection(v *servicenetworking.Connection) {
 	s.serviceConnection = v
 }
 
-func (s *State) Operation() interface{} {
+func (s *State) Operation() any {
 	return s.operation
 }
 
-func (s *State) SetOperation(v interface{}) {
+func (s *State) SetOperation(v any) {
 	s.operation = v
 }
 
