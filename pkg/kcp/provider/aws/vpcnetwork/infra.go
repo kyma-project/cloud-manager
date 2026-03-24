@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -155,13 +156,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 		if ptr.Deref(assoc.CidrBlock, "xxx") == ptr.Deref(vpc.CidrBlock, "yyy") {
 			continue
 		}
-		found := false
-		for _, c := range o.cidrBlocks {
-			if c == ptr.Deref(assoc.CidrBlock, "") {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(o.cidrBlocks, ptr.Deref(assoc.CidrBlock, ""))
 		if !found {
 			removeCidrAssociations[ptr.Deref(assoc.AssociationId, "")] = ptr.Deref(assoc.CidrBlock, "")
 		}
@@ -246,11 +241,11 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 	var sgID string
 	sgArr, err := o.client.DescribeSecurityGroups(ctx, []ec2types.Filter{
 		{
-			Name:   ptr.To("vpc-id"),
+			Name:   new("vpc-id"),
 			Values: []string{ptr.Deref(vpc.VpcId, "")},
 		},
 		{
-			Name:   ptr.To("tag:Name"),
+			Name:   new("tag:Name"),
 			Values: []string{o.name},
 		},
 	}, nil)
@@ -260,8 +255,8 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 	if len(sgArr) == 0 {
 		id, err := o.client.CreateSecurityGroup(ctx, ptr.Deref(vpc.VpcId, ""), o.name, []ec2types.Tag{
 			{
-				Key:   ptr.To("Name"),
-				Value: ptr.To(o.name),
+				Key:   new("Name"),
+				Value: new(o.name),
 			},
 		})
 		if err != nil {
@@ -357,11 +352,11 @@ func DeleteInfra(ctx context.Context, name string, c awsvpcnetworkclient.Client)
 		// delete all security groups from vpc
 		sgArr, err := c.DescribeSecurityGroups(ctx, []ec2types.Filter{
 			{
-				Name:   ptr.To("vpc-id"),
+				Name:   new("vpc-id"),
 				Values: []string{ptr.Deref(vpc.VpcId, "")},
 			},
 			{
-				Name:   ptr.To("tag:Name"),
+				Name:   new("tag:Name"),
 				Values: []string{name},
 			},
 		}, nil)
