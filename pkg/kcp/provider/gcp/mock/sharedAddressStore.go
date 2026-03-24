@@ -10,7 +10,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
-	"google.golang.org/protobuf/proto"
 )
 
 // sharedAddressStore provides thread-safe storage for GCP addresses
@@ -104,13 +103,13 @@ func (s *sharedAddressStore) CreatePscIpRange(ctx context.Context, projectId, vp
 		"id": id,
 	}
 	addr := &computepb.Address{
-		Name:         proto.String(name),
-		Description:  proto.String(description),
-		Address:      proto.String(address),
-		PrefixLength: proto.Int32(int32(prefixLength)),
-		Network:      proto.String(client.GetVPCPath(projectId, vpcName)),
-		AddressType:  proto.String(computepb.Address_INTERNAL.String()),
-		Purpose:      proto.String(computepb.Address_VPC_PEERING.String()),
+		Name:         new(name),
+		Description:  new(description),
+		Address:      new(address),
+		PrefixLength: new(int32(prefixLength)),
+		Network:      new(client.GetVPCPath(projectId, vpcName)),
+		AddressType:  new(computepb.Address_INTERNAL.String()),
+		Purpose:      new(computepb.Address_VPC_PEERING.String()),
 		Labels:       lbls,
 	}
 	s.addresses = append(s.addresses, addr)

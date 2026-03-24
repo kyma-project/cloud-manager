@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/googleapi"
-	"k8s.io/utils/ptr"
 )
 
 func TestFilter(t *testing.T) {
@@ -21,8 +20,8 @@ func TestFilter(t *testing.T) {
 		assert.NoError(t, err)
 
 		obj := &computepb.Network{
-			Name:     ptr.To("test-network"),
-			SelfLink: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-network"),
+			Name:     new("test-network"),
+			SelfLink: new("https://www.googleapis.com/compute/v1/projects/test-project/global/networks/test-network"),
 			Subnetworks: []string{
 				gcputil.NewSubnetworkName("test-project", "test-region", "test-subnetwork-1").String(),
 				gcputil.NewSubnetworkName("test-project", "test-region", "test-subnetwork-2").String(),
@@ -86,7 +85,7 @@ func TestFilter(t *testing.T) {
 		fe, err := NewFilterEngine[*file.Operation]()
 		assert.NoError(t, err)
 
-		metadata := map[string]interface{}{
+		metadata := map[string]any{
 			"verb":   "restore",
 			"target": "projects/test-project/locations/test-location/instances/test-instance",
 		}
@@ -140,16 +139,16 @@ func TestFilter(t *testing.T) {
 		assert.NoError(t, err)
 
 		obj := &computepb.Address{
-			Address:      ptr.To("10.250.0.0"),
-			PrefixLength: ptr.To(int32(16)),
-			Id:           ptr.To(uint64(1358567327454931553)),
-			Kind:         ptr.To("compute#address"),
-			Name:         ptr.To("test-address"),
-			Region:       ptr.To("https://www.googleapis.com/compute/v1/projects/my-project/regions/europe-west3"),
-			SelfLink:     ptr.To("https://www.googleapis.com/compute/v1/projects/my-project/regions/europe-west3/addresses/test-address"),
-			Status:       ptr.To("IN_USE"),
-			Purpose:      ptr.To("NAT_AUTO"),
-			NetworkTier:  ptr.To("PREMIUM"),
+			Address:      new("10.250.0.0"),
+			PrefixLength: new(int32(16)),
+			Id:           new(uint64(1358567327454931553)),
+			Kind:         new("compute#address"),
+			Name:         new("test-address"),
+			Region:       new("https://www.googleapis.com/compute/v1/projects/my-project/regions/europe-west3"),
+			SelfLink:     new("https://www.googleapis.com/compute/v1/projects/my-project/regions/europe-west3/addresses/test-address"),
+			Status:       new("IN_USE"),
+			Purpose:      new("NAT_AUTO"),
+			NetworkTier:  new("PREMIUM"),
 			Users: []string{
 				"https://www.googleapis.com/compute/v1/projects/my-project/regions/europe-west3/routers/my-router",
 			},

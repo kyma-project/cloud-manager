@@ -5,7 +5,6 @@ import (
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/servicenetworking/v1"
-	"google.golang.org/protobuf/proto"
 )
 
 type iprangeStore struct {
@@ -57,7 +56,7 @@ func (s *iprangeStore) GetGlobalOperation(ctx context.Context, projectId, operat
 	// Mock returns a DONE operation
 	status := computepb.Operation_DONE
 	return &computepb.Operation{
-		Name:   proto.String(operationName),
+		Name:   new(operationName),
 		Status: &status,
 	}, nil
 }

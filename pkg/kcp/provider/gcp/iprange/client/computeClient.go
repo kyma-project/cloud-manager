@@ -8,7 +8,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/iterator"
-	"google.golang.org/protobuf/proto"
 )
 
 // ComputeClient defines business operations for IpRange Compute API interactions.
@@ -83,13 +82,13 @@ func (c *computeClient) CreatePscIpRange(ctx context.Context, projectId, vpcName
 	req := &computepb.InsertGlobalAddressRequest{
 		Project: projectId,
 		AddressResource: &computepb.Address{
-			Name:         proto.String(name),
-			Description:  proto.String(description),
-			Address:      proto.String(address),
-			PrefixLength: proto.Int32(int32(prefixLength)),
-			Network:      proto.String(gcpclient.GetVPCPath(projectId, vpcName)),
-			AddressType:  proto.String(computepb.Address_INTERNAL.String()),
-			Purpose:      proto.String(computepb.Address_VPC_PEERING.String()),
+			Name:         new(name),
+			Description:  new(description),
+			Address:      new(address),
+			PrefixLength: new(int32(prefixLength)),
+			Network:      new(gcpclient.GetVPCPath(projectId, vpcName)),
+			AddressType:  new(computepb.Address_INTERNAL.String()),
+			Purpose:      new(computepb.Address_VPC_PEERING.String()),
 		},
 	}
 
@@ -111,7 +110,7 @@ func (c *computeClient) ListGlobalAddresses(ctx context.Context, projectId, vpc 
 
 	req := &computepb.ListGlobalAddressesRequest{
 		Project: projectId,
-		Filter:  proto.String(filter),
+		Filter:  new(filter),
 	}
 
 	it := c.globalAddressesClient.List(ctx, req)

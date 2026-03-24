@@ -114,8 +114,8 @@ func (s *store) DeleteGlobalAddress(ctx context.Context, req *computepb.DeleteGl
 
 	op := s.createComputeOperationNoLock(addrName.ProjectId(), "", "delete", addr.GetSelfLink(), addr.GetId())
 	op.Status = ptr.To(computepb.Operation_DONE)
-	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	op.Progress = ptr.To(int32(100))
+	op.EndTime = new(time.Now().Format(time.RFC3339))
+	op.Progress = new(int32(100))
 
 	return newComputeOperation(op), nil
 }
@@ -151,7 +151,7 @@ func (s *store) InsertGlobalAddress(ctx context.Context, req *computepb.InsertGl
 		return nil, gcpmeta.NewBadRequestError("network %s not found for address resource", netNd.String())
 	}
 	if req.AddressResource.AddressType == nil {
-		req.AddressResource.AddressType = ptr.To("EXTERNAL")
+		req.AddressResource.AddressType = new("EXTERNAL")
 	}
 	if at := ptr.Deref(req.AddressResource.AddressType, ""); at != "EXTERNAL" && at != "INTERNAL" {
 		return nil, gcpmeta.NewBadRequestError("invalid address type: %q", at)
@@ -178,17 +178,17 @@ func (s *store) InsertGlobalAddress(ctx context.Context, req *computepb.InsertGl
 
 	id := rand.Uint64()
 	name := gcputil.NewGlobalAddressName(req.Project, addr.GetName())
-	addr.Id = ptr.To(id)
-	addr.SelfLink = ptr.To(name.PrefixWithGoogleApisComputeV1())
-	addr.Kind = ptr.To("compute#address")
-	addr.Status = ptr.To(computepb.Address_RESERVED.String())
+	addr.Id = new(id)
+	addr.SelfLink = new(name.PrefixWithGoogleApisComputeV1())
+	addr.Kind = new("compute#address")
+	addr.Status = new(computepb.Address_RESERVED.String())
 
 	s.addresses.Add(addr, name)
 
 	op := s.createComputeOperationNoLock(name.ProjectId(), "", "insert", addr.GetSelfLink(), addr.GetId())
 	op.Status = ptr.To(computepb.Operation_DONE)
-	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	op.Progress = ptr.To(int32(100))
+	op.EndTime = new(time.Now().Format(time.RFC3339))
+	op.Progress = new(int32(100))
 
 	return newComputeOperation(op), nil
 }
@@ -254,7 +254,7 @@ func (s *store) GetRouterIpAddresses(ctx context.Context, project string, region
 	it := s.ListAddresses(ctx, &computepb.ListAddressesRequest{
 		Project: project,
 		Region:  region,
-		Filter:  ptr.To(`purpose="NAT_AUTO"`), // the API does not work with users filter, so have to do this
+		Filter:  new(`purpose="NAT_AUTO"`), // the API does not work with users filter, so have to do this
 	}).All()
 	var results []*computepb.Address
 	for x, err := range it {
