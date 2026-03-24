@@ -18,7 +18,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -101,7 +100,7 @@ func (c *defaultClusterInSession) PodLogs(ctx context.Context, namespace, podNam
 	}
 	podLogOptions := &corev1.PodLogOptions{
 		Container: containerName,
-		TailLines: ptr.To(int64(100)),
+		TailLines: new(int64(100)),
 	}
 	req := cs.CoreV1().Pods(namespace).GetLogs(podName, podLogOptions)
 	podLogs, err := req.Stream(ctx)

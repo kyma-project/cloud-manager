@@ -8,7 +8,6 @@ import (
 	authenticationv1alpha1 "github.com/gardener/gardener/pkg/apis/authentication/v1alpha1"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -45,7 +44,7 @@ func (p *gardenKubeconfigProvider) CreateNewKubeconfig(ctx context.Context, shoo
 
 	adminKubeconfigRequest := &authenticationv1alpha1.AdminKubeconfigRequest{
 		Spec: authenticationv1alpha1.AdminKubeconfigRequestSpec{
-			ExpirationSeconds: ptr.To(int64(p.expiresIn.Seconds())),
+			ExpirationSeconds: new(int64(p.expiresIn.Seconds())),
 		},
 	}
 	err = p.gardenClient.SubResource("adminkubeconfig").Create(ctx, shoot, adminKubeconfigRequest)
