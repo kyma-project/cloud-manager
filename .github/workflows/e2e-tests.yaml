@@ -148,9 +148,7 @@ jobs:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
           if [ -f "$KUBECONFIG" ]; then
-            go run ./e2e/cmd instance clean -a shared-$PROVIDER -v
-            # give time to CM to pick-up and start deletion
-            sleep 30
+            go run ./e2e/cmd instance clean --alias shared-$PROVIDER --verbose --wait --force --timeout 30m
           fi
 
       - name: Delete shared instance
