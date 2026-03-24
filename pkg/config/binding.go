@@ -25,7 +25,7 @@ func (b *binding) Copy(in string) {
 		}
 		str = res.String()
 	}
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	err := json.Unmarshal([]byte(str), &data)
 	if err != nil {
 		return

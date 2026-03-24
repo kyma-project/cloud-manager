@@ -53,13 +53,13 @@ func (s *sourceFile) Read(inJsonString string) string {
 	ext := filepath.Ext(s.file)
 
 	var newJsonString string
-	var newData map[string]interface{}
+	var newData map[string]any
 
 	switch ext {
 	case ".json":
 		newJsonString = loadedFileString
 	case ".yaml", ".yml":
-		newData = map[string]interface{}{}
+		newData = map[string]any{}
 		err = yaml.Unmarshal([]byte(loadedFileString), newData)
 		if err != nil {
 			return inJsonString
@@ -87,7 +87,7 @@ func (s *sourceFile) Read(inJsonString string) string {
 		return changedJsonString
 	}
 
-	existingData := map[string]interface{}{}
+	existingData := map[string]any{}
 	err = json.Unmarshal([]byte(existingGJsonResult.Raw), &existingData)
 	if err != nil {
 		return inJsonString

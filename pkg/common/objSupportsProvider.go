@@ -9,6 +9,7 @@ import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"slices"
 )
 
 var (
@@ -54,10 +55,8 @@ func ObjSupportsProvider(o client.Object, scheme *runtime.Scheme, provider strin
 			if len(supportedProviders) == 0 {
 				return true, nil
 			}
-			for _, p := range supportedProviders {
-				if p == provider {
-					return true, nil
-				}
+			if slices.Contains(supportedProviders, provider) {
+				return true, nil
 			}
 			return false, nil
 		}

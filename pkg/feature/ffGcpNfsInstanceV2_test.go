@@ -10,8 +10,7 @@ import (
 )
 
 func TestGcpNfsInstanceV2(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	err := Initialize(ctx, logr.Discard(), WithFile("testdata/gcpNfsInstanceV2.yaml"))
 	assert.NoError(t, err)

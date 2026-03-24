@@ -107,7 +107,7 @@ type ContextBuilder interface {
 	FFCtx() ffcontext.Context
 
 	LoadFromScope(scope *cloudcontrolv1beta1.Scope) ContextBuilder
-	LoadFromMap(m map[string]interface{}) ContextBuilder
+	LoadFromMap(m map[string]any) ContextBuilder
 	Landscape(v string) ContextBuilder
 	Feature(v string) ContextBuilder
 	FeatureFromObject(obj client.Object, scheme *runtime.Scheme) ContextBuilder
@@ -130,7 +130,7 @@ type ContextBuilder interface {
 	// lower(spec.names.kind).lower(spec.group).
 	KindsFromObject(obj client.Object, scheme *runtime.Scheme) ContextBuilder
 
-	Custom(key string, value interface{}) ContextBuilder
+	Custom(key string, value any) ContextBuilder
 	Std(key types.Key, value string) ContextBuilder
 }
 
@@ -204,7 +204,7 @@ func (b *contextBuilderImpl) LoadFromScope(scope *cloudcontrolv1beta1.Scope) Con
 	return b
 }
 
-func (b *contextBuilderImpl) LoadFromMap(m map[string]interface{}) ContextBuilder {
+func (b *contextBuilderImpl) LoadFromMap(m map[string]any) ContextBuilder {
 	for k, v := range m {
 		b.Custom(k, v)
 	}
@@ -301,7 +301,7 @@ func (b *contextBuilderImpl) KindsFromObject(obj client.Object, scheme *runtime.
 	return b
 }
 
-func (b *contextBuilderImpl) Custom(key string, value interface{}) ContextBuilder {
+func (b *contextBuilderImpl) Custom(key string, value any) ContextBuilder {
 	b.builder = b.builder.AddCustom(key, value)
 	return b
 }
