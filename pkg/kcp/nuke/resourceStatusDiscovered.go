@@ -5,7 +5,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -20,7 +19,7 @@ func resourceStatusDiscovered(ctx context.Context, st composed.State) (error, co
 	}
 
 	if state.ObjAsNuke().Status.InitializedOn.IsZero() {
-		state.ObjAsNuke().Status.InitializedOn = ptr.To(metav1.NewTime(time.Now()))
+		state.ObjAsNuke().Status.InitializedOn = new(metav1.NewTime(time.Now()))
 		changed = true
 	}
 
