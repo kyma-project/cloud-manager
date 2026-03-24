@@ -103,7 +103,7 @@ func (c *localClient) IsAlreadyExists(err error) bool {
 
 func (c *client) ListTags(ctx context.Context, resourceArn string) (map[string]string, error) {
 	in := &backup.ListTagsInput{
-		ResourceArn: ptr.To(resourceArn),
+		ResourceArn: new(resourceArn),
 	}
 	out, err := c.svc.ListTags(ctx, in)
 	if err != nil {
@@ -123,7 +123,7 @@ func (c *client) ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaul
 
 func (c *client) DescribeBackupVault(ctx context.Context, backupVaultName string) (*backup.DescribeBackupVaultOutput, error) {
 	in := &backup.DescribeBackupVaultInput{
-		BackupVaultName: ptr.To(backupVaultName),
+		BackupVaultName: new(backupVaultName),
 	}
 	out, err := c.svc.DescribeBackupVault(ctx, in)
 	if err != nil {
@@ -134,9 +134,9 @@ func (c *client) DescribeBackupVault(ctx context.Context, backupVaultName string
 
 func (c *client) CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error) {
 	in := &backup.CreateBackupVaultInput{
-		BackupVaultName:  ptr.To(name),
+		BackupVaultName:  new(name),
 		BackupVaultTags:  tags,
-		CreatorRequestId: ptr.To(name),
+		CreatorRequestId: new(name),
 	}
 	out, err := c.svc.CreateBackupVault(ctx, in)
 	if err != nil {
@@ -147,7 +147,7 @@ func (c *client) CreateBackupVault(ctx context.Context, name string, tags map[st
 
 func (c *client) DeleteBackupVault(ctx context.Context, name string) error {
 	in := &backup.DeleteBackupVaultInput{
-		BackupVaultName: ptr.To(name),
+		BackupVaultName: new(name),
 	}
 	_, err := c.svc.DeleteBackupVault(ctx, in)
 	return err
@@ -162,9 +162,9 @@ func (c *client) StartBackupJob(ctx context.Context, params *StartBackupJobInput
 		}
 	}
 	in := &backup.StartBackupJobInput{
-		BackupVaultName:   ptr.To(params.BackupVaultName),
-		IamRoleArn:        ptr.To(params.IamRoleArn),
-		ResourceArn:       ptr.To(params.ResourceArn),
+		BackupVaultName:   new(params.BackupVaultName),
+		IamRoleArn:        new(params.IamRoleArn),
+		ResourceArn:       new(params.ResourceArn),
 		BackupOptions:     nil, // ???
 		IdempotencyToken:  params.IdempotencyToken,
 		Lifecycle:         lifecycle,
@@ -188,7 +188,7 @@ func (c *client) ListBackupJobs(ctx context.Context, in *backup.ListBackupJobsIn
 
 func (c *client) DescribeBackupJob(ctx context.Context, backupJobId string) (*backup.DescribeBackupJobOutput, error) {
 	in := &backup.DescribeBackupJobInput{
-		BackupJobId: ptr.To(backupJobId),
+		BackupJobId: new(backupJobId),
 	}
 	out, err := c.svc.DescribeBackupJob(ctx, in)
 	if err != nil {
@@ -199,8 +199,8 @@ func (c *client) DescribeBackupJob(ctx context.Context, backupJobId string) (*ba
 
 func (c *client) ListRecoveryPointsForVault(ctx context.Context, accountId, backupVaultName string) ([]backuptypes.RecoveryPointByBackupVault, error) {
 	in := &backup.ListRecoveryPointsByBackupVaultInput{
-		BackupVaultName:      ptr.To(backupVaultName),
-		BackupVaultAccountId: ptr.To(accountId),
+		BackupVaultName:      new(backupVaultName),
+		BackupVaultAccountId: new(accountId),
 	}
 	out, err := c.svc.ListRecoveryPointsByBackupVault(ctx, in)
 	if err != nil {
@@ -211,9 +211,9 @@ func (c *client) ListRecoveryPointsForVault(ctx context.Context, accountId, back
 
 func (c *client) DescribeRecoveryPoint(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.DescribeRecoveryPointOutput, error) {
 	in := &backup.DescribeRecoveryPointInput{
-		BackupVaultName:      ptr.To(backupVaultName),
-		RecoveryPointArn:     ptr.To(recoveryPointArn),
-		BackupVaultAccountId: ptr.To(accountId),
+		BackupVaultName:      new(backupVaultName),
+		RecoveryPointArn:     new(recoveryPointArn),
+		BackupVaultAccountId: new(accountId),
 	}
 	out, err := c.svc.DescribeRecoveryPoint(ctx, in)
 	if err != nil {
@@ -223,8 +223,8 @@ func (c *client) DescribeRecoveryPoint(ctx context.Context, accountId, backupVau
 }
 func (c *client) DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error) {
 	in := &backup.DeleteRecoveryPointInput{
-		BackupVaultName:  ptr.To(backupVaultName),
-		RecoveryPointArn: ptr.To(recoveryPointArn),
+		BackupVaultName:  new(backupVaultName),
+		RecoveryPointArn: new(recoveryPointArn),
 	}
 	out, err := c.svc.DeleteRecoveryPoint(ctx, in)
 	if err != nil {
@@ -242,10 +242,10 @@ func (c *client) StartCopyJob(ctx context.Context, params *StartCopyJobInput) (*
 		}
 	}
 	in := &backup.StartCopyJobInput{
-		DestinationBackupVaultArn: ptr.To(params.DestinationBackupVaultArn),
-		IamRoleArn:                ptr.To(params.IamRoleArn),
-		RecoveryPointArn:          ptr.To(params.RecoveryPointArn),
-		SourceBackupVaultName:     ptr.To(params.SourceBackupVaultName),
+		DestinationBackupVaultArn: new(params.DestinationBackupVaultArn),
+		IamRoleArn:                new(params.IamRoleArn),
+		RecoveryPointArn:          new(params.RecoveryPointArn),
+		SourceBackupVaultName:     new(params.SourceBackupVaultName),
 		IdempotencyToken:          params.IdempotencyToken,
 		Lifecycle:                 lifecycle,
 	}
@@ -259,7 +259,7 @@ func (c *client) StartCopyJob(ctx context.Context, params *StartCopyJobInput) (*
 
 func (c *client) DescribeCopyJob(ctx context.Context, copyJobId string) (*backup.DescribeCopyJobOutput, error) {
 	in := &backup.DescribeCopyJobInput{
-		CopyJobId: ptr.To(copyJobId),
+		CopyJobId: new(copyJobId),
 	}
 	out, err := c.svc.DescribeCopyJob(ctx, in)
 	if err != nil {

@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 )
 
@@ -22,8 +21,8 @@ func NewBackupProtectableItemsClient(bpic *armrecoveryservicesbackup.BackupProte
 func (c backupProtectableItemsClient) ListBackupProtectableItems(ctx context.Context, vaultName string, resourceGroupName string) ([]*armrecoveryservicesbackup.WorkloadProtectableItemResource, error) {
 
 	pager := c.azureClient.NewListPager(vaultName, resourceGroupName,
-		to.Ptr(armrecoveryservicesbackup.BackupProtectableItemsClientListOptions{
-			Filter:    to.Ptr("backupManagementType eq 'AzureStorage'"),
+		new(armrecoveryservicesbackup.BackupProtectableItemsClientListOptions{
+			Filter:    new("backupManagementType eq 'AzureStorage'"),
 			SkipToken: nil,
 		}),
 	)

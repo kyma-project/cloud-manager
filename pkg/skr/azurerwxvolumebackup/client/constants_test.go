@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/suite"
@@ -111,22 +110,22 @@ func (s *constantsSuite) TestAzureStorageErrorInfoToJson() {
 	var errorCode int32 = 1234
 	var sampleErrors = make([]*armrecoveryservicesbackup.AzureStorageErrorInfo, 3)
 	var recommendations = make([]*string, 3)
-	recommendations[0] = to.Ptr("recommendation 1")
-	recommendations[1] = to.Ptr("recommendation 2")
-	recommendations[2] = to.Ptr("recommendation 3")
+	recommendations[0] = new("recommendation 1")
+	recommendations[1] = new("recommendation 2")
+	recommendations[2] = new("recommendation 3")
 	sampleErrors[0] = &armrecoveryservicesbackup.AzureStorageErrorInfo{
-		ErrorCode:       to.Ptr(errorCode),
-		ErrorString:     to.Ptr("Sample message 1"),
+		ErrorCode:       new(errorCode),
+		ErrorString:     new("Sample message 1"),
 		Recommendations: recommendations,
 	}
 	sampleErrors[1] = &armrecoveryservicesbackup.AzureStorageErrorInfo{
-		ErrorCode:       to.Ptr(errorCode),
-		ErrorString:     to.Ptr("Sample message 2"),
+		ErrorCode:       new(errorCode),
+		ErrorString:     new("Sample message 2"),
 		Recommendations: recommendations,
 	}
 	sampleErrors[2] = &armrecoveryservicesbackup.AzureStorageErrorInfo{
-		ErrorCode:       to.Ptr(errorCode),
-		ErrorString:     to.Ptr("Sample message 3"),
+		ErrorCode:       new(errorCode),
+		ErrorString:     new("Sample message 3"),
 		Recommendations: recommendations,
 	}
 	detailsInJson, err := AzureStorageErrorInfoToJson(sampleErrors)

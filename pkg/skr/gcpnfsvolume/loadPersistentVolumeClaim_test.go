@@ -1,7 +1,6 @@
 package gcpnfsvolume
 
 import (
-	"context"
 	"testing"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -65,8 +64,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: load existing PVC", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolumeClaim(ctx, state)
 
@@ -79,8 +77,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if APIServer cant find requested PVC", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			fakeClient := fake.NewClientBuilder().
 				WithScheme(commonscheme.SkrScheme).
 				Build()

@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"time"
 )
@@ -25,10 +24,10 @@ func (c backupClient) TriggerBackup(ctx context.Context, vaultName, resourceGrou
 	expiryTime := time.Date(2124, time.January, 1, 0, 0, 0, 0, time.UTC)
 	params := armrecoveryservicesbackup.BackupRequestResource{
 		ETag:     nil,
-		Location: to.Ptr(location),
-		Properties: to.Ptr(armrecoveryservicesbackup.AzureFileShareBackupRequest{
-			ObjectType:                   to.Ptr("AzureFileShareBackupRequest"),
-			RecoveryPointExpiryTimeInUTC: to.Ptr(expiryTime),
+		Location: new(location),
+		Properties: new(armrecoveryservicesbackup.AzureFileShareBackupRequest{
+			ObjectType:                   new("AzureFileShareBackupRequest"),
+			RecoveryPointExpiryTimeInUTC: new(expiryTime),
 		}),
 		Tags: nil,
 	}

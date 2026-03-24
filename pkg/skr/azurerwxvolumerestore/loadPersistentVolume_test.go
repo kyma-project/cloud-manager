@@ -1,7 +1,6 @@
 package azurerwxvolumerestore
 
 import (
-	"context"
 	"testing"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -128,8 +127,7 @@ func TestLoadPersistentVolume(t *testing.T) {
 
 		t.Run("Should: load Bound PV", func(t *testing.T) {
 			setupTest(true, corev1.VolumeBound)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolume(ctx, state)
 
@@ -143,8 +141,7 @@ func TestLoadPersistentVolume(t *testing.T) {
 
 		t.Run("Should: fail PV that is not Bound", func(t *testing.T) {
 			setupTest(true, corev1.VolumePending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolume(ctx, state)
 
@@ -157,8 +154,7 @@ func TestLoadPersistentVolume(t *testing.T) {
 
 		t.Run("Should: error out if APIServer cant find requested PV", func(t *testing.T) {
 			setupTest(false, corev1.VolumePending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolume(ctx, state)
 

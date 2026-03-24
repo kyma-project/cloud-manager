@@ -25,36 +25,36 @@ func (c protectionPoliciesClient) CreateBackupPolicy(ctx context.Context, vaultN
 	ppr := armrecoveryservicesbackup.ProtectionPolicyResource{
 		ETag:     nil,
 		Location: nil,
-		Properties: to.Ptr(armrecoveryservicesbackup.AzureFileShareProtectionPolicy{
-			BackupManagementType:           to.Ptr("AzureStorage"),
+		Properties: new(armrecoveryservicesbackup.AzureFileShareProtectionPolicy{
+			BackupManagementType:           new("AzureStorage"),
 			ProtectedItemsCount:            nil,
 			ResourceGuardOperationRequests: nil,
-			RetentionPolicy: to.Ptr(armrecoveryservicesbackup.LongTermRetentionPolicy{
-				RetentionPolicyType: to.Ptr("LongTermRetentionPolicy"),
-				DailySchedule: to.Ptr(armrecoveryservicesbackup.DailyRetentionSchedule{
-					RetentionDuration: to.Ptr(armrecoveryservicesbackup.RetentionDuration{
-						Count:        to.Ptr(int32(30)),
+			RetentionPolicy: new(armrecoveryservicesbackup.LongTermRetentionPolicy{
+				RetentionPolicyType: new("LongTermRetentionPolicy"),
+				DailySchedule: new(armrecoveryservicesbackup.DailyRetentionSchedule{
+					RetentionDuration: new(armrecoveryservicesbackup.RetentionDuration{
+						Count:        new(int32(30)),
 						DurationType: to.Ptr(armrecoveryservicesbackup.RetentionDurationTypeDays),
 					}),
-					RetentionTimes: []*time.Time{to.Ptr(time.Now())},
+					RetentionTimes: []*time.Time{new(time.Now())},
 				}),
 				MonthlySchedule: nil,
 				WeeklySchedule:  nil,
 				YearlySchedule:  nil,
 			}),
-			SchedulePolicy: to.Ptr(armrecoveryservicesbackup.SimpleSchedulePolicy{
+			SchedulePolicy: new(armrecoveryservicesbackup.SimpleSchedulePolicy{
 				SchedulePolicyType:      nil,
 				HourlySchedule:          nil,
 				ScheduleRunDays:         nil,
 				ScheduleRunFrequency:    to.Ptr(armrecoveryservicesbackup.ScheduleRunTypeDaily),
-				ScheduleRunTimes:        []*time.Time{to.Ptr(time.Now())},
+				ScheduleRunTimes:        []*time.Time{new(time.Now())},
 				ScheduleWeeklyFrequency: nil,
 			}),
-			TimeZone:             to.Ptr("UTC"),
+			TimeZone:             new("UTC"),
 			VaultRetentionPolicy: nil,
 			WorkLoadType:         to.Ptr(armrecoveryservicesbackup.WorkloadTypeAzureFileShare),
 		}),
-		Tags: map[string]*string{"cloud-manager": to.Ptr("rwxVolumeBackup")},
+		Tags: map[string]*string{"cloud-manager": new("rwxVolumeBackup")},
 		ID:   nil,
 		Name: nil,
 		Type: nil,

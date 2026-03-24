@@ -1,7 +1,6 @@
 package azurerwxvolumerestore
 
 import (
-	"context"
 	"testing"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -114,8 +113,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: load Bound pvc", func(t *testing.T) {
 			setupTest(true, corev1.ClaimBound)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolumeClaim(ctx, state)
 
@@ -127,8 +125,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: fail pvc that is not Bound", func(t *testing.T) {
 			setupTest(true, corev1.ClaimPending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolumeClaim(ctx, state)
 
@@ -139,8 +136,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: fail pvc with invalid provisioner", func(t *testing.T) {
 			setupTest(true, corev1.ClaimPending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			// patch the annotations to have invalid provisioner
 			pvc.Annotations["volume.kubernetes.io/storage-provisioner"] = "invalid.provisioner"
 			err := k8sClient.Patch(ctx, pvc, client.MergeFrom(pvc), client.FieldOwner("test"))
@@ -154,8 +150,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: error out if APIServer cant find requested pvc", func(t *testing.T) {
 			setupTest(false, corev1.ClaimPending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolumeClaim(ctx, state)
 

@@ -1,7 +1,6 @@
 package gcpnfsvolume
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -61,8 +60,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 
 		t.Run("Should: sanitize released PV and remove PVC ref", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			assert.NotNilf(t, pv.Spec.ClaimRef, "Claim ref not nil")
 
 			err, _ := sanitizeReleasedVolume(ctx, state)
@@ -74,8 +72,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 
 		t.Run("Should: do nothing if its marked for deletion", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			gcpNfsVolume.ObjectMeta = metav1.ObjectMeta{
 				DeletionTimestamp: &metav1.Time{
 					Time: time.Now(),
@@ -91,8 +88,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 
 		t.Run("Should: do nothing if Volume is notdefined in state", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			state.PV = nil
 
 			err, res := sanitizeReleasedVolume(ctx, state)
@@ -104,8 +100,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 
 		t.Run("Should: do nothing if state.Volume.status is not in released phase", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			state.PV.Status.Phase = corev1.VolumeBound
 
 			err, res := sanitizeReleasedVolume(ctx, state)
@@ -117,8 +112,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 
 		t.Run("Should: do nothing if state.Volume has no defined ClaimRef", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			state.PV.Spec.ClaimRef = nil
 
 			err, res := sanitizeReleasedVolume(ctx, state)

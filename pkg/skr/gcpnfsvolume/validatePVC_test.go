@@ -1,7 +1,6 @@
 package gcpnfsvolume
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -67,8 +66,7 @@ func TestValidatePVC(t *testing.T) {
 
 		t.Run("Should: do nothing if GcpNfsVolume is marked for deletion", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			gcpNfsVolume.DeletionTimestamp = &metav1.Time{
 				Time: time.Now(),
 			}
@@ -81,8 +79,7 @@ func TestValidatePVC(t *testing.T) {
 
 		t.Run("Should: do nothing if APIServer cant find requested PVC", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			fakeClient := fake.NewClientBuilder().
 				WithScheme(commonscheme.SkrScheme).
 				Build()
@@ -96,8 +93,7 @@ func TestValidatePVC(t *testing.T) {
 
 		t.Run("Should: do nothing if found PVC has expected labels", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := validatePVC(ctx, state)
 
@@ -107,8 +103,7 @@ func TestValidatePVC(t *testing.T) {
 
 		t.Run("Should: set Status to Error and returns error when PVC belongs to another GcpNfsVolume", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			pvc.Labels[cloudresourcesv1beta1.LabelNfsVolName] = "another-owner-name"
 			fakeClient := fake.NewClientBuilder().
 				WithScheme(commonscheme.SkrScheme).

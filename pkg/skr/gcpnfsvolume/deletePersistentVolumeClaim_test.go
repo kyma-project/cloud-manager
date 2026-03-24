@@ -1,7 +1,6 @@
 package gcpnfsvolume
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -68,8 +67,7 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: invoke delete API call if PVC is found and not marked for deletion", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := deletePersistentVolumeClaim(ctx, state)
 
@@ -80,8 +78,7 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if GcpNfsVolume is not marked for deletion", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			gcpNfsVolume.DeletionTimestamp = nil
 
 			err, res := deletePersistentVolumeClaim(ctx, state)
@@ -93,8 +90,7 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if PVC is not defined", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			state.PVC = nil
 
@@ -107,8 +103,7 @@ func TestDeletePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if PVC is marked for deletion", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			pvc := &corev1.PersistentVolumeClaim{
 				ObjectMeta: metav1.ObjectMeta{
 					DeletionTimestamp: &metav1.Time{

@@ -12,7 +12,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -128,7 +127,7 @@ func (s *skrStatusSaver) Save(ctx context.Context, skrStatus *SkrStatus) error {
 			sum += dur.Seconds()
 			count++
 		}
-		last = ptr.To(dt.Time)
+		last = new(dt.Time)
 	}
 	api.Spec.AverageIntervalSeconds = 0
 	if count > 0 {
