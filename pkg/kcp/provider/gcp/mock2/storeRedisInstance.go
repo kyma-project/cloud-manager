@@ -96,7 +96,7 @@ func (s *store) CreateRedisInstance(ctx context.Context, req *redispb.CreateInst
 	}
 
 	// redis values validation
-	validRedisVersions := []string{"REDIS_3_2", "REDIS_4_0", "REDIS_5_0", "REDIS_6_X"}
+	validRedisVersions := []string{"REDIS_3_2", "REDIS_4_0", "REDIS_5_0", "REDIS_6_X", "REDIS_7_0", "REDIS_7_2"}
 	if !slices.Contains(validRedisVersions, req.Instance.RedisVersion) {
 		return nil, gcpmeta.NewBadRequestError("invalid redisVersion %q, must be one of %v", req.Instance.RedisVersion, validRedisVersions)
 	}
@@ -162,6 +162,10 @@ func (s *store) CreateRedisInstance(ctx context.Context, req *redispb.CreateInst
 	// simplified takes first ip of the range
 	ri.Host = addr.GetAddress()
 	ri.Port = 6379
+	if ri.Tier == redispb.Instance_STANDARD_HA {
+		ri.ReadEndpoint = addr.GetAddress()
+		ri.ReadEndpointPort = 6379
+	}
 
 	s.redisInstances.Add(ri, riName)
 
@@ -187,6 +191,25 @@ func (s *store) GetRedisInstance(ctx context.Context, req *redispb.GetInstanceRe
 		return nil, err
 	}
 	return util.Clone(ri)
+}
+
+func (s *store) GetRedisInstanceAuthString(ctx context.Context, req *redispb.GetInstanceAuthStringRequest, _ ...gax.CallOption) (*redispb.InstanceAuthString, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return nil, ctx.Err()
+	}
+
+	ri, err := s.getRedisInstanceNoLock(req.Name)
+	if err != nil {
+		return nil, err
+	}
+	if !ri.AuthEnabled {
+		return nil, gcpmeta.NewBadRequestError("auth is not enabled for redis instance %s", req.Name)
+	}
+	return &redispb.InstanceAuthString{
+		AuthString: fmt.Sprintf("auth-%s", ri.Name),
+	}, nil
 }
 
 func (s *store) UpdateRedisInstance(ctx context.Context, req *redispb.UpdateInstanceRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*redispb.Instance], error) {

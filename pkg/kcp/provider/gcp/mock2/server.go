@@ -7,6 +7,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -32,6 +33,16 @@ func (s *server) ExposedDataProvider() gcpclient.GcpClientProvider[gcpexposeddat
 func (s *server) VpcNetworkProvider() gcpclient.GcpClientProvider[gcpvpcnetworkclient.Client] {
 	return func(projectId string) gcpvpcnetworkclient.Client {
 		return s.GetSubscription(projectId)
+	}
+}
+
+func (s *server) RedisInstanceProvider() gcpclient.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient] {
+	return func(projectId string) gcpredisinstanceclient.MemorystoreClient {
+		sub := s.GetSubscription(projectId)
+		if sub == nil {
+			return nil
+		}
+		return gcpredisinstanceclient.NewMemorystoreClientFromRedisInstanceClient(sub)
 	}
 }
 

@@ -220,6 +220,18 @@ func WithKcpGcpRedisInstanceConfigs(redisConfigs map[string]string) ObjAction {
 	}
 }
 
+func WithKcpGcpRedisInstanceAuthEnabled(authEnabled bool) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if gcpRedisInstance, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
+				gcpRedisInstance.Spec.Instance.Gcp.AuthEnabled = authEnabled
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpGcpRedisInstanceAuthEnabled", obj))
+		},
+	}
+}
+
 func WithKcpGcpRedisInstanceMaintenancePolicy(maintenancePolicy *cloudcontrolv1beta1.MaintenancePolicyGcp) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

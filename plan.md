@@ -113,7 +113,9 @@ test file:
 
 ## Resources to Migrate (Priority Order)
 
-### 1. RedisInstance (`pkg/kcp/provider/gcp/redisinstance`)
+### 1. RedisInstance (`pkg/kcp/provider/gcp/redisinstance`) ✅ COMPLETE
+
+**Status**: Both Part A (client code) and Part B (mock migration) are complete. Build and tests passing.
 
 #### Part A: Client Code
 
