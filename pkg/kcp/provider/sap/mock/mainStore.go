@@ -21,7 +21,6 @@ import (
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	sapmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/ptr"
 )
 
 func deptrSlice[T any](arr []*T) []T {
@@ -177,7 +176,7 @@ func (s *mainStore) GetNetwork(ctx context.Context, id string) (*networks.Networ
 func (s *mainStore) CreateExternalNetwork(ctx context.Context, opts networks.CreateOptsBuilder) (*networks.Network, error) {
 	return s.CreateNetwork(ctx, external.CreateOptsExt{
 		CreateOptsBuilder: opts,
-		External:          ptr.To(true),
+		External:          new(true),
 	})
 }
 
@@ -673,7 +672,7 @@ func (s *mainStore) AddRouterInterface(ctx context.Context, routerId string, opt
 			DeviceID:     routerId,
 			NetworkID:    subnetInfo.subnet.NetworkID,
 			Name:         uuid.NewString(),
-			AdminStateUp: ptr.To(true),
+			AdminStateUp: new(true),
 			FixedIPs: []ports.IP{{
 				SubnetID: opts.SubnetID,
 			}},
@@ -788,7 +787,7 @@ func (s *mainStore) AddSubnetToRouter(ctx context.Context, routerId string, subn
 		DeviceID:     routerId,
 		NetworkID:    subnetInfo.subnet.NetworkID,
 		Name:         fmt.Sprintf("%s-%s", routerId, subnetId),
-		AdminStateUp: ptr.To(true),
+		AdminStateUp: new(true),
 		FixedIPs: []ports.IP{{
 			SubnetID: subnetId,
 		}},
