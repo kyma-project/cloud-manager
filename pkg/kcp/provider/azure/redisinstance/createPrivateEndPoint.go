@@ -3,7 +3,6 @@ package redisinstance
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -39,18 +38,18 @@ func createPrivateEndPoint(ctx context.Context, st composed.State) (error, conte
 		resourceGroupName,
 		privateEndpointInstanceName,
 		armnetwork.PrivateEndpoint{
-			Location: to.Ptr(state.Scope().Spec.Region),
+			Location: new(state.Scope().Spec.Region),
 			Properties: &armnetwork.PrivateEndpointProperties{
 				Subnet: &armnetwork.Subnet{
-					ID:   to.Ptr(subnetResourceId),
-					Name: to.Ptr(state.IpRange().Spec.Network.Name),
+					ID:   new(subnetResourceId),
+					Name: new(state.IpRange().Spec.Network.Name),
 				},
 				PrivateLinkServiceConnections: []*armnetwork.PrivateLinkServiceConnection{
 					{
-						Name: to.Ptr(privateEndpointInstanceName),
+						Name: new(privateEndpointInstanceName),
 						Properties: &armnetwork.PrivateLinkServiceConnectionProperties{
-							PrivateLinkServiceID: to.Ptr(redisInstanceResourceId),
-							GroupIDs:             []*string{ptr.To("redisCache")},
+							PrivateLinkServiceID: new(redisInstanceResourceId),
+							GroupIDs:             []*string{new("redisCache")},
 						},
 					},
 				},

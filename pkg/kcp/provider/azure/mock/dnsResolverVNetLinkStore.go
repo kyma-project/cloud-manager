@@ -44,11 +44,11 @@ func (s *dnsResolverVNetLinkStore) CreateDnsResolverVNetLink(ctx context.Context
 	}
 
 	item := &armdnsresolver.VirtualNetworkLink{
-		ID: ptr.To(azureutil.NewDnsForwardingRulesetVNetLinkResourceId(s.subscription, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName).String()),
+		ID: new(azureutil.NewDnsForwardingRulesetVNetLinkResourceId(s.subscription, resourceGroupName, dnsForwardingRulesetName, virtualNetworkLinkName).String()),
 		Properties: &armdnsresolver.VirtualNetworkLinkProperties{
-			VirtualNetwork: &armdnsresolver.SubResource{ID: ptr.To(vnetId)},
+			VirtualNetwork: &armdnsresolver.SubResource{ID: new(vnetId)},
 		},
-		Name: ptr.To(virtualNetworkLinkName),
+		Name: new(virtualNetworkLinkName),
 	}
 
 	s.items[resourceGroupName][dnsForwardingRulesetName][virtualNetworkLinkName] = item

@@ -3,7 +3,6 @@ package rediscluster
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -41,7 +40,7 @@ func modifyRedisVersion(ctx context.Context, st composed.State) (error, context.
 		requestedAzureRedisCluster.Name,
 		armredis.UpdateParameters{
 			Properties: &armredis.UpdateProperties{
-				RedisVersion: to.Ptr(requestedAzureRedisCluster.Spec.Instance.Azure.RedisVersion),
+				RedisVersion: new(requestedAzureRedisCluster.Spec.Instance.Azure.RedisVersion),
 			},
 		},
 	)

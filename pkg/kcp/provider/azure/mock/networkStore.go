@@ -99,7 +99,7 @@ func (s *networkStore) SetPeeringSyncLevel(ctx context.Context, resourceGroup, v
 		peering.Properties = &armnetwork.VirtualNetworkPeeringPropertiesFormat{}
 	}
 
-	peering.Properties.PeeringSyncLevel = ptr.To(peeringLevel)
+	peering.Properties.PeeringSyncLevel = new(peeringLevel)
 
 	return nil
 }
@@ -117,7 +117,7 @@ func (s *networkStore) SetNetworkAddressSpace(ctx context.Context, resourceGroup
 	}
 
 	entry.network.Properties.AddressSpace = &armnetwork.AddressSpace{
-		AddressPrefixes: []*string{ptr.To(addressSpace)},
+		AddressPrefixes: []*string{new(addressSpace)},
 	}
 
 	return nil
@@ -166,8 +166,8 @@ func (s *networkStore) CreateOrUpdateNetwork(ctx context.Context, resourceGroupN
 	if err != nil {
 		return nil, err
 	}
-	net.ID = ptr.To(azureutil.NewVirtualNetworkResourceId(s.subscription, resourceGroupName, virtualNetworkName).String())
-	net.Name = ptr.To(virtualNetworkName)
+	net.ID = new(azureutil.NewVirtualNetworkResourceId(s.subscription, resourceGroupName, virtualNetworkName).String())
+	net.Name = new(virtualNetworkName)
 
 	s.items[resourceGroupName][virtualNetworkName] = &networkEntry{network: net}
 
@@ -293,8 +293,8 @@ func (s *networkStore) CreateOrUpdateSubnet(ctx context.Context, resourceGroupNa
 		return nil, fmt.Errorf("subnet %s does not exist for resume: %w", id, azuremeta.NewAzureNotFoundError())
 	}
 
-	subnetParameters.ID = ptr.To(id.String())
-	subnetParameters.Name = ptr.To(subnetName)
+	subnetParameters.ID = new(id.String())
+	subnetParameters.Name = new(subnetName)
 	if subnetParameters.Properties == nil {
 		subnetParameters.Properties = &armnetwork.SubnetPropertiesFormat{}
 	}
@@ -377,8 +377,8 @@ func (s *networkStore) CreateOrUpdatePeering(ctx context.Context, resourceGroupN
 
 	if peering == nil {
 		peering = &armnetwork.VirtualNetworkPeering{
-			ID:   ptr.To(id),
-			Name: ptr.To(virtualNetworkPeeringName),
+			ID:   new(id),
+			Name: new(virtualNetworkPeeringName),
 		}
 
 		entry.network.Properties.VirtualNetworkPeerings = append(entry.network.Properties.VirtualNetworkPeerings, peering)
@@ -400,12 +400,12 @@ func (s *networkStore) CreateOrUpdatePeering(ctx context.Context, resourceGroupN
 		remoteAddressSpace = remoteVnet.Properties.AddressSpace.AddressPrefixes[0]
 	}
 	peering.Properties = &armnetwork.VirtualNetworkPeeringPropertiesFormat{
-		AllowForwardedTraffic:     ptr.To(true),
-		AllowGatewayTransit:       ptr.To(allowGatewayTransit),
-		AllowVirtualNetworkAccess: ptr.To(allowVnetAccess),
-		UseRemoteGateways:         ptr.To(useRemoteGateway),
+		AllowForwardedTraffic:     new(true),
+		AllowGatewayTransit:       new(allowGatewayTransit),
+		AllowVirtualNetworkAccess: new(allowVnetAccess),
+		UseRemoteGateways:         new(useRemoteGateway),
 		RemoteVirtualNetwork: &armnetwork.SubResource{
-			ID: ptr.To(remoteVnetId),
+			ID: new(remoteVnetId),
 		},
 		PeeringState:     ptr.To(armnetwork.VirtualNetworkPeeringStateInitiated),   // check if this is needed
 		PeeringSyncLevel: ptr.To(armnetwork.VirtualNetworkPeeringLevelFullyInSync), // check if this is needed

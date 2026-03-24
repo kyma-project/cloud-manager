@@ -3,7 +3,6 @@ package mock
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
@@ -95,10 +94,10 @@ func (s *virtualNetworkLinkStore) CreateVirtualNetworkLink(ctx context.Context, 
 	props.VirtualNetworkLinkState = ptr.To(armprivatedns.VirtualNetworkLinkStateCompleted)
 
 	item := &armprivatedns.VirtualNetworkLink{
-		ID:         ptr.To(azureutil.NewVirtualNetworkLinkResourceId(s.subscription, resourceGroupName, privateDnsZoneName, virtualNetworkLinkName).String()),
-		Location:   to.Ptr("global"),
+		ID:         new(azureutil.NewVirtualNetworkLinkResourceId(s.subscription, resourceGroupName, privateDnsZoneName, virtualNetworkLinkName).String()),
+		Location:   new("global"),
 		Properties: props,
-		Name:       to.Ptr(virtualNetworkLinkName),
+		Name:       new(virtualNetworkLinkName),
 	}
 
 	s.items[resourceGroupName][privateDnsZoneName][virtualNetworkLinkName] = item
