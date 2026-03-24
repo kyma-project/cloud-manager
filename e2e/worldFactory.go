@@ -69,13 +69,11 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 
 	// KCP Cluster ----------------------------
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if err := kcpManager.Start(ctx); err != nil {
 			result.runError = multierror.Append(result.runError, fmt.Errorf("error running KCP cluster manager: %w", err))
 		}
-	}()
+	})
 
 	if !waitClusterStarts(ctx, kcpManager) {
 		cancel()
@@ -98,13 +96,11 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 		return nil, fmt.Errorf("error creating garden cluster manager: %w", err)
 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if err := gardenManager.Start(ctx); err != nil {
 			result.runError = multierror.Append(result.runError, fmt.Errorf("error running Garden cluster: %w", err))
 		}
-	}()
+	})
 
 	if !waitClusterStarts(ctx, gardenManager) {
 		cancel()
