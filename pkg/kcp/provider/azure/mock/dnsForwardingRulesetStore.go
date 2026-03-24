@@ -6,7 +6,6 @@ import (
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/ptr"
 	"sync"
 )
 
@@ -56,8 +55,8 @@ func (s *dnsForwardingRulesetStore) CreateDnsForwardingRuleset(ctx context.Conte
 	}
 
 	item := &armdnsresolver.DNSForwardingRuleset{
-		ID:   ptr.To(azureutil.NewDnsForwardingRulesetResourceId(s.subscription, resourceGroup, dnsForwardingRulesetName).String()),
-		Name: ptr.To(dnsForwardingRulesetName),
+		ID:   new(azureutil.NewDnsForwardingRulesetResourceId(s.subscription, resourceGroup, dnsForwardingRulesetName).String()),
+		Name: new(dnsForwardingRulesetName),
 		Tags: azureutil.AzureTags(tags),
 	}
 
