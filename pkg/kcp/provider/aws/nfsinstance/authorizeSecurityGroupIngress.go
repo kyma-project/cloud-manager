@@ -42,12 +42,12 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 	if !hasPods {
 		logger.Info("Adding pod cidr to the NFS security group")
 		permissions = append(permissions, ec2types.IpPermission{
-			IpProtocol: ptr.To("tcp"),
-			FromPort:   ptr.To(toPort),
-			ToPort:     ptr.To(toPort),
+			IpProtocol: new("tcp"),
+			FromPort:   new(toPort),
+			ToPort:     new(toPort),
 			IpRanges: []ec2types.IpRange{
 				{
-					CidrIp: ptr.To(state.Scope().Spec.Scope.Aws.Network.Pods),
+					CidrIp: new(state.Scope().Spec.Scope.Aws.Network.Pods),
 				},
 			},
 		})
@@ -55,12 +55,12 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 	if !hasNet {
 		logger.Info("Adding vpc cidr to the NFS security group")
 		permissions = append(permissions, ec2types.IpPermission{
-			IpProtocol: ptr.To("tcp"),
-			FromPort:   ptr.To(toPort),
-			ToPort:     ptr.To(toPort),
+			IpProtocol: new("tcp"),
+			FromPort:   new(toPort),
+			ToPort:     new(toPort),
 			IpRanges: []ec2types.IpRange{
 				{
-					CidrIp: ptr.To(state.Scope().Spec.Scope.Aws.Network.VPC.CIDR),
+					CidrIp: new(state.Scope().Spec.Scope.Aws.Network.VPC.CIDR),
 				},
 			},
 		})

@@ -97,17 +97,17 @@ func (s *State) GetModifyElastiCacheClusterOptions() awsclient.ModifyElastiCache
 }
 
 func (s *State) UpdateCacheNodeType(cacheNodeType string) {
-	s.modifyElastiCacheClusterOptions.CacheNodeType = ptr.To(cacheNodeType)
+	s.modifyElastiCacheClusterOptions.CacheNodeType = new(cacheNodeType)
 	s.updateMask = append(s.updateMask, "cacheNodeType")
 }
 
 func (s *State) UpdateAutoMinorVersionUpgrade(autoMinorVersionUpgrade bool) {
-	s.modifyElastiCacheClusterOptions.AutoMinorVersionUpgrade = ptr.To(autoMinorVersionUpgrade)
+	s.modifyElastiCacheClusterOptions.AutoMinorVersionUpgrade = new(autoMinorVersionUpgrade)
 	s.updateMask = append(s.updateMask, "autoMinorVersionUpgrade")
 }
 
 func (s *State) UpdatePreferredMaintenanceWindow(preferredMaintenanceWindow string) {
-	s.modifyElastiCacheClusterOptions.PreferredMaintenanceWindow = ptr.To(preferredMaintenanceWindow)
+	s.modifyElastiCacheClusterOptions.PreferredMaintenanceWindow = new(preferredMaintenanceWindow)
 	s.updateMask = append(s.updateMask, "preferredMaintenanceWindow")
 }
 
