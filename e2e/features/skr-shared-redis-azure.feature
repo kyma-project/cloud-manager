@@ -5,6 +5,8 @@ Feature: AzureRedisInstance feature
 
     Given there is shared SKR with "Azure" provider
 
+    Given eventually timeout is "1h"
+
     And resource declaration:
       | Alias  | Kind               | ApiVersion                              | Name                         | Namespace |
       | redis  | AzureRedisInstance | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                  |           |

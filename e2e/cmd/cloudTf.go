@@ -40,7 +40,7 @@ var cmdCloudTf = &cobra.Command{
 		}
 
 		if strings.HasPrefix(tfSource, "./") || strings.HasPrefix(tfSource, "../") {
-			tfSource = path.Join(config.ConfigDir, "e2e/tf", tfSource)
+			tfSource = path.Clean(path.Join(config.ConfigDir, "../e2e/tf", tfSource))
 		}
 
 		b.WithSource(tfSource)
