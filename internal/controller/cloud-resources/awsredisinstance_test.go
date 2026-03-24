@@ -13,7 +13,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: SKR AwsRedisInstance", func() {
@@ -64,7 +63,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 		autoMinorVersionUpgrade := true
 		authEnabled := true
 
-		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
+		preferredMaintenanceWindow := new("sun:23:00-mon:01:30")
 
 		parameterKey := "active-defrag-cycle-max"
 		parameterValue := "85"

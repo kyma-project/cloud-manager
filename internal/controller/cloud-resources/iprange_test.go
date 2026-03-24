@@ -43,7 +43,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 			By("When SKR IpRange is created", func() {
-				args := []interface{}{
+				args := []any{
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
 				}
@@ -179,7 +179,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 			By("Given SKR IpRange exists", func() {
-				args := []interface{}{
+				args := []any{
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
 				}
