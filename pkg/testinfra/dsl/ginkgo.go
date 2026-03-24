@@ -4,7 +4,7 @@ import (
 	"github.com/onsi/ginkgo/v2"
 )
 
-func SkipDescribe(text string, _ ...interface{}) bool {
+func SkipDescribe(text string, _ ...any) bool {
 	_ = ginkgo.Describe("SKIPPED: "+text, func() {
 		ginkgo.It("Scenario: ???", func() {})
 		ginkgo.It("Scenario: ???", func() {})
