@@ -1,7 +1,6 @@
 package gcpnfsvolume
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -92,8 +91,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: modify PVC when labels change", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			gcpNfsVolume.Spec.PersistentVolumeClaim = &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
 				Labels: map[string]string{
 					"foo": "bar-modified",
@@ -110,8 +108,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: modify PVC when annotation change", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			gcpNfsVolume.Spec.PersistentVolumeClaim = &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
 				Annotations: map[string]string{
 					"baz": "qux-modified",
@@ -128,8 +125,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: modify only PVC label when capacity changes", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			originalCapacity := actualPVC.Spec.Resources.Requests["storage"].DeepCopy()
 			gcpNfsVolume.Spec.CapacityGb = 2000
 
@@ -145,8 +141,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if GcpNfsVolume is marked for deletion", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			gcpNfsVolume.ObjectMeta = metav1.ObjectMeta{
 				DeletionTimestamp: &metav1.Time{
 					Time: time.Now(),
@@ -162,8 +157,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if NFS is not ready", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			state.PVC = nil
 			gcpNfsVolume.Status.Conditions = []metav1.Condition{}
 
@@ -176,8 +170,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if PVC is not loaded", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			state.PVC = nil
 
 			err, res := modifyPersistentVolumeClaim(ctx, state)
@@ -189,8 +182,7 @@ func TestModifyPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if PVC actual and desired PVC state is same", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := modifyPersistentVolumeClaim(ctx, state)
 

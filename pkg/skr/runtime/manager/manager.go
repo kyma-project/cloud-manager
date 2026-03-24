@@ -11,7 +11,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/config"
@@ -87,9 +86,7 @@ func (m *skrManager) Start(ctx context.Context) error {
 	var wg sync.WaitGroup
 	for _, r := range m.controllers {
 		rr := r
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			err := rr.Start(ctx)
 			if err != nil {
 				logger := m.logger
@@ -99,7 +96,7 @@ func (m *skrManager) Start(ctx context.Context) error {
 				logger.Error(err, "error starting controller")
 				return
 			}
-		}()
+		})
 	}
 
 	<-ctx.Done()
@@ -154,7 +151,7 @@ func (m *skrManager) GetControllerOptions() config.Controller {
 		CacheSyncTimeout:        0,
 		RecoverPanic:            nil,
 		NeedLeaderElection:      nil,
-		SkipNameValidation:      ptr.To(true),
+		SkipNameValidation:      new(true),
 	}
 	return result
 }

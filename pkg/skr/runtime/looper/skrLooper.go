@@ -144,7 +144,7 @@ func (l *activeSkrCollection) Contains(kymaName string) bool {
 }
 
 func (l *activeSkrCollection) GetKymaNames() []string {
-	return pie.Map(l.queue.Items(), func(x interface{}) string {
+	return pie.Map(l.queue.Items(), func(x any) string {
 		return x.(string)
 	})
 }

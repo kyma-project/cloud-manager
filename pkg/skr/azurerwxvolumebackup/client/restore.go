@@ -51,20 +51,20 @@ func (c restoreClient) TriggerRestore(ctx context.Context,
 ) (*string, error) {
 	logger := composed.LoggerFromCtx(ctx).WithName("restoreClient - TriggerRestore")
 	parameters := armrecoveryservicesbackup.RestoreRequestResource{
-		Properties: to.Ptr(armrecoveryservicesbackup.AzureFileShareRestoreRequest{
-			ObjectType:   to.Ptr("AzureFileShareRestoreRequest"),
+		Properties: new(armrecoveryservicesbackup.AzureFileShareRestoreRequest{
+			ObjectType:   new("AzureFileShareRestoreRequest"),
 			CopyOptions:  to.Ptr(armrecoveryservicesbackup.CopyOptionsOverwrite),
 			RecoveryType: to.Ptr(armrecoveryservicesbackup.RecoveryTypeAlternateLocation),
 			RestoreFileSpecs: []*armrecoveryservicesbackup.RestoreFileSpecs{
 				{
-					TargetFolderPath: to.Ptr(request.TargetFolderName),
+					TargetFolderPath: new(request.TargetFolderName),
 				},
 			},
 			RestoreRequestType: to.Ptr(armrecoveryservicesbackup.RestoreRequestTypeFullShareRestore),
-			SourceResourceID:   to.Ptr(request.SourceStorageAccountPath), // Source file share arm id
-			TargetDetails: to.Ptr(armrecoveryservicesbackup.TargetAFSRestoreInfo{
-				Name:             to.Ptr(request.TargetFileShareName),      // Target File share name
-				TargetResourceID: to.Ptr(request.TargetStorageAccountPath), // Target file share arm id
+			SourceResourceID:   new(request.SourceStorageAccountPath), // Source file share arm id
+			TargetDetails: new(armrecoveryservicesbackup.TargetAFSRestoreInfo{
+				Name:             new(request.TargetFileShareName),      // Target File share name
+				TargetResourceID: new(request.TargetStorageAccountPath), // Target file share arm id
 			}),
 		}),
 	}

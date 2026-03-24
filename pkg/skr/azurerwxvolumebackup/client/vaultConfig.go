@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 )
 
@@ -69,7 +68,7 @@ func (c vaultConfigClient) GetStorageContainers(ctx context.Context, resourceGro
 	pager := c.backupProtectionContainersClient.NewListPager(vaultName,
 		resourceGroupName,
 		&armrecoveryservicesbackup.BackupProtectionContainersClientListOptions{
-			Filter: to.Ptr("backupManagementType eq 'AzureStorage'"),
+			Filter: new("backupManagementType eq 'AzureStorage'"),
 		},
 	)
 

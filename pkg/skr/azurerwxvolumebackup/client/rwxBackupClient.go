@@ -203,7 +203,7 @@ func (c *rwxBackupClient) StopFileShareProtection(ctx context.Context, protected
 		return err
 	}
 
-	protectedFileShare.PolicyID = to.Ptr("")
+	protectedFileShare.PolicyID = new("")
 	protectedFileShare.ProtectionState = to.Ptr(armrecoveryservicesbackup.ProtectionStateProtectionStopped)
 	protected.Properties = protectedFileShare
 

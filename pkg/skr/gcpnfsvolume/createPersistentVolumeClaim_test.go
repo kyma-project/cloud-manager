@@ -1,7 +1,6 @@
 package gcpnfsvolume
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -71,8 +70,7 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: create PVC", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := createPersistentVolumeClaim(ctx, state)
 
@@ -102,8 +100,7 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if GcpNfsVolume is marked for deletion", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			gcpNfsVolume.ObjectMeta = metav1.ObjectMeta{
 				DeletionTimestamp: &metav1.Time{
 					Time: time.Now(),
@@ -119,8 +116,7 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if PVC already exists (already defined in state)", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			state.PVC = &corev1.PersistentVolumeClaim{}
 
 			err, res := sanitizeReleasedVolume(ctx, state)
@@ -132,8 +128,7 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if PV for binding does not exist", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			state.PV = nil
 
 			err, res := sanitizeReleasedVolume(ctx, state)

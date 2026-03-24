@@ -2,6 +2,7 @@ package gcpredisinstance
 
 import (
 	"errors"
+	"maps"
 	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -40,9 +41,7 @@ func getAuthSecretAnnotations(gcpRedis *cloudresourcesv1beta1.GcpRedisInstance) 
 		return nil
 	}
 	result := map[string]string{}
-	for k, v := range gcpRedis.Spec.AuthSecret.Annotations {
-		result[k] = v
-	}
+	maps.Copy(result, gcpRedis.Spec.AuthSecret.Annotations)
 	return result
 }
 

@@ -2,6 +2,7 @@ package awsrediscluster
 
 import (
 	"errors"
+	"maps"
 	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -40,9 +41,7 @@ func getAuthSecretAnnotations(awsRedis *cloudresourcesv1beta1.AwsRedisCluster) m
 		return nil
 	}
 	result := map[string]string{}
-	for k, v := range awsRedis.Spec.AuthSecret.Annotations {
-		result[k] = v
-	}
+	maps.Copy(result, awsRedis.Spec.AuthSecret.Annotations)
 	return result
 }
 

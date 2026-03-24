@@ -9,7 +9,6 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/ptr"
 )
 
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
@@ -17,9 +16,9 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	backupDiscovery := state.ObjAsGcpNfsVolumeBackupDiscovery()
 
-	backupDiscovery.Status.DiscoverySnapshotTime = ptr.To(metav1.NewTime(time.Now()))
+	backupDiscovery.Status.DiscoverySnapshotTime = new(metav1.NewTime(time.Now()))
 	backupDiscovery.Status.State = cloudresourcesv1beta1.JobStateDone
-	backupDiscovery.Status.AvailableBackupsCount = ptr.To(len(state.backups))
+	backupDiscovery.Status.AvailableBackupsCount = new(len(state.backups))
 	backupDiscovery.Status.AvailableBackupUris = make([]string, 0, len(state.backups))
 	backupDiscovery.Status.AvailableBackups = make([]cloudresourcesv1beta1.AvailableBackup, 0, len(state.backups))
 	for _, b := range state.backups {
@@ -55,7 +54,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			// Set creation time if available
 			if b.CreateTime != "" {
 				if creationTime, err := time.Parse(time.RFC3339, b.CreateTime); err == nil {
-					availableBackup.CreationTime = ptr.To(metav1.NewTime(creationTime))
+					availableBackup.CreationTime = new(metav1.NewTime(creationTime))
 				}
 			}
 

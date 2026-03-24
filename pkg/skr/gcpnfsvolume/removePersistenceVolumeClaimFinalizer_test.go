@@ -1,7 +1,6 @@
 package gcpnfsvolume
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -74,8 +73,7 @@ func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
 
 		t.Run("Should: delete finalizer", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := removePersistenceVolumeClaimFinalizer(ctx, state)
 
@@ -87,8 +85,7 @@ func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
 
 		t.Run("Should: do nothing if PVC is not marked for deletion", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			pvc.DeletionTimestamp = nil
 
 			err, res := removePersistenceVolumeClaimFinalizer(ctx, state)
@@ -101,8 +98,7 @@ func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
 
 		t.Run("Should: do nothing if PVC is not defined", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			state.PVC = nil
 
@@ -116,8 +112,7 @@ func TestRemovePersistentVolumeClaimFinalizer(t *testing.T) {
 
 		t.Run("Should: do nothing if PVC does not contain Finalizer", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			pvc.Finalizers = nil
 			state.PVC = pvc
 
