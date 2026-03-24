@@ -13,22 +13,22 @@ var (
 )
 
 func init() {
-	kymaCRWithThreeModules.Object["spec"] = map[string]interface{}{
-		"modules": []interface{}{
-			map[string]interface{}{
+	kymaCRWithThreeModules.Object["spec"] = map[string]any{
+		"modules": []any{
+			map[string]any{
 				"name": "foo",
 			},
-			map[string]interface{}{
+			map[string]any{
 				"name": "bar",
 			},
-			map[string]interface{}{
+			map[string]any{
 				"name": "baz",
 			},
 		},
 	}
 
-	kymaCRWithEmptyModules.Object["spec"] = map[string]interface{}{
-		"modules": []interface{}{},
+	kymaCRWithEmptyModules.Object["spec"] = map[string]any{
+		"modules": []any{},
 	}
 }
 
