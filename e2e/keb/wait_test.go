@@ -117,7 +117,7 @@ func TestWait(t *testing.T) {
 					//WithInterval(10 * time.Millisecond),
 					WithRuntime(id.RuntimeID),
 					WithErrorCountThreshold(5), // important to calculate listCallCount
-					WithSleeperFunc(func(_ time.Duration) {}),
+					WithSleeperFunc(func(_ context.Context, _ time.Duration) {}),
 				}
 
 				actualListCallCount := 0

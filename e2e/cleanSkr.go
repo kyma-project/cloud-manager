@@ -21,14 +21,13 @@ func CleanSkrNoWait(ctx context.Context, c client.Client) error {
 	var typesToDelete []reflect.Type
 	for kind, tp := range knownTypes {
 		// Skip List types and nil types
-		if strings.HasSuffix(kind, "List") || tp == nil {
+		if strings.HasSuffix(kind, "List") || strings.HasSuffix(kind, "Options") || tp == nil {
 			continue
 		}
 		typesToDelete = append(typesToDelete, tp)
 	}
 
 	for _, tp := range typesToDelete {
-		logger.Info(tp.Name())
 		objPtr := reflect.New(tp)
 		obj, ok := objPtr.Interface().(client.Object)
 		if !ok {
@@ -37,13 +36,14 @@ func CleanSkrNoWait(ctx context.Context, c client.Client) error {
 
 		err := c.DeleteAllOf(ctx, obj)
 		if meta.IsNoMatchError(err) || apierrors.IsNotFound(err) {
-			logger.Info("not found")
 			continue
 		}
 		if err != nil {
+			logger.Info(tp.Name())
 			logger.Error(err, "Unexpected error")
 			continue
 		}
+		logger.Info(tp.Name())
 	}
 
 	logger.Info("cleanup completed")

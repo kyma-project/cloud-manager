@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/elliotchance/pie/v2"
-	"github.com/kyma-project/cloud-manager/e2e"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	e2eclean "github.com/kyma-project/cloud-manager/e2e/clean"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/spf13/cobra"
 )
 
@@ -53,16 +56,30 @@ Examples:
 			runtimeID = idArr[0].RuntimeID
 		}
 
-		if verbose {
-			rootLogger.WithValues("runtimeID", runtimeID).Info("Cleaning SKR instance")
-		}
-
 		skrClient, err := keb.CreateInstanceClient(rootCtx, runtimeID)
 		if err != nil {
 			return fmt.Errorf("failed to create SKR client: %w", err)
 		}
 
-		err = e2e.CleanSkrNoWait(rootCtx, skrClient)
+		opts := []e2eclean.Option{
+			e2eclean.WithClient(skrClient),
+			e2eclean.WithScheme(commonscheme.SkrScheme),
+			e2eclean.WithMatchers(
+				e2eclean.MatchAll(
+					e2eclean.MatchingGroup(cloudresourcesv1beta1.GroupVersion.Group),
+					e2eclean.NotMatch(e2eclean.MatchingKind("CloudResources")),
+				),
+			),
+			e2eclean.WithTimeout(timeout),
+			e2eclean.WithWait(waitDone),
+			e2eclean.WithForceDeleteOnTimeout(force),
+			e2eclean.WithDryRun(dryRun),
+		}
+		if verbose {
+			opts = append(opts, e2eclean.WithLogger(rootLogger))
+		}
+
+		err = e2eclean.Clean(rootCtx, opts...)
 		if err != nil {
 			return fmt.Errorf("failed to clean SKR: %w", err)
 		}
@@ -77,6 +94,10 @@ func init() {
 	cmdInstance.AddCommand(cmdInstanceClean)
 	cmdInstanceClean.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "Runtime ID of the instance to clean")
 	cmdInstanceClean.Flags().StringVarP(&alias, "alias", "a", "", "Alias of the instance to clean")
+	cmdInstanceClean.Flags().BoolVarP(&waitDone, "wait", "w", false, "Wait until deleted")
+	cmdInstanceClean.Flags().DurationVarP(&timeout, "timeout", "t", 30*time.Minute, "Timeout")
+	cmdInstanceClean.Flags().BoolVarP(&force, "force", "f", false, "Force delete after timeout")
+	cmdInstanceClean.Flags().BoolVarP(&dryRun, "dry-run", "", false, "Dry run")
 	cmdInstanceClean.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceClean.MarkFlagsOneRequired("runtime-id", "alias")
 }

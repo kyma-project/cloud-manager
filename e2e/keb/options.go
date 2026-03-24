@@ -7,6 +7,7 @@ import (
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 // WithNodesRange ======================================================================
@@ -168,21 +169,21 @@ func (o WithErrorCountThreshold) ApplyOnWait(opt *waitOptions) {
 // WithSleeper ==================================================================================
 
 type WithSleeperOpt struct {
-	sleeper Sleeper
+	sleeper util.Sleeper
 }
 
 func (o WithSleeperOpt) ApplyOnWait(opt *waitOptions) {
 	opt.sleeper = o.sleeper
 }
 
-func WithSleeper(sleeper Sleeper) WithSleeperOpt {
+func WithSleeper(sleeper util.Sleeper) WithSleeperOpt {
 	return WithSleeperOpt{sleeper}
 }
 
-type WithSleeperFunc SleeperFunc
+type WithSleeperFunc util.SleeperFunc
 
 func (o WithSleeperFunc) ApplyOnWait(opt *waitOptions) {
-	opt.sleeper = SleeperFunc(o)
+	opt.sleeper = util.SleeperFunc(o)
 }
 
 // WithProgressCallback ============================================================================

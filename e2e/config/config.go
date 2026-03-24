@@ -197,12 +197,10 @@ func LoadConfig() *ConfigType {
 	env := abstractions.NewOSEnvironment()
 	cfg := config.NewConfig(env)
 	configDir := env.Get("CONFIG_DIR")
-	fmt.Printf("configDir from CONFIG_DIR: %q\n", configDir)
 	if configDir == "" {
 		projectRoot := env.Get("PROJECTROOT")
 		if projectRoot != "" {
 			configDir = filepath.Join(projectRoot, "tmp")
-			fmt.Printf("configDir from PROJECTROOT: %q\n", configDir)
 		}
 	}
 	if configDir == "" {
@@ -230,7 +228,6 @@ func LoadConfig() *ConfigType {
 		if configDir == "" {
 			panic("could not find config directory, either: 1) set CONFIG_DIR environment variable pointing to the config dir itself, 2) run in or below of the cloud-manager repo for auto-detect, 3) set PROJECTROOT environment variable pointing to the root of cloud-manager repo")
 		}
-		fmt.Printf("configDir defaulted to %q\n", configDir)
 	}
 	if !strings.HasPrefix(configDir, "/") {
 		panic("configDir must be an absolute path")

@@ -18,4 +18,6 @@ var (
 	ignoreAliases []string
 	enableAliases []string
 	verbose       bool
+	dryRun        bool
+	force         bool
 )

@@ -83,7 +83,11 @@ func errEvalContextBuilding(err error) error {
 	return fmt.Errorf("error building evaluation context: %w", err)
 }
 
-func eventuallyTimeoutIs(ctx context.Context, d time.Duration) (context.Context, error) {
+func eventuallyTimeoutIs(ctx context.Context, txt string) (context.Context, error) {
+	d, err := time.ParseDuration(txt)
+	if err != nil {
+		return ctx, fmt.Errorf("error parsing timeout %q: %w", txt, err)
+	}
 	session := GetCurrentScenarioSession(ctx)
 	if session == nil {
 		return ctx, ErrNoSession

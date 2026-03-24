@@ -79,9 +79,9 @@ jobs:
 
       - name: Setup tags
         run: |
-          TAGS="@$PROVIDER"
+          TAGS="@$PROVIDER && ~@skip"
           if [ -n "${{ inputs.tags }}" ]; then
-            TAGS="${{ inputs.tags }} && @$PROVIDER"
+            TAGS="${{ inputs.tags }} && $TAGS"
           fi
           echo "Running tests with tag: $TAGS"
           echo "TAGS=$TAGS" >> $GITHUB_ENV
@@ -135,6 +135,12 @@ jobs:
             cat $GHERKIN_REPORT | sed 's/\x1b\[[0-9;]*[mGKH]//g' >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
+
+      # task "Cleaning extended API groups" failed: 1 error occurred:
+      #  * retry failed with context deadline exceeded, last error: remaining objects are still present:
+      # *v1.CustomResourceDefinition /cloudresources.cloud-resources.kyma-project.io
+      # *v1.CustomResourceDefinition /ipranges.cloud-resources.kyma-project.io
+      # *v1.CustomResourceDefinition /kymas.operator.kyma-project.io
 
       - name: Clean up orphaned SKR resources
         if: always() && env.INPUTSOK != ''

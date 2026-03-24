@@ -14,6 +14,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 )
@@ -32,7 +33,7 @@ type waitOptions struct {
 	progressCallback    func(WaitProgress)
 	logger              logr.Logger
 	errorCountThreshold int
-	sleeper             Sleeper
+	sleeper             util.Sleeper
 }
 
 func (o *waitOptions) validate() error {
@@ -53,7 +54,7 @@ func (o *waitOptions) validate() error {
 		o.errorCountThreshold = 3
 	}
 	if o.sleeper == nil {
-		o.sleeper = SleeperFunc(RealSleeperFunc)
+		o.sleeper = util.SleeperFunc(util.RealSleeperFunc)
 	}
 	return nil
 }
@@ -104,28 +105,8 @@ var defaultWaitOptions = []WaitOption{
 	WithInterval(5 * time.Second),
 	WithProgressCallback(func(WaitProgress) {}),
 	WithErrorCountThreshold(3),
-	WithSleeperFunc(RealSleeperFunc),
+	WithSleeperFunc(util.RealSleeperFunc),
 }
-
-type Sleeper interface {
-	Sleep(d time.Duration)
-}
-
-type SleeperFunc func(time.Duration)
-
-func (f SleeperFunc) Sleep(d time.Duration) {
-	f(d)
-}
-
-var _ Sleeper = (SleeperFunc)(nil)
-
-func RealSleeperFunc(d time.Duration) {
-	time.Sleep(d)
-}
-
-var _ SleeperFunc = RealSleeperFunc
-
-var _ Sleeper = SleeperFunc(RealSleeperFunc)
 
 func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOption) error {
 	options := &waitOptions{}
@@ -233,7 +214,7 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 			break
 		}
 
-		options.sleeper.Sleep(options.interval)
+		options.sleeper.Sleep(ctx, options.interval)
 	}
 
 	if loopErr != nil {
