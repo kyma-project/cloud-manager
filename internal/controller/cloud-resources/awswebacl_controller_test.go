@@ -17,10 +17,12 @@ limitations under the License.
 package cloudresources
 
 import (
+	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var _ = Describe("AwsWebAcl Controller", func() {
@@ -33,6 +35,33 @@ var _ = Describe("AwsWebAcl Controller", func() {
 					infra.Ctx(), infra.SKR().Client(), awsWebAcl,
 					WithName("67ba9c61-8826-4349-873c-d30e9756aaec"),
 				).Should(Succeed())
+		})
+
+		By("Then AwsWebAcl is loaded", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsWebAcl,
+					NewObjActions(),
+					HaveFinalizer(api.CommonFinalizerDeletionHook),
+				).
+				Should(Succeed(), "expected AwsWebAcl to have finalizer")
+		})
+
+		By("And Then AwsWebAcl has finalizer", func() {
+			Expect(controllerutil.ContainsFinalizer(awsWebAcl, api.CommonFinalizerDeletionHook)).
+				To(BeTrue(), "expected AwsWebAcl to have finalizer, but it does not")
+		})
+
+		By("When AwsWebAcl is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAcl).
+				Should(Succeed())
+		})
+
+		By("Then AwsWebAcl is deleted", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAcl).
+				Should(Succeed())
 		})
 	})
 })

@@ -163,6 +163,10 @@ var _ = BeforeSuite(func() {
 	Expect(SetupGcpSubnetReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
 
+	// AwsWebAcl
+	Expect(SetupAwsWebAclReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
+
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
 })
