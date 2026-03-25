@@ -211,7 +211,7 @@ func (o *options) allGone(ctx context.Context) (bool, error) {
 			continue
 		}
 		list := m.list.DeepCopyObject().(client.ObjectList)
-		o.logger.WithValues("gvk", m.gvkList.String()).Info("listing...")
+		o.logger.WithValues("gvk", m.gvkObj.String()).Info("listing...")
 		err := o.client.List(ctx, list)
 		if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
 			return false, fmt.Errorf("error listing %T: %w", m.list, err)

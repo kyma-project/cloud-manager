@@ -236,7 +236,6 @@ func LoadConfig() *ConfigType {
 	result.ConfigDir = configDir
 	result.TfWorkspaceDir = path.Join(result.ConfigDir, "tf-workspaces")
 	cfg.BaseDir(configDir)
-	fmt.Printf("configDir final value: %q\n", configDir)
 	initConfig(cfg, result)
 	cfg.Read()
 
