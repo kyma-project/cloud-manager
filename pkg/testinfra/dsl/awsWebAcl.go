@@ -7,10 +7,7 @@ import (
 )
 
 func CreateAwsWebAcl(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AwsWebAcl, opts ...ObjAction) error {
-	NewObjActions(opts...).
-		Append(
-			WithNamespace(DefaultSkrNamespace),
-		).ApplyOnObject(obj)
+	NewObjActions(opts...).ApplyOnObject(obj)
 
 	err := clnt.Create(ctx, obj)
 	return err
