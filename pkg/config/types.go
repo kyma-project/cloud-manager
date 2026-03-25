@@ -20,6 +20,7 @@ type Config interface {
 	Bind(fieldPath string, obj any)
 	Json() string
 	PrintJson() string
+	PrintYaml() string
 	GetAsString(path string) string
 }
 

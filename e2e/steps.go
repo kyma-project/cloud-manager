@@ -3,7 +3,6 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -1022,11 +1021,7 @@ func tfModuleIsApplied(ctx context.Context, alias string, tbl *godog.Table) (con
 		v := row.Cells[1].Value
 		switch k {
 		case "source":
-			vv := v
-			if strings.HasPrefix(vv, "./") || strings.HasPrefix(vv, "../") {
-				vv = path.Join(world.Config().ConfigDir, "e2e/tf", v)
-			}
-			b.WithSource(vv)
+			b.WithSource(v)
 		case "provider":
 			b.WithProvider(v)
 		default:

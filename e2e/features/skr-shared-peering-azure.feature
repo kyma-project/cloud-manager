@@ -12,8 +12,8 @@ Feature: AzureVpcPeering feature
 
     Given tf module "tf" is applied:
       | source                        | ./azure-peering-target       |
-      | provider                      | hashicorp/azurerm 4.55.0     |
-      | provider                      | hashicorp/random 3.7.2       |
+      | provider                      | hashicorp/azurerm@4.55.0     |
+      | provider                      | hashicorp/random@3.7.2       |
       | location                      | "westeurope"                 |
       | name                          | "${_.peering.name}"          |
       | virtual_network_address_space | "192.168.255.0/25"           |

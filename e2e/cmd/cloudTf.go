@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/kyma-project/cloud-manager/e2e/cloud"
@@ -37,10 +36,6 @@ var cmdCloudTf = &cobra.Command{
 		b := cld.WorkspaceBuilder(util.RandomString(8))
 		for _, p := range tfProviders {
 			b.WithProvider(p)
-		}
-
-		if strings.HasPrefix(tfSource, "./") || strings.HasPrefix(tfSource, "../") {
-			tfSource = path.Clean(path.Join(config.ConfigDir, "../e2e/tf", tfSource))
 		}
 
 		b.WithSource(tfSource)

@@ -123,9 +123,11 @@ jobs:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
           if [ -n "$DEBUG" ]; then
-            echo "$TAGS"
-            echo "$KUBECONFIG"
+            echo "TAGS=$TAGS"
+            echo "KUBECONFIG=$KUBECONFIG"
+            echo "CONIFG_DIR=$CONFIG_DIR"
             ls -la ./tmp
+            go run ./e2e/cmd config dump
           fi
           go test ./e2e/tests -timeout 0 -v -race -godog.tags "$TAGS" -godog.format "pretty,pretty:$GHERKIN_REPORT"
 

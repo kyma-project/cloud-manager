@@ -10,29 +10,29 @@ import (
 )
 
 type matcherCase struct {
-	gvk schema.GroupVersionKind
+	gvk      schema.GroupVersionKind
 	expected bool
 }
 
 func TestMatcher(t *testing.T) {
 
 	testCases := []struct {
-		title string
+		title   string
 		matcher Matcher
-		cases []matcherCase
-	} {
+		cases   []matcherCase
+	}{
 		{
 			"whole group w/out one kind",
 			MatchAll(MatchingGroup(cloudresourcesv1beta1.GroupVersion.Group), NotMatch(MatchingKind("CloudResources"))),
 			[]matcherCase{
-				{ cloudresourcesv1beta1.GroupVersion.WithKind("IpRange"), true},
-				{ cloudresourcesv1beta1.GroupVersion.WithKind("AwsNfsVolume"), true},
-				{ cloudresourcesv1beta1.GroupVersion.WithKind("CloudResources"), false},
+				{cloudresourcesv1beta1.GroupVersion.WithKind("IpRange"), true},
+				{cloudresourcesv1beta1.GroupVersion.WithKind("AwsNfsVolume"), true},
+				{cloudresourcesv1beta1.GroupVersion.WithKind("CloudResources"), false},
 
-				{ infrastructuremanagerv1.GroupVersion.WithKind("Runtime"), false},
-				{ infrastructuremanagerv1.GroupVersion.WithKind("GardenerCluster"), false},
+				{infrastructuremanagerv1.GroupVersion.WithKind("Runtime"), false},
+				{infrastructuremanagerv1.GroupVersion.WithKind("GardenerCluster"), false},
 
-				{ schema.ParseGroupKind("pod").WithVersion("v"), false},
+				{schema.ParseGroupKind("pod").WithVersion("v"), false},
 			},
 		},
 	}

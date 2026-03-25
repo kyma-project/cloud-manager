@@ -263,8 +263,8 @@ func (s *scenarioSession) DebugDumpDeclaredResources(ctx context.Context) (strin
 			if err != nil {
 				data[ri.Alias] = fmt.Sprintf("error: %v", err.Error())
 			} else {
-				if obj != nil && obj["metadata"] != nil && obj["metadata"].(map[string]interface {})["managedFields"] != nil {
-					delete(obj["metadata"].(map[string]interface {}), "managedFields")
+				if obj != nil && obj["metadata"] != nil && obj["metadata"].(map[string]interface{})["managedFields"] != nil {
+					delete(obj["metadata"].(map[string]interface{}), "managedFields")
 				}
 				data[ri.Alias] = obj
 			}
