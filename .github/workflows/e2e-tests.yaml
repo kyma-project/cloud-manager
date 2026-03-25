@@ -156,6 +156,15 @@ jobs:
             go run ./e2e/cmd instance clean --alias shared-$PROVIDER --verbose --wait --force --timeout 30m
           fi
 
+      - name: Remove CloudManager Module
+        if: always() && env.INPUTSOK != ''
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+        run: |
+          if [ -f "$KUBECONFIG" ]; then
+            go run ./e2e/cmd instance module remove --alias shared-$PROVIDER --module cloud-manager
+          fi
+
       - name: Delete shared instance
         if: always() && env.INPUTSOK != ''
         env:
