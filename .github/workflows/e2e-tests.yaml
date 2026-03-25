@@ -48,6 +48,7 @@ jobs:
       DEBUG:  ${{ inputs.debug && 'true' || '' }}
       RUN_E2E_TESTS: 1
       CONFIG_DIR: ${{ github.workspace }}/tmp
+      GHERKIN_REPORT: ${{ github.workspace }}/output.gherkin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -121,7 +122,6 @@ jobs:
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
-          GHERKIN_REPORT="${{ github.workspace }}/output.gherkin"
           if [ -n "$DEBUG" ]; then
             echo "$TAGS"
             echo "$KUBECONFIG"
@@ -129,11 +129,16 @@ jobs:
           fi
           go test ./e2e/tests -timeout 0 -v -race -godog.tags "$TAGS" -godog.format "pretty,pretty:$GHERKIN_REPORT"
 
+      - name: Print Gherkin Report
+        if: always() && env.INPUTSOK != ''
+        run: |
           if [ -f "$GHERKIN_REPORT" ]; then
+            echo
             echo '# Features' >> $GITHUB_STEP_SUMMARY
             echo '```gherkin' >> $GITHUB_STEP_SUMMARY
             cat $GHERKIN_REPORT | sed 's/\x1b\[[0-9;]*[mGKH]//g' >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
+            echo
           fi
 
       # task "Cleaning extended API groups" failed: 1 error occurred:
