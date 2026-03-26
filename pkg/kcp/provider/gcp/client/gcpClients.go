@@ -280,6 +280,11 @@ func (c *GcpClients) AddressesWrapped() RegionalAddressesClient {
 	return &regionalAddressesClient{inner: c.ComputeAddresses}
 }
 
+// RedisInstanceWrapped is supposed to replace usage of field RedisInstance after the refactoring
+func (c *GcpClients) RedisInstanceWrapped() RedisInstanceClient {
+	return &redisInstanceClient{inner: c.RedisInstance}
+}
+
 func (c *VpcPeeringClients) Close() error {
 	return reflectingClose(c)
 }

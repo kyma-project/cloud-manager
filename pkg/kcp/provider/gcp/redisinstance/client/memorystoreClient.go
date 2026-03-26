@@ -6,7 +6,6 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 
-	redis "cloud.google.com/go/redis/apiv1"
 	"cloud.google.com/go/redis/apiv1/redispb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -43,13 +42,17 @@ func NewMemorystoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.Gc
 }
 
 func NewMemorystoreClient(gcpClients *gcpclient.GcpClients) MemorystoreClient {
+	return NewMemorystoreClientFromRedisInstanceClient(gcpClients.RedisInstanceWrapped())
+}
+
+func NewMemorystoreClientFromRedisInstanceClient(redisInstanceClient gcpclient.RedisInstanceClient) MemorystoreClient {
 	return &memorystoreClient{
-		redisInstanceClient: gcpClients.RedisInstance,
+		redisInstanceClient: redisInstanceClient,
 	}
 }
 
 type memorystoreClient struct {
-	redisInstanceClient *redis.CloudRedisClient
+	redisInstanceClient gcpclient.RedisInstanceClient
 }
 
 // UpdateRedisInstanceConfigs implements MemorystoreClient.
@@ -61,7 +64,7 @@ func (memorystoreClient *memorystoreClient) UpdateRedisInstance(ctx context.Cont
 		Instance: redisInstance,
 	}
 
-	_, err := memorystoreClient.redisInstanceClient.UpdateInstance(ctx, req)
+	_, err := memorystoreClient.redisInstanceClient.UpdateRedisInstance(ctx, req)
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Error(err, "Failed to update redis instance", "redisInstance", redisInstance.Name)
@@ -99,7 +102,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisInstance(ctx context.Cont
 		},
 	}
 
-	_, err := memorystoreClient.redisInstanceClient.CreateInstance(ctx, req)
+	_, err := memorystoreClient.redisInstanceClient.CreateRedisInstance(ctx, req)
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
@@ -118,7 +121,7 @@ func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context
 		Name: name,
 	}
 
-	instanceResponse, err := memorystoreClient.redisInstanceClient.GetInstance(ctx, req)
+	instanceResponse, err := memorystoreClient.redisInstanceClient.GetRedisInstance(ctx, req)
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target Redis instance not found")
@@ -132,7 +135,7 @@ func (memorystoreClient *memorystoreClient) GetRedisInstance(ctx context.Context
 		return instanceResponse, nil, err
 	}
 
-	authResponse, err := memorystoreClient.redisInstanceClient.GetInstanceAuthString(ctx, &redispb.GetInstanceAuthStringRequest{Name: name})
+	authResponse, err := memorystoreClient.redisInstanceClient.GetRedisInstanceAuthString(ctx, &redispb.GetInstanceAuthStringRequest{Name: name})
 	if err != nil {
 		logger.Error(err, "Failed to get Redis instance Auth")
 		return nil, nil, err
@@ -148,7 +151,7 @@ func (memorystoreClient *memorystoreClient) UpgradeRedisInstance(ctx context.Con
 		RedisVersion: redisVersion,
 	}
 
-	_, err := memorystoreClient.redisInstanceClient.UpgradeInstance(ctx, req)
+	_, err := memorystoreClient.redisInstanceClient.UpgradeRedisInstance(ctx, req)
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
@@ -164,7 +167,7 @@ func (memorystoreClient *memorystoreClient) DeleteRedisInstance(ctx context.Cont
 		Name: GetGcpMemoryStoreRedisName(projectId, locationId, instanceId),
 	}
 
-	_, err := memorystoreClient.redisInstanceClient.DeleteInstance(ctx, req)
+	_, err := memorystoreClient.redisInstanceClient.DeleteRedisInstance(ctx, req)
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
