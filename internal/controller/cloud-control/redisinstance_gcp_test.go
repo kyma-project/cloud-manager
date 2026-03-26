@@ -29,13 +29,9 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpscope.Ignore.AddName(name)
 
-			Eventually(CreateScopeGcp).
-				WithArguments(infra.Ctx(), infra, scope, WithName(name)).
+			Eventually(CreateScopeGcp2).
+				WithArguments(infra.Ctx(), infra, scope, gcpMock.ProjectId(), WithName(name)).
 				Should(Succeed())
-
-			// Update Scope's GCP project to match mock subscription before any reconciler uses it
-			scope.Spec.Scope.Gcp.Project = gcpMock.ProjectId()
-			Expect(infra.KCP().Client().Update(infra.Ctx(), scope)).To(Succeed())
 		})
 
 		vpcNetworkName := scope.Spec.Scope.Gcp.VpcNetwork
