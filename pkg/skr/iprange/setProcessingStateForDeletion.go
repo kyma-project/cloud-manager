@@ -5,7 +5,6 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func setProcessingStateForDeletion(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,14 +18,15 @@ func setProcessingStateForDeletion(ctx context.Context, st composed.State) (erro
 		return nil, ctx // KCP IpRange is already marked for deletion, so it already passed Processing state
 	}
 
-	if state.ObjAsIpRange().State() != cloudresourcesv1beta1.StateProcessing {
-		state.ObjAsIpRange().SetState(cloudresourcesv1beta1.StateProcessing)
-		err := state.UpdateObjStatus(ctx)
-		if client.IgnoreNotFound(err) != nil {
-			// No reason to halt the flow if we can't set the processing state here as it will go to "deleting" or "error" state soon
-			return composed.LogErrorAndReturn(err, "Error updating SKR IpRange status with Processing state", nil, ctx)
-		}
+	// Only update status if not already in Processing state to avoid unnecessary updates and conflicts
+	if state.ObjAsIpRange().Status.State == cloudresourcesv1beta1.StateProcessing {
+		return nil, ctx
 	}
 
+	state.ObjAsIpRange().SetState(cloudresourcesv1beta1.StateProcessing)
+	err := state.UpdateObjStatus(ctx)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error updating SKR IpRange status with Processing state", composed.StopWithRequeue, ctx)
+	}
 	return nil, ctx
 }
