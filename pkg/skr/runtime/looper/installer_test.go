@@ -133,3 +133,20 @@ func TestInstaller(t *testing.T) {
 		})
 	})
 }
+
+func TestInstallerFailsWhenCommonDirMissing(t *testing.T) {
+	ctx := context.Background()
+	skrStatus := NewSkrStatus(ctx)
+	instlr := &installer{
+		skrStatus:        skrStatus,
+		skrProvidersPath: "../../../../config/dist/skr/crd/does-not-exist/providers",
+		logger:           logr.Discard(),
+	}
+
+	clnt := fake.NewFakeClient()
+	clstr := NewCluster(commonscheme.SkrScheme, clnt, clnt)
+
+	err := instlr.Handle(ctx, string(cloudcontrolv1beta1.ProviderGCP), clstr)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
