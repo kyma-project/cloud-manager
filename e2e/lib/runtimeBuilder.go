@@ -163,6 +163,14 @@ func (b *RuntimeBuilder) WithAlias(val string) *RuntimeBuilder {
 	return b
 }
 
+func (b *RuntimeBuilder) WithLabel(key, value string) *RuntimeBuilder {
+	if b.Obj.Labels == nil {
+		b.Obj.Labels = make(map[string]string)
+	}
+	b.Obj.Labels[key] = value
+	return b
+}
+
 func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType, region string) *RuntimeBuilder {
 	b.errProvider = nil
 	lProvider := strings.ToLower(string(provider))
