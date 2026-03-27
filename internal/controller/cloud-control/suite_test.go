@@ -167,9 +167,9 @@ var _ = BeforeSuite(func() {
 	Expect(SetupGcpSubnetReconciler(
 		infra.Ctx(),
 		infra.KcpManager(),
-		infra.GcpMock().SubnetComputeClientProvider(),
-		infra.GcpMock().SubnetNetworkConnectivityProvider(),
-		infra.GcpMock().SubnetRegionOperationsClientProvider(),
+		infra.GcpMock2().SubnetComputeProvider(),
+		infra.GcpMock2().SubnetNetworkConnectivityProvider(),
+		infra.GcpMock2().SubnetRegionOperationsProvider(),
 		env,
 	)).To(Succeed())
 	//AzureVNetLink
