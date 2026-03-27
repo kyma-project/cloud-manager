@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awswebacl/client"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -30,13 +31,19 @@ type reconcilerFactory struct {
 }
 
 func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
+	baseStateFactory := composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster))
+
+	scopeStateFactory := commonscope.NewStateFactory(
+		composed.NewStateClusterFromCluster(args.KcpCluster),
+		args.KymaRef,
+	)
 
 	return &reconciler{
 		factory: newStateFactory(
-			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			args.KymaRef,
-			composed.NewStateClusterFromCluster(args.KcpCluster),
+			baseStateFactory,
+			scopeStateFactory,
 			f.awsClientProvider,
+			f.env,
 		),
 	}
 }
@@ -59,17 +66,7 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crAwsWebAclMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsWebAcl{}),
-		composed.LoadObj,
-		composeActions(),
-	)
-}
-
-func composeActions() composed.Action {
-	return composed.ComposeActions(
-		"crAwsWebAclMain",
-		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsWebAcl{}),
-		composed.LoadObj,
-		loadScope,
+		commonscope.New(),
 		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 			composed.ComposeActions(
 				"awsWebAcl-create",
