@@ -36,7 +36,7 @@ var _ = Describe("AwsWebAcl Controller", Focus, func() {
 
 		scope := &cloudcontrolv1beta1.Scope{}
 
-		By("Given Scope is created", func() {
+		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpscope.Ignore.AddName(kymaName)
 
@@ -44,13 +44,17 @@ var _ = Describe("AwsWebAcl Controller", Focus, func() {
 				WithArguments(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(kymaName)).
 				Should(Succeed())
 		})
-		awsWebAcl := &cloudresourcesv1beta1.AwsWebAcl{}
 
-		By("Given scope exists", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions()).
+		By("And Given scope is ready", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.KCP().Client(), scope,
+					WithConditions(KcpReadyCondition()),
+				).
 				Should(Succeed())
 		})
+
+		awsWebAcl := &cloudresourcesv1beta1.AwsWebAcl{}
 
 		By("When AwsWebAcl is created", func() {
 			Eventually(CreateAwsWebAcl).
