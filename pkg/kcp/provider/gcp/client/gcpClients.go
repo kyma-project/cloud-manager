@@ -300,6 +300,11 @@ func (c *GcpClients) NetworkConnectivityWrapped() NetworkConnectivityClient {
 	return &networkConnectivityClient{inner: c.NetworkConnectivityCrossNetworkAutomation}
 }
 
+// RedisClusterWrapped is supposed to replace usage of field RedisCluster after the refactoring
+func (c *GcpClients) RedisClusterWrapped() RedisClusterClient {
+	return &redisClusterClient{inner: c.RedisCluster}
+}
+
 func (c *VpcPeeringClients) Close() error {
 	return reflectingClose(c)
 }
