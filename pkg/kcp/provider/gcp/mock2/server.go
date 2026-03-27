@@ -8,6 +8,7 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -43,6 +44,36 @@ func (s *server) RedisInstanceProvider() gcpclient.GcpClientProvider[gcpredisins
 			return nil
 		}
 		return gcpredisinstanceclient.NewMemorystoreClientFromRedisInstanceClient(sub)
+	}
+}
+
+func (s *server) SubnetComputeProvider() gcpclient.GcpClientProvider[gcpsubnetclient.ComputeClient] {
+	return func(projectId string) gcpsubnetclient.ComputeClient {
+		sub := s.GetSubscription(projectId)
+		if sub == nil {
+			return nil
+		}
+		return gcpsubnetclient.NewComputeClientFromSubnetClient(sub)
+	}
+}
+
+func (s *server) SubnetNetworkConnectivityProvider() gcpclient.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient] {
+	return func(projectId string) gcpsubnetclient.NetworkConnectivityClient {
+		sub := s.GetSubscription(projectId)
+		if sub == nil {
+			return nil
+		}
+		return gcpsubnetclient.NewNetworkConnectivityClientFromWrapped(sub)
+	}
+}
+
+func (s *server) SubnetRegionOperationsProvider() gcpclient.GcpClientProvider[gcpsubnetclient.RegionOperationsClient] {
+	return func(projectId string) gcpsubnetclient.RegionOperationsClient {
+		sub := s.GetSubscription(projectId)
+		if sub == nil {
+			return nil
+		}
+		return gcpsubnetclient.NewRegionOperationsClientFromWrapped(sub)
 	}
 }
 

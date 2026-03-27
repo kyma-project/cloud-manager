@@ -61,6 +61,10 @@ func NewSimpleComputeOperationError(code, message string) *computepb.Error {
 	}
 }
 
+type ComputeOperationsConfig interface {
+	ResolveComputeOperation(nd gcputil.NameDetail, httpErrorStatusCode *int32, httpErrorMessage *string, err *computepb.Error) error
+}
+
 func (s *store) ResolveComputeOperation(nd gcputil.NameDetail, httpErrorStatusCode *int32, httpErrorMessage *string, err *computepb.Error) error {
 	s.m.Lock()
 	defer s.m.Unlock()

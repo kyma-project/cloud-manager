@@ -4,6 +4,7 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
 )
 
@@ -27,11 +28,15 @@ type Providers interface {
 	ExposedDataProvider() gcpclient.GcpClientProvider[gcpexposeddataclient.Client]
 	VpcNetworkProvider() gcpclient.GcpClientProvider[gcpvpcnetworkclient.Client]
 	RedisInstanceProvider() gcpclient.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient]
+	SubnetComputeProvider() gcpclient.GcpClientProvider[gcpsubnetclient.ComputeClient]
+	SubnetNetworkConnectivityProvider() gcpclient.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient]
+	SubnetRegionOperationsProvider() gcpclient.GcpClientProvider[gcpsubnetclient.RegionOperationsClient]
 	// all others feature's providers as they are refactored to switch using these new GCP clients
 }
 
 type Configs interface {
 	VpcNetworkConfig
+	ComputeOperationsConfig
 	FileStoreOperationsConfig
 	FileStoreBackupOperationsConfig
 	RedisInstanceOperationsConfig

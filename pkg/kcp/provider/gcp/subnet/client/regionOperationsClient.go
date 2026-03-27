@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 
-	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
@@ -24,16 +23,20 @@ func NewRegionOperationsClientProvider(gcpClients *gcpclient.GcpClients) gcpclie
 	}
 }
 
-type regionalOperationsClient struct {
-	operationsClient *compute.RegionOperationsClient
+func NewRegionOperationsClient(gcpClients *gcpclient.GcpClients) RegionOperationsClient {
+	return NewRegionOperationsClientFromWrapped(gcpClients.RegionOperationsWrapped())
 }
 
-func NewRegionOperationsClient(gcpClients *gcpclient.GcpClients) RegionOperationsClient {
-	return &regionalOperationsClient{operationsClient: gcpClients.RegionOperations}
+func NewRegionOperationsClientFromWrapped(regionalOpsClient gcpclient.ComputeRegionalOperationsClient) RegionOperationsClient {
+	return &regionalOperationsClient{regionalOpsClient: regionalOpsClient}
+}
+
+type regionalOperationsClient struct {
+	regionalOpsClient gcpclient.ComputeRegionalOperationsClient
 }
 
 func (c *regionalOperationsClient) GetRegionOperation(ctx context.Context, request GetRegionOperationRequest) (*computepb.Operation, error) {
-	op, err := c.operationsClient.Get(ctx, &computepb.GetRegionOperationRequest{
+	op, err := c.regionalOpsClient.GetComputeRegionalOperation(ctx, &computepb.GetRegionOperationRequest{
 		Project:   request.ProjectId,
 		Region:    request.Region,
 		Operation: request.Name,
