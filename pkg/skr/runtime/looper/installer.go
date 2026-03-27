@@ -79,7 +79,7 @@ func (i *installer) Handle(ctx context.Context, provider string, skrCluster Clus
 
 	// Apply provider-independent common resources (e.g. aggregated RBAC roles)
 	commonDir := path.Join(path.Dir(i.skrProvidersPath), "common")
-	commonCount, err := i.applyDir(ctx, skrCluster, commonDir, provider, true)
+	commonCount, err := i.applyDir(ctx, skrCluster, commonDir, provider, false)
 	if err != nil {
 		return err
 	}
