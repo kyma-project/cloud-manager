@@ -8,6 +8,7 @@ type accountRegionStore struct {
 	*vpcPeeringStore
 	*elastiCacheClientFake
 	*routeTablesStore
+	*webAclStore
 
 	region string
 }
@@ -21,6 +22,7 @@ func newAccountRegionStore(region string) *accountRegionStore {
 		elastiCacheClientFake: newElastiCacheClientFake(),
 		nfsStore:              &nfsStore{},
 		routeTablesStore:      &routeTablesStore{},
+		webAclStore:           newWebAclStore(),
 	}
 }
 

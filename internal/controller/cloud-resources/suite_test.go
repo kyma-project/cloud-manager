@@ -164,7 +164,7 @@ var _ = BeforeSuite(func() {
 		NotTo(HaveOccurred())
 
 	// AwsWebAcl
-	Expect(SetupAwsWebAclReconciler(infra.Registry())).
+	Expect(SetupAwsWebAclReconciler(infra.Registry(), infra.AwsMock().WebAclProvider(), env)).
 		NotTo(HaveOccurred())
 
 	// Start controllers

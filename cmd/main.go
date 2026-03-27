@@ -88,6 +88,7 @@ import (
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
+	awswebaclclient "github.com/kyma-project/cloud-manager/pkg/skr/awswebacl/client"
 	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
@@ -311,7 +312,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupAwsWebAclReconciler(skrRegistry); err != nil {
+	if err = cloudresourcescontroller.SetupAwsWebAclReconciler(skrRegistry, awswebaclclient.NewClientProvider(), abstractions.NewOSEnvironment()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsWebAcl")
 		os.Exit(1)
 	}

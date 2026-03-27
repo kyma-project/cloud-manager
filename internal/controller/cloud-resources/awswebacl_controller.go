@@ -18,20 +18,25 @@ package cloudresources
 
 import (
 	"context"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awswebacl"
+	"github.com/kyma-project/cloud-manager/pkg/skr/awswebacl/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 )
 
-type AwsWebAclReconcilerFactory struct{}
+type AwsWebAclReconcilerFactory struct {
+	webAclProvider awsclient.SkrClientProvider[client.Client]
+	env            abstractions.Environment
+}
 
 func (f *AwsWebAclReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &AwsWebAclReconciler{
-		reconciler: awswebacl.NewReconcilerFactory().New(args),
+		reconciler: awswebacl.NewReconcilerFactory(f.webAclProvider, f.env).New(args),
 	}
 }
 
@@ -57,9 +62,12 @@ func (r *AwsWebAclReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return r.reconciler.Reconcile(ctx, req)
 }
 
-func SetupAwsWebAclReconciler(reg skrruntime.SkrRegistry) error {
+func SetupAwsWebAclReconciler(reg skrruntime.SkrRegistry, provider awsclient.SkrClientProvider[client.Client], env abstractions.Environment) error {
 	return reg.Register().
-		WithFactory(&AwsWebAclReconcilerFactory{}).
+		WithFactory(&AwsWebAclReconcilerFactory{
+			webAclProvider: provider,
+			env:            env,
+		}).
 		For(&cloudresourcesv1beta1.AwsWebAcl{}).
 		Complete()
 }

@@ -18,16 +18,39 @@ package cloudresources
 
 import (
 	"github.com/kyma-project/cloud-manager/api"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-var _ = Describe("AwsWebAcl Controller", func() {
+var _ = Describe("AwsWebAcl Controller", Focus, func() {
 	It("Scenario: SKR AwsWebAcl is created then deleted", func() {
+		kymaName := infra.SkrKymaRef().Name
+
+		awsAccountLocal := infra.AwsMock().NewAccount()
+		defer awsAccountLocal.Delete()
+
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope is created", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeAws).
+				WithArguments(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(kymaName)).
+				Should(Succeed())
+		})
 		awsWebAcl := &cloudresourcesv1beta1.AwsWebAcl{}
+
+		By("Given scope exists", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions()).
+				Should(Succeed())
+		})
 
 		By("When AwsWebAcl is created", func() {
 			Eventually(CreateAwsWebAcl).
