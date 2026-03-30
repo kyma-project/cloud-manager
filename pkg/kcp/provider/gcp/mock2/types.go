@@ -3,6 +3,7 @@ package mock2
 import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
@@ -31,6 +32,7 @@ type Providers interface {
 	SubnetComputeProvider() gcpclient.GcpClientProvider[gcpsubnetclient.ComputeClient]
 	SubnetNetworkConnectivityProvider() gcpclient.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient]
 	SubnetRegionOperationsProvider() gcpclient.GcpClientProvider[gcpsubnetclient.RegionOperationsClient]
+	RedisClusterProvider() gcpclient.GcpClientProvider[gcpredisclusterclient.MemorystoreClusterClient]
 	// all others feature's providers as they are refactored to switch using these new GCP clients
 }
 

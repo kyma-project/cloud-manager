@@ -145,7 +145,7 @@ var _ = BeforeSuite(func() {
 	)).NotTo(HaveOccurred())
 	Expect(SetupGcpRedisClusterReconciler(
 		infra.KcpManager(),
-		infra.GcpMock().MemoryStoreClusterProviderFake(),
+		infra.GcpMock2().RedisClusterProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	// Network
