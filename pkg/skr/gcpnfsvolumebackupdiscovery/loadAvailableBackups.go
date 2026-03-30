@@ -16,7 +16,7 @@ func loadAvailableBackups(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 	backupDiscovery := state.ObjAsGcpNfsVolumeBackupDiscovery()
 
-	backups, err := state.fileBackupClient.ListFilesBackups(
+	backups, err := state.fileBackupClient.ListBackups(
 		ctx, state.Scope.Spec.Scope.Gcp.Project,
 		gcpclient.GetSharedBackupsFilter(state.Scope.Spec.ShootName, state.Scope.Spec.ShootName), // todo: change second arg to SubaccountId
 	)

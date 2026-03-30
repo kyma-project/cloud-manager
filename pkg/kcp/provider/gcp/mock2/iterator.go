@@ -36,7 +36,7 @@ func (it *iteratorMocked[T]) Next() (T, error) {
 	}
 	item := it.items[0]
 	it.items = it.items[1:]
-	cpy, err := util.JsonClone(item)
+	cpy, err := util.Clone(item)
 	if err != nil {
 		return zero, fmt.Errorf("failed to clone item: %w", err)
 	}

@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	networkconnectivity "cloud.google.com/go/networkconnectivity/apiv1"
-
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"github.com/google/uuid"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
@@ -40,15 +38,19 @@ func NewNetworkConnectivityClientProvider(gcpClients *gcpclient.GcpClients) gcpc
 }
 
 func NewNetworkConnectivityClient(gcpClients *gcpclient.GcpClients) NetworkConnectivityClient {
-	return &networkConnectivityClient{crossNetworkAutomationClient: *gcpClients.NetworkConnectivityCrossNetworkAutomation}
+	return NewNetworkConnectivityClientFromWrapped(gcpClients.NetworkConnectivityWrapped())
+}
+
+func NewNetworkConnectivityClientFromWrapped(ncClient gcpclient.NetworkConnectivityClient) NetworkConnectivityClient {
+	return &networkConnectivityClient{ncClient: ncClient}
 }
 
 type networkConnectivityClient struct {
-	crossNetworkAutomationClient networkconnectivity.CrossNetworkAutomationClient
+	ncClient gcpclient.NetworkConnectivityClient
 }
 
 func (ncClient *networkConnectivityClient) UpdateServiceConnectionPolicy(ctx context.Context, policy *networkconnectivitypb.ServiceConnectionPolicy, updateMask []string) error {
-	_, err := ncClient.crossNetworkAutomationClient.UpdateServiceConnectionPolicy(ctx, &networkconnectivitypb.UpdateServiceConnectionPolicyRequest{
+	_, err := ncClient.ncClient.UpdateServiceConnectionPolicy(ctx, &networkconnectivitypb.UpdateServiceConnectionPolicyRequest{
 		ServiceConnectionPolicy: policy,
 		RequestId:               uuid.NewString(),
 		UpdateMask: &fieldmaskpb.FieldMask{
@@ -68,7 +70,7 @@ func (ncClient *networkConnectivityClient) CreateServiceConnectionPolicy(ctx con
 	parent := fmt.Sprintf("projects/%s/locations/%s", request.ProjectId, request.Region)
 	connectionPolicyNameFull := fmt.Sprintf("%s/serviceConnectionPolicies/%s", parent, request.Name)
 
-	_, err := ncClient.crossNetworkAutomationClient.CreateServiceConnectionPolicy(ctx, &networkconnectivitypb.CreateServiceConnectionPolicyRequest{
+	_, err := ncClient.ncClient.CreateServiceConnectionPolicy(ctx, &networkconnectivitypb.CreateServiceConnectionPolicyRequest{
 		Parent:                    parent,
 		ServiceConnectionPolicyId: request.Name,
 		ServiceConnectionPolicy: &networkconnectivitypb.ServiceConnectionPolicy{
@@ -92,7 +94,7 @@ func (ncClient *networkConnectivityClient) CreateServiceConnectionPolicy(ctx con
 }
 
 func (ncClient *networkConnectivityClient) GetServiceConnectionPolicy(ctx context.Context, name string) (*networkconnectivitypb.ServiceConnectionPolicy, error) {
-	connectionPolicy, err := ncClient.crossNetworkAutomationClient.GetServiceConnectionPolicy(ctx, &networkconnectivitypb.GetServiceConnectionPolicyRequest{
+	connectionPolicy, err := ncClient.ncClient.GetServiceConnectionPolicy(ctx, &networkconnectivitypb.GetServiceConnectionPolicyRequest{
 		Name: name,
 	})
 
@@ -104,7 +106,7 @@ func (ncClient *networkConnectivityClient) GetServiceConnectionPolicy(ctx contex
 }
 
 func (ncClient *networkConnectivityClient) DeleteServiceConnectionPolicy(ctx context.Context, request DeleteServiceConnectionPolicyRequest) error {
-	_, err := ncClient.crossNetworkAutomationClient.DeleteServiceConnectionPolicy(ctx, &networkconnectivitypb.DeleteServiceConnectionPolicyRequest{
+	_, err := ncClient.ncClient.DeleteServiceConnectionPolicy(ctx, &networkconnectivitypb.DeleteServiceConnectionPolicyRequest{
 		Name:      request.Name,
 		RequestId: request.IdempotenceId,
 	})

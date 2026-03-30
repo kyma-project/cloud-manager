@@ -122,7 +122,7 @@ func (s *store) InsertNetwork(ctx context.Context, req *computepb.InsertNetworkR
 		return nil, gcpmeta.NewBadRequestError("subnetworks field is not supported for network creation")
 	}
 
-	net, err := util.JsonClone(req.NetworkResource)
+	net, err := util.Clone(req.NetworkResource)
 	if err != nil {
 		return nil, fmt.Errorf("failed to clone network resource: %w", err)
 	}

@@ -280,6 +280,36 @@ func (c *GcpClients) AddressesWrapped() RegionalAddressesClient {
 	return &regionalAddressesClient{inner: c.ComputeAddresses}
 }
 
+// RedisInstanceWrapped is supposed to replace usage of field RedisInstance after the refactoring
+func (c *GcpClients) RedisInstanceWrapped() RedisInstanceClient {
+	return &redisInstanceClient{inner: c.RedisInstance}
+}
+
+// SubnetWrapped is supposed to replace usage of field ComputeSubnetworks after the refactoring
+func (c *GcpClients) SubnetWrapped() SubnetClient {
+	return &subnetClient{inner: c.ComputeSubnetworks}
+}
+
+// RegionOperationsWrapped is supposed to replace usage of field RegionOperations after the refactoring
+func (c *GcpClients) RegionOperationsWrapped() ComputeRegionalOperationsClient {
+	return &computeRegionalOperationsClient{inner: c.RegionOperations}
+}
+
+// NetworkConnectivityWrapped is supposed to replace usage of field NetworkConnectivityCrossNetworkAutomation after the refactoring
+func (c *GcpClients) NetworkConnectivityWrapped() NetworkConnectivityClient {
+	return &networkConnectivityClient{inner: c.NetworkConnectivityCrossNetworkAutomation}
+}
+
+// RedisClusterWrapped is supposed to replace usage of field RedisCluster after the refactoring
+func (c *GcpClients) RedisClusterWrapped() RedisClusterClient {
+	return &redisClusterClient{inner: c.RedisCluster}
+}
+
+// FilestoreWrapped is supposed to replace usage of field Filestore after the refactoring
+func (c *GcpClients) FilestoreWrapped() FilestoreClient {
+	return &filestoreClient{inner: c.Filestore}
+}
+
 func (c *VpcPeeringClients) Close() error {
 	return reflectingClose(c)
 }
