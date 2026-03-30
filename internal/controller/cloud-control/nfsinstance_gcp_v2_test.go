@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -15,6 +16,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
@@ -43,6 +45,56 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 				Should(Succeed())
 		})
 
+		vpcNetworkName := scope.Spec.Scope.Gcp.VpcNetwork
+
+		By("And Given GCP VPC network exists", func() {
+			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				NetworkResource: &computepb.Network{
+					Name: ptr.To(vpcNetworkName),
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(op.Wait(infra.Ctx())).To(Succeed())
+		})
+
+		addressName := "test-psa-address"
+		By("And Given GCP PSA address range exists", func() {
+			net, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				Network: vpcNetworkName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			op, err := gcpMock.InsertGlobalAddress(infra.Ctx(), &computepb.InsertGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				AddressResource: &computepb.Address{
+					Name:         ptr.To(addressName),
+					Address:      ptr.To("10.251.0.0"),
+					PrefixLength: ptr.To(int32(16)),
+					Network:      ptr.To(net.GetSelfLink()),
+					AddressType:  ptr.To(computepb.Address_INTERNAL.String()),
+					Purpose:      ptr.To(computepb.Address_VPC_PEERING.String()),
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(op.Wait(infra.Ctx())).To(Succeed())
+		})
+
+		By("And Given GCP PSA connection exists", func() {
+			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				Address: addressName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			net, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				Network: vpcNetworkName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			_, err = gcpMock.CreateServiceConnection(infra.Ctx(), gcpMock.ProjectId(), net.GetName(), []string{addr.GetName()})
+			Expect(err).ToNot(HaveOccurred())
+		})
+
 		kcpIpRangeName := "ffff14c2-0937-43cb-872f-cc5573e7c5b9"
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
@@ -58,7 +110,13 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 				Should(Succeed())
 		})
 
-		By("And Given KCP IpRange has Ready condition", func() {
+		By("And Given KCP IpRange has Ready condition and Status.Id", func() {
+			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				Address: addressName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			kcpIpRange.Status.Id = addr.GetSelfLink()
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
@@ -222,6 +280,56 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 				Should(Succeed())
 		})
 
+		vpcNetworkName := scope.Spec.Scope.Gcp.VpcNetwork
+
+		By("And Given GCP VPC network exists", func() {
+			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				NetworkResource: &computepb.Network{
+					Name: ptr.To(vpcNetworkName),
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(op.Wait(infra.Ctx())).To(Succeed())
+		})
+
+		addressName := "test-psa-address"
+		By("And Given GCP PSA address range exists", func() {
+			net, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				Network: vpcNetworkName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			op, err := gcpMock.InsertGlobalAddress(infra.Ctx(), &computepb.InsertGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				AddressResource: &computepb.Address{
+					Name:         ptr.To(addressName),
+					Address:      ptr.To("10.251.0.0"),
+					PrefixLength: ptr.To(int32(16)),
+					Network:      ptr.To(net.GetSelfLink()),
+					AddressType:  ptr.To(computepb.Address_INTERNAL.String()),
+					Purpose:      ptr.To(computepb.Address_VPC_PEERING.String()),
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(op.Wait(infra.Ctx())).To(Succeed())
+		})
+
+		By("And Given GCP PSA connection exists", func() {
+			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				Address: addressName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			net, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				Network: vpcNetworkName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			_, err = gcpMock.CreateServiceConnection(infra.Ctx(), gcpMock.ProjectId(), net.GetName(), []string{addr.GetName()})
+			Expect(err).ToNot(HaveOccurred())
+		})
+
 		kcpIpRangeName := "14161cce-cd3e-49f8-9b06-18db08409440"
 		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
 
@@ -237,7 +345,13 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 				Should(Succeed())
 		})
 
-		By("And Given KCP IpRange has Ready condition", func() {
+		By("And Given KCP IpRange has Ready condition and Status.Id", func() {
+			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				Address: addressName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			kcpIpRange.Status.Id = addr.GetSelfLink()
 			Eventually(UpdateStatus).
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
