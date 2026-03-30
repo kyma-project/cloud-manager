@@ -1,13 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/elliotchance/pie/v2"
+	"github.com/go-logr/logr"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
+	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 var cmdInstanceModulesAdd = &cobra.Command{
@@ -72,6 +77,37 @@ var cmdInstanceModulesAdd = &cobra.Command{
 
 		fmt.Println("Module is added")
 
+		if waitDone && moduleName == "cloud-manager" {
+			fmt.Println("Waiting for module to be ready")
+
+			logger := logr.Discard()
+			if verbose {
+				logger = rootLogger.WithName("waitModuleReady")
+			}
+			err := wait.PollUntilContextTimeout(rootCtx, 5*time.Second, timeout, false, func(ctx context.Context) (done bool, err error) {
+				err = clnt.Get(rootCtx, types.NamespacedName{
+					Namespace: "kyma-system",
+					Name:      "default",
+				}, kyma)
+				if err != nil {
+					return false, fmt.Errorf("failed to get SKR kyma while waiting module ready: %w", err)
+				}
+				m, ok := kyma.GetModuleStatusMap()[moduleName]
+				if !ok {
+					logger.Info("not found in status")
+					return false, nil
+				}
+				if m.State != operatorshared.StateReady {
+					logger.WithValues("state", m.State).Info("module is not ready")
+					return false, nil
+				}
+				return true, nil
+			})
+			if err != nil {
+				return fmt.Errorf("failed to wait for module ready: %w", err)
+			}
+		}
+
 		return nil
 	},
 }
@@ -81,6 +117,8 @@ func init() {
 	cmdInstanceModulesAdd.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "The runtime ID")
 	cmdInstanceModulesAdd.Flags().StringVarP(&alias, "alias", "a", "", "The runtime alias")
 	cmdInstanceModulesAdd.Flags().StringVarP(&moduleName, "module", "m", "", "The module name")
+	cmdInstanceModulesAdd.Flags().BoolVarP(&waitDone, "wait", "w", false, "Wait until module is added")
+	cmdInstanceModulesAdd.Flags().DurationVarP(&timeout, "timeout", "t", 5*time.Minute, "Timeout")
 	_ = cmdInstanceModulesAdd.MarkFlagRequired("module")
 	cmdInstanceModulesAdd.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceModulesAdd.MarkFlagsOneRequired("runtime-id", "alias")
