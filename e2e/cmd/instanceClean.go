@@ -9,6 +9,7 @@ import (
 	e2eclean "github.com/kyma-project/cloud-manager/e2e/clean"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
+	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/spf13/cobra"
 )
 
@@ -75,6 +76,20 @@ Examples:
 			e2eclean.WithForceDeleteOnTimeout(force),
 			e2eclean.WithDryRun(dryRun),
 		}
+		if all {
+			opts = append(opts, e2eclean.WithMatchers(
+				e2eclean.MatchingGroup(cloudresourcesv1beta1.GroupVersion.Group),
+				e2eclean.MatchingGroup(operatorv1beta2.GroupVersion.Group),
+			))
+		} else {
+			opts = append(opts, e2eclean.WithMatchers(
+				e2eclean.MatchAll(
+					e2eclean.MatchingGroup(cloudresourcesv1beta1.GroupVersion.Group),
+					e2eclean.NotMatch(e2eclean.MatchingKind("CloudResources")),
+				),
+			))
+
+		}
 		if verbose {
 			opts = append(opts, e2eclean.WithLogger(rootLogger))
 		}
@@ -95,9 +110,10 @@ func init() {
 	cmdInstanceClean.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "Runtime ID of the instance to clean")
 	cmdInstanceClean.Flags().StringVarP(&alias, "alias", "a", "", "Alias of the instance to clean")
 	cmdInstanceClean.Flags().BoolVarP(&waitDone, "wait", "w", false, "Wait until deleted")
-	cmdInstanceClean.Flags().DurationVarP(&timeout, "timeout", "t", 30*time.Minute, "Timeout")
+	cmdInstanceClean.Flags().DurationVarP(&timeout, "timeout", "t", 30*time.Minute, "Timeout to wait until deleted")
 	cmdInstanceClean.Flags().BoolVarP(&force, "force", "f", false, "Force delete after timeout")
 	cmdInstanceClean.Flags().BoolVarP(&dryRun, "dry-run", "", false, "Dry run")
+	cmdInstanceClean.Flags().BoolVarP(&verbose, "all", "", false, "Delete all from kyma groups cloud-resources and operator. Destructive! Deletes Kyma and CloudResources CR! If false it will delete all from cloud-resources except for CloudResources CR")
 	cmdInstanceClean.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceClean.MarkFlagsOneRequired("runtime-id", "alias")
 }

@@ -70,7 +70,7 @@ func init() {
 	cmdInstanceDelete.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "Alias name for the instance")
 	cmdInstanceDelete.Flags().StringVarP(&alias, "alias", "a", "", "The runtime alias")
 	cmdInstanceDelete.Flags().BoolVarP(&waitDone, "wait", "w", false, "Wait for instance to be deleted before exiting")
-	cmdInstanceDelete.Flags().DurationVarP(&timeout, "timeout", "t", 900*time.Second, "Timeout for waiting for instance to be deleted")
+	cmdInstanceDelete.Flags().DurationVarP(&timeout, "timeout", "t", 40*time.Minute, "Timeout for waiting for instance to be deleted")
 	cmdInstanceDelete.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceDelete.MarkFlagsOneRequired("runtime-id", "alias")
 }

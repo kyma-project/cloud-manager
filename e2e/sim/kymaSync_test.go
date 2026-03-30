@@ -11,136 +11,204 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Feature: Kyma sync", func() {
+var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 
-	testData := []struct {
-		title            string
-		skrSpec          []string
-		skrStatus        []string
-		kcpSpec          []string
-		kcpStatus        []string
-		changedSkrStatus bool
-		changedKcpSpec   bool
-		changedKcpStatus bool
-		removedModules   []string
-	}{
+	testData := []syncTestCase{
 		{
 			title:            "no sync when empty",
 			skrSpec:          nil,
 			skrStatus:        nil,
 			kcpSpec:          nil,
 			kcpStatus:        nil,
+			processed:        nil,
 			changedSkrStatus: false,
 			changedKcpSpec:   false,
 			changedKcpStatus: false,
+			removedModules:   nil,
+			expectedStatus:   nil,
 		},
 		{
-			title:            "first module added",
+			title:            "first module added and processing",
 			skrSpec:          []string{"aaa"},
 			skrStatus:        nil,
 			kcpSpec:          nil,
 			kcpStatus:        nil,
+			processed:        nil,
 			changedSkrStatus: true,
 			changedKcpSpec:   true,
 			changedKcpStatus: true,
+			removedModules:   nil,
+			expectedStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateProcessing},
+			},
 		},
 		{
-			title:            "second module added",
-			skrSpec:          []string{"aaa", "bbb"},
-			skrStatus:        []string{"aaa"},
-			kcpSpec:          []string{"aaa"},
-			kcpStatus:        []string{"aaa"},
+			title:   "first module added and processed",
+			skrSpec: []string{"aaa"},
+			skrStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateProcessing},
+			},
+			kcpSpec: []string{"aaa"},
+			kcpStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateProcessing},
+			},
+			processed:        map[string]operatorshared.State{"aaa": operatorshared.StateReady},
+			changedSkrStatus: true,
+			changedKcpSpec:   false,
+			changedKcpStatus: true,
+			removedModules:   nil,
+			expectedStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+			},
+		},
+		{
+			title:   "first module processed, second module added and processing",
+			skrSpec: []string{"aaa", "bbb"},
+			skrStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+			},
+			kcpSpec: []string{"aaa"},
+			kcpStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+			},
+			processed:        nil,
 			changedSkrStatus: true,
 			changedKcpSpec:   true,
 			changedKcpStatus: true,
+			removedModules:   nil,
+			expectedStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+				{Name: "bbb", State: operatorshared.StateProcessing},
+			},
 		},
 		{
-			title:            "second module removed",
-			skrSpec:          []string{"aaa"},
-			skrStatus:        []string{"bbb", "aaa"},
-			kcpSpec:          []string{"bbb", "aaa"},
-			kcpStatus:        []string{"bbb", "aaa"},
+			title:   "first module processed, second module added and processed",
+			skrSpec: []string{"aaa", "bbb"},
+			skrStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+				{Name: "bbb", State: operatorshared.StateProcessing},
+			},
+			kcpSpec: []string{"aaa", "bbb"},
+			kcpStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+				{Name: "bbb", State: operatorshared.StateProcessing},
+			},
+			processed:        map[string]operatorshared.State{"bbb": operatorshared.StateReady},
+			changedSkrStatus: true,
+			changedKcpSpec:   false,
+			changedKcpStatus: true,
+			removedModules:   nil,
+			expectedStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+				{Name: "bbb", State: operatorshared.StateReady},
+			},
+		},
+		{
+			title:   "first module is ready, remove second ready module and processing",
+			skrSpec: []string{"aaa"},
+			skrStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+				{Name: "bbb", State: operatorshared.StateReady},
+			},
+			kcpSpec: []string{"aaa", "bbb"},
+			kcpStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+				{Name: "bbb", State: operatorshared.StateReady},
+			},
+			processed:        nil,
 			changedSkrStatus: true,
 			changedKcpSpec:   true,
 			changedKcpStatus: true,
 			removedModules:   []string{"bbb"},
+			expectedStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+				{Name: "bbb", State: operatorshared.StateProcessing},
+			},
 		},
 		{
-			title:            "last module removed",
-			skrSpec:          nil,
-			skrStatus:        []string{"aaa"},
-			kcpSpec:          []string{"aaa"},
-			kcpStatus:        []string{"aaa"},
+			title:   "first module is ready, removed second module and processed",
+			skrSpec: []string{"aaa"},
+			skrStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+				{Name: "bbb", State: operatorshared.StateProcessing},
+			},
+			kcpSpec: []string{"aaa"},
+			kcpStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+				{Name: "bbb", State: operatorshared.StateProcessing},
+			},
+			processed:        map[string]operatorshared.State{"bbb": operatorshared.StateReady},
 			changedSkrStatus: true,
-			changedKcpSpec:   true,
+			changedKcpSpec:   false,
 			changedKcpStatus: true,
-			removedModules:   []string{"aaa"},
+			removedModules:   []string{"bbb"},
+			expectedStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+			},
 		},
 	}
 
-	for _, data := range testData {
+	for _, tc := range testData {
 
-		It(fmt.Sprintf("Scenario: Kyma Sync - %s", data.title), func() {
+		It(tc.title, func() {
 
-			skr := &operatorv1beta2.Kyma{
-				Spec: operatorv1beta2.KymaSpec{
-					Channel: operatorv1beta2.DefaultChannel,
-					Modules: pie.Map(data.skrSpec, func(moduleName string) operatorv1beta2.Module {
-						return operatorv1beta2.Module{
-							Name:    moduleName,
-							Channel: operatorv1beta2.DefaultChannel,
-						}
-					}),
-				},
-				Status: operatorv1beta2.KymaStatus{
-					Modules: pie.Map(data.skrStatus, func(moduleName string) operatorv1beta2.ModuleStatus {
-						return operatorv1beta2.ModuleStatus{
-							Name:  moduleName,
-							State: operatorshared.StateReady,
-						}
-					}),
-				},
-			}
+			skr, kcp, outcome := tc.products()
 
-			kcp := &operatorv1beta2.Kyma{
-				Spec: operatorv1beta2.KymaSpec{
-					Channel: operatorv1beta2.DefaultChannel,
-					Modules: pie.Map(data.kcpSpec, func(moduleName string) operatorv1beta2.Module {
-						return operatorv1beta2.Module{
-							Name:    moduleName,
-							Channel: operatorv1beta2.DefaultChannel,
-						}
-					}),
-				},
-				Status: operatorv1beta2.KymaStatus{
-					Modules: pie.Map(data.kcpStatus, func(moduleName string) operatorv1beta2.ModuleStatus {
-						return operatorv1beta2.ModuleStatus{
-							Name:  moduleName,
-							State: operatorshared.StateReady,
-						}
-					}),
-				},
-			}
+			// checks
 
-			outcome := (KymaSync{SKR: skr, KCP: kcp}).Sync()
-
-			skrSpecModules := moduleNames(skr)
-			skrStatusModules := moduleStatusNames(skr)
-			kcpSpecModules := moduleNames(kcp)
-			kcpStatusModules := moduleStatusNames(kcp)
-
-			Expect(skrStatusModules).To(ConsistOf(util.ToAnySlice(skrSpecModules)...), "SKR spec vs SKR status diff")
-			Expect(kcpSpecModules).To(ConsistOf(util.ToAnySlice(skrSpecModules)...), "SKR spec vs KCP spec diff")
-			Expect(kcpStatusModules).To(ConsistOf(util.ToAnySlice(skrSpecModules)...), "SKR spec vs KCP status diff")
 			Expect(outcome.SKR.SpecChanged).To(BeFalse(), "SKR spec changed is supposed always to be false")
-			Expect(outcome.SKR.StatusChanged).To(Equal(data.changedSkrStatus), "SKR status changed")
-			Expect(outcome.KCP.SpecChanged).To(Equal(data.changedKcpSpec), "KCP spec changed")
-			Expect(outcome.KCP.StatusChanged).To(Equal(data.changedKcpStatus), "KCP status changed")
+			Expect(outcome.SKR.StatusChanged).To(Equal(tc.changedSkrStatus), "SKR status changed")
+			Expect(outcome.KCP.SpecChanged).To(Equal(tc.changedKcpSpec), "KCP spec changed")
+			Expect(outcome.KCP.StatusChanged).To(Equal(tc.changedKcpStatus), "KCP status changed")
 
-			for _, moduleName := range data.removedModules {
+			skrSpecModules := moduleNames(skr.Spec.Modules)
+			kcpSpecModules := moduleNames(kcp.Spec.Modules)
+
+			// KCP
+			Expect(kcpSpecModules).To(ConsistOf(util.ToAnySlice(skrSpecModules)...), "KCP spec should equal to SKR spec")
+
+			// SKR status
+			skrMsm := skr.GetModuleStatusMap()
+			for _, expectedModule := range tc.expectedStatus {
+				actualModule, exists := skrMsm[expectedModule.Name]
+				Expect(exists).To(BeTrue())
+				Expect(actualModule.State).To(Equal(expectedModule.State), fmt.Sprintf("expected SKR module %s to be in state %s, but it is in %s", expectedModule.Name, expectedModule.State, actualModule.State))
+			}
+			for actualModuleName, actualModule := range skrMsm {
+				isExpected := false
+				for _, expectedModule := range tc.expectedStatus {
+					if actualModuleName == expectedModule.Name {
+						isExpected = true
+						break
+					}
+				}
+				Expect(isExpected).To(BeTrue(), fmt.Sprintf("unexpected module %s with state %s in SKR status", actualModuleName, actualModule.State))
+			}
+
+			// KCP status
+			kcpMsm := kcp.GetModuleStatusMap()
+			for _, expectedModule := range tc.expectedStatus {
+				actualModule, exists := kcpMsm[expectedModule.Name]
+				Expect(exists).To(BeTrue())
+				Expect(actualModule.State).To(Equal(expectedModule.State), fmt.Sprintf("expected KCP module %s to be in state %s, but it is in %s", expectedModule.Name, expectedModule.State, actualModule.State))
+			}
+			for actualModuleName, actualModule := range kcpMsm {
+				isExpected := false
+				for _, expectedModule := range tc.expectedStatus {
+					if actualModuleName == expectedModule.Name {
+						isExpected = true
+						break
+					}
+				}
+				Expect(isExpected).To(BeTrue(), fmt.Sprintf("unexpected module %s with state %s in KCP status", actualModuleName, actualModule.State))
+			}
+
+			// check IsRemoved
+			for _, moduleName := range tc.removedModules {
 				Expect(outcome.IsRemoved(moduleName)).To(BeTrue(), fmt.Sprintf("Module %s should be removed", moduleName))
 			}
-			for _, moduleName := range data.skrSpec {
+			// check IsActive
+			for _, moduleName := range tc.skrSpec {
 				Expect(outcome.IsActive(moduleName)).To(BeTrue(), fmt.Sprintf("Module %s should be active", moduleName))
 			}
 
@@ -149,135 +217,64 @@ var _ = Describe("Feature: Kyma sync", func() {
 	}
 })
 
-//func Test_KymaSync(t *testing.T) {
-//	testData := []struct {
-//		title            string
-//		skrSpec          []string
-//		skrStatus        []string
-//		kcpSpec          []string
-//		kcpStatus        []string
-//		changedSkrStatus bool
-//		changedKcpSpec   bool
-//		changedKcpStatus bool
-//		removedModules   []string
-//	}{
-//		{
-//			title:            "no sync when empty",
-//			skrSpec:          nil,
-//			skrStatus:        nil,
-//			kcpSpec:          nil,
-//			kcpStatus:        nil,
-//			changedSkrStatus: false,
-//			changedKcpSpec:   false,
-//			changedKcpStatus: false,
-//		},
-//		{
-//			title:            "first module added",
-//			skrSpec:          []string{"aaa"},
-//			skrStatus:        nil,
-//			kcpSpec:          nil,
-//			kcpStatus:        nil,
-//			changedSkrStatus: true,
-//			changedKcpSpec:   true,
-//			changedKcpStatus: true,
-//		},
-//		{
-//			title:            "second module added",
-//			skrSpec:          []string{"aaa", "bbb"},
-//			skrStatus:        []string{"aaa"},
-//			kcpSpec:          []string{"aaa"},
-//			kcpStatus:        []string{"aaa"},
-//			changedSkrStatus: true,
-//			changedKcpSpec:   true,
-//			changedKcpStatus: true,
-//		},
-//		{
-//			title:            "second module removed",
-//			skrSpec:          []string{"aaa"},
-//			skrStatus:        []string{"bbb", "aaa"},
-//			kcpSpec:          []string{"bbb", "aaa"},
-//			kcpStatus:        []string{"bbb", "aaa"},
-//			changedSkrStatus: true,
-//			changedKcpSpec:   true,
-//			changedKcpStatus: true,
-//			removedModules:   []string{"bbb"},
-//		},
-//		{
-//			title:            "last module removed",
-//			skrSpec:          nil,
-//			skrStatus:        []string{"aaa"},
-//			kcpSpec:          []string{"aaa"},
-//			kcpStatus:        []string{"aaa"},
-//			changedSkrStatus: true,
-//			changedKcpSpec:   true,
-//			changedKcpStatus: true,
-//			removedModules:   []string{"aaa"},
-//		},
-//	}
-//
-//	for _, data := range testData {
-//		t.Run(data.title, func(t *testing.T) {
-//			skr := &operatorv1beta2.Kyma{
-//				Spec: operatorv1beta2.KymaSpec{
-//					Channel: operatorv1beta2.DefaultChannel,
-//					Modules: pie.Map(data.skrSpec, func(moduleName string) operatorv1beta2.Module {
-//						return operatorv1beta2.Module{
-//							Name:    moduleName,
-//							Channel: operatorv1beta2.DefaultChannel,
-//						}
-//					}),
-//				},
-//				Status: operatorv1beta2.KymaStatus{
-//					Modules: pie.Map(data.skrStatus, func(moduleName string) operatorv1beta2.ModuleStatus {
-//						return operatorv1beta2.ModuleStatus{
-//							Name:  moduleName,
-//							State: operatorshared.StateReady,
-//						}
-//					}),
-//				},
-//			}
-//
-//			kcp := &operatorv1beta2.Kyma{
-//				Spec: operatorv1beta2.KymaSpec{
-//					Channel: operatorv1beta2.DefaultChannel,
-//					Modules: pie.Map(data.kcpSpec, func(moduleName string) operatorv1beta2.Module {
-//						return operatorv1beta2.Module{
-//							Name:    moduleName,
-//							Channel: operatorv1beta2.DefaultChannel,
-//						}
-//					}),
-//				},
-//				Status: operatorv1beta2.KymaStatus{
-//					Modules: pie.Map(data.kcpStatus, func(moduleName string) operatorv1beta2.ModuleStatus {
-//						return operatorv1beta2.ModuleStatus{
-//							Name:  moduleName,
-//							State: operatorshared.StateReady,
-//						}
-//					}),
-//				},
-//			}
-//
-//			outcome := (KymaSync{SKR: skr, KCP: kcp}).Sync()
-//
-//			skrSpecModules := moduleNames(skr)
-//			skrStatusModules := moduleStatusNames(skr)
-//			kcpSpecModules := moduleNames(kcp)
-//			kcpStatusModules := moduleStatusNames(kcp)
-//
-//			assert.ElementsMatchf(t, skrSpecModules, skrStatusModules, "SKR spec vs SKR status diff")
-//			assert.ElementsMatchf(t, skrSpecModules, kcpSpecModules, "SKR spec vs KCP spec diff")
-//			assert.ElementsMatchf(t, skrSpecModules, kcpStatusModules, "SKR spec vs KCP status diff")
-//			assert.False(t, outcome.SKR.SpecChanged, "SKR spec changed is supposed always to be false")
-//			assert.Equal(t, data.changedSkrStatus, outcome.SKR.StatusChanged, "SKR status changed")
-//			assert.Equal(t, data.changedKcpSpec, outcome.KCP.SpecChanged, "KCP spec changed")
-//			assert.Equal(t, data.changedKcpStatus, outcome.KCP.StatusChanged, "KCP status changed")
-//
-//			for _, moduleName := range data.removedModules {
-//				assert.True(t, outcome.IsRemoved(moduleName))
-//			}
-//			for _, moduleName := range data.skrSpec {
-//				assert.True(t, outcome.IsActive(moduleName))
-//			}
-//		})
-//	}
-//}
+type syncTestCase struct {
+	title            string
+	skrSpec          []string
+	skrStatus        []operatorv1beta2.ModuleStatus
+	kcpSpec          []string
+	kcpStatus        []operatorv1beta2.ModuleStatus
+	processed        map[string]operatorshared.State
+	changedSkrStatus bool
+	changedKcpSpec   bool
+	changedKcpStatus bool
+	removedModules   []string
+	expectedStatus   []operatorv1beta2.ModuleStatus
+}
+
+func (tc syncTestCase) skrKyma() *operatorv1beta2.Kyma {
+	return &operatorv1beta2.Kyma{
+		Spec: operatorv1beta2.KymaSpec{
+			Channel: operatorv1beta2.DefaultChannel,
+			Modules: pie.Map(tc.skrSpec, func(moduleName string) operatorv1beta2.Module {
+				return operatorv1beta2.Module{
+					Name:    moduleName,
+					Channel: operatorv1beta2.DefaultChannel,
+				}
+			}),
+		},
+		Status: operatorv1beta2.KymaStatus{
+			Modules: tc.skrStatus,
+		},
+	}
+}
+
+func (tc syncTestCase) kcpKyma() *operatorv1beta2.Kyma {
+	return &operatorv1beta2.Kyma{
+		Spec: operatorv1beta2.KymaSpec{
+			Channel: operatorv1beta2.DefaultChannel,
+			Modules: pie.Map(tc.kcpSpec, func(moduleName string) operatorv1beta2.Module {
+				return operatorv1beta2.Module{
+					Name:    moduleName,
+					Channel: operatorv1beta2.DefaultChannel,
+				}
+			}),
+		},
+		Status: operatorv1beta2.KymaStatus{
+			Modules: tc.kcpStatus,
+		},
+	}
+}
+
+func (tc syncTestCase) products() (*operatorv1beta2.Kyma, *operatorv1beta2.Kyma, SyncOutcome) {
+	skr := tc.skrKyma()
+
+	kcp := tc.kcpKyma()
+
+	outcome := (&KymaSync{SKR: skr, KCP: kcp}).Sync()
+
+	for moduleName, state := range tc.processed {
+		outcome.Processed(moduleName, state, "")
+	}
+
+	return skr, kcp, outcome
+}

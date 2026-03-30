@@ -16,6 +16,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/clock"
+	clocktesting "k8s.io/utils/clock/testing"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -27,6 +28,7 @@ import (
 var infra testinfra.Infra
 
 var simInstance Sim
+var fakeClock *clocktesting.FakeClock
 var kebInstance e2ekeb.Keb
 var skrKubeconfigProviderInstance e2elib.SkrKubeconfigProviderWithCallCount
 var config *e2econfig.ConfigType
@@ -74,6 +76,7 @@ var _ = BeforeSuite(func() {
 	cpl := e2elib.NewFileCloudProfileLoader(e2elib.CloudProfilesFS, "cloudprofiles.yaml", config)
 	skrKubeconfigProviderInstance = e2elib.NewFixedSkrKubeconfigProvider(infra.SKR().Kubeconfig()).(e2elib.SkrKubeconfigProviderWithCallCount)
 	skrManagerFactory := e2ekeb.NewSkrManagerFactory(infra.KcpManager().GetClient(), clock.RealClock{}, config.KcpNamespace)
+	fakeClock = clocktesting.NewFakeClock(time.Now())
 	simInstance, err = New(CreateOptions{
 		Config:                config,
 		StartCtx:              infra.Ctx(),
@@ -83,6 +86,7 @@ var _ = BeforeSuite(func() {
 		CloudProfileLoader:    cpl,
 		SkrKubeconfigProvider: skrKubeconfigProviderInstance,
 		SkrManagerFactory:     skrManagerFactory,
+		Clock:                 fakeClock,
 	})
 	Expect(err).NotTo(HaveOccurred(), "failed creating sim")
 
