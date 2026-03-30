@@ -67,7 +67,7 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 		})
 
 		By("Then cluster has IsCreatedInSession() == false", func() {
-			Expect(clusterInSession.IsCreatedInSession()).To(BeFalse())
+			Expect(clusterInSession.IsSkrCreatedInSession()).To(BeFalse())
 		})
 
 		By("And Then cluster has IsCurrent() == true", func() {
@@ -134,7 +134,7 @@ var _ = Describe("Feature: New and existing clusters added to Scenario Session",
 		})
 
 		By("And Then cluster has IsCreatedInSession() == true", func() {
-			Expect(clusterInSession.IsCreatedInSession()).To(BeTrue())
+			Expect(clusterInSession.IsSkrCreatedInSession()).To(BeTrue())
 		})
 
 		By("And Then cluster has IsCurrent() == true", func() {

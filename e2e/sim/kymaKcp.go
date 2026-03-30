@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -39,13 +40,15 @@ type skrManagerInfo struct {
 	err              error
 }
 
-func newSimKymaKcp(startCtx context.Context, kcp client.Client, clientFactory e2ekeb.SkrManagerFactory, kcpNamespace string) *simKymaKcp {
+func newSimKymaKcp(startCtx context.Context, kcp client.Client, clientFactory e2ekeb.SkrManagerFactory, kcpNamespace string, clck clock.Clock) *simKymaKcp {
 	return &simKymaKcp{
-		kcp:                 kcp,
-		clientFactory:       clientFactory,
-		managersByRuntimeId: map[string]*skrManagerInfo{},
-		startCtx:            startCtx,
-		kcpNamespace:        kcpNamespace,
+		kcp:                   kcp,
+		clientFactory:         clientFactory,
+		managersByRuntimeId:   map[string]*skrManagerInfo{},
+		startCtx:              startCtx,
+		kcpNamespace:          kcpNamespace,
+		clock:                 clck,
+		timeoutSkrKymaRemoved: time.Duration(1.2 * float64(timeoutForceRemoveModule)),
 	}
 }
 
@@ -55,6 +58,9 @@ type simKymaKcp struct {
 	clientFactory       e2ekeb.SkrManagerFactory
 	managersByRuntimeId map[string]*skrManagerInfo
 	kcpNamespace        string
+	clock               clock.Clock
+
+	timeoutSkrKymaRemoved time.Duration
 
 	// startCtx must be set to the same context that's used to start the sim manager that is
 	// running runtime, gardenerCluster and kcpKyma controllers, so also all skrKyma managers are stopped
@@ -127,20 +133,20 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 				}
 				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 			}
-			// wait skr kyma deleted - check if deletion started less than 3 minutes ago
-			deletionAge := time.Since(skrKyma.DeletionTimestamp.Time)
-			if deletionAge < 3*time.Minute {
-				logger.Info("Waiting SKR Kyma is deleted...", "deletionAge", deletionAge)
+			// wait skr kyma deleted - check if deletion started less than `r.timeoutSkrKymaRemoved` ago
+			elapsed := r.clock.Since(skrKyma.DeletionTimestamp.Time)
+			if elapsed < r.timeoutSkrKymaRemoved {
+				logger.Info("Waiting SKR Kyma is deleted...", "elapsed", elapsed)
 				return reconcile.Result{RequeueAfter: util.Timing.T10000ms()}, nil
 			}
-			logger.Info("Timeout while waiting SKR Kyma to be deleted (after 3 minutes), continue...")
+			logger.Info(fmt.Sprintf("Timeout while waiting SKR Kyma to be deleted (after %s), continue...", r.timeoutSkrKymaRemoved.String()))
 		}
 
 		// stop manager
 
 		logger.Info("Stopping SKR manager")
 		mi.cancel()
-		if util.WaitWithTimeout(mi.wg, time.Minute) {
+		if util.WaitWgWithTimeout(mi.wg, time.Minute) {
 			logger.Error(errors.New("timeout"), "timed out waiting for SKR manager to stop")
 		}
 		if util.IgnoreContextCanceledAndDeadlineExceeded(mi.err) != nil {
@@ -291,7 +297,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	if !mi.controllersAdded {
-		err = newSimKymaSkr(r.kcp, mi.mngr.GetClient(), kcpKyma.Name, r.kcpNamespace).
+		err = newSimKymaSkr(r.kcp, mi.mngr.GetClient(), kcpKyma.Name, r.kcpNamespace, r.clock).
 			SetupWithManager(mi.mngr)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error adding Kyma SKR reconciler to manager: %w", err)

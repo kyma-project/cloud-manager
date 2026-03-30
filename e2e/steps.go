@@ -3,7 +3,6 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -83,7 +82,11 @@ func errEvalContextBuilding(err error) error {
 	return fmt.Errorf("error building evaluation context: %w", err)
 }
 
-func eventuallyTimeoutIs(ctx context.Context, d time.Duration) (context.Context, error) {
+func eventuallyTimeoutIs(ctx context.Context, txt string) (context.Context, error) {
+	d, err := time.ParseDuration(txt)
+	if err != nil {
+		return ctx, fmt.Errorf("error parsing timeout %q: %w", txt, err)
+	}
 	session := GetCurrentScenarioSession(ctx)
 	if session == nil {
 		return ctx, ErrNoSession
@@ -421,6 +424,8 @@ func resourceIsDeleted(ctx context.Context, alias string) (context.Context, erro
 Then eventually "cm.data.foo == 'bar'" is ok, unless:
 
 	| cm.data.foo && cm.data.foo != 'bar' |
+	| # timeout=1h                        |
+	| # interval=10m                      |
 */
 func eventuallyValueIsOkUnless(ctx context.Context, expression string, unless *godog.Table) (context.Context, error) {
 	arrUnless := pie.Map(unless.Rows, func(row *messages.PickleTableRow) string {
@@ -1016,11 +1021,7 @@ func tfModuleIsApplied(ctx context.Context, alias string, tbl *godog.Table) (con
 		v := row.Cells[1].Value
 		switch k {
 		case "source":
-			vv := v
-			if strings.HasPrefix(vv, "./") || strings.HasPrefix(vv, "../") {
-				vv = path.Join(world.Config().ConfigDir, "e2e/tf", v)
-			}
-			b.WithSource(vv)
+			b.WithSource(v)
 		case "provider":
 			b.WithProvider(v)
 		default:

@@ -34,6 +34,7 @@ type CreateOptions struct {
 
 	// optional
 	SkrManagerFactory e2ekeb.SkrManagerFactory
+	Clock             clock.Clock
 }
 
 func (o *CreateOptions) Validate() error {
@@ -59,6 +60,9 @@ func (o *CreateOptions) Validate() error {
 	if o.SkrKubeconfigProvider == nil {
 		result = multierror.Append(fmt.Errorf("missing SkrKubeconfigProvider"))
 	}
+	if o.Clock == nil {
+		o.Clock = &clock.RealClock{}
+	}
 	return result
 }
 
@@ -68,7 +72,7 @@ func New(opts CreateOptions) (Sim, error) {
 	}
 
 	if opts.SkrManagerFactory == nil {
-		opts.SkrManagerFactory = e2ekeb.NewSkrManagerFactory(opts.KcpManager.GetClient(), clock.RealClock{}, opts.Config.KcpNamespace)
+		opts.SkrManagerFactory = e2ekeb.NewSkrManagerFactory(opts.KcpManager.GetClient(), opts.Clock, opts.Config.KcpNamespace)
 	}
 
 	simRt := newSimRuntime(opts.KcpManager.GetClient(), opts.GardenClient, opts.CloudProfileLoader, opts.Config)
@@ -81,7 +85,7 @@ func New(opts CreateOptions) (Sim, error) {
 		return nil, fmt.Errorf("could not create gardener cluster manager: %w", err)
 	}
 
-	simKK := newSimKymaKcp(opts.StartCtx, opts.KcpManager.GetClient(), opts.SkrManagerFactory, opts.Config.KcpNamespace)
+	simKK := newSimKymaKcp(opts.StartCtx, opts.KcpManager.GetClient(), opts.SkrManagerFactory, opts.Config.KcpNamespace, opts.Clock)
 	if err := simKK.SetupWithManager(opts.KcpManager); err != nil {
 		return nil, fmt.Errorf("could not create Kyma KCP manager: %w", err)
 	}

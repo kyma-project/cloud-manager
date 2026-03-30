@@ -2,15 +2,11 @@ package keb
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
-	"github.com/elliotchance/pie/v2"
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
@@ -36,6 +32,10 @@ import (
 
 // KEB =============================================
 
+type InstanceLister interface {
+	List(ctx context.Context, opts ...ListOption) ([]InstanceDetails, error)
+}
+
 type Keb interface {
 	SkrManagerFactory
 
@@ -45,8 +45,6 @@ type Keb interface {
 	GardenClient() client.Client
 
 	CreateInstance(ctx context.Context, opts ...CreateOption) (InstanceDetails, error)
-	WaitProvisioningCompleted(ctx context.Context, opts ...WaitOption) error
-	WaitDeleted(ctx context.Context, opts ...WaitOption) error
 	GetInstance(ctx context.Context, runtimeID string) (*InstanceDetails, error)
 	List(ctx context.Context, opts ...ListOption) ([]InstanceDetails, error)
 	DeleteInstance(ctx context.Context, opts ...DeleteOption) error
@@ -55,6 +53,8 @@ type Keb interface {
 	CreateInstanceClient(ctx context.Context, runtimeID string) (client.Client, error)
 	RenewInstanceKubeconfig(ctx context.Context, runtimeID string) error
 }
+
+var _ InstanceLister = (Keb)(nil)
 
 func NewKeb(kcpClient client.Client, gardenClient client.Client, managerFactory SkrManagerFactory, cpl e2elib.CloudProfileLoader, skrKubeconfigProvider e2elib.SkrKubeconfigProvider, config *e2econfig.ConfigType) Keb {
 	return &defaultKeb{
@@ -128,73 +128,6 @@ func defaultCreateOptions() []CreateOption {
 	}
 }
 
-// WaitOption ============================================================
-
-type WaitOption interface {
-	ApplyOnWait(*waitOptions)
-}
-
-type waitOptions struct {
-	runtimeIds       []string
-	timeout          time.Duration
-	interval         time.Duration
-	progressCallback func(WaitProgress)
-}
-
-func (o waitOptions) validate() error {
-	var result error
-	if len(o.runtimeIds) == 0 {
-		result = multierror.Append(result, errors.New("no runtime IDs specified to wait for"))
-	}
-	return result
-}
-
-type WaitProgress struct {
-	Done    []InstanceDetails
-	Pending []InstanceDetails
-	WithErr []InstanceDetails
-}
-
-func (in WaitProgress) DoneAliases() []string {
-	return pie.Map(in.Done, func(x InstanceDetails) string {
-		return x.Alias
-	})
-}
-
-func (in WaitProgress) PendingAliases() []string {
-	return pie.Map(in.Pending, func(x InstanceDetails) string {
-		return x.Alias
-	})
-}
-
-func (in WaitProgress) ErrAliases() []string {
-	return pie.Map(in.WithErr, func(x InstanceDetails) string {
-		return x.Alias
-	})
-}
-
-func (in WaitProgress) Hash() string {
-	arr := make([]string, 0, len(in.Done)+1+len(in.Pending))
-	for _, i := range in.Done {
-		arr = append(arr, i.RuntimeID)
-	}
-	arr = append(arr, "|")
-	for _, i := range in.Pending {
-		arr = append(arr, i.RuntimeID)
-	}
-	txt := strings.Join(arr, ",")
-	hasher := sha256.New()
-	hasher.Write([]byte(txt))
-	sum := hasher.Sum(nil)
-	return hex.EncodeToString(sum)
-}
-
-var defaultWaitOptions = []WaitOption{
-	WithTimeout(15 * time.Minute),
-	WithInterval(2 * time.Second),
-	WithProgressCallback(func(WaitProgress) {}),
-}
-
 // ListOption ============================================================
 
 type ListOption interface {
@@ -203,6 +136,7 @@ type ListOption interface {
 
 type listOptions struct {
 	alias         string
+	runtimeId     string
 	globalAccount string
 	subAccount    string
 	provider      cloudcontrolv1beta1.ProviderType
@@ -237,14 +171,15 @@ type DeleteOption interface {
 
 type deleteOptions struct {
 	runtimeId                      string
+	alias                          string
 	shootMarkedForDeletionTimeout  time.Duration
 	shootMarkedForDeletionInterval time.Duration
 }
 
 func (in deleteOptions) validate() error {
 	var result error
-	if in.runtimeId == "" {
-		result = multierror.Append(result, errors.New("runtimeId required"))
+	if in.runtimeId == "" && in.alias == "" {
+		result = multierror.Append(result, errors.New("runtimeId or alias is required"))
 	}
 	if in.shootMarkedForDeletionTimeout > 0 && in.shootMarkedForDeletionInterval == 0 {
 		result = multierror.Append(result, errors.New("if timeout is specified then internal must also be specified"))
@@ -257,171 +192,7 @@ var defaultDeleteOptions = []DeleteOption{
 	WithInterval(2 * time.Second),
 }
 
-// ===================================================================
-// OPTIONS IMPLEMENTATION
-// ===================================================================
-
-// WithNodesRange =====================================================
-
-// WithNodesRange specifies nodes rage for create
-type WithNodesRange string
-
-func (o WithNodesRange) ApplyOnCreate(opts *createOptions) {
-	opts.nodesRange = string(o)
-}
-
-// WithPodsRange =====================================================
-
-// WithPodsRange specifies pods range for create
-type WithPodsRange string
-
-func (o WithPodsRange) ApplyOnCreate(opts *createOptions) {
-	opts.podsRange = string(o)
-}
-
-// WithServicesRange =====================================================
-
-// WithServicesRange specifies services range for create
-type WithServicesRange string
-
-func (o WithServicesRange) ApplyOnCreate(opts *createOptions) {
-	opts.servicesRange = string(o)
-}
-
 // WithAlias =====================================================
-
-// WithAlias specifies alias for list and create
-type WithAlias string
-
-func (o WithAlias) ApplyOnList(opt *listOptions) {
-	opt.alias = string(o)
-}
-
-func (o WithAlias) ApplyOnCreate(opt *createOptions) {
-	opt.alias = string(o)
-}
-
-// WithGlobalAccount =====================================================
-
-// WithGlobalAccount specifies alias for list and create
-type WithGlobalAccount string
-
-func (o WithGlobalAccount) ApplyOnList(opt *listOptions) {
-	opt.globalAccount = string(o)
-}
-
-func (o WithGlobalAccount) ApplyOnCreate(opt *createOptions) {
-	opt.globalAccount = string(o)
-}
-
-// WithSubAccount =====================================================
-
-// WithSubAccount specifies alias for list and create
-type WithSubAccount string
-
-func (o WithSubAccount) ApplyOnList(opt *listOptions) {
-	opt.globalAccount = string(o)
-}
-
-func (o WithSubAccount) ApplyOnCreate(opt *createOptions) {
-	opt.subAccount = string(o)
-}
-
-// WithRegion =======================================================
-
-type WithRegion string
-
-func (o WithRegion) ApplyOnCreate(opt *createOptions) {
-	opt.region = string(o)
-}
-
-// WithProvider =====================================================
-
-// WithProvider specifies alias for list and create
-type WithProvider cloudcontrolv1beta1.ProviderType
-
-func (o WithProvider) ApplyOnList(opt *listOptions) {
-	opt.provider = cloudcontrolv1beta1.ProviderType(o)
-}
-
-func (o WithProvider) ApplyOnCreate(opt *createOptions) {
-	opt.provider = cloudcontrolv1beta1.ProviderType(o)
-	if opt.region == "" {
-		opt.region = e2elib.DefaultRegions[opt.provider]
-	}
-}
-
-// WithProgressCallback =====================================================
-
-// WithProgressCallback specifies progress callback for wait operations in WaitProvisioningCompleted
-// and WaitDeleted
-type WithProgressCallback func(WaitProgress)
-
-func (o WithProgressCallback) ApplyOnWait(opt *waitOptions) {
-	opt.progressCallback = o
-}
-
-// WithRuntimes =====================================================
-
-// WithRuntimes specifies multiple runtime ids for wait operations in WaitProvisioningCompleted and WaitDeleted
-type WithRuntimes []string
-
-func (o WithRuntimes) ApplyOnWait(opt *waitOptions) {
-	opt.runtimeIds = append(opt.runtimeIds, []string(o)...)
-}
-
-// WithRuntime =====================================================
-
-// WithRuntime specifies single runtime id for WaitProvisioningCompleted, WaitDeleted, and DeleteInstance
-// If applied multiple times or in the combination with WithRuntimes then
-// * for the WaitProvisioningCompleted and WaitDeleted it has cumulative effect
-// * for DeleteInstance it overwrites previously set runtime id
-type WithRuntime string
-
-func (o WithRuntime) ApplyOnWait(opt *waitOptions) {
-	opt.runtimeIds = append(opt.runtimeIds, string(o))
-}
-
-func (o WithRuntime) ApplyOnDelete(opt *deleteOptions) {
-	opt.runtimeId = string(o)
-}
-
-// WithTimeout =====================================================
-
-// WithTimeout specifies timeout for
-// * wait ops WaitProvisioningCompleted and WaitDeleted for how much it wil be waited for instances to be provisioned or deleted
-// * DeleteInstance for how much it will be waited for shoot to be marked as deleted, if zero no wait is done
-// * CreateInstance for how much it will be waited for shoot to be created, if zero no wait is done
-type WithTimeout time.Duration
-
-func (o WithTimeout) ApplyOnWait(opt *waitOptions) {
-	opt.timeout = time.Duration(o)
-}
-
-func (o WithTimeout) ApplyOnDelete(opt *deleteOptions) {
-	opt.shootMarkedForDeletionTimeout = time.Duration(o)
-}
-
-func (o WithTimeout) ApplyOnCreate(opt *createOptions) {
-	opt.shootCreatedTimeout = time.Duration(o)
-}
-
-// WithInterval =====================================================
-
-// WithInterval specifies interval duration for timeout if any set, in wait ops, DeleteInstance and CreateInstance
-type WithInterval time.Duration
-
-func (o WithInterval) ApplyOnWait(opt *waitOptions) {
-	opt.interval = time.Duration(o)
-}
-
-func (o WithInterval) ApplyOnDelete(opt *deleteOptions) {
-	opt.shootMarkedForDeletionInterval = time.Duration(o)
-}
-
-func (o WithInterval) ApplyOnCreate(opt *createOptions) {
-	opt.shootCreatedInterval = time.Duration(o)
-}
 
 // InstanceDetails =============================================
 
@@ -505,138 +276,6 @@ func (k *defaultKeb) KcpClient() client.Client {
 
 func (k *defaultKeb) GardenClient() client.Client {
 	return k.gardenClient
-}
-
-func (k *defaultKeb) WaitProvisioningCompleted(ctx context.Context, opts ...WaitOption) error {
-	options := &waitOptions{}
-	for _, o := range append(append([]WaitOption{}, defaultWaitOptions...), opts...) {
-		o.ApplyOnWait(options)
-	}
-	if err := options.validate(); err != nil {
-		return fmt.Errorf("waitProvisioningCompleted invalid input: %w", err)
-	}
-
-	lastNotifiedWith := "-"
-
-	err := wait.PollUntilContextTimeout(ctx, options.interval, options.timeout, false, func(ctx context.Context) (bool, error) {
-		arr, err := k.List(ctx)
-		if err != nil {
-			return false, fmt.Errorf("error listing instances in WaitProvisioningCompleted: %w", err)
-		}
-		var done []InstanceDetails
-		var pending []InstanceDetails
-		var withErr []InstanceDetails
-		for _, id := range arr {
-			if !slices.Contains(options.runtimeIds, id.RuntimeID) {
-				continue
-			}
-			if id.BeingDeleted {
-				id.Message = "being deleted"
-				withErr = append(withErr, id)
-			} else if id.State == infrastructuremanagerv1.RuntimeStateFailed {
-				withErr = append(withErr, id)
-			} else {
-				if id.ProvisioningCompleted {
-					done = append(done, id)
-				} else {
-					pending = append(pending, id)
-				}
-			}
-		}
-
-		wp := WaitProgress{
-			Done:    done,
-			Pending: pending,
-			WithErr: withErr,
-		}
-		currentNotifyWith := wp.Hash()
-
-		if currentNotifyWith != lastNotifiedWith {
-			lastNotifiedWith = currentNotifyWith
-			options.progressCallback(wp)
-		}
-
-		err = nil
-		for _, id := range withErr {
-			err = multierror.Append(err, fmt.Errorf("instance %s %s has error %s", id.Alias, id.RuntimeID, id.Message))
-		}
-
-		return len(pending) == 0, err
-	})
-
-	if err != nil {
-		return fmt.Errorf("error waiting for instance(s) to become provisioned: %w", err)
-	}
-
-	return nil
-}
-
-func (k *defaultKeb) WaitDeleted(ctx context.Context, opts ...WaitOption) error {
-	options := &waitOptions{}
-	for _, o := range append(append([]WaitOption{}, defaultWaitOptions...), opts...) {
-		o.ApplyOnWait(options)
-	}
-	if err := options.validate(); err != nil {
-		return fmt.Errorf("waitDeleted invalid input: %w", err)
-	}
-
-	lastNotifiedWith := "-"
-
-	err := wait.PollUntilContextTimeout(ctx, options.interval, options.timeout, false, func(ctx context.Context) (bool, error) {
-		arr, err := k.List(ctx)
-		if err != nil {
-			return false, fmt.Errorf("error listing instances in WaitDeleted: %w", err)
-		}
-		var done []InstanceDetails
-		var pending []InstanceDetails
-		var withErr []InstanceDetails
-		for _, runtimeID := range options.runtimeIds {
-			var id *InstanceDetails
-			for _, x := range arr {
-				if x.Alias == runtimeID {
-					id = &x
-					break
-				}
-			}
-			if id == nil {
-				done = append(done, InstanceDetails{RuntimeID: runtimeID})
-			} else {
-				if !id.BeingDeleted {
-					id.Message = "not being deleted"
-					withErr = append(withErr, *id)
-				} else if id.State == infrastructuremanagerv1.RuntimeStateFailed {
-					withErr = append(withErr, *id)
-				} else {
-					pending = append(pending, *id)
-				}
-			}
-		}
-
-		wp := WaitProgress{
-			Done:    done,
-			Pending: pending,
-			WithErr: withErr,
-		}
-		currentNotifyWith := wp.Hash()
-
-		if currentNotifyWith != lastNotifiedWith {
-			lastNotifiedWith = currentNotifyWith
-			options.progressCallback(wp)
-		}
-
-		err = nil
-		for _, id := range withErr {
-			err = multierror.Append(err, fmt.Errorf("instance %s %s has error %s", id.Alias, id.RuntimeID, id.Message))
-		}
-
-		return len(pending) == 0, err
-	})
-
-	if err != nil {
-		return fmt.Errorf("error waiting for instance(s) to be deleted: %w; timeout: %s", err, options.timeout)
-	}
-
-	return nil
 }
 
 func (k *defaultKeb) GetInstance(ctx context.Context, runtimeID string) (*InstanceDetails, error) {
@@ -762,8 +401,16 @@ func (k *defaultKeb) List(ctx context.Context, options ...ListOption) ([]Instanc
 	}
 
 	rtList := &infrastructuremanagerv1.RuntimeList{}
-	if err := k.kcpClient.List(ctx, rtList, loArr...); err != nil {
-		return nil, fmt.Errorf("error listing runtimes: %w", err)
+	if opts.runtimeId != "" {
+		rt := &infrastructuremanagerv1.Runtime{}
+		if err := k.kcpClient.Get(ctx, client.ObjectKey{Namespace: k.config.KcpNamespace, Name: opts.runtimeId}, rt); err != nil {
+			return nil, fmt.Errorf("runtime %s not found: %w", opts.runtimeId, err)
+		}
+		rtList.Items = append(rtList.Items, *rt)
+	} else {
+		if err := k.kcpClient.List(ctx, rtList, loArr...); err != nil {
+			return nil, fmt.Errorf("error listing runtimes: %w", err)
+		}
 	}
 
 	var results []InstanceDetails

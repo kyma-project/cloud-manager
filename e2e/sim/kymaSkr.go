@@ -15,17 +15,27 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func newSimKymaSkr(kcp client.Client, skr client.Client, runtimeID, kcpNamespace string) *simKymaSkr {
+const timeoutAddModuleToReadyState = 30 * time.Second
+const timeoutRemoveModuleToErrorState = 5 * time.Minute
+const timeoutForceRemoveModule = 10 * time.Minute
+
+func newSimKymaSkr(kcp client.Client, skr client.Client, runtimeID, kcpNamespace string, clck clock.Clock) *simKymaSkr {
 	return &simKymaSkr{
 		kcp:          kcp,
 		skr:          skr,
 		runtimeID:    runtimeID,
 		kcpNamespace: kcpNamespace,
+		clock:        clck,
+
+		timeoutAddModuleToReadyState:    timeoutAddModuleToReadyState,
+		timeoutRemoveModuleToErrorState: timeoutRemoveModuleToErrorState,
+		timeoutForceRemoveModule:        timeoutForceRemoveModule,
 	}
 }
 
@@ -34,6 +44,11 @@ type simKymaSkr struct {
 	skr          client.Client
 	runtimeID    string
 	kcpNamespace string
+	clock        clock.Clock
+
+	timeoutAddModuleToReadyState    time.Duration
+	timeoutRemoveModuleToErrorState time.Duration
+	timeoutForceRemoveModule        time.Duration
 }
 
 func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
@@ -43,47 +58,177 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	logger := composed.LoggerFromCtx(ctx)
 
+	// load SKR Kyma ====================================================================
+
 	skrKyma := &operatorv1beta2.Kyma{}
 	err := r.skr.Get(ctx, request.NamespacedName, skrKyma)
-	if client.IgnoreNotFound(err) != nil {
+	if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
 		return reconcile.Result{}, fmt.Errorf("error getting Kyma: %w", err)
 	}
 	if err != nil {
+		skrKyma = nil
+	}
+
+	// load CloudResources CM ==========================================================
+
+	cm := &cloudresourcesv1beta1.CloudResources{}
+	err = r.skr.Get(ctx, types.NamespacedName{
+		Namespace: "kyma-system",
+		Name:      "default",
+	}, cm)
+	if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
+		return reconcile.Result{}, fmt.Errorf("error getting default CloudResources: %w", err)
+	}
+	if err != nil {
+		cm = nil
+	}
+
+	// find runtimeId =================================================================
+
+	var runtimeId string
+	if skrKyma != nil {
+		runtimeId = skrKyma.Labels[cloudcontrolv1beta1.LabelRuntimeId]
+		if runtimeId == "" {
+			statusChanged := false
+			if skrKyma.Status.State != operatorshared.StateError {
+				skrKyma.Status.State = operatorshared.StateError
+				statusChanged = true
+			}
+			errCond := meta.FindStatusCondition(skrKyma.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+			if errCond == nil || len(skrKyma.Status.Conditions) != 1 {
+				meta.SetStatusCondition(&skrKyma.Status.Conditions, metav1.Condition{
+					Type:               cloudcontrolv1beta1.ConditionTypeError,
+					Status:             metav1.ConditionTrue,
+					ObservedGeneration: skrKyma.Generation,
+					Reason:             "NoRuntimeIdLabel",
+					Message:            "Missing runtime ID label",
+				})
+				statusChanged = true
+			}
+			if statusChanged {
+				logger.Info("Missing runtimeID label in SKR KCP")
+				err = composed.PatchObjStatus(ctx, skrKyma, r.skr)
+				if err != nil {
+					return reconcile.Result{}, fmt.Errorf("error updating Kyma status for missing runtime id label: %w", err)
+				}
+			}
+			return reconcile.Result{}, nil
+		}
+	}
+
+	// load KCP Kyma =================================================================
+
+	kcpKyma := &operatorv1beta2.Kyma{}
+	err = r.kcp.Get(ctx, types.NamespacedName{
+		Namespace: r.kcpNamespace,
+		Name:      runtimeId,
+	}, kcpKyma)
+	if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
+		return reconcile.Result{}, fmt.Errorf("error getting KCP Kyma %q: %w", runtimeId, err)
+	}
+	if err != nil {
+		kcpKyma = nil
+	}
+
+	// handle loaded resources =====================================================
+
+	if skrKyma == nil {
 		return reconcile.Result{}, nil
 	}
+	if kcpKyma == nil {
+		return reconcile.Result{}, nil
+	}
+
+	// determine the outcomes and change SKR Kyma status and KCP Kyma spec
+	outcome := (&KymaSync{SKR: skrKyma, KCP: kcpKyma}).Sync()
+	outcome.AutoProcessAllBut("cloud-manager")
 
 	// delete ================================================================
 
 	if skrKyma.DeletionTimestamp != nil {
-		cm := &cloudresourcesv1beta1.CloudResources{}
-		err = r.skr.Get(ctx, types.NamespacedName{
-			Namespace: "kyma-system",
-			Name:      "default",
-		}, cm)
-		if client.IgnoreNotFound(err) != nil {
-			return reconcile.Result{}, fmt.Errorf("error getting default CloudResources: %w", err)
-		}
-		if err != nil {
-			cm = nil
-		}
 
-		if cm != nil && cm.DeletionTimestamp == nil {
-			logger.Info("Deleting default CloudResources")
-			err = r.skr.Delete(ctx, cm)
-			if client.IgnoreNotFound(err) != nil {
-				return reconcile.Result{}, fmt.Errorf("error deleting default CloudResources: %w", err)
+		// disable all modules and save SKR Kyma
+		// if cloud-manager module is enabled its status will go to Processing state
+		if len(skrKyma.Spec.Modules) > 0 {
+			logger.Info("Disabling all modules in SKR Kyma spec")
+			skrKyma.Spec.Modules = nil
+			outcome.SKR.SpecChanged = true
+			if err := outcome.PatchObjects(ctx, r.skr, r.kcp); err != nil {
+				return reconcile.Result{}, err
 			}
 			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 		}
 
+		// CloudResources CR exists
 		if cm != nil {
-			logger.Info("Waiting CloudResources are deleted...")
+
+			// not deleted
+			if cm.DeletionTimestamp == nil {
+				// delete it
+				logger.Info("Deleting default CloudResources")
+				err = r.skr.Delete(ctx, cm)
+				if client.IgnoreNotFound(err) != nil {
+					return reconcile.Result{}, fmt.Errorf("error deleting default CloudResources: %w", err)
+				}
+				return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
+			}
+
+			// wait deleted
+			// CM should respond and eventually remove the finalizer
+
+			elapsed := r.clock.Since(cm.CreationTimestamp.Time)
+
+			if elapsed >= r.timeoutRemoveModuleToErrorState {
+				ms := skrKyma.GetModuleStatusMap()["cloud-manager"]
+				if ms.State != operatorshared.StateError {
+					outcome.Processed("cloud-manager", operatorshared.StateError, "Timeout waiting for module to be deleted")
+
+					util.ExpiringSwitch().
+						Key("e2e.sim.kymaSkr.wait.CloudResources.remove.timeout", r.runtimeID).
+						IfNotRecently(func() {
+							logger.
+								WithValues(
+									"since", elapsed.String(),
+									"timeout", r.timeoutAddModuleToReadyState.String(),
+								).
+								Info("Timeout waiting CloudResources CR to be deleted")
+						})
+				}
+			} // if timeout
+
+			if elapsed >= r.timeoutForceRemoveModule {
+				util.ExpiringSwitch().
+					Key("e2e.sim.kymaSkr.wait.CloudResources.force.remove.timeout", r.runtimeID).
+					IfNotRecently(func() {
+						logger.
+							WithValues(
+								"since", elapsed.String(),
+								"timeout", r.timeoutAddModuleToReadyState.String(),
+							).
+							Info("Force removing CloudResources CR")
+					})
+
+				p := []byte(`[{"op": "remove", "path": "/metadata/finalizers"}]`)
+				err = r.skr.Patch(ctx, cm, client.RawPatch(types.JSONPatchType, p))
+				if err != nil {
+					return reconcile.Result{}, fmt.Errorf("error removing CloudResources CR finalizers: %w", err)
+				}
+
+				outcome.Processed("cloud-manager", operatorshared.StateReady, "")
+			}
+
+			if err := outcome.PatchObjects(ctx, r.skr, r.kcp); err != nil {
+				return reconcile.Result{}, err
+			}
+
 			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
-		}
+		} // if CloudResources exists
+
+		// CloudResources does not exist
 
 		logger.Info("Removing SKR Kyma finalizer")
 		_, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, skrKyma, r.skr)
-		if client.IgnoreNotFound(err) != nil {
+		if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
 			return reconcile.Result{}, fmt.Errorf("error removing SKR Kyma finalizer: %w", err)
 		}
 
@@ -92,63 +237,16 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	// create & update ========================================================
 
-	runtimeId := skrKyma.Labels[cloudcontrolv1beta1.LabelRuntimeId]
-	if runtimeId == "" {
-		statusChanged := false
-		if skrKyma.Status.State != operatorshared.StateError {
-			skrKyma.Status.State = operatorshared.StateError
-			statusChanged = true
-		}
-		errCond := meta.FindStatusCondition(skrKyma.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
-		if errCond == nil || len(skrKyma.Status.Conditions) != 1 {
-			meta.SetStatusCondition(&skrKyma.Status.Conditions, metav1.Condition{
-				Type:               cloudcontrolv1beta1.ConditionTypeError,
-				Status:             metav1.ConditionTrue,
-				ObservedGeneration: skrKyma.Generation,
-				Reason:             "NoRuntimeIdLabel",
-				Message:            "Missing runtime ID label",
-			})
-			statusChanged = true
-		}
-		if statusChanged {
-			logger.Info("Missing runtimeID label in SKR KCP")
-			err = composed.PatchObjStatus(ctx, skrKyma, r.skr)
-			if err != nil {
-				return reconcile.Result{}, fmt.Errorf("error updating Kyma status for missing runtime id label: %w", err)
-			}
-		}
-		return reconcile.Result{}, nil
-	}
+	// CloudManager is not enabled (not in spec) ===============================================================
 
-	kcpKyma := &operatorv1beta2.Kyma{}
-	err = r.kcp.Get(ctx, types.NamespacedName{
-		Namespace: r.kcpNamespace,
-		Name:      runtimeId,
-	}, kcpKyma)
-	if err != nil {
-		return reconcile.Result{}, fmt.Errorf("error getting KCP Kyma %q: %w", runtimeId, err)
-	}
+	if !outcome.IsActive("cloud-manager") {
 
-	outcome := (KymaSync{SKR: skrKyma, KCP: kcpKyma}).Sync()
+		if cm != nil {
+			// CloudResources CR exists
 
-	// delete CloudResources so CM can delete CRDs
-	if outcome.IsRemoved("cloud-manager") {
-		cm := &cloudresourcesv1beta1.CloudResources{}
-		err = r.skr.Get(ctx, types.NamespacedName{
-			Namespace: "kyma-system",
-			Name:      "default",
-		}, cm)
-		if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
-			return reconcile.Result{}, fmt.Errorf("error getting CloudResources CR: %w", err)
-		}
-		if err == nil {
-			// CloudResources is loaded
+			// if not deleted yet, delete it now
 			if cm.DeletionTimestamp == nil {
-				util.ExpiringSwitch().
-					Key("e2e.sim.kymaSkr.removedModule.cloud-manager", r.runtimeID).
-					IfNotRecently(func() {
-						logger.Info("Deleting CloudResources")
-					})
+				logger.Info("Deleting CloudResources")
 				err = r.skr.Delete(ctx, cm)
 				if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
 					return reconcile.Result{}, fmt.Errorf("error deleting CloudResources CR: %w", err)
@@ -156,109 +254,123 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 				return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 			}
 
-			since := time.Since(cm.DeletionTimestamp.Time)
-			timeout := 3 * time.Minute
-			if since > timeout {
-				skrKyma.Status.State = operatorshared.StateError
-				mm := skrKyma.GetModuleStatusMap()
-				cm, ok := mm["cloud-manager"]
-				if ok {
-					cm.State = operatorshared.StateError
-					cm.Message = fmt.Sprintf("CloudResources delete timeout after %s", timeout.String())
-				}
-				err = r.skr.Update(ctx, skrKyma)
-				if err != nil {
-					return reconcile.Result{}, fmt.Errorf("error updating SKR Kyma status due to CloudResources delete timeout: %w", err)
-				}
+			// waiting to be deleted
 
-				util.ExpiringSwitch().
-					Key("e2e.sim.kymaSkr.wait.CloudResources.deleteTimeout", r.runtimeID).
-					IfNotRecently(func() {
-						logger.
-							WithValues(
-								"since", since.String(),
-								"timeout", timeout.String(),
-							).
-							Info("CloudResources CR is still not deleted")
-					})
+			// check for timeout
+			elapsed := r.clock.Since(cm.CreationTimestamp.Time)
+			if elapsed >= r.timeoutRemoveModuleToErrorState {
+				ms := skrKyma.GetModuleStatusMap()["cloud-manager"]
+				if ms.State != operatorshared.StateError {
+					outcome.Processed("cloud-manager", operatorshared.StateError, "Timeout waiting for module to be deleted")
+
+					util.ExpiringSwitch().
+						Key("e2e.sim.kymaSkr.wait.CloudResources.remove.timeout", r.runtimeID).
+						IfNotRecently(func() {
+							logger.
+								WithValues(
+									"since", elapsed.String(),
+									"timeout", r.timeoutAddModuleToReadyState.String(),
+								).
+								Info("Timeout waiting CloudResources CR to be deleted")
+						})
+
+				}
+			} // if timeout
+
+			if err := outcome.PatchObjects(ctx, r.skr, r.kcp); err != nil {
+				return reconcile.Result{}, err
 			}
 
+			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
+		} // if exists
+
+		// CloudResources CR do not exist
+
+		outcome.Processed("cloud-manager", operatorshared.StateReady, "")
+
+	} // if cloud-manager is disabled
+
+	// CloudManager  is enabled (in spec) ===========================================================================
+
+	if outcome.IsActive("cloud-manager") {
+
+		// CM CR does not exist  => create CloudResources CM
+		if cm == nil {
+			logger.Info("Creating default CloudResources")
+			cm = &cloudresourcesv1beta1.CloudResources{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "kyma-system",
+					Name:      "default",
+				},
+			}
+			err = r.skr.Create(ctx, cm)
+			if client.IgnoreAlreadyExists(err) != nil {
+				return reconcile.Result{}, fmt.Errorf("error creating CloudResources: %w", err)
+			}
+			return reconcile.Result{RequeueAfter: util.Timing.T100ms()}, nil
+		}
+
+		// CM CR exists, check if ready
+
+		if cm.Status.State != "Ready" {
+
+			// CloudResources CR is not ready
+
+			// waiting to be to ready
 			util.ExpiringSwitch().
-				Key("e2e.sim.kymaSkr.wait.CloudResources", r.runtimeID).
+				Key("e2e.sim.kymaSkr.wait.CloudResources.add", r.runtimeID).
 				IfNotRecently(func() {
-					logger.Info("Waiting CloudResources CR to get deleted")
+					logger.
+						Info("Waiting CloudResources CR to become Ready")
 				})
 
+			elapsed := r.clock.Since(cm.CreationTimestamp.Time)
+			if elapsed >= r.timeoutAddModuleToReadyState {
+				ms := skrKyma.GetModuleStatusMap()["cloud-manager"]
+				if ms.State != operatorshared.StateError {
+					outcome.Processed("cloud-manager", operatorshared.StateError, "Timeout waiting for module to be ready")
+
+					util.ExpiringSwitch().
+						Key("e2e.sim.kymaSkr.wait.CloudResources.add.timeout", r.runtimeID).
+						IfNotRecently(func() {
+							logger.
+								WithValues(
+									"since", elapsed.String(),
+									"timeout", r.timeoutAddModuleToReadyState.String(),
+								).
+								Info("Timeout waiting CloudResources CR to become Ready")
+						})
+				}
+			} // if timeout
+
+			if err := outcome.PatchObjects(ctx, r.skr, r.kcp); err != nil {
+				return reconcile.Result{}, err
+			}
+
 			return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
-		} // if CloudResources exists
+
+		} // if not ready
+
+		// CloudResources CR is ready
+		// ensure SKR Kyma module status is Ready
 
 		util.ExpiringSwitch().
-			Key("e2e.sim.kymaSkr.CloudResources.isDeleted", r.runtimeID).
+			Key("e2e.sim.kymaSkr.wait.CloudResources.ready", r.runtimeID).
 			IfNotRecently(func() {
-				logger.Info("CloudResources CR is deleted")
+				logger.
+					Info("CloudResources CR is Ready")
 			})
-	} // if cloud-manager module is removed (not in spec, but present in status)
 
-	if outcome.SKR.StatusChanged {
-		logger.Info("Patching SKR Kyma status.modules")
-		if err := composed.PatchObjStatus(ctx, skrKyma, r.skr); err != nil {
-			return reconcile.Result{}, fmt.Errorf("error patching SKR Kyma status: %w", err)
-		}
-	}
-	if outcome.KCP.SpecChanged {
-		logger.Info("Updating KCP Kyma spec.modules")
-		if err := r.kcp.Update(ctx, kcpKyma); err != nil {
-			return reconcile.Result{}, fmt.Errorf("error updating KCP Kyma spec: %w", err)
-		}
-	}
-	if outcome.KCP.StatusChanged {
-		logger.Info("Patching KCP Kyma status.modules")
-		if err := composed.PatchObjStatus(ctx, kcpKyma, r.kcp); err != nil {
-			return reconcile.Result{}, fmt.Errorf("error updating KCP Kyma status: %w", err)
-		}
-	}
+		outcome.Processed("cloud-manager", operatorshared.StateReady, "Success")
 
-	cm := &cloudresourcesv1beta1.CloudResources{}
-	err = r.skr.Get(ctx, types.NamespacedName{
-		Namespace: "kyma-system",
-		Name:      "default",
-	}, cm)
-	if client.IgnoreNotFound(err) != nil {
-		return reconcile.Result{}, fmt.Errorf("error getting default CloudResources: %w", err)
-	}
-	if err != nil {
-		cm = nil
-	}
+	} // if cloud-manager is enabled
 
-	if cm == nil && outcome.IsActive("cloud-manager") {
-		logger.Info("Creating default CloudResources")
-		cm = &cloudresourcesv1beta1.CloudResources{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "kyma-system",
-				Name:      "default",
-			},
-		}
-		err = r.skr.Create(ctx, cm)
-		if client.IgnoreAlreadyExists(err) != nil {
-			return reconcile.Result{}, fmt.Errorf("error creating CloudResources: %w", err)
-		}
-	}
+	// save SKR/KCP Kyma
 
-	statusChanged := false
-	if skrKyma.Status.State != operatorshared.StateReady {
-		skrKyma.Status.State = operatorshared.StateReady
-		statusChanged = true
-	}
-	if len(skrKyma.Status.Conditions) > 0 {
-		skrKyma.Status.Conditions = []metav1.Condition{}
-		statusChanged = true
-	}
-	if statusChanged {
-		logger.Info("Patching SKR Kyma status state to Ready")
-		err = composed.PatchObjStatus(ctx, skrKyma, r.skr)
-		if err != nil {
-			return reconcile.Result{}, fmt.Errorf("error patching SKR Kyma status: %w", err)
-		}
+	outcome.SetSkrKymaReadyStatus()
+
+	if err := outcome.PatchObjects(ctx, r.skr, r.kcp); err != nil {
+		return reconcile.Result{}, err
 	}
 
 	return reconcile.Result{}, nil

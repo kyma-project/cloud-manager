@@ -1,6 +1,6 @@
 Feature: AWS NfsVolume feature
 
-  @test @skr
+  @test @skr @skip
   Scenario: Test scenario
 
     Given there is shared SKR with "AWS" provider

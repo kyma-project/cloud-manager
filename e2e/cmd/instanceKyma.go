@@ -10,6 +10,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+type cmdInstanceKymaOptionsType struct {
+	runtimeID string
+}
+
+var cmdInstanceKymaOptions cmdInstanceKymaOptionsType
+
 var cmdInstanceKyma = &cobra.Command{
 	Use: "kyma",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -18,7 +24,7 @@ var cmdInstanceKyma = &cobra.Command{
 			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		clnt, err := keb.CreateInstanceClient(rootCtx, runtimeID)
+		clnt, err := keb.CreateInstanceClient(rootCtx, cmdInstanceKymaOptions.runtimeID)
 		if err != nil {
 			return err
 		}
@@ -45,6 +51,6 @@ var cmdInstanceKyma = &cobra.Command{
 
 func init() {
 	cmdInstance.AddCommand(cmdInstanceKyma)
-	cmdInstanceKyma.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "The runtime ID")
-	_ = cmdInstanceModulesList.MarkFlagRequired("runtime-id")
+	cmdInstanceKyma.Flags().StringVarP(&cmdInstanceKymaOptions.runtimeID, "runtime-id", "r", "", "The runtime ID")
+	_ = cmdInstanceKyma.MarkFlagRequired("runtime-id")
 }

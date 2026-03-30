@@ -1,12 +1,16 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
+	"sigs.k8s.io/controller-runtime/pkg/cluster"
 )
 
 func SkipE2eTests(t *testing.T) {
@@ -29,4 +33,19 @@ func SharedShootResourceAlias(shootName string) string {
 
 func SharedGardenerClusterResourceAlias(name string) string {
 	return fmt.Sprintf("gc_%s", name)
+}
+
+func waitClusterStarts(ctx context.Context, c cluster.Cluster) bool {
+	var toCtx context.Context
+	var toCancel context.CancelFunc
+	if debugged.Debugged {
+		toCtx, toCancel = context.WithTimeout(ctx, 10*time.Minute)
+	} else {
+		toCtx, toCancel = context.WithTimeout(ctx, 10*time.Second)
+	}
+	defer toCancel()
+	if ok := c.GetCache().WaitForCacheSync(toCtx); !ok {
+		return false
+	}
+	return true
 }

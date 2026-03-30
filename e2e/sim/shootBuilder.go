@@ -15,6 +15,7 @@ import (
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	sapconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
@@ -46,15 +47,20 @@ func NewShootBuilder(cpr e2elib.CloudProfileRegistry, config *e2econfig.ConfigTy
 	}
 	loc, err := time.LoadLocation("Europe/Belgrade")
 	if err == nil {
-		if time.Now().In(loc).Hour() < 18 {
-			b.obj.Spec.Hibernation = &gardenertypes.Hibernation{
-				Schedules: []gardenertypes.HibernationSchedule{
-					{
-						Start:    ptr.To("00 20 * * 1,2,3,4,5,6,0"),
-						Location: ptr.To("Europe/Belgrade"),
-					},
+		hCron := 19 // normally go to hibernation at 19h
+		// but if it's between 18 and 21h, then hibernate at current hour +2h
+		// in order to prevent shutdowns two hours after creation
+		hCurrent := time.Now().In(loc).Hour()
+		if hCurrent > 18 && hCurrent < 21 {
+			hCron = hCurrent + 2
+		}
+		b.obj.Spec.Hibernation = &gardenertypes.Hibernation{
+			Schedules: []gardenertypes.HibernationSchedule{
+				{
+					Start:    ptr.To(fmt.Sprintf("00 %d * * 1,2,3,4,5,6,0", hCron)),
+					Location: ptr.To("Europe/Belgrade"),
 				},
-			}
+			},
 		}
 	}
 	return b
@@ -258,7 +264,11 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 				APIVersion: gardeneraopenstack.SchemeGroupVersion.String(),
 				Kind:       "InfrastructureConfig",
 			},
-			FloatingPoolName: "FloatingIP-external-kyma-01",
+			FloatingPoolName:       sapconfig.SapConfig.FloatingPoolNetwork, // "FloatingIP-external-kyma-01",
+			FloatingPoolSubnetName: ptr.To(sapconfig.SapConfig.FloatingPoolSubnet),
+		}
+		if len(sapconfig.SapConfig.FloatingPoolSubnet) < 1 {
+			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("no FloatingPoolSubnet specified in config"))
 		}
 
 		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {

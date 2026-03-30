@@ -9,13 +9,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type cmdSimRunOptionsType struct {
+	timeout time.Duration
+}
+
+var cmdSimRunOptions cmdSimRunOptionsType
+
 var cmdSimRun = &cobra.Command{
 	Use: "run",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := rootCtx
 		cancel := func() {}
-		if timeout > 0 {
-			ctx, cancel = context.WithTimeout(ctx, timeout)
+		if cmdSimRunOptions.timeout > 0 {
+			ctx, cancel = context.WithTimeout(ctx, cmdSimRunOptions.timeout)
 		}
 		defer cancel()
 
@@ -34,5 +40,5 @@ var cmdSimRun = &cobra.Command{
 
 func init() {
 	cmdSim.AddCommand(cmdSimRun)
-	cmdSimRun.Flags().DurationVarP(&timeout, "timeout", "t", time.Duration(0), "Time to run and then quit")
+	cmdSimRun.Flags().DurationVarP(&cmdSimRunOptions.timeout, "timeout", "t", time.Duration(0), "Time to run and then quit")
 }

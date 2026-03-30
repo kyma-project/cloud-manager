@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/ginkgo/v2/types"
 )
@@ -19,10 +20,28 @@ func ReportAfterSuite(report ginkgo.Report) {
 			path := append(spec.ContainerHierarchyTexts, spec.LeafNodeText)
 			root.add(path, spec.State, spec.RunTime)
 			subState := spec.State
+			// By("") does not have SpecEventByEnd, only SpecEventByStart
+			// By("", func() {}) has both SpecEventByEnd and SpecEventByStart, where SpecEventByStart has duration
+			var steps []util.Pair[string, time.Duration]
 			for _, evt := range spec.SpecEvents {
-				if evt.SpecEventType == types.SpecEventByEnd {
-					root.add(append(path, evt.Message), subState, evt.Duration)
+				if evt.SpecEventType == types.SpecEventByStart {
+					steps = append(steps, util.Pair[string, time.Duration]{First: evt.Message})
 				}
+				if evt.SpecEventType == types.SpecEventByEnd {
+					var step *util.Pair[string, time.Duration]
+					for _, s := range steps {
+						if s.First == evt.Message {
+							step = &s
+							break
+						}
+					}
+					if step != nil {
+						step.Second = evt.Duration
+					}
+				}
+			}
+			for _, step := range steps {
+				root.add(append(path, step.First), subState, step.Second)
 			}
 		}
 	}

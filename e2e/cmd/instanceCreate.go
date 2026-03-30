@@ -11,11 +11,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type cmdInstanceCreateOptionsType struct {
+	alias    string
+	provider string
+	waitDone bool
+	timeout  time.Duration
+}
+
+var cmdInstanceCreateOptions cmdInstanceCreateOptionsType
+
 var cmdInstanceCreate = &cobra.Command{
 	Use:   "create",
 	Short: "Create an instance with given alias and provider, and optionally wait until it is provisioned",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		pt, err := cloudcontrolv1beta1.ParseProviderType(provider)
+		pt, err := cloudcontrolv1beta1.ParseProviderType(cmdInstanceCreateOptions.provider)
 		if err != nil {
 			return err
 		}
@@ -26,7 +35,7 @@ var cmdInstanceCreate = &cobra.Command{
 		}
 
 		id, err := keb.CreateInstance(rootCtx,
-			e2ekeb.WithAlias(alias),
+			e2ekeb.WithAlias(cmdInstanceCreateOptions.alias),
 			e2ekeb.WithGlobalAccount(uuid.NewString()),
 			e2ekeb.WithSubAccount(uuid.NewString()),
 			e2ekeb.WithProvider(pt),
@@ -42,9 +51,13 @@ var cmdInstanceCreate = &cobra.Command{
 		fmt.Println("Instance created:")
 		fmt.Println(string(b))
 
-		if waitDone {
-			fmt.Printf("Waiting for instance to be ready with timeout of %s...\n", timeout)
-			err = keb.WaitProvisioningCompleted(rootCtx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(timeout))
+		if cmdInstanceCreateOptions.waitDone {
+			fmt.Printf("Waiting for instance to be ready with timeout of %s...\n", cmdInstanceCreateOptions.timeout)
+			opts := []e2ekeb.WaitOption{e2ekeb.WithAlias(id.Alias), e2ekeb.WithTimeout(cmdInstanceCreateOptions.timeout)}
+			if verbose {
+				opts = append(opts, e2ekeb.WaitProgressPrint())
+			}
+			err = e2ekeb.WaitCompleted(rootCtx, keb, opts...)
 			if err != nil {
 				return fmt.Errorf("error waiting provisioning completed: %w", err)
 			}
@@ -56,10 +69,10 @@ var cmdInstanceCreate = &cobra.Command{
 }
 
 func init() {
-	cmdInstanceCreate.Flags().StringVarP(&alias, "alias", "a", "", "Alias name for the instance")
-	cmdInstanceCreate.Flags().StringVarP(&provider, "provider", "p", "", "Provider name for the instance")
-	cmdInstanceCreate.Flags().BoolVarP(&waitDone, "wait", "w", false, "Wait for instance to be ready before exiting")
-	cmdInstanceCreate.Flags().DurationVarP(&timeout, "timeout", "t", 900*time.Second, "Timeout in seconds for waiting for instance to become ready")
+	cmdInstanceCreate.Flags().StringVarP(&cmdInstanceCreateOptions.alias, "alias", "a", "", "Alias name for the instance")
+	cmdInstanceCreate.Flags().StringVarP(&cmdInstanceCreateOptions.provider, "provider", "p", "", "Provider name for the instance")
+	cmdInstanceCreate.Flags().BoolVarP(&cmdInstanceCreateOptions.waitDone, "wait", "w", false, "Wait for instance to be ready before exiting")
+	cmdInstanceCreate.Flags().DurationVarP(&cmdInstanceCreateOptions.timeout, "timeout", "t", 900*time.Second, "Timeout in seconds for waiting for instance to become ready")
 
 	_ = cmdInstanceCreate.MarkFlagRequired("alias")
 	_ = cmdInstanceCreate.MarkFlagRequired("provider")

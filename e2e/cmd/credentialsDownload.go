@@ -14,10 +14,10 @@ var cmdCredentialsDownload = &cobra.Command{
 	Use:     "download",
 	Aliases: []string{"down", "d"},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if config.CredentialsDir == "" {
-			return fmt.Errorf("credentials dir is required")
+		if config.ConfigDir == "" {
+			return fmt.Errorf("config dir is required")
 		}
-		if err := os.MkdirAll(config.CredentialsDir, 0755); err != nil {
+		if err := os.MkdirAll(config.ConfigDir, 0755); err != nil {
 			return fmt.Errorf("failed to create credentials dir: %w", err)
 		}
 
@@ -43,7 +43,7 @@ var cmdCredentialsDownload = &cobra.Command{
 					fmt.Printf("key %s not found in secret %s\n", key, secretName)
 					continue
 				}
-				err = os.WriteFile(filepath.Join(config.CredentialsDir, filename), val, 0644)
+				err = os.WriteFile(filepath.Join(config.ConfigDir, filename), val, 0644)
 				if err != nil {
 					return fmt.Errorf("failed to write file %s: %w", filename, err)
 				}
