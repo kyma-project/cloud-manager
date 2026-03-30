@@ -27,7 +27,7 @@ var cmdInstanceWait = &cobra.Command{
 			opts = append(opts, e2ekeb.WithTimeout(timeout))
 		}
 		if verbose {
-			opts = append(opts, e2ekeb.WaitProgressPrint())
+			opts = append(opts, e2ekeb.WaitProgressPrint(), e2ekeb.WithLogger(rootLogger))
 		}
 
 		err = e2ekeb.WaitCompleted(rootCtx, keb, opts...)

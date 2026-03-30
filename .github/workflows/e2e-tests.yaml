@@ -115,13 +115,11 @@ jobs:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
           DETAILS=$(go run ./e2e/cmd instance show -a shared-$PROVIDER)
-          echo $DETAILS
+          echo "$DETAILS"
           
           echo "# Instance Details :information_source:" >> $GITHUB_STEP_SUMMARY
-          echo $DETAILS | awk '{print "* " toupper(substr($0,1,1)) substr($0,2)}' >> $GITHUB_STEP_SUMMARY
+          echo "$DETAILS" | awk '{print "* " toupper(substr($0,1,1)) substr($0,2)}' >> $GITHUB_STEP_SUMMARY
 
-          cat $GITHUB_STEP_SUMMARY
-          
       - name: Add module to shared instance
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
