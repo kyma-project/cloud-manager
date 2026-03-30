@@ -29,6 +29,7 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 		By("Given clusters are clean", func() {
 			commonOps := []e2eclean.Option{
 				e2eclean.WithWait(true),
+				// intentionally low timeout, not waiting for something to remove finalizers, but doing a force delete
 				e2eclean.WithTimeout(time.Millisecond),
 				e2eclean.WithForceDeleteOnTimeout(true),
 				e2eclean.WithLogger(composed.LoggerFromCtx(infra.Ctx())),

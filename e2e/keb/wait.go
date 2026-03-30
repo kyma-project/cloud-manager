@@ -210,6 +210,7 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 			loopErr = err
 			break
 		}
+		// this is early exit, exiting the loop if no more pending, or there's some instance with error
 		if len(pending) == 0 && len(withErr) == 0 {
 			break
 		}

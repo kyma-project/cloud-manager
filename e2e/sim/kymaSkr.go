@@ -176,7 +176,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 			// wait deleted
 			// CM should respond and eventually remove the finalizer
 
-			elapsed := r.clock.Since(cm.CreationTimestamp.Time)
+			elapsed := r.clock.Since(cm.DeletionTimestamp.Time)
 
 			if elapsed >= r.timeoutRemoveModuleToErrorState {
 				ms := skrKyma.GetModuleStatusMap()["cloud-manager"]
@@ -189,7 +189,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 							logger.
 								WithValues(
 									"since", elapsed.String(),
-									"timeout", r.timeoutAddModuleToReadyState.String(),
+									"timeout", r.timeoutRemoveModuleToErrorState.String(),
 								).
 								Info("Timeout waiting CloudResources CR to be deleted")
 						})
@@ -203,7 +203,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 						logger.
 							WithValues(
 								"since", elapsed.String(),
-								"timeout", r.timeoutAddModuleToReadyState.String(),
+								"timeout", r.timeoutForceRemoveModule.String(),
 							).
 							Info("Force removing CloudResources CR")
 					})
@@ -269,7 +269,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 							logger.
 								WithValues(
 									"since", elapsed.String(),
-									"timeout", r.timeoutAddModuleToReadyState.String(),
+									"timeout", r.timeoutRemoveModuleToErrorState.String(),
 								).
 								Info("Timeout waiting CloudResources CR to be deleted")
 						})

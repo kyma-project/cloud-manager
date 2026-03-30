@@ -32,6 +32,9 @@ var cmdInstanceWait = &cobra.Command{
 		if cmdInstanceWaitOptions.alias != "" {
 			opts = append(opts, e2ekeb.WithAlias(cmdInstanceWaitOptions.alias))
 		}
+		// otherwise, if not runtime-id or alias specified, then it's all, and that requires no special option
+		// since list will list everything
+
 		if cmdInstanceWaitOptions.timeout > 0 {
 			opts = append(opts, e2ekeb.WithTimeout(cmdInstanceWaitOptions.timeout))
 		}

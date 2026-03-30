@@ -77,12 +77,6 @@ Examples:
 		opts := []e2eclean.Option{
 			e2eclean.WithClient(skrClient),
 			e2eclean.WithScheme(commonscheme.SkrScheme),
-			e2eclean.WithMatchers(
-				e2eclean.MatchAll(
-					e2eclean.MatchingGroup(cloudresourcesv1beta1.GroupVersion.Group),
-					e2eclean.NotMatch(e2eclean.MatchingKind("CloudResources")),
-				),
-			),
 			e2eclean.WithTimeout(cmdInstanceCleanOptions.timeout),
 			e2eclean.WithWait(cmdInstanceCleanOptions.waitDone),
 			e2eclean.WithForceDeleteOnTimeout(cmdInstanceCleanOptions.force),
