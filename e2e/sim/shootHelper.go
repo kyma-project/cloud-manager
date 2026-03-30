@@ -4,9 +4,18 @@ import (
 	"fmt"
 
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	gardenerhelper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// GetCondition finds and returns a condition by type from the condition list
+func GetCondition(conditions []gardenerapicore.Condition, conditionType gardenerapicore.ConditionType) *gardenerapicore.Condition {
+	for i := range conditions {
+		if conditions[i].Type == conditionType {
+			return &conditions[i]
+		}
+	}
+	return nil
+}
 
 func IsShootReady(shoot *gardenerapicore.Shoot) bool {
 	if shoot.Status.IsHibernated {
@@ -16,7 +25,7 @@ func IsShootReady(shoot *gardenerapicore.Shoot) bool {
 		return false
 	}
 	for _, ct := range GardenerConditionTypes {
-		cond := gardenerhelper.GetCondition(shoot.Status.Conditions, ct)
+		cond := GetCondition(shoot.Status.Conditions, ct)
 		if cond == nil {
 			return false
 		}
