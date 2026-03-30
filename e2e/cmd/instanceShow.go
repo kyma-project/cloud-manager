@@ -9,6 +9,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type cmdInstanceShowOptionsType struct {
+	runtimeID string
+	alias     string
+}
+
+var cmdInstanceShowOptions cmdInstanceShowOptionsType
+
 var cmdInstanceShow = &cobra.Command{
 	Use:   "show",
 	Short: "Show instance details",
@@ -19,22 +26,22 @@ var cmdInstanceShow = &cobra.Command{
 		}
 
 		var id e2ekeb.InstanceDetails
-		if runtimeID != "" {
-			x, err := keb.GetInstance(rootCtx, runtimeID)
+		if cmdInstanceShowOptions.runtimeID != "" {
+			x, err := keb.GetInstance(rootCtx, cmdInstanceShowOptions.runtimeID)
 			if err != nil {
 				return fmt.Errorf("failed to get instance: %w", err)
 			}
 			if x == nil {
-				return fmt.Errorf("instance %q not found", runtimeID)
+				return fmt.Errorf("instance %q not found", cmdInstanceShowOptions.runtimeID)
 			}
 			id = *x
 		} else {
-			arr, err := keb.List(rootCtx, e2ekeb.WithAlias(alias))
+			arr, err := keb.List(rootCtx, e2ekeb.WithAlias(cmdInstanceShowOptions.alias))
 			if err != nil {
 				return fmt.Errorf("failed to list instances by alias: %w", err)
 			}
 			if len(arr) == 0 {
-				return fmt.Errorf("instance %q not found", alias)
+				return fmt.Errorf("instance %q not found", cmdInstanceShowOptions.alias)
 			}
 			if len(arr) > 1 {
 				return fmt.Errorf("more than one instance found: %v", pie.Map(arr, func(xx e2ekeb.InstanceDetails) string {
@@ -56,8 +63,8 @@ var cmdInstanceShow = &cobra.Command{
 
 func init() {
 	cmdInstance.AddCommand(cmdInstanceShow)
-	cmdInstanceShow.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "Runtime ID")
-	cmdInstanceShow.Flags().StringVarP(&alias, "alias", "a", "", "Alias name")
+	cmdInstanceShow.Flags().StringVarP(&cmdInstanceShowOptions.runtimeID, "runtime-id", "r", "", "Runtime ID")
+	cmdInstanceShow.Flags().StringVarP(&cmdInstanceShowOptions.alias, "alias", "a", "", "Alias name")
 	cmdInstanceShow.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceShow.MarkFlagsOneRequired("runtime-id", "alias")
 }

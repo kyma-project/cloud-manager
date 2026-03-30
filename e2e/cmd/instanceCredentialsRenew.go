@@ -7,6 +7,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type cmdInstanceCredentialsRenewOptionsType struct {
+	runtimeID string
+}
+
+var cmdInstanceCredentialsRenewOptions cmdInstanceCredentialsRenewOptionsType
+
 var cmdInstanceCredentialsRenew = &cobra.Command{
 	Use: "renew",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -15,7 +21,7 @@ var cmdInstanceCredentialsRenew = &cobra.Command{
 			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		err = keb.RenewInstanceKubeconfig(rootCtx, runtimeID)
+		err = keb.RenewInstanceKubeconfig(rootCtx, cmdInstanceCredentialsRenewOptions.runtimeID)
 		if err != nil {
 			return err
 		}
@@ -29,6 +35,6 @@ var cmdInstanceCredentialsRenew = &cobra.Command{
 
 func init() {
 	cmdInstanceCredentials.AddCommand(cmdInstanceCredentialsRenew)
-	cmdInstanceCredentialsRenew.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "The runtime ID")
+	cmdInstanceCredentialsRenew.Flags().StringVarP(&cmdInstanceCredentialsRenewOptions.runtimeID, "runtime-id", "r", "", "The runtime ID")
 	_ = cmdInstanceCredentialsRenew.MarkFlagRequired("runtime-id")
 }

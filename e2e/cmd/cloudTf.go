@@ -12,12 +12,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	tfProviders     []string
-	tfSource        string
-	tfVariables     []string
-	tfConfirmDelete bool
-)
+type cmdCloudTfOptionsType struct {
+	providers     []string
+	source        string
+	variables     []string
+	confirmDelete bool
+}
+
+var cmdCloudTfOptions cmdCloudTfOptionsType
 
 var cmdCloudTf = &cobra.Command{
 	Use: "tf",
@@ -34,13 +36,13 @@ var cmdCloudTf = &cobra.Command{
 
 		// alias is not important here since used w/out cluster and resource declaration
 		b := cld.WorkspaceBuilder(util.RandomString(8))
-		for _, p := range tfProviders {
+		for _, p := range cmdCloudTfOptions.providers {
 			b.WithProvider(p)
 		}
 
-		b.WithSource(tfSource)
+		b.WithSource(cmdCloudTfOptions.source)
 
-		for _, v := range tfVariables {
+		for _, v := range cmdCloudTfOptions.variables {
 			parts := strings.Split(v, "=")
 			if len(parts) != 2 {
 				return fmt.Errorf("invalid variable format: %s", v)
@@ -86,7 +88,7 @@ var cmdCloudTf = &cobra.Command{
 		fmt.Println("Outputs")
 		fmt.Println(string(jj))
 
-		if tfConfirmDelete {
+		if cmdCloudTfOptions.confirmDelete {
 			reader := bufio.NewReader(os.Stdin)
 			fmt.Print("\n\nPress [enter] to destroy\n")
 			_, _ = reader.ReadString('\n')
@@ -102,10 +104,10 @@ var cmdCloudTf = &cobra.Command{
 }
 
 func init() {
-	cmdCloudTf.Flags().StringArrayVarP(&tfProviders, "provider", "p", nil, "tf provider, can be repeated, ie `hashicorp/aws ~> 6.0`")
-	cmdCloudTf.Flags().StringArrayVarP(&tfVariables, "var", "", nil, "input variable, can be repeated, ie `key=\"value\"`, or `key=123`")
-	cmdCloudTf.Flags().StringVarP(&tfSource, "source", "s", "", "tf module source, ie `terraform-aws-modules/vpc/aws 6.5.1`")
-	cmdCloudTf.Flags().BoolVarP(&tfConfirmDelete, "confirm-delete", "c", false, "ask confirmation before destroy")
+	cmdCloudTf.Flags().StringArrayVarP(&cmdCloudTfOptions.providers, "provider", "p", nil, "tf provider, can be repeated, ie `hashicorp/aws ~> 6.0`")
+	cmdCloudTf.Flags().StringArrayVarP(&cmdCloudTfOptions.variables, "var", "", nil, "input variable, can be repeated, ie `key=\"value\"`, or `key=123`")
+	cmdCloudTf.Flags().StringVarP(&cmdCloudTfOptions.source, "source", "s", "", "tf module source, ie `terraform-aws-modules/vpc/aws 6.5.1`")
+	cmdCloudTf.Flags().BoolVarP(&cmdCloudTfOptions.confirmDelete, "confirm-delete", "c", false, "ask confirmation before destroy")
 	cmdCloud.AddCommand(cmdCloudTf)
 	util.MustVoid(cmdCloudTf.MarkFlagRequired("source"))
 }

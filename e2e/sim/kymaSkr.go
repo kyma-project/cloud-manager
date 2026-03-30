@@ -310,19 +310,19 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 			return reconcile.Result{RequeueAfter: util.Timing.T100ms()}, nil
 		}
 
-		// waiting to be to ready
-		util.ExpiringSwitch().
-			Key("e2e.sim.kymaSkr.wait.CloudResources.add", r.runtimeID).
-			IfNotRecently(func() {
-				logger.
-					Info("Waiting CloudResources CR to become Ready")
-			})
-
 		// CM CR exists, check if ready
 
 		if cm.Status.State != "Ready" {
 
 			// CloudResources CR is not ready
+
+			// waiting to be to ready
+			util.ExpiringSwitch().
+				Key("e2e.sim.kymaSkr.wait.CloudResources.add", r.runtimeID).
+				IfNotRecently(func() {
+					logger.
+						Info("Waiting CloudResources CR to become Ready")
+				})
 
 			elapsed := r.clock.Since(cm.CreationTimestamp.Time)
 			if elapsed >= r.timeoutAddModuleToReadyState {
@@ -353,6 +353,13 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 
 		// CloudResources CR is ready
 		// ensure SKR Kyma module status is Ready
+
+		util.ExpiringSwitch().
+			Key("e2e.sim.kymaSkr.wait.CloudResources.ready", r.runtimeID).
+			IfNotRecently(func() {
+				logger.
+					Info("CloudResources CR is Ready")
+			})
 
 		outcome.Processed("cloud-manager", operatorshared.StateReady, "Success")
 

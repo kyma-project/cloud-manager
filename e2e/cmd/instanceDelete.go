@@ -9,6 +9,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type cmdInstanceDeleteOptionsType struct {
+	runtimeID string
+	alias     string
+	waitDone  bool
+	timeout   time.Duration
+}
+
+var cmdInstanceDeleteOptions cmdInstanceDeleteOptionsType
+
 var cmdInstanceDelete = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete an instance with given runtime id, and optionally wait until it's deleted.",
@@ -18,26 +27,26 @@ var cmdInstanceDelete = &cobra.Command{
 			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		if runtimeID == "" {
-			idArr, err := keb.List(rootCtx, e2ekeb.WithAlias(alias))
+		if cmdInstanceDeleteOptions.runtimeID == "" {
+			idArr, err := keb.List(rootCtx, e2ekeb.WithAlias(cmdInstanceDeleteOptions.alias))
 			if err != nil {
 				return fmt.Errorf("failed to list runtimes: %w", err)
 			}
 			if len(idArr) == 0 {
-				return fmt.Errorf("runtime with alias %q not found", alias)
+				return fmt.Errorf("runtime with alias %q not found", cmdInstanceDeleteOptions.alias)
 			}
 			if len(idArr) > 1 {
-				return fmt.Errorf("multiple runtimes with alias %q found: %v", alias, pie.Map(idArr, func(x e2ekeb.InstanceDetails) string {
+				return fmt.Errorf("multiple runtimes with alias %q found: %v", cmdInstanceDeleteOptions.alias, pie.Map(idArr, func(x e2ekeb.InstanceDetails) string {
 					return x.RuntimeID
 				}))
 			}
-			runtimeID = idArr[0].RuntimeID
+			cmdInstanceDeleteOptions.runtimeID = idArr[0].RuntimeID
 		}
 
 		err = keb.DeleteInstance(
 			rootCtx,
-			e2ekeb.WithRuntime(runtimeID),
-			e2ekeb.WithTimeout(timeout),
+			e2ekeb.WithRuntime(cmdInstanceDeleteOptions.runtimeID),
+			e2ekeb.WithTimeout(cmdInstanceDeleteOptions.timeout),
 		)
 		if err != nil {
 			return fmt.Errorf("failed to delete instance: %w", err)
@@ -45,11 +54,11 @@ var cmdInstanceDelete = &cobra.Command{
 
 		fmt.Println("Instance is marked for deletion.")
 
-		if waitDone {
+		if cmdInstanceDeleteOptions.waitDone {
 			fmt.Printf("Waiting for instance to be destroyed...")
 			opts := []e2ekeb.WaitOption{
-				e2ekeb.WithRuntime(runtimeID),
-				e2ekeb.WithTimeout(timeout),
+				e2ekeb.WithRuntime(cmdInstanceDeleteOptions.runtimeID),
+				e2ekeb.WithTimeout(cmdInstanceDeleteOptions.timeout),
 			}
 			if verbose {
 				opts = append(opts, e2ekeb.WithLogger(rootLogger), e2ekeb.WaitProgressPrint())
@@ -67,10 +76,10 @@ var cmdInstanceDelete = &cobra.Command{
 
 func init() {
 	cmdInstance.AddCommand(cmdInstanceDelete)
-	cmdInstanceDelete.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "Alias name for the instance")
-	cmdInstanceDelete.Flags().StringVarP(&alias, "alias", "a", "", "The runtime alias")
-	cmdInstanceDelete.Flags().BoolVarP(&waitDone, "wait", "w", false, "Wait for instance to be deleted before exiting")
-	cmdInstanceDelete.Flags().DurationVarP(&timeout, "timeout", "t", 40*time.Minute, "Timeout for waiting for instance to be deleted")
+	cmdInstanceDelete.Flags().StringVarP(&cmdInstanceDeleteOptions.runtimeID, "runtime-id", "r", "", "Alias name for the instance")
+	cmdInstanceDelete.Flags().StringVarP(&cmdInstanceDeleteOptions.alias, "alias", "a", "", "The runtime alias")
+	cmdInstanceDelete.Flags().BoolVarP(&cmdInstanceDeleteOptions.waitDone, "wait", "w", false, "Wait for instance to be deleted before exiting")
+	cmdInstanceDelete.Flags().DurationVarP(&cmdInstanceDeleteOptions.timeout, "timeout", "t", 40*time.Minute, "Timeout for waiting for instance to be deleted")
 	cmdInstanceDelete.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceDelete.MarkFlagsOneRequired("runtime-id", "alias")
 }

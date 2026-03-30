@@ -8,6 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type cmdInstanceWaitOptionsType struct {
+	alias     string
+	runtimeID string
+	all       bool
+	timeout   time.Duration
+}
+
+var cmdInstanceWaitOptions cmdInstanceWaitOptionsType
+
 var cmdInstanceWait = &cobra.Command{
 	Use: "wait",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -17,14 +26,14 @@ var cmdInstanceWait = &cobra.Command{
 		}
 
 		var opts []e2ekeb.WaitOption
-		if runtimeID != "" {
-			opts = append(opts, e2ekeb.WithRuntime(runtimeID))
+		if cmdInstanceWaitOptions.runtimeID != "" {
+			opts = append(opts, e2ekeb.WithRuntime(cmdInstanceWaitOptions.runtimeID))
 		}
-		if alias != "" {
-			opts = append(opts, e2ekeb.WithAlias(alias))
+		if cmdInstanceWaitOptions.alias != "" {
+			opts = append(opts, e2ekeb.WithAlias(cmdInstanceWaitOptions.alias))
 		}
-		if timeout > 0 {
-			opts = append(opts, e2ekeb.WithTimeout(timeout))
+		if cmdInstanceWaitOptions.timeout > 0 {
+			opts = append(opts, e2ekeb.WithTimeout(cmdInstanceWaitOptions.timeout))
 		}
 		if verbose {
 			opts = append(opts, e2ekeb.WaitProgressPrint(), e2ekeb.WithLogger(rootLogger))
@@ -36,10 +45,10 @@ var cmdInstanceWait = &cobra.Command{
 }
 
 func init() {
-	cmdInstanceWait.Flags().StringVarP(&alias, "alias", "a", "", "alias of instance to wait for")
-	cmdInstanceWait.Flags().StringVarP(&runtimeID, "runtime", "r", "", "runtime ID of instance to wait for")
-	cmdInstanceWait.Flags().BoolVarP(&all, "all", "", false, "wait for all runtime instances")
-	cmdInstanceWait.Flags().DurationVarP(&timeout, "timeout", "t", 900*time.Second, "timeout for waiting for instance to become ready")
+	cmdInstanceWait.Flags().StringVarP(&cmdInstanceWaitOptions.alias, "alias", "a", "", "alias of instance to wait for")
+	cmdInstanceWait.Flags().StringVarP(&cmdInstanceWaitOptions.runtimeID, "runtime", "r", "", "runtime ID of instance to wait for")
+	cmdInstanceWait.Flags().BoolVarP(&cmdInstanceWaitOptions.all, "all", "", false, "wait for all runtime instances")
+	cmdInstanceWait.Flags().DurationVarP(&cmdInstanceWaitOptions.timeout, "timeout", "t", 900*time.Second, "timeout for waiting for instance to become ready")
 	cmdInstanceWait.MarkFlagsOneRequired("runtime", "alias", "all")
 
 	cmdInstance.AddCommand(cmdInstanceWait)

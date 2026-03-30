@@ -13,6 +13,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type cmdInstanceCleanOptionsType struct {
+	runtimeID string
+	alias     string
+	waitDone  bool
+	timeout   time.Duration
+	force     bool
+	dryRun    bool
+	all       bool
+}
+
+var cmdInstanceCleanOptions cmdInstanceCleanOptionsType
+
 var cmdInstanceClean = &cobra.Command{
 	Use:   "clean",
 	Short: "Clean orphaned cloud resources from an SKR instance after e2e test failures",
@@ -41,23 +53,23 @@ Examples:
 			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		if runtimeID == "" {
-			idArr, err := keb.List(rootCtx, e2ekeb.WithAlias(alias))
+		if cmdInstanceCleanOptions.runtimeID == "" {
+			idArr, err := keb.List(rootCtx, e2ekeb.WithAlias(cmdInstanceCleanOptions.alias))
 			if err != nil {
 				return fmt.Errorf("failed to list runtimes: %w", err)
 			}
 			if len(idArr) == 0 {
-				return fmt.Errorf("runtime with alias %q not found", alias)
+				return fmt.Errorf("runtime with alias %q not found", cmdInstanceCleanOptions.alias)
 			}
 			if len(idArr) > 1 {
-				return fmt.Errorf("multiple runtimes with alias %q found: %v", alias, pie.Map(idArr, func(x e2ekeb.InstanceDetails) string {
+				return fmt.Errorf("multiple runtimes with alias %q found: %v", cmdInstanceCleanOptions.alias, pie.Map(idArr, func(x e2ekeb.InstanceDetails) string {
 					return x.RuntimeID
 				}))
 			}
-			runtimeID = idArr[0].RuntimeID
+			cmdInstanceCleanOptions.runtimeID = idArr[0].RuntimeID
 		}
 
-		skrClient, err := keb.CreateInstanceClient(rootCtx, runtimeID)
+		skrClient, err := keb.CreateInstanceClient(rootCtx, cmdInstanceCleanOptions.runtimeID)
 		if err != nil {
 			return fmt.Errorf("failed to create SKR client: %w", err)
 		}
@@ -71,12 +83,12 @@ Examples:
 					e2eclean.NotMatch(e2eclean.MatchingKind("CloudResources")),
 				),
 			),
-			e2eclean.WithTimeout(timeout),
-			e2eclean.WithWait(waitDone),
-			e2eclean.WithForceDeleteOnTimeout(force),
-			e2eclean.WithDryRun(dryRun),
+			e2eclean.WithTimeout(cmdInstanceCleanOptions.timeout),
+			e2eclean.WithWait(cmdInstanceCleanOptions.waitDone),
+			e2eclean.WithForceDeleteOnTimeout(cmdInstanceCleanOptions.force),
+			e2eclean.WithDryRun(cmdInstanceCleanOptions.dryRun),
 		}
-		if all {
+		if cmdInstanceCleanOptions.all {
 			opts = append(opts, e2eclean.WithMatchers(
 				e2eclean.MatchingGroup(cloudresourcesv1beta1.GroupVersion.Group),
 				e2eclean.MatchingGroup(operatorv1beta2.GroupVersion.Group),
@@ -99,7 +111,7 @@ Examples:
 			return fmt.Errorf("failed to clean SKR: %w", err)
 		}
 
-		fmt.Printf("\n✅ Successfully cleaned SKR instance %s\n", runtimeID)
+		fmt.Printf("\n✅ Successfully cleaned SKR instance %s\n", cmdInstanceCleanOptions.runtimeID)
 
 		return nil
 	},
@@ -107,13 +119,13 @@ Examples:
 
 func init() {
 	cmdInstance.AddCommand(cmdInstanceClean)
-	cmdInstanceClean.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "Runtime ID of the instance to clean")
-	cmdInstanceClean.Flags().StringVarP(&alias, "alias", "a", "", "Alias of the instance to clean")
-	cmdInstanceClean.Flags().BoolVarP(&waitDone, "wait", "w", false, "Wait until deleted")
-	cmdInstanceClean.Flags().DurationVarP(&timeout, "timeout", "t", 30*time.Minute, "Timeout to wait until deleted")
-	cmdInstanceClean.Flags().BoolVarP(&force, "force", "f", false, "Force delete after timeout")
-	cmdInstanceClean.Flags().BoolVarP(&dryRun, "dry-run", "", false, "Dry run")
-	cmdInstanceClean.Flags().BoolVarP(&verbose, "all", "", false, "Delete all from kyma groups cloud-resources and operator. Destructive! Deletes Kyma and CloudResources CR! If false it will delete all from cloud-resources except for CloudResources CR")
+	cmdInstanceClean.Flags().StringVarP(&cmdInstanceCleanOptions.runtimeID, "runtime-id", "r", "", "Runtime ID of the instance to clean")
+	cmdInstanceClean.Flags().StringVarP(&cmdInstanceCleanOptions.alias, "alias", "a", "", "Alias of the instance to clean")
+	cmdInstanceClean.Flags().BoolVarP(&cmdInstanceCleanOptions.waitDone, "wait", "w", false, "Wait until deleted")
+	cmdInstanceClean.Flags().DurationVarP(&cmdInstanceCleanOptions.timeout, "timeout", "t", 30*time.Minute, "Timeout to wait until deleted")
+	cmdInstanceClean.Flags().BoolVarP(&cmdInstanceCleanOptions.force, "force", "f", false, "Force delete after timeout")
+	cmdInstanceClean.Flags().BoolVarP(&cmdInstanceCleanOptions.dryRun, "dry-run", "", false, "Dry run")
+	cmdInstanceClean.Flags().BoolVarP(&cmdInstanceCleanOptions.all, "all", "", false, "Delete all from kyma groups cloud-resources and operator. Destructive! Deletes Kyma and CloudResources CR! If false it will delete all from cloud-resources except for CloudResources CR")
 	cmdInstanceClean.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceClean.MarkFlagsOneRequired("runtime-id", "alias")
 }

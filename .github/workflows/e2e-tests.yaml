@@ -124,7 +124,7 @@ jobs:
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
-          go run ./e2e/cmd instance modules add -m cloud-manager -a shared-$PROVIDER --wait --verbose
+          go run ./e2e/cmd instance modules add -m cloud-manager -a shared-$PROVIDER --wait --verbose --timeout 5m
 
       - name: run e2e tests
         env:

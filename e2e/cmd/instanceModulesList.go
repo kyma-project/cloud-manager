@@ -48,6 +48,14 @@ func (mi ModuleInfo) ToTableRows() []any {
 	}
 }
 
+type cmdInstanceModulesListOptionsType struct {
+	runtimeID string
+	alias     string
+	modules   []string
+}
+
+var cmdInstanceModulesListOptions cmdInstanceModulesListOptionsType
+
 var cmdInstanceModulesList = &cobra.Command{
 	Use: "list",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -57,11 +65,11 @@ var cmdInstanceModulesList = &cobra.Command{
 		}
 
 		var opts []e2ekeb.ListOption
-		if runtimeID != "" {
-			opts = append(opts, e2ekeb.WithRuntime(runtimeID))
+		if cmdInstanceModulesListOptions.runtimeID != "" {
+			opts = append(opts, e2ekeb.WithRuntime(cmdInstanceModulesListOptions.runtimeID))
 		}
-		if alias != "" {
-			opts = append(opts, e2ekeb.WithAlias(alias))
+		if cmdInstanceModulesListOptions.alias != "" {
+			opts = append(opts, e2ekeb.WithAlias(cmdInstanceModulesListOptions.alias))
 		}
 
 		arr, err := keb.List(rootCtx, opts...)
@@ -86,7 +94,7 @@ var cmdInstanceModulesList = &cobra.Command{
 			rtModules := map[string]*ModuleInfo{}
 
 			for _, m := range kcpKyma.Status.Modules {
-				if len(modules) > 0 && !pie.Contains(modules, m.Name) {
+				if len(cmdInstanceModulesListOptions.modules) > 0 && !pie.Contains(cmdInstanceModulesListOptions.modules, m.Name) {
 					continue
 				}
 				mi := &ModuleInfo{
@@ -100,7 +108,7 @@ var cmdInstanceModulesList = &cobra.Command{
 				rtModules[m.Name] = mi
 			}
 			for _, m := range kcpKyma.Spec.Modules {
-				if len(modules) > 0 && !pie.Contains(modules, m.Name) {
+				if len(cmdInstanceModulesListOptions.modules) > 0 && !pie.Contains(cmdInstanceModulesListOptions.modules, m.Name) {
 					continue
 				}
 				mi, ok := rtModules[m.Name]
@@ -158,8 +166,8 @@ var cmdInstanceModulesList = &cobra.Command{
 
 func init() {
 	cmdInstanceModules.AddCommand(cmdInstanceModulesList)
-	cmdInstanceModulesList.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "The runtime ID")
-	cmdInstanceModulesList.Flags().StringVarP(&alias, "alias", "a", "", "The runtime alias")
-	cmdInstanceModulesList.Flags().StringArrayVarP(&modules, "module-name", "m", nil, "The module name")
+	cmdInstanceModulesList.Flags().StringVarP(&cmdInstanceModulesListOptions.runtimeID, "runtime-id", "r", "", "The runtime ID")
+	cmdInstanceModulesList.Flags().StringVarP(&cmdInstanceModulesListOptions.alias, "alias", "a", "", "The runtime alias")
+	cmdInstanceModulesList.Flags().StringArrayVarP(&cmdInstanceModulesListOptions.modules, "module-name", "m", nil, "The module name")
 	cmdInstanceModulesList.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 }
