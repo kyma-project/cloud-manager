@@ -212,7 +212,7 @@ func LoadConfig() *ConfigType {
 				if err == nil {
 					if stat.IsDir() {
 						fn := filepath.Join(candidateDir, "e2e-config.yaml")
-						stat, err = os.Stat(fn)
+						_, err = os.Stat(fn)
 						if err == nil {
 							configDir = candidateDir
 							break

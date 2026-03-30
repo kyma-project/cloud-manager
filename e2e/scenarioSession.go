@@ -503,36 +503,6 @@ func (s *scenarioSession) addClusterAndStartIt(ctx context.Context, cc ClusterIn
 	}()
 }
 
-func (s *scenarioSession) _xxx_createManagerAndStartIt(ctx context.Context, id *e2ekeb.InstanceDetails, isSkrCreatedInSession bool) (ClusterInSession, error) {
-	clstr, err := s.world.Keb().CreateSkrManager(ctx, id.RuntimeID, e2ekeb.WithLogger(logr.Discard()))
-	if err != nil {
-		return nil, fmt.Errorf("error creating client cluster for runtime: %w", err)
-	}
-
-	cc := &defaultClusterInSession{
-		Cluster:               NewCluster(ctx, id.Alias, clstr, s.world.Config()),
-		isSkrCreatedInSession: isSkrCreatedInSession,
-		runtimeID:             id.RuntimeID,
-		shootName:             id.ShootName,
-		session:               s,
-	}
-	s.clusters = append(s.clusters, cc)
-	s.SetCurrentCluster(id.Alias)
-
-	s.wg.Add(1)
-	if s.ctx == nil {
-		s.ctx, s.cancel = context.WithCancel(ctx)
-	}
-	go func() {
-		defer s.wg.Done()
-		if err := cc.Start(s.ctx); err != nil {
-			s.runErr = multierror.Append(s.runErr, fmt.Errorf("error running %q: %w", id.Alias, err))
-		}
-	}()
-
-	return cc, nil
-}
-
 func (s *scenarioSession) AllClusters() []ClusterInSession {
 	result := make([]ClusterInSession, len(s.clusters))
 	for i, v := range s.clusters {
