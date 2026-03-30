@@ -189,13 +189,14 @@ jobs:
           fi
 
         # just in case it wasn't deleted gracefully - delete forcefully CloudResources and Kyma CR so Shoot can be deleted
+        # it may happen SKR instance does not exist, thus || true
       - name: Clean up everything from SKR forcefully
         if: always() && env.INPUTSOK != ''
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
           if [ -f "$KUBECONFIG" ]; then
-            go run ./e2e/cmd instance clean --alias shared-$PROVIDER --verbose --wait --all --force --timeout 1s
+            go run ./e2e/cmd instance clean --alias shared-$PROVIDER --verbose --wait --all --force --timeout 1s || true
           fi
 
       - name: Destroy E2E environment
