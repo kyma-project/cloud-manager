@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	filestore "cloud.google.com/go/filestore/apiv1"
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -47,26 +46,30 @@ func NewFilestoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpC
 
 // NewFilestoreClient creates a new FilestoreClient wrapping GcpClients.
 func NewFilestoreClient(gcpClients *gcpclient.GcpClients) FilestoreClient {
-	return &filestoreClient{
-		cloudFilestoreManager: gcpClients.Filestore,
+	return NewFilestoreClientFromFilestoreClient(gcpClients.FilestoreWrapped())
+}
+
+func NewFilestoreClientFromFilestoreClient(filestoreClient gcpclient.FilestoreClient) FilestoreClient {
+	return &filestoreClientImpl{
+		filestoreClient: filestoreClient,
 	}
 }
 
-// filestoreClient implements FilestoreClient using the modern GCP Filestore API.
-type filestoreClient struct {
-	cloudFilestoreManager *filestore.CloudFilestoreManagerClient
+// filestoreClientImpl implements FilestoreClient using the wrapped GCP Filestore interface.
+type filestoreClientImpl struct {
+	filestoreClient gcpclient.FilestoreClient
 }
 
-var _ FilestoreClient = &filestoreClient{}
+var _ FilestoreClient = &filestoreClientImpl{}
 
-func (c *filestoreClient) GetInstance(ctx context.Context, projectId, location, instanceId string) (*filestorepb.Instance, error) {
+func (c *filestoreClientImpl) GetInstance(ctx context.Context, projectId, location, instanceId string) (*filestorepb.Instance, error) {
 	logger := composed.LoggerFromCtx(ctx).WithValues("projectId", projectId, "location", location, "instanceId", instanceId)
 
 	req := &filestorepb.GetInstanceRequest{
 		Name: GetFilestoreName(projectId, location, instanceId),
 	}
 
-	instance, err := c.cloudFilestoreManager.GetInstance(ctx, req)
+	instance, err := c.filestoreClient.GetFilestoreInstance(ctx, req)
 
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
@@ -80,7 +83,7 @@ func (c *filestoreClient) GetInstance(ctx context.Context, projectId, location, 
 	return instance, nil
 }
 
-func (c *filestoreClient) CreateInstance(ctx context.Context, projectId, location, instanceId string, instance *filestorepb.Instance) (string, error) {
+func (c *filestoreClientImpl) CreateInstance(ctx context.Context, projectId, location, instanceId string, instance *filestorepb.Instance) (string, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	req := &filestorepb.CreateInstanceRequest{
@@ -89,7 +92,7 @@ func (c *filestoreClient) CreateInstance(ctx context.Context, projectId, locatio
 		Instance:   instance,
 	}
 
-	op, err := c.cloudFilestoreManager.CreateInstance(ctx, req)
+	op, err := c.filestoreClient.CreateFilestoreInstance(ctx, req)
 
 	if err != nil {
 		logger.Error(err, "Failed to create Filestore instance",
@@ -102,7 +105,7 @@ func (c *filestoreClient) CreateInstance(ctx context.Context, projectId, locatio
 	return op.Name(), nil
 }
 
-func (c *filestoreClient) UpdateInstance(ctx context.Context, projectId, location, instanceId string, instance *filestorepb.Instance, updateMask []string) (string, error) {
+func (c *filestoreClientImpl) UpdateInstance(ctx context.Context, projectId, location, instanceId string, instance *filestorepb.Instance, updateMask []string) (string, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	instance.Name = GetFilestoreName(projectId, location, instanceId)
@@ -114,7 +117,7 @@ func (c *filestoreClient) UpdateInstance(ctx context.Context, projectId, locatio
 		Instance: instance,
 	}
 
-	op, err := c.cloudFilestoreManager.UpdateInstance(ctx, req)
+	op, err := c.filestoreClient.UpdateFilestoreInstance(ctx, req)
 
 	if err != nil {
 		logger.Error(err, "Failed to update Filestore instance",
@@ -128,14 +131,14 @@ func (c *filestoreClient) UpdateInstance(ctx context.Context, projectId, locatio
 	return op.Name(), nil
 }
 
-func (c *filestoreClient) DeleteInstance(ctx context.Context, projectId, location, instanceId string) (string, error) {
+func (c *filestoreClientImpl) DeleteInstance(ctx context.Context, projectId, location, instanceId string) (string, error) {
 	logger := composed.LoggerFromCtx(ctx).WithValues("projectId", projectId, "location", location, "instanceId", instanceId)
 
 	req := &filestorepb.DeleteInstanceRequest{
 		Name: GetFilestoreName(projectId, location, instanceId),
 	}
 
-	op, err := c.cloudFilestoreManager.DeleteInstance(ctx, req)
+	op, err := c.filestoreClient.DeleteFilestoreInstance(ctx, req)
 
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
@@ -149,14 +152,14 @@ func (c *filestoreClient) DeleteInstance(ctx context.Context, projectId, locatio
 	return op.Name(), nil
 }
 
-func (c *filestoreClient) GetOperation(ctx context.Context, operationName string) (bool, error) {
+func (c *filestoreClientImpl) GetOperation(ctx context.Context, operationName string) (bool, error) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	req := &longrunningpb.GetOperationRequest{
 		Name: operationName,
 	}
 
-	op, err := c.cloudFilestoreManager.LROClient.GetOperation(ctx, req)
+	op, err := c.filestoreClient.GetFilestoreOperation(ctx, req)
 
 	if err != nil {
 		logger.Error(err, "Failed to get operation",

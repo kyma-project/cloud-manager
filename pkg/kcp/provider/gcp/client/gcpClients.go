@@ -305,6 +305,11 @@ func (c *GcpClients) RedisClusterWrapped() RedisClusterClient {
 	return &redisClusterClient{inner: c.RedisCluster}
 }
 
+// FilestoreWrapped is supposed to replace usage of field Filestore after the refactoring
+func (c *GcpClients) FilestoreWrapped() FilestoreClient {
+	return &filestoreClient{inner: c.Filestore}
+}
+
 func (c *VpcPeeringClients) Close() error {
 	return reflectingClose(c)
 }

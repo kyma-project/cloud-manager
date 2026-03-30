@@ -7,6 +7,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
@@ -85,6 +86,16 @@ func (s *server) RedisClusterProvider() gcpclient.GcpClientProvider[gcpredisclus
 			return nil
 		}
 		return gcpredisclusterclient.NewMemorystoreClientFromRedisClusterClient(sub)
+	}
+}
+
+func (s *server) NfsInstanceV2Provider() gcpclient.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient] {
+	return func(projectId string) gcpnfsinstancev2client.FilestoreClient {
+		sub := s.GetSubscription(projectId)
+		if sub == nil {
+			return nil
+		}
+		return gcpnfsinstancev2client.NewFilestoreClientFromFilestoreClient(sub)
 	}
 }
 

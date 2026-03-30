@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
+	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
+	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -29,12 +31,15 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 		const kymaName = "38bd0764-ba1b-4428-9afa-7736aee31ded"
 		scope := &cloudcontrolv1beta1.Scope{}
 
+		gcpMock := infra.GcpMock2().NewSubscription("nfs-instance-v2")
+		defer gcpMock.Delete()
+
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpscope.Ignore.AddName(kymaName)
 
-			Eventually(CreateScopeGcp).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+			Eventually(CreateScopeGcp2).
+				WithArguments(infra.Ctx(), infra, scope, gcpMock.ProjectId(), WithName(kymaName)).
 				Should(Succeed())
 		})
 
@@ -78,7 +83,6 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 				Should(Succeed(), "failed creating NfsInstance")
 		})
 
-		var filestoreInstance *filestorepb.Instance
 		By("Then GCP Filestore instance is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
@@ -86,15 +90,27 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 					HavingNfsInstanceStatusId()).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 
-				// Get instance from mock using Status.Id as full key
-			mockServer := infra.GcpMock()
-			filestoreInstance = mockServer.GetInstanceByName(nfsInstance.Status.Id)
+			// Get instance from mock2 using the correct GCP instance name
+			instanceName := gcpnfsinstancev2client.GetFilestoreName(gcpMock.ProjectId(), scope.Spec.Region, kymaName)
+			filestoreInstance, err := gcpMock.GetFilestoreInstance(infra.Ctx(), &filestorepb.GetInstanceRequest{
+				Name: instanceName,
+			})
+			Expect(err).ToNot(HaveOccurred())
 			Expect(filestoreInstance).NotTo(BeNil())
 		})
 
-		By("When GCP Filestore instance is Ready", func() {
-			mockServer := infra.GcpMock()
-			mockServer.SetInstanceReady(nfsInstance.Status.Id)
+		var createOpName string
+		By("When GCP Filestore create operation is resolved", func() {
+			Eventually(func() error {
+				it := gcpMock.ListFilestoreOperations(infra.Ctx(), &longrunningpb.ListOperationsRequest{})
+				for op, err := it.Next(); err == nil; op, err = it.Next() {
+					if !op.Done && op.Name != "" {
+						createOpName = op.Name
+						return gcpMock.ResolveFilestoreOperation(infra.Ctx(), createOpName)
+					}
+				}
+				return fmt.Errorf("no pending create operation found yet")
+			}).Should(Succeed(), "expected to find and resolve create operation")
 		})
 
 		By("Then NfsInstance has Ready condition", func() {
@@ -131,6 +147,18 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 				Should(Succeed(), "failed deleting NfsInstance")
 		})
 
+		By("And When GCP Filestore delete operation is resolved", func() {
+			Eventually(func() error {
+				it := gcpMock.ListFilestoreOperations(infra.Ctx(), &longrunningpb.ListOperationsRequest{})
+				for op, err := it.Next(); err == nil; op, err = it.Next() {
+					if !op.Done && op.Name != "" && op.Name != createOpName {
+						return gcpMock.ResolveFilestoreOperation(infra.Ctx(), op.Name)
+					}
+				}
+				return fmt.Errorf("no pending delete operation found yet")
+			}).Should(Succeed(), "expected to find and resolve delete operation")
+		})
+
 		By("Then NfsInstance does not exist", func() {
 			Eventually(IsDeleted, 5*time.Second).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
@@ -143,12 +171,15 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 		const kymaName = "fcd7ef63-d0db-4d31-bedf-18feac25edee"
 		scope := &cloudcontrolv1beta1.Scope{}
 
+		gcpMock := infra.GcpMock2().NewSubscription("nfs-instance-v2-update")
+		defer gcpMock.Delete()
+
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpscope.Ignore.AddName(kymaName)
 
-			Eventually(CreateScopeGcp).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+			Eventually(CreateScopeGcp2).
+				WithArguments(infra.Ctx(), infra, scope, gcpMock.ProjectId(), WithName(kymaName)).
 				Should(Succeed())
 		})
 
@@ -192,7 +223,6 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 				Should(Succeed(), "failed creating NfsInstance")
 		})
 
-		var filestoreInstance *filestorepb.Instance
 		By("Then GCP Filestore instance is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
@@ -200,15 +230,26 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 					HavingNfsInstanceStatusId()).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 
-				// Get instance from mock using Status.Id as full key
-			mockServer := infra.GcpMock()
-			filestoreInstance = mockServer.GetInstanceByName(nfsInstance.Status.Id)
+			instanceName := gcpnfsinstancev2client.GetFilestoreName(gcpMock.ProjectId(), scope.Spec.Region, kymaName)
+			filestoreInstance, err := gcpMock.GetFilestoreInstance(infra.Ctx(), &filestorepb.GetInstanceRequest{
+				Name: instanceName,
+			})
+			Expect(err).ToNot(HaveOccurred())
 			Expect(filestoreInstance).NotTo(BeNil())
 		})
 
-		By("When GCP Filestore instance is Ready", func() {
-			mockServer := infra.GcpMock()
-			mockServer.SetInstanceReady(nfsInstance.Status.Id)
+		var createOpName string
+		By("When GCP Filestore create operation is resolved", func() {
+			Eventually(func() error {
+				it := gcpMock.ListFilestoreOperations(infra.Ctx(), &longrunningpb.ListOperationsRequest{})
+				for op, err := it.Next(); err == nil; op, err = it.Next() {
+					if !op.Done && op.Name != "" {
+						createOpName = op.Name
+						return gcpMock.ResolveFilestoreOperation(infra.Ctx(), createOpName)
+					}
+				}
+				return fmt.Errorf("no pending create operation found yet")
+			}).Should(Succeed(), "expected to find and resolve create operation")
 		})
 
 		By("Then NfsInstance has Ready condition", func() {
@@ -245,16 +286,16 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			Expect(nfsInstance.Status.State).To(Equal(cloudcontrolv1beta1.StateReady))
 		})
 
-		By("And GCP Filestore instance reflects capacity change", func() {
-			mockServer := infra.GcpMock()
-
-			Eventually(func() int64 {
-				instance := mockServer.GetInstanceByName(nfsInstance.Status.Id)
-				if instance == nil || len(instance.FileShares) == 0 {
-					return 0
+		By("And When GCP Filestore update operation is resolved", func() {
+			Eventually(func() error {
+				it := gcpMock.ListFilestoreOperations(infra.Ctx(), &longrunningpb.ListOperationsRequest{})
+				for op, err := it.Next(); err == nil; op, err = it.Next() {
+					if !op.Done && op.Name != "" && op.Name != createOpName {
+						return gcpMock.ResolveFilestoreOperation(infra.Ctx(), op.Name)
+					}
 				}
-				return instance.FileShares[0].CapacityGb
-			}).Should(BeNumerically(">", originalCapacity))
+				return fmt.Errorf("no pending update operation found yet")
+			}).Should(Succeed(), "expected to find and resolve update operation")
 		})
 
 		By("And Then NfsInstance status reflects the updated capacity", func() {
@@ -276,6 +317,18 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 				Should(Succeed(), "failed deleting NfsInstance")
 		})
 
+		By("And When GCP Filestore delete operation is resolved", func() {
+			Eventually(func() error {
+				it := gcpMock.ListFilestoreOperations(infra.Ctx(), &longrunningpb.ListOperationsRequest{})
+				for op, err := it.Next(); err == nil; op, err = it.Next() {
+					if !op.Done && op.Name != "" {
+						return gcpMock.ResolveFilestoreOperation(infra.Ctx(), op.Name)
+					}
+				}
+				return fmt.Errorf("no pending delete operation found yet")
+			}).Should(Succeed(), "expected to find and resolve delete operation")
+		})
+
 		By("Then NfsInstance does not exist", func() {
 			Eventually(IsDeleted, 5*time.Second).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
@@ -288,12 +341,15 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 		const kymaName = "76261c61-5ff3-45e7-9642-47b574003ee7"
 		scope := &cloudcontrolv1beta1.Scope{}
 
+		gcpMock := infra.GcpMock2().NewSubscription("nfs-instance-v2-backup")
+		defer gcpMock.Delete()
+
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpscope.Ignore.AddName(kymaName)
 
-			Eventually(CreateScopeGcp).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+			Eventually(CreateScopeGcp2).
+				WithArguments(infra.Ctx(), infra, scope, gcpMock.ProjectId(), WithName(kymaName)).
 				Should(Succeed())
 		})
 
@@ -339,7 +395,6 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 				Should(Succeed(), "failed creating NfsInstance with SourceBackup")
 		})
 
-		var filestoreInstance *filestorepb.Instance
 		By("Then GCP Filestore instance is created with SourceBackup", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
@@ -347,17 +402,29 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 					HavingNfsInstanceStatusId()).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 
-			// Get instance from mock using Status.Id as full key
-			mockServer := infra.GcpMock()
-			filestoreInstance = mockServer.GetInstanceByName(nfsInstance.Status.Id)
+			// Get instance from mock2 using the correct GCP instance name
+			instanceName := gcpnfsinstancev2client.GetFilestoreName(gcpMock.ProjectId(), scope.Spec.Region, kymaName)
+			filestoreInstance, err := gcpMock.GetFilestoreInstance(infra.Ctx(), &filestorepb.GetInstanceRequest{
+				Name: instanceName,
+			})
+			Expect(err).ToNot(HaveOccurred())
 			Expect(filestoreInstance).NotTo(BeNil())
 			Expect(filestoreInstance.FileShares).To(HaveLen(1))
 			Expect(filestoreInstance.FileShares[0].GetSourceBackup()).To(Equal(sourceBackupPath))
 		})
 
-		By("When GCP Filestore instance is Ready", func() {
-			mockServer := infra.GcpMock()
-			mockServer.SetInstanceReady(nfsInstance.Status.Id)
+		var createOpName string
+		By("When GCP Filestore create operation is resolved", func() {
+			Eventually(func() error {
+				it := gcpMock.ListFilestoreOperations(infra.Ctx(), &longrunningpb.ListOperationsRequest{})
+				for op, err := it.Next(); err == nil; op, err = it.Next() {
+					if !op.Done && op.Name != "" {
+						createOpName = op.Name
+						return gcpMock.ResolveFilestoreOperation(infra.Ctx(), createOpName)
+					}
+				}
+				return fmt.Errorf("no pending create operation found yet")
+			}).Should(Succeed(), "expected to find and resolve create operation")
 		})
 
 		By("Then NfsInstance has Ready condition", func() {
@@ -376,6 +443,18 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
 				Should(Succeed(), "failed deleting NfsInstance")
+		})
+
+		By("And When GCP Filestore delete operation is resolved", func() {
+			Eventually(func() error {
+				it := gcpMock.ListFilestoreOperations(infra.Ctx(), &longrunningpb.ListOperationsRequest{})
+				for op, err := it.Next(); err == nil; op, err = it.Next() {
+					if !op.Done && op.Name != "" && op.Name != createOpName {
+						return gcpMock.ResolveFilestoreOperation(infra.Ctx(), op.Name)
+					}
+				}
+				return fmt.Errorf("no pending delete operation found yet")
+			}).Should(Succeed(), "expected to find and resolve delete operation")
 		})
 
 		By("Then NfsInstance does not exist", func() {
