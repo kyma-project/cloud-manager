@@ -220,6 +220,60 @@ func CreateScopeGcp(ctx context.Context, infra testinfra.Infra, scope *cloudcont
 	return nil
 }
 
+func CreateScopeGcp2(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, projectId string, opts ...ObjAction) error {
+	if scope == nil {
+		scope = &cloudcontrolv1beta1.Scope{}
+	}
+
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultKcpNamespace),
+		).
+		ApplyOnObject(scope)
+
+	project := strings.TrimPrefix(scope.Namespace, "garden-")
+
+	scope.Spec = cloudcontrolv1beta1.ScopeSpec{
+		KymaName:  scope.Name,
+		Region:    "us-central1",
+		ShootName: scope.Name,
+		Provider:  cloudcontrolv1beta1.ProviderGCP,
+		Scope: cloudcontrolv1beta1.ScopeInfo{
+			Gcp: &cloudcontrolv1beta1.GcpScope{
+				VpcNetwork: fmt.Sprintf("shoot--%s--%s", project, scope.Name),
+				Project:    projectId,
+				Network: cloudcontrolv1beta1.GcpNetwork{
+					Nodes:    "10.250.0.0/22",
+					Pods:     "10.96.0.0/13",
+					Services: "10.104.0.0/13",
+				},
+				Workers: []cloudcontrolv1beta1.GcpWorkers{
+					{
+						Zones: []string{"us-central1-a", "us-central1-b", "us-central1-c"},
+					},
+				},
+			},
+		},
+	}
+
+	err := infra.KCP().Client().Create(ctx, scope)
+	if err != nil {
+		return err
+	}
+
+	kyma := util.NewKymaUnstructured()
+	if err := CreateKymaCR(ctx, infra, kyma,
+		WithName(scope.Name),
+		WithKymaModuleListedInSpec(),
+		WithKymaStatusModuleState(util.KymaModuleStateReady),
+		WithKymaSpecChannel("fast"),
+	); err != nil {
+		return fmt.Errorf("error creating kyma: %w", err)
+	}
+
+	return nil
+}
+
 func CreateScopeOpenStack(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, pp sapclient.ProviderParams, opts ...ObjAction) error {
 	if scope == nil {
 		scope = &cloudcontrolv1beta1.Scope{}

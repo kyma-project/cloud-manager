@@ -27,8 +27,6 @@ import (
 
 	iprangeallocate "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -88,8 +86,6 @@ var _ = BeforeSuite(func() {
 	// Setup environment variables
 	env := abstractions.NewMockedEnvironment(map[string]string{})
 
-	testSetupLog := ctrl.Log.WithName("testSetup")
-
 	// Setup controllers
 	// Test Only PV Controller
 	Expect(testinfra.SetupPvController(infra.Registry())).
@@ -119,7 +115,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupGcpNfsVolumeBackupReconciler(infra.Registry(), infra.GcpMock().FileBackupClientProvider(), infra.GcpMock().FileBackupClientProviderV2(), env)).
 		NotTo(HaveOccurred())
 	// GcpNfsVolumeBackupDiscovery
-	Expect(SetupGcpNfsVolumeBackupDiscoveryReconciler(infra.Registry(), infra.GcpMock().FileBackupClientProvider(), env, testSetupLog)).
+	Expect(SetupGcpNfsVolumeBackupDiscoveryReconciler(infra.Registry(), infra.GcpMock().FileBackupClientProviderV2())).
 		NotTo(HaveOccurred())
 	// GcpRedisInstance
 	Expect(SetupGcpRedisInstanceReconciler(infra.Registry())).

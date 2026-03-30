@@ -116,7 +116,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().NfsInstanceSkrProvider(),
 		infra.GcpMock().FilestoreClientProvider(),
-		infra.GcpMock().FilestoreClientProviderV2(),
+		infra.GcpMock2().NfsInstanceV2Provider(),
 		infra.SapMock().NfsInstanceProvider(),
 		env,
 	)).NotTo(HaveOccurred())
@@ -131,7 +131,7 @@ var _ = BeforeSuite(func() {
 	// RedisInstance
 	Expect(SetupRedisInstanceReconciler(
 		infra.KcpManager(),
-		infra.GcpMock().MemoryStoreProviderFake(),
+		infra.GcpMock2().RedisInstanceProvider(),
 		infra.AzureMock().RedisClientProvider(),
 		infra.AwsMock().ElastiCacheProviderFake(),
 		env,
@@ -145,7 +145,7 @@ var _ = BeforeSuite(func() {
 	)).NotTo(HaveOccurred())
 	Expect(SetupGcpRedisClusterReconciler(
 		infra.KcpManager(),
-		infra.GcpMock().MemoryStoreClusterProviderFake(),
+		infra.GcpMock2().RedisClusterProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	// Network
@@ -167,9 +167,9 @@ var _ = BeforeSuite(func() {
 	Expect(SetupGcpSubnetReconciler(
 		infra.Ctx(),
 		infra.KcpManager(),
-		infra.GcpMock().SubnetComputeClientProvider(),
-		infra.GcpMock().SubnetNetworkConnectivityProvider(),
-		infra.GcpMock().SubnetRegionOperationsClientProvider(),
+		infra.GcpMock2().SubnetComputeProvider(),
+		infra.GcpMock2().SubnetNetworkConnectivityProvider(),
+		infra.GcpMock2().SubnetRegionOperationsProvider(),
 		env,
 	)).To(Succeed())
 	//AzureVNetLink

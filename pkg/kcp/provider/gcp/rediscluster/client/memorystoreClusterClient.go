@@ -8,7 +8,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/utils/ptr"
 
-	cluster "cloud.google.com/go/redis/cluster/apiv1"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
@@ -39,16 +38,22 @@ func NewMemorystoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.Gc
 }
 
 func NewMemorystoreClient(gcpClients *gcpclient.GcpClients) MemorystoreClusterClient {
-	return &memorystoreClient{redisClusterClient: gcpClients.RedisCluster}
+	return NewMemorystoreClientFromRedisClusterClient(gcpClients.RedisClusterWrapped())
+}
+
+func NewMemorystoreClientFromRedisClusterClient(redisClusterClient gcpclient.RedisClusterClient) MemorystoreClusterClient {
+	return &memorystoreClient{
+		redisClusterClient: redisClusterClient,
+	}
 }
 
 type memorystoreClient struct {
-	redisClusterClient *cluster.CloudRedisClusterClient
+	redisClusterClient gcpclient.RedisClusterClient
 }
 
 func (memorystoreClient *memorystoreClient) GetRedisClusterCertificateAuthority(ctx context.Context, projectId, locationId, clusterId string) (string, error) {
 	name := GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
-	response, err := memorystoreClient.redisClusterClient.GetClusterCertificateAuthority(ctx, &clusterpb.GetClusterCertificateAuthorityRequest{
+	response, err := memorystoreClient.redisClusterClient.GetRedisClusterCertificateAuthority(ctx, &clusterpb.GetClusterCertificateAuthorityRequest{
 		Name: name,
 	})
 
@@ -72,7 +77,7 @@ func (memorystoreClient *memorystoreClient) UpdateRedisCluster(ctx context.Conte
 		Cluster: redisCluster,
 	}
 
-	_, err := memorystoreClient.redisClusterClient.UpdateCluster(ctx, req)
+	_, err := memorystoreClient.redisClusterClient.UpdateRedisCluster(ctx, req)
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
 		logger.Error(err, "Failed to update redis cluster", "redisCluster", redisCluster.Name)
@@ -106,7 +111,7 @@ func (memorystoreClient *memorystoreClient) CreateRedisCluster(ctx context.Conte
 		},
 	}
 
-	_, err := memorystoreClient.redisClusterClient.CreateCluster(ctx, req)
+	_, err := memorystoreClient.redisClusterClient.CreateRedisCluster(ctx, req)
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)
@@ -125,7 +130,7 @@ func (memorystoreClient *memorystoreClient) GetRedisCluster(ctx context.Context,
 		Name: name,
 	}
 
-	instanceResponse, err := memorystoreClient.redisClusterClient.GetCluster(ctx, req)
+	instanceResponse, err := memorystoreClient.redisClusterClient.GetRedisCluster(ctx, req)
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target Redis instance not found")
@@ -143,7 +148,7 @@ func (memorystoreClient *memorystoreClient) DeleteRedisCluster(ctx context.Conte
 		Name: GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId),
 	}
 
-	_, err := memorystoreClient.redisClusterClient.DeleteCluster(ctx, req)
+	_, err := memorystoreClient.redisClusterClient.DeleteRedisCluster(ctx, req)
 
 	if err != nil {
 		logger := composed.LoggerFromCtx(ctx)

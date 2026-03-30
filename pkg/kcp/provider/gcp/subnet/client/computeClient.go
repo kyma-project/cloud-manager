@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"k8s.io/utils/ptr"
@@ -47,17 +46,21 @@ func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpCli
 }
 
 func NewComputeClient(gcpClients *gcpclient.GcpClients) ComputeClient {
-	return &computeClient{subnetworksClient: gcpClients.ComputeSubnetworks}
+	return NewComputeClientFromSubnetClient(gcpClients.SubnetWrapped())
+}
+
+func NewComputeClientFromSubnetClient(subnetClient gcpclient.SubnetClient) ComputeClient {
+	return &computeClient{subnetClient: subnetClient}
 }
 
 type computeClient struct {
-	subnetworksClient *compute.SubnetworksClient
+	subnetClient gcpclient.SubnetClient
 }
 
 func (computeClient *computeClient) CreateSubnet(ctx context.Context, request CreateSubnetRequest) (string, error) {
 	networkNameFull := fmt.Sprintf("projects/%s/global/networks/%s", request.ProjectId, request.Network)
 
-	op, err := computeClient.subnetworksClient.Insert(ctx, &computepb.InsertSubnetworkRequest{
+	op, err := computeClient.subnetClient.InsertSubnet(ctx, &computepb.InsertSubnetworkRequest{
 		Project: request.ProjectId,
 		Region:  request.Region,
 		SubnetworkResource: &computepb.Subnetwork{
@@ -78,7 +81,7 @@ func (computeClient *computeClient) CreateSubnet(ctx context.Context, request Cr
 }
 
 func (computeClient *computeClient) GetSubnet(ctx context.Context, request GetSubnetRequest) (*computepb.Subnetwork, error) {
-	subnet, err := computeClient.subnetworksClient.Get(ctx, &computepb.GetSubnetworkRequest{
+	subnet, err := computeClient.subnetClient.GetSubnet(ctx, &computepb.GetSubnetworkRequest{
 		Project:    request.ProjectId,
 		Region:     request.Region,
 		Subnetwork: request.Name,
@@ -92,7 +95,7 @@ func (computeClient *computeClient) GetSubnet(ctx context.Context, request GetSu
 }
 
 func (computeClient *computeClient) DeleteSubnet(ctx context.Context, request DeleteSubnetRequest) error {
-	_, err := computeClient.subnetworksClient.Delete(ctx, &computepb.DeleteSubnetworkRequest{
+	_, err := computeClient.subnetClient.DeleteSubnet(ctx, &computepb.DeleteSubnetworkRequest{
 		Project:    request.ProjectId,
 		Region:     request.Region,
 		Subnetwork: request.Name,

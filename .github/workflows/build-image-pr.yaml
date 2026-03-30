@@ -25,9 +25,14 @@ jobs:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Build Image Locally
         uses: docker/build-push-action@v6
         with:
+          context: .
           outputs: type=cacheonly
           push: false
           tags: user/app:latest

@@ -12,6 +12,7 @@ import (
 type RedisInstanceClient interface {
 	CreateRedisInstance(ctx context.Context, req *redispb.CreateInstanceRequest, opts ...gax.CallOption) (ResultOperation[*redispb.Instance], error)
 	GetRedisInstance(ctx context.Context, req *redispb.GetInstanceRequest, opts ...gax.CallOption) (*redispb.Instance, error)
+	GetRedisInstanceAuthString(ctx context.Context, req *redispb.GetInstanceAuthStringRequest, opts ...gax.CallOption) (*redispb.InstanceAuthString, error)
 	UpdateRedisInstance(ctx context.Context, req *redispb.UpdateInstanceRequest, opts ...gax.CallOption) (ResultOperation[*redispb.Instance], error)
 	UpgradeRedisInstance(ctx context.Context, req *redispb.UpgradeInstanceRequest, opts ...gax.CallOption) (ResultOperation[*redispb.Instance], error)
 	DeleteRedisInstance(ctx context.Context, req *redispb.DeleteInstanceRequest, opts ...gax.CallOption) (VoidOperation, error)
@@ -32,6 +33,10 @@ func (c *redisInstanceClient) CreateRedisInstance(ctx context.Context, req *redi
 
 func (c *redisInstanceClient) GetRedisInstance(ctx context.Context, req *redispb.GetInstanceRequest, opts ...gax.CallOption) (*redispb.Instance, error) {
 	return c.inner.GetInstance(ctx, req)
+}
+
+func (c *redisInstanceClient) GetRedisInstanceAuthString(ctx context.Context, req *redispb.GetInstanceAuthStringRequest, opts ...gax.CallOption) (*redispb.InstanceAuthString, error) {
+	return c.inner.GetInstanceAuthString(ctx, req, opts...)
 }
 
 func (c *redisInstanceClient) UpdateRedisInstance(ctx context.Context, req *redispb.UpdateInstanceRequest, opts ...gax.CallOption) (ResultOperation[*redispb.Instance], error) {

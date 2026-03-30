@@ -103,7 +103,7 @@ func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetwor
 
 	// create the subnet
 
-	subnet, err := util.JsonClone(req.SubnetworkResource)
+	subnet, err := util.Clone(req.SubnetworkResource)
 	if err != nil {
 		return nil, fmt.Errorf("failed to clone subnetwork resource: %w", err)
 	}
@@ -154,7 +154,7 @@ func (s *store) GetSubnet(ctx context.Context, req *computepb.GetSubnetworkReque
 		return nil, err
 	}
 
-	cpy, err := util.JsonClone(subnet)
+	cpy, err := util.Clone(subnet)
 	if err != nil {
 		return nil, fmt.Errorf("failed to clone subnet: %w", err)
 	}
