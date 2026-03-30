@@ -27,6 +27,10 @@ on:
         required: false
         description: 'Feature flag file: ff_edge.yaml (default, with backup) | ff_ga.yaml (GA only)'
         default: ./pkg/feature/ff_edge.yaml
+
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
