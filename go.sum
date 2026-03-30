@@ -227,7 +227,6 @@ github.com/fsouza/fake-gcs-server v1.54.0 h1:DGO4EkFVbtP/A5Ha+CAHHx+Xa6O6LeskMB4
 github.com/fsouza/fake-gcs-server v1.54.0/go.mod h1:ryXYE4debQs8GjOxwaOAwFRwM4Cvs6S+NKPPgdVJe6g=
 github.com/fxamacker/cbor/v2 v2.9.0 h1:NpKPmjDBgUfBms6tr6JZkTHtfFGcMKsw3eGcmD/sapM=
 github.com/fxamacker/cbor/v2 v2.9.0/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
-github.com/gardener/gardener v1.137.5 h1:rnpkiWL3MR13D9Z2stTL4GvmXWzfCn+Nn6DcA17m1+Q=
 github.com/gardener/gardener-extension-provider-aws v1.68.3 h1:AEDyczZycAqYmQASI/soZfkyUOcWbk+g8lnylVnvGH4=
 github.com/gardener/gardener-extension-provider-aws v1.68.3/go.mod h1:ZcrTrielsv6kSd6qsgL4hkfZFAghhhS05cBI6U2eY9k=
 github.com/gardener/gardener-extension-provider-azure v1.59.0 h1:RveMz6rn/e6sGvzGfI+6nXyfaT5JZiCuzY+fRNKp9bA=
