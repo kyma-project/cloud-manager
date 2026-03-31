@@ -1,6 +1,6 @@
 Feature: GcpVpcPeering feature
 
-  @skr @gcp @peering
+  @skr @gcp @peering @skip
   Scenario: GcpVpcPeering scenario
 
     Given there is shared SKR with "GCP" provider

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -45,7 +46,6 @@ type ConfigType struct {
 	OverwriteGardenerCredentials bool `yaml:"overwriteGardenerCredentials" json:"overwriteGardenerCredentials"`
 
 	ConfigDir      string `yaml:"configDir" json:"configDir"`
-	CredentialsDir string `yaml:"credentialsDir" json:"credentialsDir"`
 	TfWorkspaceDir string `yaml:"tfWorkspaceDir" json:"tfWorkspaceDir"`
 	TfCmd          string `yaml:"tfCmd" json:"tfCmd"`
 
@@ -198,21 +198,43 @@ func LoadConfig() *ConfigType {
 	cfg := config.NewConfig(env)
 	configDir := env.Get("CONFIG_DIR")
 	if configDir == "" {
-		configDir = env.Get("PROJECTROOT")
+		projectRoot := env.Get("PROJECTROOT")
+		if projectRoot != "" {
+			configDir = filepath.Join(projectRoot, "tmp")
+		}
 	}
 	if configDir == "" {
-		configDir = "../../../../"
+		currentDir, err := os.Getwd()
+		if err == nil {
+			for {
+				candidateDir := filepath.Join(currentDir, "tmp")
+				stat, err := os.Stat(candidateDir)
+				if err == nil {
+					if stat.IsDir() {
+						fn := filepath.Join(candidateDir, "e2e-config.yaml")
+						_, err = os.Stat(fn)
+						if err == nil {
+							configDir = candidateDir
+							break
+						}
+					}
+				}
+				currentDir = filepath.Dir(currentDir)
+				if currentDir == string(os.PathSeparator) || filepath.Base(currentDir) == "kyma-project" || filepath.Base(currentDir) == "github.com" {
+					break
+				}
+			}
+		}
+		if configDir == "" {
+			panic("could not find config directory, either: 1) set CONFIG_DIR environment variable pointing to the config dir itself, 2) run in or below of the cloud-manager repo for auto-detect, 3) set PROJECTROOT environment variable pointing to the root of cloud-manager repo")
+		}
+	}
+	if !strings.HasPrefix(configDir, "/") {
+		panic("configDir must be an absolute path")
 	}
 	result := &ConfigType{}
 	result.ConfigDir = configDir
-	if !strings.HasPrefix(configDir, "/") {
-		wd, err := os.Getwd()
-		if err == nil {
-			result.ConfigDir = path.Join(wd, configDir)
-		}
-	}
-	result.CredentialsDir = path.Join(result.ConfigDir, "tmp")
-	result.TfWorkspaceDir = path.Join(result.CredentialsDir, "tf-workspaces")
+	result.TfWorkspaceDir = path.Join(result.ConfigDir, "tf-workspaces")
 	cfg.BaseDir(configDir)
 	initConfig(cfg, result)
 	cfg.Read()

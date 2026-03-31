@@ -10,6 +10,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+type cmdInstanceModulesRemoveOptionsType struct {
+	runtimeID  string
+	alias      string
+	moduleName string
+}
+
+var cmdInstanceModulesRemoveOptions cmdInstanceModulesRemoveOptionsType
+
 var cmdInstanceModulesRemove = &cobra.Command{
 	Use: "remove",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -18,23 +26,23 @@ var cmdInstanceModulesRemove = &cobra.Command{
 			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		if runtimeID == "" {
-			idArr, err := keb.List(rootCtx, e2ekeb.WithAlias(alias))
+		if cmdInstanceModulesRemoveOptions.runtimeID == "" {
+			idArr, err := keb.List(rootCtx, e2ekeb.WithAlias(cmdInstanceModulesRemoveOptions.alias))
 			if err != nil {
 				return fmt.Errorf("failed to list runtimes: %w", err)
 			}
 			if len(idArr) == 0 {
-				return fmt.Errorf("runtime with alias %q not found", alias)
+				return fmt.Errorf("runtime with alias %q not found", cmdInstanceModulesRemoveOptions.alias)
 			}
 			if len(idArr) > 1 {
-				return fmt.Errorf("multiple runtimes with alias %q found: %v", alias, pie.Map(idArr, func(x e2ekeb.InstanceDetails) string {
+				return fmt.Errorf("multiple runtimes with alias %q found: %v", cmdInstanceModulesRemoveOptions.alias, pie.Map(idArr, func(x e2ekeb.InstanceDetails) string {
 					return x.RuntimeID
 				}))
 			}
-			runtimeID = idArr[0].RuntimeID
+			cmdInstanceModulesRemoveOptions.runtimeID = idArr[0].RuntimeID
 		}
 
-		clnt, err := keb.CreateInstanceClient(rootCtx, runtimeID)
+		clnt, err := keb.CreateInstanceClient(rootCtx, cmdInstanceModulesRemoveOptions.runtimeID)
 		if err != nil {
 			return err
 		}
@@ -50,7 +58,7 @@ var cmdInstanceModulesRemove = &cobra.Command{
 
 		isFound := false
 		for _, m := range kyma.Spec.Modules {
-			if m.Name == moduleName {
+			if m.Name == cmdInstanceModulesRemoveOptions.moduleName {
 				isFound = true
 				break
 			}
@@ -62,7 +70,7 @@ var cmdInstanceModulesRemove = &cobra.Command{
 		}
 
 		kyma.Spec.Modules = pie.FilterNot(kyma.Spec.Modules, func(m operatorv1beta2.Module) bool {
-			return m.Name == moduleName
+			return m.Name == cmdInstanceModulesRemoveOptions.moduleName
 		})
 
 		err = clnt.Update(rootCtx, kyma)
@@ -78,9 +86,9 @@ var cmdInstanceModulesRemove = &cobra.Command{
 
 func init() {
 	cmdInstanceModules.AddCommand(cmdInstanceModulesRemove)
-	cmdInstanceModulesRemove.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "The runtime ID")
-	cmdInstanceModulesRemove.Flags().StringVarP(&alias, "alias", "a", "", "The runtime alias")
-	cmdInstanceModulesRemove.Flags().StringVarP(&moduleName, "module", "m", "", "The module name")
+	cmdInstanceModulesRemove.Flags().StringVarP(&cmdInstanceModulesRemoveOptions.runtimeID, "runtime-id", "r", "", "The runtime ID")
+	cmdInstanceModulesRemove.Flags().StringVarP(&cmdInstanceModulesRemoveOptions.alias, "alias", "a", "", "The runtime alias")
+	cmdInstanceModulesRemove.Flags().StringVarP(&cmdInstanceModulesRemoveOptions.moduleName, "module", "m", "", "The module name")
 	_ = cmdInstanceModulesRemove.MarkFlagRequired("module")
 	cmdInstanceModulesRemove.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceModulesRemove.MarkFlagsOneRequired("runtime-id", "alias")

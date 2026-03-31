@@ -52,13 +52,6 @@ type skrManagerFactoryCreateOptions struct {
 	logger *logr.Logger
 }
 
-type WithLogger logr.Logger
-
-func (o WithLogger) ApplyOnCreate(opts *skrManagerFactoryCreateOptions) {
-	l := logr.Logger(o)
-	opts.logger = &l
-}
-
 func (f *defaultSkrManagerFactory) CreateSkrManager(ctx context.Context, runtimeID string, opts ...SkrManagerFactoryOption) (manager.Manager, error) {
 	options := &skrManagerFactoryCreateOptions{}
 	for _, o := range opts {

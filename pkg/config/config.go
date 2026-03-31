@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+	"gopkg.in/yaml.v3"
 )
 
 func NewConfig(env abstractions.Environment) Config {
@@ -215,11 +216,27 @@ func (c *config) Json() string {
 func (c *config) PrintJson() string {
 	js := c.js
 	for _, sensitivePath := range c.sensitive {
-		jsjs, err := sjson.Set(js, sensitivePath, "*****")
-		if err != nil {
-			return fmt.Sprintf("error: %s", js)
+		if len(gjson.Get(js, sensitivePath).Raw) > 0 {
+			jsjs, err := sjson.Set(js, sensitivePath, "*****")
+			if err != nil {
+				return fmt.Sprintf("error: %s", js)
+			}
+			js = jsjs
 		}
-		js = jsjs
 	}
 	return js
+}
+
+func (c *config) PrintYaml() string {
+	js := c.js
+	data := map[string]interface{}{}
+	err := json.Unmarshal([]byte(js), &data)
+	if err != nil {
+		return fmt.Sprintf("error unmarshaling josn: %v", err)
+	}
+	b, err := yaml.Marshal(data)
+	if err != nil {
+		return fmt.Sprintf("error marshaling yaml: %v", err)
+	}
+	return string(b)
 }

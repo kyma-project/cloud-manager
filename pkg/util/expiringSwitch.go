@@ -11,8 +11,8 @@ import (
 var _expiringSwitch ExpiringSwitchType
 
 func init() {
-	expiration := 10 * time.Minute
-	cleanup := 15 * time.Minute
+	expiration := 5 * time.Minute
+	cleanup := 10 * time.Minute
 	_expiringSwitch = &expiringFlagImpl{
 		cache:      cache.New(expiration, cleanup),
 		expiration: expiration,

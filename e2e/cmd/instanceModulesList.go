@@ -48,6 +48,14 @@ func (mi ModuleInfo) ToTableRows() []any {
 	}
 }
 
+type cmdInstanceModulesListOptionsType struct {
+	runtimeID string
+	alias     string
+	modules   []string
+}
+
+var cmdInstanceModulesListOptions cmdInstanceModulesListOptionsType
+
 var cmdInstanceModulesList = &cobra.Command{
 	Use: "list",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -56,30 +64,22 @@ var cmdInstanceModulesList = &cobra.Command{
 			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		var runtimeIdList []string
-		if len(runtimes) > 0 {
-			runtimeIdList = append([]string{}, runtimes...)
-		} else {
-			idArr, err := keb.List(rootCtx)
-			if err != nil {
-				return fmt.Errorf("failed to list keb instances: %w", err)
-			}
-			for _, id := range idArr {
-				if aliases == nil || pie.Contains(aliases, id.Alias) {
-					runtimeIdList = append(runtimeIdList, id.RuntimeID)
-				}
-			}
+		var opts []e2ekeb.ListOption
+		if cmdInstanceModulesListOptions.runtimeID != "" {
+			opts = append(opts, e2ekeb.WithRuntime(cmdInstanceModulesListOptions.runtimeID))
+		}
+		if cmdInstanceModulesListOptions.alias != "" {
+			opts = append(opts, e2ekeb.WithAlias(cmdInstanceModulesListOptions.alias))
+		}
+
+		arr, err := keb.List(rootCtx, opts...)
+		if err != nil {
+			return fmt.Errorf("failed to list instances: %w", err)
 		}
 
 		tbl := table.New("Alias", "Runtime", "Module", "Spec", "Status", "State", "Message", "CR State").WithPadding(4)
 
-		for _, rtID := range runtimeIdList {
-
-			id, err := keb.GetInstance(rootCtx, rtID)
-			if err != nil {
-				tbl.AddRow("?", rtID, "", "", "", "", err.Error())
-				continue
-			}
+		for _, id := range arr {
 
 			kcpKyma := &operatorv1beta2.Kyma{}
 			err = keb.KcpClient().Get(rootCtx, types.NamespacedName{
@@ -94,7 +94,7 @@ var cmdInstanceModulesList = &cobra.Command{
 			rtModules := map[string]*ModuleInfo{}
 
 			for _, m := range kcpKyma.Status.Modules {
-				if len(modules) > 0 && !pie.Contains(modules, m.Name) {
+				if len(cmdInstanceModulesListOptions.modules) > 0 && !pie.Contains(cmdInstanceModulesListOptions.modules, m.Name) {
 					continue
 				}
 				mi := &ModuleInfo{
@@ -108,7 +108,7 @@ var cmdInstanceModulesList = &cobra.Command{
 				rtModules[m.Name] = mi
 			}
 			for _, m := range kcpKyma.Spec.Modules {
-				if len(modules) > 0 && !pie.Contains(modules, m.Name) {
+				if len(cmdInstanceModulesListOptions.modules) > 0 && !pie.Contains(cmdInstanceModulesListOptions.modules, m.Name) {
 					continue
 				}
 				mi, ok := rtModules[m.Name]
@@ -126,7 +126,7 @@ var cmdInstanceModulesList = &cobra.Command{
 
 			for _, mi := range rtModules {
 				if mi.Name == "cloud-manager" {
-					clnt, err := keb.CreateInstanceClient(rootCtx, rtID)
+					clnt, err := keb.CreateInstanceClient(rootCtx, id.RuntimeID)
 					if err != nil {
 						mi.CrState = err.Error()
 						break
@@ -166,8 +166,8 @@ var cmdInstanceModulesList = &cobra.Command{
 
 func init() {
 	cmdInstanceModules.AddCommand(cmdInstanceModulesList)
-	cmdInstanceModulesList.Flags().StringArrayVarP(&runtimes, "runtime-id", "r", nil, "The runtime ID")
-	cmdInstanceModulesList.Flags().StringArrayVarP(&aliases, "alias", "a", nil, "The runtime alias")
-	cmdInstanceModulesList.Flags().StringArrayVarP(&modules, "module-name", "m", nil, "The module name")
+	cmdInstanceModulesList.Flags().StringVarP(&cmdInstanceModulesListOptions.runtimeID, "runtime-id", "r", "", "The runtime ID")
+	cmdInstanceModulesList.Flags().StringVarP(&cmdInstanceModulesListOptions.alias, "alias", "a", "", "The runtime alias")
+	cmdInstanceModulesList.Flags().StringArrayVarP(&cmdInstanceModulesListOptions.modules, "module-name", "m", nil, "The module name")
 	cmdInstanceModulesList.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 }

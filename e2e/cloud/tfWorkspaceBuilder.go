@@ -3,6 +3,7 @@ package cloud
 import (
 	"errors"
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -13,6 +14,8 @@ import (
 
 type TFWorkspaceBuilder struct {
 	ws *tfWorkspace
+
+	modulesDir string
 }
 
 func NewTFWorkspaceBuilder(alias string, env map[string]string, config *e2econfig.ConfigType) *TFWorkspaceBuilder {
@@ -24,13 +27,17 @@ func NewTFWorkspaceBuilder(alias string, env map[string]string, config *e2econfi
 			name:    util.RandomString(8),
 			env:     env,
 		},
+		modulesDir: path.Clean(path.Join(config.ConfigDir, "..", "e2e", "tf")),
 	}
 	b.ws.data.Module.Variables = map[string]string{}
 	return b
 }
 
 func (b *TFWorkspaceBuilder) WithSource(source string) *TFWorkspaceBuilder {
-	parts := strings.SplitN(source, " ", 2)
+	parts := strings.SplitN(source, "@", 2)
+	if strings.HasPrefix(parts[0], "./") {
+		parts[0] = path.Clean(path.Join(b.modulesDir, parts[0]))
+	}
 	b.ws.data.Module.Source = parts[0]
 	if len(parts) == 2 {
 		b.ws.data.Module.Version = parts[1]
@@ -39,7 +46,7 @@ func (b *TFWorkspaceBuilder) WithSource(source string) *TFWorkspaceBuilder {
 }
 
 func (b *TFWorkspaceBuilder) WithProvider(provider string) *TFWorkspaceBuilder {
-	parts := strings.SplitN(provider, " ", 2)
+	parts := strings.SplitN(provider, "@", 2)
 	name := filepath.Base(parts[0])
 	p := TfTemplateProvider{
 		Name:   name,

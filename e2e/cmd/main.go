@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
+	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -31,10 +32,9 @@ var cmdRoot = &cobra.Command{
 		if configDir != "" {
 			_ = os.Setenv("CONFIG_DIR", configDir)
 		}
-		if configDir == "" && os.Getenv("CONFIG_DIR") == "" {
-			_ = os.Setenv("CONFIG_DIR", ".")
-		}
 		config = e2econfig.LoadConfig()
+
+		_ = commonconfig.CreateNewConfigAndLoad()
 
 		return nil
 	},
@@ -42,6 +42,7 @@ var cmdRoot = &cobra.Command{
 
 func init() {
 	cmdRoot.PersistentFlags().StringVar(&configDir, "config-dir", "", "Path to the directory containing e2econfig.yaml file")
+	cmdRoot.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
 }
 
 func main() {

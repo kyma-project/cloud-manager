@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -56,6 +58,7 @@ type ScenarioSession interface {
 	GetScenarioName() string
 
 	DebugLog(bool)
+	DebugDumpDeclaredResources(ctx context.Context) (string, error)
 	Logger(context.Context) logr.Logger
 
 	AddTfWorkspace(ws cloud.TFWorkspace) error
@@ -71,7 +74,7 @@ type Timing struct {
 
 type ClusterInSession interface {
 	Cluster
-	IsCreatedInSession() bool
+	IsSkrCreatedInSession() bool
 	IsCurrent() bool
 	RuntimeID() string
 	ShootName() string
@@ -81,17 +84,21 @@ type ClusterInSession interface {
 	PodLogs(ctx context.Context, namespace, podName, containerName string) (string, error)
 
 	DeleteOnTerminate(objects ...client.Object)
+
+	GetObjectsToDeleteOnTerminate() []client.Object
+
+	SetCurrent(v bool)
 }
 
 type defaultClusterInSession struct {
 	Cluster
-	isCreatedInSession bool
-	isCurrent          bool
-	runtimeID          string
-	shootName          string
-	session            ScenarioSession
-	deleteOnTerminate  []client.Object
-	clientset          *kubernetes.Clientset
+	isSkrCreatedInSession bool
+	isCurrent             bool
+	runtimeID             string
+	shootName             string
+	session               ScenarioSession
+	deleteOnTerminate     []client.Object
+	clientset             *kubernetes.Clientset
 }
 
 func (c *defaultClusterInSession) PodLogs(ctx context.Context, namespace, podName, containerName string) (string, error) {
@@ -143,12 +150,16 @@ func (c *defaultClusterInSession) AddResources(ctx context.Context, arr ...*Reso
 	return c.Cluster.AddResources(ctx, arr...)
 }
 
-func (c *defaultClusterInSession) IsCreatedInSession() bool {
-	return c.isCreatedInSession
+func (c *defaultClusterInSession) IsSkrCreatedInSession() bool {
+	return c.isSkrCreatedInSession
 }
 
 func (c *defaultClusterInSession) IsCurrent() bool {
 	return c.isCurrent
+}
+
+func (c *defaultClusterInSession) SetCurrent(v bool) {
+	c.isCurrent = v
 }
 
 func (c *defaultClusterInSession) RuntimeID() string {
@@ -157,6 +168,10 @@ func (c *defaultClusterInSession) RuntimeID() string {
 
 func (c *defaultClusterInSession) ShootName() string {
 	return c.shootName
+}
+
+func (c *defaultClusterInSession) GetObjectsToDeleteOnTerminate() []client.Object {
+	return c.deleteOnTerminate
 }
 
 func (c *defaultClusterInSession) DeleteOnTerminate(objects ...client.Object) {
@@ -178,7 +193,7 @@ func NewScenarioSession(world WorldIntf, scenarioName string) ScenarioSession {
 		world:        world,
 		scenarioName: scenarioName,
 		timing: &Timing{
-			EventuallyTimeout:  2 * time.Hour,
+			EventuallyTimeout:  10 * time.Minute,
 			EventuallyInterval: 2 * time.Second,
 		},
 		tfWorkspaces: map[string]cloud.TFWorkspace{},
@@ -214,7 +229,7 @@ type scenarioSession struct {
 	world          WorldIntf
 	scenarioName   string
 	stepName       string
-	clusters       []*defaultClusterInSession
+	clusters       []ClusterInSession
 	loggingEnabled bool
 
 	tfWorkspaces map[string]cloud.TFWorkspace
@@ -238,6 +253,28 @@ func (s *scenarioSession) GetScenarioName() string {
 
 func (s *scenarioSession) DebugLog(v bool) {
 	s.loggingEnabled = v
+}
+
+func (s *scenarioSession) DebugDumpDeclaredResources(ctx context.Context) (string, error) {
+	data := map[string]interface{}{}
+	for _, c := range s.clusters {
+		for _, ri := range c.AllResources() {
+			obj, err := c.Get(ctx, ri.Alias)
+			if err != nil {
+				data[ri.Alias] = fmt.Sprintf("error: %v", err.Error())
+			} else {
+				if obj != nil && obj["metadata"] != nil && obj["metadata"].(map[string]interface{})["managedFields"] != nil {
+					delete(obj["metadata"].(map[string]interface{}), "managedFields")
+				}
+				data[ri.Alias] = obj
+			}
+		}
+	}
+	txt, err := yaml.Marshal(data)
+	if err != nil {
+		return "", fmt.Errorf("could not yaml marshal resource debug info: %w", err)
+	}
+	return string(txt), nil
 }
 
 func (s *scenarioSession) Logger(ctx context.Context) logr.Logger {
@@ -272,8 +309,36 @@ func (s *scenarioSession) EventuallyResourceDoesNotExist(ctx context.Context, al
 	return err
 }
 
-func (s *scenarioSession) EventuallyValueIsOK(ctx context.Context, expression string, arrUnless ...string) error {
-	err := wait.PollUntilContextTimeout(ctx, s.Timing().EventuallyInterval, s.Timing().EventuallyTimeout, true, func(ctx context.Context) (done bool, err error) {
+func (s *scenarioSession) EventuallyValueIsOK(ctx context.Context, expression string, arrUnlessParam ...string) error {
+
+	interval := s.Timing().EventuallyInterval
+	timeout := s.Timing().EventuallyTimeout
+
+	var arrUnless []string
+	for _, exp := range arrUnlessParam {
+		if strings.HasPrefix(exp, "#") {
+			val := strings.TrimSpace(strings.TrimPrefix(exp, "#"))
+			parts := strings.SplitN(val, "=", 2)
+			switch parts[0] {
+			case "timeout":
+				x, err := time.ParseDuration(parts[1])
+				if err != nil {
+					return fmt.Errorf("invalid timeout value in %q: %w", val, err)
+				}
+				timeout = x
+			case "interval":
+				x, err := time.ParseDuration(parts[1])
+				if err != nil {
+					return fmt.Errorf("invalid interval value in %q: %w", val, err)
+				}
+				interval = x
+			}
+		} else {
+			arrUnless = append(arrUnless, exp)
+		}
+	}
+
+	err := wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx context.Context) (done bool, err error) {
 		eval, err := s.Eval(ctx)
 		if err != nil {
 			return false, errEvalContextBuilding(err)
@@ -297,6 +362,13 @@ func (s *scenarioSession) EventuallyValueIsOK(ctx context.Context, expression st
 		}
 		return false, nil
 	})
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		txt, dErr := s.DebugDumpDeclaredResources(ctx)
+		if dErr != nil {
+			return fmt.Errorf("%w, %w", dErr, err)
+		}
+		err = fmt.Errorf("%w:\nresources debug info:\n%s", err, txt)
+	}
 	return err
 }
 
@@ -316,9 +388,9 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 
 	if alias == s.world.Kcp().ClusterAlias() {
 		cc := &defaultClusterInSession{
-			Cluster:            s.world.Kcp(),
-			isCreatedInSession: false,
-			session:            s,
+			Cluster:               s.world.Kcp(),
+			isSkrCreatedInSession: false,
+			session:               s,
 		}
 		s.clusters = append(s.clusters, cc)
 		s.SetCurrentCluster(alias)
@@ -327,9 +399,9 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 
 	if alias == s.world.Garden().ClusterAlias() {
 		cc := &defaultClusterInSession{
-			Cluster:            s.world.Garden(),
-			isCreatedInSession: false,
-			session:            s,
+			Cluster:               s.world.Garden(),
+			isSkrCreatedInSession: false,
+			session:               s,
 		}
 		s.clusters = append(s.clusters, cc)
 		s.SetCurrentCluster(alias)
@@ -350,13 +422,13 @@ func (s *scenarioSession) AddExistingCluster(ctx context.Context, alias string) 
 	id := &arr[0]
 
 	if !id.ProvisioningCompleted {
-		err = s.world.Keb().WaitProvisioningCompleted(ctx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(15*time.Minute))
+		err = e2ekeb.WaitCompleted(ctx, s.world.Keb(), e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(15*time.Minute))
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return s.createManagerAndStartIt(ctx, id, false)
+	return s.createSkrManagerAndStartIt(ctx, id, false)
 }
 
 func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...e2ekeb.CreateOption) (ClusterInSession, error) {
@@ -388,29 +460,36 @@ func (s *scenarioSession) CreateNewSkrCluster(ctx context.Context, opts ...e2eke
 		return nil, fmt.Errorf("error creating runtime in KEB: %w", err)
 	}
 
-	err = s.world.Keb().WaitProvisioningCompleted(ctx, e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(15*time.Minute))
+	err = e2ekeb.WaitCompleted(ctx, s.world.Keb(), e2ekeb.WithRuntime(id.RuntimeID), e2ekeb.WithTimeout(15*time.Minute))
 	if err != nil {
 		return nil, err
 	}
 
-	return s.createManagerAndStartIt(ctx, &id, true)
+	return s.createSkrManagerAndStartIt(ctx, &id, true)
 }
 
-func (s *scenarioSession) createManagerAndStartIt(ctx context.Context, id *e2ekeb.InstanceDetails, isCreatedInSession bool) (ClusterInSession, error) {
+func (s *scenarioSession) createSkrManagerAndStartIt(ctx context.Context, id *e2ekeb.InstanceDetails, isSkrCreatedInSession bool) (ClusterInSession, error) {
 	clstr, err := s.world.Keb().CreateSkrManager(ctx, id.RuntimeID, e2ekeb.WithLogger(logr.Discard()))
 	if err != nil {
 		return nil, fmt.Errorf("error creating client cluster for runtime: %w", err)
 	}
 
 	cc := &defaultClusterInSession{
-		Cluster:            NewCluster(ctx, id.Alias, clstr, s.world.Config()),
-		isCreatedInSession: isCreatedInSession,
-		runtimeID:          id.RuntimeID,
-		shootName:          id.ShootName,
-		session:            s,
+		Cluster:               NewCluster(ctx, id.Alias, clstr, s.world.Config()),
+		isSkrCreatedInSession: isSkrCreatedInSession,
+		runtimeID:             id.RuntimeID,
+		shootName:             id.ShootName,
+		session:               s,
 	}
+
+	s.addClusterAndStartIt(ctx, cc)
+
+	return cc, nil
+}
+
+func (s *scenarioSession) addClusterAndStartIt(ctx context.Context, cc ClusterInSession) {
 	s.clusters = append(s.clusters, cc)
-	s.SetCurrentCluster(id.Alias)
+	s.SetCurrentCluster(cc.ClusterAlias())
 
 	s.wg.Add(1)
 	if s.ctx == nil {
@@ -419,11 +498,9 @@ func (s *scenarioSession) createManagerAndStartIt(ctx context.Context, id *e2eke
 	go func() {
 		defer s.wg.Done()
 		if err := cc.Start(s.ctx); err != nil {
-			s.runErr = multierror.Append(s.runErr, fmt.Errorf("error running %q: %w", id.Alias, err))
+			s.runErr = multierror.Append(s.runErr, fmt.Errorf("error running %q: %w", cc.ClusterAlias(), err))
 		}
 	}()
-
-	return cc, nil
 }
 
 func (s *scenarioSession) AllClusters() []ClusterInSession {
@@ -445,7 +522,7 @@ func (s *scenarioSession) CurrentCluster() ClusterInSession {
 
 func (s *scenarioSession) SetCurrentCluster(alias string) {
 	for _, c := range s.clusters {
-		c.isCurrent = c.ClusterAlias() == alias
+		c.SetCurrent(c.ClusterAlias() == alias)
 	}
 }
 
@@ -511,7 +588,7 @@ func (s *scenarioSession) Terminate(ctx context.Context) error {
 
 	for _, c := range s.clusters {
 
-		for _, obj := range c.deleteOnTerminate {
+		for _, obj := range c.GetObjectsToDeleteOnTerminate() {
 			err := c.GetClient().Delete(ctx, obj)
 			if util.IgnoreNoMatch(client.IgnoreNotFound(err)) != nil {
 				ctrl.Log.Error(err, "error deleting object")
@@ -524,7 +601,7 @@ func (s *scenarioSession) Terminate(ctx context.Context) error {
 			//}
 		}
 
-		if c.IsCreatedInSession() {
+		if c.IsSkrCreatedInSession() {
 			if err := s.world.Keb().DeleteInstance(ctx, e2ekeb.WithRuntime(c.RuntimeID())); err != nil {
 				s.runErr = multierror.Append(s.runErr, fmt.Errorf("error deleting cluster %q: %w", c.ClusterAlias(), err))
 			}

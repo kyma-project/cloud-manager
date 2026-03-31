@@ -3,7 +3,7 @@ description: Destroys the environment after E2E tests
 runs:
   using: composite
   steps:
-    - name: Kill Cloud Manager
+    - name: Stop Cloud Manager
       shell: bash
       if: always()
       run: |
@@ -13,7 +13,8 @@ runs:
         else
           echo "CLOUD_MANAGER_PID not set, skipping"
         fi
-    - name: Kill sim
+
+    - name: Stop sim
       shell: bash
       if: always()
       run: |
@@ -23,7 +24,8 @@ runs:
         else
           echo "SIM_PID not set, skipping"
         fi
-    - name: Kill envtest
+
+    - name: Stop envtest
       shell: bash
       if: always()
       run: |
@@ -33,14 +35,16 @@ runs:
         else
           echo "ENVTEST_PID not set, skipping"
         fi
+
     - name: Upload logs
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: logs
         path: |
           tmp/envtest.log
           tmp/sim.log
           tmp/cloud-manager.log
+
     - name: Delete tmp directory
       shell: bash
       if: always()
