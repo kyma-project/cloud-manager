@@ -18,22 +18,30 @@ runs:
   using: composite
   steps:
     - name: Setup Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: 'go.mod'
+
     - name: Setup OpenTofu
-      uses: opentofu/setup-opentofu@v1
+      uses: opentofu/setup-opentofu@v2
+
     - name: Display Go version
       shell: bash
       run: go version
+
     - name: Write KUBECONFIG to file
       shell: bash
       run: |
         echo "${{ inputs.gardener_kubeconfig }}" > kubeconfig-garden.yaml
+
+    - name: Create tmp directory
+      shell: bash
+      run: mkdir ./tmp
+
     - name: Write e2e config file
       shell: bash
       run: |
-        cat <<EOF > e2e-config.yaml
+        cat <<EOF > ./tmp/e2e-config.yaml
         gardenKubeconfig: $PWD/kubeconfig-garden.yaml
         shootPrefix: pp
         kcpNamespace: kcp-system
@@ -54,6 +62,7 @@ runs:
         oidcIssuerUrl: ${{ inputs.oidc_issuer_url }}
         administrators:
           - vladimir.andjelkoski@sap.com
+          - milos.tomic@sap.com
           - dl_623b719a6a0d2d029907bee0@global.corp.sap
         overwriteGardenerCredentials: true
         downloadGardenSecrets:
@@ -72,47 +81,78 @@ runs:
             AZURE_CLIENT_SECRET: clientSecret
             AZURE_PEERING_CLIENT_ID: clientID
             AZURE_PEERING_CLIENT_SECRET: clientSecret
-
+          monsoon3-kyma-phoenix-e2e-mt:
+            OS_APPLICATION_CREDENTIAL_ID: applicationCredentialID
+            OS_APPLICATION_CREDENTIAL_NAME: applicationCredentialName
+            OS_APPLICATION_CREDENTIAL_SECRET: applicationCredentialSecret
         EOF
-    - name: Display e2e config file
-      shell: bash
-      run: cat e2e-config.yaml
-    - name: Create tmp directory
-      shell: bash
-      run: mkdir ./tmp
+
     - name: List directory
       shell: bash
-      run: ls -la
+      run: |
+        if [ -n "$DEBUG" ]; then
+          ls -la
+        fi
+
     - name: Download credentials
       shell: bash
       run: go run ./e2e/cmd credentials download
+
+    - name: OS Floating Pool Config
+      shell: bash
+      run: |
+        echo -n "FloatingIP-external-monsoon3-06" > ./tmp/OS_FLOATING_POOL_NETWORK
+        echo -n "FloatingIP-sap-monsoon3-06*" > ./tmp/OS_FLOATING_POOL_SUBNET
+
     - name: List tmp directory
       shell: bash
-      run: ls -la ./tmp
+      run: |
+        if [ -n "$DEBUG" ]; then 
+          ls -la ./tmp
+          cat ./tmp/OS_FLOATING_POOL_NETWORK
+          cat ./tmp/OS_FLOATING_POOL_SUBNET
+        fi
+
     - name: Download setup-envtest
       shell: bash
       run: make envtest
+
     - name: Get ENVTEST_K8S_VERSION from Makefile
       shell: bash
       run: |
         ENVTEST_K8S_VERSION=$(grep "ENVTEST_K8S_VERSION = " Makefile | awk -F '[[:space:]]*=[[:space:]]*' '{print $2}')
         echo "ENVTEST_K8S_VERSION is $ENVTEST_K8S_VERSION"
         echo "ENVTEST_K8S_VERSION=$ENVTEST_K8S_VERSION" >> $GITHUB_ENV
+
     - name: Setup envtest
       shell: bash
       run: |
         ./bin/setup-envtest use $ENVTEST_K8S_VERSION --bin-dir $PWD/bin -p path
+
     - name: Run envtest
       shell: bash
       run: |
-        go run ./e2e/cmd envtest run -v $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml > ./tmp/envtest.log 2>&1 &
+        go run ./e2e/cmd envtest run --version $ENVTEST_K8S_VERSION -o ./tmp/kubeconfig-kcp.yaml > ./tmp/envtest.log 2>&1 &
         ENVTEST_PID=$!
         echo "ENVTEST_PID=$ENVTEST_PID" >> "$GITHUB_ENV"
         echo "Waiting for envtest to start K8S cluster"
-        sleep 30
+        sleep 10
+
     - name: List tmp directory after K8S start
       shell: bash
-      run: ls -la ./tmp
+      run: |
+        [ -n "$DEBUG" ] && ls -la ./tmp || true
+
+    - name: Fail if KCP kubeconfig not present
+      shell: bash
+      run: |
+        if [ ! -f ./tmp/kubeconfig-kcp.yaml ]; then
+          echo "KCP Kubeconfig is not created by envtest"
+          echo "> [!CAUTION]" >> $GITHUB_STEP_SUMMARY
+          echo "> :x: KCP Kubeconfig is not created by envtest" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+
     - name: Run sim
       shell: bash
       env:
@@ -122,7 +162,8 @@ runs:
         SIM_PID=$!
         echo "SIM_PID=$SIM_PID" >> "$GITHUB_ENV"
         echo "Waiting for sim to start"
-        sleep 30
+        sleep 10
+
     - name: Validate and prepare feature flags
       shell: bash
       run: |
@@ -137,10 +178,10 @@ runs:
           exit 1
         fi
         echo "✓ Using feature flags: $FF_FILE"
+
     - name: Run Cloud Manager
       shell: bash
       env:
-        CONFIG_DIR: ./tmp
         KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         LANDSCAPE: dev
         PEERING_NETWORK_TAG: e2e

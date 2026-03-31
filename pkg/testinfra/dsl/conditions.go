@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -94,7 +95,19 @@ func HavingState(state string) ObjAssertion {
 			}
 			return nil
 		}
-		return fmt.Errorf("type %T does not implement ObjWithConditionsAndState", obj)
+		if x, ok := obj.(*operatorv1beta2.Kyma); ok {
+			if string(x.Status.State) != state {
+				conditions := pie.Map(x.Status.Conditions, func(c metav1.Condition) string {
+					return fmt.Sprintf("%s:%s:%s", c.Type, c.Status, c.Reason)
+				})
+				modules := pie.Map(x.Status.Modules, func(m operatorv1beta2.ModuleStatus) string {
+					return fmt.Sprintf("%s:%s:%s", m.Name, m.State, m.Message)
+				})
+				return fmt.Errorf("expected state %s but got %s with conditions: %v, and modules %v", state, x.Status.State, conditions, modules)
+			}
+			return nil
+		}
+		return fmt.Errorf("type %T does not implement ObjWithConditionsAndState, or is not one of *operatorv1beta2.Kyma", obj)
 	}
 }
 

@@ -10,6 +10,12 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+type cmdInstanceListOptionsType struct {
+	outputFormat string
+}
+
+var cmdInstanceListOptions cmdInstanceListOptionsType
+
 var cmdInstanceList = &cobra.Command{
 	Use:   "list",
 	Short: "List all instances",
@@ -24,7 +30,7 @@ var cmdInstanceList = &cobra.Command{
 			return fmt.Errorf("error listing intances: %w", err)
 		}
 
-		if outputFormat == "json" {
+		if cmdInstanceListOptions.outputFormat == "json" {
 			txt, err := json.MarshalIndent(arr, "", "  ")
 			if err != nil {
 				return fmt.Errorf("error marshalling json: %w", err)
@@ -33,7 +39,7 @@ var cmdInstanceList = &cobra.Command{
 			return nil
 		}
 
-		if outputFormat == "yaml" {
+		if cmdInstanceListOptions.outputFormat == "yaml" {
 			txt, err := yaml.Marshal(arr)
 			if err != nil {
 				return fmt.Errorf("error marshalling yaml: %w", err)
@@ -47,14 +53,14 @@ var cmdInstanceList = &cobra.Command{
 			fmt.Println("No instances found")
 		} else {
 			var tbl table.Table
-			if outputFormat == "wide" {
+			if cmdInstanceListOptions.outputFormat == "wide" {
 				tbl = table.New("Alias", "RuntimeID", "Shoot", "Provider", "Region", "GA", "SA", "Ready", "Deleting", "Ignored")
 			} else {
 				tbl = table.New("Alias", "RuntimeID", "Shoot", "Provider", "Region", "Ready", "Deleting", "Ignored")
 			}
 
 			for _, id := range arr {
-				if outputFormat == "wide" {
+				if cmdInstanceListOptions.outputFormat == "wide" {
 					tbl.AddRow(
 						id.Alias,
 						id.RuntimeID,
@@ -90,5 +96,5 @@ var cmdInstanceList = &cobra.Command{
 
 func init() {
 	cmdInstance.AddCommand(cmdInstanceList)
-	cmdInstanceList.Flags().StringVarP(&outputFormat, "output", "o", "default", "Output format, one of: default, wide, json, yaml")
+	cmdInstanceList.Flags().StringVarP(&cmdInstanceListOptions.outputFormat, "output", "o", "default", "Output format, one of: default, wide, json, yaml")
 }

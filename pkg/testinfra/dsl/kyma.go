@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
+	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
@@ -167,4 +169,54 @@ func KymaCRModuleStateUpdate(ctx context.Context, kcpClient client.Client, kymaC
 	}
 
 	return nil
+}
+
+func HavingKymaModuleInStatus(moduleName string, state *operatorshared.State) ObjAssertion {
+	return func(obj client.Object) error {
+		switch x := obj.(type) {
+		case *operatorv1beta2.Kyma:
+			msm := x.GetModuleStatusMap()
+			mm, ok := msm[moduleName]
+			if !ok {
+				return fmt.Errorf("module %s is not present in Kyma status", moduleName)
+			}
+			if state != nil && mm.State != *state {
+				return fmt.Errorf("module %s found, but is not in expected state %s", moduleName, *state)
+			}
+			return nil
+		case *unstructured.Unstructured:
+			ss := util.GetKymaModuleStateFromStatus(x, moduleName)
+			if ss == util.KymaModuleStateNotPresent {
+				return fmt.Errorf("module %s is not present in Kyma status", moduleName)
+			}
+			if state != nil && string(ss) != string(*state) {
+				return fmt.Errorf("module %s found, but is not in expected state %s", moduleName, *state)
+			}
+			return nil
+		default:
+			return fmt.Errorf("unknown object type: %T", obj)
+		} // switch
+	}
+}
+
+func NotHavingKymaModuleInStatus(moduleName string) ObjAssertion {
+	return func(obj client.Object) error {
+		switch x := obj.(type) {
+		case *operatorv1beta2.Kyma:
+			msm := x.GetModuleStatusMap()
+			_, ok := msm[moduleName]
+			if ok {
+				return fmt.Errorf("module %s is present in Kyma status", moduleName)
+			}
+			return nil
+		case *unstructured.Unstructured:
+			ss := util.GetKymaModuleStateFromStatus(x, moduleName)
+			if ss != util.KymaModuleStateNotPresent {
+				return fmt.Errorf("module %s is present in Kyma status", moduleName)
+			}
+			return nil
+		default:
+			return fmt.Errorf("unknown object type: %T", obj)
+		} // switch
+	}
 }

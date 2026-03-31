@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func WaitWithTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
+func WaitWgWithTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 	c := make(chan struct{})
 	go func() {
 		defer close(c)

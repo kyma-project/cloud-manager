@@ -1,11 +1,9 @@
 package tests
 
 import (
-	"os"
 	"testing"
 
 	"github.com/cucumber/godog"
-	"github.com/cucumber/godog/colors"
 	"github.com/kyma-project/cloud-manager/e2e"
 )
 
@@ -19,7 +17,6 @@ func WithTags(tags string) GodogOption {
 
 func BuildOptions(opts ...GodogOption) *godog.Options {
 	o := &godog.Options{
-		Output:      colors.Colored(os.Stdout),
 		Concurrency: 10,
 		FS:          e2e.Features,
 		Tags:        "@skr && @aws && ~@peering",

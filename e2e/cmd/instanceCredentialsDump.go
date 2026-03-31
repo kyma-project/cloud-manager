@@ -9,6 +9,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type cmdInstanceCredentialsDumpOptionsType struct {
+	runtimeID string
+	alias     string
+}
+
+var cmdInstanceCredentialsDumpOptions cmdInstanceCredentialsDumpOptionsType
+
 var cmdInstanceCredentialsDump = &cobra.Command{
 	Use: "dump",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -17,23 +24,23 @@ var cmdInstanceCredentialsDump = &cobra.Command{
 			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		if runtimeID == "" {
-			idArr, err := keb.List(rootCtx, e2ekeb.WithAlias(alias))
+		if cmdInstanceCredentialsDumpOptions.runtimeID == "" {
+			idArr, err := keb.List(rootCtx, e2ekeb.WithAlias(cmdInstanceCredentialsDumpOptions.alias))
 			if err != nil {
 				return fmt.Errorf("failed to list runtimes: %w", err)
 			}
 			if len(idArr) == 0 {
-				return fmt.Errorf("runtime with alias %q not found", alias)
+				return fmt.Errorf("runtime with alias %q not found", cmdInstanceCredentialsDumpOptions.alias)
 			}
 			if len(idArr) > 1 {
-				return fmt.Errorf("multiple runtimes with alias %q found: %v", alias, pie.Map(idArr, func(x e2ekeb.InstanceDetails) string {
+				return fmt.Errorf("multiple runtimes with alias %q found: %v", cmdInstanceCredentialsDumpOptions.alias, pie.Map(idArr, func(x e2ekeb.InstanceDetails) string {
 					return x.RuntimeID
 				}))
 			}
-			runtimeID = idArr[0].RuntimeID
+			cmdInstanceCredentialsDumpOptions.runtimeID = idArr[0].RuntimeID
 		}
 
-		data, expiresAt, err := keb.GetInstanceKubeconfig(rootCtx, runtimeID)
+		data, expiresAt, err := keb.GetInstanceKubeconfig(rootCtx, cmdInstanceCredentialsDumpOptions.runtimeID)
 		if err != nil {
 			return err
 		}
@@ -49,8 +56,8 @@ var cmdInstanceCredentialsDump = &cobra.Command{
 
 func init() {
 	cmdInstanceCredentials.AddCommand(cmdInstanceCredentialsDump)
-	cmdInstanceCredentialsDump.Flags().StringVarP(&runtimeID, "runtime-id", "r", "", "The runtime ID")
-	cmdInstanceCredentialsDump.Flags().StringVarP(&alias, "alias", "a", "", "The runtime alias")
+	cmdInstanceCredentialsDump.Flags().StringVarP(&cmdInstanceCredentialsDumpOptions.runtimeID, "runtime-id", "r", "", "The runtime ID")
+	cmdInstanceCredentialsDump.Flags().StringVarP(&cmdInstanceCredentialsDumpOptions.alias, "alias", "a", "", "The runtime alias")
 	cmdInstanceCredentialsDump.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceCredentialsDump.MarkFlagsOneRequired("runtime-id", "alias")
 }

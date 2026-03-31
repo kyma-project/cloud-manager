@@ -12,10 +12,8 @@ import (
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	"github.com/kyma-project/cloud-manager/pkg/common"
-	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/clock"
-	"sigs.k8s.io/controller-runtime/pkg/cluster"
 )
 
 type WorldFactory struct {
@@ -42,21 +40,6 @@ func (f *WorldFactory) Create(rootCtx context.Context, opts WorldCreateOptions) 
 	kcpManager, err := factoryKcp.CreateManager(rootCtx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create kcp cluster manager: %w", err)
-	}
-
-	waitClusterStarts := func(ctx context.Context, c cluster.Cluster) bool {
-		var toCtx context.Context
-		var toCancel context.CancelFunc
-		if debugged.Debugged {
-			toCtx, toCancel = context.WithTimeout(ctx, 10*time.Minute)
-		} else {
-			toCtx, toCancel = context.WithTimeout(ctx, 10*time.Second)
-		}
-		defer toCancel()
-		if ok := c.GetCache().WaitForCacheSync(toCtx); !ok {
-			return false
-		}
-		return true
 	}
 
 	wg := sync.WaitGroup{}
