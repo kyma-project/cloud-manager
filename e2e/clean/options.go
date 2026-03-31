@@ -195,7 +195,8 @@ func (o *options) deleteAll(ctx context.Context) error {
 				continue
 			}
 
-			if err := o.client.DeleteAllOf(ctx, m.obj); err != nil {
+			err := o.client.DeleteAllOf(ctx, m.obj)
+			if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
 				return fmt.Errorf("error deleting all of %T: %w", m.obj, err)
 			}
 		} else {
