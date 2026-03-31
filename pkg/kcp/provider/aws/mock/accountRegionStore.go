@@ -10,19 +10,20 @@ type accountRegionStore struct {
 	*routeTablesStore
 	*webAclStore
 
-	region string
+	region  string
+	account string
 }
 
-func newAccountRegionStore(region string) *accountRegionStore {
+func newAccountRegionStore(account, region string) *accountRegionStore {
 	return &accountRegionStore{
-		region: region,
-
+		region:                region,
+		account:               account,
 		vpcStore:              newVpcStore(),
 		vpcPeeringStore:       newVpcPeeringStore(),
 		elastiCacheClientFake: newElastiCacheClientFake(),
 		nfsStore:              &nfsStore{},
 		routeTablesStore:      &routeTablesStore{},
-		webAclStore:           newWebAclStore(),
+		webAclStore:           newWebAclStore(account, region),
 	}
 }
 

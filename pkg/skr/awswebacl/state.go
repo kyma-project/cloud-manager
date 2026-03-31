@@ -14,6 +14,10 @@ type State struct {
 	commonscope.State
 	awsClientProvider awsclient.SkrClientProvider[webaclclient.Client]
 	env               abstractions.Environment
+
+	awsClient webaclclient.Client
+	roleName  string
+	lockToken string // Transient lock token from loadWebAcl, not persisted
 }
 
 func newStateFactory(
