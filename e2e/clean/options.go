@@ -287,7 +287,8 @@ func (o *options) forceDelete(ctx context.Context) error {
 				Info("force deleting")
 
 			p := []byte(`[{"op": "remove", "path": "/metadata/finalizers"}]`)
-			if err := o.client.Patch(ctx, obj, client.RawPatch(types.JSONPatchType, p)); err != nil {
+			err := o.client.Patch(ctx, obj, client.RawPatch(types.JSONPatchType, p))
+			if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
 				return fmt.Errorf("could not remove finalizers: %w", err)
 			}
 		}
