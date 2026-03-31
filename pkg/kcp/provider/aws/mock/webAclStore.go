@@ -3,12 +3,14 @@ package mock
 import (
 	"context"
 	"fmt"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/aws/smithy-go"
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )
@@ -27,11 +29,15 @@ type webAclStore struct {
 	m        sync.Mutex
 	items    []*webAclEntry
 	errorMap map[string]error
+	account  string
+	region   string
 }
 
-func newWebAclStore() *webAclStore {
+func newWebAclStore(account, region string) *webAclStore {
 	return &webAclStore{
 		errorMap: make(map[string]error),
+		account:  account,
+		region:   region,
 	}
 }
 
@@ -50,7 +56,7 @@ func (s *webAclStore) CreateWebACL(ctx context.Context, name, description string
 	}
 
 	id := uuid.NewString()
-	arn := fmt.Sprintf("arn:aws:wafv2:us-east-1:123456789012:regional/webacl/%s/%s", name, id)
+	arn := awsutil.Waf2Arn(s.region, s.account, name, id)
 	lockToken := uuid.NewString()
 
 	webAcl := types.WebACL{
@@ -220,7 +226,7 @@ func (s *webAclStore) InitiateWebAcl(id, name string, scope types.Scope) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	arn := fmt.Sprintf("arn:aws:wafv2:us-east-1:123456789012:regional/webacl/%s/%s", name, id)
+	arn := awsutil.Waf2Arn(s.region, s.account, name, id)
 	lockToken := uuid.NewString()
 
 	item := &webAclEntry{
@@ -234,4 +240,8 @@ func (s *webAclStore) InitiateWebAcl(id, name string, scope types.Scope) {
 	}
 
 	s.items = append(s.items, item)
+}
+
+func (s *webAclStore) WafClient() awsclient.Wafv2Client {
+	return s
 }

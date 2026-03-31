@@ -20,6 +20,15 @@ spec:
     - jsonPath: .status.state
       name: State
       type: string
+    - jsonPath: .spec.defaultAction
+      name: Default Action
+      type: string
+    - jsonPath: .status.capacity
+      name: Capacity
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1beta1
     schema:
       openAPIV3Schema:
@@ -44,10 +53,240 @@ spec:
             type: object
           spec:
             description: spec defines the desired state of AwsWebAcl
+            properties:
+              defaultAction:
+                default: Allow
+                description: DefaultAction specifies what to do when no rules match
+                enum:
+                - Allow
+                - Block
+                type: string
+              description:
+                description: Description provides context about the WebACL purpose
+                maxLength: 256
+                type: string
+              rules:
+                description: Rules define the filtering logic (evaluated by priority
+                  order)
+                items:
+                  properties:
+                    action:
+                      description: Action when rule matches
+                      enum:
+                      - Allow
+                      - Block
+                      - Count
+                      - Captcha
+                      type: string
+                    name:
+                      description: Name must be unique within the WebACL
+                      maxLength: 128
+                      minLength: 1
+                      pattern: ^[0-9A-Za-z_-]+$
+                      type: string
+                    priority:
+                      description: Priority determines evaluation order (lower numbers
+                        evaluated first, must be unique)
+                      format: int32
+                      minimum: 0
+                      type: integer
+                    statement:
+                      description: Statement defines the match condition (exactly
+                        one must be set)
+                      properties:
+                        byteMatch:
+                          description: ByteMatch - Match specific patterns in requests
+                          properties:
+                            fieldToMatch:
+                              description: FieldToMatch specifies where to search
+                              properties:
+                                body:
+                                  description: Body matches the request body
+                                  type: boolean
+                                method:
+                                  description: Method matches the HTTP method
+                                  type: boolean
+                                queryString:
+                                  description: QueryString matches the query string
+                                  type: boolean
+                                singleHeader:
+                                  description: SingleHeader matches a specific header
+                                    by name
+                                  type: string
+                                uriPath:
+                                  description: UriPath matches the URI path
+                                  type: boolean
+                              type: object
+                            positionalConstraint:
+                              description: PositionalConstraint defines match location
+                              enum:
+                              - EXACTLY
+                              - STARTS_WITH
+                              - ENDS_WITH
+                              - CONTAINS
+                              - CONTAINS_WORD
+                              type: string
+                            searchString:
+                              description: SearchString to match
+                              maxLength: 200
+                              minLength: 1
+                              type: string
+                          required:
+                          - fieldToMatch
+                          - positionalConstraint
+                          - searchString
+                          type: object
+                        geoMatch:
+                          description: GeoMatch - Match requests from specific countries
+                          properties:
+                            countryCodes:
+                              description: CountryCodes using ISO 3166-1 alpha-2 codes
+                                (e.g., "US", "GB", "DE")
+                              items:
+                                type: string
+                              minItems: 1
+                              type: array
+                          required:
+                          - countryCodes
+                          type: object
+                        ipSet:
+                          description: IPSet - Match requests from specific IP addresses/ranges
+                            (inline definition)
+                          properties:
+                            ipAddresses:
+                              description: |-
+                                IPAddresses in CIDR notation (e.g., "192.0.2.0/24", "2001:db8::/32")
+                                Cloud Manager will create/manage the IPSet resource automatically
+                              items:
+                                type: string
+                              maxItems: 10000
+                              minItems: 1
+                              type: array
+                          required:
+                          - ipAddresses
+                          type: object
+                        managedRuleGroup:
+                          description: ManagedRuleGroup - Use AWS-managed rule sets
+                          properties:
+                            excludedRules:
+                              description: ExcludedRules to disable specific rules
+                                within the managed group
+                              items:
+                                properties:
+                                  name:
+                                    description: Name of the rule to exclude from
+                                      the managed rule group
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                              type: array
+                            name:
+                              description: |-
+                                Name of the managed rule group
+                                Common AWS managed rules:
+                                - AWSManagedRulesCommonRuleSet
+                                - AWSManagedRulesKnownBadInputsRuleSet
+                                - AWSManagedRulesSQLiRuleSet
+                                - AWSManagedRulesLinuxRuleSet
+                                - AWSManagedRulesUnixRuleSet
+                              type: string
+                            vendorName:
+                              description: VendorName (typically "AWS" for AWS managed
+                                rules)
+                              type: string
+                            version:
+                              description: Version of the rule group (optional, uses
+                                latest if not specified)
+                              type: string
+                          required:
+                          - name
+                          - vendorName
+                          type: object
+                        rateBased:
+                          description: RateBased - Rate limiting per IP
+                          properties:
+                            limit:
+                              description: Limit - Max requests per 5 minutes from
+                                a single IP
+                              format: int64
+                              maximum: 2000000000
+                              minimum: 100
+                              type: integer
+                          required:
+                          - limit
+                          type: object
+                      type: object
+                    visibilityConfig:
+                      description: VisibilityConfig for rule-specific metrics
+                      properties:
+                        cloudWatchMetricsEnabled:
+                          default: true
+                          description: CloudWatchMetricsEnabled enables CloudWatch
+                            metrics
+                          type: boolean
+                        metricName:
+                          description: MetricName for CloudWatch (must be unique)
+                          maxLength: 128
+                          minLength: 1
+                          pattern: ^[0-9A-Za-z_-]+$
+                          type: string
+                        sampledRequestsEnabled:
+                          default: true
+                          description: SampledRequestsEnabled enables request sampling
+                            in AWS console
+                          type: boolean
+                      required:
+                      - cloudWatchMetricsEnabled
+                      - metricName
+                      - sampledRequestsEnabled
+                      type: object
+                  required:
+                  - action
+                  - name
+                  - priority
+                  - statement
+                  type: object
+                maxItems: 100
+                type: array
+              visibilityConfig:
+                description: VisibilityConfig defines CloudWatch metrics and request
+                  sampling
+                properties:
+                  cloudWatchMetricsEnabled:
+                    default: true
+                    description: CloudWatchMetricsEnabled enables CloudWatch metrics
+                    type: boolean
+                  metricName:
+                    description: MetricName for CloudWatch (must be unique)
+                    maxLength: 128
+                    minLength: 1
+                    pattern: ^[0-9A-Za-z_-]+$
+                    type: string
+                  sampledRequestsEnabled:
+                    default: true
+                    description: SampledRequestsEnabled enables request sampling in
+                      AWS console
+                    type: boolean
+                required:
+                - cloudWatchMetricsEnabled
+                - metricName
+                - sampledRequestsEnabled
+                type: object
+            required:
+            - defaultAction
+            - visibilityConfig
             type: object
           status:
             description: status defines the observed state of AwsWebAcl
             properties:
+              arn:
+                description: ARN of the WebACL
+                type: string
+              capacity:
+                description: Capacity units consumed by the WebACL
+                format: int64
+                type: integer
               conditions:
                 description: List of status conditions to indicate the status of a
                   AwsWebAcl.

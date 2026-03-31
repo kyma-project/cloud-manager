@@ -4,6 +4,160 @@ metadata:
   labels:
     app.kubernetes.io/name: cloud-manager
     app.kubernetes.io/managed-by: kustomize
-  name: awswebacl-sample
+  name: waf-for-yelb
 spec:
-  # TODO(user): Add fields here
+  # Default action when no rules match
+  defaultAction: Allow
+
+  # Optional description
+  description: "Web ACL for Yelb application with AWS managed rule sets"
+
+  # CloudWatch metrics configuration for the entire WebACL
+  visibilityConfig:
+    cloudWatchMetricsEnabled: true
+    metricName: YelbWAFAclMetrics
+    sampledRequestsEnabled: true
+
+  # Rules are evaluated in priority order (lower priority first)
+  rules:
+    # Bot Control Rule Set - Protects against automated bot traffic
+    - name: AWS-AWSManagedRulesBotControlRuleSet
+      priority: 0
+      action: Count  # For managed rules with OverrideAction: None, use Count
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesBotControlRuleSet
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: AWS-AWSManagedRulesBotControlRuleSet
+        sampledRequestsEnabled: true
+
+    # Admin Protection Rule Set - Protects admin pages
+    - name: AWS-AWSManagedRulesAdminProtectionRuleSet
+      priority: 1
+      action: Count
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesAdminProtectionRuleSet
+          # Note: RuleActionOverrides from original JSON not yet supported
+          # excludedRules can be used to disable specific rules entirely
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: AWS-AWSManagedRulesAdminProtectionRuleSet
+        sampledRequestsEnabled: true
+
+    # IP Reputation List - Blocks IPs with bad reputation
+    - name: AWS-AWSManagedRulesAmazonIpReputationList
+      priority: 2
+      action: Count
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesAmazonIpReputationList
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: AWS-AWSManagedRulesAmazonIpReputationList
+        sampledRequestsEnabled: true
+
+    # Common Rule Set - OWASP Top 10 protection
+    - name: AWS-AWSManagedRulesCommonRuleSet
+      priority: 3
+      action: Count
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesCommonRuleSet
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: AWS-AWSManagedRulesCommonRuleSet
+        sampledRequestsEnabled: true
+
+---
+# Additional example with custom rules
+
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsWebAcl
+metadata:
+  name: webacl-with-custom-rules
+spec:
+  defaultAction: Allow
+  description: "WebACL demonstrating various rule types"
+
+  visibilityConfig:
+    cloudWatchMetricsEnabled: true
+    metricName: custom-webacl-metrics
+    sampledRequestsEnabled: true
+
+  rules:
+    # Rate limiting - Block IPs exceeding request threshold
+    - name: rate-limit-rule
+      priority: 0
+      action: Block
+      statement:
+        rateBased:
+          limit: 2000  # Max 2000 requests per 5 minutes per IP
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: rate-limit-rule
+        sampledRequestsEnabled: true
+
+    # Geographic blocking
+    - name: geo-block-rule
+      priority: 1
+      action: Block
+      statement:
+        geoMatch:
+          countryCodes: ["CN", "RU", "KP"]
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: geo-block-rule
+        sampledRequestsEnabled: true
+
+    # IP allowlist (inline IP set - no ARN needed)
+    - name: ip-allowlist
+      priority: 2
+      action: Allow
+      statement:
+        ipSet:
+          ipAddresses:
+            - "10.0.0.0/8"
+            - "192.168.1.0/24"
+            - "203.0.113.0/24"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: ip-allowlist
+        sampledRequestsEnabled: true
+
+    # Pattern matching in query strings
+    - name: block-suspicious-patterns
+      priority: 3
+      action: Block
+      statement:
+        byteMatch:
+          searchString: "../"
+          positionalConstraint: CONTAINS
+          fieldToMatch:
+            queryString: true
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-suspicious-patterns
+        sampledRequestsEnabled: true
+
+    # SQL injection protection
+    - name: AWS-AWSManagedRulesSQLiRuleSet
+      priority: 4
+      action: Count
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesSQLiRuleSet
+          # Optionally exclude specific rules
+          excludedRules:
+            - name: SQLi_QUERYARGUMENTS
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: AWS-AWSManagedRulesSQLiRuleSet
+        sampledRequestsEnabled: true
+
