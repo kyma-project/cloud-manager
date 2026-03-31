@@ -1,0 +1,360 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: awswebacls.cloud-resources.kyma-project.io
+spec:
+  group: cloud-resources.kyma-project.io
+  names:
+    categories:
+    - kyma-cloud-manager
+    kind: AwsWebAcl
+    listKind: AwsWebAclList
+    plural: awswebacls
+    singular: awswebacl
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.state
+      name: State
+      type: string
+    - jsonPath: .spec.defaultAction
+      name: Default Action
+      type: string
+    - jsonPath: .status.capacity
+      name: Capacity
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: AwsWebAcl is the Schema for the awswebacls API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of AwsWebAcl
+            properties:
+              defaultAction:
+                default: Allow
+                description: DefaultAction specifies what to do when no rules match
+                enum:
+                - Allow
+                - Block
+                type: string
+              description:
+                description: Description provides context about the WebACL purpose
+                maxLength: 256
+                type: string
+              rules:
+                description: Rules define the filtering logic (evaluated by priority
+                  order)
+                items:
+                  properties:
+                    action:
+                      description: Action when rule matches
+                      enum:
+                      - Allow
+                      - Block
+                      - Count
+                      - Captcha
+                      type: string
+                    name:
+                      description: Name must be unique within the WebACL
+                      maxLength: 128
+                      minLength: 1
+                      pattern: ^[0-9A-Za-z_-]+$
+                      type: string
+                    priority:
+                      description: Priority determines evaluation order (lower numbers
+                        evaluated first, must be unique)
+                      format: int32
+                      minimum: 0
+                      type: integer
+                    statement:
+                      description: Statement defines the match condition (exactly
+                        one must be set)
+                      properties:
+                        byteMatch:
+                          description: ByteMatch - Match specific patterns in requests
+                          properties:
+                            fieldToMatch:
+                              description: FieldToMatch specifies where to search
+                              properties:
+                                body:
+                                  description: Body matches the request body
+                                  type: boolean
+                                method:
+                                  description: Method matches the HTTP method
+                                  type: boolean
+                                queryString:
+                                  description: QueryString matches the query string
+                                  type: boolean
+                                singleHeader:
+                                  description: SingleHeader matches a specific header
+                                    by name
+                                  type: string
+                                uriPath:
+                                  description: UriPath matches the URI path
+                                  type: boolean
+                              type: object
+                            positionalConstraint:
+                              description: PositionalConstraint defines match location
+                              enum:
+                              - EXACTLY
+                              - STARTS_WITH
+                              - ENDS_WITH
+                              - CONTAINS
+                              - CONTAINS_WORD
+                              type: string
+                            searchString:
+                              description: SearchString to match
+                              maxLength: 200
+                              minLength: 1
+                              type: string
+                          required:
+                          - fieldToMatch
+                          - positionalConstraint
+                          - searchString
+                          type: object
+                        geoMatch:
+                          description: GeoMatch - Match requests from specific countries
+                          properties:
+                            countryCodes:
+                              description: CountryCodes using ISO 3166-1 alpha-2 codes
+                                (e.g., "US", "GB", "DE")
+                              items:
+                                type: string
+                              minItems: 1
+                              type: array
+                          required:
+                          - countryCodes
+                          type: object
+                        ipSet:
+                          description: IPSet - Match requests from specific IP addresses/ranges
+                            (inline definition)
+                          properties:
+                            ipAddresses:
+                              description: |-
+                                IPAddresses in CIDR notation (e.g., "192.0.2.0/24", "2001:db8::/32")
+                                Cloud Manager will create/manage the IPSet resource automatically
+                              items:
+                                type: string
+                              maxItems: 10000
+                              minItems: 1
+                              type: array
+                          required:
+                          - ipAddresses
+                          type: object
+                        managedRuleGroup:
+                          description: ManagedRuleGroup - Use AWS-managed rule sets
+                          properties:
+                            excludedRules:
+                              description: ExcludedRules to disable specific rules
+                                within the managed group
+                              items:
+                                properties:
+                                  name:
+                                    description: Name of the rule to exclude from
+                                      the managed rule group
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                              type: array
+                            name:
+                              description: |-
+                                Name of the managed rule group
+                                Common AWS managed rules:
+                                - AWSManagedRulesCommonRuleSet
+                                - AWSManagedRulesKnownBadInputsRuleSet
+                                - AWSManagedRulesSQLiRuleSet
+                                - AWSManagedRulesLinuxRuleSet
+                                - AWSManagedRulesUnixRuleSet
+                              type: string
+                            vendorName:
+                              description: VendorName (typically "AWS" for AWS managed
+                                rules)
+                              type: string
+                            version:
+                              description: Version of the rule group (optional, uses
+                                latest if not specified)
+                              type: string
+                          required:
+                          - name
+                          - vendorName
+                          type: object
+                        rateBased:
+                          description: RateBased - Rate limiting per IP
+                          properties:
+                            limit:
+                              description: Limit - Max requests per 5 minutes from
+                                a single IP
+                              format: int64
+                              maximum: 2000000000
+                              minimum: 100
+                              type: integer
+                          required:
+                          - limit
+                          type: object
+                      type: object
+                    visibilityConfig:
+                      description: VisibilityConfig for rule-specific metrics
+                      properties:
+                        cloudWatchMetricsEnabled:
+                          default: true
+                          description: CloudWatchMetricsEnabled enables CloudWatch
+                            metrics
+                          type: boolean
+                        metricName:
+                          description: MetricName for CloudWatch (must be unique)
+                          maxLength: 128
+                          minLength: 1
+                          pattern: ^[0-9A-Za-z_-]+$
+                          type: string
+                        sampledRequestsEnabled:
+                          default: true
+                          description: SampledRequestsEnabled enables request sampling
+                            in AWS console
+                          type: boolean
+                      required:
+                      - cloudWatchMetricsEnabled
+                      - metricName
+                      - sampledRequestsEnabled
+                      type: object
+                  required:
+                  - action
+                  - name
+                  - priority
+                  - statement
+                  type: object
+                maxItems: 100
+                type: array
+              visibilityConfig:
+                description: VisibilityConfig defines CloudWatch metrics and request
+                  sampling
+                properties:
+                  cloudWatchMetricsEnabled:
+                    default: true
+                    description: CloudWatchMetricsEnabled enables CloudWatch metrics
+                    type: boolean
+                  metricName:
+                    description: MetricName for CloudWatch (must be unique)
+                    maxLength: 128
+                    minLength: 1
+                    pattern: ^[0-9A-Za-z_-]+$
+                    type: string
+                  sampledRequestsEnabled:
+                    default: true
+                    description: SampledRequestsEnabled enables request sampling in
+                      AWS console
+                    type: boolean
+                required:
+                - cloudWatchMetricsEnabled
+                - metricName
+                - sampledRequestsEnabled
+                type: object
+            required:
+            - defaultAction
+            - visibilityConfig
+            type: object
+          status:
+            description: status defines the observed state of AwsWebAcl
+            properties:
+              arn:
+                description: ARN of the WebACL
+                type: string
+              capacity:
+                description: Capacity units consumed by the WebACL
+                format: int64
+                type: integer
+              conditions:
+                description: List of status conditions to indicate the status of a
+                  AwsWebAcl.
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              state:
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
