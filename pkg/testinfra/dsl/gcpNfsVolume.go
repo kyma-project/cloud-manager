@@ -91,6 +91,18 @@ func WithGcpNfsVolumeStatusLocation(location string) ObjAction {
 	}
 }
 
+func WithGcpNfsVolumeStatusId(id string) ObjAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
+				x.Status.Id = id
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsVolumeStatusId", obj))
+		},
+	}
+}
+
 func WithGcpNfsVolumeCapacity(capacityGb int) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

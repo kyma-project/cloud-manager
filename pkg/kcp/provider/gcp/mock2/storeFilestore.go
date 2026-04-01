@@ -342,7 +342,14 @@ func (s *store) ListFilestoreBackups(ctx context.Context, req *filestorepb.ListB
 			}
 		}
 		list = list.FilterByCallback(func(item FilterableListItem[*filestorepb.Backup]) bool {
-			return item.Name.ProjectId() == parentNd.ProjectId() && item.Name.LocationRegionId() == parentNd.LocationRegionId()
+			if item.Name.ProjectId() != parentNd.ProjectId() {
+				return false
+			}
+			// "-" is the GCP wildcard meaning "all locations"
+			if parentNd.LocationRegionId() == "-" {
+				return true
+			}
+			return item.Name.LocationRegionId() == parentNd.LocationRegionId()
 		})
 	}
 	if req.Filter != "" {

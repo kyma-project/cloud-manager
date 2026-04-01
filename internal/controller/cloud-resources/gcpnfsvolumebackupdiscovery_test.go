@@ -3,83 +3,182 @@ package cloudresources
 import (
 	"fmt"
 
-	"time"
-
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
-	"github.com/google/uuid"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 
 	It("Scenario: SKR GcpNfsVolumeBackupDiscovery is created", func() {
 
-		name := uuid.NewString()
-		scopeName := infra.SkrKymaRef().Name
-		shootName := scopeName // ShootName is always set to scope.Name in GivenScopeGcpExists
+		gcpMock := infra.GcpMock2().NewSubscription("backup-discovery")
+		defer gcpMock.Delete()
 
-		By("Given KCP Scope exists", func() {
-			Expect(
-				infra.GivenScopeGcpExists(scopeName),
-			).NotTo(HaveOccurred())
+		scopeName := infra.SkrKymaRef().Name
+		shootName := scopeName // ShootName is always set to scope.Name in givenScopeGcpExistsWithProject
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given KCP Scope exists with mock2 project", func() {
+			Expect(infra.GivenScopeGcpExistsWithProject(scopeName, gcpMock.ProjectId())).NotTo(HaveOccurred())
+			Eventually(func() (exists bool, err error) {
+				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(scopeName), scope)
+				exists = err == nil
+				return exists, client.IgnoreNotFound(err)
+			}).Should(BeTrue(), "expected Scope to get created")
 		})
 
-		By("And Given shared backups exist for shoot", func() {
-			infra.GcpMock().CreateFakeBackupV2(&filestorepb.Backup{
-				Name:               fmt.Sprintf("projects/kyma/locations/us-central1-a/backups/%s-backup-1", name),
-				Description:        fmt.Sprintf("Test NFS volume backup 1 for %s", name),
-				State:              filestorepb.Backup_READY,
-				CreateTime:         timestamppb.New(time.Date(2024, 10, 30, 10, 0, 0, 0, time.UTC)),
-				SourceFileShare:    fmt.Sprintf("%s-share-1", name),
-				SourceInstance:     fmt.Sprintf("projects/kyma/locations/us-central1-a/instances/%s-instance-1", name),
-				SourceInstanceTier: filestorepb.Instance_STANDARD,
-				Labels: map[string]string{
-					"managed-by":                          "cloud-manager",
-					"scope-name":                          scopeName,
-					util.GcpLabelSkrVolumeName:            fmt.Sprintf("%s-volume-1", name),
-					util.GcpLabelSkrVolumeNamespace:       "default",
-					util.GcpLabelSkrBackupName:            fmt.Sprintf("%s-backup-1", name),
-					util.GcpLabelSkrBackupNamespace:       "default",
-					util.GcpLabelShootName:                shootName,
-					fmt.Sprintf("cm-allow-%s", shootName): util.GcpLabelBackupAccessibleFrom,
+		vpcNetworkName := scope.Spec.Scope.Gcp.VpcNetwork
+		addressName := "discovery-psa-address"
+
+		By("And Given GCP VPC network exists in mock2", func() {
+			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				NetworkResource: &computepb.Network{
+					Name: ptr.To(vpcNetworkName),
 				},
-				CapacityGb:   100,
-				StorageBytes: 107374182400, // 100 GB in bytes
 			})
-			infra.GcpMock().CreateFakeBackupV2(&filestorepb.Backup{
-				Name:               fmt.Sprintf("projects/kyma/locations/us-central1-a/backups/%s-backup-2", name),
-				Description:        fmt.Sprintf("Test NFS volume backup 2 for %s", name),
-				State:              filestorepb.Backup_READY,
-				CreateTime:         timestamppb.New(time.Date(2024, 10, 30, 11, 0, 0, 0, time.UTC)),
-				SourceFileShare:    fmt.Sprintf("%s-share-2", name),
-				SourceInstance:     fmt.Sprintf("projects/kyma/locations/us-central1-a/instances/%s-instance-2", name),
-				SourceInstanceTier: filestorepb.Instance_PREMIUM,
-				Labels: map[string]string{
-					"managed-by":                          "cloud-manager",
-					"scope-name":                          scopeName,
-					util.GcpLabelSkrVolumeName:            fmt.Sprintf("%s-volume-2", name),
-					util.GcpLabelSkrVolumeNamespace:       "default",
-					util.GcpLabelSkrBackupName:            fmt.Sprintf("%s-backup-2", name),
-					util.GcpLabelSkrBackupNamespace:       "default",
-					util.GcpLabelShootName:                shootName,
-					fmt.Sprintf("cm-allow-%s", shootName): util.GcpLabelBackupAccessibleFrom,
+			Expect(err).ToNot(HaveOccurred())
+			Expect(op.Wait(infra.Ctx())).To(Succeed())
+		})
+
+		By("And Given GCP PSA address range exists in mock2", func() {
+			net, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				Network: vpcNetworkName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			op, err := gcpMock.InsertGlobalAddress(infra.Ctx(), &computepb.InsertGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				AddressResource: &computepb.Address{
+					Name:         ptr.To(addressName),
+					Address:      ptr.To("10.251.0.0"),
+					PrefixLength: ptr.To(int32(16)),
+					Network:      ptr.To(net.GetSelfLink()),
+					AddressType:  ptr.To(computepb.Address_INTERNAL.String()),
+					Purpose:      ptr.To(computepb.Address_VPC_PEERING.String()),
 				},
-				CapacityGb:   200,
-				StorageBytes: 214748364800, // 200 GB in bytes
 			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(op.Wait(infra.Ctx())).To(Succeed())
+		})
+
+		By("And Given GCP PSA connection exists in mock2", func() {
+			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				Address: addressName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			net, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				Network: vpcNetworkName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			_, err = gcpMock.CreateServiceConnection(infra.Ctx(), gcpMock.ProjectId(), net.GetName(), []string{addr.GetName()})
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		instanceName := "shared-instance-1"
+		fileShareName := "vol1"
+
+		By("And Given GCP Filestore instance exists in mock2 (required for backup source validation)", func() {
+			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				Address: addressName,
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			instanceOp, err := gcpMock.CreateFilestoreInstance(infra.Ctx(), &filestorepb.CreateInstanceRequest{
+				Parent:     fmt.Sprintf("projects/%s/locations/%s", gcpMock.ProjectId(), scope.Spec.Region),
+				InstanceId: instanceName,
+				Instance: &filestorepb.Instance{
+					Tier: filestorepb.Instance_BASIC_HDD,
+					FileShares: []*filestorepb.FileShareConfig{
+						{
+							Name:       fileShareName,
+							CapacityGb: 1024,
+						},
+					},
+					Networks: []*filestorepb.NetworkConfig{
+						{
+							Network:         fmt.Sprintf("projects/%s/global/networks/%s", gcpMock.ProjectId(), vpcNetworkName),
+							ConnectMode:     filestorepb.NetworkConfig_PRIVATE_SERVICE_ACCESS,
+							ReservedIpRange: addr.GetSelfLink(),
+						},
+					},
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			opName := instanceOp.Name()
+			Expect(gcpMock.ResolveFilestoreOperation(infra.Ctx(), opName)).To(Succeed())
+		})
+
+		sourceInstancePath := fmt.Sprintf("projects/%s/locations/%s/instances/%s",
+			gcpMock.ProjectId(), scope.Spec.Region, instanceName)
+
+		backupName1 := "shared-backup-1"
+		backupName2 := "shared-backup-2"
+
+		By("And Given shared backups exist for shoot in mock2", func() {
+			// Create backup 1
+			op1, err := gcpMock.CreateFilestoreBackup(infra.Ctx(), &filestorepb.CreateBackupRequest{
+				Parent:   fmt.Sprintf("projects/%s/locations/%s", gcpMock.ProjectId(), scope.Spec.Region),
+				BackupId: backupName1,
+				Backup: &filestorepb.Backup{
+					SourceInstance:  sourceInstancePath,
+					SourceFileShare: fileShareName,
+					Labels: map[string]string{
+						"managed-by":                          "cloud-manager",
+						"scope-name":                          scopeName,
+						util.GcpLabelSkrVolumeName:            "volume-1",
+						util.GcpLabelSkrVolumeNamespace:       "default",
+						util.GcpLabelSkrBackupName:            backupName1,
+						util.GcpLabelSkrBackupNamespace:       "default",
+						util.GcpLabelShootName:                shootName,
+						fmt.Sprintf("cm-allow-%s", shootName): util.GcpLabelBackupAccessibleFrom,
+					},
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(gcpMock.ResolveFilestoreBackupOperation(infra.Ctx(), op1.Name())).To(Succeed())
+
+			// Create backup 2
+			op2, err := gcpMock.CreateFilestoreBackup(infra.Ctx(), &filestorepb.CreateBackupRequest{
+				Parent:   fmt.Sprintf("projects/%s/locations/%s", gcpMock.ProjectId(), scope.Spec.Region),
+				BackupId: backupName2,
+				Backup: &filestorepb.Backup{
+					SourceInstance:  sourceInstancePath,
+					SourceFileShare: fileShareName,
+					Labels: map[string]string{
+						"managed-by":                          "cloud-manager",
+						"scope-name":                          scopeName,
+						util.GcpLabelSkrVolumeName:            "volume-2",
+						util.GcpLabelSkrVolumeNamespace:       "default",
+						util.GcpLabelSkrBackupName:            backupName2,
+						util.GcpLabelSkrBackupNamespace:       "default",
+						util.GcpLabelShootName:                shootName,
+						fmt.Sprintf("cm-allow-%s", shootName): util.GcpLabelBackupAccessibleFrom,
+					},
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(gcpMock.ResolveFilestoreBackupOperation(infra.Ctx(), op2.Name())).To(Succeed())
 		})
 
 		gcpNfsVolumeBackupDiscovery := &cloudresourcesv1beta1.GcpNfsVolumeBackupDiscovery{}
+		discoveryName := "discovery-" + scopeName[:8]
 
 		By("When GcpNfsVolumeBackupDiscovery is created", func() {
 			Expect(CreateObj(
 				infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackupDiscovery,
-				WithName(name),
+				WithName(discoveryName),
 			)).To(Succeed())
 		})
 

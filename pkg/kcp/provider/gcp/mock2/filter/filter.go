@@ -213,6 +213,11 @@ func (f *FilterEngine[T]) Match(filter string, obj T) (bool, error) {
 	}
 	out, _, err := prog.Eval(activation)
 	if err != nil {
+		// "no such key" means a map key referenced in the filter doesn't exist on the object;
+		// GCP's real filter API treats this as a non-match rather than an error.
+		if strings.Contains(err.Error(), "no such key") {
+			return false, nil
+		}
 		return false, err
 	}
 
@@ -302,6 +307,12 @@ func translateAIP160(s string) string {
 	// labels.owner:*  →  has(labels["owner"])
 	re = regexp.MustCompile(`labels\.([a-zA-Z0-9_-]+):\*`)
 	s = re.ReplaceAllString(s, `has(labels["$1"])`)
+
+	// labels.key-with-hyphens == "value"  →  labels["key-with-hyphens"] == "value"
+	// Must come after the == substitution above. Handles map keys with hyphens that are
+	// invalid as CEL field selectors (e.g. labels.cm-allow-shoot-name == "accessible-from").
+	re = regexp.MustCompile(`labels\.([a-zA-Z0-9_-]*-[a-zA-Z0-9_-]+) ==`)
+	s = re.ReplaceAllString(s, `labels["$1"] ==`)
 
 	// field:("quoted-value")  →  field.exists(x, x.contains("quoted-value"))
 	// Must come before the unquoted exists rule.

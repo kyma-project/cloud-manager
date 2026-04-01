@@ -7,6 +7,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
@@ -96,6 +97,16 @@ func (s *server) NfsInstanceV2Provider() gcpclient.GcpClientProvider[gcpnfsinsta
 			return nil
 		}
 		return gcpnfsinstancev2client.NewFilestoreClientFromFilestoreClient(sub)
+	}
+}
+
+func (s *server) NfsBackupV2Provider() gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient] {
+	return func(projectId string) gcpnfsbackupclientv2.FileBackupClient {
+		sub := s.GetSubscription(projectId)
+		if sub == nil {
+			return nil
+		}
+		return gcpnfsbackupclientv2.NewFileBackupClientFromFilestoreClient(sub)
 	}
 }
 

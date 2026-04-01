@@ -2,10 +2,14 @@ package filter
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcputil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/file/v1"
@@ -183,6 +187,39 @@ func TestFilter(t *testing.T) {
 				assert.Equal(t, tc.match, ok)
 			})
 		}
+	})
+
+	t.Run("filestorepb.Backup with hyphenated label keys (GetSharedBackupsFilter)", func(t *testing.T) {
+		fe, err := NewFilterEngine[*filestorepb.Backup]()
+		assert.NoError(t, err)
+
+		shootName := "5e32a9dd-4e68-47c7-aac7-64a4880a00d7"
+
+		obj := &filestorepb.Backup{
+			Name: fmt.Sprintf("projects/test-project/locations/us-west1/backups/test-backup"),
+			Labels: map[string]string{
+				"managed-by":                          "cloud-manager",
+				"scope-name":                          shootName,
+				util.GcpLabelShootName:                shootName,
+				fmt.Sprintf("cm-allow-%s", shootName): util.GcpLabelBackupAccessibleFrom,
+			},
+		}
+
+		sharedFilter := gcpclient.GetSharedBackupsFilter(shootName, shootName)
+		ok, err := fe.Match(sharedFilter, obj)
+		require.NoError(t, err, "GetSharedBackupsFilter should match backup with matching shoot label")
+		assert.True(t, ok)
+
+		// Backup without the allow label should NOT match
+		objNoLabel := &filestorepb.Backup{
+			Name: "projects/test-project/locations/us-west1/backups/other-backup",
+			Labels: map[string]string{
+				"managed-by": "cloud-manager",
+			},
+		}
+		ok, err = fe.Match(sharedFilter, objNoLabel)
+		require.NoError(t, err)
+		assert.False(t, ok)
 	})
 
 }
