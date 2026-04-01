@@ -58,6 +58,7 @@ on:
 
 jobs:
   test:
+    name: Test ${{ inputs.provider }}
     runs-on: ubuntu-latest
     env:
       AWS_ROLE_NAME: CloudManagerRole
@@ -221,3 +222,5 @@ jobs:
         if: always() && env.INPUTSOK != ''
         uses: ./.github/actions/e2e-destroy
         id: e2e-destroy
+        with:
+          logs-suffix: ${{ inputs.provider }}
