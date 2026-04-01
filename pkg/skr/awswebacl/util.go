@@ -2,11 +2,11 @@ package awswebacl
 
 import (
 	"fmt"
-	"strings"
 
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/ptr"
 )
 
@@ -47,20 +47,29 @@ func convertRule(rule cloudresourcesv1beta1.AwsWebAclRule) (*wafv2types.Rule, er
 		return nil, err
 	}
 
-	action, err := convertRuleAction(rule.Action)
-	if err != nil {
-		return nil, err
-	}
-
 	visibilityConfig := convertVisibilityConfig(rule.VisibilityConfig, rule.Name)
 
-	return &wafv2types.Rule{
+	wafRule := &wafv2types.Rule{
 		Name:             ptr.To(rule.Name),
 		Priority:         rule.Priority,
 		Statement:        statement,
-		Action:           action,
 		VisibilityConfig: visibilityConfig,
-	}, nil
+	}
+
+	// Managed rule groups require OverrideAction instead of Action
+	if rule.Statement.ManagedRuleGroup != nil {
+		wafRule.OverrideAction = &wafv2types.OverrideAction{
+			None: &wafv2types.NoneAction{},
+		}
+	} else {
+		action, err := convertRuleAction(rule.Action)
+		if err != nil {
+			return nil, err
+		}
+		wafRule.Action = action
+	}
+
+	return wafRule, nil
 }
 
 func convertRuleAction(action cloudresourcesv1beta1.AwsWebAclRuleAction) (*wafv2types.RuleAction, error) {
@@ -229,9 +238,5 @@ func extractIdFromArn(arn string) string {
 }
 
 func isNotFoundError(err error) bool {
-	if err == nil {
-		return false
-	}
-	return strings.Contains(err.Error(), "WAFNonexistentItemException") ||
-		strings.Contains(err.Error(), "ResourceNotFoundException")
+	return awsmeta.IsNotFound(err)
 }
