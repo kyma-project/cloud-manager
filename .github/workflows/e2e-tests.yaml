@@ -1,5 +1,5 @@
 name: E2E tests
-run-name: E2E tests ${{ inputs.provider }}
+run-name: E2E tests ${{ inputs.provider }} ${{ inputs.tags }} ${{ inputs.feature_flags }}
 
 # Required GitHub Repository Configuration:
 #
@@ -19,8 +19,8 @@ on:
         options:
           - ''
           - aws
-          - gcp
           - azure
+          - gcp
         description: Cloud provider
       tags:
         type: string
@@ -38,6 +38,24 @@ on:
         type: boolean
         description: Extra logs and prints
         default: false
+
+  workflow_call:
+    inputs:
+      provider:
+        type: string
+        required: true
+      tags:
+        type: string
+        required: false
+      feature_flags:
+        type: string
+        required: false
+        default: ./pkg/feature/ff_edge.yaml
+      debug:
+        type: boolean
+        required: false
+        default: false
+
 jobs:
   test:
     runs-on: ubuntu-latest
