@@ -1,6 +1,7 @@
 package awswebacl
 
 import (
+	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -17,7 +18,8 @@ type State struct {
 
 	awsClient webaclclient.Client
 	roleName  string
-	lockToken string // Transient lock token from loadWebAcl, not persisted
+	awsWebAcl *wafv2types.WebACL // Loaded AWS WebACL
+	lockToken string              // Transient lock token from loadWebAcl, not persisted
 }
 
 func newStateFactory(

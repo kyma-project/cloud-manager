@@ -75,7 +75,8 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		return composed.LogErrorAndReturn(err, "Error creating WebACL", composed.StopWithRequeue, ctx)
 	}
 
-	// Store lock token in state (transient, not persisted)
+	// Store WebACL and lock token in state (transient, not persisted)
+	state.awsWebAcl = createdWebACL
 	state.lockToken = lockToken
 
 	return composed.NewStatusPatcherComposed(webAcl).
