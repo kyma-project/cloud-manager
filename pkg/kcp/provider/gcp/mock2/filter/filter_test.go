@@ -196,7 +196,7 @@ func TestFilter(t *testing.T) {
 		shootName := "5e32a9dd-4e68-47c7-aac7-64a4880a00d7"
 
 		obj := &filestorepb.Backup{
-			Name: fmt.Sprintf("projects/test-project/locations/us-west1/backups/test-backup"),
+			Name: "projects/test-project/locations/us-west1/backups/test-backup",
 			Labels: map[string]string{
 				"managed-by":                          "cloud-manager",
 				"scope-name":                          shootName,

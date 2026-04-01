@@ -21,7 +21,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 		gcpMock := infra.GcpMock2().NewSubscription("nfs-backup-v2")
 		defer gcpMock.Delete()
 
-		skrGcpNfsVolumeName := "b7e6f9b1-11de-40aa-8c24-1207791fc0b9"
+		skrGcpNfsVolumeName := "207c83d0-2480-4a2d-b402-938a66d2ca9e"
 		skrGcpNfsVolumeId := "b7e6f9b1-11de-40aa-8c24-1207791fc0b9"
 		skrGcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
 		skrIpRangeName := "3d5eef8e-b871-4147-b6a2-7a49753c8bf8"
@@ -228,7 +228,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 		gcpMock := infra.GcpMock2().NewSubscription("nfs-backup-v2-empty-loc")
 		defer gcpMock.Delete()
 
-		skrGcpNfsVolumeName := "c4d4c1f0-fdbe-4673-b84b-276e735b7cc6"
+		skrGcpNfsVolumeName := "1c533c96-cf3e-43cb-9fb9-8d6308186af3"
 		skrGcpNfsVolumeId := "c4d4c1f0-fdbe-4673-b84b-276e735b7cc6"
 		skrGcpNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
 		skrIpRangeName := "adc5accc-eb4b-4668-b760-e06b601a3893"
