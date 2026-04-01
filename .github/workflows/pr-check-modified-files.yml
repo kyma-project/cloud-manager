@@ -1,0 +1,35 @@
+# This is a subset of the pr-test.yaml that just checks for modified fields
+# Purpose is to fail fast in case files are modified and not to wait for tests for finish
+name: PR Check modified files
+run-name: Check modified files ${{ github.event.pull_request.number || github.ref_name }}
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "*"
+env:
+  PIPELINE: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Check modified files
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - name: Display Go version
+        run: go version
+      - name: Runs sync, tidy & fmt
+        run: |
+          ./config/sync.sh
+          go mod tidy
+          go fmt ./...
+      - name: Check modified files
+        run: git diff --exit-code
+      - name: Check if test GUIDs are unique
+        run: x=$(grep -rEho '[[:xdigit:]]{8}(-[[:xdigit:]]{4}){3}-[[:xdigit:]]{12}'  ./internal | sort | uniq -d); [ -z "${x}" ] || ( echo duplicated GUID detected $x; exit 1; )
