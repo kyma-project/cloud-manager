@@ -38,7 +38,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 
 	// Setting the uuid as id to prevent duplicate backups if updateStatus fails.
 	if backup.Status.Id == "" {
-		location := getLocation(state)
+		location := getLocation(backup.Spec.Location, state.Scope.Spec.Region)
 		backup.Status.Location = location
 		backup.Status.Id = uuid.NewString()
 		return composed.PatchStatus(backup).
@@ -80,10 +80,3 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		Run(ctx, state)
 }
 
-func getLocation(state *State) string {
-	location := state.ObjAsGcpNfsVolumeBackup().Spec.Location
-	if len(location) != 0 {
-		return location
-	}
-	return state.Scope.Spec.Region
-}
