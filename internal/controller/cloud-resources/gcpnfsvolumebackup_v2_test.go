@@ -160,7 +160,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 				).Should(Succeed())
 		})
 
-		By("Then GCP Backup is created", func() {
+		By("Then GcpNfsVolumeBackup has status.id set", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,

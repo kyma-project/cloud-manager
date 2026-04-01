@@ -182,16 +182,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 			)).To(Succeed())
 		})
 
-		By("Then GcpNfsVolumeBackupDiscovery is created in SKR", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackupDiscovery,
-					NewObjActions(),
-				).
-				Should(Succeed())
-		})
-
-		By("And Then GcpNfsVolumeBackupDiscovery will get Ready condition", func() {
+		By("Then GcpNfsVolumeBackupDiscovery will get Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackupDiscovery,
