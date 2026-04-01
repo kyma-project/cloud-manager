@@ -306,6 +306,10 @@ func (s *scenarioSession) EventuallyResourceDoesNotExist(ctx context.Context, al
 		return true, nil
 	})
 
+	if errors.Is(err, context.DeadlineExceeded) {
+		err = fmt.Errorf("timeout after %s: %w", s.Timing().EventuallyTimeout, err)
+	}
+
 	return err
 }
 
@@ -367,7 +371,11 @@ func (s *scenarioSession) EventuallyValueIsOK(ctx context.Context, expression st
 		if dErr != nil {
 			return fmt.Errorf("%w, %w", dErr, err)
 		}
-		err = fmt.Errorf("%w:\nresources debug info:\n%s", err, txt)
+		txtToCa := "timeout"
+		if errors.Is(err, context.Canceled) {
+			txtToCa = "canceled"
+		}
+		err = fmt.Errorf("%s after %s: %w:\nresources debug info:\n%s", txtToCa, timeout.String(), err, txt)
 	}
 	return err
 }

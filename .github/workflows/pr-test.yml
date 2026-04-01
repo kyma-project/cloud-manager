@@ -1,6 +1,5 @@
-name: PR Checks
-run-name: >-
-  ${{ github.event.pull_request.number || github.ref_name }}
+name: PR Test
+run-name: Test ${{ github.event.pull_request.number || github.ref_name }}
 on:
   push:
     branches:

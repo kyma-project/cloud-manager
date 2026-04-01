@@ -5,6 +5,8 @@ Feature: AwsRedisInstance feature
 
     Given there is shared SKR with "AWS" provider
 
+    Given eventually timeout is "30m"
+
     And resource declaration:
       | Alias  | Kind             | ApiVersion                              | Name                         | Namespace |
       | redis  | AwsRedisInstance | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                  |           |
