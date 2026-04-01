@@ -98,7 +98,14 @@
         "secretsmanager:GetSecretValue",
         "secretsmanager:TagResource",
         "sts:GetCallerIdentity",
-        "tag:GetResources"
+        "tag:GetResources",
+        "wafv2:CreateWebACL",
+        "wafv2:DeleteWebACL",
+        "wafv2:GetWebACL",
+        "wafv2:ListWebACLs",
+        "wafv2:TagResource",
+        "wafv2:UntagResource",
+        "wafv2:UpdateWebACL"
       ],
       "Resource": "*"
     },
