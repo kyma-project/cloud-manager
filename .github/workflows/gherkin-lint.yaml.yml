@@ -1,0 +1,29 @@
+name: gherkin-lint.yaml
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  gherkin-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+
+      - name: NPM install
+        shell: bash
+        run: |
+          npm install -g gherkin-lint
+
+      - name: Gherkin lint
+        shell: bash
+        run: |
+          gherkin-lint --rulesdir e2e/features

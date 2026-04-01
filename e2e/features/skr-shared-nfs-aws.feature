@@ -5,7 +5,7 @@ Feature: AWS NfsVolume feature
   Scenario: AwsNfsVolume scenario
 
     Given there is shared SKR with "AWS" provider
-    
+
     Given eventually timeout is "50m"
 
     Given resource declaration:
