@@ -19,7 +19,7 @@ import (
 
 var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 
-	It("Scenario: SKR AwsNfsVolume is created with specified IpRange", Focus, func() {
+	It("Scenario: SKR AwsNfsVolume is created with specified IpRange", func() {
 
 		skrIpRangeName := "3ef3cbbc-b347-4762-b63a-c1ec9555be65"
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}

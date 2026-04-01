@@ -10,8 +10,10 @@ import (
 
 type ReconcilerArguments struct {
 	ScopeProvider scopeprovider.ScopeProvider
+
 	// Deprecated: Use ScopeProvider instead
-	KymaRef    klog.ObjectRef
+	KymaRef klog.ObjectRef
+
 	KcpCluster cluster.Cluster
 	SkrCluster cluster.Cluster
 	// Provider indicates specific provider resources are available for,
