@@ -12,6 +12,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -165,8 +166,6 @@ func (o *options) observe(gvkList schema.GroupVersionKind, tp reflect.Type) erro
 
 func (o *options) deleteAll(ctx context.Context) error {
 	for _, m := range o.matches {
-		logger := o.logger.WithValues("gvk", m.gvkObj.String())
-
 		list := m.list.DeepCopyObject().(client.ObjectList)
 		err := o.client.List(ctx, list)
 		if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
@@ -199,8 +198,6 @@ func (o *options) deleteAll(ctx context.Context) error {
 			if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
 				return fmt.Errorf("error deleting all of %T: %w", m.obj, err)
 			}
-		} else {
-			logger.Info("no resources found")
 		}
 	}
 	return nil
@@ -281,15 +278,31 @@ func (o *options) forceDelete(ctx context.Context) error {
 		}
 
 		for _, obj := range arr {
+			if len(obj.GetFinalizers()) == 0 {
+				continue
+			}
 			o.logger.
 				WithValues("gvk", m.gvkObj.String()).
 				WithValues("name", client.ObjectKeyFromObject(obj)).
-				Info("force deleting")
+				Info("force deleting / removing finalizers")
 
-			p := []byte(`[{"op": "remove", "path": "/metadata/finalizers"}]`)
-			err := o.client.Patch(ctx, obj, client.RawPatch(types.JSONPatchType, p))
+			p := []byte(`{"metadata":{"finalizers":[]}}`)
+			err := o.client.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 			if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
-				return fmt.Errorf("could not remove finalizers: %w", err)
+				reason := metav1.StatusReasonUnknown
+				var code int32
+				if status, ok := err.(apierrors.APIStatus); ok || errors.As(err, &status) {
+					reason = status.Status().Reason
+					code = status.Status().Code
+				}
+				return fmt.Errorf("could not remove finalizers %T (reason: %s, code: %d): %w", err, reason, code, err)
+			}
+			err = o.client.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+			if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
+				return fmt.Errorf("failed to load obj after finalizer remove: %w", err)
+			}
+			if len(obj.GetFinalizers()) > 0 {
+				return fmt.Errorf("expected no finalizers after finalizer remove")
 			}
 		}
 	}
