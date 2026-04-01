@@ -2,7 +2,6 @@ package awswebacl
 
 import (
 	"fmt"
-	"strings"
 
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -220,17 +219,4 @@ func convertTags(webAcl *cloudresourcesv1beta1.AwsWebAcl) []wafv2types.Tag {
 	}
 
 	return tags
-}
-
-// extractIdFromArn extracts the WebACL ID from its ARN
-// ARN format: arn:aws:wafv2:region:account:scope/webacl/name/id
-func extractIdFromArn(arn string) string {
-	if arn == "" {
-		return ""
-	}
-	parts := strings.Split(arn, "/")
-	if len(parts) >= 4 {
-		return parts[len(parts)-1]
-	}
-	return ""
 }

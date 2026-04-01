@@ -13,6 +13,7 @@ type Client interface {
 	GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error)
 	UpdateWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, defaultAction *wafv2types.DefaultAction, rules []wafv2types.Rule, visibilityConfig *wafv2types.VisibilityConfig, lockToken string) error
 	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
+	ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error)
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[Client] {
@@ -47,4 +48,8 @@ func (c *client) UpdateWebACL(ctx context.Context, name, id string, scope wafv2t
 
 func (c *client) DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error {
 	return c.wafv2Client.DeleteWebACL(ctx, name, id, scope, lockToken)
+}
+
+func (c *client) ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error) {
+	return c.wafv2Client.ListWebACLs(ctx, scope)
 }

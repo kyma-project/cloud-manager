@@ -21,8 +21,36 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	scope := ScopeRegional()
 
+	// Get ID from loaded WebACL in state
+	var id string
+	if state.awsWebAcl != nil && state.awsWebAcl.Id != nil {
+		id = *state.awsWebAcl.Id
+	} else {
+		// If WebACL not loaded (e.g., manual deletion), try to find it by listing
+		summaries, err := state.awsClient.ListWebACLs(ctx, scope)
+		if err != nil {
+			if awsmeta.IsNotFound(err) {
+				logger.Info("WebACL not found in AWS, considering as deleted")
+				return nil, ctx
+			}
+			return composed.LogErrorAndReturn(err, "Error listing WebACLs for deletion", composed.StopWithRequeue, ctx)
+		}
+
+		// Find by name
+		for _, summary := range summaries {
+			if summary.Name != nil && *summary.Name == webAcl.Name && summary.Id != nil {
+				id = *summary.Id
+				break
+			}
+		}
+
+		if id == "" {
+			logger.Info("WebACL not found in AWS, considering as deleted")
+			return nil, ctx
+		}
+	}
+
 	// Delete WebACL
-	id := extractIdFromArn(webAcl.Status.Arn)
 	err := state.awsClient.DeleteWebACL(ctx, webAcl.Name, id, scope, state.lockToken)
 	if err != nil {
 		// If not found, consider it deleted

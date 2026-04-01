@@ -59,12 +59,22 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 	visibilityConfig := convertVisibilityConfig(webAcl.Spec.VisibilityConfig, webAcl.Name)
 
 	scope := ScopeRegional()
+
+	// Get ID from loaded WebACL in state
+	if state.awsWebAcl == nil || state.awsWebAcl.Id == nil {
+		return composed.LogErrorAndReturn(
+			fmt.Errorf("WebACL not loaded in state"),
+			"Cannot update WebACL without loaded state",
+			composed.StopWithRequeue,
+			ctx,
+		)
+	}
+
 	// Update WebACL
-	id := extractIdFromArn(webAcl.Status.Arn)
 	err = state.awsClient.UpdateWebACL(
 		ctx,
 		webAcl.Name,
-		id,
+		*state.awsWebAcl.Id,
 		scope,
 		defaultAction,
 		rules,
