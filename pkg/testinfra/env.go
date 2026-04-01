@@ -11,6 +11,7 @@ import (
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	gcpmock2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock2"
 	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/skr/runtime/looper"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
@@ -79,6 +80,10 @@ func (ie *infraEnv) SkrKymaRef() klog.ObjectRef {
 
 func (ie *infraEnv) SkrRunner() skrruntime.SkrRunner {
 	return ie.runner
+}
+
+func (ie *infraEnv) AddScopeProvider(scopeProvider scopeprovider.ScopeProvider) {
+	ie.runner.ScopeProvider().Add(scopeProvider)
 }
 
 func (ie *infraEnv) Config() config.Config {

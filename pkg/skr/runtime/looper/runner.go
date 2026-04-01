@@ -12,6 +12,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -52,6 +53,10 @@ func WithTimeout(timeout time.Duration) RunOption {
 }
 
 type SkrRunner interface {
+	// ScopeProvider returns used ScopeProvider when started. Before that it's nil
+	ScopeProvider() scopeprovider.ScopeProviderRegistry
+
+	// Run starts the runner. Once run the ScopeProvider() is available
 	Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) error
 }
 
@@ -74,6 +79,8 @@ type skrRunner struct {
 	skrStatusSaver SkrStatusSaver
 	kymaName       string
 
+	scopeProvider scopeprovider.ScopeProviderRegistry
+
 	runOnce sync.Once
 	started bool
 	stopped bool
@@ -84,6 +91,10 @@ func (r *skrRunner) isObjectActiveForProvider(scheme *runtime.Scheme, provider *
 		return true
 	}
 	return common.ObjSupportsProvider(obj, scheme, string(*provider))
+}
+
+func (r *skrRunner) ScopeProvider() scopeprovider.ScopeProviderRegistry {
+	return r.scopeProvider
 }
 
 func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) (err error) {
@@ -136,11 +147,15 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			}
 		}
 
+		r.scopeProvider = scopeprovider.New().
+			Add(scopeprovider.Always(skrManager.KymaRef().Namespace, skrManager.KymaRef().Name))
+
 		rArgs := reconcile2.ReconcilerArguments{
-			KymaRef:    skrManager.KymaRef(),
-			KcpCluster: r.kcpCluster,
-			SkrCluster: skrManager,
-			Provider:   options.provider,
+			ScopeProvider: r.scopeProvider,
+			KymaRef:       skrManager.KymaRef(),
+			KcpCluster:    r.kcpCluster,
+			SkrCluster:    skrManager,
+			Provider:      options.provider,
 
 			IgnoreWatchErrors: skrManager.IgnoreWatchErrors,
 		}
