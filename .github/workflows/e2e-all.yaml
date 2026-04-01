@@ -1,0 +1,65 @@
+name: E2E All Providers
+
+on:
+  workflow_dispatch:
+    inputs:
+      aws:
+        type: boolean
+        required: false
+        default: true
+        description: AWS
+      azure:
+        type: boolean
+        required: false
+        default: true
+        description: Azure
+      gcp:
+        type: boolean
+        required: false
+        default: true
+        description: GCP
+      tags:
+        type: string
+        required: false
+        description: |
+          Godog tags (provider automatically appended)
+      feature_flags:
+        type: choice
+        required: true
+        options:
+          - ./pkg/feature/ff_edge.yaml
+          - ./pkg/feature/ff_ga.yaml
+        description: Feature flag file
+      debug:
+        type: boolean
+        description: Extra logs and prints
+        default: false
+
+jobs:
+  aws:
+    if: ${{ inputs.aws }}
+    uses: ./.github/workflows/e2e-tests.yaml
+    secrets: inherit
+    with:
+      provider: aws
+      tags: ${{ inputs.tags }}
+      feature_flags: ${{ inputs.feature_flags }}
+      debug: ${{ inputs.debug }}
+  azure:
+    if: ${{ inputs.azure }}
+    uses: ./.github/workflows/e2e-tests.yaml
+    secrets: inherit
+    with:
+      provider: azure
+      tags: ${{ inputs.tags }}
+      feature_flags: ${{ inputs.feature_flags }}
+      debug: ${{ inputs.debug }}
+  gcp:
+    if: ${{ inputs.gcp }}
+    uses: ./.github/workflows/e2e-tests.yaml
+    secrets: inherit
+    with:
+      provider: gcp
+      tags: ${{ inputs.tags }}
+      feature_flags: ${{ inputs.feature_flags }}
+      debug: ${{ inputs.debug }}
