@@ -28,6 +28,8 @@ Feature: GcpNfsVolume feature
 
     Then eventually "vol.status.state == 'Ready'" is ok, unless:
       | vol.status.state == 'Error' |
+      | #timeout=20m                |
+
     And eventually "pv.status.phase == 'Bound'" is ok
     And eventually "pvc.status.phase == 'Bound'" is ok
 
@@ -100,6 +102,8 @@ Feature: GcpNfsVolume feature
 
     Then eventually "vol2.status.state == 'Ready'" is ok, unless:
       | vol2.status.state == 'Error' |
+      | #timeout=20m                 |
+
     And eventually "pv2.status.phase == 'Bound'" is ok
     And eventually "pvc2.status.phase == 'Bound'" is ok
 

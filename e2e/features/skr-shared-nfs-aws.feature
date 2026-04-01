@@ -6,8 +6,6 @@ Feature: AWS NfsVolume feature
 
     Given there is shared SKR with "AWS" provider
 
-    Given eventually timeout is "50m"
-
     Given resource declaration:
       | Alias     | Kind                  | ApiVersion                              | Name                                            | Namespace |
       | vol       | AwsNfsVolume          | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                                     |           |
@@ -28,6 +26,7 @@ Feature: AWS NfsVolume feature
 
     Then eventually "findConditionTrue(vol, 'Ready')" is ok, unless:
       | findConditionTrue(vol, 'Error') |
+      | #timeout=20m                    |
 
     And "vol.status.state == 'Ready'" is ok
     And eventually "pv.status.phase == 'Bound'" is ok
