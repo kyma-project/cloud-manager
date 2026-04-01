@@ -3,6 +3,7 @@ package awswebacl
 import (
 	"context"
 
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -28,7 +29,7 @@ func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context)
 	awsWebACL, lockToken, err := state.awsClient.GetWebACL(ctx, webAcl.Name, id, scope)
 	if err != nil {
 		// If not found, clear status so it can be recreated
-		if isNotFoundError(err) {
+		if awsmeta.IsNotFound(err) {
 			logger.Info("WebACL not found in AWS, will recreate")
 			webAcl.Status.Arn = ""
 			webAcl.Status.Capacity = 0
