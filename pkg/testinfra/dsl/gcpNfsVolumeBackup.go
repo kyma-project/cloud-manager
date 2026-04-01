@@ -109,6 +109,30 @@ func AssertGcpNfsVolumeBackupHasState(state string) ObjAssertion {
 	}
 }
 
+func WithGcpNfsVolumeBackupStatusLocation(location string) ObjAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup); ok {
+				x.Status.Location = location
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsVolumeBackupStatusLocation", obj))
+		},
+	}
+}
+
+func WithGcpNfsVolumeBackupStatusId(id string) ObjAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup); ok {
+				x.Status.Id = id
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithGcpNfsVolumeBackupStatusId", obj))
+		},
+	}
+}
+
 func WithGcpNfsVolumeBackupLocation(location string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
