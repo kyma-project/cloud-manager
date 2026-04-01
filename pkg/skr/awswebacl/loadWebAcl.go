@@ -3,8 +3,8 @@ package awswebacl
 import (
 	"context"
 
-	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 )
 
 func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,10 +19,7 @@ func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context)
 
 	logger.Info("Loading AWS WebACL")
 
-	scope, err := convertScope(state.Scope())
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error determining scope", composed.StopWithRequeue, ctx)
-	}
+	scope := ScopeRegional()
 
 	// Load WebACL from AWS
 	id := extractIdFromArn(webAcl.Status.Arn)

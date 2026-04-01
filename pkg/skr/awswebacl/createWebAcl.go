@@ -2,12 +2,8 @@ package awswebacl
 
 import (
 	"context"
-	"fmt"
-
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
 
@@ -26,47 +22,42 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 	// Convert spec to AWS types
 	defaultAction, err := convertDefaultAction(webAcl.Spec.DefaultAction)
 	if err != nil {
-		webAcl.Status.State = cloudresourcesv1beta1.StateError
-		return composed.PatchStatus(webAcl).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonInvalidSpec,
-				Message: fmt.Sprintf("Invalid default action: %v", err),
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+				acl.SetStatusProviderError(err.Error())
 			}).
-			SuccessError(composed.StopWithRequeue).
-			Run(ctx, state)
+			OnSuccess(
+				composed.LogError(err, "Provider error on SKR AWS WebACL create/update"),
+				composed.Requeue).
+			Run(ctx, state.Cluster().K8sClient())
 	}
 
 	rules, err := convertRules(webAcl.Spec.Rules)
+
 	if err != nil {
-		webAcl.Status.State = cloudresourcesv1beta1.StateError
-		return composed.PatchStatus(webAcl).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonInvalidSpec,
-				Message: fmt.Sprintf("Invalid rules: %v", err),
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+				acl.SetStatusProviderError(err.Error())
 			}).
-			SuccessError(composed.StopWithRequeue).
-			Run(ctx, state)
+			OnSuccess(
+				composed.LogError(err, "Provider error on SKR AWS WebACL create/update"),
+				composed.Requeue).
+			Run(ctx, state.Cluster().K8sClient())
 	}
 
 	visibilityConfig := convertVisibilityConfig(webAcl.Spec.VisibilityConfig, webAcl.Name)
 
 	// Determine scope
-	scope, err := convertScope(state.Scope())
+	scope := ScopeRegional()
 	if err != nil {
-		webAcl.Status.State = cloudresourcesv1beta1.StateError
-		return composed.PatchStatus(webAcl).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudresourcesv1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonInvalidSpec,
-				Message: fmt.Sprintf("Error determining scope: %v", err),
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+				acl.SetStatusProviderError(err.Error())
 			}).
-			SuccessError(composed.StopWithRequeue).
-			Run(ctx, state)
+			OnSuccess(
+				composed.LogError(err, "Provider error on SKR AWS WebACL create/update"),
+				composed.Requeue).
+			Run(ctx, state.Cluster().K8sClient())
 	}
 
 	// Create WebACL
@@ -84,21 +75,18 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		return composed.LogErrorAndReturn(err, "Error creating WebACL", composed.StopWithRequeue, ctx)
 	}
 
-	// Update status with created resource info
-	webAcl.Status.Arn = ptr.Deref(createdWebACL.ARN, "")
-	webAcl.Status.Capacity = createdWebACL.Capacity
-	webAcl.Status.State = cloudresourcesv1beta1.StateReady
-
 	// Store lock token in state (transient, not persisted)
 	state.lockToken = lockToken
 
-	return composed.PatchStatus(webAcl).
-		SetExclusiveConditions(metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeReady,
-			Status:  metav1.ConditionTrue,
-			Reason:  cloudcontrolv1beta1.ReasonReady,
-			Message: "WebACL created successfully",
+	return composed.NewStatusPatcherComposed(webAcl).
+		MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+			acl.Status.Arn = ptr.Deref(createdWebACL.ARN, "")
+			acl.Status.Capacity = createdWebACL.Capacity
+			acl.SetStatusReady()
 		}).
-		SuccessError(composed.StopWithRequeue).
-		Run(ctx, state)
+		OnSuccess(
+			// log only if something was created/updated
+			composed.Log("AWS SKR WebACL is successfully created"),
+		).
+		Run(ctx, state.Cluster().K8sClient())
 }

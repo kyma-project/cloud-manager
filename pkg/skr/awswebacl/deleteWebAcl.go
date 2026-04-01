@@ -3,10 +3,8 @@ package awswebacl
 import (
 	"context"
 
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 )
 
 func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Context) {
@@ -21,19 +19,15 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Deleting AWS WebACL")
 
-	scope, err := convertScope(state.Scope())
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error determining scope", composed.StopWithRequeue, ctx)
-	}
+	scope := ScopeRegional()
 
 	// Delete WebACL
 	id := extractIdFromArn(webAcl.Status.Arn)
-	err = state.awsClient.DeleteWebACL(ctx, webAcl.Name, id, scope, state.lockToken)
+	err := state.awsClient.DeleteWebACL(ctx, webAcl.Name, id, scope, state.lockToken)
 	if err != nil {
 		// If not found, consider it deleted
-		if isNotFoundError(err) {
+		if awsmeta.IsNotFound(err) {
 			logger.Info("WebACL not found in AWS, considering as deleted")
-			webAcl.Status.Arn = ""
 			return nil, ctx
 		}
 		return composed.LogErrorAndReturn(err, "Error deleting WebACL", composed.StopWithRequeue, ctx)
@@ -41,18 +35,5 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("WebACL deleted successfully")
 
-	// Clear status
-	webAcl.Status.Arn = ""
-	webAcl.Status.Capacity = 0
-	webAcl.Status.State = cloudresourcesv1beta1.StateDeleting
-
-	return composed.PatchStatus(webAcl).
-		SetExclusiveConditions(metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeDeleting,
-			Status:  metav1.ConditionTrue,
-			Reason:  cloudcontrolv1beta1.ReasonProcessing,
-			Message: "WebACL deleted",
-		}).
-		SuccessError(composed.StopWithRequeue).
-		Run(ctx, state)
+	return nil, ctx
 }

@@ -5,9 +5,7 @@ import (
 	"strings"
 
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/ptr"
 )
 
@@ -196,10 +194,9 @@ func convertVisibilityConfig(config *cloudresourcesv1beta1.AwsWebAclVisibilityCo
 	}
 }
 
-func convertScope(scope *cloudcontrolv1beta1.Scope) (wafv2types.Scope, error) {
+func ScopeRegional() wafv2types.Scope {
 	// For now, always use REGIONAL
-	// CloudFront scope would require us-east-1 region
-	return wafv2types.ScopeRegional, nil
+	return wafv2types.ScopeRegional
 }
 
 func convertTags(webAcl *cloudresourcesv1beta1.AwsWebAcl) []wafv2types.Tag {

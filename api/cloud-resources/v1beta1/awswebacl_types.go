@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -237,6 +238,8 @@ type AwsWebAclStatus struct {
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
 	// +optional
 	State string `json:"state,omitempty"`
 }
@@ -264,6 +267,40 @@ type AwsWebAcl struct {
 	// status defines the observed state of AwsWebAcl
 	// +optional
 	Status AwsWebAclStatus `json:"status,omitempty"`
+}
+
+func (in *AwsWebAcl) ObservedGeneration() int64 {
+	return in.Status.ObservedGeneration
+}
+
+func (in *AwsWebAcl) SetObservedGeneration(i int64) {
+	in.Status.ObservedGeneration = i
+}
+
+func (in *AwsWebAcl) GetStatus() any {
+	return &in.Status
+}
+
+func (in *AwsWebAcl) SetStatusProviderError(msg string) {
+	in.Status.State = ReasonProviderError
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonProviderError,
+		Message:            msg,
+	})
+}
+
+func (in *AwsWebAcl) SetStatusReady() {
+	in.Status.State = StateReady
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionTrue,
+		ObservedGeneration: in.Status.ObservedGeneration,
+		Reason:             ReasonReady,
+		Message:            ReasonReady,
+	})
 }
 
 func (in *AwsWebAcl) Conditions() *[]metav1.Condition { return &in.Status.Conditions }

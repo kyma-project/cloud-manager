@@ -58,11 +58,7 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	visibilityConfig := convertVisibilityConfig(webAcl.Spec.VisibilityConfig, webAcl.Name)
 
-	scope, err := convertScope(state.Scope())
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error determining scope", composed.StopWithRequeue, ctx)
-	}
-
+	scope := ScopeRegional()
 	// Update WebACL
 	id := extractIdFromArn(webAcl.Status.Arn)
 	err = state.awsClient.UpdateWebACL(
