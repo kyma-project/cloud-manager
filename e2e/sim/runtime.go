@@ -55,16 +55,6 @@ var GardenerConditionTypes = []gardenertypes.ConditionType{
 
 func (r *simRuntime) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	result, err := r.reconcileRequest(ctx, request)
-	//logger := composed.LoggerFromCtx(ctx)
-	//if err != nil {
-	//	logger.Error(err, "reconciliation failed with error")
-	//} else if result.Requeue {
-	//	logger.Info("reconciliation requeue")
-	//} else if result.RequeueAfter > 0 {
-	//	logger.Info(fmt.Sprintf("reconciliation delayed requeue after %s", result.RequeueAfter.String()))
-	//} else {
-	//	logger.Info("reconciliation succeeded")
-	//}
 	return result, err
 }
 

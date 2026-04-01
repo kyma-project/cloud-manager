@@ -4,14 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	gardenerapicore "github.com/gardener/gardener/pkg/apis/core"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	e2eclean "github.com/kyma-project/cloud-manager/e2e/clean"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
-	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
@@ -25,54 +22,9 @@ import (
 
 var _ = Describe("Feature: KCP SIM", Serial, func() {
 
-	BeforeEach(func() {
-		By("Given clusters are clean", func() {
-			commonOps := []e2eclean.Option{
-				e2eclean.WithWait(true),
-				// intentionally low timeout, not waiting for something to remove finalizers, but doing a force delete
-				e2eclean.WithTimeout(time.Millisecond),
-				e2eclean.WithForceDeleteOnTimeout(true),
-				e2eclean.WithLogger(composed.LoggerFromCtx(infra.Ctx())),
-			}
-			makeOpts := func(opts ...e2eclean.Option) []e2eclean.Option {
-				return append(commonOps, opts...)
-			}
-			var err error
-
-			err = e2eclean.Clean(infra.Ctx(), makeOpts(
-				e2eclean.WithClient(infra.KCP().Client()),
-				e2eclean.WithScheme(commonscheme.KcpScheme),
-				e2eclean.WithMatchers(
-					e2eclean.MatchingGroup(infrastructuremanagerv1.GroupVersion.Group),
-					e2eclean.MatchingGroup(operatorv1beta2.GroupVersion.Group),
-					e2eclean.MatchingGroup(cloudcontrolv1beta1.GroupVersion.Group),
-				),
-			)...)
-			Expect(err).NotTo(HaveOccurred())
-
-			err = e2eclean.Clean(infra.Ctx(), makeOpts(
-				e2eclean.WithClient(infra.Garden().Client()),
-				e2eclean.WithScheme(commonscheme.GardenScheme),
-				e2eclean.WithMatchers(
-					e2eclean.MatchAll(
-						e2eclean.MatchingGroup(gardenerapicore.GroupName),
-						e2eclean.MatchingKind("Shoot"),
-					),
-				),
-			)...)
-			Expect(err).NotTo(HaveOccurred())
-
-			err = e2eclean.Clean(infra.Ctx(), makeOpts(
-				e2eclean.WithClient(infra.SKR().Client()),
-				e2eclean.WithScheme(commonscheme.SkrScheme),
-				e2eclean.WithMatchers(
-					e2eclean.MatchingGroup(operatorv1beta2.GroupVersion.Group),
-					e2eclean.MatchingGroup(cloudresourcesv1beta1.GroupVersion.Group),
-				),
-			)...)
-			Expect(err).NotTo(HaveOccurred())
-		})
-	})
+	// These two scenarios indirectly depend on each other. If first fails it will properly delete instance
+	// and second will most probably fail also. In that just solve the error from the first test, and ignore
+	// all others since they were induced with the first failure.
 
 	It("Scenario: Instance is created, module added and removed, and instance deleted", Serial, func() {
 		const (
@@ -87,6 +39,12 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 		shoot := &gardenertypes.Shoot{}
 
 		kubeconfigCallCount := skrKubeconfigProviderInstance.GetCallCount(shoot.Name)
+
+		By("Given there are no runtime instances", func() {
+			arr, err := kebInstance.List(infra.Ctx())
+			Expect(err).ToNot(HaveOccurred())
+			Expect(arr).To(HaveLen(0))
+		})
 
 		By("When instance is created", func() {
 			id, err := kebInstance.CreateInstance(infra.Ctx(),
@@ -258,6 +216,7 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 
 		By("And Then cloud-manager module is not present in KCP Kyma status", func() {
 			Eventually(LoadAndCheck).
+				WithTimeout(12*time.Second).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpKyma, NewObjActions(), NotHavingKymaModuleInStatus("cloud-manager")).
 				Should(Succeed())
 		})
@@ -309,6 +268,12 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 		rt := &infrastructuremanagerv1.Runtime{}
 		shoot := &gardenertypes.Shoot{}
 
+		By("Given there are no runtime instances", func() {
+			arr, err := kebInstance.List(infra.Ctx())
+			Expect(err).ToNot(HaveOccurred())
+			Expect(arr).To(HaveLen(0))
+		})
+
 		By("Given SKR instance is created", func() {
 			id, err := kebInstance.CreateInstance(infra.Ctx(),
 				e2ekeb.WithAlias(alias),
@@ -346,6 +311,7 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpKyma, NewObjActions(WithName(rt.Name), WithNamespace(rt.Namespace))).
 				Should(Succeed())
+			Expect(len(kcpKyma.Finalizers)).To(Equal(1))
 		})
 
 		skrKyma := &operatorv1beta2.Kyma{}
@@ -445,14 +411,13 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		// TODO: fix kymaKcp reconciler so this commented steps work
-		//By("# SIM has deleted the KCP Kyma since instance is being deleted")
-		//
-		//By("Then KCP Kyma has deletion timestamp", func() {
-		//	Eventually(LoadAndCheck).
-		//		WithArguments(infra.Ctx(), infra.SKR().Client(), kcpKyma, NewObjActions(), HavingDeletionTimestamp()).
-		//		Should(Succeed())
-		//})
+		By("# SIM has deleted the KCP Kyma since instance is being deleted")
+
+		By("Then KCP Kyma has deletion timestamp", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpKyma, NewObjActions(), HavingDeletionTimestamp()).
+				Should(Succeed())
+		})
 
 		By("# SIM has deleted the SKR Kyma since KCP Kyma is being deleted")
 
@@ -513,6 +478,7 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 
 		By("And When CloudResources CR does not exist", func() {
 			Eventually(IsDeleted).
+				WithTimeout(12*time.Second).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), cr).
 				Should(Succeed())
 		})
