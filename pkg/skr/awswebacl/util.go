@@ -2,6 +2,7 @@ package awswebacl
 
 import (
 	"fmt"
+	"strings"
 
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -235,8 +236,4 @@ func extractIdFromArn(arn string) string {
 		return parts[len(parts)-1]
 	}
 	return ""
-}
-
-func isNotFoundError(err error) bool {
-	return awsmeta.IsNotFound(err)
 }
