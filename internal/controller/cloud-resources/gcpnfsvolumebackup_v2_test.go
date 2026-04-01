@@ -39,7 +39,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 
 		kymaName := infra.SkrKymaRef().Name
 
-		By("Given KCP Scope exists with mock2 project", func() {
+		By("Given KCP Scope exists", func() {
 			Expect(infra.GivenScopeGcpExistsWithProject(kymaName, gcpMock.ProjectId())).NotTo(HaveOccurred())
 			Eventually(func() (exists bool, err error) {
 				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(kymaName), scope)
@@ -50,7 +50,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 
 		vpcNetworkName := scope.Spec.Scope.Gcp.VpcNetwork
 
-		By("And Given GCP VPC network exists in mock2", func() {
+		By("And Given GCP VPC network exists", func() {
 			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				NetworkResource: &computepb.Network{
@@ -62,7 +62,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 		})
 
 		addressName := "test-psa-address"
-		By("And Given GCP PSA address range exists in mock2", func() {
+		By("And Given GCP PSA address range exists", func() {
 			net, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				Network: vpcNetworkName,
@@ -83,7 +83,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 			Expect(op.Wait(infra.Ctx())).To(Succeed())
 		})
 
-		By("And Given GCP PSA connection exists in mock2", func() {
+		By("And Given GCP PSA connection exists", func() {
 			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
 				Project: gcpMock.ProjectId(),
 				Address: addressName,
@@ -116,7 +116,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 				).Should(Succeed())
 		})
 
-		By("And Given GCP Filestore instance exists in mock2 (required for backup source validation)", func() {
+		By("And Given GCP Filestore instance exists", func() {
 			// The reconciler constructs instance name as "cm-<nfsVolumeId>"
 			nfsInstanceName := fmt.Sprintf("cm-%.60s", skrGcpNfsVolumeId)
 			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
@@ -160,7 +160,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 				).Should(Succeed())
 		})
 
-		By("Then GCP Backup is created in mock2", func() {
+		By("Then GCP Backup is created", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
@@ -203,7 +203,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 				Should(Succeed())
 		})
 
-		By("Then GCP Backup is in Deleting state in mock2", func() {
+		By("Then GCP Backup is in Deleting state", func() {
 			gcpBackupPath := GcpNfsVolumeBackupPath(scope, gcpNfsVolumeBackup)
 			Eventually(func() filestorepb.Backup_State {
 				backup, err := gcpMock.GetFilestoreBackup(infra.Ctx(), &filestorepb.GetBackupRequest{Name: gcpBackupPath})

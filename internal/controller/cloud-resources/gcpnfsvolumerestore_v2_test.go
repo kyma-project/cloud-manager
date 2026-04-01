@@ -44,7 +44,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 
 		kymaName := infra.SkrKymaRef().Name
 
-		By("Given KCP Scope exists with mock2 project", func() {
+		By("Given KCP Scope exists", func() {
 			Expect(infra.GivenScopeGcpExistsWithProject(kymaName, gcpMock.ProjectId())).NotTo(HaveOccurred())
 			Eventually(func() (exists bool, err error) {
 				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(kymaName), scope)
@@ -55,7 +55,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 
 		vpcNetworkName := scope.Spec.Scope.Gcp.VpcNetwork
 
-		By("And Given GCP VPC network exists in mock2", func() {
+		By("And Given GCP VPC network exists", func() {
 			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				NetworkResource: &computepb.Network{
@@ -67,7 +67,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 		})
 
 		addressName := "test-psa-address-restore"
-		By("And Given GCP PSA address range exists in mock2", func() {
+		By("And Given GCP PSA address range exists", func() {
 			net, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				Network: vpcNetworkName,
@@ -88,7 +88,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 			Expect(op.Wait(infra.Ctx())).To(Succeed())
 		})
 
-		By("And Given GCP PSA connection exists in mock2", func() {
+		By("And Given GCP PSA connection exists", func() {
 			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
 				Project: gcpMock.ProjectId(),
 				Address: addressName,
@@ -121,7 +121,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 				).Should(Succeed())
 		})
 
-		By("And Given GCP Filestore instance exists in mock2 (restore destination)", func() {
+		By("And Given GCP Filestore instance exists as restore destination", func() {
 			nfsInstanceName := fmt.Sprintf("cm-%.60s", skrGcpNfsVolumeId)
 			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
 				Project: gcpMock.ProjectId(),
@@ -242,7 +242,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 
 		kymaName := infra.SkrKymaRef().Name
 
-		By("Given KCP Scope exists with mock2 project", func() {
+		By("Given KCP Scope exists", func() {
 			Expect(infra.GivenScopeGcpExistsWithProject(kymaName, gcpMock.ProjectId())).NotTo(HaveOccurred())
 			Eventually(func() (exists bool, err error) {
 				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(kymaName), scope)
@@ -253,7 +253,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 
 		vpcNetworkName := scope.Spec.Scope.Gcp.VpcNetwork
 
-		By("And Given GCP VPC network exists in mock2", func() {
+		By("And Given GCP VPC network exists", func() {
 			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				NetworkResource: &computepb.Network{
@@ -265,7 +265,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 		})
 
 		addressName := "test-psa-address-restore-del"
-		By("And Given GCP PSA address range exists in mock2", func() {
+		By("And Given GCP PSA address range exists", func() {
 			net, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				Network: vpcNetworkName,
@@ -286,7 +286,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 			Expect(op.Wait(infra.Ctx())).To(Succeed())
 		})
 
-		By("And Given GCP PSA connection exists in mock2", func() {
+		By("And Given GCP PSA connection exists", func() {
 			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
 				Project: gcpMock.ProjectId(),
 				Address: addressName,
@@ -319,7 +319,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 				).Should(Succeed())
 		})
 
-		By("And Given GCP Filestore instance exists in mock2 (restore destination)", func() {
+		By("And Given GCP Filestore instance exists as restore destination", func() {
 			nfsInstanceName := fmt.Sprintf("cm-%.60s", skrGcpNfsVolumeId)
 			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
 				Project: gcpMock.ProjectId(),
@@ -431,7 +431,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 
 		kymaName := infra.SkrKymaRef().Name
 
-		By("Given KCP Scope exists with mock2 project", func() {
+		By("Given KCP Scope exists", func() {
 			Expect(infra.GivenScopeGcpExistsWithProject(kymaName, gcpMock.ProjectId())).NotTo(HaveOccurred())
 			Eventually(func() (exists bool, err error) {
 				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(kymaName), scope)

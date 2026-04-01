@@ -26,7 +26,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 		shootName := scopeName // ShootName is always set to scope.Name in givenScopeGcpExistsWithProject
 		scope := &cloudcontrolv1beta1.Scope{}
 
-		By("Given KCP Scope exists with mock2 project", func() {
+		By("Given KCP Scope exists", func() {
 			Expect(infra.GivenScopeGcpExistsWithProject(scopeName, gcpMock.ProjectId())).NotTo(HaveOccurred())
 			Eventually(func() (exists bool, err error) {
 				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(scopeName), scope)
@@ -38,7 +38,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 		vpcNetworkName := scope.Spec.Scope.Gcp.VpcNetwork
 		addressName := "discovery-psa-address"
 
-		By("And Given GCP VPC network exists in mock2", func() {
+		By("And Given GCP VPC network exists", func() {
 			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				NetworkResource: &computepb.Network{
@@ -49,7 +49,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 			Expect(op.Wait(infra.Ctx())).To(Succeed())
 		})
 
-		By("And Given GCP PSA address range exists in mock2", func() {
+		By("And Given GCP PSA address range exists", func() {
 			net, err := gcpMock.GetNetwork(infra.Ctx(), &computepb.GetNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				Network: vpcNetworkName,
@@ -70,7 +70,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 			Expect(op.Wait(infra.Ctx())).To(Succeed())
 		})
 
-		By("And Given GCP PSA connection exists in mock2", func() {
+		By("And Given GCP PSA connection exists", func() {
 			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
 				Project: gcpMock.ProjectId(),
 				Address: addressName,
@@ -88,7 +88,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 		instanceName := "shared-instance-1"
 		fileShareName := "vol1"
 
-		By("And Given GCP Filestore instance exists in mock2 (required for backup source validation)", func() {
+		By("And Given GCP Filestore instance exists", func() {
 			addr, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
 				Project: gcpMock.ProjectId(),
 				Address: addressName,
@@ -126,7 +126,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 		backupName1 := "shared-backup-1"
 		backupName2 := "shared-backup-2"
 
-		By("And Given shared backups exist for shoot in mock2", func() {
+		By("And Given shared backups exist for shoot", func() {
 			// Create backup 1
 			op1, err := gcpMock.CreateFilestoreBackup(infra.Ctx(), &filestorepb.CreateBackupRequest{
 				Parent:   fmt.Sprintf("projects/%s/locations/%s", gcpMock.ProjectId(), scope.Spec.Region),
