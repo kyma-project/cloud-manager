@@ -2,6 +2,7 @@ package azurevpcdnslink
 
 import (
 	"context"
+	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
@@ -9,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -22,7 +24,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			args.KymaRef,
+			args.ScopeProvider,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
 		),
 	}
@@ -33,7 +35,10 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, reqest reconcile.Request) (reconcile.Result, error) {
-	state := r.factory.NewState(reqest)
+	state, err := r.factory.NewState(ctx, reqest)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating AzureVpcDnsLink state: %w", err)
+	}
 	action := r.newAction()
 
 	return composed.Handling().

@@ -5,8 +5,10 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	cmutil "github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR AzureVNetLink", func() {
@@ -17,7 +19,10 @@ var _ = Describe("Feature: SKR AzureVNetLink", func() {
 			remoteResourceGroup = "MyResourceGroup"
 			remoteVnetName      = "MyVnet"
 		)
+		azureVNetLinkName := "dea5b922-f7be-404c-9f69-72dfce914bd2"
 		azureVNetLink := &cloudresourcesv1beta1.AzureVpcDnsLink{}
+
+		skrKymaRef := cmutil.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: azureVNetLinkName}))
 
 		remoteVnetId := util.NewVirtualNetworkResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName).String()
 
@@ -25,7 +30,7 @@ var _ = Describe("Feature: SKR AzureVNetLink", func() {
 			Eventually(CreateAzureVpcDnsLink).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureVNetLink,
-					WithName("dea5b922-f7be-404c-9f69-72dfce914bd2"),
+					WithName(azureVNetLinkName),
 					WithAzureRemoteVpcDnsLinkName("91953457-3728-4e40-b874-ac4717f9d43e"),
 					WithAzureRemotePrivateDnsZone(remoteVnetId),
 				).Should(Succeed())
@@ -58,7 +63,7 @@ var _ = Describe("Feature: SKR AzureVNetLink", func() {
 		})
 
 		By("And Then KCP AzureVNetLink has annotations", func() {
-			Expect(kcpAzureVNetLink.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpAzureVNetLink.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(skrKymaRef.Name))
 			Expect(kcpAzureVNetLink.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(azureVNetLink.Name))
 			Expect(kcpAzureVNetLink.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(azureVNetLink.Namespace))
 		})

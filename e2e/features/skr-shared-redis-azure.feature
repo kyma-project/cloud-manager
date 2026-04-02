@@ -5,8 +5,6 @@ Feature: AzureRedisInstance feature
 
     Given there is shared SKR with "Azure" provider
 
-    Given eventually timeout is "1h"
-
     And resource declaration:
       | Alias  | Kind               | ApiVersion                              | Name                         | Namespace |
       | redis  | AzureRedisInstance | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                  |           |
@@ -25,6 +23,7 @@ Feature: AzureRedisInstance feature
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
       | redis.status.state == 'Error' |
+      | #timeout=20m                  |
 
     And Redis "PING" gives "PONG" with:
       | Host | Secret | ${redis.metadata.name} | host       |

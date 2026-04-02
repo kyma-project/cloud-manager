@@ -77,7 +77,7 @@ func (f *GcpNfsVolumeRestoreReconcilerFactory) New(args reconcile2.ReconcilerArg
 	// Check feature flag at reconciler creation time (after feature.Initialize has run)
 	if feature.GcpNfsRestoreV2.Value(context.Background()) {
 		reconciler := gcpnfsvolumerestorev2.NewReconciler(
-			args.KymaRef,
+			args.ScopeProvider,
 			args.KcpCluster,
 			args.SkrCluster,
 			f.fileRestoreClientProviderV2,
@@ -87,7 +87,7 @@ func (f *GcpNfsVolumeRestoreReconcilerFactory) New(args reconcile2.ReconcilerArg
 	}
 
 	reconciler := gcpnfsvolumerestorev1.NewReconciler(
-		args.KymaRef,
+		args.ScopeProvider,
 		args.KcpCluster,
 		args.SkrCluster,
 		f.fileRestoreClientProviderV1,

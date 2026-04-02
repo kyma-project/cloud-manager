@@ -1,13 +1,14 @@
 package azurerwxvolumerestore
 
 import (
+	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -28,14 +29,19 @@ type stateFactory struct {
 	storageClientProvider   azureclient.ClientProvider[client.Client]
 }
 
-func (f *stateFactory) NewState(req ctrl.Request) *State {
-
-	return &State{
-		State: f.commonScopeStateFactory.NewState(
-			f.composedStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeRestore{}),
-		),
-		storageClientProvider: f.storageClientProvider,
+func (f *stateFactory) NewState(ctx context.Context, req ctrl.Request) (*State, error) {
+	scopeState, err := f.commonScopeStateFactory.NewState(
+		ctx,
+		req.NamespacedName,
+		f.composedStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeRestore{}),
+	)
+	if err != nil {
+		return nil, err
 	}
+	return &State{
+		State:                 scopeState,
+		storageClientProvider: f.storageClientProvider,
+	}, nil
 }
 
 func newStateFactory(
@@ -52,9 +58,4 @@ func newStateFactory(
 
 func (s *State) ObjAsAzureRwxVolumeRestore() *cloudresourcesv1beta1.AzureRwxVolumeRestore {
 	return s.Obj().(*cloudresourcesv1beta1.AzureRwxVolumeRestore)
-}
-
-var kymaRef = klog.ObjectRef{
-	Name:      "skr",
-	Namespace: "test",
 }

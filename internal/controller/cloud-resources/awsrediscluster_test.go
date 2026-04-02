@@ -15,6 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 )
 
@@ -49,6 +50,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 		})
 
 		awsRedisClusterName := "07d85fea-6005-4747-9800-831173d7c11b"
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: awsRedisClusterName}))
 		awsRedisCluster := &cloudresourcesv1beta1.AwsRedisCluster{}
 
 		const (
@@ -130,7 +132,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 				Should(Succeed())
 
 			By("And has annotaton cloud-manager.kyma-project.io/kymaName")
-			Expect(kcpRedisCluster.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpRedisCluster.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(skrKymaRef.Name))
 
 			By("And has annotaton cloud-manager.kyma-project.io/remoteName")
 			Expect(kcpRedisCluster.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(awsRedisCluster.Name))
@@ -139,7 +141,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 			Expect(kcpRedisCluster.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(awsRedisCluster.Namespace))
 
 			By("And has spec.scope.name equal to SKR Cluster kyma name")
-			Expect(kcpRedisCluster.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpRedisCluster.Spec.Scope.Name).To(Equal(skrKymaRef.Name))
 
 			By("And has spec.remoteRef matching to to SKR IpRange")
 			Expect(kcpRedisCluster.Spec.RemoteRef.Namespace).To(Equal(awsRedisCluster.Namespace))

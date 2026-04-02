@@ -10,6 +10,7 @@ import (
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	gcpmock2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock2"
 	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,8 +58,10 @@ type InfraEnv interface {
 	GcpMock2() gcpmock2.Server
 	AzureMock() azuremock.Server
 	SapMock() sapmock.Server
+	// dont use this, use ScopeProvider().GetScope() instead
 	SkrKymaRef() klog.ObjectRef
 	SkrRunner() skrruntime.SkrRunner
+	ScopeProvider() scopeprovider.ScopeProviderRegistry
 	Config() config.Config
 
 	StartKcpControllers(ctx context.Context)

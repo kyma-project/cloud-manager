@@ -2,13 +2,14 @@ package reconcile
 
 import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"k8s.io/klog/v2"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type ReconcilerArguments struct {
-	KymaRef    klog.ObjectRef
+	ScopeProvider scopeprovider.ScopeProvider
+
 	KcpCluster cluster.Cluster
 	SkrCluster cluster.Cluster
 	// Provider indicates specific provider resources are available for,

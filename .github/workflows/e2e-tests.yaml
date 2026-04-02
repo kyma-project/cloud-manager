@@ -1,5 +1,5 @@
 name: E2E tests
-run-name: E2E tests ${{ inputs.provider }}
+run-name: E2E tests ${{ inputs.provider }} ${{ inputs.tags }} ${{ inputs.feature_flags }}
 
 # Required GitHub Repository Configuration:
 #
@@ -19,8 +19,8 @@ on:
         options:
           - ''
           - aws
-          - gcp
           - azure
+          - gcp
         description: Cloud provider
       tags:
         type: string
@@ -38,8 +38,27 @@ on:
         type: boolean
         description: Extra logs and prints
         default: false
+
+  workflow_call:
+    inputs:
+      provider:
+        type: string
+        required: true
+      tags:
+        type: string
+        required: false
+      feature_flags:
+        type: string
+        required: false
+        default: ./pkg/feature/ff_edge.yaml
+      debug:
+        type: boolean
+        required: false
+        default: false
+
 jobs:
   test:
+    name: Test ${{ inputs.provider }}
     runs-on: ubuntu-latest
     env:
       AWS_ROLE_NAME: CloudManagerRole
@@ -91,9 +110,9 @@ jobs:
           echo "INPUTSOK='true'" >> $GITHUB_ENV
           
           echo "# Runtime info :information_source:" >> $GITHUB_STEP_SUMMARY
-          echo " * Provider: \\`$PROVIDER\\`" >> $GITHUB_STEP_SUMMARY
-          echo " * Tags: \\`$TAGS\\`" >> $GITHUB_STEP_SUMMARY
-          echo " * Debug: \\`$DEBUG\\`" >> $GITHUB_STEP_SUMMARY
+          echo " * Provider: $PROVIDER" >> $GITHUB_STEP_SUMMARY
+          echo " * Tags: $TAGS" >> $GITHUB_STEP_SUMMARY
+          echo " * Debug: $DEBUG" >> $GITHUB_STEP_SUMMARY
 
       - name: Initialize E2E environment
         uses: ./.github/actions/e2e-init
@@ -203,3 +222,5 @@ jobs:
         if: always() && env.INPUTSOK != ''
         uses: ./.github/actions/e2e-destroy
         id: e2e-destroy
+        with:
+          logs-suffix: ${{ inputs.provider }}

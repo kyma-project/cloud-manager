@@ -31,6 +31,7 @@ Feature: GcpRedisInstance feature
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
       | redis.status.state == 'Error' |
+      | #timeout=20m                  |
 
     And "findConditionTrue(redis, 'Ready')" is ok
 

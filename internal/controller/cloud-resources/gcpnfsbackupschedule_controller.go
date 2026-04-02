@@ -57,13 +57,13 @@ type GcpNfsBackupScheduleReconcilerFactory struct {
 func (f *GcpNfsBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	if feature.BackupScheduleV2.Value(context.Background()) {
 		reconciler := gcpnfsbackupschedule.NewReconciler(
-			args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, f.clk,
+			args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, f.clk,
 		)
 		return &GcpNfsBackupScheduleReconciler{reconciler: &reconciler}
 	}
 
 	reconciler := backupschedulev1.NewReconciler(
-		args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, backupschedulev1.GcpNfsBackupSchedule,
+		args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, backupschedulev1.GcpNfsBackupSchedule,
 	)
 	return &GcpNfsBackupScheduleReconciler{reconciler: &reconciler}
 }

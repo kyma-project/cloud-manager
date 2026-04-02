@@ -11,6 +11,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -22,7 +23,9 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 		gcpMock := infra.GcpMock2().NewSubscription("backup-discovery")
 		defer gcpMock.Delete()
 
-		scopeName := infra.SkrKymaRef().Name
+		kymaName := "a60531f8-e487-44e7-a891-d5bfaa901372"
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: kymaName}))
+		scopeName := skrKymaRef.Name
 		shootName := scopeName // ShootName is always set to scope.Name in givenScopeGcpExistsWithProject
 		scope := &cloudcontrolv1beta1.Scope{}
 

@@ -5,8 +5,10 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR GcpVpcPeering", func() {
@@ -21,6 +23,9 @@ var _ = Describe("Feature: SKR GcpVpcPeering", func() {
 		)
 
 		gcpVpcPeering := &cloudresourcesv1beta1.GcpVpcPeering{}
+
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: "peering-kyma-dev-to-my-gcp-project"}))
+
 		By("When SKR GcpVpcPeering is created", func() {
 			Eventually(CreateObj).
 				WithArguments(
@@ -97,7 +102,7 @@ var _ = Describe("Feature: SKR GcpVpcPeering", func() {
 		})
 
 		By("And Then KCP VpcPeering has annotations", func() {
-			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(skrKymaRef.Name))
 			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(gcpVpcPeering.Name))
 			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(gcpVpcPeering.Namespace))
 		})

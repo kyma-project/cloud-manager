@@ -2,6 +2,7 @@ package awsnfsvolumebackup
 
 import (
 	"context"
+	"fmt"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
@@ -37,7 +38,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
 			commonscope.NewStateFactory(
 				composed.NewStateClusterFromCluster(args.KcpCluster),
-				args.KymaRef,
+				args.ScopeProvider,
 			),
 			f.awsClientProvider,
 			f.env,
@@ -54,7 +55,10 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return ctrl.Result{}, nil
 	}
 
-	state := r.factory.NewState(request)
+	state, err := r.factory.NewState(ctx, request)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating AwsNfsVolumeBackup state: %w", err)
+	}
 	action := r.newAction()
 
 	return composed.Handling().

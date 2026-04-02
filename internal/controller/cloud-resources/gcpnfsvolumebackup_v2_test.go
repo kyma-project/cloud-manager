@@ -11,8 +11,10 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -37,12 +39,13 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 		gcpNfsVolumeBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
 		gcpNfsVolumeBackupName := "8469ce3a-6529-474d-8e83-d5b8aef13362"
 
-		kymaName := infra.SkrKymaRef().Name
+		kymaName := "1ab2af56-ceb5-4a93-8ad8-c846617101f2"
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: kymaName}))
 
 		By("Given KCP Scope exists", func() {
-			Expect(infra.GivenScopeGcpExistsWithProject(kymaName, gcpMock.ProjectId())).NotTo(HaveOccurred())
+			Expect(infra.GivenScopeGcpExistsWithProject(skrKymaRef.Name, gcpMock.ProjectId())).NotTo(HaveOccurred())
 			Eventually(func() (exists bool, err error) {
-				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(kymaName), scope)
+				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(skrKymaRef.Name), scope)
 				exists = err == nil
 				return exists, client.IgnoreNotFound(err)
 			}).Should(BeTrue(), "expected Scope to get created")

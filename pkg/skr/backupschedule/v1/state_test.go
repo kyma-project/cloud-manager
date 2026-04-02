@@ -10,18 +10,15 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-var kymaRef = klog.ObjectRef{
-	Name:      "skr",
-	Namespace: "test",
-}
+var kymaRef = scopeprovider.Always("test", "skr")
 
 var gcpScope = cloudcontrolv1beta1.Scope{
 	ObjectMeta: metav1.ObjectMeta{
