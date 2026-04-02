@@ -2,6 +2,7 @@ package gcpsubnet
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
@@ -25,7 +26,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			args.KymaRef,
+			args.ScopeProvider,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
 		),
 	}
@@ -40,7 +41,10 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return ctrl.Result{}, nil
 	}
 
-	state := r.factory.NewState(request)
+	state, err := r.factory.NewState(ctx, request)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating GcpSubnet state: %w", err)
+	}
 	action := r.newAction()
 
 	return composed.Handling().

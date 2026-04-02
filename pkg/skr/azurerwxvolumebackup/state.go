@@ -1,6 +1,8 @@
 package azurerwxvolumebackup
 
 import (
+	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -35,14 +37,19 @@ type stateFactory struct {
 	clientProvider          azureclient.ClientProvider[client.Client]
 }
 
-func (f *stateFactory) NewState(req ctrl.Request) *State {
-
-	return &State{
-		State: f.commonScopeStateFactory.NewState(
-			f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
-		),
-		clientProvider: f.clientProvider,
+func (f *stateFactory) NewState(ctx context.Context, req ctrl.Request) (*State, error) {
+	scopeState, err := f.commonScopeStateFactory.NewState(
+		ctx,
+		req.NamespacedName,
+		f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AzureRwxVolumeBackup{}),
+	)
+	if err != nil {
+		return nil, err
 	}
+	return &State{
+		State:          scopeState,
+		clientProvider: f.clientProvider,
+	}, nil
 }
 
 func newStateFactory(

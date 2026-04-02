@@ -10,6 +10,7 @@ import (
 	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	backupschedule "github.com/kyma-project/cloud-manager/pkg/skr/backupschedule/v1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +32,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		skrNfsVolumeName := suffix
 		nfsInstanceName := suffix
 		scheduleName := suffix
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: scheduleName}))
 		existingBackupName := fmt.Sprintf("%s-existing", suffix)
 		skrNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
@@ -52,7 +54,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 
 		By("Given KCP Scope exists", func() {
 			Expect(client.IgnoreAlreadyExists(
-				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(skrKymaRef.Name)))).
 				To(Succeed())
 		})
 
@@ -70,7 +72,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(nfsInstanceName),
 					WithRemoteRef(skrNfsVolumeName),
-					WithScope(infra.SkrKymaRef().Name),
+					WithScope(skrKymaRef.Name),
 					WithIpRange(nfsInstanceName),
 					WithNfsInstanceAws(),
 				).
@@ -181,6 +183,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		skrNfsVolumeName := suffix
 		nfsInstanceName := suffix
 		scheduleName := suffix
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: scheduleName}))
 		scope := &cloudcontrolv1beta1.Scope{}
 		skrNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
@@ -193,7 +196,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 
 		By("Given KCP Scope exists", func() {
 			Expect(client.IgnoreAlreadyExists(
-				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(skrKymaRef.Name)))).
 				To(Succeed())
 		})
 
@@ -211,7 +214,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(nfsInstanceName),
 					WithRemoteRef(skrNfsVolumeName),
-					WithScope(infra.SkrKymaRef().Name),
+					WithScope(skrKymaRef.Name),
 					WithIpRange(nfsInstanceName),
 					WithNfsInstanceAws(),
 				).

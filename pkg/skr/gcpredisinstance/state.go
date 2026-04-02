@@ -1,12 +1,14 @@
 package gcpredisinstance
 
 import (
+	"context"
 	"maps"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
@@ -27,28 +29,32 @@ type State struct {
 
 func newStateFactory(
 	baseStateFactory composed.StateFactory,
-	kymaRef klog.ObjectRef,
+	scopeProvider scopeprovider.ScopeProvider,
 	kcpCluster composed.StateCluster,
 ) *stateFactory {
 	return &stateFactory{
 		baseStateFactory: baseStateFactory,
-		kymaRef:          kymaRef,
+		scopeProvider:    scopeProvider,
 		kcpCluster:       kcpCluster,
 	}
 }
 
 type stateFactory struct {
 	baseStateFactory composed.StateFactory
-	kymaRef          klog.ObjectRef
+	scopeProvider    scopeprovider.ScopeProvider
 	kcpCluster       composed.StateCluster
 }
 
-func (f *stateFactory) NewState(req ctrl.Request) *State {
+func (f *stateFactory) NewState(ctx context.Context, req ctrl.Request) (*State, error) {
+	kymaRef, err := f.scopeProvider.GetScope(ctx, req.NamespacedName)
+	if err != nil {
+		return nil, err
+	}
 	return &State{
 		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.GcpRedisInstance{}),
-		KymaRef:    f.kymaRef,
+		KymaRef:    kymaRef,
 		KcpCluster: f.kcpCluster,
-	}
+	}, nil
 }
 
 func (s *State) ObjAsGcpRedisInstance() *cloudresourcesv1beta1.GcpRedisInstance {

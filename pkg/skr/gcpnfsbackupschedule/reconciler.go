@@ -11,9 +11,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog/v2"
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
@@ -84,12 +84,12 @@ func (r *Reconciler) newAction() composed.Action {
 	)
 }
 
-func NewReconciler(kymaRef klog.ObjectRef, kcpCluster cluster.Cluster, skrCluster cluster.Cluster,
+func NewReconciler(scopeProvider scopeprovider.ScopeProvider, kcpCluster cluster.Cluster, skrCluster cluster.Cluster,
 	env abstractions.Environment, clk clock.Clock) Reconciler {
 	compSkrCluster := composed.NewStateClusterFromCluster(skrCluster)
 	compKcpCluster := composed.NewStateClusterFromCluster(kcpCluster)
 	composedStateFactory := composed.NewStateFactory(compSkrCluster)
-	stateFactory := NewStateFactory(kymaRef, compKcpCluster, compSkrCluster, env, clk)
+	stateFactory := NewStateFactory(scopeProvider, compKcpCluster, compSkrCluster, env, clk)
 
 	return Reconciler{
 		composedStateFactory: composedStateFactory,

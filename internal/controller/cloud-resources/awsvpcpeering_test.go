@@ -5,14 +5,19 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR AwsVpcPeering", func() {
 
 	It("Scenario: SKR AwsVpcPeering is created then deleted", func() {
+		awsVpcPeeringName := "2c371635-5256-46c6-aaf1-e49c439d985c"
 		awsVpcPeering := &cloudresourcesv1beta1.AwsVpcPeering{}
+
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: awsVpcPeeringName}))
 
 		const (
 			remoteAccountId = "444455556666"
@@ -24,7 +29,7 @@ var _ = Describe("Feature: SKR AwsVpcPeering", func() {
 			Eventually(CreateAwsVpcPeering).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsVpcPeering,
-					WithName("2c371635-5256-46c6-aaf1-e49c439d985c"),
+					WithName(awsVpcPeeringName),
 					WithAwsRemoteAccountId(remoteAccountId),
 					WithAwsRemoteRegion(remoteRegion),
 					WithAwsRemoteVpcId(remoteVpcId),
@@ -96,7 +101,7 @@ var _ = Describe("Feature: SKR AwsVpcPeering", func() {
 		})
 
 		By("And Then KCP VpcPeering has annotations", func() {
-			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(skrKymaRef.Name))
 			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(awsVpcPeering.Name))
 			Expect(kcpVpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(awsVpcPeering.Namespace))
 		})

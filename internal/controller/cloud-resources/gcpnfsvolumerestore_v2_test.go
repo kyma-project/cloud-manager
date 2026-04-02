@@ -10,9 +10,11 @@ import (
 	skrgcpnfsvolbackupv1 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v1"
 	skrgcpnfsvolbackupv2 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v2"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -32,10 +34,12 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 		gcpNfsVolumeRestore := &cloudresourcesv1beta1.GcpNfsVolumeRestore{}
 		gcpNfsVolumeRestoreName := "9a63bc2b-055c-45c9-9128-37863cd2f00a"
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: gcpNfsVolumeRestoreName}))
+
 		By("Given KCP Scope exists", func() {
-			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
+			Expect(infra.GivenScopeGcpExists(skrKymaRef.Name)).NotTo(HaveOccurred())
 			Eventually(func() (exists bool, err error) {
-				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
+				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(skrKymaRef.Name), scope)
 				exists = err == nil
 				return exists, client.IgnoreNotFound(err)
 			}).Should(BeTrue(), "expected Scope to get created")
@@ -145,10 +149,12 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 		gcpNfsVolumeRestore := &cloudresourcesv1beta1.GcpNfsVolumeRestore{}
 		gcpNfsVolumeRestoreName := "9f65425d-c7b4-4139-b916-4c7e091f28c0"
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: gcpNfsVolumeRestoreName}))
+
 		By("Given KCP Scope exists", func() {
-			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
+			Expect(infra.GivenScopeGcpExists(skrKymaRef.Name)).NotTo(HaveOccurred())
 			Eventually(func() (exists bool, err error) {
-				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
+				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(skrKymaRef.Name), scope)
 				exists = err == nil
 				return exists, client.IgnoreNotFound(err)
 			}).Should(BeTrue(), "expected Scope to get created")
@@ -249,10 +255,12 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 		gcpNfsVolumeRestore := &cloudresourcesv1beta1.GcpNfsVolumeRestore{}
 		gcpNfsVolumeRestoreName := "6e5efcc7-692e-4a1c-9638-9e8a879a3544"
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: gcpNfsVolumeRestoreName}))
+
 		By("Given KCP Scope exists", func() {
-			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
+			Expect(infra.GivenScopeGcpExists(skrKymaRef.Name)).NotTo(HaveOccurred())
 			Eventually(func() (exists bool, err error) {
-				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
+				err = infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(skrKymaRef.Name), scope)
 				exists = err == nil
 				return exists, client.IgnoreNotFound(err)
 			}).Should(BeTrue(), "expected Scope to get created")

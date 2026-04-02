@@ -1,8 +1,12 @@
 package scope
 
 import (
+	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 )
 
@@ -16,27 +20,31 @@ type State interface {
 }
 
 type StateFactory interface {
-	NewState(baseState composed.State) State
+	NewState(ctx context.Context, namespacedName types.NamespacedName, baseState composed.State) (State, error)
 }
 
-func NewStateFactory(kcpCluster composed.StateCluster, kymaRef klog.ObjectRef) StateFactory {
+func NewStateFactory(kcpCluster composed.StateCluster, scopeProvider scopeprovider.ScopeProvider) StateFactory {
 	return &stateFactory{
-		kcpCluster: kcpCluster,
-		kymaRef:    kymaRef,
+		kcpCluster:    kcpCluster,
+		scopeProvider: scopeProvider,
 	}
 }
 
 type stateFactory struct {
-	kcpCluster composed.StateCluster
-	kymaRef    klog.ObjectRef
+	kcpCluster    composed.StateCluster
+	scopeProvider scopeprovider.ScopeProvider
 }
 
-func (f *stateFactory) NewState(baseState composed.State) State {
+func (f *stateFactory) NewState(ctx context.Context, namespacedName types.NamespacedName, baseState composed.State) (State, error) {
+	kymaRef, err := f.scopeProvider.GetScope(ctx, namespacedName)
+	if err != nil {
+		return nil, err
+	}
 	return &myState{
 		State:      baseState,
 		kcpCluster: f.kcpCluster,
-		kymaRef:    f.kymaRef,
-	}
+		kymaRef:    kymaRef,
+	}, nil
 }
 
 type myState struct {

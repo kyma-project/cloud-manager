@@ -1,9 +1,12 @@
 package iprange
 
 import (
+	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
@@ -19,10 +22,10 @@ type State struct {
 	KcpIpRange *cloudcontrolv1beta1.IpRange
 }
 
-func newStateFactory(baseStateFactory composed.StateFactory, kymaRef klog.ObjectRef, kcpCluster composed.StateCluster, provider *cloudcontrolv1beta1.ProviderType) *stateFactory {
+func newStateFactory(baseStateFactory composed.StateFactory, scopeProvider scopeprovider.ScopeProvider, kcpCluster composed.StateCluster, provider *cloudcontrolv1beta1.ProviderType) *stateFactory {
 	return &stateFactory{
 		baseStateFactory: baseStateFactory,
-		kymaRef:          kymaRef,
+		scopeProvider:    scopeProvider,
 		kcpCluster:       kcpCluster,
 		provider:         provider,
 	}
@@ -30,18 +33,22 @@ func newStateFactory(baseStateFactory composed.StateFactory, kymaRef klog.Object
 
 type stateFactory struct {
 	baseStateFactory composed.StateFactory
-	kymaRef          klog.ObjectRef
+	scopeProvider    scopeprovider.ScopeProvider
 	kcpCluster       composed.StateCluster
 	provider         *cloudcontrolv1beta1.ProviderType
 }
 
-func (f *stateFactory) NewState(req ctrl.Request) *State {
+func (f *stateFactory) NewState(ctx context.Context, req ctrl.Request) (*State, error) {
+	kymaRef, err := f.scopeProvider.GetScope(ctx, req.NamespacedName)
+	if err != nil {
+		return nil, err
+	}
 	return &State{
 		State:      f.baseStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.IpRange{}),
-		KymaRef:    f.kymaRef,
+		KymaRef:    kymaRef,
 		KcpCluster: f.kcpCluster,
 		Provider:   f.provider,
-	}
+	}, nil
 }
 
 func (s *State) ObjAsIpRange() *cloudresourcesv1beta1.IpRange {

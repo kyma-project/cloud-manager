@@ -12,6 +12,7 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"google.golang.org/api/file/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -41,14 +42,14 @@ type StateFactory interface {
 }
 
 func NewStateFactory(
-	kymaRef klog.ObjectRef,
+	scopeProvider scopeprovider.ScopeProvider,
 	kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster,
 	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
 	env abstractions.Environment,
 ) StateFactory {
 	return &stateFactory{
-		kymaRef:                  kymaRef,
+		scopeProvider:            scopeProvider,
 		kcpCluster:               kcpCluster,
 		skrCluster:               skrCluster,
 		fileBackupClientProvider: fileBackupClientProvider,
@@ -57,7 +58,7 @@ func NewStateFactory(
 }
 
 type stateFactory struct {
-	kymaRef                  klog.ObjectRef
+	scopeProvider            scopeprovider.ScopeProvider
 	kcpCluster               composed.StateCluster
 	skrCluster               composed.StateCluster
 	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
@@ -65,6 +66,11 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
+	kymaRef, err := f.scopeProvider.GetScope(ctx, baseState.Name())
+	if err != nil {
+		return nil, err
+	}
+
 	fbc, err := f.fileBackupClientProvider(ctx, config.GcpConfig.CredentialsFile)
 	if err != nil {
 		return nil, err
@@ -72,7 +78,7 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 
 	return &State{
 		State:            baseState,
-		KymaRef:          f.kymaRef,
+		KymaRef:          kymaRef,
 		KcpCluster:       f.kcpCluster,
 		SkrCluster:       f.skrCluster,
 		fileBackupClient: fbc,

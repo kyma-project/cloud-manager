@@ -15,18 +15,15 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	gcpnfsrestoreclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/option"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-var kymaRef = klog.ObjectRef{
-	Name:      "skr",
-	Namespace: "test",
-}
+var kymaRef = scopeprovider.Always("test", "skr")
 
 var scope = cloudcontrolv1beta1.Scope{
 	ObjectMeta: metav1.ObjectMeta{

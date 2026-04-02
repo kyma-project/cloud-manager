@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"k8s.io/apimachinery/pkg/types"
 
 	"time"
@@ -17,14 +18,10 @@ import (
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	"github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-var kymaRef = klog.ObjectRef{
-	Name:      "skr",
-	Namespace: "test",
-}
+var scopeProvider = scopeprovider.Always("test", "skr")
 
 var scope = cloudcontrolv1beta1.Scope{
 	ObjectMeta: metav1.ObjectMeta{
@@ -182,7 +179,7 @@ func newStateFactoryWithObj(awsNfsVolumeRestore *cloudresourcesv1beta1.AwsNfsVol
 	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
 	factory := newStateFactory(
 		composed.NewStateFactory(skrCluster),
-		commonscope.NewStateFactory(kcpCluster, kymaRef),
+		commonscope.NewStateFactory(kcpCluster, scopeProvider),
 		client.NewMockClient(), env,
 	)
 	return &testStateFactory{
@@ -193,13 +190,20 @@ func newStateFactoryWithObj(awsNfsVolumeRestore *cloudresourcesv1beta1.AwsNfsVol
 }
 
 func (f *testStateFactory) newStateWith(obj *cloudresourcesv1beta1.AwsNfsVolumeRestore) (*State, error) {
+	nn := types.NamespacedName{
+		Name:      obj.Name,
+		Namespace: obj.Namespace,
+	}
+	scopeState, err := f.commonScopeStateFactory.NewState(
+		context.Background(),
+		nn,
+		f.composedStateFactory.NewState(nn, obj),
+	)
+	if err != nil {
+		return nil, err
+	}
 	return &State{
-		State: f.commonScopeStateFactory.NewState(
-			f.composedStateFactory.NewState(types.NamespacedName{
-				Name:      obj.Name,
-				Namespace: obj.Namespace,
-			}, obj),
-		),
+		State:             scopeState,
 		awsClientProvider: f.awsClientProvider,
 		env:               f.env,
 	}, nil

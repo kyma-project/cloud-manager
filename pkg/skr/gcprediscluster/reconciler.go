@@ -2,6 +2,7 @@ package gcprediscluster
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultgcpsubnet"
 
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -26,7 +28,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			args.KymaRef,
+			args.ScopeProvider,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
 		),
 	}
@@ -37,7 +39,10 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	state := r.factory.NewState(request)
+	state, err := r.factory.NewState(ctx, request)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating GcpRedisCluster state: %w", err)
+	}
 	action := r.newAction()
 
 	return composed.Handling().

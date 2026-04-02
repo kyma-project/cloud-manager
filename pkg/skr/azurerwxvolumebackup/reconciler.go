@@ -2,6 +2,7 @@ package azurerwxvolumebackup
 
 import (
 	"context"
+	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -26,7 +27,10 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return ctrl.Result{}, nil
 	}
 
-	state := r.factory.NewState(request)
+	state, err := r.factory.NewState(ctx, request)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating AzureRwxVolumeBackup state: %w", err)
+	}
 
 	action := r.newAction()
 
@@ -67,7 +71,7 @@ func NewReconciler(args skrruntime.ReconcilerArguments, clientProvider azureclie
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
 			commonscope.NewStateFactory(
 				composed.NewStateClusterFromCluster(args.KcpCluster),
-				args.KymaRef),
+				args.ScopeProvider),
 			clientProvider,
 		),
 	}
