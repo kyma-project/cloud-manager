@@ -19,9 +19,10 @@ var _ = Describe("Feature: SKR AzureVNetLink", func() {
 			remoteResourceGroup = "MyResourceGroup"
 			remoteVnetName      = "MyVnet"
 		)
+		azureVNetLinkName := "dea5b922-f7be-404c-9f69-72dfce914bd2"
 		azureVNetLink := &cloudresourcesv1beta1.AzureVpcDnsLink{}
 
-		skrKymaRef := cmutil.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: "dea5b922-f7be-404c-9f69-72dfce914bd2"}))
+		skrKymaRef := cmutil.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: azureVNetLinkName}))
 
 		remoteVnetId := util.NewVirtualNetworkResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName).String()
 
@@ -29,7 +30,7 @@ var _ = Describe("Feature: SKR AzureVNetLink", func() {
 			Eventually(CreateAzureVpcDnsLink).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureVNetLink,
-					WithName("dea5b922-f7be-404c-9f69-72dfce914bd2"),
+					WithName(azureVNetLinkName),
 					WithAzureRemoteVpcDnsLinkName("91953457-3728-4e40-b874-ac4717f9d43e"),
 					WithAzureRemotePrivateDnsZone(remoteVnetId),
 				).Should(Succeed())

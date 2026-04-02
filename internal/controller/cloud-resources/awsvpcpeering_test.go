@@ -14,9 +14,10 @@ import (
 var _ = Describe("Feature: SKR AwsVpcPeering", func() {
 
 	It("Scenario: SKR AwsVpcPeering is created then deleted", func() {
+		awsVpcPeeringName := "2c371635-5256-46c6-aaf1-e49c439d985c"
 		awsVpcPeering := &cloudresourcesv1beta1.AwsVpcPeering{}
 
-		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: "2c371635-5256-46c6-aaf1-e49c439d985c"}))
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: awsVpcPeeringName}))
 
 		const (
 			remoteAccountId = "444455556666"
@@ -28,7 +29,7 @@ var _ = Describe("Feature: SKR AwsVpcPeering", func() {
 			Eventually(CreateAwsVpcPeering).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsVpcPeering,
-					WithName("2c371635-5256-46c6-aaf1-e49c439d985c"),
+					WithName(awsVpcPeeringName),
 					WithAwsRemoteAccountId(remoteAccountId),
 					WithAwsRemoteRegion(remoteRegion),
 					WithAwsRemoteVpcId(remoteVpcId),
