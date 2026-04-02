@@ -15,6 +15,7 @@ import (
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/option"
 	corev1 "k8s.io/api/core/v1"
@@ -340,7 +341,7 @@ func newTestStateFactoryWithObject(fakeHttpServer *httptest.Server, backup *clou
 	nfsRestoreClientBackup := NewFakeFileBackupClientProvider(fakeHttpServer)
 	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
 
-	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster, nfsRestoreClientBackup, env)
+	factory := NewStateFactory(scopeprovider.Always(kymaRef.Namespace, kymaRef.Name), kcpCluster, skrCluster, nfsRestoreClientBackup, env)
 
 	return &testStateFactory{
 		factory:             factory,

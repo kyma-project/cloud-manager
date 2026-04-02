@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -23,7 +24,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			args.KymaRef,
+			args.ScopeProvider,
 			composed.NewStateClusterFromCluster(args.KcpCluster),
 			args.Provider,
 		),
@@ -39,7 +40,10 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	state := r.factory.NewState(req)
+	state, err := r.factory.NewState(ctx, req)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating IpRange state: %w", err)
+	}
 	action := r.newAction()
 
 	return composed.Handling().

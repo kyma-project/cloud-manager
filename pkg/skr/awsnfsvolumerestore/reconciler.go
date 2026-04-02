@@ -2,6 +2,7 @@ package awsnfsvolumerestore
 
 import (
 	"context"
+	"fmt"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
@@ -12,6 +13,7 @@ import (
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -36,7 +38,7 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
 			commonscope.NewStateFactory(
 				composed.NewStateClusterFromCluster(args.KcpCluster),
-				args.KymaRef,
+				args.ScopeProvider,
 			),
 			f.awsClientProvider,
 			f.env,
@@ -49,7 +51,10 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	state := r.factory.NewState(request)
+	state, err := r.factory.NewState(ctx, request)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating AwsNfsVolumeRestore state: %w", err)
+	}
 	action := r.newAction()
 
 	return composed.Handling().

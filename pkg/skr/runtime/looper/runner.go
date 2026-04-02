@@ -152,7 +152,6 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 
 		rArgs := reconcile2.ReconcilerArguments{
 			ScopeProvider: r.scopeProvider,
-			KymaRef:       skrManager.KymaRef(),
 			KcpCluster:    r.kcpCluster,
 			SkrCluster:    skrManager,
 			Provider:      options.provider,

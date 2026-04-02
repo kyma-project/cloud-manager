@@ -2,6 +2,7 @@ package azurerwxpv
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -10,6 +11,7 @@ import (
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
@@ -21,7 +23,10 @@ type reconciler struct {
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 
-	state := r.factory.NewState(request)
+	state, err := r.factory.NewState(ctx, request)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating AzureRwxPV state: %w", err)
+	}
 
 	action := r.newAction()
 
@@ -64,7 +69,7 @@ func NewReconciler(args skrruntime.ReconcilerArguments, clientProvider azureclie
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
 			commonscope.NewStateFactory(
 				composed.NewStateClusterFromCluster(args.KcpCluster),
-				args.KymaRef),
+				args.ScopeProvider),
 			clientProvider,
 		),
 	}

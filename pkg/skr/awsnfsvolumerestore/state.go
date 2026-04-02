@@ -1,6 +1,7 @@
 package awsnfsvolumerestore
 
 import (
+	"context"
 	"fmt"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -45,14 +46,20 @@ type stateFactory struct {
 	env                     abstractions.Environment
 }
 
-func (f *stateFactory) NewState(req ctrl.Request) *State {
+func (f *stateFactory) NewState(ctx context.Context, req ctrl.Request) (*State, error) {
+	scopeState, err := f.commonScopeStateFactory.NewState(
+		ctx,
+		req.NamespacedName,
+		f.composedStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AwsNfsVolumeRestore{}),
+	)
+	if err != nil {
+		return nil, err
+	}
 	return &State{
-		State: f.commonScopeStateFactory.NewState(
-			f.composedStateFactory.NewState(req.NamespacedName, &cloudresourcesv1beta1.AwsNfsVolumeRestore{}),
-		),
+		State:             scopeState,
 		awsClientProvider: f.awsClientProvider,
 		env:               f.env,
-	}
+	}, nil
 }
 
 func (s *State) ObjAsAwsNfsVolumeRestore() *cloudresourcesv1beta1.AwsNfsVolumeRestore {

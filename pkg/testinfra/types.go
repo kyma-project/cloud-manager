@@ -60,7 +60,7 @@ type InfraEnv interface {
 	SapMock() sapmock.Server
 	SkrKymaRef() klog.ObjectRef
 	SkrRunner() skrruntime.SkrRunner
-	AddScopeProvider(scopeProvider scopeprovider.ScopeProvider)
+	ScopeProvider() scopeprovider.ScopeProviderRegistry
 	Config() config.Config
 
 	StartKcpControllers(ctx context.Context)

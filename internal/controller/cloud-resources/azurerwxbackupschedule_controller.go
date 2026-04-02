@@ -57,7 +57,7 @@ type AzureRwxBackupScheduleReconcilerFactory struct {
 
 func (f *AzureRwxBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &AzureRwxBackupScheduleReconciler{
-		Reconciler: backupschedule.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, backupschedule.AzureRwxBackupSchedule),
+		Reconciler: backupschedule.NewReconciler(args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, backupschedule.AzureRwxBackupSchedule),
 	}
 }
 

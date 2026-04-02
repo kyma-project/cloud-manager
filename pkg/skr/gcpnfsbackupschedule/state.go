@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/clock"
 )
@@ -62,29 +63,33 @@ type StateFactory interface {
 	NewState(ctx context.Context, baseState composed.State) (*State, error)
 }
 
-func NewStateFactory(kymaRef klog.ObjectRef, kcpCluster composed.StateCluster,
+func NewStateFactory(scopeProvider scopeprovider.ScopeProvider, kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster, env abstractions.Environment, clk clock.Clock) StateFactory {
 	return &stateFactory{
-		kymaRef:    kymaRef,
-		kcpCluster: kcpCluster,
-		skrCluster: skrCluster,
-		env:        env,
-		clk:        clk,
+		scopeProvider: scopeProvider,
+		kcpCluster:    kcpCluster,
+		skrCluster:    skrCluster,
+		env:           env,
+		clk:           clk,
 	}
 }
 
 type stateFactory struct {
-	kymaRef    klog.ObjectRef
-	kcpCluster composed.StateCluster
-	skrCluster composed.StateCluster
-	env        abstractions.Environment
-	clk        clock.Clock
+	scopeProvider scopeprovider.ScopeProvider
+	kcpCluster    composed.StateCluster
+	skrCluster    composed.StateCluster
+	env           abstractions.Environment
+	clk           clock.Clock
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
+	kymaRef, err := f.scopeProvider.GetScope(ctx, baseState.Name())
+	if err != nil {
+		return nil, err
+	}
 	return &State{
 		State:      baseState,
-		KymaRef:    f.kymaRef,
+		KymaRef:    kymaRef,
 		KcpCluster: f.kcpCluster,
 		SkrCluster: f.skrCluster,
 		env:        f.env,
