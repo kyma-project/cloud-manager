@@ -18,34 +18,38 @@ package cloudresources
 
 import (
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	cmutil "github.com/kyma-project/cloud-manager/pkg/util"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("AwsWebAcl Controller", Focus, func() {
+var _ = Describe("AwsWebAcl Controller", func() {
 	It("Scenario: SKR AwsWebAcl is created then deleted", func() {
 
-		//Skip("Scope race condition, fix me")
-
-		kymaName := infra.SkrKymaRef().Name
-
+		name := "waf-for-test-app"
 		awsAccountLocal := infra.AwsMock().NewAccount()
 		defer awsAccountLocal.Delete()
 
 		scope := &cloudcontrolv1beta1.Scope{}
 
+		scopeName := "e08b6fe8-9628-4601-8351-7d443a078606"
+
+		infra.ScopeProvider().Add(scopeprovider.MatchingObjName(name, "kcp-system", scopeName))
+
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
-			kcpscope.Ignore.AddName(kymaName)
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(kymaName))).To(Succeed())
+			kcpscope.Ignore.AddName(scopeName)
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(scopeName))).To(Succeed())
 		})
 
 		awsMockLocal := awsAccountLocal.Region(scope.Spec.Region)
@@ -60,6 +64,10 @@ var _ = Describe("AwsWebAcl Controller", Focus, func() {
 		})
 
 		awsWebAcl := &cloudresourcesv1beta1.AwsWebAcl{}
+
+		skrKymaRef := cmutil.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: name}))
+
+		Expect(skrKymaRef.Name).To(Equal(scopeName))
 
 		By("When AwsWebAcl is created", func() {
 			// Create with comprehensive spec similar to the sample CRD
@@ -141,7 +149,7 @@ var _ = Describe("AwsWebAcl Controller", Focus, func() {
 			Expect(len(arnParts)).To(BeNumerically(">=", 4), "expected ARN to have at least 4 parts")
 			id := arnParts[len(arnParts)-1]
 
-			awsWebACL, _, err := awsMockLocal.GetWebACL(infra.Ctx(), awsWebAcl.Name, id, types.ScopeRegional)
+			awsWebACL, _, err := awsMockLocal.GetWebACL(infra.Ctx(), awsWebAcl.Name, id, wafv2types.ScopeRegional)
 			Expect(err).NotTo(HaveOccurred(), "expected WebACL to exist in mock")
 			Expect(awsWebACL).NotTo(BeNil())
 			Expect(*awsWebACL.Name).To(Equal(awsWebAcl.Name))
@@ -167,7 +175,7 @@ var _ = Describe("AwsWebAcl Controller", Focus, func() {
 		})
 
 		By("And Then WebACL is deleted from AWS mock", func() {
-			_, _, err := awsMockLocal.GetWebACL(infra.Ctx(), "waf-for-test-app", id, types.ScopeRegional)
+			_, _, err := awsMockLocal.GetWebACL(infra.Ctx(), "waf-for-test-app", id, wafv2types.ScopeRegional)
 			Expect(err).To(HaveOccurred(), "expected WebACL to be deleted from mock")
 			Expect(err.Error()).To(ContainSubstring("WAFNonexistentItemException"), "expected not found error")
 
