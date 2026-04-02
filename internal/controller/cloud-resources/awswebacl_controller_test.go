@@ -17,6 +17,7 @@ limitations under the License.
 package cloudresources
 
 import (
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -151,29 +152,25 @@ var _ = Describe("AwsWebAcl Controller", Focus, func() {
 			Expect(awsWebACL.Capacity).To(Equal(int64(100)), "expected mock capacity to be 100")
 		})
 
-		arn := ""
+		id := awsutil.ParseArnResourceId(awsWebAcl.Status.Arn)
 
 		By("When AwsWebAcl is deleted", func() {
-			arn = awsWebAcl.Status.Arn // Save ARN before deletion clears it
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAcl).
 				Should(Succeed())
 		})
 
-		By("Then AwsWebAcl is deleted", func() {
+		By("Then AwsWebAcl is does not exists", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAcl).
 				Should(Succeed())
 		})
 
 		By("And Then WebACL is deleted from AWS mock", func() {
-			// Extract ID from saved ARN
-			arnParts := strings.Split(arn, "/")
-			id := arnParts[len(arnParts)-1]
-
 			_, _, err := awsMockLocal.GetWebACL(infra.Ctx(), "waf-for-test-app", id, types.ScopeRegional)
 			Expect(err).To(HaveOccurred(), "expected WebACL to be deleted from mock")
 			Expect(err.Error()).To(ContainSubstring("WAFNonexistentItemException"), "expected not found error")
+
 		})
 	})
 })
