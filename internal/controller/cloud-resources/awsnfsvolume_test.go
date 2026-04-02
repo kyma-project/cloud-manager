@@ -5,6 +5,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/api"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/types"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -50,6 +51,8 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 		awsNfsVolumeName := "b0fe166e-917c-4dd0-8bb3-978190b6661d"
 		awsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		awsNfsVolumeCapacity := "100G"
+
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: awsNfsVolumeName}))
 
 		const (
 			pvName = "4e0a550e-a247-44b1-8232-cb973ba053b3"
@@ -116,7 +119,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 				Should(Succeed())
 
 			By("And has label cloud-manager.kyma-project.io/kymaName")
-			Expect(kcpNfsInstance.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpNfsInstance.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(skrKymaRef.Name))
 
 			By("And has label cloud-manager.kyma-project.io/remoteName")
 			Expect(kcpNfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(awsNfsVolume.Name))
@@ -125,7 +128,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 			Expect(kcpNfsInstance.Labels[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(awsNfsVolume.Namespace))
 
 			By("And has spec.scope.name equal to SKR Cluster kyma name")
-			Expect(kcpNfsInstance.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpNfsInstance.Spec.Scope.Name).To(Equal(skrKymaRef.Name))
 
 			By("And has spec.remoteRef matching to to SKR IpRange")
 			Expect(kcpNfsInstance.Spec.RemoteRef.Namespace).To(Equal(awsNfsVolume.Namespace))

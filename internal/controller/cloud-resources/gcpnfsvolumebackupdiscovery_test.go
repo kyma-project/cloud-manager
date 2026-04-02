@@ -13,6 +13,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
@@ -20,7 +21,8 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 	It("Scenario: SKR GcpNfsVolumeBackupDiscovery is created", func() {
 
 		name := uuid.NewString()
-		scopeName := infra.SkrKymaRef().Name
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: name}))
+		scopeName := skrKymaRef.Name
 		shootName := scopeName // ShootName is always set to scope.Name in GivenScopeGcpExists
 
 		By("Given KCP Scope exists", func() {

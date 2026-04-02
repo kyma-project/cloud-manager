@@ -9,8 +9,10 @@ import (
 	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -25,6 +27,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 		skrAwsNfsVolumeName := suffix
 		nfsInstanceName := suffix
 		backupName := suffix
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: backupName}))
 
 		scope := &cloudcontrolv1beta1.Scope{}
 		skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
@@ -37,7 +40,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 
 		By("Given KCP Scope exists", func() {
 			Expect(client.IgnoreAlreadyExists(
-				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(skrKymaRef.Name)))).
 				To(Succeed())
 		})
 
@@ -69,7 +72,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(nfsInstanceName),
 					WithRemoteRef(skrAwsNfsVolumeName),
-					WithScope(infra.SkrKymaRef().Name),
+					WithScope(skrKymaRef.Name),
 					WithIpRange(nfsInstanceName),
 					WithNfsInstanceAws(),
 				).
@@ -127,6 +130,8 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 		backupName := suffix
 		var recoveryPointArn string
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: backupName}))
+
 		scope := &cloudcontrolv1beta1.Scope{}
 		skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
@@ -138,7 +143,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 
 		By("Given KCP Scope exists", func() {
 			Expect(client.IgnoreAlreadyExists(
-				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(skrKymaRef.Name)))).
 				To(Succeed())
 		})
 
@@ -170,7 +175,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(nfsInstanceName),
 					WithRemoteRef(skrAwsNfsVolumeName),
-					WithScope(infra.SkrKymaRef().Name),
+					WithScope(skrKymaRef.Name),
 					WithIpRange(nfsInstanceName),
 					WithNfsInstanceAws(),
 				).
@@ -267,6 +272,8 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 		backupName := suffix
 		awsNfsVolumeBackupLocation := "us-west-1"
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: backupName}))
+
 		scope := &cloudcontrolv1beta1.Scope{}
 		skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
@@ -278,7 +285,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 
 		By("Given KCP Scope exists", func() {
 			Expect(client.IgnoreAlreadyExists(
-				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(skrKymaRef.Name)))).
 				To(Succeed())
 		})
 
@@ -310,7 +317,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(nfsInstanceName),
 					WithRemoteRef(skrAwsNfsVolumeName),
-					WithScope(infra.SkrKymaRef().Name),
+					WithScope(skrKymaRef.Name),
 					WithIpRange(nfsInstanceName),
 					WithNfsInstanceAws(),
 				).
@@ -370,6 +377,8 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 		awsNfsVolumeBackupLocation := "us-west-1"
 		var recoveryPointArn string
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: backupName}))
+
 		scope := &cloudcontrolv1beta1.Scope{}
 		skrAwsNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
@@ -381,7 +390,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 
 		By("Given KCP Scope exists", func() {
 			Expect(client.IgnoreAlreadyExists(
-				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(infra.SkrKymaRef().Name)))).
+				CreateScopeAws(infra.Ctx(), infra, scope, awsAccountId, WithName(skrKymaRef.Name)))).
 				To(Succeed())
 		})
 
@@ -413,7 +422,7 @@ var _ = Describe("Feature: SKR AwsNfsVolumeBackup", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(nfsInstanceName),
 					WithRemoteRef(skrAwsNfsVolumeName),
-					WithScope(infra.SkrKymaRef().Name),
+					WithScope(skrKymaRef.Name),
 					WithIpRange(nfsInstanceName),
 					WithNfsInstanceAws(),
 				).
