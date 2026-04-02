@@ -19,56 +19,18 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Creating AWS WebACL")
 
-	// Convert spec to AWS types
-	defaultAction, err := convertDefaultAction(webAcl.Spec.DefaultAction)
-	if err != nil {
-		return composed.NewStatusPatcherComposed(webAcl).
-			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
-				acl.SetStatusProviderError(err.Error())
-			}).
-			OnSuccess(
-				composed.LogError(err, "Provider error on SKR AWS WebACL create/update"),
-				composed.Requeue).
-			Run(ctx, state.Cluster().K8sClient())
-	}
-
-	rules, err := convertRules(webAcl.Spec.Rules)
-
-	if err != nil {
-		return composed.NewStatusPatcherComposed(webAcl).
-			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
-				acl.SetStatusProviderError(err.Error())
-			}).
-			OnSuccess(
-				composed.LogError(err, "Provider error on SKR AWS WebACL create/update"),
-				composed.Requeue).
-			Run(ctx, state.Cluster().K8sClient())
-	}
-
-	visibilityConfig := convertVisibilityConfig(webAcl.Spec.VisibilityConfig, webAcl.Name)
-
 	// Determine scope
 	scope := ScopeRegional()
-	if err != nil {
-		return composed.NewStatusPatcherComposed(webAcl).
-			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
-				acl.SetStatusProviderError(err.Error())
-			}).
-			OnSuccess(
-				composed.LogError(err, "Provider error on SKR AWS WebACL create/update"),
-				composed.Requeue).
-			Run(ctx, state.Cluster().K8sClient())
-	}
 
-	// Create WebACL
+	// Create WebACL using config from state
 	createdWebACL, lockToken, err := state.awsClient.CreateWebACL(
 		ctx,
 		webAcl.Name,
 		webAcl.Spec.Description,
 		scope,
-		defaultAction,
-		rules,
-		visibilityConfig,
+		state.defaultAction,
+		state.rules,
+		state.visibilityConfig,
 		convertTags(webAcl),
 	)
 	if err != nil {
