@@ -341,16 +341,7 @@ func (s *store) ListFilestoreBackups(ctx context.Context, req *filestorepb.ListB
 				err: gcpmeta.NewBadRequestError("invalid file store backup parent name: %v", err),
 			}
 		}
-		list = list.FilterByCallback(func(item FilterableListItem[*filestorepb.Backup]) bool {
-			if item.Name.ProjectId() != parentNd.ProjectId() {
-				return false
-			}
-			// "-" is the GCP wildcard meaning "all locations"
-			if parentNd.LocationRegionId() == "-" {
-				return true
-			}
-			return item.Name.LocationRegionId() == parentNd.LocationRegionId()
-		})
+		list = list.FilterByParent(parentNd)
 	}
 	if req.Filter != "" {
 		list, err = list.FilterByExpression(&req.Filter)

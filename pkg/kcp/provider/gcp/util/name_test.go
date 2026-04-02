@@ -345,6 +345,13 @@ func TestNames(t *testing.T) {
 			{"projects/my-project/regions/my-region-1", "projects/my-project/regions/my-region/operations/my-operation", false},
 			{"projects/my-project/locations/my-location-1", "projects/my-project/locations/my-location/instances/my-instance", false},
 			{"projects/my-project/regions/my-region-1", "https://www.googleapis.com/compute/v1/projects/my-project/regions/my-region/addresses/my-address", false},
+
+			// "-" wildcard in prefix location means all locations
+			{"projects/my-project/locations/-", "projects/my-project/locations/my-location/instances/my-instance", true},
+			{"projects/my-project/locations/-", "projects/my-project/locations/other-location/instances/my-instance", true},
+			{"projects/my-project/locations/-", "projects/my-project/locations/my-location/backups/my-backup", true},
+			// "-" wildcard with wrong project
+			{"projects/other-project/locations/-", "projects/my-project/locations/my-location/instances/my-instance", false},
 		}
 
 		for i, tc := range testCases {
