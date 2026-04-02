@@ -3,13 +3,11 @@ package v2
 import (
 	"context"
 
-	filestore "cloud.google.com/go/filestore/apiv1"
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
-	"google.golang.org/api/iterator"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
@@ -49,14 +47,20 @@ func NewFileBackupClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.Gcp
 
 // NewFileBackupClient creates a new FileBackupClient wrapping GcpClients.
 func NewFileBackupClient(gcpClients *gcpclient.GcpClients) FileBackupClient {
+	return NewFileBackupClientFromFilestoreClient(gcpClients.FilestoreWrapped())
+}
+
+// NewFileBackupClientFromFilestoreClient creates a FileBackupClient from a wrapped FilestoreClient.
+// Used for mock2 wiring where the subscription's Store implements gcpclient.FilestoreClient.
+func NewFileBackupClientFromFilestoreClient(filestoreClient gcpclient.FilestoreClient) FileBackupClient {
 	return &fileBackupClient{
-		cloudFilestoreManager: gcpClients.Filestore,
+		filestoreClient: filestoreClient,
 	}
 }
 
-// fileBackupClient implements FileBackupClient using the modern GCP Filestore API.
+// fileBackupClient implements FileBackupClient using the wrapped gcpclient.FilestoreClient.
 type fileBackupClient struct {
-	cloudFilestoreManager *filestore.CloudFilestoreManagerClient
+	filestoreClient gcpclient.FilestoreClient
 }
 
 var _ FileBackupClient = &fileBackupClient{}
@@ -68,7 +72,7 @@ func (c *fileBackupClient) GetBackup(ctx context.Context, projectId, location, n
 		Name: GetFileBackupPath(projectId, location, name),
 	}
 
-	backup, err := c.cloudFilestoreManager.GetBackup(ctx, req)
+	backup, err := c.filestoreClient.GetFilestoreBackup(ctx, req)
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target Filestore backup not found")
@@ -91,12 +95,8 @@ func (c *fileBackupClient) ListBackups(ctx context.Context, projectId, filter st
 	}
 
 	var backups []*filestorepb.Backup
-	it := c.cloudFilestoreManager.ListBackups(ctx, req)
-	for {
-		backup, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
+	it := c.filestoreClient.ListFilestoreBackups(ctx, req)
+	for backup, err := range it.All() {
 		if err != nil {
 			logger.Error(err, "Failed to list backups", "projectId", projectId, "filter", filter)
 			return nil, err
@@ -116,7 +116,7 @@ func (c *fileBackupClient) CreateBackup(ctx context.Context, projectId, location
 		Backup:   backup,
 	}
 
-	op, err := c.cloudFilestoreManager.CreateBackup(ctx, req)
+	op, err := c.filestoreClient.CreateFilestoreBackup(ctx, req)
 	if err != nil {
 		logger.Error(err, "Failed to create Filestore backup",
 			"projectId", projectId,
@@ -135,7 +135,7 @@ func (c *fileBackupClient) DeleteBackup(ctx context.Context, projectId, location
 		Name: GetFileBackupPath(projectId, location, name),
 	}
 
-	op, err := c.cloudFilestoreManager.DeleteBackup(ctx, req)
+	op, err := c.filestoreClient.DeleteFilestoreBackup(ctx, req)
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target Filestore backup not found")
@@ -155,7 +155,7 @@ func (c *fileBackupClient) GetBackupLROperation(ctx context.Context, operationNa
 		Name: operationName,
 	}
 
-	op, err := c.cloudFilestoreManager.LROClient.GetOperation(ctx, req)
+	op, err := c.filestoreClient.GetFilestoreOperation(ctx, req)
 	if err != nil {
 		logger.Error(err, "Failed to get operation", "operationName", operationName)
 		return nil, err
@@ -176,7 +176,7 @@ func (c *fileBackupClient) UpdateBackup(ctx context.Context, projectId, location
 		},
 	}
 
-	op, err := c.cloudFilestoreManager.UpdateBackup(ctx, req)
+	op, err := c.filestoreClient.UpdateFilestoreBackup(ctx, req)
 	if err != nil {
 		logger.Error(err, "Failed to update Filestore backup",
 			"projectId", projectId,

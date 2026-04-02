@@ -341,9 +341,7 @@ func (s *store) ListFilestoreBackups(ctx context.Context, req *filestorepb.ListB
 				err: gcpmeta.NewBadRequestError("invalid file store backup parent name: %v", err),
 			}
 		}
-		list = list.FilterByCallback(func(item FilterableListItem[*filestorepb.Backup]) bool {
-			return item.Name.ProjectId() == parentNd.ProjectId() && item.Name.LocationRegionId() == parentNd.LocationRegionId()
-		})
+		list = list.FilterByParent(parentNd)
 	}
 	if req.Filter != "" {
 		list, err = list.FilterByExpression(&req.Filter)
@@ -453,4 +451,37 @@ func (s *store) DeleteFilestoreBackup(ctx context.Context, req *filestorepb.Dele
 	s.longRunningOperations.Add(b, opName)
 
 	return b.BuildVoidOperation(), nil
+}
+
+// Restore =====================================================================================
+
+func (s *store) RestoreFilestoreInstance(ctx context.Context, req *filestorepb.RestoreInstanceRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*filestorepb.Instance], error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return nil, ctx.Err()
+	}
+
+	if req.Name == "" {
+		return nil, gcpmeta.NewBadRequestError("instance name is required")
+	}
+	fsName, err := gcputil.ParseNameDetail(req.Name)
+	if err != nil {
+		return nil, gcpmeta.NewBadRequestError("invalid filestore instance name: %v", err)
+	}
+	fs, err := s.getFilestoreNoLock(req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	fs.State = filestorepb.Instance_RESTORING
+
+	opName := s.newLongRunningOperationName()
+	b := NewOperationLongRunningBuilder(opName.String(), fsName)
+	if err := b.WithCommonMetadata(fsName, "restore"); err != nil {
+		return nil, fmt.Errorf("%w: failed setting restore filestore operation metadata: %w", common.ErrLogical, err)
+	}
+	s.longRunningOperations.Add(b, opName)
+
+	return NewResultOperation[*filestorepb.Instance](b.GetOperationPB()), nil
 }

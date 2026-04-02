@@ -83,6 +83,7 @@ type InfraDSL interface {
 	WhenKymaModuleStateUpdates(kymaName string, state util.KymaModuleState) error
 	GivenGardenShootGcpExists(name string) error
 	GivenScopeGcpExists(name string) error
+	GivenScopeGcpExistsWithProject(name, project string) error
 }
 
 type ClusterDSL interface {

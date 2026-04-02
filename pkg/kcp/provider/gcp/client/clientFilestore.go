@@ -22,6 +22,8 @@ type FilestoreClient interface {
 	CreateFilestoreBackup(ctx context.Context, req *filestorepb.CreateBackupRequest, opts ...gax.CallOption) (ResultOperation[*filestorepb.Backup], error)
 	DeleteFilestoreBackup(ctx context.Context, req *filestorepb.DeleteBackupRequest, opts ...gax.CallOption) (VoidOperation, error)
 
+	RestoreFilestoreInstance(ctx context.Context, req *filestorepb.RestoreInstanceRequest, opts ...gax.CallOption) (ResultOperation[*filestorepb.Instance], error)
+
 	GetFilestoreOperation(ctx context.Context, req *longrunningpb.GetOperationRequest, opts ...gax.CallOption) (*longrunningpb.Operation, error)
 	ListFilestoreOperations(ctx context.Context, req *longrunningpb.ListOperationsRequest, opts ...gax.CallOption) Iterator[*longrunningpb.Operation]
 }
