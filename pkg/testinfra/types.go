@@ -58,6 +58,7 @@ type InfraEnv interface {
 	GcpMock2() gcpmock2.Server
 	AzureMock() azuremock.Server
 	SapMock() sapmock.Server
+	// Deprecated: Use ScopeProvider().GetScope() instead
 	SkrKymaRef() klog.ObjectRef
 	SkrRunner() skrruntime.SkrRunner
 	ScopeProvider() scopeprovider.ScopeProviderRegistry
