@@ -4,7 +4,6 @@ import (
 	"context"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/ptr"
 )
 
 func createWebAcl(ctx context.Context, st composed.State) (error, context.Context) {
@@ -34,22 +33,20 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		convertTags(webAcl),
 	)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error creating WebACL", composed.StopWithRequeue, ctx)
+		logger.Error(err, "Error creating WebACL")
+
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+				acl.SetStatusProviderError(err.Error())
+			}).
+			OnSuccess(composed.Requeue).
+			OnStatusChanged(composed.Log("AwsWebAcl ProviderError")).
+			Run(ctx, state.Cluster().K8sClient())
 	}
 
 	// Store WebACL and lock token in state (transient, not persisted)
 	state.awsWebAcl = createdWebACL
 	state.lockToken = lockToken
 
-	return composed.NewStatusPatcherComposed(webAcl).
-		MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
-			acl.Status.Arn = ptr.Deref(createdWebACL.ARN, "")
-			acl.Status.Capacity = createdWebACL.Capacity
-			acl.SetStatusReady()
-		}).
-		OnSuccess(
-			// log only if something was created/updated
-			composed.Log("AWS SKR WebACL is successfully created"),
-		).
-		Run(ctx, state.Cluster().K8sClient())
+	return nil, ctx
 }
