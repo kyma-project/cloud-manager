@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"

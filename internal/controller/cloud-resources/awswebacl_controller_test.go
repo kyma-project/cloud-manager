@@ -33,10 +33,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("AwsWebAcl Controller", func() {
+var _ = Describe("AwsWebAcl Controller", Focus, func() {
 	It("Scenario: SKR AwsWebAcl is created then deleted", func() {
 
-		name := "waf-for-test-app"
 		awsAccountLocal := infra.AwsMock().NewAccount()
 		defer awsAccountLocal.Delete()
 
@@ -44,13 +43,17 @@ var _ = Describe("AwsWebAcl Controller", func() {
 
 		scopeName := "e08b6fe8-9628-4601-8351-7d443a078606"
 
-		infra.ScopeProvider().Add(scopeprovider.MatchingObjName(name, "kcp-system", scopeName))
-
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpscope.Ignore.AddName(scopeName)
 			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(scopeName))).To(Succeed())
 		})
+
+		Expect(scope.Namespace).To(Equal(infra.KCP().Namespace()))
+		Expect(scope.Name).To(Equal(scopeName))
+
+		objName := "waf-for-test-app"
+		infra.ScopeProvider().Add(scopeprovider.MatchingObj(objName, scope))
 
 		awsMockLocal := awsAccountLocal.Region(scope.Spec.Region)
 
@@ -65,7 +68,7 @@ var _ = Describe("AwsWebAcl Controller", func() {
 
 		awsWebAcl := &cloudresourcesv1beta1.AwsWebAcl{}
 
-		skrKymaRef := cmutil.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: name}))
+		skrKymaRef := cmutil.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: objName}))
 
 		Expect(skrKymaRef.Name).To(Equal(scopeName))
 
@@ -118,7 +121,7 @@ var _ = Describe("AwsWebAcl Controller", func() {
 			Eventually(CreateAwsWebAcl).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsWebAcl,
-					WithName("waf-for-test-app"),
+					WithName(objName),
 				).Should(Succeed())
 		})
 
@@ -175,7 +178,7 @@ var _ = Describe("AwsWebAcl Controller", func() {
 		})
 
 		By("And Then WebACL is deleted from AWS mock", func() {
-			_, _, err := awsMockLocal.GetWebACL(infra.Ctx(), "waf-for-test-app", id, wafv2types.ScopeRegional)
+			_, _, err := awsMockLocal.GetWebACL(infra.Ctx(), objName, id, wafv2types.ScopeRegional)
 			Expect(err).To(HaveOccurred(), "expected WebACL to be deleted from mock")
 			Expect(err.Error()).To(ContainSubstring("WAFNonexistentItemException"), "expected not found error")
 

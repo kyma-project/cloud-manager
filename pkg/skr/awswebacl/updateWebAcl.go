@@ -3,6 +3,7 @@ package awswebacl
 import (
 	"context"
 	"fmt"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -48,7 +49,15 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		state.lockToken,
 	)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating WebACL", composed.StopWithRequeue, ctx)
+		logger.Error(err, "Error updating WebACL")
+		if err != nil {
+			return composed.NewStatusPatcherComposed(webAcl).
+				MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+					acl.SetStatusProviderError(err.Error())
+				}).
+				OnSuccess(composed.Requeue).
+				Run(ctx, state.Cluster().K8sClient())
+		}
 	}
 
 	logger.Info("WebACL updated successfully")
