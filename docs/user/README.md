@@ -39,4 +39,5 @@ The `cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes
 ## Related Information
 
 * [Cloud Manager module tutorials](./tutorials/README.md)
+* [RBAC Aggregation](./00-70-rbac-aggregation.md)
 * [Calculation with the Cloud Manager Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/commercial-information-sap-btp-kyma-runtime?state=DRAFT&version=Internal#calculation-with-the-cloud-manager-module)
