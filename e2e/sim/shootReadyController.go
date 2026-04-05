@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	gardenerhelper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -60,7 +59,7 @@ func (r *defaultShootReadyController) Reconcile(ctx context.Context, request rec
 
 	changed := false
 	for _, ct := range GardenerConditionTypes {
-		cond := gardenerhelper.GetCondition(shoot.Status.Conditions, ct)
+		cond := GetCondition(shoot.Status.Conditions, ct)
 		if cond == nil {
 			cond = &gardenerapicore.Condition{
 				Type:               ct,
