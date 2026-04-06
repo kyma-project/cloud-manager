@@ -47,7 +47,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.27.0
 	github.com/google/uuid v1.6.0
-	github.com/googleapis/gax-go/v2 v2.19.0
+	github.com/googleapis/gax-go/v2 v2.21.0
 	github.com/gophercloud/gophercloud/v2 v2.11.1
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/hashicorp/go-multierror v1.1.1
@@ -71,7 +71,7 @@ require (
 	go.uber.org/zap v1.27.1
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.273.0
-	google.golang.org/genproto v0.0.0-20260316180232-0b37fe3546d5
+	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260319201613-d00831a3d3e7
 	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
@@ -189,7 +189,7 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260316180232-0b37fe3546d5 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260319201613-d00831a3d3e7 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/component-base v0.35.3 // indirect
