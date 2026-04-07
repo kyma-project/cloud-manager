@@ -41,7 +41,6 @@ func loadSpecifiedIpRange(ctx context.Context, st composed.State) (error, contex
 
 	logger = logger.WithValues("skrIpRangeRef", ipRangeRef.Name)
 	ctx = composed.LoggerIntoCtx(ctx, logger)
-	logger.Info("IpRange loaded")
 
 	state.SetSkrIpRange(skrIpRange)
 
