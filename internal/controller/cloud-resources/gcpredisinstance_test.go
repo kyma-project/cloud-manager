@@ -112,8 +112,8 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.SKR().Client(),
 					gcpRedisInstance,
 					NewObjActions(),
-					HavingGcpRedisInstanceStatusId(),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR GcpRedisInstance to get status.id")
 
@@ -187,7 +187,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					gcpRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -283,8 +283,8 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.SKR().Client(),
 					gcpRedisInstance,
 					NewObjActions(),
-					HavingGcpRedisInstanceStatusId(),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR GcpRedisInstance to get status.id")
 
@@ -323,7 +323,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					gcpRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed(), "expected GcpRedisInstance to exist and have Ready condition")
 		})
@@ -359,7 +359,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					gcpRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.StateDeleting),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateDeleting),
+					HavingFieldValue(cloudresourcesv1beta1.StateDeleting, "status", "state"),
 				).
 				Should(Succeed(), "expected GcpRedisInstance to have Deleting state")
 		})
@@ -466,8 +466,8 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.SKR().Client(),
 					gcpRedisInstance,
 					NewObjActions(),
-					HavingGcpRedisInstanceStatusId(),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR GcpRedisInstance to get status.id and status creating")
 
@@ -505,7 +505,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					gcpRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -606,8 +606,8 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.SKR().Client(),
 					gcpRedisInstance,
 					NewObjActions(),
-					HavingGcpRedisInstanceStatusId(),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR GcpRedisInstance to get status.id and status creating")
 
@@ -643,7 +643,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					gcpRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -766,8 +766,8 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					infra.SKR().Client(),
 					gcpRedisInstance,
 					NewObjActions(),
-					HavingGcpRedisInstanceStatusId(),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed())
 
@@ -807,7 +807,7 @@ var _ = Describe("Feature: SKR GcpRedisInstance", func() {
 					gcpRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})

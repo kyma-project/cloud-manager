@@ -239,7 +239,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
 					HaveFinalizer(api.CommonFinalizerDeletionHook),
-					HavingKcpVpcPeeringStatusIdNotEmpty(),
+					HavingFieldSet("status", "id"),
 				).Should(Succeed())
 		})
 
@@ -536,7 +536,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
 					HaveFinalizer(api.CommonFinalizerDeletionHook),
-					HavingKcpVpcPeeringStatusIdNotEmpty(),
+					HavingFieldSet("status", "id"),
 				).Should(Succeed())
 		})
 
@@ -780,7 +780,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
 					HaveFinalizer(api.CommonFinalizerDeletionHook),
-					HavingKcpVpcPeeringStatusIdNotEmpty(),
+					HavingFieldSet("status", "id"),
 				).Should(Succeed())
 		})
 
@@ -1039,7 +1039,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpPeering,
 					NewObjActions(),
 					HaveFinalizer(api.CommonFinalizerDeletionHook),
-					HavingKcpVpcPeeringStatusIdNotEmpty(),
+					HavingFieldSet("status", "id"),
 				).Should(Succeed())
 		})
 

@@ -214,29 +214,3 @@ func WithAwsRedisClusterAuthSecretExtraData(extraData map[string]string) ObjActi
 		},
 	}
 }
-
-func HavingAwsRedisClusterStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AwsRedisCluster)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR AwsRedisCluster", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the SKR AwsRedisCluster ID not set")
-		}
-		return nil
-	}
-}
-
-func HavingAwsRedisClusterStatusState(state string) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AwsRedisCluster)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR AwsRedisCluster", obj)
-		}
-		if x.Status.State != state {
-			return fmt.Errorf("the SKR AwsRedisCluster State does not match. expected: %s, got: %s", state, x.Status.State)
-		}
-		return nil
-	}
-}

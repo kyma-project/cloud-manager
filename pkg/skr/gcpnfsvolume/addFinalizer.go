@@ -8,7 +8,7 @@ import (
 
 func addFinalizer(ctx context.Context, st composed.State) (error, context.Context) {
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	modified, err := st.PatchObjAddFinalizer(ctx, api.CommonFinalizerDeletionHook)
@@ -19,5 +19,5 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 		composed.LoggerFromCtx(ctx).Info("Finalizer added")
 	}
 
-	return nil, nil
+	return nil, ctx
 }

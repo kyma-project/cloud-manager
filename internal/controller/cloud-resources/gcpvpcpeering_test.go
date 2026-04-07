@@ -45,7 +45,7 @@ var _ = Describe("Feature: SKR GcpVpcPeering", func() {
 					infra.SKR().Client(),
 					gcpVpcPeering,
 					NewObjActions(),
-					HavingGcpVpcPeeringStatusId(),
+					HavingFieldSet("status", "id"),
 				).
 				Should(Succeed(), "failed to load SKR GcpVpcPeering with unique id")
 		})

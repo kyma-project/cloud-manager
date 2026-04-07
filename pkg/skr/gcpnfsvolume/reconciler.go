@@ -54,13 +54,11 @@ func (r *Reconciler) newAction() composed.Action {
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolume{}),
 		composed.LoadObj,
 		loadScope,
-		composed.ComposeActions(
-			"crGcpNfsVolumeValidateSpec",
-			validateIpRange, validatePV, validatePVC),
+		validatePV,
+		validatePVC,
 		setProcessing,
 		defaultiprange.New(),
 		addFinalizer,
-		loadKcpIpRange,
 		loadKcpNfsInstance,
 		updateStatusId,
 		composed.IfElse(

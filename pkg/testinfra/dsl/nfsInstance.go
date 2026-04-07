@@ -216,19 +216,6 @@ func DeleteNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontro
 	return err
 }
 
-func HavingNfsInstanceStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
-		if !ok {
-			return fmt.Errorf("the object %T is not KCP NfsInstance", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the KCP NfsInstance status.id is not set")
-		}
-		return nil
-	}
-}
-
 func HavingNfsInstanceStatusCapacity(capacity resource.Quantity) ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)

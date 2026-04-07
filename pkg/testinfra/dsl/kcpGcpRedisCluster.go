@@ -75,19 +75,6 @@ func WithKcpGcpRedisClusterReplicasPerShard(replicasPerShard int32) ObjAction {
 	}
 }
 
-func HavingKcpGcpRedisClusterStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudcontrolv1beta1.GcpRedisCluster)
-		if !ok {
-			return fmt.Errorf("the object %T is not KCP GcpRedisCluster", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the KCP GcpRedisCluster .status.id not set")
-		}
-		return nil
-	}
-}
-
 func WithKcpGcpRedisClusterDiscoveryEndpoint(discoveryEndpoint string) ObjStatusAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {

@@ -103,8 +103,8 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.SKR().Client(),
 					gcpRedisCluster,
 					NewObjActions(),
-					HavingSkrGcpRedisClusterStatusId(),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR GcpRedisCluster to get status.id")
 
@@ -169,7 +169,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					gcpRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -265,8 +265,8 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.SKR().Client(),
 					gcpRedisCluster,
 					NewObjActions(),
-					HavingSkrGcpRedisClusterStatusId(),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR GcpRedisCluster to get status.id")
 
@@ -305,7 +305,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					gcpRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed(), "expected GcpRedisCluster to exist and have Ready condition")
 		})
@@ -341,7 +341,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					gcpRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.StateDeleting),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateDeleting),
+					HavingFieldValue(cloudresourcesv1beta1.StateDeleting, "status", "state"),
 				).
 				Should(Succeed(), "expected GcpRedisCluster to have Deleting state")
 		})
@@ -448,8 +448,8 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.SKR().Client(),
 					gcpGcpRedisCluster,
 					NewObjActions(),
-					HavingSkrGcpRedisClusterStatusId(),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR GcpRedisCluster to get status.id and status creating")
 
@@ -485,7 +485,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					gcpGcpRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -586,8 +586,8 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.SKR().Client(),
 					gcpGcpRedisCluster,
 					NewObjActions(),
-					HavingSkrGcpRedisClusterStatusId(),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR GcpRedisCluster to get status.id and status creating")
 
@@ -623,7 +623,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					gcpGcpRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -745,8 +745,8 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.SKR().Client(),
 					gcpRedisCluster,
 					NewObjActions(),
-					HavingSkrGcpRedisClusterStatusId(),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed())
 
@@ -788,7 +788,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					gcpRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})

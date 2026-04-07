@@ -16,7 +16,7 @@ func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	//If GcpNfsVolume is marked for deletion, continue
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR GcpNfsVolume is NOT marked for deletion, do not delete mirror in KCP
-		return nil, nil
+		return nil, ctx
 	}
 
 	//Get GcpNfsVolume object
@@ -25,12 +25,12 @@ func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, con
 
 	//If GcpNfsVolume is not Ready state, continue.
 	if !meta.IsStatusConditionTrue(nfsVolume.Status.Conditions, v1beta1.ConditionTypeReady) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	//If PV doesn't exist, continue.
 	if state.PV == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	//Modify PV if any changes are done to GcpNfsVolume.
@@ -57,7 +57,7 @@ func modifyPersistenceVolume(ctx context.Context, st composed.State) (error, con
 
 	//No changes to PV, continue.
 	if !changed {
-		return nil, nil
+		return nil, ctx
 	}
 
 	err := state.SkrCluster.K8sClient().Update(ctx, state.PV)

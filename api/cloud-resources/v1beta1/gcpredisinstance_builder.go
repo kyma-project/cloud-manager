@@ -8,6 +8,8 @@ func NewGcpRedisInstanceBuilder() *GcpRedisInstanceBuilder {
 	}
 }
 
+// +kubebuilder:object:generate=false
+
 type GcpRedisInstanceBuilder struct {
 	GcpRedisInstance GcpRedisInstance
 }

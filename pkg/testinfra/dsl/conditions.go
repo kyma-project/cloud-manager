@@ -198,15 +198,26 @@ func HavingCondition(conditionType string, status metav1.ConditionStatus, reason
 }
 
 func HaveFinalizer(finalizer string) ObjAssertion {
+	return HavingFinalizer(finalizer)
+}
+
+func HavingFinalizer(finalizer string) ObjAssertion {
 	return func(obj client.Object) error {
 		if len(obj.GetFinalizers()) == 0 {
+			conditions := []string{"doesnt implement ObjWithConditions"}
+			if x, ok := obj.(composed.ObjWithConditions); ok {
+				conditions = pie.Map(*x.Conditions(), func(c metav1.Condition) string {
+					return fmt.Sprintf("%s:%s:%s", c.Type, c.Status, c.Reason)
+				})
+			}
 			return fmt.Errorf(
-				"expected object %T %s/%s to have finalizer %s, but following finalizers found: %v",
+				"expected object %T %s/%s to have finalizer %s, but following finalizers found: %v, conditions: %v",
 				obj,
 				obj.GetNamespace(),
 				obj.GetName(),
 				finalizer,
 				obj.GetFinalizers(),
+				conditions,
 			)
 		}
 		return nil

@@ -158,7 +158,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
 					NewObjActions(),
-					HavingVpcPeeringStatusId(),
+					HavingFieldSet("status", "id"),
 				).
 				Should(Succeed())
 			kymaPeeringObject = infra.GcpMock().GetMockVpcPeering(kymaProject, kymaVpc)
@@ -490,7 +490,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcpeering,
 					NewObjActions(),
-					HavingVpcPeeringStatusId(),
+					HavingFieldSet("status", "id"),
 				).
 				Should(Succeed())
 			kymaPeeringObject = infra.GcpMock().GetMockVpcPeering(kymaProject, kymaVpc)

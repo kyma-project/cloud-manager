@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -26,12 +27,12 @@ func loadPersistenceVolume(ctx context.Context, st composed.State) (error, conte
 	}
 
 	if len(list.Items) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if len(list.Items) == 1 {
 		state.PV = &list.Items[0]
-		return nil, nil
+		return nil, ctx
 	}
 
 	// more than one PersistentVolume found in SKR, log warning and pick one
@@ -53,6 +54,6 @@ func loadPersistenceVolume(ctx context.Context, st composed.State) (error, conte
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 
 }

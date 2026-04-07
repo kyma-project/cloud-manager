@@ -14,15 +14,15 @@ func deletePersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 	logger := composed.LoggerFromCtx(ctx)
 
 	if !composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PVC == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if !state.PVC.DeletionTimestamp.IsZero() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	err, _ := composed.PatchStatus(state.ObjAsGcpNfsVolume()).

@@ -16,20 +16,20 @@ func sanitizeReleasedVolume(ctx context.Context, st composed.State) (error, cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PV == nil {
 		logger.Info("PersistentVolume for GcpNfsVolume not present.")
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PV.Status.Phase != corev1.VolumeReleased {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PV.Spec.ClaimRef == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.PV.Spec.ClaimRef = nil

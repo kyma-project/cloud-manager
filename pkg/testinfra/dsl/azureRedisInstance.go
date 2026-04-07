@@ -138,32 +138,6 @@ func WithAzureRedisInstanceAuthSecretExtraData(extraData map[string]string) ObjA
 	}
 }
 
-func HavingAzureRedisInstanceStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR AzureRedisInstance", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the SKR AzureRedisInstance ID not set")
-		}
-		return nil
-	}
-}
-
-func HavingAzureRedisInstanceStatusState(state string) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AzureRedisInstance)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR AzureRedisInstance", obj)
-		}
-		if x.Status.State != state {
-			return fmt.Errorf("the SKR AzureRedisInstance State does not match. expected: %s, got: %s", state, x.Status.State)
-		}
-		return nil
-	}
-}
-
 func UpdateAzureRedisInstance(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AzureRedisInstance, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudresourcesv1beta1.AzureRedisInstance{}

@@ -6,6 +6,8 @@ func NewNfsInstanceBuilder() *NfsInstanceBuilder {
 	}
 }
 
+// +kubebuilder:object:generate=false
+
 type NfsInstanceBuilder struct {
 	NfsInstance NfsInstance
 }

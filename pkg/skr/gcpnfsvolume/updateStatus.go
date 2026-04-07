@@ -90,7 +90,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if kcpCondReady != nil && skrCondReady != nil {
 		// already with Ready condition
 		// continue with next actions to create PV
-		return nil, nil
+		return nil, ctx
 	}
 
 	// no conditions on KCP NfsInstance

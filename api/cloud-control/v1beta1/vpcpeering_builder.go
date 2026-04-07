@@ -4,6 +4,8 @@ func NewVpcPeeringBuilder() *VpcPeeringBuilder {
 	return &VpcPeeringBuilder{}
 }
 
+// +kubebuilder:object:generate=false
+
 // VpcPeeringBuilder each call to Build() returns the same VpcPeering instance and the builder
 // allows you to create invalid objects not implementing the VpcPeering CEL validation rules
 type VpcPeeringBuilder struct {

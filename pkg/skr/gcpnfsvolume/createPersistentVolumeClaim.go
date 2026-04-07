@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -15,16 +16,16 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PVC != nil {
 		logger.Info("PersistentVolumeClaim for GcpNfsVolume already exists")
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PV == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	nfsVolume := state.ObjAsGcpNfsVolume()
@@ -58,5 +59,5 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 
 	logger.Info("PVC for Gcp PV created")
 
-	return nil, nil
+	return nil, ctx
 }

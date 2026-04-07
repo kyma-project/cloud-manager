@@ -7,7 +7,7 @@ import (
 
 type Action func(ctx context.Context, state State) (error, context.Context)
 
-func Noop(ctx context.Context, state State) (error, context.Context) {
+func Noop(ctx context.Context, _ State) (error, context.Context) {
 	return nil, ctx
 }
 
@@ -39,10 +39,9 @@ func ComposeActions(_ string, actions ...Action) Action {
 			}
 		}
 
-		var fce FlowControlError
 		if lastError == nil {
 			return nil, currentCtx
-		} else if errors.As(lastError, &fce) {
+		} else if fce, ok := errors.AsType[FlowControlError](lastError); ok {
 			if !fce.ShouldReturnError() {
 				lastError = nil
 			}

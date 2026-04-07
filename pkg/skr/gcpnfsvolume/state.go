@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -24,7 +25,6 @@ type State struct {
 	KymaRef           klog.ObjectRef
 	KcpCluster        composed.StateCluster
 	KcpNfsInstance    *cloudcontrolv1beta1.NfsInstance
-	KcpIpRange        *cloudcontrolv1beta1.IpRange
 	SkrIpRange        *cloudresourcesv1beta1.IpRange
 	SkrCluster        composed.StateCluster
 	PV                *corev1.PersistentVolume
