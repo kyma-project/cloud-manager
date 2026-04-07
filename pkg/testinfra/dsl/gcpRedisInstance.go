@@ -175,16 +175,3 @@ func WithGcpRedisInstanceAuthSecretExtraData(extraData map[string]string) ObjAct
 		},
 	}
 }
-
-func HavingGcpRedisInstanceStatusState(state string) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.GcpRedisInstance)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR GcpRedisInstance", obj)
-		}
-		if x.Status.State != state {
-			return fmt.Errorf("the SKR GcpRedisInstance State does not match. expected: %s, got: %s", state, x.Status.State)
-		}
-		return nil
-	}
-}

@@ -103,7 +103,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
-					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id")
 
@@ -163,7 +163,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -306,7 +306,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
-					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id")
 
@@ -346,7 +346,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed(), "expected AwsNfsVolume to exist and have Ready condition")
 		})
@@ -396,7 +396,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateDeleting),
+					HavingFieldValue(cloudresourcesv1beta1.StateDeleting, "status", "state"),
 				).
 				Should(Succeed(), "expected AwsNfsVolume to have Deleting state")
 		})
@@ -506,7 +506,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
-					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id and status creating")
 
@@ -543,7 +543,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -648,7 +648,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
-					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR AwsNfsVolume to get status.id and status creating")
 
@@ -685,7 +685,7 @@ var _ = Describe("Feature: SKR AwsNfsVolume", func() {
 					awsNfsVolume,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAwsNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})

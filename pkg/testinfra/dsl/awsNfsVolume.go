@@ -152,19 +152,6 @@ func CreateAwsNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 	return err
 }
 
-func HavingAwsNfsVolumeStatusState(state string) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR AwsNfsVolume", obj)
-		}
-		if x.Status.State != state {
-			return fmt.Errorf("the SKR AwsNfsVolume State does not match. expected: %s, got: %s", state, x.Status.State)
-		}
-		return nil
-	}
-}
-
 func GivenAwsNfsVolumeExists(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AwsNfsVolume, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudresourcesv1beta1.AwsNfsVolume{}

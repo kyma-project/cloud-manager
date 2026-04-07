@@ -96,7 +96,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					azureRedisInstance,
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
-					HavingAzureRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed())
 
@@ -160,7 +160,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					azureRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAzureRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -281,7 +281,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					azureRedisInstance,
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
-					HavingAzureRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed())
 
@@ -421,7 +421,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					azureRedisInstance,
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
-					HavingAzureRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR AzureRedisInstance to get status.id")
 
@@ -460,7 +460,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					azureRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAzureRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed(), "expected AzureRedisInstance to exist and have Ready condition")
 		})
@@ -496,7 +496,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					azureRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.StateDeleting),
-					HavingAzureRedisInstanceStatusState(cloudresourcesv1beta1.StateDeleting),
+					HavingFieldValue(cloudresourcesv1beta1.StateDeleting, "status", "state"),
 				).
 				Should(Succeed(), "expected AzureRedisInstance to have Deleting state")
 		})
@@ -603,7 +603,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					azureRedisInstance,
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
-					HavingAzureRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed())
 
@@ -643,7 +643,7 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 					azureRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAzureRedisInstanceStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})

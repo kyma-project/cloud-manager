@@ -163,16 +163,3 @@ func WithSkrGcpRedisClusterAuthSecretExtraData(extraData map[string]string) ObjA
 		},
 	}
 }
-
-func HavingSkrGcpRedisClusterStatusState(state string) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.GcpRedisCluster)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR GcpRedisCluster", obj)
-		}
-		if x.Status.State != state {
-			return fmt.Errorf("the SKR GcpRedisCluster State does not match. expected: %s, got: %s", state, x.Status.State)
-		}
-		return nil
-	}
-}

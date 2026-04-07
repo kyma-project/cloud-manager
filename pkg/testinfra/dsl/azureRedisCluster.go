@@ -162,19 +162,6 @@ func WithAzureRedisClusterAuthSecretExtraData(extraData map[string]string) ObjAc
 	}
 }
 
-func HavingAzureRedisClusterStatusState(state string) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AzureRedisCluster)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR AzureRedisCluster", obj)
-		}
-		if x.Status.State != state {
-			return fmt.Errorf("the SKR AzureRedisCluster State does not match. expected: %s, got: %s", state, x.Status.State)
-		}
-		return nil
-	}
-}
-
 func UpdateAzureRedisCluster(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.AzureRedisCluster, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudresourcesv1beta1.AzureRedisCluster{}

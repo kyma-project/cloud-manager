@@ -116,7 +116,7 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 					sapNfsVolume,
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
-					HavingSapNfsVolumeStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR SapNfsVolume to get status.id and status creating")
 
@@ -183,7 +183,7 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 					sapNfsVolume,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingSapNfsVolumeStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
