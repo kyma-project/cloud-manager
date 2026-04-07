@@ -376,7 +376,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeBackup,
 					NewObjActions(),
-					HavingGcpNfsVolumeBackupStatusId(),
+					HavingFieldSet("status", "id"),
 				).Should(Succeed(), "expected GcpNfsVolumeBackup to get status.id")
 		})
 
