@@ -4,6 +4,8 @@ func NewNetworkBuilder() *NetworkBuilder {
 	return &NetworkBuilder{}
 }
 
+// +kubebuilder:object:generate=false
+
 // NetworkBuilder **on purpose** if Build() called several times will always return one the same instance of the
 // Network that might be mutated by calling builder methods in between builds. After the build the Network
 // instance is not reset and all set attributes are still effective. If you need to build separate instances

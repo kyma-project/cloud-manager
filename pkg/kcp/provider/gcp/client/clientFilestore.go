@@ -11,6 +11,7 @@ import (
 )
 
 type FilestoreClient interface {
+	ListFilestoreInstances(ctx context.Context, req *filestorepb.ListInstancesRequest, opts ...gax.CallOption) Iterator[*filestorepb.Instance]
 	GetFilestoreInstance(ctx context.Context, req *filestorepb.GetInstanceRequest, opts ...gax.CallOption) (*filestorepb.Instance, error)
 	CreateFilestoreInstance(ctx context.Context, req *filestorepb.CreateInstanceRequest, opts ...gax.CallOption) (ResultOperation[*filestorepb.Instance], error)
 	UpdateFilestoreInstance(ctx context.Context, req *filestorepb.UpdateInstanceRequest, opts ...gax.CallOption) (ResultOperation[*filestorepb.Instance], error)
@@ -32,6 +33,10 @@ var _ FilestoreClient = (*filestoreClient)(nil)
 
 type filestoreClient struct {
 	inner *filestore.CloudFilestoreManagerClient
+}
+
+func (c *filestoreClient) ListFilestoreInstances(ctx context.Context, req *filestorepb.ListInstancesRequest, opts ...gax.CallOption) Iterator[*filestorepb.Instance] {
+	return c.inner.ListInstances(ctx, req, opts...)
 }
 
 func (c *filestoreClient) GetFilestoreInstance(ctx context.Context, req *filestorepb.GetInstanceRequest, opts ...gax.CallOption) (*filestorepb.Instance, error) {

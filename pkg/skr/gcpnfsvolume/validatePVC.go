@@ -18,7 +18,7 @@ func validatePVC(ctx context.Context, st composed.State) (error, context.Context
 	nfsVolume := state.ObjAsGcpNfsVolume()
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	pvcName := getVolumeClaimName(nfsVolume)
@@ -26,7 +26,7 @@ func validatePVC(ctx context.Context, st composed.State) (error, context.Context
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{Name: pvcName, Namespace: nfsVolume.Namespace}, pvc)
 
 	if apierrors.IsNotFound(err) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if err != nil {
@@ -36,11 +36,13 @@ func validatePVC(ctx context.Context, st composed.State) (error, context.Context
 	parentName, nameLabelExists := pvc.Labels[cloudresourcesv1beta1.LabelNfsVolName]
 	parentNamespace, namespaceLabelExists := pvc.Labels[cloudresourcesv1beta1.LabelNfsVolNS]
 	if nameLabelExists && namespaceLabelExists && parentName == nfsVolume.Name && parentNamespace == nfsVolume.Namespace {
-		return nil, nil
+		return nil, ctx
 	}
 
 	nfsVolume.Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 	errorMsg := fmt.Sprintf("Desired PVC(%s/%s) already exists with different owner", pvc.Namespace, pvc.Name)
+
+	composed.LoggerFromCtx(ctx).Info(errorMsg)
 
 	return composed.PatchStatus(nfsVolume).
 		SetExclusiveConditions(metav1.Condition{

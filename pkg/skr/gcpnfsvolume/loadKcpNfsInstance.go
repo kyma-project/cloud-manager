@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -27,12 +28,12 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 	}
 
 	if len(list.Items) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if len(list.Items) == 1 {
 		state.KcpNfsInstance = &list.Items[0]
-		return nil, nil
+		return nil, ctx
 	}
 
 	// more than one NfsInstance found in KCP, log warning and pick one
@@ -54,5 +55,5 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }

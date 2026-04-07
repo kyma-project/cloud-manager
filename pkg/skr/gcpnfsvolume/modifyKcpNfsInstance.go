@@ -19,7 +19,7 @@ func modifyKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR GcpNfsVolume is marked for deletion, do not create mirror in KCP
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.KcpNfsInstance == nil {
@@ -28,7 +28,7 @@ func modifyKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 		return updateKcpNfsInstance(ctx, state, logger.WithValues("operation", "updateKcpNfsInstance"))
 	}
 
-	return nil, nil
+	return nil, ctx
 
 }
 
@@ -65,7 +65,7 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 				Name:      state.ObjAsGcpNfsVolume().Name,
 			},
 			IpRange: cloudcontrolv1beta1.IpRangeRef{
-				Name: state.KcpIpRange.Name,
+				Name: state.SkrIpRange.Status.Id,
 			},
 			Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 				Gcp: &cloudcontrolv1beta1.NfsInstanceGcp{

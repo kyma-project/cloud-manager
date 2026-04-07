@@ -71,7 +71,7 @@ func populateBackupUrl(ctx context.Context, st composed.State) (error, context.C
 		backupName := fmt.Sprintf("cm-%.60s", nfsVolumeBackup.Status.Id)
 		srcBackupFullPath := gcpclient.GetFileBackupPath(state.Scope.Spec.Scope.Gcp.Project, nfsVolumeBackup.Status.Location, backupName)
 		state.SrcBackupFullPath = srcBackupFullPath
-		return nil, nil
+		return nil, ctx
 	}
 
 	project := state.Scope.Spec.Scope.Gcp.Project
@@ -92,10 +92,10 @@ func populateBackupUrl(ctx context.Context, st composed.State) (error, context.C
 				Run(ctx, state)
 		}
 		state.SrcBackupFullPath = fullPath
-		return nil, nil
+		return nil, ctx
 	}
 
 	// Neither SourceBackup nor SourceBackupUrl is set, nothing to do
 	logger.Info("No SourceBackup or SourceBackupUrl specified, skipping populateBackupUrl")
-	return nil, nil
+	return nil, ctx
 }

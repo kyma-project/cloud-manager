@@ -17,7 +17,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog/v2"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -58,8 +57,6 @@ type InfraEnv interface {
 	GcpMock2() gcpmock2.Server
 	AzureMock() azuremock.Server
 	SapMock() sapmock.Server
-	// dont use this, use ScopeProvider().GetScope() instead
-	SkrKymaRef() klog.ObjectRef
 	SkrRunner() skrruntime.SkrRunner
 	ScopeProvider() scopeprovider.ScopeProviderRegistry
 	Config() config.Config

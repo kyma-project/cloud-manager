@@ -3,6 +3,7 @@ package defaultiprange
 import (
 	"context"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,6 +38,10 @@ func loadSpecifiedIpRange(ctx context.Context, st composed.State) (error, contex
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading specified SKR IpRange", composed.StopWithRequeue, ctx)
 	}
+
+	logger = logger.WithValues("skrIpRangeRef", ipRangeRef.Name)
+	ctx = composed.LoggerIntoCtx(ctx, logger)
+	logger.Info("IpRange loaded")
 
 	state.SetSkrIpRange(skrIpRange)
 

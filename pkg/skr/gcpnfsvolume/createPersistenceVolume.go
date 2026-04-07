@@ -3,6 +3,7 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
@@ -21,7 +22,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	//If NfsVolume is marked for deletion, continue
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR GcpNfsVolume is NOT marked for deletion, do not delete mirror in KCP
-		return nil, nil
+		return nil, ctx
 	}
 
 	//Get GcpNfsVolume object
@@ -30,12 +31,12 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 
 	//If GcpNfsVolume is not Ready state, continue.
 	if !meta.IsStatusConditionTrue(nfsVolume.Status.Conditions, v1beta1.ConditionTypeReady) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	//PV already exists, continue.
 	if state.PV != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	//If the NFS Host list is empty, create error response.
@@ -43,7 +44,7 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 		logger.WithValues("kyma-name", state.KymaRef).
 			WithValues("NfsVolume", state.ObjAsGcpNfsVolume().Name).
 			Info("Error creating PV: Not able to get Host(s).")
-		return nil, nil
+		return nil, ctx
 	}
 
 	//Construct a PV Object
@@ -84,5 +85,5 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	//continue
-	return composed.StopWithRequeueDelay(3 * util.Timing.T1000ms()), nil
+	return composed.StopWithRequeueDelay(3 * util.Timing.T1000ms()), ctx
 }

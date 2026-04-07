@@ -14,12 +14,12 @@ func loadBackup(ctx context.Context, st composed.State) (error, context.Context)
 	restore := state.ObjAsGcpNfsVolume()
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if restore.Spec.SourceBackupUrl == "" {
 		logger.Info("Skipping backup load as no BackupUrl is provided")
-		return nil, nil
+		return nil, ctx
 	}
 
 	location := extractBackupLocation(restore.Spec.SourceBackupUrl)
@@ -44,5 +44,5 @@ func loadBackup(ctx context.Context, st composed.State) (error, context.Context)
 
 	state.fileBackup = backup
 
-	return nil, nil
+	return nil, ctx
 }

@@ -15,14 +15,14 @@ func setProcessing(ctx context.Context, st composed.State) (error, context.Conte
 	//If deleting, continue with next steps.
 	deleting := composed.IsMarkedForDeletion(state.Obj())
 	if deleting {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.WithValues("GcpNfsVolume", nfsVolume.Name).Info("Checking States")
 
 	//If state is not empty, continue
 	if nfsVolume.Status.State != "" {
-		return nil, nil
+		return nil, ctx
 	}
 
 	//Set the state to processing

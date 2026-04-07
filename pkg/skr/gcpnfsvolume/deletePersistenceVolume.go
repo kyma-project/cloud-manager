@@ -3,10 +3,11 @@ package gcpnfsvolume
 import (
 	"context"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func deletePersistenceVolume(ctx context.Context, st composed.State) (error, context.Context) {
@@ -16,12 +17,12 @@ func deletePersistenceVolume(ctx context.Context, st composed.State) (error, con
 	//If GcpNfsVolume is not marked for deletion, continue
 	if !composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR GcpNfsVolume is NOT marked for deletion, do not delete mirror in KCP
-		return nil, nil
+		return nil, ctx
 	}
 
 	//If PV doesn't exist or already marked for Deletion, continue
 	if state.PV == nil || !state.PV.DeletionTimestamp.IsZero() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PV.Status.Phase != "Released" && state.PV.Status.Phase != "Available" {
@@ -52,6 +53,9 @@ func deletePersistenceVolume(ctx context.Context, st composed.State) (error, con
 		}
 	}
 
+	logger := composed.LoggerFromCtx(ctx)
+	logger.Info("Deleting PersistenceVolume")
+
 	//Delete PV
 	err := state.SkrCluster.K8sClient().Delete(ctx, state.PV)
 	if err != nil {
@@ -59,5 +63,5 @@ func deletePersistenceVolume(ctx context.Context, st composed.State) (error, con
 	}
 
 	// give some time, and then run again
-	return composed.StopWithRequeueDelay(3 * time.Second), nil
+	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
 }

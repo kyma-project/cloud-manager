@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -13,15 +14,15 @@ func removePersistenceVolumeClaimFinalizer(ctx context.Context, st composed.Stat
 	state := st.(*State)
 
 	if !composed.IsMarkedForDeletion(state.PVC) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PVC == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if !controllerutil.ContainsFinalizer(state.PVC, api.CommonFinalizerDeletionHook) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	controllerutil.RemoveFinalizer(state.PVC, api.CommonFinalizerDeletionHook)
@@ -30,5 +31,5 @@ func removePersistenceVolumeClaimFinalizer(ctx context.Context, st composed.Stat
 		return composed.LogErrorAndReturn(err, "Error saving SKR PersistentVolumeClaim after finalizer removal", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

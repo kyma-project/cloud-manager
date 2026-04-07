@@ -56,6 +56,38 @@ func (s *store) getFilestoreNoLock(name string) (*filestorepb.Instance, error) {
 
 // Filestore =====================================================================================
 
+func (s *store) ListFilestoreInstances(ctx context.Context, req *filestorepb.ListInstancesRequest, opts ...gax.CallOption) gcpclient.Iterator[*filestorepb.Instance] {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return &iteratorMocked[*filestorepb.Instance]{
+			err: ctx.Err(),
+		}
+	}
+
+	list := s.filestores
+	if req.Parent != "" {
+		parentNd, err := gcputil.ParseNameDetail(req.Parent)
+		if err != nil {
+			return &iteratorMocked[*filestorepb.Instance]{
+				err: fmt.Errorf("invalid parent name: %w", err),
+			}
+		}
+		list = list.FilterByParent(parentNd)
+	}
+	var err error
+	if req.Filter != "" {
+		list, err = list.FilterByExpression(&req.Filter)
+		if err != nil {
+			return &iteratorMocked[*filestorepb.Instance]{
+				err: fmt.Errorf("invalid filter: %w", err),
+			}
+		}
+	}
+
+	return list.ToIterator()
+}
+
 func (s *store) GetFilestoreInstance(ctx context.Context, req *filestorepb.GetInstanceRequest, _ ...gax.CallOption) (*filestorepb.Instance, error) {
 	s.m.Lock()
 	defer s.m.Unlock()

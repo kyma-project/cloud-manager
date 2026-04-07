@@ -25,10 +25,10 @@ func loadPersistentVolumeClaim(ctx context.Context, st composed.State) (error, c
 	}
 
 	if err != nil { // PVC not-found
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.PVC = pvc
 
-	return nil, nil
+	return nil, ctx
 }

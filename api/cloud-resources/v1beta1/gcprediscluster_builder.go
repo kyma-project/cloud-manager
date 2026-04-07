@@ -8,6 +8,8 @@ func NewGcpRedisClusterBuilder() *GcpRedisClusterBuilder {
 	}
 }
 
+// +kubebuilder:object:generate=false
+
 type GcpRedisClusterBuilder struct {
 	GcpRedisCluster GcpRedisCluster
 }

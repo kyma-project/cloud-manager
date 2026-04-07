@@ -79,33 +79,6 @@ var deletedGcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 	},
 }
 
-var pvGcpNfsVolume = corev1.PersistentVolume{
-	ObjectMeta: metav1.ObjectMeta{
-		Name: fmt.Sprintf("%s--%s", gcpNfsVolume.Namespace, gcpNfsVolume.Name),
-		Labels: map[string]string{
-			cloudresourcesv1beta1.LabelNfsVolName: gcpNfsVolume.Name,
-			cloudresourcesv1beta1.LabelNfsVolNS:   gcpNfsVolume.Namespace,
-		},
-		Finalizers: []string{"kubernetes.io/pv-protection"},
-	},
-	Spec: corev1.PersistentVolumeSpec{
-		Capacity: corev1.ResourceList{
-			"storage": resource.Quantity{
-				Format: "1024Gi",
-			},
-		},
-		PersistentVolumeSource: corev1.PersistentVolumeSource{
-			NFS: &corev1.NFSVolumeSource{
-				Server: gcpNfsVolume.Status.Hosts[0],
-				Path:   fmt.Sprintf("/%s", gcpNfsVolume.Spec.FileShareName),
-			},
-		},
-	},
-	Status: corev1.PersistentVolumeStatus{
-		Phase: "Available",
-	},
-}
-
 var pvDeletingGcpNfsVolume = corev1.PersistentVolume{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: fmt.Sprintf("%s--%s", deletedGcpNfsVolume.Namespace, deletedGcpNfsVolume.Name),
@@ -156,40 +129,6 @@ var kcpScope = cloudcontrolv1beta1.Scope{
 				},
 			},
 		},
-	},
-}
-
-var kcpIpRange = cloudcontrolv1beta1.IpRange{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "test-ip-range",
-		Namespace: kymaRef.Namespace,
-		Labels: map[string]string{
-			cloudcontrolv1beta1.LabelKymaName:   kymaRef.Name,
-			cloudcontrolv1beta1.LabelRemoteName: gcpNfsVolume.Spec.IpRange.Name,
-		},
-	},
-	Spec: cloudcontrolv1beta1.IpRangeSpec{
-		RemoteRef: cloudcontrolv1beta1.RemoteRef{
-			Name: gcpNfsVolume.Spec.IpRange.Name,
-		},
-		Scope: cloudcontrolv1beta1.ScopeRef{
-			Name: kymaRef.Name,
-		},
-		Cidr: "10.20.30.0/24",
-		Options: cloudcontrolv1beta1.IpRangeOptions{
-			Gcp: &cloudcontrolv1beta1.IpRangeGcp{
-				Purpose: cloudcontrolv1beta1.GcpPurposePSA,
-			},
-		},
-	},
-}
-
-var skrIpRange = cloudresourcesv1beta1.IpRange{
-	ObjectMeta: metav1.ObjectMeta{
-		Name: gcpNfsVolume.Spec.IpRange.Name,
-	},
-	Spec: cloudresourcesv1beta1.IpRangeSpec{
-		Cidr: "10.20.30.0/24",
 	},
 }
 
@@ -271,34 +210,6 @@ var gcpNfsInstanceToDelete = cloudcontrolv1beta1.NfsInstance{
 				ConnectMode:   cloudcontrolv1beta1.PRIVATE_SERVICE_ACCESS,
 			},
 		},
-	},
-}
-
-var gcpNfsVolumeBackup = cloudresourcesv1beta1.GcpNfsVolumeBackup{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "test-gcp-nfs-volume-backup",
-		Namespace: "test",
-	},
-	Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
-		Source: cloudresourcesv1beta1.GcpNfsVolumeBackupSource{
-			Volume: cloudresourcesv1beta1.GcpNfsVolumeRef{
-				Name:      "test-gcp-nfs-volume",
-				Namespace: "test",
-			},
-		},
-	},
-	Status: cloudresourcesv1beta1.GcpNfsVolumeBackupStatus{
-		Location: "us-west1",
-		Conditions: []metav1.Condition{
-			{
-				Type:               "Ready",
-				Status:             "True",
-				LastTransitionTime: metav1.Time{Time: time.Now()},
-				Reason:             "Ready",
-				Message:            "NFS backup is ready",
-			},
-		},
-		Id: "backup-uuid",
 	},
 }
 

@@ -8,6 +8,8 @@ func NewAwsRedisInstanceBuilder() *AwsRedisInstanceBuilder {
 	}
 }
 
+// +kubebuilder:object:generate=false
+
 type AwsRedisInstanceBuilder struct {
 	AwsRedisInstance AwsRedisInstance
 }

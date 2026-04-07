@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	"cloud.google.com/go/redis/apiv1/redispb"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
@@ -156,8 +155,6 @@ func (s *server) SetSuIsEnabledError(err *googleapi.Error) {
 
 func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ServiceNetworkingClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP ServiceNetworkingClientProvider mock...")
 		// Return the legacy store for v2 - it implements ServiceNetworkingClient with Discovery API types
 		return s.iprangeStoreLegacy, nil
 	}
@@ -173,8 +170,6 @@ func (s *server) ServiceNetworkingClientProviderGcp() client.GcpClientProvider[g
 
 func (s *server) ComputeClientProvider() client.ClientProvider[gcpiprangeclient.ComputeClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ComputeClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP ComputeClientProvider mock...")
 		// For NEW pattern (refactored), return the new gRPC-based store
 		return s.iprangeStore, nil
 	}
@@ -192,8 +187,6 @@ func (s *server) ComputeClientProviderGcp() client.GcpClientProvider[gcpiprangec
 // Returns an adapter that converts between gRPC types (mock) and Discovery API types (v2)
 func (s *server) OldComputeClientProvider() client.ClientProvider[gcpiprangeclient.OldComputeClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.OldComputeClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP OldComputeClientProvider mock...")
 		// Return the legacy store directly - it already implements OldComputeClient interface with Discovery API types
 		return s.iprangeStoreLegacy, nil
 	}
@@ -219,8 +212,6 @@ func (s *server) SubnetNetworkConnectivityProvider() client.GcpClientProvider[gc
 
 func (s *server) FilestoreClientProvider() client.ClientProvider[gcpnfsinstancev1client.FilestoreClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpnfsinstancev1client.FilestoreClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP FilestoreClientProvider mock...")
 		return s, nil
 	}
 }
@@ -233,16 +224,12 @@ func (s *server) FilestoreClientProviderV2() client.GcpClientProvider[gcpnfsinst
 
 func (s *server) ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient] {
 	return func(ctx context.Context, credentialsFile string) (client.ServiceUsageClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP FilestoreClientProvider mock...")
 		return s, nil
 	}
 }
 
 func (s *server) FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclientv1.FileRestoreClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpnfsrestoreclientv1.FileRestoreClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP FilerestoreClientProvider mock...")
 		return s.nfsRestoreStore, nil
 	}
 }
@@ -255,8 +242,6 @@ func (s *server) FileRestoreClientProviderV2() client.GcpClientProvider[gcpnfsre
 
 func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpnfsbackupclientv1.FileBackupClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP FileBackupClientProvider mock...")
 		return s, nil
 	}
 }
