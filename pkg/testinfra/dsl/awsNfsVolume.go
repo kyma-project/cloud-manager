@@ -152,19 +152,6 @@ func CreateAwsNfsVolume(ctx context.Context, clnt client.Client, obj *cloudresou
 	return err
 }
 
-func HavingAwsNfsVolumeStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR AwsNfsVolume", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the SKR AwsNfsVolume ID not set")
-		}
-		return nil
-	}
-}
-
 func HavingAwsNfsVolumeStatusState(state string) ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.AwsNfsVolume)

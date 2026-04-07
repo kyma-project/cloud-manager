@@ -169,16 +169,3 @@ func HavingGcpNfsVolumeBackupAccessibleFromStatus(accessibleFrom string) ObjAsse
 		return nil
 	}
 }
-
-func HavingGcpNfsVolumeBackupStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup)
-		if !ok {
-			return fmt.Errorf("the object %T is not GcpNfsVolumeBackup", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the GcpNfsVolumeBackup ID not set")
-		}
-		return nil
-	}
-}

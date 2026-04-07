@@ -109,7 +109,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					infra.SKR().Client(),
 					awsRedisInstance,
 					NewObjActions(),
-					HavingAwsRedisInstanceStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR AwsRedisInstance to get status.id")
@@ -276,7 +276,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					infra.SKR().Client(),
 					awsRedisInstance,
 					NewObjActions(),
-					HavingAwsRedisInstanceStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR AwsRedisInstance to get status.id")
@@ -455,7 +455,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					infra.SKR().Client(),
 					awsRedisInstance,
 					NewObjActions(),
-					HavingAwsRedisInstanceStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR AwsRedisInstance to get status.id and status creating")
@@ -595,7 +595,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					infra.SKR().Client(),
 					awsRedisInstance,
 					NewObjActions(),
-					HavingAwsRedisInstanceStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR AwsRedisInstance to get status.id and status creating")
@@ -753,7 +753,7 @@ var _ = Describe("Feature: SKR AwsRedisInstance", func() {
 					infra.SKR().Client(),
 					awsRedisInstance,
 					NewObjActions(),
-					HavingAwsRedisInstanceStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingAwsRedisInstanceStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed())

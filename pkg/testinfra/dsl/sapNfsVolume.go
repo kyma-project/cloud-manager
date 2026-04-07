@@ -101,19 +101,6 @@ func WithSapNfsVolumePvcAnnotations(pvcAnnotations map[string]string) ObjAction 
 	}
 }
 
-func HavingSapNfsVolumeStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.SapNfsVolume)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR SapNfsVolume", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the SKR SapNfsVolume ID not set")
-		}
-		return nil
-	}
-}
-
 func HavingSapNfsVolumeStatusState(state string) ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.SapNfsVolume)

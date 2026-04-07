@@ -47,7 +47,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					infra.SKR().Client(),
 					gcpSubnet,
 					NewObjActions(),
-					HavingGcpSubnetStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR GcpSubnet to get status.id")
@@ -143,7 +143,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					infra.SKR().Client(),
 					gcpSubnet,
 					NewObjActions(),
-					HavingGcpSubnetStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR GcpSubnet to get status.id")
@@ -256,7 +256,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					infra.SKR().Client(),
 					skrGcpSubnet,
 					NewObjActions(),
-					HavingGcpSubnetStatusId(),
+					HavingFieldSet("status", "id"),
 				).
 				Should(Succeed(), "expected SKR GcpSubnet to get status.id, but it didn't")
 

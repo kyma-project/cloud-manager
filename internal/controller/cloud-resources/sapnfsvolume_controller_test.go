@@ -115,7 +115,7 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 					infra.SKR().Client(),
 					sapNfsVolume,
 					NewObjActions(),
-					HavingSapNfsVolumeStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingSapNfsVolumeStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR SapNfsVolume to get status.id and status creating")

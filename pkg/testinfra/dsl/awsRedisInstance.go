@@ -189,19 +189,6 @@ func WithAwsRedisInstanceAuthSecretExtraData(extraData map[string]string) ObjAct
 	}
 }
 
-func HavingAwsRedisInstanceStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR AwsRedisInstance", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the SKR AwsRedisInstance ID not set")
-		}
-		return nil
-	}
-}
-
 func HavingAwsRedisInstanceStatusState(state string) ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.AwsRedisInstance)

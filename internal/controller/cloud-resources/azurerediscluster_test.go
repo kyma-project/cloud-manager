@@ -101,7 +101,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 					infra.SKR().Client(),
 					azureRedisCluster,
 					NewObjActions(),
-					HavingAzureRedisClusterStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingAzureRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed())
@@ -287,7 +287,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 					infra.SKR().Client(),
 					azureRedisCluster,
 					NewObjActions(),
-					HavingAzureRedisClusterStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingAzureRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed())
@@ -426,7 +426,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 					infra.SKR().Client(),
 					azureRedisCluster,
 					NewObjActions(),
-					HavingAzureRedisClusterStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingAzureRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR AzureRedisCluster to get status.id")
@@ -612,7 +612,7 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 					infra.SKR().Client(),
 					azureRedisCluster,
 					NewObjActions(),
-					HavingAzureRedisClusterStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingAzureRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed())

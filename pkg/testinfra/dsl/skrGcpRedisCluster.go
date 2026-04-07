@@ -164,19 +164,6 @@ func WithSkrGcpRedisClusterAuthSecretExtraData(extraData map[string]string) ObjA
 	}
 }
 
-func HavingSkrGcpRedisClusterStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.GcpRedisCluster)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR GcpRedisCluster", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the SKR GcpRedisCluster ID not set")
-		}
-		return nil
-	}
-}
-
 func HavingSkrGcpRedisClusterStatusState(state string) ObjAssertion {
 	return func(obj client.Object) error {
 		x, ok := obj.(*cloudresourcesv1beta1.GcpRedisCluster)

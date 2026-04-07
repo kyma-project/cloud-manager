@@ -108,7 +108,7 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 
 			x, err := sapMock.GetShare(infra.Ctx(), nfsInstance.Status.Id)

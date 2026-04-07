@@ -3,7 +3,6 @@ package dsl
 import (
 	"context"
 	"errors"
-	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -76,17 +75,5 @@ func WithKcpVpcPeeringSpecGCP(remoteVpc, remoteProject, remotePeeringName string
 				}
 			}
 		},
-	}
-}
-
-func HavingKcpVpcPeeringStatusIdNotEmpty() ObjAssertion {
-	return func(obj client.Object) error {
-		if x, ok := obj.(*cloudcontrolv1beta1.VpcPeering); ok {
-			if x.Status.Id != "" {
-				return nil
-			}
-			return fmt.Errorf("the KCP VpcPeering expected status id to be not empty, but it is")
-		}
-		return fmt.Errorf("unhandled type %T", obj)
 	}
 }

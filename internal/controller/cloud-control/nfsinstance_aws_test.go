@@ -94,7 +94,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 			theEfs = awsMock.GetFileSystemById(nfsInstance.Status.Id)
 			awsMock.SetFileSystemStatusCapacityById(nfsInstance.Status.Id, resource.MustParse("10Gi"))

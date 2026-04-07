@@ -131,7 +131,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					NewObjActions(),
-					HavingRedisClusterStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected RedisCluster to get status.id")
 		})
 

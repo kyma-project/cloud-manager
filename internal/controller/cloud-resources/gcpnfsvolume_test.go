@@ -33,7 +33,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 		var gcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
 
 		pvSpec := &cloudresourcesv1beta1.GcpNfsVolumePvSpec{
-			Name: "6dab3e40-a951-4d84-8dba-ea4551b3e721-pv",
+			Name: "6dab3e40-a951-4d84-8dba-pv",
 			Labels: map[string]string{
 				"app": "gcp-nfs",
 			},
@@ -42,7 +42,7 @@ var _ = Describe("Feature: SKR GcpNfsVolume", func() {
 			},
 		}
 		pvcSpec := &cloudresourcesv1beta1.GcpNfsVolumePvcSpec{
-			Name: "6dab3e40-a951-4d84-8dba-ea4551b3e721-pvc",
+			Name: "6dab3e40-a951-4d84-8dba-pvc",
 			Labels: map[string]string{
 				"foo": "bar",
 			},

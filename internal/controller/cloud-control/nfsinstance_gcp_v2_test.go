@@ -145,7 +145,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 
 			// Get instance from mock2 using the correct GCP instance name
@@ -382,7 +382,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 
 			// Get instance from mock2 using the correct GCP instance name

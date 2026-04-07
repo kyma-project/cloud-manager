@@ -103,7 +103,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.SKR().Client(),
 					gcpRedisCluster,
 					NewObjActions(),
-					HavingSkrGcpRedisClusterStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR GcpRedisCluster to get status.id")
@@ -265,7 +265,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.SKR().Client(),
 					gcpRedisCluster,
 					NewObjActions(),
-					HavingSkrGcpRedisClusterStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR GcpRedisCluster to get status.id")
@@ -448,7 +448,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.SKR().Client(),
 					gcpGcpRedisCluster,
 					NewObjActions(),
-					HavingSkrGcpRedisClusterStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR GcpRedisCluster to get status.id and status creating")
@@ -586,7 +586,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.SKR().Client(),
 					gcpGcpRedisCluster,
 					NewObjActions(),
-					HavingSkrGcpRedisClusterStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed(), "expected SKR GcpRedisCluster to get status.id and status creating")
@@ -745,7 +745,7 @@ var _ = Describe("Feature: SKR GcpRedisCluster", func() {
 					infra.SKR().Client(),
 					gcpRedisCluster,
 					NewObjActions(),
-					HavingSkrGcpRedisClusterStatusId(),
+					HavingFieldSet("status", "id"),
 					HavingSkrGcpRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
 				).
 				Should(Succeed())
