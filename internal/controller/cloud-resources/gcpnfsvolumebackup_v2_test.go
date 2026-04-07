@@ -23,7 +23,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 
 	BeforeEach(func() {
 		if !feature.GcpBackupV2.Value(context.Background()) {
-			Skip("Skipping v2 GcpNfsVolumeBackup tests because gcpBackupV2 feature flag is disabled")
+			Skip("Skipping v2 GcpNfsVolumeBackup tests because gcpBackupV2 feature flag is disabled!")
 		}
 	})
 
@@ -218,7 +218,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackup V2", func() {
 		})
 
 		By("When GCP Backup delete operation is resolved", func() {
-			// Wait for delete operation identifier
+			// Wait for delete operation identifier.
 			Eventually(func() string {
 				_ = infra.SKR().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(gcpNfsVolumeBackup), gcpNfsVolumeBackup)
 				return gcpNfsVolumeBackup.Status.OpIdentifier
