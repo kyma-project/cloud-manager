@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -297,9 +298,20 @@ func (in *AwsWebAcl) SetStatusReady() {
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionTrue,
-		ObservedGeneration: in.Status.ObservedGeneration,
+		ObservedGeneration: in.Generation,
 		Reason:             ReasonReady,
 		Message:            ReasonReady,
+	})
+}
+
+func (in *AwsWebAcl) SetStatusProcessing() {
+	in.Status.State = StateProcessing
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
+		Reason:             v1beta1.ReasonProcessing,
+		Message:            v1beta1.ReasonProcessing,
 	})
 }
 
@@ -308,7 +320,7 @@ func (in *AwsWebAcl) SetProviderError(msg string) {
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
-		ObservedGeneration: in.Status.ObservedGeneration,
+		ObservedGeneration: in.Generation,
 		Reason:             ReasonProviderError,
 		Message:            msg,
 	})

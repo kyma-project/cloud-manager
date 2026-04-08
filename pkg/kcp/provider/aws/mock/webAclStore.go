@@ -59,14 +59,28 @@ func (s *webAclStore) CreateWebACL(ctx context.Context, name, description string
 	arn := awsutil.Waf2Arn(s.region, s.account, name, id)
 	lockToken := uuid.NewString()
 
+	// Deep copy inputs to avoid shared references
+	defaultActionCopy, err := util.JsonClone(defaultAction)
+	if err != nil {
+		return nil, "", err
+	}
+	rulesCopy, err := util.JsonClone(rules)
+	if err != nil {
+		return nil, "", err
+	}
+	visibilityConfigCopy, err := util.JsonClone(visibilityConfig)
+	if err != nil {
+		return nil, "", err
+	}
+
 	webAcl := types.WebACL{
 		Id:               ptr.To(id),
 		Name:             ptr.To(name),
 		ARN:              ptr.To(arn),
 		Description:      ptr.To(description),
-		DefaultAction:    defaultAction,
-		Rules:            rules,
-		VisibilityConfig: visibilityConfig,
+		DefaultAction:    defaultActionCopy,
+		Rules:            rulesCopy,
+		VisibilityConfig: visibilityConfigCopy,
 		Capacity:         100,
 	}
 
@@ -144,10 +158,23 @@ func (s *webAclStore) UpdateWebACL(ctx context.Context, name, id string, scope t
 				}
 			}
 
-			// Update the WebACL
-			x.webAcl.DefaultAction = defaultAction
-			x.webAcl.Rules = rules
-			x.webAcl.VisibilityConfig = visibilityConfig
+			// Update the WebACL with deep copies to avoid shared references
+			defaultActionCopy, err := util.JsonClone(defaultAction)
+			if err != nil {
+				return err
+			}
+			rulesCopy, err := util.JsonClone(rules)
+			if err != nil {
+				return err
+			}
+			visibilityConfigCopy, err := util.JsonClone(visibilityConfig)
+			if err != nil {
+				return err
+			}
+
+			x.webAcl.DefaultAction = defaultActionCopy
+			x.webAcl.Rules = rulesCopy
+			x.webAcl.VisibilityConfig = visibilityConfigCopy
 			x.lockToken = uuid.NewString()
 
 			return nil

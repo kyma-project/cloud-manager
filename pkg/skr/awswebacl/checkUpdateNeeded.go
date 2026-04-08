@@ -45,7 +45,7 @@ func checkUpdateNeeded(ctx context.Context, st composed.State) (error, context.C
 
 	// No update needed - stop and forget to skip updateWebAcl
 	state.updateNeeded = false
-	return composed.StopAndForget, ctx
+	return nil, ctx
 }
 
 func compareDefaultAction(aws, spec *wafv2types.DefaultAction) bool {

@@ -48,5 +48,7 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 	state.awsWebAcl = createdWebACL
 	state.lockToken = lockToken
 
+	logger.Info("AWS WebACL created successfully")
+
 	return nil, ctx
 }

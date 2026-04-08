@@ -37,7 +37,7 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		)
 	}
 
-	// Update WebACL using config from state
+	// Update WebACL in AWS
 	err := state.awsClient.UpdateWebACL(
 		ctx,
 		webAcl.Name,
@@ -48,19 +48,21 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		state.visibilityConfig,
 		state.lockToken,
 	)
+
 	if err != nil {
 		logger.Error(err, "Error updating WebACL")
-		if err != nil {
-			return composed.NewStatusPatcherComposed(webAcl).
-				MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
-					acl.SetStatusProviderError(err.Error())
-				}).
-				OnSuccess(composed.Requeue).
-				Run(ctx, state.Cluster().K8sClient())
-		}
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+				acl.SetStatusProviderError(err.Error())
+			}).
+			OnSuccess(composed.Requeue).
+			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	logger.Info("WebACL updated successfully")
+	logger.Info("WebACL updated successfully, requeueing to reload")
 
-	return nil, ctx
+	// Requeue to reload WebACL with fresh state from AWS
+	// On next reconciliation, loadWebAcl will load the updated WebACL
+	// and checkUpdateNeeded will return false since AWS now matches spec
+	return composed.StopWithRequeue, ctx
 }
