@@ -78,7 +78,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), schedule,
 					NewObjActions(),
-					HavingStatusActive(),
+					HavingFieldValue(cloudresourcesv1beta1.JobStateActive, "status", "state"),
 				).Should(Succeed())
 			Expect(len(schedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
 		})
@@ -188,7 +188,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), schedule,
 					NewObjActions(),
-					HavingStatusActive(),
+					HavingFieldValue(cloudresourcesv1beta1.JobStateActive, "status", "state"),
 				).Should(Succeed())
 		})
 
@@ -277,7 +277,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), schedule,
 					NewObjActions(),
-					HavingStatusActive(),
+					HavingFieldValue(cloudresourcesv1beta1.JobStateActive, "status", "state"),
 				).Should(Succeed())
 			Expect(len(schedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
 		})
@@ -356,7 +356,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), schedule,
 					NewObjActions(),
-					HavingStatusActive(),
+					HavingFieldValue(cloudresourcesv1beta1.JobStateActive, "status", "state"),
 				).Should(Succeed())
 			Expect(len(schedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
 		})
@@ -512,7 +512,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), schedule,
 					NewObjActions(),
-					HavingStatusActive(),
+					HavingFieldValue(cloudresourcesv1beta1.JobStateActive, "status", "state"),
 				).Should(Succeed())
 
 			testFakeClock.Step(2 * time.Minute)

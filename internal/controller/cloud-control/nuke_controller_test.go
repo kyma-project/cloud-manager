@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -105,7 +106,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 		By("And Given NfsInstance exists", func() {
 			kcpnfsinstance.Ignore.AddName(nfsInstanceName)
 
-			Expect(CreateNfsInstance(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 				WithName(nfsInstanceName),
 				AddFinalizer(api.CommonFinalizerDeletionHook),
 				WithRemoteRef("foo"),

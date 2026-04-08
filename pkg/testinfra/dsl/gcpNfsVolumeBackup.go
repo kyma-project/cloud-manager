@@ -144,15 +144,3 @@ func WithGcpNfsVolumeBackupLocation(location string) ObjAction {
 		},
 	}
 }
-
-func WithGcpNfsVolumeBackupAccessibleFrom(accessibleFrom []string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeBackup); ok {
-				x.Spec.AccessibleFrom = accessibleFrom
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithGcpNfsVolumeBackupAccessibleFrom", obj))
-		},
-	}
-}

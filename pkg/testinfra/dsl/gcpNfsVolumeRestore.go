@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -77,26 +78,4 @@ func CreateGcpNfsVolumeRestore(ctx context.Context, clnt client.Client, obj *clo
 	}
 	err = clnt.Create(ctx, obj)
 	return err
-}
-
-func AssertGcpNfsVolumeRestoreHasState() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolumeRestore)
-		if !ok {
-			return fmt.Errorf("the object %T is not GcpNfsVolumeRestore", obj)
-		}
-		if x.Status.State == "" {
-			return errors.New("the GcpNfsVolumeRestore state not set")
-		}
-		return nil
-	}
-}
-
-func WithGcpNfsVolumeRestoreState(state string) ObjStatusAction {
-	return &objStatusAction{
-		f: func(obj client.Object) {
-			x := obj.(*cloudresourcesv1beta1.GcpNfsVolumeRestore)
-			x.Status.State = state
-		},
-	}
 }

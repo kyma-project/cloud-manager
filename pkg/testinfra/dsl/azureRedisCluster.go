@@ -179,16 +179,3 @@ func UpdateAzureRedisCluster(ctx context.Context, clnt client.Client, obj *cloud
 	err := clnt.Update(ctx, obj)
 	return err
 }
-
-func WithAzureRedisClusterDefaultSpecs() ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if azureRedisCluster, ok := obj.(*cloudresourcesv1beta1.AzureRedisCluster); ok {
-				azureRedisCluster.Spec.RedisTier = cloudresourcesv1beta1.AzureRedisTierC4
-				azureRedisCluster.Spec.RedisVersion = "6"
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithAzureRedisClusterDefaultSpecs", obj))
-		},
-	}
-}
