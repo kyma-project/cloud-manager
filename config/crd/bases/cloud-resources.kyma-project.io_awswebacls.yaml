@@ -93,12 +93,16 @@ spec:
                     statement:
                       description: Statement defines the match condition (exactly
                         one must be set)
+                      maxProperties: 1
+                      minProperties: 1
                       properties:
                         byteMatch:
                           description: ByteMatch - Match specific patterns in requests
                           properties:
                             fieldToMatch:
                               description: FieldToMatch specifies where to search
+                              maxProperties: 1
+                              minProperties: 1
                               properties:
                                 body:
                                   description: Body matches the request body
