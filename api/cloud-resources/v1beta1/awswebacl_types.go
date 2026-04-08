@@ -89,6 +89,8 @@ type AwsWebAclRule struct {
 	VisibilityConfig *AwsWebAclVisibilityConfig `json:"visibilityConfig,omitempty"`
 }
 
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
 type AwsWebAclRuleStatement struct {
 	// IPSet - Match requests from specific IP addresses/ranges (inline definition)
 	// +optional
@@ -182,6 +184,8 @@ type AwsWebAclByteMatchStatement struct {
 	PositionalConstraint string `json:"positionalConstraint"`
 }
 
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
 type AwsWebAclFieldToMatch struct {
 	// UriPath matches the URI path
 	// +optional
