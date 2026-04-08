@@ -68,10 +68,36 @@ func HavingFieldValue(expectedValue any, fields ...string) ObjAssertion {
 		if reflect.DeepEqual(val, expectedValue) {
 			return nil
 		}
-		return fmt.Errorf("value at path %s is '%v', expectedValue '%v'", pie.Join(fields, "."), val, expectedValue)
+		// Fallback: numeric kind comparison to handle int->int64 promotion by unstructured converter
+		rv, re := reflect.ValueOf(val), reflect.ValueOf(expectedValue)
+		if isIntKind(rv.Kind()) && isIntKind(re.Kind()) {
+			if rv.Convert(reflect.TypeFor[int64]()).Int() == re.Convert(reflect.TypeFor[int64]()).Int() {
+				return nil
+			}
+		}
+		if isFloatKind(rv.Kind()) && isFloatKind(re.Kind()) {
+			if rv.Convert(reflect.TypeFor[float64]()).Float() == re.Convert(reflect.TypeFor[float64]()).Float() {
+				return nil
+			}
+		}
+		return fmt.Errorf("value at path %s is '%v' (%T), expectedValue '%v' (%T)", pie.Join(fields, "."), val, val, expectedValue, expectedValue)
 	}
 }
 
 type isZeroer interface {
 	IsZero() bool
+}
+
+func isIntKind(k reflect.Kind) bool {
+	switch k {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return true
+	default:
+		return false
+	}
+}
+
+func isFloatKind(k reflect.Kind) bool {
+	return k == reflect.Float32 || k == reflect.Float64
 }

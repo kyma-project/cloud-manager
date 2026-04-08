@@ -23,6 +23,16 @@ func TestHavingFieldValue(t *testing.T) {
 		assert.Error(t, HavingFieldValue("Error", "status", "state")(obj))
 	})
 
+	t.Run("works with int", func(t *testing.T) {
+		obj := &cloudcontrolv1beta1.NfsInstance{
+			Status: cloudcontrolv1beta1.NfsInstanceStatus{
+				CapacityGb: 2,
+			},
+		}
+		assert.NoError(t, HavingFieldValue(2, "status", "capacityGb")(obj))
+		assert.Error(t, HavingFieldValue(3, "status", "capacityGb")(obj))
+	})
+
 	t.Run("works with resource.Quantity as string", func(t *testing.T) {
 		qty := util.Must(resource.ParseQuantity("1G"))
 
