@@ -71,13 +71,14 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crAwsWebAclMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AwsWebAcl{}),
-		commonscope.New(),
+		commonscope.LoadObjWithScope(),
 		createAwsClient,
 		loadWebAcl,
 		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 			composed.ComposeActions(
 				"awsWebAcl-create",
 				actions.AddCommonFinalizer(),
+				statusInitial,
 				buildWebAclConfig,
 				createWebAcl,
 				checkUpdateNeeded,
