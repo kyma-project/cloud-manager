@@ -5,11 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/api/resource"
-
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -67,18 +63,6 @@ func WithGcpNfsValues() ObjAction {
 	}
 }
 
-func WithGcpNfsVolumeSpecTier(tier cloudresourcesv1beta1.GcpFileTier) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
-				x.Spec.Tier = tier
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
-		},
-	}
-}
-
 func WithGcpNfsVolumeStatusLocation(location string) ObjAction {
 	return &objStatusAction{
 		f: func(obj client.Object) {
@@ -100,121 +84,5 @@ func WithGcpNfsVolumeStatusId(id string) ObjAction {
 			}
 			panic(fmt.Errorf("unhandled type %T in WithGcpNfsVolumeStatusId", obj))
 		},
-	}
-}
-
-func WithGcpNfsVolumeCapacity(capacityGb int) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
-				x.Spec.CapacityGb = capacityGb
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithGcpNfsValues", obj))
-		},
-	}
-}
-
-func WithPvSpec(pvSpec *cloudresourcesv1beta1.GcpNfsVolumePvSpec) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
-				x.Spec.PersistentVolume = pvSpec
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithPvSpec", obj))
-		},
-	}
-}
-
-func WithPvcSpec(pvcSpec *cloudresourcesv1beta1.GcpNfsVolumePvcSpec) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume); ok {
-				x.Spec.PersistentVolumeClaim = pvcSpec
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithPvcSpec", obj))
-		},
-	}
-}
-
-func AssertGcpNfsVolumeHasId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.GcpNfsVolume)
-		if !ok {
-			return fmt.Errorf("the object %T is not GcpNfsVolume", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the GcpNfsVolume ID not set")
-		}
-		return nil
-	}
-}
-
-func WithKcpNfsStatusState(state cloudcontrolv1beta1.StatusState) ObjStatusAction {
-	return &objStatusAction{
-		f: func(obj client.Object) {
-			x := obj.(*cloudcontrolv1beta1.NfsInstance)
-			x.Status.State = state
-		},
-	}
-}
-func WithKcpNfsStatusHost(host string) ObjStatusAction {
-	return &objStatusAction{
-		f: func(obj client.Object) {
-			x := obj.(*cloudcontrolv1beta1.NfsInstance)
-			x.Status.Hosts = []string{host}
-			x.Status.Host = host
-		},
-	}
-}
-
-func WithKcpNfsStatusCapacity(capacity int) ObjStatusAction {
-	return &objStatusAction{
-		f: func(obj client.Object) {
-			x := obj.(*cloudcontrolv1beta1.NfsInstance)
-			x.Status.CapacityGb = capacity
-			x.Status.Capacity = resource.MustParse(fmt.Sprintf("%dGi", capacity))
-		},
-	}
-}
-
-func WithKcpNfsStatusStateData(key, value string) ObjStatusAction {
-	return &objStatusAction{
-		f: func(obj client.Object) {
-			x := obj.(*cloudcontrolv1beta1.NfsInstance)
-			if x.Status.StateData == nil {
-				x.Status.StateData = make(map[string]string)
-			}
-			if value == "" {
-				delete(x.Status.StateData, key)
-			} else {
-				x.Status.StateData[key] = value
-			}
-		},
-	}
-}
-
-func WithPvStatusPhase(phase corev1.PersistentVolumePhase) ObjStatusAction {
-	return &objStatusAction{
-		f: func(obj client.Object) {
-			x := obj.(*corev1.PersistentVolume)
-			x.Status.Phase = phase
-		},
-	}
-}
-
-func AssertKcpStatusHosts(host string) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
-		if !ok {
-			return fmt.Errorf("expected *cloudcontrolv1beta1.NfsInstance, but got %T", obj)
-		}
-		if len(x.Status.Hosts) > 0 && x.Status.Hosts[0] == host {
-			return nil
-		}
-		return fmt.Errorf("the KCP NfsInstance %s/%s expected host is %s, but it has %s",
-			x.Namespace, x.Name, host, x.Status.Hosts)
 	}
 }

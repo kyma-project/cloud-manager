@@ -3,7 +3,6 @@ package dsl
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"k8s.io/klog/v2"
@@ -79,17 +78,5 @@ func WithKcpIpRangeNetwork(network string) ObjAction {
 				x.Spec.Network.Name = network
 			}
 		},
-	}
-}
-
-func HavingKcpIpRangeStatusCidr(cidr string) ObjAssertion {
-	return func(obj client.Object) error {
-		if x, ok := obj.(*cloudcontrolv1beta1.IpRange); ok {
-			if x.Status.Cidr == cidr {
-				return nil
-			}
-			return fmt.Errorf("the KCP IpRange expected status cidr %s, but it has %s", cidr, x.Status.Cidr)
-		}
-		return fmt.Errorf("unhandled type %T", obj)
 	}
 }

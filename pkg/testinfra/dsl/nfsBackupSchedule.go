@@ -184,18 +184,3 @@ func WithGcpNfsBackupScheduleAccessibleFrom(accessibleFrom []string) ObjAction {
 		},
 	}
 }
-
-func HavingStatusActive() ObjAssertion {
-	return func(obj client.Object) error {
-		if x, ok := obj.(*cloudresourcesv1beta1.GcpNfsBackupSchedule); ok {
-			if x.Status.State != cloudresourcesv1beta1.JobStateActive {
-				return fmt.Errorf(
-					"expected object %T %s/%s to have status.state: %s, but found %s",
-					obj, obj.GetNamespace(), obj.GetName(),
-					cloudresourcesv1beta1.JobStateActive, x.Status.State,
-				)
-			}
-		}
-		return nil
-	}
-}

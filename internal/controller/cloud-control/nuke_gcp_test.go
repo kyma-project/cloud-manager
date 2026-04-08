@@ -80,7 +80,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 		By("And Given NfsInstance exists", func() {
 			kcpnfsinstance.Ignore.AddName(nfsInstanceName)
 
-			Expect(CreateNfsInstance(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 				WithName(nfsInstanceName),
 				AddFinalizer(api.CommonFinalizerDeletionHook),
 				WithRemoteRef("foo"),

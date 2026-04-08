@@ -91,7 +91,7 @@ var _ = Describe("Feature: KCP NfsInstance SAP", func() {
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 
 		By("When NfsInstance is created", func() {
-			Eventually(CreateNfsInstance).
+			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(name),
 					WithRemoteRef("foo"),

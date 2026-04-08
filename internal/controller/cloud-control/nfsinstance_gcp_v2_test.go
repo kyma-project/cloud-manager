@@ -129,7 +129,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 
 		By("When NfsInstance is created", func() {
-			Eventually(CreateNfsInstance).
+			Eventually(CreateObj).
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(kymaName),
@@ -231,8 +231,9 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusCapacityGb(expectedCapacityGb),
-					HavingNfsInstanceStatusCapacity(expectedCapacity)).
+					HavingFieldValue(expectedCapacityGb, "status", "capacityGb"),
+					HavingFieldValue(expectedCapacity.String(), "status", "capacity"),
+				).
 				Should(Succeed())
 		})
 
@@ -365,7 +366,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 		sourceBackupPath := "projects/test-project/locations/us-central1/backups/my-backup"
 
 		By("When NfsInstance is created with SourceBackup", func() {
-			Eventually(CreateNfsInstance).
+			Eventually(CreateObj).
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(kymaName),

@@ -104,7 +104,7 @@ var _ = Describe("Feature: KCP IpRange deletion with dependant objects", func() 
 
 		By("And Given NfsInstance using KCP IpRange exists", func() {
 			kcpnfsinstance.Ignore.AddName(nfsInstanceName)
-			Expect(CreateNfsInstance(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 				WithName(nfsInstanceName),
 				WithRemoteRef("foo"),
 				WithScope(kymaName),

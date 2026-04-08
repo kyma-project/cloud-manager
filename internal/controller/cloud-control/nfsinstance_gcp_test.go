@@ -95,7 +95,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			})
 
 			By("When KCP NfsVolume is created", func() {
-				Eventually(CreateNfsInstance).
+				Eventually(CreateObj).
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
 						WithName("gcp-nfs-instance-1"),
@@ -241,7 +241,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 
 			By("When KCP NfsVolume is created but Filestore Get call fails", func() {
 				infra.GcpMock().SetGetError(sample500Error())
-				Eventually(CreateNfsInstance, timeout, interval).
+				Eventually(CreateObj, timeout, interval).
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
 						WithName("gcp-nfs-instance-2"),
@@ -274,7 +274,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			})
 			By("When Filestore creation call fails", func() {
 				infra.GcpMock().SetCreateError(sample500Error())
-				// CreateNfsInstance is already called in previous test case
+				// CreateObj is already called in previous test case
 			})
 			By("Then KCP NfsVolume has Creating state", func() {
 				Eventually(func() (exists bool, err error) {
@@ -520,7 +520,7 @@ var _ = Describe("Feature: KCP NFSVolume for GCP", func() {
 			})
 
 			By("When KCP NfsVolume is created", func() {
-				Eventually(CreateNfsInstance).
+				Eventually(CreateObj).
 					WithArguments(
 						infra.Ctx(), infra.KCP().Client(), gcpNfsInstance,
 						WithName("gcp-nfs-instance-3"),

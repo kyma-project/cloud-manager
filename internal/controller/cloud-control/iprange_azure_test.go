@@ -106,7 +106,7 @@ var _ = Describe("Feature: KCP IpRange for Azure", func() {
 		By("Then KCP IpRange has allocated CIDR in status", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange, NewObjActions(),
-					HavingKcpIpRangeStatusCidr(common.DefaultCloudManagerCidr)).
+					HavingFieldValue(common.DefaultCloudManagerCidr, "status", "cidr")).
 				Should(Succeed())
 		})
 
