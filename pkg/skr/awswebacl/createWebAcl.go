@@ -49,6 +49,10 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		input.ChallengeConfig = convertChallengeConfig(webAcl.Spec.ChallengeConfig)
 	}
 
+	if webAcl.Spec.AssociationConfig != nil {
+		input.AssociationConfig = convertAssociationConfig(webAcl.Spec.AssociationConfig)
+	}
+
 	// Create WebACL
 	createdWebACL, lockToken, err := state.awsClient.CreateWebACL(ctx, input)
 	if err != nil {
