@@ -278,6 +278,15 @@ func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement) (*wafv2
 		count++
 	}
 
+	if stmt.SizeConstraint != nil {
+		sizeStmt, err := convertSizeConstraintStatement(stmt.SizeConstraint)
+		if err != nil {
+			return nil, err
+		}
+		statement.SizeConstraintStatement = sizeStmt
+		count++
+	}
+
 	if count == 0 {
 		return nil, fmt.Errorf("statement must have exactly one condition set")
 	}
@@ -689,4 +698,23 @@ func convertLabelMatchStatement(labelMatch *cloudresourcesv1beta1.AwsWebAclLabel
 		Key:   ptr.To(labelMatch.Key),
 		Scope: wafv2types.LabelMatchScope(labelMatch.Scope),
 	}
+}
+
+func convertSizeConstraintStatement(sizeConstraint *cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement) (*wafv2types.SizeConstraintStatement, error) {
+	fieldToMatch, err := convertFieldToMatch(sizeConstraint.FieldToMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	transformations, err := convertTextTransformations(sizeConstraint.TextTransformations)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wafv2types.SizeConstraintStatement{
+		ComparisonOperator:  wafv2types.ComparisonOperator(sizeConstraint.ComparisonOperator),
+		Size:                sizeConstraint.Size,
+		FieldToMatch:        fieldToMatch,
+		TextTransformations: transformations,
+	}, nil
 }

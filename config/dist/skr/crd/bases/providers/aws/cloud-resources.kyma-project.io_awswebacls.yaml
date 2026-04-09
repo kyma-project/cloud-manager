@@ -4,950 +4,968 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
+    cloud-resources.kyma-project.io/version: v0.0.1
   name: awswebacls.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
     categories:
-    - kyma-cloud-manager
+      - kyma-cloud-manager
     kind: AwsWebAcl
     listKind: AwsWebAclList
     plural: awswebacls
     singular: awswebacl
   scope: Cluster
   versions:
-  - additionalPrinterColumns:
-    - jsonPath: .status.state
-      name: State
-      type: string
-    - jsonPath: .spec.defaultAction
-      name: Default Action
-      type: string
-    - jsonPath: .status.capacity
-      name: Capacity
-      type: integer
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    name: v1beta1
-    schema:
-      openAPIV3Schema:
-        description: AwsWebAcl is the Schema for the awswebacls API
-        properties:
-          apiVersion:
-            description: |-
-              APIVersion defines the versioned schema of this representation of an object.
-              Servers should convert recognized schemas to the latest internal value, and
-              may reject unrecognized values.
-              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-            type: string
-          kind:
-            description: |-
-              Kind is a string value representing the REST resource this object represents.
-              Servers may infer this from the endpoint the client submits requests to.
-              Cannot be updated.
-              In CamelCase.
-              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: spec defines the desired state of AwsWebAcl
-            properties:
-              associationConfig:
-                description: |-
-                  AssociationConfig - Custom request body size limits for protected resources
-                  Note: ALB and AppSync are fixed at 8KB and cannot be customized
-                  This config only applies to: CLOUDFRONT, API_GATEWAY, COGNITO_USER_POOL, APP_RUNNER_SERVICE, VERIFIED_ACCESS_INSTANCE
-                properties:
-                  requestBody:
-                    additionalProperties:
-                      description: AwsWebAclRequestBodyConfig defines request body
-                        inspection limits
-                      properties:
-                        defaultSizeInspectionLimit:
-                          description: |-
-                            DefaultSizeInspectionLimit - Maximum body size to inspect
-                            Valid values: KB_8, KB_16, KB_32, KB_48, KB_64
-                            Default is KB_16 (16384 bytes) for configurable resources
-                            ALB/AppSync are always KB_8 (8192 bytes) regardless of this setting
-                          enum:
-                          - KB_8
-                          - KB_16
-                          - KB_32
-                          - KB_48
-                          - KB_64
-                          type: string
-                      required:
-                      - defaultSizeInspectionLimit
-                      type: object
-                    description: |-
-                      RequestBody - Map of resource type to body size limit
-                      Valid keys: CLOUDFRONT, API_GATEWAY, COGNITO_USER_POOL, APP_RUNNER_SERVICE, VERIFIED_ACCESS_INSTANCE
-                      Note: ALB and AppSync always use 8KB and cannot be configured here
-                    type: object
-                type: object
-              captchaConfig:
-                description: CaptchaConfig - Global default CAPTCHA immunity time
-                properties:
-                  immunityTime:
-                    description: ImmunityTime - Seconds a client is exempt after solving
-                      CAPTCHA (60-259200)
-                    format: int64
-                    maximum: 259200
-                    minimum: 60
-                    type: integer
-                required:
-                - immunityTime
-                type: object
-              challengeConfig:
-                description: ChallengeConfig - Global default Challenge immunity time
-                properties:
-                  immunityTime:
-                    description: ImmunityTime - Seconds a client is exempt after passing
-                      Challenge (60-259200)
-                    format: int64
-                    maximum: 259200
-                    minimum: 60
-                    type: integer
-                required:
-                - immunityTime
-                type: object
-              customResponseBodies:
-                additionalProperties:
+    - additionalPrinterColumns:
+        - jsonPath: .status.state
+          name: State
+          type: string
+        - jsonPath: .spec.defaultAction
+          name: Default Action
+          type: string
+        - jsonPath: .status.capacity
+          name: Capacity
+          type: integer
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: AwsWebAcl is the Schema for the awswebacls API
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: spec defines the desired state of AwsWebAcl
+              properties:
+                associationConfig:
+                  description: |-
+                    AssociationConfig - Custom request body size limits for protected resources
+                    Note: ALB and AppSync are fixed at 8KB and cannot be customized
+                    This config only applies to: CLOUDFRONT, API_GATEWAY, COGNITO_USER_POOL, APP_RUNNER_SERVICE, VERIFIED_ACCESS_INSTANCE
                   properties:
-                    content:
-                      description: Content - Response body content (max 10,240 bytes)
-                      maxLength: 10240
-                      type: string
-                    contentType:
-                      description: ContentType - Response content type
-                      enum:
-                      - TEXT_PLAIN
-                      - TEXT_HTML
-                      - APPLICATION_JSON
-                      type: string
-                  required:
-                  - content
-                  - contentType
-                  type: object
-                description: CustomResponseBodies - Custom response content for block
-                  actions
-                type: object
-              defaultAction:
-                description: DefaultAction specifies what to do when no rules match
-                maxProperties: 1
-                minProperties: 1
-                properties:
-                  allow:
-                    description: Allow action - permit the request
-                    properties:
-                      customRequestHandling:
-                        description: CustomRequestHandling - Insert custom headers
-                          into allowed requests
+                    requestBody:
+                      additionalProperties:
+                        description: AwsWebAclRequestBodyConfig defines request body inspection limits
                         properties:
-                          insertHeaders:
-                            description: InsertHeaders - Headers to insert into the
-                              request
-                            items:
-                              properties:
-                                name:
-                                  description: Name - Header name
-                                  type: string
-                                value:
-                                  description: Value - Header value
-                                  type: string
-                              required:
-                              - name
-                              - value
-                              type: object
-                            maxItems: 100
-                            type: array
-                        required:
-                        - insertHeaders
-                        type: object
-                    type: object
-                  block:
-                    description: Block action - block the request
-                    properties:
-                      customResponse:
-                        description: CustomResponse - Send custom response for blocked
-                          requests
-                        properties:
-                          customResponseBodyKey:
-                            description: CustomResponseBodyKey - Reference to custom
-                              response body in spec.customResponseBodies
+                          defaultSizeInspectionLimit:
+                            description: |-
+                              DefaultSizeInspectionLimit - Maximum body size to inspect
+                              Valid values: KB_8, KB_16, KB_32, KB_48, KB_64
+                              Default is KB_16 (16384 bytes) for configurable resources
+                              ALB/AppSync are always KB_8 (8192 bytes) regardless of this setting
+                            enum:
+                              - KB_8
+                              - KB_16
+                              - KB_32
+                              - KB_48
+                              - KB_64
                             type: string
-                          responseCode:
-                            description: ResponseCode - HTTP status code to return
-                              (200-599)
-                            format: int32
-                            maximum: 599
-                            minimum: 200
-                            type: integer
-                          responseHeaders:
-                            description: ResponseHeaders - Custom headers to include
-                              in response
-                            items:
-                              properties:
-                                name:
-                                  description: Name - Header name
-                                  type: string
-                                value:
-                                  description: Value - Header value
-                                  type: string
-                              required:
-                              - name
-                              - value
-                              type: object
-                            maxItems: 100
-                            type: array
                         required:
-                        - responseCode
+                          - defaultSizeInspectionLimit
                         type: object
-                    type: object
-                type: object
-              description:
-                description: Description provides context about the WebACL purpose
-                maxLength: 256
-                type: string
-              rules:
-                description: Rules define the filtering logic (evaluated by priority
-                  order)
-                items:
-                  properties:
-                    action:
-                      description: Action when rule matches (use for regular rules,
-                        mutually exclusive with OverrideAction)
-                      maxProperties: 1
-                      minProperties: 1
-                      properties:
-                        allow:
-                          description: Allow - Permit the request
-                          properties:
-                            customRequestHandling:
-                              description: CustomRequestHandling - Insert custom headers
-                                into allowed requests
-                              properties:
-                                insertHeaders:
-                                  description: InsertHeaders - Headers to insert into
-                                    the request
-                                  items:
-                                    properties:
-                                      name:
-                                        description: Name - Header name
-                                        type: string
-                                      value:
-                                        description: Value - Header value
-                                        type: string
-                                    required:
-                                    - name
-                                    - value
-                                    type: object
-                                  maxItems: 100
-                                  type: array
-                              required:
-                              - insertHeaders
-                              type: object
-                          type: object
-                        block:
-                          description: Block - Block the request
-                          properties:
-                            customResponse:
-                              description: CustomResponse - Send custom response for
-                                blocked requests
-                              properties:
-                                customResponseBodyKey:
-                                  description: CustomResponseBodyKey - Reference to
-                                    custom response body in spec.customResponseBodies
-                                  type: string
-                                responseCode:
-                                  description: ResponseCode - HTTP status code to
-                                    return (200-599)
-                                  format: int32
-                                  maximum: 599
-                                  minimum: 200
-                                  type: integer
-                                responseHeaders:
-                                  description: ResponseHeaders - Custom headers to
-                                    include in response
-                                  items:
-                                    properties:
-                                      name:
-                                        description: Name - Header name
-                                        type: string
-                                      value:
-                                        description: Value - Header value
-                                        type: string
-                                    required:
-                                    - name
-                                    - value
-                                    type: object
-                                  maxItems: 100
-                                  type: array
-                              required:
-                              - responseCode
-                              type: object
-                          type: object
-                        captcha:
-                          description: Captcha - Require CAPTCHA challenge
-                          properties:
-                            customRequestHandling:
-                              description: CustomRequestHandling - Insert custom headers
-                              properties:
-                                insertHeaders:
-                                  description: InsertHeaders - Headers to insert into
-                                    the request
-                                  items:
-                                    properties:
-                                      name:
-                                        description: Name - Header name
-                                        type: string
-                                      value:
-                                        description: Value - Header value
-                                        type: string
-                                    required:
-                                    - name
-                                    - value
-                                    type: object
-                                  maxItems: 100
-                                  type: array
-                              required:
-                              - insertHeaders
-                              type: object
-                          type: object
-                        challenge:
-                          description: Challenge - Require silent challenge (similar
-                            to CAPTCHA but without visual puzzle)
-                          properties:
-                            customRequestHandling:
-                              description: CustomRequestHandling - Insert custom headers
-                                when challenge token is valid
-                              properties:
-                                insertHeaders:
-                                  description: InsertHeaders - Headers to insert into
-                                    the request
-                                  items:
-                                    properties:
-                                      name:
-                                        description: Name - Header name
-                                        type: string
-                                      value:
-                                        description: Value - Header value
-                                        type: string
-                                    required:
-                                    - name
-                                    - value
-                                    type: object
-                                  maxItems: 100
-                                  type: array
-                              required:
-                              - insertHeaders
-                              type: object
-                          type: object
-                        count:
-                          description: Count - Count the request but don't take action
-                          properties:
-                            customRequestHandling:
-                              description: CustomRequestHandling - Insert custom headers
-                              properties:
-                                insertHeaders:
-                                  description: InsertHeaders - Headers to insert into
-                                    the request
-                                  items:
-                                    properties:
-                                      name:
-                                        description: Name - Header name
-                                        type: string
-                                      value:
-                                        description: Value - Header value
-                                        type: string
-                                    required:
-                                    - name
-                                    - value
-                                    type: object
-                                  maxItems: 100
-                                  type: array
-                              required:
-                              - insertHeaders
-                              type: object
-                          type: object
-                      type: object
-                    captchaConfig:
-                      description: CaptchaConfig - Per-rule CAPTCHA immunity time
-                        override (overrides global setting)
-                      properties:
-                        immunityTime:
-                          description: ImmunityTime - Seconds a client is exempt after
-                            solving CAPTCHA (60-259200)
-                          format: int64
-                          maximum: 259200
-                          minimum: 60
-                          type: integer
-                      required:
-                      - immunityTime
-                      type: object
-                    challengeConfig:
-                      description: ChallengeConfig - Per-rule Challenge immunity time
-                        override (overrides global setting)
-                      properties:
-                        immunityTime:
-                          description: ImmunityTime - Seconds a client is exempt after
-                            passing Challenge (60-259200)
-                          format: int64
-                          maximum: 259200
-                          minimum: 60
-                          type: integer
-                      required:
-                      - immunityTime
-                      type: object
-                    name:
-                      description: Name must be unique within the WebACL
-                      maxLength: 128
-                      minLength: 1
-                      pattern: ^[0-9A-Za-z_-]+$
-                      type: string
-                    overrideAction:
-                      description: OverrideAction for managed rule groups (mutually
-                        exclusive with Action)
-                      maxProperties: 1
-                      minProperties: 1
-                      properties:
-                        count:
-                          description: Count - Override all rules to Count
-                          properties:
-                            customRequestHandling:
-                              description: CustomRequestHandling - Insert custom headers
-                              properties:
-                                insertHeaders:
-                                  description: InsertHeaders - Headers to insert into
-                                    the request
-                                  items:
-                                    properties:
-                                      name:
-                                        description: Name - Header name
-                                        type: string
-                                      value:
-                                        description: Value - Header value
-                                        type: string
-                                    required:
-                                    - name
-                                    - value
-                                    type: object
-                                  maxItems: 100
-                                  type: array
-                              required:
-                              - insertHeaders
-                              type: object
-                          type: object
-                        none:
-                          description: None - Don't override, use the rule group's
-                            action
-                          type: object
-                      type: object
-                    priority:
-                      description: Priority determines evaluation order (lower numbers
-                        evaluated first, must be unique)
-                      format: int32
-                      minimum: 0
-                      type: integer
-                    ruleLabels:
                       description: |-
-                        RuleLabels - Labels to apply to matching requests (max 100)
-                        Can be used with LabelMatchStatement in subsequent rules
-                      items:
-                        properties:
-                          name:
-                            description: Name - Label string (1-1024 chars, can contain
-                              alphanumeric, underscore, hyphen, colon)
-                            maxLength: 1024
-                            minLength: 1
-                            pattern: ^[0-9A-Za-z_\-:]+$
-                            type: string
-                        required:
-                        - name
-                        type: object
-                      maxItems: 100
-                      type: array
-                    statement:
-                      description: Statement defines the match condition (exactly
-                        one must be set)
-                      maxProperties: 1
-                      minProperties: 1
+                        RequestBody - Map of resource type to body size limit
+                        Valid keys: CLOUDFRONT, API_GATEWAY, COGNITO_USER_POOL, APP_RUNNER_SERVICE, VERIFIED_ACCESS_INSTANCE
+                        Note: ALB and AppSync always use 8KB and cannot be configured here
+                      type: object
+                  type: object
+                captchaConfig:
+                  description: CaptchaConfig - Global default CAPTCHA immunity time
+                  properties:
+                    immunityTime:
+                      description: ImmunityTime - Seconds a client is exempt after solving CAPTCHA (60-259200)
+                      format: int64
+                      maximum: 259200
+                      minimum: 60
+                      type: integer
+                  required:
+                    - immunityTime
+                  type: object
+                challengeConfig:
+                  description: ChallengeConfig - Global default Challenge immunity time
+                  properties:
+                    immunityTime:
+                      description: ImmunityTime - Seconds a client is exempt after passing Challenge (60-259200)
+                      format: int64
+                      maximum: 259200
+                      minimum: 60
+                      type: integer
+                  required:
+                    - immunityTime
+                  type: object
+                customResponseBodies:
+                  additionalProperties:
+                    properties:
+                      content:
+                        description: Content - Response body content (max 10,240 bytes)
+                        maxLength: 10240
+                        type: string
+                      contentType:
+                        description: ContentType - Response content type
+                        enum:
+                          - TEXT_PLAIN
+                          - TEXT_HTML
+                          - APPLICATION_JSON
+                        type: string
+                    required:
+                      - content
+                      - contentType
+                    type: object
+                  description: CustomResponseBodies - Custom response content for block actions
+                  type: object
+                defaultAction:
+                  description: DefaultAction specifies what to do when no rules match
+                  maxProperties: 1
+                  minProperties: 1
+                  properties:
+                    allow:
+                      description: Allow action - permit the request
                       properties:
-                        and:
-                          description: And - Logical AND - all nested statements must
-                            match
+                        customRequestHandling:
+                          description: CustomRequestHandling - Insert custom headers into allowed requests
                           properties:
-                            statements:
-                              description: Statements to combine with AND logic (min
-                                2)
-                              items: {}
-                              minItems: 2
-                              type: array
-                          required:
-                          - statements
-                          type: object
-                        byteMatch:
-                          description: ByteMatch - Match specific patterns in requests
-                          properties:
-                            fieldToMatch:
-                              description: FieldToMatch specifies where to search
-                              maxProperties: 1
-                              minProperties: 1
-                              properties:
-                                body:
-                                  description: Body matches the request body
-                                  type: boolean
-                                method:
-                                  description: Method matches the HTTP method
-                                  type: boolean
-                                queryString:
-                                  description: QueryString matches the query string
-                                  type: boolean
-                                singleHeader:
-                                  description: SingleHeader matches a specific header
-                                    by name
-                                  type: string
-                                uriPath:
-                                  description: UriPath matches the URI path
-                                  type: boolean
-                              type: object
-                            positionalConstraint:
-                              description: PositionalConstraint defines match location
-                              enum:
-                              - EXACTLY
-                              - STARTS_WITH
-                              - ENDS_WITH
-                              - CONTAINS
-                              - CONTAINS_WORD
-                              type: string
-                            searchString:
-                              description: SearchString to match
-                              maxLength: 200
-                              minLength: 1
-                              type: string
-                            textTransformations:
-                              description: TextTransformations to apply before inspecting
-                                (required by AWS)
+                            insertHeaders:
+                              description: InsertHeaders - Headers to insert into the request
                               items:
                                 properties:
-                                  priority:
-                                    description: Priority determines the order of
-                                      transformations (lower = first)
-                                    format: int32
-                                    minimum: 0
-                                    type: integer
-                                  type:
-                                    description: Type of transformation
-                                    enum:
-                                    - NONE
-                                    - COMPRESS_WHITE_SPACE
-                                    - HTML_ENTITY_DECODE
-                                    - LOWERCASE
-                                    - CMD_LINE
-                                    - URL_DECODE
-                                    - BASE64_DECODE
-                                    - HEX_DECODE
-                                    - MD5
-                                    - REPLACE_COMMENTS
-                                    - ESCAPE_SEQ_DECODE
-                                    - SQL_HEX_DECODE
-                                    - CSS_DECODE
-                                    - JS_DECODE
-                                    - NORMALIZE_PATH
-                                    - NORMALIZE_PATH_WIN
-                                    - REMOVE_NULLS
-                                    - REPLACE_NULLS
-                                    - BASE64_DECODE_EXT
-                                    - URL_DECODE_UNI
-                                    - UTF8_TO_UNICODE
+                                  name:
+                                    description: Name - Header name
+                                    type: string
+                                  value:
+                                    description: Value - Header value
                                     type: string
                                 required:
-                                - priority
-                                - type
+                                  - name
+                                  - value
                                 type: object
-                              maxItems: 10
-                              minItems: 1
+                              maxItems: 100
                               type: array
                           required:
-                          - fieldToMatch
-                          - positionalConstraint
-                          - searchString
-                          - textTransformations
+                            - insertHeaders
                           type: object
-                        geoMatch:
-                          description: GeoMatch - Match requests from specific countries
+                      type: object
+                    block:
+                      description: Block action - block the request
+                      properties:
+                        customResponse:
+                          description: CustomResponse - Send custom response for blocked requests
                           properties:
-                            countryCodes:
-                              description: CountryCodes using ISO 3166-1 alpha-2 codes
-                                (e.g., "US", "GB", "DE")
+                            customResponseBodyKey:
+                              description: CustomResponseBodyKey - Reference to custom response body in spec.customResponseBodies
+                              type: string
+                            responseCode:
+                              description: ResponseCode - HTTP status code to return (200-599)
+                              format: int32
+                              maximum: 599
+                              minimum: 200
+                              type: integer
+                            responseHeaders:
+                              description: ResponseHeaders - Custom headers to include in response
                               items:
-                                type: string
-                              minItems: 1
-                              type: array
-                            forwardedIPConfig:
-                              description: ForwardedIPConfig for inspecting geo location
-                                from forwarded IP headers
-                              properties:
-                                fallbackBehavior:
-                                  description: FallbackBehavior when header is missing
-                                    or invalid
-                                  enum:
-                                  - MATCH
-                                  - NO_MATCH
-                                  type: string
-                                headerName:
-                                  description: HeaderName to extract client IP from
-                                    (e.g., "X-Forwarded-For")
-                                  pattern: ^[a-zA-Z0-9._$-]+$
-                                  type: string
-                              required:
-                              - fallbackBehavior
-                              - headerName
-                              type: object
-                          required:
-                          - countryCodes
-                          type: object
-                        ipSet:
-                          description: IPSet - Match requests from specific IP addresses/ranges
-                            (inline definition)
-                          properties:
-                            ipAddresses:
-                              description: |-
-                                IPAddresses in CIDR notation (e.g., "192.0.2.0/24", "2001:db8::/32")
-                                Cloud Manager will create/manage the IPSet resource automatically
-                              items:
-                                type: string
-                              maxItems: 10000
-                              minItems: 1
+                                properties:
+                                  name:
+                                    description: Name - Header name
+                                    type: string
+                                  value:
+                                    description: Value - Header value
+                                    type: string
+                                required:
+                                  - name
+                                  - value
+                                type: object
+                              maxItems: 100
                               type: array
                           required:
-                          - ipAddresses
+                            - responseCode
                           type: object
-                        labelMatch:
-                          description: LabelMatch - Match based on labels added by
-                            previous rules
+                      type: object
+                  type: object
+                description:
+                  description: Description provides context about the WebACL purpose
+                  maxLength: 256
+                  type: string
+                rules:
+                  description: Rules define the filtering logic (evaluated by priority order)
+                  items:
+                    properties:
+                      action:
+                        description: Action when rule matches (use for regular rules, mutually exclusive with OverrideAction)
+                        maxProperties: 1
+                        minProperties: 1
+                        properties:
+                          allow:
+                            description: Allow - Permit the request
+                            properties:
+                              customRequestHandling:
+                                description: CustomRequestHandling - Insert custom headers into allowed requests
+                                properties:
+                                  insertHeaders:
+                                    description: InsertHeaders - Headers to insert into the request
+                                    items:
+                                      properties:
+                                        name:
+                                          description: Name - Header name
+                                          type: string
+                                        value:
+                                          description: Value - Header value
+                                          type: string
+                                      required:
+                                        - name
+                                        - value
+                                      type: object
+                                    maxItems: 100
+                                    type: array
+                                required:
+                                  - insertHeaders
+                                type: object
+                            type: object
+                          block:
+                            description: Block - Block the request
+                            properties:
+                              customResponse:
+                                description: CustomResponse - Send custom response for blocked requests
+                                properties:
+                                  customResponseBodyKey:
+                                    description: CustomResponseBodyKey - Reference to custom response body in spec.customResponseBodies
+                                    type: string
+                                  responseCode:
+                                    description: ResponseCode - HTTP status code to return (200-599)
+                                    format: int32
+                                    maximum: 599
+                                    minimum: 200
+                                    type: integer
+                                  responseHeaders:
+                                    description: ResponseHeaders - Custom headers to include in response
+                                    items:
+                                      properties:
+                                        name:
+                                          description: Name - Header name
+                                          type: string
+                                        value:
+                                          description: Value - Header value
+                                          type: string
+                                      required:
+                                        - name
+                                        - value
+                                      type: object
+                                    maxItems: 100
+                                    type: array
+                                required:
+                                  - responseCode
+                                type: object
+                            type: object
+                          captcha:
+                            description: Captcha - Require CAPTCHA challenge
+                            properties:
+                              customRequestHandling:
+                                description: CustomRequestHandling - Insert custom headers
+                                properties:
+                                  insertHeaders:
+                                    description: InsertHeaders - Headers to insert into the request
+                                    items:
+                                      properties:
+                                        name:
+                                          description: Name - Header name
+                                          type: string
+                                        value:
+                                          description: Value - Header value
+                                          type: string
+                                      required:
+                                        - name
+                                        - value
+                                      type: object
+                                    maxItems: 100
+                                    type: array
+                                required:
+                                  - insertHeaders
+                                type: object
+                            type: object
+                          challenge:
+                            description: Challenge - Require silent challenge (similar to CAPTCHA but without visual puzzle)
+                            properties:
+                              customRequestHandling:
+                                description: CustomRequestHandling - Insert custom headers when challenge token is valid
+                                properties:
+                                  insertHeaders:
+                                    description: InsertHeaders - Headers to insert into the request
+                                    items:
+                                      properties:
+                                        name:
+                                          description: Name - Header name
+                                          type: string
+                                        value:
+                                          description: Value - Header value
+                                          type: string
+                                      required:
+                                        - name
+                                        - value
+                                      type: object
+                                    maxItems: 100
+                                    type: array
+                                required:
+                                  - insertHeaders
+                                type: object
+                            type: object
+                          count:
+                            description: Count - Count the request but don't take action
+                            properties:
+                              customRequestHandling:
+                                description: CustomRequestHandling - Insert custom headers
+                                properties:
+                                  insertHeaders:
+                                    description: InsertHeaders - Headers to insert into the request
+                                    items:
+                                      properties:
+                                        name:
+                                          description: Name - Header name
+                                          type: string
+                                        value:
+                                          description: Value - Header value
+                                          type: string
+                                      required:
+                                        - name
+                                        - value
+                                      type: object
+                                    maxItems: 100
+                                    type: array
+                                required:
+                                  - insertHeaders
+                                type: object
+                            type: object
+                        type: object
+                      captchaConfig:
+                        description: CaptchaConfig - Per-rule CAPTCHA immunity time override (overrides global setting)
+                        properties:
+                          immunityTime:
+                            description: ImmunityTime - Seconds a client is exempt after solving CAPTCHA (60-259200)
+                            format: int64
+                            maximum: 259200
+                            minimum: 60
+                            type: integer
+                        required:
+                          - immunityTime
+                        type: object
+                      challengeConfig:
+                        description: ChallengeConfig - Per-rule Challenge immunity time override (overrides global setting)
+                        properties:
+                          immunityTime:
+                            description: ImmunityTime - Seconds a client is exempt after passing Challenge (60-259200)
+                            format: int64
+                            maximum: 259200
+                            minimum: 60
+                            type: integer
+                        required:
+                          - immunityTime
+                        type: object
+                      name:
+                        description: Name must be unique within the WebACL
+                        maxLength: 128
+                        minLength: 1
+                        pattern: ^[0-9A-Za-z_-]+$
+                        type: string
+                      overrideAction:
+                        description: OverrideAction for managed rule groups (mutually exclusive with Action)
+                        maxProperties: 1
+                        minProperties: 1
+                        properties:
+                          count:
+                            description: Count - Override all rules to Count
+                            properties:
+                              customRequestHandling:
+                                description: CustomRequestHandling - Insert custom headers
+                                properties:
+                                  insertHeaders:
+                                    description: InsertHeaders - Headers to insert into the request
+                                    items:
+                                      properties:
+                                        name:
+                                          description: Name - Header name
+                                          type: string
+                                        value:
+                                          description: Value - Header value
+                                          type: string
+                                      required:
+                                        - name
+                                        - value
+                                      type: object
+                                    maxItems: 100
+                                    type: array
+                                required:
+                                  - insertHeaders
+                                type: object
+                            type: object
+                          none:
+                            description: None - Don't override, use the rule group's action
+                            type: object
+                        type: object
+                      priority:
+                        description: Priority determines evaluation order (lower numbers evaluated first, must be unique)
+                        format: int32
+                        minimum: 0
+                        type: integer
+                      ruleLabels:
+                        description: |-
+                          RuleLabels - Labels to apply to matching requests (max 100)
+                          Can be used with LabelMatchStatement in subsequent rules
+                        items:
                           properties:
-                            key:
-                              description: |-
-                                Key - Label key to match against (e.g., "aws:acl:name" or namespace like "aws:acl")
-                                Can include namespace specifications separated by colons
+                            name:
+                              description: Name - Label string (1-1024 chars, can contain alphanumeric, underscore, hyphen, colon)
                               maxLength: 1024
                               minLength: 1
                               pattern: ^[0-9A-Za-z_\-:]+$
                               type: string
-                            scope:
-                              description: 'Scope - Match scope: "LABEL" (full label)
-                                or "NAMESPACE" (namespace prefix)'
-                              enum:
-                              - LABEL
-                              - NAMESPACE
-                              type: string
                           required:
-                          - key
-                          - scope
+                            - name
                           type: object
-                        managedRuleGroup:
-                          description: ManagedRuleGroup - Use AWS-managed rule sets
-                          properties:
-                            excludedRules:
-                              description: ExcludedRules to disable specific rules
-                                within the managed group
-                              items:
+                        maxItems: 100
+                        type: array
+                      statement:
+                        description: Statement defines the match condition (exactly one must be set)
+                        maxProperties: 1
+                        minProperties: 1
+                        properties:
+                          and:
+                            description: And - Logical AND - all nested statements must match
+                            properties:
+                              statements:
+                                description: Statements to combine with AND logic (min 2)
+                                items: {}
+                                minItems: 2
+                                type: array
+                            required:
+                              - statements
+                            type: object
+                          byteMatch:
+                            description: ByteMatch - Match specific patterns in requests
+                            properties:
+                              fieldToMatch:
+                                description: FieldToMatch specifies where to search
+                                maxProperties: 1
+                                minProperties: 1
                                 properties:
-                                  name:
-                                    description: Name of the rule to exclude from
-                                      the managed rule group
+                                  body:
+                                    description: Body matches the request body
+                                    type: boolean
+                                  method:
+                                    description: Method matches the HTTP method
+                                    type: boolean
+                                  queryString:
+                                    description: QueryString matches the query string
+                                    type: boolean
+                                  singleHeader:
+                                    description: SingleHeader matches a specific header by name
+                                    type: string
+                                  uriPath:
+                                    description: UriPath matches the URI path
+                                    type: boolean
+                                type: object
+                              positionalConstraint:
+                                description: PositionalConstraint defines match location
+                                enum:
+                                  - EXACTLY
+                                  - STARTS_WITH
+                                  - ENDS_WITH
+                                  - CONTAINS
+                                  - CONTAINS_WORD
+                                type: string
+                              searchString:
+                                description: SearchString to match
+                                maxLength: 200
+                                minLength: 1
+                                type: string
+                              textTransformations:
+                                description: TextTransformations to apply before inspecting (required by AWS)
+                                items:
+                                  properties:
+                                    priority:
+                                      description: Priority determines the order of transformations (lower = first)
+                                      format: int32
+                                      minimum: 0
+                                      type: integer
+                                    type:
+                                      description: Type of transformation
+                                      enum:
+                                        - NONE
+                                        - COMPRESS_WHITE_SPACE
+                                        - HTML_ENTITY_DECODE
+                                        - LOWERCASE
+                                        - CMD_LINE
+                                        - URL_DECODE
+                                        - BASE64_DECODE
+                                        - HEX_DECODE
+                                        - MD5
+                                        - REPLACE_COMMENTS
+                                        - ESCAPE_SEQ_DECODE
+                                        - SQL_HEX_DECODE
+                                        - CSS_DECODE
+                                        - JS_DECODE
+                                        - NORMALIZE_PATH
+                                        - NORMALIZE_PATH_WIN
+                                        - REMOVE_NULLS
+                                        - REPLACE_NULLS
+                                        - BASE64_DECODE_EXT
+                                        - URL_DECODE_UNI
+                                        - UTF8_TO_UNICODE
+                                      type: string
+                                  required:
+                                    - priority
+                                    - type
+                                  type: object
+                                maxItems: 10
+                                minItems: 1
+                                type: array
+                            required:
+                              - fieldToMatch
+                              - positionalConstraint
+                              - searchString
+                              - textTransformations
+                            type: object
+                          geoMatch:
+                            description: GeoMatch - Match requests from specific countries
+                            properties:
+                              countryCodes:
+                                description: CountryCodes using ISO 3166-1 alpha-2 codes (e.g., "US", "GB", "DE")
+                                items:
+                                  type: string
+                                minItems: 1
+                                type: array
+                              forwardedIPConfig:
+                                description: ForwardedIPConfig for inspecting geo location from forwarded IP headers
+                                properties:
+                                  fallbackBehavior:
+                                    description: FallbackBehavior when header is missing or invalid
+                                    enum:
+                                      - MATCH
+                                      - NO_MATCH
+                                    type: string
+                                  headerName:
+                                    description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                    pattern: ^[a-zA-Z0-9._$-]+$
                                     type: string
                                 required:
-                                - name
+                                  - fallbackBehavior
+                                  - headerName
                                 type: object
-                              type: array
-                            managedRuleGroupConfigs:
-                              description: ManagedRuleGroupConfigs for ATP/ACFP/Bot
-                                Control configuration
-                              items:
+                            required:
+                              - countryCodes
+                            type: object
+                          ipSet:
+                            description: IPSet - Match requests from specific IP addresses/ranges (inline definition)
+                            properties:
+                              ipAddresses:
+                                description: |-
+                                  IPAddresses in CIDR notation (e.g., "192.0.2.0/24", "2001:db8::/32")
+                                  Cloud Manager will create/manage the IPSet resource automatically
+                                items:
+                                  type: string
+                                maxItems: 10000
+                                minItems: 1
+                                type: array
+                            required:
+                              - ipAddresses
+                            type: object
+                          labelMatch:
+                            description: LabelMatch - Match based on labels added by previous rules
+                            properties:
+                              key:
+                                description: |-
+                                  Key - Label key to match against (e.g., "aws:acl:name" or namespace like "aws:acl")
+                                  Can include namespace specifications separated by colons
+                                maxLength: 1024
+                                minLength: 1
+                                pattern: ^[0-9A-Za-z_\-:]+$
+                                type: string
+                              scope:
+                                description: 'Scope - Match scope: "LABEL" (full label) or "NAMESPACE" (namespace prefix)'
+                                enum:
+                                  - LABEL
+                                  - NAMESPACE
+                                type: string
+                            required:
+                              - key
+                              - scope
+                            type: object
+                          managedRuleGroup:
+                            description: ManagedRuleGroup - Use AWS-managed rule sets
+                            properties:
+                              excludedRules:
+                                description: ExcludedRules to disable specific rules within the managed group
+                                items:
+                                  properties:
+                                    name:
+                                      description: Name of the rule to exclude from the managed rule group
+                                      type: string
+                                  required:
+                                    - name
+                                  type: object
+                                type: array
+                              managedRuleGroupConfigs:
+                                description: ManagedRuleGroupConfigs for ATP/ACFP/Bot Control configuration
+                                items:
+                                  properties:
+                                    loginPath:
+                                      description: LoginPath for ATP/ACFP (e.g., "/login")
+                                      type: string
+                                    passwordField:
+                                      description: PasswordField for extracting password from requests
+                                      properties:
+                                        identifier:
+                                          description: Identifier path (e.g., "/username" for JSON, "username" for form)
+                                          type: string
+                                      required:
+                                        - identifier
+                                      type: object
+                                    payloadType:
+                                      description: PayloadType for request body parsing
+                                      enum:
+                                        - JSON
+                                        - FORM_ENCODED
+                                      type: string
+                                    usernameField:
+                                      description: UsernameField for extracting username from requests
+                                      properties:
+                                        identifier:
+                                          description: Identifier path (e.g., "/username" for JSON, "username" for form)
+                                          type: string
+                                      required:
+                                        - identifier
+                                      type: object
+                                  type: object
+                                type: array
+                              name:
+                                description: |-
+                                  Name of the managed rule group
+                                  Common AWS managed rules:
+                                  - AWSManagedRulesCommonRuleSet
+                                  - AWSManagedRulesKnownBadInputsRuleSet
+                                  - AWSManagedRulesSQLiRuleSet
+                                  - AWSManagedRulesLinuxRuleSet
+                                  - AWSManagedRulesUnixRuleSet
+                                type: string
+                              ruleActionOverrides:
+                                description: RuleActionOverrides to override actions for specific rules
+                                items:
+                                  properties:
+                                    actionToUse:
+                                      description: ActionToUse to replace the original action
+                                      enum:
+                                        - Allow
+                                        - Block
+                                        - Count
+                                        - Captcha
+                                      type: string
+                                    name:
+                                      description: Name of the rule to override
+                                      type: string
+                                  required:
+                                    - actionToUse
+                                    - name
+                                  type: object
+                                type: array
+                              vendorName:
+                                description: VendorName (typically "AWS" for AWS managed rules)
+                                type: string
+                              version:
+                                description: Version of the rule group (optional, uses latest if not specified)
+                                type: string
+                            required:
+                              - name
+                              - vendorName
+                            type: object
+                          not:
+                            description: Not - Logical NOT - negates the nested statement
+                            properties:
+                              statement:
+                                description: Statement to negate
+                            required:
+                              - statement
+                            type: object
+                          or:
+                            description: Or - Logical OR - at least one nested statement must match
+                            properties:
+                              statements:
+                                description: Statements to combine with OR logic (min 2)
+                                items: {}
+                                minItems: 2
+                                type: array
+                            required:
+                              - statements
+                            type: object
+                          rateBased:
+                            description: RateBased - Rate limiting per IP
+                            properties:
+                              forwardedIPConfig:
+                                description: ForwardedIPConfig for rate limiting based on forwarded IP headers
                                 properties:
-                                  loginPath:
-                                    description: LoginPath for ATP/ACFP (e.g., "/login")
-                                    type: string
-                                  passwordField:
-                                    description: PasswordField for extracting password
-                                      from requests
-                                    properties:
-                                      identifier:
-                                        description: Identifier path (e.g., "/username"
-                                          for JSON, "username" for form)
-                                        type: string
-                                    required:
-                                    - identifier
-                                    type: object
-                                  payloadType:
-                                    description: PayloadType for request body parsing
+                                  fallbackBehavior:
+                                    description: FallbackBehavior when header is missing or invalid
                                     enum:
-                                    - JSON
-                                    - FORM_ENCODED
+                                      - MATCH
+                                      - NO_MATCH
                                     type: string
-                                  usernameField:
-                                    description: UsernameField for extracting username
-                                      from requests
-                                    properties:
-                                      identifier:
-                                        description: Identifier path (e.g., "/username"
-                                          for JSON, "username" for form)
-                                        type: string
-                                    required:
-                                    - identifier
-                                    type: object
-                                type: object
-                              type: array
-                            name:
-                              description: |-
-                                Name of the managed rule group
-                                Common AWS managed rules:
-                                - AWSManagedRulesCommonRuleSet
-                                - AWSManagedRulesKnownBadInputsRuleSet
-                                - AWSManagedRulesSQLiRuleSet
-                                - AWSManagedRulesLinuxRuleSet
-                                - AWSManagedRulesUnixRuleSet
-                              type: string
-                            ruleActionOverrides:
-                              description: RuleActionOverrides to override actions
-                                for specific rules
-                              items:
-                                properties:
-                                  actionToUse:
-                                    description: ActionToUse to replace the original
-                                      action
-                                    enum:
-                                    - Allow
-                                    - Block
-                                    - Count
-                                    - Captcha
-                                    type: string
-                                  name:
-                                    description: Name of the rule to override
+                                  headerName:
+                                    description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                    pattern: ^[a-zA-Z0-9._$-]+$
                                     type: string
                                 required:
-                                - actionToUse
-                                - name
+                                  - fallbackBehavior
+                                  - headerName
                                 type: object
-                              type: array
-                            vendorName:
-                              description: VendorName (typically "AWS" for AWS managed
-                                rules)
-                              type: string
-                            version:
-                              description: Version of the rule group (optional, uses
-                                latest if not specified)
-                              type: string
-                          required:
-                          - name
-                          - vendorName
-                          type: object
-                        not:
-                          description: Not - Logical NOT - negates the nested statement
-                          properties:
-                            statement:
-                              description: Statement to negate
-                          required:
-                          - statement
-                          type: object
-                        or:
-                          description: Or - Logical OR - at least one nested statement
-                            must match
-                          properties:
-                            statements:
-                              description: Statements to combine with OR logic (min
-                                2)
-                              items: {}
-                              minItems: 2
-                              type: array
-                          required:
-                          - statements
-                          type: object
-                        rateBased:
-                          description: RateBased - Rate limiting per IP
-                          properties:
-                            forwardedIPConfig:
-                              description: ForwardedIPConfig for rate limiting based
-                                on forwarded IP headers
-                              properties:
-                                fallbackBehavior:
-                                  description: FallbackBehavior when header is missing
-                                    or invalid
-                                  enum:
-                                  - MATCH
-                                  - NO_MATCH
-                                  type: string
-                                headerName:
-                                  description: HeaderName to extract client IP from
-                                    (e.g., "X-Forwarded-For")
-                                  pattern: ^[a-zA-Z0-9._$-]+$
-                                  type: string
-                              required:
-                              - fallbackBehavior
-                              - headerName
-                              type: object
-                            limit:
-                              description: Limit - Max requests per 5 minutes from
-                                a single IP
-                              format: int64
-                              maximum: 2000000000
-                              minimum: 100
-                              type: integer
-                          required:
-                          - limit
-                          type: object
-                      type: object
-                    visibilityConfig:
-                      description: VisibilityConfig for rule-specific metrics
-                      properties:
-                        cloudWatchMetricsEnabled:
-                          default: true
-                          description: CloudWatchMetricsEnabled enables CloudWatch
-                            metrics
-                          type: boolean
-                        metricName:
-                          description: MetricName for CloudWatch (must be unique)
-                          maxLength: 128
-                          minLength: 1
-                          pattern: ^[0-9A-Za-z_-]+$
-                          type: string
-                        sampledRequestsEnabled:
-                          default: true
-                          description: SampledRequestsEnabled enables request sampling
-                            in AWS console
-                          type: boolean
-                      required:
-                      - cloudWatchMetricsEnabled
-                      - metricName
-                      - sampledRequestsEnabled
-                      type: object
-                  required:
-                  - name
-                  - priority
-                  - statement
-                  type: object
-                maxItems: 100
-                type: array
-              tokenDomains:
-                description: TokenDomains - Domains for cross-site CAPTCHA/Challenge
-                  token validation
-                items:
-                  type: string
-                maxItems: 10
-                type: array
-              visibilityConfig:
-                description: VisibilityConfig defines CloudWatch metrics and request
-                  sampling
-                properties:
-                  cloudWatchMetricsEnabled:
-                    default: true
-                    description: CloudWatchMetricsEnabled enables CloudWatch metrics
-                    type: boolean
-                  metricName:
-                    description: MetricName for CloudWatch (must be unique)
-                    maxLength: 128
-                    minLength: 1
-                    pattern: ^[0-9A-Za-z_-]+$
+                              limit:
+                                description: Limit - Max requests per 5 minutes from a single IP
+                                format: int64
+                                maximum: 2000000000
+                                minimum: 100
+                                type: integer
+                            required:
+                              - limit
+                            type: object
+                          sizeConstraint:
+                            description: SizeConstraint - Match based on request component size
+                            properties:
+                              comparisonOperator:
+                                description: ComparisonOperator - Comparison operator to use
+                                enum:
+                                  - EQ
+                                  - NE
+                                  - LE
+                                  - LT
+                                  - GE
+                                  - GT
+                                type: string
+                              fieldToMatch:
+                                description: FieldToMatch - Part of the request to inspect
+                                maxProperties: 1
+                                minProperties: 1
+                                properties:
+                                  body:
+                                    description: Body matches the request body
+                                    type: boolean
+                                  method:
+                                    description: Method matches the HTTP method
+                                    type: boolean
+                                  queryString:
+                                    description: QueryString matches the query string
+                                    type: boolean
+                                  singleHeader:
+                                    description: SingleHeader matches a specific header by name
+                                    type: string
+                                  uriPath:
+                                    description: UriPath matches the URI path
+                                    type: boolean
+                                type: object
+                              size:
+                                description: Size - Size in bytes to compare against (0 to 21,474,836,480)
+                                format: int64
+                                maximum: 21474836480
+                                minimum: 0
+                                type: integer
+                              textTransformations:
+                                description: TextTransformations - Transformations to apply before size check
+                                items:
+                                  properties:
+                                    priority:
+                                      description: Priority determines the order of transformations (lower = first)
+                                      format: int32
+                                      minimum: 0
+                                      type: integer
+                                    type:
+                                      description: Type of transformation
+                                      enum:
+                                        - NONE
+                                        - COMPRESS_WHITE_SPACE
+                                        - HTML_ENTITY_DECODE
+                                        - LOWERCASE
+                                        - CMD_LINE
+                                        - URL_DECODE
+                                        - BASE64_DECODE
+                                        - HEX_DECODE
+                                        - MD5
+                                        - REPLACE_COMMENTS
+                                        - ESCAPE_SEQ_DECODE
+                                        - SQL_HEX_DECODE
+                                        - CSS_DECODE
+                                        - JS_DECODE
+                                        - NORMALIZE_PATH
+                                        - NORMALIZE_PATH_WIN
+                                        - REMOVE_NULLS
+                                        - REPLACE_NULLS
+                                        - BASE64_DECODE_EXT
+                                        - URL_DECODE_UNI
+                                        - UTF8_TO_UNICODE
+                                      type: string
+                                  required:
+                                    - priority
+                                    - type
+                                  type: object
+                                minItems: 1
+                                type: array
+                            required:
+                              - comparisonOperator
+                              - fieldToMatch
+                              - size
+                              - textTransformations
+                            type: object
+                        type: object
+                      visibilityConfig:
+                        description: VisibilityConfig for rule-specific metrics
+                        properties:
+                          cloudWatchMetricsEnabled:
+                            default: true
+                            description: CloudWatchMetricsEnabled enables CloudWatch metrics
+                            type: boolean
+                          metricName:
+                            description: MetricName for CloudWatch (must be unique)
+                            maxLength: 128
+                            minLength: 1
+                            pattern: ^[0-9A-Za-z_-]+$
+                            type: string
+                          sampledRequestsEnabled:
+                            default: true
+                            description: SampledRequestsEnabled enables request sampling in AWS console
+                            type: boolean
+                        required:
+                          - cloudWatchMetricsEnabled
+                          - metricName
+                          - sampledRequestsEnabled
+                        type: object
+                    required:
+                      - name
+                      - priority
+                      - statement
+                    type: object
+                  maxItems: 100
+                  type: array
+                tokenDomains:
+                  description: TokenDomains - Domains for cross-site CAPTCHA/Challenge token validation
+                  items:
                     type: string
-                  sampledRequestsEnabled:
-                    default: true
-                    description: SampledRequestsEnabled enables request sampling in
-                      AWS console
-                    type: boolean
-                required:
-                - cloudWatchMetricsEnabled
-                - metricName
-                - sampledRequestsEnabled
-                type: object
-            required:
-            - defaultAction
-            - visibilityConfig
-            type: object
-          status:
-            description: status defines the observed state of AwsWebAcl
-            properties:
-              arn:
-                description: ARN of the WebACL
-                type: string
-              capacity:
-                description: Capacity units consumed by the WebACL
-                format: int64
-                type: integer
-              conditions:
-                description: List of status conditions to indicate the status of a
-                  AwsWebAcl.
-                items:
-                  description: Condition contains details for one aspect of the current
-                    state of this API Resource.
+                  maxItems: 10
+                  type: array
+                visibilityConfig:
+                  description: VisibilityConfig defines CloudWatch metrics and request sampling
                   properties:
-                    lastTransitionTime:
-                      description: |-
-                        lastTransitionTime is the last time the condition transitioned from one status to another.
-                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
-                      format: date-time
-                      type: string
-                    message:
-                      description: |-
-                        message is a human readable message indicating details about the transition.
-                        This may be an empty string.
-                      maxLength: 32768
-                      type: string
-                    observedGeneration:
-                      description: |-
-                        observedGeneration represents the .metadata.generation that the condition was set based upon.
-                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
-                        with respect to the current state of the instance.
-                      format: int64
-                      minimum: 0
-                      type: integer
-                    reason:
-                      description: |-
-                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
-                        Producers of specific condition types may define expected values and meanings for this field,
-                        and whether the values are considered a guaranteed API.
-                        The value should be a CamelCase string.
-                        This field may not be empty.
-                      maxLength: 1024
+                    cloudWatchMetricsEnabled:
+                      default: true
+                      description: CloudWatchMetricsEnabled enables CloudWatch metrics
+                      type: boolean
+                    metricName:
+                      description: MetricName for CloudWatch (must be unique)
+                      maxLength: 128
                       minLength: 1
-                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      pattern: ^[0-9A-Za-z_-]+$
                       type: string
-                    status:
-                      description: status of the condition, one of True, False, Unknown.
-                      enum:
-                      - "True"
-                      - "False"
-                      - Unknown
-                      type: string
-                    type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                      maxLength: 316
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
-                      type: string
+                    sampledRequestsEnabled:
+                      default: true
+                      description: SampledRequestsEnabled enables request sampling in AWS console
+                      type: boolean
                   required:
-                  - lastTransitionTime
-                  - message
-                  - reason
-                  - status
-                  - type
+                    - cloudWatchMetricsEnabled
+                    - metricName
+                    - sampledRequestsEnabled
                   type: object
-                type: array
-                x-kubernetes-list-map-keys:
-                - type
-                x-kubernetes-list-type: map
-              observedGeneration:
-                format: int64
-                type: integer
-              state:
-                type: string
-            type: object
-        required:
-        - spec
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
+              required:
+                - defaultAction
+                - visibilityConfig
+              type: object
+            status:
+              description: status defines the observed state of AwsWebAcl
+              properties:
+                arn:
+                  description: ARN of the WebACL
+                  type: string
+                capacity:
+                  description: Capacity units consumed by the WebACL
+                  format: int64
+                  type: integer
+                conditions:
+                  description: List of status conditions to indicate the status of a AwsWebAcl.
+                  items:
+                    description: Condition contains details for one aspect of the current state of this API Resource.
+                    properties:
+                      lastTransitionTime:
+                        description: |-
+                          lastTransitionTime is the last time the condition transitioned from one status to another.
+                          This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                        format: date-time
+                        type: string
+                      message:
+                        description: |-
+                          message is a human readable message indicating details about the transition.
+                          This may be an empty string.
+                        maxLength: 32768
+                        type: string
+                      observedGeneration:
+                        description: |-
+                          observedGeneration represents the .metadata.generation that the condition was set based upon.
+                          For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                          with respect to the current state of the instance.
+                        format: int64
+                        minimum: 0
+                        type: integer
+                      reason:
+                        description: |-
+                          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                          Producers of specific condition types may define expected values and meanings for this field,
+                          and whether the values are considered a guaranteed API.
+                          The value should be a CamelCase string.
+                          This field may not be empty.
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                        type: string
+                      status:
+                        description: status of the condition, one of True, False, Unknown.
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                        type: string
+                      type:
+                        description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                        type: string
+                    required:
+                      - lastTransitionTime
+                      - message
+                      - reason
+                      - status
+                      - type
+                    type: object
+                  type: array
+                  x-kubernetes-list-map-keys:
+                    - type
+                  x-kubernetes-list-type: map
+                observedGeneration:
+                  format: int64
+                  type: integer
+                state:
+                  type: string
+              type: object
+          required:
+            - spec
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
