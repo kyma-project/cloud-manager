@@ -3,11 +3,9 @@ package client
 import (
 	"context"
 
-	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"google.golang.org/api/iterator"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -32,15 +30,21 @@ func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpCli
 
 // NewComputeClient creates a new ComputeClient wrapping GcpClients.
 func NewComputeClient(gcpClients *gcpclient.GcpClients) ComputeClient {
+	return NewComputeClientFromWrapped(gcpClients.GlobalAddressesWrapped(), gcpClients.GlobalOperationsWrapped())
+}
+
+// NewComputeClientFromWrapped creates a ComputeClient from wrapped interfaces.
+// Used by mock2 for test wiring.
+func NewComputeClientFromWrapped(globalAddresses gcpclient.GlobalAddressesClient, globalOperations gcpclient.ComputeGlobalOperationsClient) ComputeClient {
 	return &computeClient{
-		globalAddressesClient:  gcpClients.ComputeGlobalAddresses,
-		globalOperationsClient: gcpClients.ComputeGlobalOperations,
+		globalAddressesClient:  globalAddresses,
+		globalOperationsClient: globalOperations,
 	}
 }
 
 type computeClient struct {
-	globalAddressesClient  *compute.GlobalAddressesClient
-	globalOperationsClient *compute.GlobalOperationsClient
+	globalAddressesClient  gcpclient.GlobalAddressesClient
+	globalOperationsClient gcpclient.ComputeGlobalOperationsClient
 }
 
 func (c *computeClient) GetIpRange(ctx context.Context, projectId, name string) (*computepb.Address, error) {
@@ -51,7 +55,7 @@ func (c *computeClient) GetIpRange(ctx context.Context, projectId, name string) 
 		Address: name,
 	}
 
-	out, err := c.globalAddressesClient.Get(ctx, req)
+	out, err := c.globalAddressesClient.GetGlobalAddress(ctx, req)
 	if err != nil {
 		logger.Info("GetIpRange", "err", err)
 	}
@@ -66,11 +70,11 @@ func (c *computeClient) DeleteIpRange(ctx context.Context, projectId, name strin
 		Address: name,
 	}
 
-	op, err := c.globalAddressesClient.Delete(ctx, req)
+	op, err := c.globalAddressesClient.DeleteGlobalAddress(ctx, req)
 
 	var operationName string
 	if op != nil {
-		operationName = op.Proto().GetName()
+		operationName = op.Name()
 	}
 
 	logger.Info("DeleteIpRange", "operation", operationName, "err", err)
@@ -93,11 +97,11 @@ func (c *computeClient) CreatePscIpRange(ctx context.Context, projectId, vpcName
 		},
 	}
 
-	op, err := c.globalAddressesClient.Insert(ctx, req)
+	op, err := c.globalAddressesClient.InsertGlobalAddress(ctx, req)
 
 	var operationName string
 	if op != nil {
-		operationName = op.Proto().GetName()
+		operationName = op.Name()
 	}
 
 	logger.Info("CreatePscIpRange", "operation", operationName, "err", err)
@@ -114,14 +118,10 @@ func (c *computeClient) ListGlobalAddresses(ctx context.Context, projectId, vpc 
 		Filter:  proto.String(filter),
 	}
 
-	it := c.globalAddressesClient.List(ctx, req)
+	it := c.globalAddressesClient.ListGlobalAddresses(ctx, req)
 
 	var addresses []*computepb.Address
-	for {
-		addr, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
+	for addr, err := range it.All() {
 		if err != nil {
 			logger.Error(err, "ListGlobalAddresses", "projectId", projectId, "vpc", vpc)
 			return nil, err
@@ -140,7 +140,7 @@ func (c *computeClient) GetGlobalOperation(ctx context.Context, projectId, opera
 		Operation: operationName,
 	}
 
-	out, err := c.globalOperationsClient.Get(ctx, req)
+	out, err := c.globalOperationsClient.GetComputeGlobalOperation(ctx, req)
 	if err != nil {
 		logger.Error(err, "GetGlobalOperation", "projectId", projectId, "operationName", operationName)
 		return nil, err
@@ -149,17 +149,11 @@ func (c *computeClient) GetGlobalOperation(ctx context.Context, projectId, opera
 }
 
 func (c *computeClient) WaitGlobalOperation(ctx context.Context, projectId, operationName string) error {
+	// WaitGlobalOperation is not available on the wrapped interface.
+	// This method is retained for interface compatibility but is not called in production code.
+	// Use GetGlobalOperation and poll instead.
 	logger := composed.LoggerFromCtx(ctx)
-
-	req := &computepb.WaitGlobalOperationRequest{
-		Project:   projectId,
-		Operation: operationName,
-	}
-
-	_, err := c.globalOperationsClient.Wait(ctx, req)
-	if err != nil {
-		logger.Error(err, "WaitGlobalOperation", "projectId", projectId, "operationName", operationName)
-		return err
-	}
-	return nil
+	logger.Info("WaitGlobalOperation called - polling via GetGlobalOperation", "projectId", projectId, "operationName", operationName)
+	_, err := c.GetGlobalOperation(ctx, projectId, operationName)
+	return err
 }

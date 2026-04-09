@@ -3,6 +3,7 @@ package mock2
 import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
@@ -39,6 +40,8 @@ type Providers interface {
 	NfsInstanceV2Provider() gcpclient.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient]
 	NfsBackupV2Provider() gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
 	NfsRestoreV2Provider() gcpclient.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient]
+	IpRangeComputeProvider() gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient]
+	IpRangeServiceNetworkingProvider() gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient]
 	// all others feature's providers as they are refactored to switch using these new GCP clients
 }
 

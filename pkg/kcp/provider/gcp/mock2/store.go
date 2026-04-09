@@ -95,6 +95,7 @@ var _ gcpclient.RedisInstanceClient = (*store)(nil)
 var _ gcpclient.RedisClusterClient = (*store)(nil)
 var _ gcpclient.NetworkConnectivityClient = (*store)(nil)
 var _ gcpclient.ResourceManagerClient = (*store)(nil)
+var _ gcpclient.ServiceNetworkingClient = (*store)(nil)
 
 func (s *store) ProjectId() string {
 	return s.projectId

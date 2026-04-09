@@ -104,10 +104,10 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().IpRangeSkrProvider(),
 		infra.AzureMock().IpRangeProvider(),
-		infra.GcpMock().ServiceNetworkingClientProviderGcp(), // v3: NEW pattern (GcpClientProvider)
-		infra.GcpMock().ComputeClientProviderGcp(),           // v3: NEW pattern (GcpClientProvider)
-		infra.GcpMock().ServiceNetworkingClientProvider(),    // v2: OLD pattern (ClientProvider)
-		infra.GcpMock().OldComputeClientProvider(),           // v2: OLD pattern (ClientProvider)
+		infra.GcpMock2().IpRangeServiceNetworkingProvider(), // v3: NEW pattern (GcpClientProvider) via mock2
+		infra.GcpMock2().IpRangeComputeProvider(),           // v3: NEW pattern (GcpClientProvider) via mock2
+		infra.GcpMock().ServiceNetworkingClientProvider(),   // v2: OLD pattern (ClientProvider)
+		infra.GcpMock().OldComputeClientProvider(),          // v2: OLD pattern (ClientProvider)
 		infra.SapMock().IpRangeProvider(),
 		env,
 	)).NotTo(HaveOccurred())

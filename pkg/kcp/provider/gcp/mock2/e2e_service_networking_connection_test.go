@@ -23,7 +23,7 @@ func TestE2EServiceNetworkingConnection(t *testing.T) {
 
 		con := s.createPsaConnectionOK(net.GetSelfLink(), addr.GetSelfLink())
 		require.Len(t, con.ReservedPeeringRanges, 1)
-		require.Equal(t, []string{addr.GetSelfLink()}, con.ReservedPeeringRanges)
+		require.Equal(t, []string{addr.GetName()}, con.ReservedPeeringRanges)
 
 		// second address
 		addr2 := s.createPsaRangeOK(net.GetSelfLink(), "test-address-2", "10.252.0.0", 16)
@@ -36,7 +36,7 @@ func TestE2EServiceNetworkingConnection(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, arr, 1)
 		require.Len(t, arr[0].ReservedPeeringRanges, 2)
-		require.Equal(t, []string{addr.GetSelfLink(), addr2.GetSelfLink()}, arr[0].ReservedPeeringRanges)
+		require.Equal(t, []string{addr.GetName(), addr2.GetName()}, arr[0].ReservedPeeringRanges)
 
 		// delete
 

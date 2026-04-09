@@ -169,10 +169,10 @@ func (s *store) CreateFilestoreInstance(ctx context.Context, req *filestorepb.Cr
 			return netName.EqualString(item.Obj.Network)
 		}).
 		FilterByCallback(func(item FilterableListItem[*servicenetworking.Connection]) bool {
-			return pie.Contains(item.Obj.ReservedPeeringRanges, addr.GetSelfLink())
+			return pie.Contains(item.Obj.ReservedPeeringRanges, addrName.ResourceId())
 		})
 	if serviceConnections.Len() == 0 {
-		return nil, gcpmeta.NewNotFoundError("service connection in network %s linked to address %s not found", netName.String(), addr.GetSelfLink())
+		return nil, gcpmeta.NewNotFoundError("service connection in network %s linked to address %s not found", netName.String(), addrName.ResourceId())
 	}
 
 	// validate file shares
