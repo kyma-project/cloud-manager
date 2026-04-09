@@ -127,6 +127,12 @@ type AwsWebAclSpec struct {
 	// ChallengeConfig - Global default Challenge immunity time
 	// +optional
 	ChallengeConfig *AwsWebAclChallengeConfig `json:"challengeConfig,omitempty"`
+
+	// AssociationConfig - Custom request body size limits for protected resources
+	// Note: ALB and AppSync are fixed at 8KB and cannot be customized
+	// This config only applies to: CLOUDFRONT, API_GATEWAY, COGNITO_USER_POOL, APP_RUNNER_SERVICE, VERIFIED_ACCESS_INSTANCE
+	// +optional
+	AssociationConfig *AwsWebAclAssociationConfig `json:"associationConfig,omitempty"`
 }
 
 type AwsWebAclRule struct {
@@ -373,6 +379,27 @@ type AwsWebAclChallengeConfig struct {
 	// +kubebuilder:validation:Minimum=60
 	// +kubebuilder:validation:Maximum=259200
 	ImmunityTime int64 `json:"immunityTime"`
+}
+
+// AwsWebAclAssociationConfig specifies custom request body inspection limits
+// Note: ALB and AppSync are fixed at 8KB. This only applies to CloudFront, API Gateway, etc.
+type AwsWebAclAssociationConfig struct {
+	// RequestBody - Map of resource type to body size limit
+	// Valid keys: CLOUDFRONT, API_GATEWAY, COGNITO_USER_POOL, APP_RUNNER_SERVICE, VERIFIED_ACCESS_INSTANCE
+	// Note: ALB and AppSync always use 8KB and cannot be configured here
+	// +optional
+	RequestBody map[string]AwsWebAclRequestBodyConfig `json:"requestBody,omitempty"`
+}
+
+// AwsWebAclRequestBodyConfig defines request body inspection limits
+type AwsWebAclRequestBodyConfig struct {
+	// DefaultSizeInspectionLimit - Maximum body size to inspect
+	// Valid values: KB_8, KB_16, KB_32, KB_48, KB_64
+	// Default is KB_16 (16384 bytes) for configurable resources
+	// ALB/AppSync are always KB_8 (8192 bytes) regardless of this setting
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=KB_8;KB_16;KB_32;KB_48;KB_64
+	DefaultSizeInspectionLimit string `json:"defaultSizeInspectionLimit"`
 }
 
 type AwsWebAclExcludedRule struct {

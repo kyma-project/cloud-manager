@@ -54,6 +54,10 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		input.ChallengeConfig = convertChallengeConfig(webAcl.Spec.ChallengeConfig)
 	}
 
+	if webAcl.Spec.AssociationConfig != nil {
+		input.AssociationConfig = convertAssociationConfig(webAcl.Spec.AssociationConfig)
+	}
+
 	// Update WebACL
 	err := state.awsClient.UpdateWebACL(ctx, input)
 
