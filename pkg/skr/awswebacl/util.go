@@ -272,6 +272,12 @@ func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement) (*wafv2
 		count++
 	}
 
+	if stmt.LabelMatch != nil {
+		labelStmt := convertLabelMatchStatement(stmt.LabelMatch)
+		statement.LabelMatchStatement = labelStmt
+		count++
+	}
+
 	if count == 0 {
 		return nil, fmt.Errorf("statement must have exactly one condition set")
 	}
@@ -676,4 +682,11 @@ func convertNotStatement(not *cloudresourcesv1beta1.AwsWebAclNotStatement) (*waf
 	return &wafv2types.NotStatement{
 		Statement: converted,
 	}, nil
+}
+
+func convertLabelMatchStatement(labelMatch *cloudresourcesv1beta1.AwsWebAclLabelMatchStatement) *wafv2types.LabelMatchStatement {
+	return &wafv2types.LabelMatchStatement{
+		Key:   ptr.To(labelMatch.Key),
+		Scope: wafv2types.LabelMatchScope(labelMatch.Scope),
+	}
 }

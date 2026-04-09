@@ -508,6 +508,30 @@ spec:
         metricName: advanced-threat-detection
         sampledRequestsEnabled: true
 
+    # ============================================================
+    # RULE 16: LABEL MATCH - Block based on labels from previous rules
+    # ============================================================
+    # This rule demonstrates label-based filtering, matching requests
+    # that have been labeled by previous rules. Useful for creating
+    # rule chains where earlier rules classify traffic and later rules
+    # take action based on those classifications.
+    - name: block-labeled-threats
+      priority: 17
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      # Block if request has been labeled as "block:high-risk-combined" by Rule 12
+      statement:
+        labelMatch:
+          key: "block:high-risk-combined"
+          scope: "LABEL"  # LABEL = exact match, NAMESPACE = prefix match
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-labeled-threats
+        sampledRequestsEnabled: true
+
 ---
 # ====================
 # API FIELD REFERENCE
@@ -557,9 +581,10 @@ spec:
 # - rateBased: { limit: int64, forwardedIPConfig: {...} }
 # - byteMatch: { searchString, positionalConstraint, fieldToMatch, textTransformations }
 # - managedRuleGroup: { vendorName, name, version, excludedRules, managedRuleGroupConfigs, ruleActionOverrides }
+# - labelMatch: { key: "label:name", scope: "LABEL" | "NAMESPACE" }  # Match based on labels from previous rules
 # - and: { statements: [...] }  # Logical AND (min 2 statements, all must match)
-# - OrStatement: { statements: [...] }   # Logical OR (min 2 statements, at least one must match)
-# - NotStatement: { statement: {...} }   # Logical NOT (negates nested statement)
+# - or: { statements: [...] }   # Logical OR (min 2 statements, at least one must match)
+# - not: { statement: {...} }   # Logical NOT (negates nested statement)
 #
 # LOGICAL OPERATORS:
 # - Statements can be nested arbitrarily deep

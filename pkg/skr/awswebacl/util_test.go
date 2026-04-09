@@ -985,3 +985,47 @@ func TestConvertStatementWithLogicalOperators(t *testing.T) {
 		assert.NotNil(t, result.NotStatement)
 	})
 }
+
+func TestConvertLabelMatchStatement(t *testing.T) {
+	t.Run("LabelMatch with LABEL scope", func(t *testing.T) {
+		labelMatch := &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
+			Key:   "aws:acl:block-high-risk",
+			Scope: "LABEL",
+		}
+
+		result := convertLabelMatchStatement(labelMatch)
+		assert.NotNil(t, result)
+		assert.Equal(t, "aws:acl:block-high-risk", *result.Key)
+		assert.Equal(t, wafv2types.LabelMatchScopeLabel, result.Scope)
+	})
+
+	t.Run("LabelMatch with NAMESPACE scope", func(t *testing.T) {
+		labelMatch := &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
+			Key:   "aws:acl",
+			Scope: "NAMESPACE",
+		}
+
+		result := convertLabelMatchStatement(labelMatch)
+		assert.NotNil(t, result)
+		assert.Equal(t, "aws:acl", *result.Key)
+		assert.Equal(t, wafv2types.LabelMatchScopeNamespace, result.Scope)
+	})
+}
+
+func TestConvertStatementWithLabelMatch(t *testing.T) {
+	t.Run("Statement with LabelMatch", func(t *testing.T) {
+		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			LabelMatch: &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
+				Key:   "protection:advanced-logic",
+				Scope: "LABEL",
+			},
+		}
+
+		result, err := convertStatement(stmt)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.LabelMatchStatement)
+		assert.Equal(t, "protection:advanced-logic", *result.LabelMatchStatement.Key)
+		assert.Equal(t, wafv2types.LabelMatchScopeLabel, result.LabelMatchStatement.Scope)
+	})
+}

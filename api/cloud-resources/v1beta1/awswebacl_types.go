@@ -275,6 +275,25 @@ type AwsWebAclRuleStatement struct {
 	// Not - Logical NOT - negates the nested statement
 	// +optional
 	Not *AwsWebAclNotStatement `json:"not,omitempty"`
+
+	// LabelMatch - Match based on labels added by previous rules
+	// +optional
+	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+}
+
+type AwsWebAclLabelMatchStatement struct {
+	// Key - Label key to match against (e.g., "aws:acl:name" or namespace like "aws:acl")
+	// Can include namespace specifications separated by colons
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=1024
+	// +kubebuilder:validation:Pattern=`^[0-9A-Za-z_\-:]+$`
+	Key string `json:"key"`
+
+	// Scope - Match scope: "LABEL" (full label) or "NAMESPACE" (namespace prefix)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=LABEL;NAMESPACE
+	Scope string `json:"scope"`
 }
 
 type AwsWebAclIPSetStatement struct {

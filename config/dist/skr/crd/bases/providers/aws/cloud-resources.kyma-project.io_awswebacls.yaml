@@ -625,6 +625,29 @@ spec:
                           required:
                           - ipAddresses
                           type: object
+                        labelMatch:
+                          description: LabelMatch - Match based on labels added by
+                            previous rules
+                          properties:
+                            key:
+                              description: |-
+                                Key - Label key to match against (e.g., "aws:acl:name" or namespace like "aws:acl")
+                                Can include namespace specifications separated by colons
+                              maxLength: 1024
+                              minLength: 1
+                              pattern: ^[0-9A-Za-z_\-:]+$
+                              type: string
+                            scope:
+                              description: 'Scope - Match scope: "LABEL" (full label)
+                                or "NAMESPACE" (namespace prefix)'
+                              enum:
+                              - LABEL
+                              - NAMESPACE
+                              type: string
+                          required:
+                          - key
+                          - scope
+                          type: object
                         managedRuleGroup:
                           description: ManagedRuleGroup - Use AWS-managed rule sets
                           properties:
