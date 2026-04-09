@@ -97,7 +97,7 @@ var _ = Describe("AwsWebAcl Controller", func() {
 		By("When AwsWebAcl is created", func() {
 			// Create with comprehensive spec similar to the sample CRD
 			awsWebAcl.Spec = cloudresourcesv1beta1.AwsWebAclSpec{
-				DefaultAction: cloudresourcesv1beta1.AwsWebAclDefaultActionAllow,
+				DefaultAction: cloudresourcesv1beta1.DefaultActionAllow(),
 				Description:   "Web ACL for test application with AWS managed rule sets",
 				VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
 					CloudWatchMetricsEnabled: true,
@@ -106,9 +106,9 @@ var _ = Describe("AwsWebAcl Controller", func() {
 				},
 				Rules: []cloudresourcesv1beta1.AwsWebAclRule{
 					{
-						Name:     "AWS-AWSManagedRulesBotControlRuleSet",
-						Priority: 0,
-						Action:   cloudresourcesv1beta1.AwsWebAclRuleActionCount,
+						Name:           "AWS-AWSManagedRulesBotControlRuleSet",
+						Priority:       0,
+						OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
 						Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 							ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 								VendorName: "AWS",
@@ -122,9 +122,9 @@ var _ = Describe("AwsWebAcl Controller", func() {
 						},
 					},
 					{
-						Name:     "AWS-AWSManagedRulesCommonRuleSet",
-						Priority: 1,
-						Action:   cloudresourcesv1beta1.AwsWebAclRuleActionCount,
+						Name:           "AWS-AWSManagedRulesCommonRuleSet",
+						Priority:       1,
+						OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
 						Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 							ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 								VendorName: "AWS",
@@ -190,7 +190,7 @@ var _ = Describe("AwsWebAcl Controller", func() {
 		By("When AwsWebAcl spec is updated to change DefaultAction", func() {
 			Eventually(Update).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAcl,
-					SetAwsWebAclDefaultAction(cloudresourcesv1beta1.AwsWebAclDefaultActionBlock),
+					SetAwsWebAclDefaultAction(cloudresourcesv1beta1.DefaultActionBlock()),
 				).Should(Succeed())
 
 		})
@@ -228,9 +228,9 @@ var _ = Describe("AwsWebAcl Controller", func() {
 			Eventually(Update).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAcl,
 					AddAwsWebAclRule(cloudresourcesv1beta1.AwsWebAclRule{
-						Name:     "AWS-AWSManagedRulesKnownBadInputsRuleSet",
-						Priority: 2,
-						Action:   cloudresourcesv1beta1.AwsWebAclRuleActionCount,
+						Name:           "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+						Priority:       2,
+						OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
 						Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 							ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 								VendorName: "AWS",

@@ -2,10 +2,11 @@ package awswebacl
 
 import (
 	"context"
-	"fmt"
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/utils/ptr"
 )
 
 func updateWebAcl(ctx context.Context, st composed.State) (error, context.Context) {
@@ -25,29 +26,36 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Updating AWS WebACL")
 
-	scope := ScopeRegional()
-
-	// Get ID from loaded WebACL in state
-	if state.awsWebAcl == nil || state.awsWebAcl.Id == nil {
-		return composed.LogErrorAndReturn(
-			fmt.Errorf("WebACL not loaded in state"),
-			"Cannot update WebACL without loaded state",
-			composed.StopWithRequeue,
-			ctx,
-		)
+	// Build UpdateWebACLInput
+	input := &wafv2.UpdateWebACLInput{
+		Name:             ptr.To(webAcl.Name),
+		Id:               state.awsWebAcl.Id,
+		Scope:            ScopeRegional(),
+		DefaultAction:    state.defaultAction,
+		Rules:            state.rules,
+		VisibilityConfig: state.visibilityConfig,
+		LockToken:        ptr.To(state.lockToken),
 	}
 
-	// Update WebACL in AWS
-	err := state.awsClient.UpdateWebACL(
-		ctx,
-		webAcl.Name,
-		*state.awsWebAcl.Id,
-		scope,
-		state.defaultAction,
-		state.rules,
-		state.visibilityConfig,
-		state.lockToken,
-	)
+	// Add optional fields from spec
+	if len(webAcl.Spec.TokenDomains) > 0 {
+		input.TokenDomains = webAcl.Spec.TokenDomains
+	}
+
+	if len(webAcl.Spec.CustomResponseBodies) > 0 {
+		input.CustomResponseBodies = convertCustomResponseBodies(webAcl.Spec.CustomResponseBodies)
+	}
+
+	if webAcl.Spec.CaptchaConfig != nil {
+		input.CaptchaConfig = convertCaptchaConfig(webAcl.Spec.CaptchaConfig)
+	}
+
+	if webAcl.Spec.ChallengeConfig != nil {
+		input.ChallengeConfig = convertChallengeConfig(webAcl.Spec.ChallengeConfig)
+	}
+
+	// Update WebACL
+	err := state.awsClient.UpdateWebACL(ctx, input)
 
 	if err != nil {
 		logger.Error(err, "Error updating WebACL")

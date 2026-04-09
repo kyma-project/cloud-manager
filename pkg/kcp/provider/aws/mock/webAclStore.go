@@ -3,7 +3,6 @@ package mock
 import (
 	"context"
 	"fmt"
-	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -11,6 +10,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	"github.com/google/uuid"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )

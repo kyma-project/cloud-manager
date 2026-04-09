@@ -13,7 +13,7 @@ type testAwsWebAclBuilder struct {
 func newTestAwsWebAclBuilder() *testAwsWebAclBuilder {
 	return &testAwsWebAclBuilder{
 		AwsWebAclBuilder: cloudresourcesv1beta1.NewAwsWebAclBuilder().
-			WithDefaultAction(cloudresourcesv1beta1.AwsWebAclDefaultActionAllow).
+			WithDefaultAction(cloudresourcesv1beta1.DefaultActionAllow()).
 			WithDescription("Test WebACL").
 			WithVisibilityConfig(&cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
 				CloudWatchMetricsEnabled: true,
@@ -58,12 +58,12 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 
 		canCreateSkr(
 			"AwsWebAcl can be created with Block default action",
-			newTestAwsWebAclBuilder().WithDefaultAction(cloudresourcesv1beta1.AwsWebAclDefaultActionBlock),
+			newTestAwsWebAclBuilder().WithDefaultAction(cloudresourcesv1beta1.DefaultActionBlock()),
 		)
 
 		canNotCreateSkr(
 			"AwsWebAcl cannot be created with invalid default action",
-			newTestAwsWebAclBuilder().WithDefaultAction("Invalid"),
+			newTestAwsWebAclBuilder().WithDefaultAction(cloudresourcesv1beta1.AwsWebAclDefaultAction{}), // Empty - neither Allow nor Block
 			"spec.defaultAction",
 		)
 
@@ -71,7 +71,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			"AwsWebAcl cannot be created without visibility config",
 			&testAwsWebAclBuilder{
 				AwsWebAclBuilder: cloudresourcesv1beta1.NewAwsWebAclBuilder().
-					WithDefaultAction(cloudresourcesv1beta1.AwsWebAclDefaultActionAllow),
+					WithDefaultAction(cloudresourcesv1beta1.DefaultActionAllow()),
 			},
 			"visibilityConfig",
 		)
@@ -84,7 +84,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:      "empty-statement",
 				Priority:  0,
-				Action:    cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:    cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{}, // Empty - no statement type
 			}),
 			"statement",
@@ -95,7 +95,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "multiple-statements",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 						IPAddresses: []string{"10.0.0.0/8"},
@@ -113,7 +113,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "ipset-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionAllow,
+				Action:   cloudresourcesv1beta1.RuleActionAllow(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 						IPAddresses: []string{"10.0.0.0/8", "192.168.0.0/16"},
@@ -127,7 +127,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "geo-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"CN", "RU"},
@@ -141,7 +141,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "rate-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit: 2000,
@@ -153,9 +153,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with single ManagedRuleGroup statement",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "managed-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionCount,
+				Name:           "managed-rule",
+				Priority:       0,
+				OverrideAction: cloudresourcesv1beta1.OverrideActionNone(), // Use OverrideAction for managed rules
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 						VendorName: "AWS",
@@ -170,13 +170,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "byte-match-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "../",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
 							QueryString: true,
+						},
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "NONE"},
 						},
 					},
 				},
@@ -191,12 +194,15 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "empty-field",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "test",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch:         cloudresourcesv1beta1.AwsWebAclFieldToMatch{}, // Empty
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "NONE"},
+						},
 					},
 				},
 			}),
@@ -208,7 +214,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "multiple-fields",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "test",
@@ -216,6 +222,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
 							UriPath:     true,
 							QueryString: true, // Two fields set
+						},
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "NONE"},
 						},
 					},
 				},
@@ -228,7 +237,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "mixed-fields",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "test",
@@ -236,6 +245,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
 							UriPath:      true,
 							SingleHeader: "user-agent", // Two fields set
+						},
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "NONE"},
 						},
 					},
 				},
@@ -248,13 +260,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "uri-path-match",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "/admin",
 						PositionalConstraint: "STARTS_WITH",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
 							UriPath: true,
+						},
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "LOWERCASE"},
 						},
 					},
 				},
@@ -266,13 +281,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "query-match",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "../",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
 							QueryString: true,
+						},
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "URL_DECODE"},
 						},
 					},
 				},
@@ -284,13 +302,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "method-match",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "DELETE",
 						PositionalConstraint: "EXACTLY",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
 							Method: true,
+						},
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "NONE"},
 						},
 					},
 				},
@@ -302,13 +323,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "header-match",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "bot",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
 							SingleHeader: "user-agent",
+						},
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "LOWERCASE"},
 						},
 					},
 				},
@@ -320,13 +344,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "body-match",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "<script>",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
 							Body: true,
+						},
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "HTML_ENTITY_DECODE"},
 						},
 					},
 				},
@@ -341,7 +368,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "allow-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionAllow,
+				Action:   cloudresourcesv1beta1.RuleActionAllow(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 						IPAddresses: []string{"10.0.0.0/8"},
@@ -355,7 +382,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "block-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 						IPAddresses: []string{"192.0.2.0/24"},
@@ -369,7 +396,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "count-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionCount,
+				Action:   cloudresourcesv1beta1.RuleActionCount(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit: 1000,
@@ -383,28 +410,13 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "captcha-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionCaptcha,
+				Action:   cloudresourcesv1beta1.RuleActionCaptcha(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"CN"},
 					},
 				},
 			}),
-		)
-
-		canNotCreateSkr(
-			"AwsWebAcl cannot be created with invalid action",
-			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "invalid-action",
-				Priority: 0,
-				Action:   "Invalid",
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{"10.0.0.0/8"},
-					},
-				},
-			}),
-			"action",
 		)
 	})
 
@@ -415,7 +427,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "empty-ips",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 						IPAddresses: []string{}, // Empty
@@ -430,7 +442,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "ipv4-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 						IPAddresses: []string{
@@ -448,7 +460,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "ipv6-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 						IPAddresses: []string{
@@ -465,7 +477,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "mixed-ip-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionAllow,
+				Action:   cloudresourcesv1beta1.RuleActionAllow(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 						IPAddresses: []string{
@@ -485,7 +497,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "low-rate",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit: 99,
@@ -500,7 +512,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "min-rate",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit: 100,
@@ -514,7 +526,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "normal-rate",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit: 2000,
@@ -532,7 +544,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				{
 					Name:     "rule-1-ipset",
 					Priority: 0,
-					Action:   cloudresourcesv1beta1.AwsWebAclRuleActionAllow,
+					Action:   cloudresourcesv1beta1.RuleActionAllow(),
 					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 						IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 							IPAddresses: []string{"10.0.0.0/8"},
@@ -542,7 +554,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				{
 					Name:     "rule-2-geo",
 					Priority: 1,
-					Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+					Action:   cloudresourcesv1beta1.RuleActionBlock(),
 					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 							CountryCodes: []string{"CN"},
@@ -552,7 +564,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				{
 					Name:     "rule-3-rate",
 					Priority: 2,
-					Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+					Action:   cloudresourcesv1beta1.RuleActionBlock(),
 					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 						RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 							Limit: 1000,
@@ -567,17 +579,17 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 
 		canChangeSkr(
 			"AwsWebAcl defaultAction can be changed from Allow to Block",
-			newTestAwsWebAclBuilder().WithDefaultAction(cloudresourcesv1beta1.AwsWebAclDefaultActionAllow),
+			newTestAwsWebAclBuilder().WithDefaultAction(cloudresourcesv1beta1.DefaultActionAllow()),
 			func(b Builder[*cloudresourcesv1beta1.AwsWebAcl]) {
-				b.(*testAwsWebAclBuilder).WithDefaultAction(cloudresourcesv1beta1.AwsWebAclDefaultActionBlock)
+				b.(*testAwsWebAclBuilder).WithDefaultAction(cloudresourcesv1beta1.DefaultActionBlock())
 			},
 		)
 
 		canChangeSkr(
 			"AwsWebAcl defaultAction can be changed from Block to Allow",
-			newTestAwsWebAclBuilder().WithDefaultAction(cloudresourcesv1beta1.AwsWebAclDefaultActionBlock),
+			newTestAwsWebAclBuilder().WithDefaultAction(cloudresourcesv1beta1.DefaultActionBlock()),
 			func(b Builder[*cloudresourcesv1beta1.AwsWebAcl]) {
-				b.(*testAwsWebAclBuilder).WithDefaultAction(cloudresourcesv1beta1.AwsWebAclDefaultActionAllow)
+				b.(*testAwsWebAclBuilder).WithDefaultAction(cloudresourcesv1beta1.DefaultActionAllow())
 			},
 		)
 	})
@@ -591,7 +603,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				b.(*testAwsWebAclBuilder).WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 					Name:     "new-rule",
 					Priority: 0,
-					Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+					Action:   cloudresourcesv1beta1.RuleActionBlock(),
 					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 						IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 							IPAddresses: []string{"10.0.0.0/8"},
@@ -606,7 +618,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "ipset-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionBlock,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 						IPAddresses: []string{"10.0.0.0/8"},
@@ -628,7 +640,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "action-rule",
 				Priority: 0,
-				Action:   cloudresourcesv1beta1.AwsWebAclRuleActionCount,
+				Action:   cloudresourcesv1beta1.RuleActionCount(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
 					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
 						IPAddresses: []string{"10.0.0.0/8"},
@@ -637,7 +649,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			}),
 			func(b Builder[*cloudresourcesv1beta1.AwsWebAcl]) {
 				webacl := b.Build()
-				webacl.Spec.Rules[0].Action = cloudresourcesv1beta1.AwsWebAclRuleActionBlock
+				webacl.Spec.Rules[0].Action = cloudresourcesv1beta1.RuleActionBlock()
 			},
 		)
 	})

@@ -41,3 +41,59 @@ func (b *AwsWebAclBuilder) WithRules(rules []AwsWebAclRule) *AwsWebAclBuilder {
 	b.AwsWebAcl.Spec.Rules = rules
 	return b
 }
+
+// DefaultActionAllow returns a simple Allow default action
+func DefaultActionAllow() AwsWebAclDefaultAction {
+	return AwsWebAclDefaultAction{
+		Allow: &AwsWebAclAllowAction{},
+	}
+}
+
+// DefaultActionBlock returns a simple Block default action
+func DefaultActionBlock() AwsWebAclDefaultAction {
+	return AwsWebAclDefaultAction{
+		Block: &AwsWebAclBlockAction{},
+	}
+}
+
+// RuleActionAllow returns a simple Allow rule action
+func RuleActionAllow() *AwsWebAclRuleActionType {
+	return &AwsWebAclRuleActionType{
+		Allow: &AwsWebAclAllowAction{},
+	}
+}
+
+// RuleActionBlock returns a simple Block rule action
+func RuleActionBlock() *AwsWebAclRuleActionType {
+	return &AwsWebAclRuleActionType{
+		Block: &AwsWebAclBlockAction{},
+	}
+}
+
+// RuleActionCount returns a simple Count rule action
+func RuleActionCount() *AwsWebAclRuleActionType {
+	return &AwsWebAclRuleActionType{
+		Count: &AwsWebAclCountAction{},
+	}
+}
+
+// RuleActionCaptcha returns a simple Captcha rule action
+func RuleActionCaptcha() *AwsWebAclRuleActionType {
+	return &AwsWebAclRuleActionType{
+		Captcha: &AwsWebAclCaptchaAction{},
+	}
+}
+
+// OverrideActionNone returns a None override action (don't override)
+func OverrideActionNone() *AwsWebAclOverrideAction {
+	return &AwsWebAclOverrideAction{
+		None: &AwsWebAclNoneAction{},
+	}
+}
+
+// OverrideActionCount returns a Count override action (override all to count)
+func OverrideActionCount() *AwsWebAclOverrideAction {
+	return &AwsWebAclOverrideAction{
+		Count: &AwsWebAclCountAction{},
+	}
+}

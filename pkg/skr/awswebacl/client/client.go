@@ -9,9 +9,9 @@ import (
 )
 
 type Client interface {
-	CreateWebACL(ctx context.Context, name, description string, scope wafv2types.Scope, defaultAction *wafv2types.DefaultAction, rules []wafv2types.Rule, visibilityConfig *wafv2types.VisibilityConfig, tags []wafv2types.Tag) (*wafv2types.WebACL, string, error)
+	CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error)
 	GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error)
-	UpdateWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, defaultAction *wafv2types.DefaultAction, rules []wafv2types.Rule, visibilityConfig *wafv2types.VisibilityConfig, lockToken string) error
+	UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error
 	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
 	ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error)
 }
@@ -34,16 +34,40 @@ type client struct {
 	wafv2Client awsclient.Wafv2Client
 }
 
-func (c *client) CreateWebACL(ctx context.Context, name, description string, scope wafv2types.Scope, defaultAction *wafv2types.DefaultAction, rules []wafv2types.Rule, visibilityConfig *wafv2types.VisibilityConfig, tags []wafv2types.Tag) (*wafv2types.WebACL, string, error) {
-	return c.wafv2Client.CreateWebACL(ctx, name, description, scope, defaultAction, rules, visibilityConfig, tags)
+func (c *client) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error) {
+	description := ""
+	if input.Description != nil {
+		description = *input.Description
+	}
+	// Call underlying client which builds its own input from parameters
+	return c.wafv2Client.CreateWebACL(
+		ctx,
+		*input.Name,
+		description,
+		input.Scope,
+		input.DefaultAction,
+		input.Rules,
+		input.VisibilityConfig,
+		input.Tags,
+	)
 }
 
 func (c *client) GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error) {
 	return c.wafv2Client.GetWebACL(ctx, name, id, scope)
 }
 
-func (c *client) UpdateWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, defaultAction *wafv2types.DefaultAction, rules []wafv2types.Rule, visibilityConfig *wafv2types.VisibilityConfig, lockToken string) error {
-	return c.wafv2Client.UpdateWebACL(ctx, name, id, scope, defaultAction, rules, visibilityConfig, lockToken)
+func (c *client) UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error {
+	// Call underlying client which builds its own input from parameters
+	return c.wafv2Client.UpdateWebACL(
+		ctx,
+		*input.Name,
+		*input.Id,
+		input.Scope,
+		input.DefaultAction,
+		input.Rules,
+		input.VisibilityConfig,
+		*input.LockToken,
+	)
 }
 
 func (c *client) DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error {
