@@ -575,3 +575,59 @@ func TestConvertAssociationConfig(t *testing.T) {
 		assert.Nil(t, result)
 	})
 }
+
+func TestConvertRuleLabels(t *testing.T) {
+	t.Run("With multiple labels", func(t *testing.T) {
+		labels := []cloudresourcesv1beta1.AwsWebAclLabel{
+			{Name: "label:one"},
+			{Name: "label:two"},
+			{Name: "namespace:production"},
+		}
+		result := convertRuleLabels(labels)
+		assert.NotNil(t, result)
+		assert.Len(t, result, 3)
+		assert.Equal(t, "label:one", *result[0].Name)
+		assert.Equal(t, "label:two", *result[1].Name)
+		assert.Equal(t, "namespace:production", *result[2].Name)
+	})
+
+	t.Run("With empty labels returns nil", func(t *testing.T) {
+		result := convertRuleLabels([]cloudresourcesv1beta1.AwsWebAclLabel{})
+		assert.Nil(t, result)
+	})
+}
+
+func TestConvertRuleActionTypeWithChallenge(t *testing.T) {
+	t.Run("Challenge action", func(t *testing.T) {
+		actionType := &cloudresourcesv1beta1.AwsWebAclRuleActionType{
+			Challenge: &cloudresourcesv1beta1.AwsWebAclChallengeAction{},
+		}
+		result, err := convertRuleActionType(actionType)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Nil(t, result.Allow)
+		assert.Nil(t, result.Block)
+		assert.Nil(t, result.Count)
+		assert.Nil(t, result.Captcha)
+		assert.NotNil(t, result.Challenge)
+	})
+
+	t.Run("Challenge action with custom request handling", func(t *testing.T) {
+		actionType := &cloudresourcesv1beta1.AwsWebAclRuleActionType{
+			Challenge: &cloudresourcesv1beta1.AwsWebAclChallengeAction{
+				CustomRequestHandling: &cloudresourcesv1beta1.AwsWebAclCustomRequestHandling{
+					InsertHeaders: []cloudresourcesv1beta1.AwsWebAclCustomHTTPHeader{
+						{Name: "X-Challenge-Passed", Value: "true"},
+					},
+				},
+			},
+		}
+		result, err := convertRuleActionType(actionType)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.Challenge)
+		assert.NotNil(t, result.Challenge.CustomRequestHandling)
+		assert.Len(t, result.Challenge.CustomRequestHandling.InsertHeaders, 1)
+		assert.Equal(t, "X-Challenge-Passed", *result.Challenge.CustomRequestHandling.InsertHeaders[0].Name)
+	})
+}
