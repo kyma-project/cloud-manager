@@ -631,3 +631,95 @@ func TestConvertRuleActionTypeWithChallenge(t *testing.T) {
 		assert.Equal(t, "X-Challenge-Passed", *result.Challenge.CustomRequestHandling.InsertHeaders[0].Name)
 	})
 }
+
+func TestConvertRuleWithPerRuleConfigs(t *testing.T) {
+	t.Run("Rule with per-rule CaptchaConfig overrides global", func(t *testing.T) {
+		rule := cloudresourcesv1beta1.AwsWebAclRule{
+			Name:     "captcha-rule-with-override",
+			Priority: 10,
+			Action:   cloudresourcesv1beta1.RuleActionCaptcha(),
+			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+					CountryCodes: []string{"US"},
+				},
+			},
+			CaptchaConfig: &cloudresourcesv1beta1.AwsWebAclCaptchaConfig{
+				ImmunityTime: 300, // 5 minutes override
+			},
+		}
+		result, err := convertRule(rule)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.CaptchaConfig)
+		assert.Equal(t, int64(300), *result.CaptchaConfig.ImmunityTimeProperty.ImmunityTime)
+	})
+
+	t.Run("Rule with per-rule ChallengeConfig overrides global", func(t *testing.T) {
+		rule := cloudresourcesv1beta1.AwsWebAclRule{
+			Name:     "challenge-rule-with-override",
+			Priority: 20,
+			Action:   cloudresourcesv1beta1.RuleActionChallenge(),
+			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+					CountryCodes: []string{"CN"},
+				},
+			},
+			ChallengeConfig: &cloudresourcesv1beta1.AwsWebAclChallengeConfig{
+				ImmunityTime: 600, // 10 minutes override
+			},
+		}
+		result, err := convertRule(rule)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.ChallengeConfig)
+		assert.Equal(t, int64(600), *result.ChallengeConfig.ImmunityTimeProperty.ImmunityTime)
+	})
+
+	t.Run("Rule with both per-rule configs", func(t *testing.T) {
+		rule := cloudresourcesv1beta1.AwsWebAclRule{
+			Name:     "rule-with-both-configs",
+			Priority: 30,
+			Action:   cloudresourcesv1beta1.RuleActionCount(),
+			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+					Limit: 2000,
+				},
+			},
+			CaptchaConfig: &cloudresourcesv1beta1.AwsWebAclCaptchaConfig{
+				ImmunityTime: 300,
+			},
+			ChallengeConfig: &cloudresourcesv1beta1.AwsWebAclChallengeConfig{
+				ImmunityTime: 600,
+			},
+			RuleLabels: []cloudresourcesv1beta1.AwsWebAclLabel{
+				{Name: "rate-limited"},
+			},
+		}
+		result, err := convertRule(rule)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.CaptchaConfig)
+		assert.NotNil(t, result.ChallengeConfig)
+		assert.Len(t, result.RuleLabels, 1)
+		assert.Equal(t, int64(300), *result.CaptchaConfig.ImmunityTimeProperty.ImmunityTime)
+		assert.Equal(t, int64(600), *result.ChallengeConfig.ImmunityTimeProperty.ImmunityTime)
+	})
+
+	t.Run("Rule without per-rule configs has nil", func(t *testing.T) {
+		rule := cloudresourcesv1beta1.AwsWebAclRule{
+			Name:     "simple-rule",
+			Priority: 40,
+			Action:   cloudresourcesv1beta1.RuleActionAllow(),
+			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+					CountryCodes: []string{"US"},
+				},
+			},
+		}
+		result, err := convertRule(rule)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Nil(t, result.CaptchaConfig)
+		assert.Nil(t, result.ChallengeConfig)
+	})
+}

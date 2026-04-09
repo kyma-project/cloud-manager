@@ -68,6 +68,16 @@ func convertRule(rule cloudresourcesv1beta1.AwsWebAclRule) (*wafv2types.Rule, er
 		wafRule.RuleLabels = convertRuleLabels(rule.RuleLabels)
 	}
 
+	// Convert per-rule CaptchaConfig if present (overrides global)
+	if rule.CaptchaConfig != nil {
+		wafRule.CaptchaConfig = convertCaptchaConfig(rule.CaptchaConfig)
+	}
+
+	// Convert per-rule ChallengeConfig if present (overrides global)
+	if rule.ChallengeConfig != nil {
+		wafRule.ChallengeConfig = convertChallengeConfig(rule.ChallengeConfig)
+	}
+
 	// Validate: exactly one of Action or OverrideAction must be set
 	if rule.Action != nil && rule.OverrideAction != nil {
 		return nil, fmt.Errorf("rule %s: cannot set both action and overrideAction", rule.Name)

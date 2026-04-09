@@ -166,6 +166,14 @@ type AwsWebAclRule struct {
 	// +kubebuilder:validation:MaxItems=100
 	RuleLabels []AwsWebAclLabel `json:"ruleLabels,omitempty"`
 
+	// CaptchaConfig - Per-rule CAPTCHA immunity time override (overrides global setting)
+	// +optional
+	CaptchaConfig *AwsWebAclCaptchaConfig `json:"captchaConfig,omitempty"`
+
+	// ChallengeConfig - Per-rule Challenge immunity time override (overrides global setting)
+	// +optional
+	ChallengeConfig *AwsWebAclChallengeConfig `json:"challengeConfig,omitempty"`
+
 	// VisibilityConfig for rule-specific metrics
 	// +optional
 	VisibilityConfig *AwsWebAclVisibilityConfig `json:"visibilityConfig,omitempty"`
