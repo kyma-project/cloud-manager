@@ -245,6 +245,33 @@ func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement) (*wafv2
 		count++
 	}
 
+	if stmt.And != nil {
+		andStmt, err := convertAndStatement(stmt.And)
+		if err != nil {
+			return nil, err
+		}
+		statement.AndStatement = andStmt
+		count++
+	}
+
+	if stmt.Or != nil {
+		orStmt, err := convertOrStatement(stmt.Or)
+		if err != nil {
+			return nil, err
+		}
+		statement.OrStatement = orStmt
+		count++
+	}
+
+	if stmt.Not != nil {
+		notStmt, err := convertNotStatement(stmt.Not)
+		if err != nil {
+			return nil, err
+		}
+		statement.NotStatement = notStmt
+		count++
+	}
+
 	if count == 0 {
 		return nil, fmt.Errorf("statement must have exactly one condition set")
 	}
@@ -596,4 +623,57 @@ func convertRuleLabels(labels []cloudresourcesv1beta1.AwsWebAclLabel) []wafv2typ
 		})
 	}
 	return result
+}
+
+func convertAndStatement(and *cloudresourcesv1beta1.AwsWebAclAndStatement) (*wafv2types.AndStatement, error) {
+	if and == nil || len(and.Statements) < 2 {
+		return nil, fmt.Errorf("and statement requires at least 2 nested statements")
+	}
+
+	statements := make([]wafv2types.Statement, 0, len(and.Statements))
+	for i, stmt := range and.Statements {
+		converted, err := convertStatement(stmt)
+		if err != nil {
+			return nil, fmt.Errorf("error converting and statement[%d]: %w", i, err)
+		}
+		statements = append(statements, *converted)
+	}
+
+	return &wafv2types.AndStatement{
+		Statements: statements,
+	}, nil
+}
+
+func convertOrStatement(or *cloudresourcesv1beta1.AwsWebAclOrStatement) (*wafv2types.OrStatement, error) {
+	if or == nil || len(or.Statements) < 2 {
+		return nil, fmt.Errorf("or statement requires at least 2 nested statements")
+	}
+
+	statements := make([]wafv2types.Statement, 0, len(or.Statements))
+	for i, stmt := range or.Statements {
+		converted, err := convertStatement(stmt)
+		if err != nil {
+			return nil, fmt.Errorf("error converting or statement[%d]: %w", i, err)
+		}
+		statements = append(statements, *converted)
+	}
+
+	return &wafv2types.OrStatement{
+		Statements: statements,
+	}, nil
+}
+
+func convertNotStatement(not *cloudresourcesv1beta1.AwsWebAclNotStatement) (*wafv2types.NotStatement, error) {
+	if not == nil {
+		return nil, fmt.Errorf("not statement cannot be nil")
+	}
+
+	converted, err := convertStatement(not.Statement)
+	if err != nil {
+		return nil, fmt.Errorf("error converting not statement: %w", err)
+	}
+
+	return &wafv2types.NotStatement{
+		Statement: converted,
+	}, nil
 }

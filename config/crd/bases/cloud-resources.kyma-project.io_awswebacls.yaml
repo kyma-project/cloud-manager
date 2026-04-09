@@ -475,6 +475,19 @@ spec:
                       maxProperties: 1
                       minProperties: 1
                       properties:
+                        and:
+                          description: And - Logical AND - all nested statements must
+                            match
+                          properties:
+                            statements:
+                              description: Statements to combine with AND logic (min
+                                2)
+                              items: {}
+                              minItems: 2
+                              type: array
+                          required:
+                          - statements
+                          type: object
                         byteMatch:
                           description: ByteMatch - Match specific patterns in requests
                           properties:
@@ -709,6 +722,27 @@ spec:
                           required:
                           - name
                           - vendorName
+                          type: object
+                        not:
+                          description: Not - Logical NOT - negates the nested statement
+                          properties:
+                            statement:
+                              description: Statement to negate
+                          required:
+                          - statement
+                          type: object
+                        or:
+                          description: Or - Logical OR - at least one nested statement
+                            must match
+                          properties:
+                            statements:
+                              description: Statements to combine with OR logic (min
+                                2)
+                              items: {}
+                              minItems: 2
+                              type: array
+                          required:
+                          - statements
                           type: object
                         rateBased:
                           description: RateBased - Rate limiting per IP
