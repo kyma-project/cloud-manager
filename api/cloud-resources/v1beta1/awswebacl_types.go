@@ -279,6 +279,32 @@ type AwsWebAclRuleStatement struct {
 	// LabelMatch - Match based on labels added by previous rules
 	// +optional
 	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+
+	// SizeConstraint - Match based on request component size
+	// +optional
+	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+}
+
+type AwsWebAclSizeConstraintStatement struct {
+	// ComparisonOperator - Comparison operator to use
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=EQ;NE;LE;LT;GE;GT
+	ComparisonOperator string `json:"comparisonOperator"`
+
+	// Size - Size in bytes to compare against (0 to 21,474,836,480)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=21474836480
+	Size int64 `json:"size"`
+
+	// FieldToMatch - Part of the request to inspect
+	// +kubebuilder:validation:Required
+	FieldToMatch AwsWebAclFieldToMatch `json:"fieldToMatch"`
+
+	// TextTransformations - Transformations to apply before size check
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
 }
 
 type AwsWebAclLabelMatchStatement struct {

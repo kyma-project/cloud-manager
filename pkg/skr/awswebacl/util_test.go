@@ -1029,3 +1029,70 @@ func TestConvertStatementWithLabelMatch(t *testing.T) {
 		assert.Equal(t, wafv2types.LabelMatchScopeLabel, result.LabelMatchStatement.Scope)
 	})
 }
+
+func TestConvertSizeConstraintStatement(t *testing.T) {
+	t.Run("SizeConstraint with GT operator", func(t *testing.T) {
+		sizeConstraint := &cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement{
+			ComparisonOperator: "GT",
+			Size:               8192,
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				QueryString: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "NONE"},
+			},
+		}
+
+		result, err := convertSizeConstraintStatement(sizeConstraint)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, wafv2types.ComparisonOperatorGt, result.ComparisonOperator)
+		assert.Equal(t, int64(8192), result.Size)
+		assert.NotNil(t, result.FieldToMatch.QueryString)
+		assert.Len(t, result.TextTransformations, 1)
+	})
+
+	t.Run("SizeConstraint with LE operator on body", func(t *testing.T) {
+		sizeConstraint := &cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement{
+			ComparisonOperator: "LE",
+			Size:               1024,
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				Body: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "COMPRESS_WHITE_SPACE"},
+			},
+		}
+
+		result, err := convertSizeConstraintStatement(sizeConstraint)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, wafv2types.ComparisonOperatorLe, result.ComparisonOperator)
+		assert.Equal(t, int64(1024), result.Size)
+		assert.NotNil(t, result.FieldToMatch.Body)
+	})
+}
+
+func TestConvertStatementWithSizeConstraint(t *testing.T) {
+	t.Run("Statement with SizeConstraint", func(t *testing.T) {
+		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			SizeConstraint: &cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement{
+				ComparisonOperator: "GT",
+				Size:               10000,
+				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+					UriPath: true,
+				},
+				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+					{Priority: 0, Type: "URL_DECODE"},
+				},
+			},
+		}
+
+		result, err := convertStatement(stmt)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.SizeConstraintStatement)
+		assert.Equal(t, wafv2types.ComparisonOperatorGt, result.SizeConstraintStatement.ComparisonOperator)
+		assert.Equal(t, int64(10000), result.SizeConstraintStatement.Size)
+	})
+}
