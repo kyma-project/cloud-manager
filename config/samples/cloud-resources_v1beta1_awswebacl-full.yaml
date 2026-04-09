@@ -1,0 +1,573 @@
+# Complete AwsWebAcl Example with All Features
+# ============================================
+# This example demonstrates every available field in the AwsWebAcl CRD including:
+# - All statement types (IPSet, GeoMatch, RateBased, ByteMatch, ManagedRuleGroup)
+# - All action types (Allow, Block, Count, Captcha, Challenge)
+# - Custom request handling and custom responses
+# - Rule labels for advanced filtering
+# - Per-rule immunity time overrides
+# - Association config for request body inspection limits
+# - Token domains for CAPTCHA/Challenge
+# - Custom response bodies
+
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsWebAcl
+metadata:
+  name: comprehensive-webacl-example
+  namespace: default
+  labels:
+    app: my-application
+    environment: production
+    team: security
+
+spec:
+  # ====================
+  # DEFAULT ACTION (Required)
+  # ====================
+  # What to do when no rules match - exactly one of allow or block must be set
+  defaultAction:
+    allow: {}
+    # Alternatively use block with custom response:
+    # block:
+    #   customResponse:
+    #     responseCode: 403
+    #     customResponseBodyKey: "block-page"
+    #     responseHeaders:
+    #       - name: X-Custom-Header
+    #         value: blocked-by-waf
+
+  # ====================
+  # DESCRIPTION (Optional)
+  # ====================
+  description: "Production WebACL with comprehensive protection: bot control, geo-blocking, IP filtering, rate limiting, and custom pattern matching"
+
+  # ====================
+  # VISIBILITY CONFIG (Required)
+  # ====================
+  visibilityConfig:
+    cloudWatchMetricsEnabled: true
+    metricName: ComprehensiveWebAclMetrics
+    sampledRequestsEnabled: true
+
+  # ====================
+  # TOKEN DOMAINS (Optional, max 10)
+  # ====================
+  # Domains where CAPTCHA/Challenge tokens are valid (cross-domain support)
+  tokenDomains:
+    - example.com
+    - api.example.com
+    - www.example.com
+
+  # ====================
+  # CUSTOM RESPONSE BODIES (Optional)
+  # ====================
+  # Custom HTML/JSON content for block actions
+  customResponseBodies:
+    block-page:
+      contentType: TEXT_HTML
+      content: |
+        <html>
+          <head><title>Access Denied</title></head>
+          <body><h1>Access Denied</h1><p>Your request was blocked by our Web Application Firewall.</p></body>
+        </html>
+    json-errOrStatement:
+      contentType: APPLICATION_JSON
+      content: '{"error": "forbidden", "message": "Request blocked by WAF"}'
+
+  # ====================
+  # GLOBAL CAPTCHA CONFIG (Optional)
+  # ====================
+  # Default immunity time after passing CAPTCHA (60-259200 seconds)
+  captchaConfig:
+    immunityTime: 3600  # 1 hour
+
+  # ====================
+  # GLOBAL CHALLENGE CONFIG (Optional)
+  # ====================
+  # Default immunity time after passing Challenge (60-259200 seconds)
+  challengeConfig:
+    immunityTime: 7200  # 2 hours
+
+  # ====================
+  # ASSOCIATION CONFIG (Optional)
+  # ====================
+  # Custom request body size inspection limits per resource type
+  # NOTE: ALB and AppSync are fixed at 8KB and cannot be customized
+  # Valid resource types: CLOUDFRONT, API_GATEWAY, COGNITO_USER_POOL, APP_RUNNER_SERVICE, VERIFIED_ACCESS_INSTANCE
+  associationConfig:
+    requestBody:
+      CLOUDFRONT:
+        defaultSizeInspectionLimit: KB_32
+      API_GATEWAY:
+        defaultSizeInspectionLimit: KB_16
+      COGNITO_USER_POOL:
+        defaultSizeInspectionLimit: KB_8
+
+  # ====================
+  # RULES (Optional, max 100)
+  # ====================
+  rules:
+    # ============================================================
+    # RULE 1: IP SET with Rule Labels
+    # ============================================================
+    - name: allow-corporate-network
+      priority: 0
+      action:
+        allow:
+          customRequestHandling:
+            insertHeaders:
+              - name: X-Corporate-Network
+                value: "true"
+      statement:
+        ipSet:
+          ipAddresses:
+            - "10.0.0.0/8"
+            - "172.16.0.0/12"
+            - "192.168.0.0/16"
+            - "203.0.113.0/24"
+      # Apply labels to matching requests for use in subsequent rules
+      ruleLabels:
+        - name: "trusted:corporate"
+        - name: "source:internal"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: allow-corporate-network
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 2: GEO MATCH - Block with custom response
+    # ============================================================
+    - name: block-high-risk-countries
+      priority: 1
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: "block-page"
+            responseHeaders:
+              - name: X-Block-Reason
+                value: geo-restricted
+      statement:
+        geoMatch:
+          countryCodes:
+            - "CN"
+            - "RU"
+            - "KP"
+      ruleLabels:
+        - name: "block:geo-restricted"
+        - name: "severity:high"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-high-risk-countries
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 3: RATE BASED - Rate limiting
+    # ============================================================
+    - name: rate-limit-per-ip
+      priority: 2
+      action:
+        block:
+          customResponse:
+            responseCode: 429
+            customResponseBodyKey: "json-error"
+      statement:
+        rateBased:
+          limit: 2000
+      ruleLabels:
+        - name: "protection:rate-limit"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: rate-limit-per-ip
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 4: BYTE MATCH - Pattern in query string
+    # ============================================================
+    - name: block-path-traversal
+      priority: 3
+      action:
+        block: {}
+      statement:
+        byteMatch:
+          searchString: "../"
+          positionalConstraint: CONTAINS
+          fieldToMatch:
+            queryString: true
+          textTransformations:
+            - priority: 0
+              type: URL_DECODE
+            - priority: 1
+              type: LOWERCASE
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-path-traversal
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 5: BYTE MATCH - Header inspection
+    # ============================================================
+    - name: block-malicious-user-agents
+      priority: 4
+      action:
+        block: {}
+      statement:
+        byteMatch:
+          searchString: "sqlmap"
+          positionalConstraint: CONTAINS
+          fieldToMatch:
+            singleHeader: "user-agent"
+          textTransformations:
+            - priority: 0
+              type: LOWERCASE
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-malicious-user-agents
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 6: CAPTCHA with per-rule immunity override
+    # ============================================================
+    - name: captcha-challenge-suspicious-ips
+      priority: 5
+      action:
+        captcha:
+          customRequestHandling:
+            insertHeaders:
+              - name: X-Captcha-Passed
+                value: "true"
+      statement:
+        ipSet:
+          ipAddresses:
+            - "198.51.100.0/24"
+      # Override global CAPTCHA immunity time for this specific rule
+      captchaConfig:
+        immunityTime: 300  # 5 minutes (shorter for suspicious IPs)
+      ruleLabels:
+        - name: "challenge:captcha"
+        - name: "risk:medium"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: captcha-challenge-suspicious-ips
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 7: CHALLENGE action (silent bot verification)
+    # ============================================================
+    - name: challenge-bots
+      priority: 6
+      action:
+        challenge:
+          customRequestHandling:
+            insertHeaders:
+              - name: X-Challenge-Passed
+                value: "true"
+      statement:
+        rateBased:
+          limit: 500
+      # Override global Challenge immunity time for this rule
+      challengeConfig:
+        immunityTime: 600  # 10 minutes
+      ruleLabels:
+        - name: "challenge:silent-verification"
+        - name: "protection:bot-control"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: challenge-bots
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 8: COUNT action (monitoring mode)
+    # ============================================================
+    - name: monitor-admin-access
+      priority: 7
+      action:
+        count:
+          customRequestHandling:
+            insertHeaders:
+              - name: X-Admin-Access-Logged
+                value: "true"
+      statement:
+        byteMatch:
+          searchString: "/admin"
+          positionalConstraint: STARTS_WITH
+          fieldToMatch:
+            uriPath: true
+          textTransformations:
+            - priority: 0
+              type: LOWERCASE
+      ruleLabels:
+        - name: "monitOrStatement:admin-path"
+        - name: "action:count"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: monitor-admin-access
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 9: MANAGED RULE GROUP with OverrideAction
+    # ============================================================
+    - name: AWS-AWSManagedRulesBotControlRuleSet
+      priority: 10
+      # For managed rule groups, use OverrideAction instead of Action
+      overrideAction:
+        count: {}  # Override all rules in the group to Count (monitoring mode)
+        # Alternatively use none to keep the group's default actions:
+        # none: {}
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesBotControlRuleSet
+          version: ""  # Empty means latest version
+          excludedRules: []
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: AWS-AWSManagedRulesBotControlRuleSet
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 10: MANAGED RULE GROUP - OWASP Top 10
+    # ============================================================
+    - name: AWS-AWSManagedRulesCommonRuleSet
+      priority: 11
+      overrideAction:
+        none: {}  # Use the rule group's default actions
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesCommonRuleSet
+          version: ""
+          excludedRules: []
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: AWS-AWSManagedRulesCommonRuleSet
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 11: MANAGED RULE GROUP - SQL Injection with exclusions
+    # ============================================================
+    - name: AWS-AWSManagedRulesSQLiRuleSet
+      priority: 12
+      overrideAction:
+        none: {}
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesSQLiRuleSet
+          version: ""
+          # Exclude specific rules that cause false positives
+          excludedRules:
+            - name: SQLi_QUERYARGUMENTS
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: AWS-AWSManagedRulesSQLiRuleSet
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 12: LOGICAL AND - Block if ALL conditions match
+    # ============================================================
+    - name: block-high-risk-traffic
+      priority: 13
+      action:
+        block: {}
+      # Block if: (from CN OR RU) AND rate > 500 AND NOT from corporate network
+      statement:
+        AndStatement:
+          statements:
+            # First condition: Country is CN or RU
+            - OrStatement:
+                statements:
+                  - geoMatch:
+                      countryCodes: ["CN"]
+                  - geoMatch:
+                      countryCodes: ["RU"]
+            # Second condition: Rate exceeds limit
+            - rateBased:
+                limit: 500
+            # Third condition: NOT from corporate network
+            - NotStatement:
+                statement:
+                  ipSet:
+                    ipAddresses: ["10.0.0.0/8"]
+      ruleLabels:
+        - name: "protection:advanced-logic"
+        - name: "block:high-risk-combined"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-high-risk-traffic
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 13: LOGICAL OR - Block if ANY condition matches
+    # ============================================================
+    - name: block-multiple-threats
+      priority: 14
+      action:
+        block: {}
+      # Block if ANY of these match: suspicious UA OR path traversal OR high rate
+      statement:
+        OrStatement:
+          statements:
+            # Suspicious user agent
+            - byteMatch:
+                searchString: "sqlmap"
+                positionalConstraint: CONTAINS
+                fieldToMatch:
+                  singleHeader: "user-agent"
+                textTransformations:
+                  - priority: 0
+                    type: LOWERCASE
+            # Path traversal attempt
+            - byteMatch:
+                searchString: "../"
+                positionalConstraint: CONTAINS
+                fieldToMatch:
+                  queryString: true
+                textTransformations:
+                  - priority: 0
+                    type: URL_DECODE
+            # High rate
+            - rateBased:
+                limit: 100
+      ruleLabels:
+        - name: "protection:multi-threat"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-multiple-threats
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 14: LOGICAL NOT - Allow only trusted traffic
+    # ============================================================
+    - name: allow-only-trusted-sources
+      priority: 15
+      action:
+        block: {}
+      # Block if NOT from trusted sources (inverted logic: block everything except trusted)
+      statement:
+        NotStatement:
+          statement:
+            OrStatement:
+              statements:
+                # Trusted corporate network
+                - ipSet:
+                    ipAddresses: ["10.0.0.0/8", "172.16.0.0/12"]
+                # Trusted countries
+                - geoMatch:
+                    countryCodes: ["US", "GB", "DE"]
+      ruleLabels:
+        - name: "protection:inverted-logic"
+        - name: "allow:trusted-only"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: allow-only-trusted-sources
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 15: COMPLEX NESTED LOGIC
+    # ============================================================
+    - name: advanced-threat-detection
+      priority: 16
+      action:
+        captcha: {}
+      # CAPTCHA if: ((CN OR RU) AND rate > 200) OR (suspicious UA AND NOT from trusted IPs)
+      statement:
+        OrStatement:
+          statements:
+            # First branch: High-risk countries with moderate rate
+            - and:
+                statements:
+                  - OrStatement:
+                      statements:
+                        - geoMatch:
+                            countryCodes: ["CN"]
+                        - geoMatch:
+                            countryCodes: ["RU"]
+                  - rateBased:
+                      limit: 200
+            # Second branch: Suspicious user agent from untrusted IPs
+            - and:
+                statements:
+                  - byteMatch:
+                      searchString: "bot"
+                      positionalConstraint: CONTAINS
+                      fieldToMatch:
+                        singleHeader: "user-agent"
+                      textTransformations:
+                        - priority: 0
+                          type: LOWERCASE
+                  - NotStatement:
+                      statement:
+                        ipSet:
+                          ipAddresses: ["10.0.0.0/8"]
+      ruleLabels:
+        - name: "protection:complex-logic"
+        - name: "challenge:adaptive"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: advanced-threat-detection
+        sampledRequestsEnabled: true
+
+---
+# ====================
+# API FIELD REFERENCE
+# ====================
+#
+# REQUIRED FIELDS:
+# - spec.defaultAction (exactly one: allow or block)
+# - spec.visibilityConfig.cloudWatchMetricsEnabled (bool)
+# - spec.visibilityConfig.metricName (string, 1-128 chars)
+# - spec.visibilityConfig.sampledRequestsEnabled (bool)
+#
+# OPTIONAL TOP-LEVEL FIELDS:
+# - spec.description (string, max 256 chars)
+# - spec.rules[] (array, max 100)
+# - spec.tokenDomains[] (array, max 10)
+# - spec.customResponseBodies (map[string]AwsWebAclCustomResponseBody)
+# - spec.captchaConfig.immunityTime (int64, 60-259200 seconds)
+# - spec.challengeConfig.immunityTime (int64, 60-259200 seconds)
+# - spec.associationConfig.requestBody (map of resource type to size limit)
+#
+# RULE REQUIRED FIELDS:
+# - name (string, 1-128 chars, pattern: ^[0-9A-Za-z_-]+$)
+# - priority (int32, min 0, must be unique)
+# - action OR overrideAction (exactly one, mutually exclusive)
+# - statement (exactly one statement type)
+#
+# RULE OPTIONAL FIELDS:
+# - ruleLabels[] (array, max 100, name: 1-1024 chars)
+# - captchaConfig.immunityTime (overrides global)
+# - challengeConfig.immunityTime (overrides global)
+# - visibilityConfig (overrides WebACL-level)
+#
+# ACTION TYPES (for regular rules):
+# - allow: { customRequestHandling: { insertHeaders: [...] } }
+# - block: { customResponse: { responseCode, customResponseBodyKey, responseHeaders } }
+# - count: { customRequestHandling: { insertHeaders: [...] } }
+# - captcha: { customRequestHandling: { insertHeaders: [...] } }
+# - challenge: { customRequestHandling: { insertHeaders: [...] } }
+#
+# OVERRIDE ACTION TYPES (for managed rule groups):
+# - none: {}  # Don't override, use group's actions
+# - count: { customRequestHandling: { insertHeaders: [...] } }  # Override all to count
+#
+# STATEMENT TYPES (exactly one per rule):
+# - ipSet: { ipAddresses: [...] }
+# - geoMatch: { countryCodes: [...], forwardedIPConfig: {...} }
+# - rateBased: { limit: int64, forwardedIPConfig: {...} }
+# - byteMatch: { searchString, positionalConstraint, fieldToMatch, textTransformations }
+# - managedRuleGroup: { vendorName, name, version, excludedRules, managedRuleGroupConfigs, ruleActionOverrides }
+# - and: { statements: [...] }  # Logical AND (min 2 statements, all must match)
+# - OrStatement: { statements: [...] }   # Logical OR (min 2 statements, at least one must match)
+# - NotStatement: { statement: {...} }   # Logical NOT (negates nested statement)
+#
+# LOGICAL OPERATORS:
+# - Statements can be nested arbitrarily deep
+# - Example: and { or { geoMatch, geoMatch }, not { ipSet } }
+# - Use to create complex filtering rules with boolean logic
+# - Each nested statement follows the same rules (exactly one statement type)
+#
+# ASSOCIATION CONFIG SIZE LIMITS:
+# - KB_8, KB_16, KB_32, KB_48, KB_64
+#
+# NOTE: ALB and AppSync are fixed at KB_8 and cannot be customized
