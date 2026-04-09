@@ -316,6 +316,35 @@ spec:
                               - insertHeaders
                               type: object
                           type: object
+                        challenge:
+                          description: Challenge - Require silent challenge (similar
+                            to CAPTCHA but without visual puzzle)
+                          properties:
+                            customRequestHandling:
+                              description: CustomRequestHandling - Insert custom headers
+                                when challenge token is valid
+                              properties:
+                                insertHeaders:
+                                  description: InsertHeaders - Headers to insert into
+                                    the request
+                                  items:
+                                    properties:
+                                      name:
+                                        description: Name - Header name
+                                        type: string
+                                      value:
+                                        description: Value - Header value
+                                        type: string
+                                    required:
+                                    - name
+                                    - value
+                                    type: object
+                                  maxItems: 100
+                                  type: array
+                              required:
+                              - insertHeaders
+                              type: object
+                          type: object
                         count:
                           description: Count - Count the request but don't take action
                           properties:
@@ -394,6 +423,24 @@ spec:
                       format: int32
                       minimum: 0
                       type: integer
+                    ruleLabels:
+                      description: |-
+                        RuleLabels - Labels to apply to matching requests (max 100)
+                        Can be used with LabelMatchStatement in subsequent rules
+                      items:
+                        properties:
+                          name:
+                            description: Name - Label string (1-1024 chars, can contain
+                              alphanumeric, underscore, hyphen, colon)
+                            maxLength: 1024
+                            minLength: 1
+                            pattern: ^[0-9A-Za-z_\-:]+$
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      maxItems: 100
+                      type: array
                     statement:
                       description: Statement defines the match condition (exactly
                         one must be set)

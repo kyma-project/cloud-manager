@@ -160,6 +160,12 @@ type AwsWebAclRule struct {
 	// +kubebuilder:validation:Required
 	Statement AwsWebAclRuleStatement `json:"statement"`
 
+	// RuleLabels - Labels to apply to matching requests (max 100)
+	// Can be used with LabelMatchStatement in subsequent rules
+	// +optional
+	// +kubebuilder:validation:MaxItems=100
+	RuleLabels []AwsWebAclLabel `json:"ruleLabels,omitempty"`
+
 	// VisibilityConfig for rule-specific metrics
 	// +optional
 	VisibilityConfig *AwsWebAclVisibilityConfig `json:"visibilityConfig,omitempty"`
@@ -185,6 +191,10 @@ type AwsWebAclRuleActionType struct {
 	// Captcha - Require CAPTCHA challenge
 	// +optional
 	Captcha *AwsWebAclCaptchaAction `json:"captcha,omitempty"`
+
+	// Challenge - Require silent challenge (similar to CAPTCHA but without visual puzzle)
+	// +optional
+	Challenge *AwsWebAclChallengeAction `json:"challenge,omitempty"`
 }
 
 type AwsWebAclCountAction struct {
@@ -195,6 +205,12 @@ type AwsWebAclCountAction struct {
 
 type AwsWebAclCaptchaAction struct {
 	// CustomRequestHandling - Insert custom headers
+	// +optional
+	CustomRequestHandling *AwsWebAclCustomRequestHandling `json:"customRequestHandling,omitempty"`
+}
+
+type AwsWebAclChallengeAction struct {
+	// CustomRequestHandling - Insert custom headers when challenge token is valid
 	// +optional
 	CustomRequestHandling *AwsWebAclCustomRequestHandling `json:"customRequestHandling,omitempty"`
 }
@@ -465,6 +481,15 @@ type AwsWebAclFieldToMatch struct {
 	// Body matches the request body
 	// +optional
 	Body bool `json:"body,omitempty"`
+}
+
+type AwsWebAclLabel struct {
+	// Name - Label string (1-1024 chars, can contain alphanumeric, underscore, hyphen, colon)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=1024
+	// +kubebuilder:validation:Pattern=`^[0-9A-Za-z_\-:]+$`
+	Name string `json:"name"`
 }
 
 type AwsWebAclVisibilityConfig struct {

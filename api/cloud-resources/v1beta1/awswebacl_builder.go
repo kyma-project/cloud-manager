@@ -84,6 +84,13 @@ func RuleActionCaptcha() *AwsWebAclRuleActionType {
 	}
 }
 
+// RuleActionChallenge returns a simple Challenge rule action
+func RuleActionChallenge() *AwsWebAclRuleActionType {
+	return &AwsWebAclRuleActionType{
+		Challenge: &AwsWebAclChallengeAction{},
+	}
+}
+
 // OverrideActionNone returns a None override action (don't override)
 func OverrideActionNone() *AwsWebAclOverrideAction {
 	return &AwsWebAclOverrideAction{

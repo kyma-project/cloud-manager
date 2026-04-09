@@ -63,6 +63,11 @@ func convertRule(rule cloudresourcesv1beta1.AwsWebAclRule) (*wafv2types.Rule, er
 		VisibilityConfig: visibilityConfig,
 	}
 
+	// Convert RuleLabels if present
+	if len(rule.RuleLabels) > 0 {
+		wafRule.RuleLabels = convertRuleLabels(rule.RuleLabels)
+	}
+
 	// Validate: exactly one of Action or OverrideAction must be set
 	if rule.Action != nil && rule.OverrideAction != nil {
 		return nil, fmt.Errorf("rule %s: cannot set both action and overrideAction", rule.Name)
@@ -153,7 +158,16 @@ func convertRuleActionType(actionType *cloudresourcesv1beta1.AwsWebAclRuleAction
 		return result, nil
 	}
 
-	return nil, fmt.Errorf("action must have one of allow, block, count, or captcha set")
+	if actionType.Challenge != nil {
+		challengeAction := &wafv2types.ChallengeAction{}
+		if actionType.Challenge.CustomRequestHandling != nil {
+			challengeAction.CustomRequestHandling = convertCustomRequestHandling(actionType.Challenge.CustomRequestHandling)
+		}
+		result.Challenge = challengeAction
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("action must have one of allow, block, count, captcha, or challenge set")
 }
 
 func convertOverrideAction(overrideAction *cloudresourcesv1beta1.AwsWebAclOverrideAction) (*wafv2types.OverrideAction, error) {
@@ -558,4 +572,18 @@ func convertAssociationConfig(config *cloudresourcesv1beta1.AwsWebAclAssociation
 	return &wafv2types.AssociationConfig{
 		RequestBody: requestBody,
 	}
+}
+
+func convertRuleLabels(labels []cloudresourcesv1beta1.AwsWebAclLabel) []wafv2types.Label {
+	if len(labels) == 0 {
+		return nil
+	}
+
+	result := make([]wafv2types.Label, 0, len(labels))
+	for _, label := range labels {
+		result = append(result, wafv2types.Label{
+			Name: ptr.To(label.Name),
+		})
+	}
+	return result
 }
