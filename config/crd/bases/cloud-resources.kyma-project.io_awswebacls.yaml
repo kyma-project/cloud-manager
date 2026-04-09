@@ -373,6 +373,34 @@ spec:
                               type: object
                           type: object
                       type: object
+                    captchaConfig:
+                      description: CaptchaConfig - Per-rule CAPTCHA immunity time
+                        override (overrides global setting)
+                      properties:
+                        immunityTime:
+                          description: ImmunityTime - Seconds a client is exempt after
+                            solving CAPTCHA (60-259200)
+                          format: int64
+                          maximum: 259200
+                          minimum: 60
+                          type: integer
+                      required:
+                      - immunityTime
+                      type: object
+                    challengeConfig:
+                      description: ChallengeConfig - Per-rule Challenge immunity time
+                        override (overrides global setting)
+                      properties:
+                        immunityTime:
+                          description: ImmunityTime - Seconds a client is exempt after
+                            passing Challenge (60-259200)
+                          format: int64
+                          maximum: 259200
+                          minimum: 60
+                          type: integer
+                      required:
+                      - immunityTime
+                      type: object
                     name:
                       description: Name must be unique within the WebACL
                       maxLength: 128
