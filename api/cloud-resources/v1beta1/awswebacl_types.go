@@ -263,6 +263,18 @@ type AwsWebAclRuleStatement struct {
 	// ByteMatch - Match specific patterns in requests
 	// +optional
 	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+
+	// And - Logical AND - all nested statements must match
+	// +optional
+	And *AwsWebAclAndStatement `json:"and,omitempty"`
+
+	// Or - Logical OR - at least one nested statement must match
+	// +optional
+	Or *AwsWebAclOrStatement `json:"or,omitempty"`
+
+	// Not - Logical NOT - negates the nested statement
+	// +optional
+	Not *AwsWebAclNotStatement `json:"not,omitempty"`
 }
 
 type AwsWebAclIPSetStatement struct {
@@ -517,6 +529,32 @@ type AwsWebAclVisibilityConfig struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=true
 	SampledRequestsEnabled bool `json:"sampledRequestsEnabled"`
+}
+
+// AwsWebAclAndStatement - Logical AND operation combining multiple statements
+// All nested statements must match for the And statement to match
+type AwsWebAclAndStatement struct {
+	// Statements to combine with AND logic (min 2)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=2
+	Statements []AwsWebAclRuleStatement `json:"statements"`
+}
+
+// AwsWebAclOrStatement - Logical OR operation combining multiple statements
+// At least one nested statement must match for the Or statement to match
+type AwsWebAclOrStatement struct {
+	// Statements to combine with OR logic (min 2)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=2
+	Statements []AwsWebAclRuleStatement `json:"statements"`
+}
+
+// AwsWebAclNotStatement - Logical NOT operation negating a statement
+// Matches when the nested statement does NOT match
+type AwsWebAclNotStatement struct {
+	// Statement to negate
+	// +kubebuilder:validation:Required
+	Statement AwsWebAclRuleStatement `json:"statement"`
 }
 
 // AwsWebAclStatus defines the observed state of AwsWebAcl.
