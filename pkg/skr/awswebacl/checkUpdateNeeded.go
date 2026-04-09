@@ -25,20 +25,35 @@ func checkUpdateNeeded(ctx context.Context, st composed.State) (error, context.C
 		return nil, ctx
 	}
 
+	// Convert spec to AWS types for comparison
+	defaultAction, err := convertDefaultAction(webAcl.Spec.DefaultAction)
+	if err != nil {
+		state.updateNeeded = false
+		return nil, ctx
+	}
+
+	rules, err := convertRules(webAcl.Spec.Rules)
+	if err != nil {
+		state.updateNeeded = false
+		return nil, ctx
+	}
+
+	visibilityConfig := convertVisibilityConfig(webAcl.Spec.VisibilityConfig, webAcl.Name)
+
 	// Compare defaultAction
-	if !compareDefaultAction(state.awsWebAcl.DefaultAction, state.defaultAction) {
+	if !compareDefaultAction(state.awsWebAcl.DefaultAction, defaultAction) {
 		state.updateNeeded = true
 		return nil, ctx
 	}
 
 	// Compare visibilityConfig
-	if !compareVisibilityConfig(state.awsWebAcl.VisibilityConfig, state.visibilityConfig) {
+	if !compareVisibilityConfig(state.awsWebAcl.VisibilityConfig, visibilityConfig) {
 		state.updateNeeded = true
 		return nil, ctx
 	}
 
 	// Compare rules
-	if !compareRules(state.awsWebAcl.Rules, state.rules) {
+	if !compareRules(state.awsWebAcl.Rules, rules) {
 		state.updateNeeded = true
 		return nil, ctx
 	}

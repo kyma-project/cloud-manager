@@ -79,7 +79,6 @@ func (r *reconciler) newAction() composed.Action {
 				"awsWebAcl-create",
 				actions.AddCommonFinalizer(),
 				statusInitial,
-				buildWebAclConfig,
 				createWebAcl,
 				checkUpdateNeeded,
 				updateWebAcl,

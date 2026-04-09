@@ -21,14 +21,37 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Creating AWS WebACL")
 
+	// Convert spec to AWS types
+	defaultAction, err := convertDefaultAction(webAcl.Spec.DefaultAction)
+	if err != nil {
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+				acl.SetStatusProviderError(err.Error())
+			}).
+			OnSuccess(composed.Requeue).
+			Run(ctx, state.Cluster().K8sClient())
+	}
+
+	rules, err := convertRules(webAcl.Spec.Rules)
+	if err != nil {
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+				acl.SetStatusProviderError(err.Error())
+			}).
+			OnSuccess(composed.Requeue).
+			Run(ctx, state.Cluster().K8sClient())
+	}
+
+	visibilityConfig := convertVisibilityConfig(webAcl.Spec.VisibilityConfig, webAcl.Name)
+
 	// Build CreateWebACLInput
 	input := &wafv2.CreateWebACLInput{
 		Name:             ptr.To(webAcl.Name),
 		Description:      ptr.To(webAcl.Spec.Description),
 		Scope:            ScopeRegional(),
-		DefaultAction:    state.defaultAction,
-		Rules:            state.rules,
-		VisibilityConfig: state.visibilityConfig,
+		DefaultAction:    defaultAction,
+		Rules:            rules,
+		VisibilityConfig: visibilityConfig,
 		Tags:             convertTags(webAcl),
 	}
 

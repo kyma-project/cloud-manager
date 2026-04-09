@@ -17,15 +17,11 @@ type State struct {
 	awsClientProvider awsclient.SkrClientProvider[webaclclient.Client]
 	env               abstractions.Environment
 
-	awsClient         webaclclient.Client
-	roleName          string
-	awsWebAcl         *wafv2types.WebACL        // Loaded AWS WebACL
-	lockToken         string                    // Transient lock token from loadWebAcl, not persisted
-	defaultAction     *wafv2types.DefaultAction // Converted from spec
-	visibilityConfig  *wafv2types.VisibilityConfig
-	associationConfig *wafv2types.AssociationConfig
-	rules             []wafv2types.Rule
-	updateNeeded      bool // Whether update is needed based on spec vs AWS state
+	awsClient    webaclclient.Client
+	roleName     string
+	awsWebAcl    *wafv2types.WebACL // Loaded AWS WebACL
+	lockToken    string             // Transient lock token from loadWebAcl, not persisted
+	updateNeeded bool               // Whether update is needed based on spec vs AWS state
 }
 
 func newStateFactory(
