@@ -2,8 +2,11 @@ package awswebacl
 
 import (
 	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/utils/ptr"
 )
 
 func createWebAcl(ctx context.Context, st composed.State) (error, context.Context) {
@@ -18,20 +21,36 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Creating AWS WebACL")
 
-	// Determine scope
-	scope := ScopeRegional()
+	// Build CreateWebACLInput
+	input := &wafv2.CreateWebACLInput{
+		Name:             ptr.To(webAcl.Name),
+		Description:      ptr.To(webAcl.Spec.Description),
+		Scope:            ScopeRegional(),
+		DefaultAction:    state.defaultAction,
+		Rules:            state.rules,
+		VisibilityConfig: state.visibilityConfig,
+		Tags:             convertTags(webAcl),
+	}
 
-	// Create WebACL using config from state
-	createdWebACL, lockToken, err := state.awsClient.CreateWebACL(
-		ctx,
-		webAcl.Name,
-		webAcl.Spec.Description,
-		scope,
-		state.defaultAction,
-		state.rules,
-		state.visibilityConfig,
-		convertTags(webAcl),
-	)
+	// Add optional fields from state
+	if len(webAcl.Spec.TokenDomains) > 0 {
+		input.TokenDomains = webAcl.Spec.TokenDomains
+	}
+
+	if len(webAcl.Spec.CustomResponseBodies) > 0 {
+		input.CustomResponseBodies = convertCustomResponseBodies(webAcl.Spec.CustomResponseBodies)
+	}
+
+	if webAcl.Spec.CaptchaConfig != nil {
+		input.CaptchaConfig = convertCaptchaConfig(webAcl.Spec.CaptchaConfig)
+	}
+
+	if webAcl.Spec.ChallengeConfig != nil {
+		input.ChallengeConfig = convertChallengeConfig(webAcl.Spec.ChallengeConfig)
+	}
+
+	// Create WebACL
+	createdWebACL, lockToken, err := state.awsClient.CreateWebACL(ctx, input)
 	if err != nil {
 		logger.Error(err, "Error creating WebACL")
 

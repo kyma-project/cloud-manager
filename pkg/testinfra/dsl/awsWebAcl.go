@@ -10,8 +10,8 @@ func CreateAwsWebAcl(ctx context.Context, clnt client.Client, obj *cloudresource
 	NewObjActions(opts...).ApplyOnObject(obj)
 
 	// Set required fields if not already set
-	if obj.Spec.DefaultAction == "" {
-		obj.Spec.DefaultAction = cloudresourcesv1beta1.AwsWebAclDefaultActionAllow
+	if obj.Spec.DefaultAction.Allow == nil && obj.Spec.DefaultAction.Block == nil {
+		obj.Spec.DefaultAction = cloudresourcesv1beta1.DefaultActionAllow()
 	}
 	if obj.Spec.VisibilityConfig == nil {
 		obj.Spec.VisibilityConfig = &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{

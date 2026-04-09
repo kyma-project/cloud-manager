@@ -23,12 +23,64 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type AwsWebAclDefaultAction string
+// AwsWebAclDefaultAction defines the action when no rules match
+// Exactly one of Allow or Block must be set
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type AwsWebAclDefaultAction struct {
+	// Allow action - permit the request
+	// +optional
+	Allow *AwsWebAclAllowAction `json:"allow,omitempty"`
 
-const (
-	AwsWebAclDefaultActionAllow AwsWebAclDefaultAction = "Allow"
-	AwsWebAclDefaultActionBlock AwsWebAclDefaultAction = "Block"
-)
+	// Block action - block the request
+	// +optional
+	Block *AwsWebAclBlockAction `json:"block,omitempty"`
+}
+
+type AwsWebAclAllowAction struct {
+	// CustomRequestHandling - Insert custom headers into allowed requests
+	// +optional
+	CustomRequestHandling *AwsWebAclCustomRequestHandling `json:"customRequestHandling,omitempty"`
+}
+
+type AwsWebAclBlockAction struct {
+	// CustomResponse - Send custom response for blocked requests
+	// +optional
+	CustomResponse *AwsWebAclCustomResponse `json:"customResponse,omitempty"`
+}
+
+type AwsWebAclCustomRequestHandling struct {
+	// InsertHeaders - Headers to insert into the request
+	// +kubebuilder:validation:MaxItems=100
+	InsertHeaders []AwsWebAclCustomHTTPHeader `json:"insertHeaders"`
+}
+
+type AwsWebAclCustomResponse struct {
+	// CustomResponseBodyKey - Reference to custom response body in spec.customResponseBodies
+	// +optional
+	CustomResponseBodyKey string `json:"customResponseBodyKey,omitempty"`
+
+	// ResponseCode - HTTP status code to return (200-599)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=200
+	// +kubebuilder:validation:Maximum=599
+	ResponseCode int32 `json:"responseCode"`
+
+	// ResponseHeaders - Custom headers to include in response
+	// +optional
+	// +kubebuilder:validation:MaxItems=100
+	ResponseHeaders []AwsWebAclCustomHTTPHeader `json:"responseHeaders,omitempty"`
+}
+
+type AwsWebAclCustomHTTPHeader struct {
+	// Name - Header name
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Value - Header value
+	// +kubebuilder:validation:Required
+	Value string `json:"value"`
+}
 
 type AwsWebAclRuleAction string
 
@@ -43,8 +95,6 @@ const (
 type AwsWebAclSpec struct {
 	// DefaultAction specifies what to do when no rules match
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=Allow;Block
-	// +kubebuilder:default=Allow
 	DefaultAction AwsWebAclDefaultAction `json:"defaultAction"`
 
 	// Description provides context about the WebACL purpose
@@ -60,6 +110,23 @@ type AwsWebAclSpec struct {
 	// VisibilityConfig defines CloudWatch metrics and request sampling
 	// +kubebuilder:validation:Required
 	VisibilityConfig *AwsWebAclVisibilityConfig `json:"visibilityConfig"`
+
+	// CustomResponseBodies - Custom response content for block actions
+	// +optional
+	CustomResponseBodies map[string]AwsWebAclCustomResponseBody `json:"customResponseBodies,omitempty"`
+
+	// TokenDomains - Domains for cross-site CAPTCHA/Challenge token validation
+	// +optional
+	// +kubebuilder:validation:MaxItems=10
+	TokenDomains []string `json:"tokenDomains,omitempty"`
+
+	// CaptchaConfig - Global default CAPTCHA immunity time
+	// +optional
+	CaptchaConfig *AwsWebAclCaptchaConfig `json:"captchaConfig,omitempty"`
+
+	// ChallengeConfig - Global default Challenge immunity time
+	// +optional
+	ChallengeConfig *AwsWebAclChallengeConfig `json:"challengeConfig,omitempty"`
 }
 
 type AwsWebAclRule struct {
@@ -75,10 +142,13 @@ type AwsWebAclRule struct {
 	// +kubebuilder:validation:Minimum=0
 	Priority int32 `json:"priority"`
 
-	// Action when rule matches
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=Allow;Block;Count;Captcha
-	Action AwsWebAclRuleAction `json:"action"`
+	// Action when rule matches (use for regular rules, mutually exclusive with OverrideAction)
+	// +optional
+	Action *AwsWebAclRuleActionType `json:"action,omitempty"`
+
+	// OverrideAction for managed rule groups (mutually exclusive with Action)
+	// +optional
+	OverrideAction *AwsWebAclOverrideAction `json:"overrideAction,omitempty"`
 
 	// Statement defines the match condition (exactly one must be set)
 	// +kubebuilder:validation:Required
@@ -87,6 +157,58 @@ type AwsWebAclRule struct {
 	// VisibilityConfig for rule-specific metrics
 	// +optional
 	VisibilityConfig *AwsWebAclVisibilityConfig `json:"visibilityConfig,omitempty"`
+}
+
+// AwsWebAclRuleActionType represents the action to take when a rule matches
+// Exactly one action type must be set
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type AwsWebAclRuleActionType struct {
+	// Allow - Permit the request
+	// +optional
+	Allow *AwsWebAclAllowAction `json:"allow,omitempty"`
+
+	// Block - Block the request
+	// +optional
+	Block *AwsWebAclBlockAction `json:"block,omitempty"`
+
+	// Count - Count the request but don't take action
+	// +optional
+	Count *AwsWebAclCountAction `json:"count,omitempty"`
+
+	// Captcha - Require CAPTCHA challenge
+	// +optional
+	Captcha *AwsWebAclCaptchaAction `json:"captcha,omitempty"`
+}
+
+type AwsWebAclCountAction struct {
+	// CustomRequestHandling - Insert custom headers
+	// +optional
+	CustomRequestHandling *AwsWebAclCustomRequestHandling `json:"customRequestHandling,omitempty"`
+}
+
+type AwsWebAclCaptchaAction struct {
+	// CustomRequestHandling - Insert custom headers
+	// +optional
+	CustomRequestHandling *AwsWebAclCustomRequestHandling `json:"customRequestHandling,omitempty"`
+}
+
+// AwsWebAclOverrideAction for managed rule groups
+// Exactly one action type must be set
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type AwsWebAclOverrideAction struct {
+	// None - Don't override, use the rule group's action
+	// +optional
+	None *AwsWebAclNoneAction `json:"none,omitempty"`
+
+	// Count - Override all rules to Count
+	// +optional
+	Count *AwsWebAclCountAction `json:"count,omitempty"`
+}
+
+type AwsWebAclNoneAction struct {
+	// No fields - empty struct
 }
 
 // +kubebuilder:validation:MinProperties=1
@@ -127,6 +249,22 @@ type AwsWebAclGeoMatchStatement struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
 	CountryCodes []string `json:"countryCodes"`
+
+	// ForwardedIPConfig for inspecting geo location from forwarded IP headers
+	// +optional
+	ForwardedIPConfig *AwsWebAclForwardedIPConfig `json:"forwardedIPConfig,omitempty"`
+}
+
+type AwsWebAclForwardedIPConfig struct {
+	// HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9._$-]+$`
+	HeaderName string `json:"headerName"`
+
+	// FallbackBehavior when header is missing or invalid
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=MATCH;NO_MATCH
+	FallbackBehavior string `json:"fallbackBehavior"`
 }
 
 type AwsWebAclRateBasedStatement struct {
@@ -135,6 +273,10 @@ type AwsWebAclRateBasedStatement struct {
 	// +kubebuilder:validation:Minimum=100
 	// +kubebuilder:validation:Maximum=2000000000
 	Limit int64 `json:"limit"`
+
+	// ForwardedIPConfig for rate limiting based on forwarded IP headers
+	// +optional
+	ForwardedIPConfig *AwsWebAclForwardedIPConfig `json:"forwardedIPConfig,omitempty"`
 }
 
 type AwsWebAclManagedRuleGroupStatement struct {
@@ -159,6 +301,78 @@ type AwsWebAclManagedRuleGroupStatement struct {
 	// ExcludedRules to disable specific rules within the managed group
 	// +optional
 	ExcludedRules []AwsWebAclExcludedRule `json:"excludedRules,omitempty"`
+
+	// ManagedRuleGroupConfigs for ATP/ACFP/Bot Control configuration
+	// +optional
+	ManagedRuleGroupConfigs []AwsWebAclManagedRuleGroupConfig `json:"managedRuleGroupConfigs,omitempty"`
+
+	// RuleActionOverrides to override actions for specific rules
+	// +optional
+	RuleActionOverrides []AwsWebAclRuleActionOverride `json:"ruleActionOverrides,omitempty"`
+}
+
+type AwsWebAclManagedRuleGroupConfig struct {
+	// LoginPath for ATP/ACFP (e.g., "/login")
+	// +optional
+	LoginPath string `json:"loginPath,omitempty"`
+
+	// PayloadType for request body parsing
+	// +optional
+	// +kubebuilder:validation:Enum=JSON;FORM_ENCODED
+	PayloadType string `json:"payloadType,omitempty"`
+
+	// UsernameField for extracting username from requests
+	// +optional
+	UsernameField *AwsWebAclFieldIdentifier `json:"usernameField,omitempty"`
+
+	// PasswordField for extracting password from requests
+	// +optional
+	PasswordField *AwsWebAclFieldIdentifier `json:"passwordField,omitempty"`
+}
+
+type AwsWebAclFieldIdentifier struct {
+	// Identifier path (e.g., "/username" for JSON, "username" for form)
+	// +kubebuilder:validation:Required
+	Identifier string `json:"identifier"`
+}
+
+type AwsWebAclRuleActionOverride struct {
+	// Name of the rule to override
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// ActionToUse to replace the original action
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=Allow;Block;Count;Captcha
+	ActionToUse AwsWebAclRuleAction `json:"actionToUse"`
+}
+
+type AwsWebAclCustomResponseBody struct {
+	// ContentType - Response content type
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=TEXT_PLAIN;TEXT_HTML;APPLICATION_JSON
+	ContentType string `json:"contentType"`
+
+	// Content - Response body content (max 10,240 bytes)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MaxLength=10240
+	Content string `json:"content"`
+}
+
+type AwsWebAclCaptchaConfig struct {
+	// ImmunityTime - Seconds a client is exempt after solving CAPTCHA (60-259200)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=60
+	// +kubebuilder:validation:Maximum=259200
+	ImmunityTime int64 `json:"immunityTime"`
+}
+
+type AwsWebAclChallengeConfig struct {
+	// ImmunityTime - Seconds a client is exempt after passing Challenge (60-259200)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=60
+	// +kubebuilder:validation:Maximum=259200
+	ImmunityTime int64 `json:"immunityTime"`
 }
 
 type AwsWebAclExcludedRule struct {
@@ -182,6 +396,24 @@ type AwsWebAclByteMatchStatement struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=EXACTLY;STARTS_WITH;ENDS_WITH;CONTAINS;CONTAINS_WORD
 	PositionalConstraint string `json:"positionalConstraint"`
+
+	// TextTransformations to apply before inspecting (required by AWS)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=10
+	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
+}
+
+type AwsWebAclTextTransformation struct {
+	// Priority determines the order of transformations (lower = first)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Minimum=0
+	Priority int32 `json:"priority"`
+
+	// Type of transformation
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=NONE;COMPRESS_WHITE_SPACE;HTML_ENTITY_DECODE;LOWERCASE;CMD_LINE;URL_DECODE;BASE64_DECODE;HEX_DECODE;MD5;REPLACE_COMMENTS;ESCAPE_SEQ_DECODE;SQL_HEX_DECODE;CSS_DECODE;JS_DECODE;NORMALIZE_PATH;NORMALIZE_PATH_WIN;REMOVE_NULLS;REPLACE_NULLS;BASE64_DECODE_EXT;URL_DECODE_UNI;UTF8_TO_UNICODE
+	Type string `json:"type"`
 }
 
 // +kubebuilder:validation:MinProperties=1
