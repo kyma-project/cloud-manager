@@ -7,6 +7,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
+	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
@@ -118,6 +119,26 @@ func (s *server) NfsRestoreV2Provider() gcpclient.GcpClientProvider[gcpnfsrestor
 			return nil
 		}
 		return gcpnfsrestoreclientv2.NewFileRestoreClientFromFilestoreClient(sub)
+	}
+}
+
+func (s *server) IpRangeComputeProvider() gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient] {
+	return func(projectId string) gcpiprangeclient.ComputeClient {
+		sub := s.GetSubscription(projectId)
+		if sub == nil {
+			return nil
+		}
+		return gcpiprangeclient.NewComputeClientFromWrapped(sub, sub)
+	}
+}
+
+func (s *server) IpRangeServiceNetworkingProvider() gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient] {
+	return func(projectId string) gcpiprangeclient.ServiceNetworkingClient {
+		sub := s.GetSubscription(projectId)
+		if sub == nil {
+			return nil
+		}
+		return gcpiprangeclient.NewServiceNetworkingClientFromWrapped(sub)
 	}
 }
 

@@ -182,6 +182,11 @@ func (s *store) InsertGlobalAddress(ctx context.Context, req *computepb.InsertGl
 	addr.SelfLink = ptr.To(name.PrefixWithGoogleApisComputeV1())
 	addr.Kind = ptr.To("compute#address")
 	addr.Status = ptr.To(computepb.Address_RESERVED.String())
+	if addr.Network != nil {
+		if nd, err := gcputil.ParseNameDetail(*addr.Network); err == nil {
+			addr.Network = ptr.To(nd.PrefixWithGoogleApisComputeV1())
+		}
+	}
 
 	s.addresses.Add(addr, name)
 
