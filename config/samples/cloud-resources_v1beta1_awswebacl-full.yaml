@@ -658,6 +658,32 @@ spec:
         metricName: block-suspicious-patterns
         sampledRequestsEnabled: true
 
+    # ============================================================
+    # RULE 21: ASN MATCHING - Match by Autonomous System Number
+    # ============================================================
+    # This rule blocks traffic from specific ASNs (network providers).
+    # Useful for blocking known malicious hosting providers or data centers.
+    - name: block-suspicious-asns
+      priority: 22
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      # Block requests from specific ASNs (e.g., suspicious hosting providers)
+      statement:
+        asnMatch:
+          autonomousSystemNumbers:
+            - 64496  # Reserved for documentation/examples
+            - 64497  # Reserved for documentation/examples
+      ruleLabels:
+        - name: "security:asn-block"
+        - name: "block:suspicious-network"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-suspicious-asns
+        sampledRequestsEnabled: true
+
 ---
 # ====================
 # API FIELD REFERENCE
@@ -712,6 +738,7 @@ spec:
 # - sqliMatch: { fieldToMatch, textTransformations, sensitivityLevel: "LOW" | "HIGH" }  # SQL injection detection
 # - xssMatch: { fieldToMatch, textTransformations }  # Cross-site scripting detection
 # - regexMatch: { regexString, fieldToMatch, textTransformations }  # Regular expression pattern matching
+# - asnMatch: { autonomousSystemNumbers: [int64...], forwardedIPConfig: {...} }  # Match by ASN
 # - and: { statements: [...] }  # Logical AND (min 2 statements, all must match)
 # - or: { statements: [...] }   # Logical OR (min 2 statements, at least one must match)
 # - not: { statement: {...} }   # Logical NOT (negates nested statement)
