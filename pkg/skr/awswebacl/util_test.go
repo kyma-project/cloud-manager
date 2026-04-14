@@ -1071,3 +1071,77 @@ func TestConvertStatementWithRegexMatch(t *testing.T) {
 		assert.Equal(t, "^/admin/.*$", *result.RegexMatchStatement.RegexString)
 	})
 }
+
+func TestConvertAsnMatchStatement(t *testing.T) {
+	t.Run("AsnMatch with single ASN", func(t *testing.T) {
+		asnMatch := &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
+			AutonomousSystemNumbers: []int64{64512},
+		}
+
+		result, err := convertAsnMatchStatement(asnMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.AsnList, 1)
+		assert.Equal(t, int64(64512), result.AsnList[0])
+		assert.Nil(t, result.ForwardedIPConfig)
+	})
+
+	t.Run("AsnMatch with multiple ASNs", func(t *testing.T) {
+		asnMatch := &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
+			AutonomousSystemNumbers: []int64{64512, 64513, 13335}, // Cloudflare ASN
+		}
+
+		result, err := convertAsnMatchStatement(asnMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.AsnList, 3)
+		assert.Equal(t, int64(64512), result.AsnList[0])
+		assert.Equal(t, int64(64513), result.AsnList[1])
+		assert.Equal(t, int64(13335), result.AsnList[2])
+	})
+
+	t.Run("AsnMatch with ForwardedIPConfig", func(t *testing.T) {
+		asnMatch := &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
+			AutonomousSystemNumbers: []int64{15169}, // Google ASN
+			ForwardedIPConfig: &cloudresourcesv1beta1.AwsWebAclForwardedIPConfig{
+				HeaderName:       "X-Forwarded-For",
+				FallbackBehavior: "MATCH",
+			},
+		}
+
+		result, err := convertAsnMatchStatement(asnMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.AsnList, 1)
+		assert.NotNil(t, result.ForwardedIPConfig)
+		assert.Equal(t, "X-Forwarded-For", *result.ForwardedIPConfig.HeaderName)
+		assert.Equal(t, wafv2types.FallbackBehaviorMatch, result.ForwardedIPConfig.FallbackBehavior)
+	})
+
+	t.Run("AsnMatch with empty ASN list returns error", func(t *testing.T) {
+		asnMatch := &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
+			AutonomousSystemNumbers: []int64{},
+		}
+
+		result, err := convertAsnMatchStatement(asnMatch)
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "autonomousSystemNumbers")
+	})
+}
+
+func TestConvertStatementWithAsnMatch(t *testing.T) {
+	t.Run("Statement with AsnMatch", func(t *testing.T) {
+		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			AsnMatch: &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
+				AutonomousSystemNumbers: []int64{64512, 64513},
+			},
+		}
+
+		result, err := convertStatement(stmt)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.AsnMatchStatement)
+		assert.Len(t, result.AsnMatchStatement.AsnList, 2)
+	})
+}

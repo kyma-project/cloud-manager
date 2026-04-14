@@ -282,6 +282,15 @@ func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement) (*wafv2
 		count++
 	}
 
+	if stmt.AsnMatch != nil {
+		asnStmt, err := convertAsnMatchStatement(stmt.AsnMatch)
+		if err != nil {
+			return nil, err
+		}
+		statement.AsnMatchStatement = asnStmt
+		count++
+	}
+
 	if count == 0 {
 		return nil, fmt.Errorf("statement must have exactly one condition set")
 	}
@@ -764,4 +773,20 @@ func convertRegexMatchStatement(regexMatch *cloudresourcesv1beta1.AwsWebAclRegex
 		FieldToMatch:        fieldToMatch,
 		TextTransformations: transformations,
 	}, nil
+}
+
+func convertAsnMatchStatement(asnMatch *cloudresourcesv1beta1.AwsWebAclAsnMatchStatement) (*wafv2types.AsnMatchStatement, error) {
+	if len(asnMatch.AutonomousSystemNumbers) == 0 {
+		return nil, fmt.Errorf("autonomousSystemNumbers must have at least one entry")
+	}
+
+	stmt := &wafv2types.AsnMatchStatement{
+		AsnList: asnMatch.AutonomousSystemNumbers,
+	}
+
+	if asnMatch.ForwardedIPConfig != nil {
+		stmt.ForwardedIPConfig = convertForwardedIPConfig(asnMatch.ForwardedIPConfig)
+	}
+
+	return stmt, nil
 }

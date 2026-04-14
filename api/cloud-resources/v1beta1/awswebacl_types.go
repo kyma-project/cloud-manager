@@ -279,6 +279,10 @@ type AwsWebAclRuleStatement struct {
 	// RegexMatch - Match using regular expression patterns
 	// +optional
 	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+
+	// AsnMatch - Match requests from specific Autonomous System Numbers
+	// +optional
+	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
 }
 
 type AwsWebAclSqliMatchStatement struct {
@@ -324,6 +328,18 @@ type AwsWebAclRegexMatchStatement struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
 	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
+}
+
+type AwsWebAclAsnMatchStatement struct {
+	// AutonomousSystemNumbers - List of ASNs to match (e.g., [64512, 64513])
+	// Valid range: 0 to 4294967295
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	AutonomousSystemNumbers []int64 `json:"autonomousSystemNumbers"`
+
+	// ForwardedIPConfig - Configuration for inspecting forwarded IP headers
+	// +optional
+	ForwardedIPConfig *AwsWebAclForwardedIPConfig `json:"forwardedIPConfig,omitempty"`
 }
 
 type AwsWebAclSizeConstraintStatement struct {

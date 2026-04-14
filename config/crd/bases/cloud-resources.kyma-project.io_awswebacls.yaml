@@ -443,6 +443,38 @@ spec:
                         maxProperties: 1
                         minProperties: 1
                         properties:
+                          asnMatch:
+                            description: AsnMatch - Match requests from specific Autonomous System Numbers
+                            properties:
+                              autonomousSystemNumbers:
+                                description: |-
+                                  AutonomousSystemNumbers - List of ASNs to match (e.g., [64512, 64513])
+                                  Valid range: 0 to 4294967295
+                                items:
+                                  format: int64
+                                  type: integer
+                                minItems: 1
+                                type: array
+                              forwardedIPConfig:
+                                description: ForwardedIPConfig - Configuration for inspecting forwarded IP headers
+                                properties:
+                                  fallbackBehavior:
+                                    description: FallbackBehavior when header is missing or invalid
+                                    enum:
+                                      - MATCH
+                                      - NO_MATCH
+                                    type: string
+                                  headerName:
+                                    description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                    pattern: ^[a-zA-Z0-9._$-]+$
+                                    type: string
+                                required:
+                                  - fallbackBehavior
+                                  - headerName
+                                type: object
+                            required:
+                              - autonomousSystemNumbers
+                            type: object
                           byteMatch:
                             description: ByteMatch - Match specific patterns in requests
                             properties:
