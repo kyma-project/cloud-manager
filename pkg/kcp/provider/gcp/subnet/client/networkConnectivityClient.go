@@ -53,7 +53,7 @@ func (ncClient *networkConnectivityClient) CreateServiceConnectionPolicyForRedis
 	parent := fmt.Sprintf("projects/%s/locations/%s", request.ProjectId, request.Region)
 	connectionPolicyNameFull := fmt.Sprintf("%s/serviceConnectionPolicies/%s", parent, request.Name)
 
-	_, err := ncClient.NetworkConnectivityClient.CreateServiceConnectionPolicy(ctx, &networkconnectivitypb.CreateServiceConnectionPolicyRequest{
+	_, err := ncClient.CreateServiceConnectionPolicy(ctx, &networkconnectivitypb.CreateServiceConnectionPolicyRequest{
 		Parent:                    parent,
 		ServiceConnectionPolicyId: request.Name,
 		ServiceConnectionPolicy: &networkconnectivitypb.ServiceConnectionPolicy{
