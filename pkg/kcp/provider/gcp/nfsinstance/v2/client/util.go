@@ -16,3 +16,9 @@ func GetFilestoreInstanceId(kcpResourceName string) string {
 func GetFilestoreName(projectId, location, kcpResourceName string) string {
 	return fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, location, GetFilestoreInstanceId(kcpResourceName))
 }
+
+// GetFilestoreParentPath returns the parent path for Filestore resources.
+// Format: projects/{project}/locations/{location}
+func GetFilestoreParentPath(projectId, location string) string {
+	return fmt.Sprintf("projects/%s/locations/%s", projectId, location)
+}

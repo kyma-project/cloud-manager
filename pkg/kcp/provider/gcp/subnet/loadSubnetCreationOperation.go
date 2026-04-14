@@ -3,10 +3,10 @@ package subnet
 import (
 	"context"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,10 +27,10 @@ func loadSubnetCreationOperation(ctx context.Context, st composed.State) (error,
 
 	logger.Info("loading GCP Subnet Creation Operation")
 
-	op, err := state.regionOperationsClient.GetRegionOperation(ctx, client.GetRegionOperationRequest{
-		ProjectId: gcpScope.Project,
+	op, err := state.regionOperationsClient.GetComputeRegionalOperation(ctx, &computepb.GetRegionOperationRequest{
+		Project:   gcpScope.Project,
 		Region:    region,
-		Name:      subnet.Status.SubnetCreationOperationName,
+		Operation: subnet.Status.SubnetCreationOperationName,
 	})
 
 	if err != nil {

@@ -9,20 +9,11 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
-	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
-	"cloud.google.com/go/redis/apiv1/redispb"
-	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
-	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
-	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
-	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
-	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
-	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
-	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
@@ -32,11 +23,6 @@ import (
 var _ Server = &server{}
 
 func New() Server {
-
-	regionalOperationsClientfake := &regionalOperationsClientFake{
-		mutex:      sync.Mutex{},
-		operations: map[string]*computepb.Operation{},
-	}
 
 	// Create shared address storage that both iprangeStore and iprangeStoreLegacy can use
 	// Thread-safety: sharedAddressStore has its own mutex and protects all access to addresses.
@@ -66,55 +52,26 @@ func New() Server {
 			addressStore:    sharedAddresses,
 			connectionStore: sharedConnections,
 		},
-		computeClientFake: &computeClientFake{
-			mutex:                 sync.Mutex{},
-			subnets:               map[string]*computepb.Subnetwork{},
-			operationsClientUtils: regionalOperationsClientfake,
-		},
-		networkConnectivityClientFake: &networkConnectivityClientFake{
-			mutex:              sync.Mutex{},
-			connectionPolicies: map[string]*networkconnectivitypb.ServiceConnectionPolicy{},
-		},
-		nfsStore:              &nfsStore{},
-		filestoreClientFakeV2: newFilestoreClientFakeV2(),
-		serviceUsageStore:     &serviceUsageStore{},
-		nfsRestoreStore:       &nfsRestoreStore{},
-		nfsRestoreStoreV2:     &nfsRestoreStoreV2{},
-		nfsBackupStore:        &nfsBackupStore{},
-		nfsBackupStoreV2:      &nfsBackupStoreV2{},
-		vpcPeeringStore:       &vpcPeeringStore{},
-		memoryStoreClientFake: &memoryStoreClientFake{
-			mutex:          sync.Mutex{},
-			redisInstances: map[string]*redispb.Instance{},
-		},
-		memoryStoreClusterClientFake: &memoryStoreClusterClientFake{
-			mutex:         sync.Mutex{},
-			redisClusters: map[string]*clusterpb.Cluster{},
-		},
+		nfsStore:          &nfsStore{},
+		serviceUsageStore: &serviceUsageStore{},
+		nfsRestoreStore:   &nfsRestoreStore{},
+		nfsBackupStore:    &nfsBackupStore{},
+		vpcPeeringStore:   &vpcPeeringStore{},
 		exposedDataStore: &exposedDataStore{
 			ipPool: util.Must(iprangeallocate.NewAddressSpace("33.0.0.0/16")),
 		},
-		regionalOperationsClientFake: regionalOperationsClientfake,
 	}
 }
 
 type server struct {
 	iprangeStore       *iprangeStore
 	iprangeStoreLegacy *iprangeStoreLegacy
-	*computeClientFake
-	*networkConnectivityClientFake
 	*nfsStore
-	*filestoreClientFakeV2
 	*serviceUsageStore
 	*nfsRestoreStore
-	*nfsRestoreStoreV2
 	*nfsBackupStore
-	*nfsBackupStoreV2
 	*vpcPeeringStore
-	*memoryStoreClientFake
-	*memoryStoreClusterClientFake
 	*exposedDataStore
-	*regionalOperationsClientFake
 }
 
 func (s *server) SetCreateError(err *googleapi.Error) {
@@ -192,33 +149,9 @@ func (s *server) OldComputeClientProvider() client.ClientProvider[gcpiprangeclie
 	}
 }
 
-func (s *server) SubnetComputeClientProvider() client.GcpClientProvider[gcpsubnetclient.ComputeClient] {
-	return func(_ string) gcpsubnetclient.ComputeClient {
-		return s
-	}
-}
-
-func (s *server) SubnetRegionOperationsClientProvider() client.GcpClientProvider[gcpsubnetclient.RegionOperationsClient] {
-	return func(_ string) gcpsubnetclient.RegionOperationsClient {
-		return s
-	}
-}
-
-func (s *server) SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient] {
-	return func(_ string) gcpsubnetclient.NetworkConnectivityClient {
-		return s
-	}
-}
-
 func (s *server) FilestoreClientProvider() client.ClientProvider[gcpnfsinstancev1client.FilestoreClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpnfsinstancev1client.FilestoreClient, error) {
 		return s, nil
-	}
-}
-
-func (s *server) FilestoreClientProviderV2() client.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient] {
-	return func(_ string) gcpnfsinstancev2client.FilestoreClient {
-		return s
 	}
 }
 
@@ -234,38 +167,14 @@ func (s *server) FilerestoreClientProvider() client.ClientProvider[gcpnfsrestore
 	}
 }
 
-func (s *server) FileRestoreClientProviderV2() client.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient] {
-	return func(_ string) gcpnfsrestoreclientv2.FileRestoreClient {
-		return s.nfsRestoreStoreV2
-	}
-}
-
 func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpnfsbackupclientv1.FileBackupClient, error) {
 		return s, nil
 	}
 }
 
-func (s *server) FileBackupClientProviderV2() client.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient] {
-	return func(_ string) gcpnfsbackupclientv2.FileBackupClient {
-		return s.nfsBackupStoreV2
-	}
-}
-
 func (s *server) VpcPeeringProvider() client.GcpClientProvider[gcpvpcpeeringclient.VpcPeeringClient] {
 	return func(_ string) gcpvpcpeeringclient.VpcPeeringClient {
-		return s
-	}
-}
-
-func (s *server) MemoryStoreProviderFake() client.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient] {
-	return func(_ string) gcpredisinstanceclient.MemorystoreClient {
-		return s
-	}
-}
-
-func (s *server) MemoryStoreClusterProviderFake() client.GcpClientProvider[gcpredisclusterclient.MemorystoreClusterClient] {
-	return func(_ string) gcpredisclusterclient.MemorystoreClusterClient {
 		return s
 	}
 }

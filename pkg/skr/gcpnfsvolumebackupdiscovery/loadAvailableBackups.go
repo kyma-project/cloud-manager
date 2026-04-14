@@ -3,9 +3,11 @@ package gcpnfsvolumebackupdiscovery
 import (
 	"context"
 
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
@@ -16,10 +18,21 @@ func loadAvailableBackups(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 	backupDiscovery := state.ObjAsGcpNfsVolumeBackupDiscovery()
 
-	backups, err := state.fileBackupClient.ListBackups(
-		ctx, state.Scope.Spec.Scope.Gcp.Project,
-		gcpclient.GetSharedBackupsFilter(state.Scope.Spec.ShootName, state.Scope.Spec.ShootName), // todo: change second arg to SubaccountId
-	)
+	project := state.Scope.Spec.Scope.Gcp.Project
+	filter := gcpclient.GetSharedBackupsFilter(state.Scope.Spec.ShootName, state.Scope.Spec.ShootName) // todo: change second arg to SubaccountId
+	iter := state.fileBackupClient.ListFilestoreBackups(ctx, &filestorepb.ListBackupsRequest{
+		Parent: v2client.GetFilestoreParentPath(project, "-"),
+		Filter: filter,
+	})
+	var backups []*filestorepb.Backup
+	var err error
+	for b, iterErr := range iter.All() {
+		if iterErr != nil {
+			err = iterErr
+			break
+		}
+		backups = append(backups, b)
+	}
 
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {

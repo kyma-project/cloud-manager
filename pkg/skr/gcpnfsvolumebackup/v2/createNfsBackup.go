@@ -55,7 +55,11 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		SourceInstance:  v2client.GetFilestoreInstancePath(project, state.GcpNfsVolume.Status.Location, nfsInstanceName),
 		Labels:          map[string]string{gcpclient.ManagedByKey: gcpclient.ManagedByValue, gcpclient.ScopeNameKey: state.Scope.Name},
 	}
-	opName, err := state.fileBackupClient.CreateBackup(ctx, project, backup.Status.Location, name, fileBackup)
+	op, err := state.fileBackupClient.CreateFilestoreBackup(ctx, &filestorepb.CreateBackupRequest{
+		Parent:   v2client.GetFilestoreParentPath(project, backup.Status.Location),
+		BackupId: name,
+		Backup:   fileBackup,
+	})
 
 	if err != nil {
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
@@ -72,7 +76,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupCreating
-	backup.Status.OpIdentifier = opName
+	backup.Status.OpIdentifier = op.Name()
 	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
 		// Give some time for backup to get created.

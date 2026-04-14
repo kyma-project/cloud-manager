@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 
+	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -24,7 +25,9 @@ func pollOperation(ctx context.Context, st composed.State) (error, context.Conte
 
 	logger.Info("Checking GCP Operation Status", "operation", opName)
 
-	isDone, err := state.GetFilestoreClient().GetOperation(ctx, opName)
+	op, err := state.GetFilestoreClient().GetFilestoreOperation(ctx, &longrunningpb.GetOperationRequest{
+		Name: opName,
+	})
 	if err != nil {
 		logger.Error(err, "Error getting Filestore Operation from GCP")
 
@@ -41,7 +44,7 @@ func pollOperation(ctx context.Context, st composed.State) (error, context.Conte
 			Run(ctx, state)
 	}
 
-	if !isDone {
+	if !op.Done {
 		logger.Info("Operation still in progress, requeuing")
 		return composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime), nil
 	}
