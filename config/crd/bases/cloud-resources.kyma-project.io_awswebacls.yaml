@@ -557,21 +557,6 @@ spec:
                             required:
                               - countryCodes
                             type: object
-                          ipSet:
-                            description: IPSet - Match requests from specific IP addresses/ranges (inline definition)
-                            properties:
-                              ipAddresses:
-                                description: |-
-                                  IPAddresses in CIDR notation (e.g., "192.0.2.0/24", "2001:db8::/32")
-                                  Cloud Manager will create/manage the IPSet resource automatically
-                                items:
-                                  type: string
-                                maxItems: 10000
-                                minItems: 1
-                                type: array
-                            required:
-                              - ipAddresses
-                            type: object
                           labelMatch:
                             description: LabelMatch - Match based on labels added by previous rules
                             properties:
@@ -708,6 +693,80 @@ spec:
                                 type: integer
                             required:
                               - limit
+                            type: object
+                          regexMatch:
+                            description: RegexMatch - Match using regular expression patterns
+                            properties:
+                              fieldToMatch:
+                                description: FieldToMatch - Part of the request to inspect
+                                maxProperties: 1
+                                minProperties: 1
+                                properties:
+                                  body:
+                                    description: Body matches the request body
+                                    type: boolean
+                                  method:
+                                    description: Method matches the HTTP method
+                                    type: boolean
+                                  queryString:
+                                    description: QueryString matches the query string
+                                    type: boolean
+                                  singleHeader:
+                                    description: SingleHeader matches a specific header by name
+                                    type: string
+                                  uriPath:
+                                    description: UriPath matches the URI path
+                                    type: boolean
+                                type: object
+                              regexString:
+                                description: RegexString - Regular expression pattern to match (max 512 chars)
+                                maxLength: 512
+                                minLength: 1
+                                type: string
+                              textTransformations:
+                                description: TextTransformations - Transformations to apply before matching
+                                items:
+                                  properties:
+                                    priority:
+                                      description: Priority determines the order of transformations (lower = first)
+                                      format: int32
+                                      minimum: 0
+                                      type: integer
+                                    type:
+                                      description: Type of transformation
+                                      enum:
+                                        - NONE
+                                        - COMPRESS_WHITE_SPACE
+                                        - HTML_ENTITY_DECODE
+                                        - LOWERCASE
+                                        - CMD_LINE
+                                        - URL_DECODE
+                                        - BASE64_DECODE
+                                        - HEX_DECODE
+                                        - MD5
+                                        - REPLACE_COMMENTS
+                                        - ESCAPE_SEQ_DECODE
+                                        - SQL_HEX_DECODE
+                                        - CSS_DECODE
+                                        - JS_DECODE
+                                        - NORMALIZE_PATH
+                                        - NORMALIZE_PATH_WIN
+                                        - REMOVE_NULLS
+                                        - REPLACE_NULLS
+                                        - BASE64_DECODE_EXT
+                                        - URL_DECODE_UNI
+                                        - UTF8_TO_UNICODE
+                                      type: string
+                                  required:
+                                    - priority
+                                    - type
+                                  type: object
+                                minItems: 1
+                                type: array
+                            required:
+                              - fieldToMatch
+                              - regexString
+                              - textTransformations
                             type: object
                           sizeConstraint:
                             description: SizeConstraint - Match based on request component size

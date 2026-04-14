@@ -992,3 +992,82 @@ func TestConvertStatementWithXssMatch(t *testing.T) {
 		assert.NotNil(t, result.XssMatchStatement.FieldToMatch.QueryString)
 	})
 }
+
+func TestConvertRegexMatchStatement(t *testing.T) {
+	t.Run("RegexMatch with simple pattern", func(t *testing.T) {
+		regexMatch := &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
+			RegexString: "^/api/v[0-9]+/.*$",
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				UriPath: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "LOWERCASE"},
+			},
+		}
+
+		result, err := convertRegexMatchStatement(regexMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, "^/api/v[0-9]+/.*$", *result.RegexString)
+		assert.NotNil(t, result.FieldToMatch.UriPath)
+		assert.Len(t, result.TextTransformations, 1)
+	})
+
+	t.Run("RegexMatch with email pattern", func(t *testing.T) {
+		regexMatch := &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
+			RegexString: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				Body: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "NONE"},
+			},
+		}
+
+		result, err := convertRegexMatchStatement(regexMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Contains(t, *result.RegexString, "@")
+		assert.NotNil(t, result.FieldToMatch.Body)
+	})
+
+	t.Run("RegexMatch with multiple transformations", func(t *testing.T) {
+		regexMatch := &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
+			RegexString: "(?i)(admin|root|superuser)",
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				QueryString: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "URL_DECODE"},
+				{Priority: 1, Type: "LOWERCASE"},
+			},
+		}
+
+		result, err := convertRegexMatchStatement(regexMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.TextTransformations, 2)
+	})
+}
+
+func TestConvertStatementWithRegexMatch(t *testing.T) {
+	t.Run("Statement with RegexMatch", func(t *testing.T) {
+		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			RegexMatch: &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
+				RegexString: "^/admin/.*$",
+				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+					UriPath: true,
+				},
+				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+					{Priority: 0, Type: "LOWERCASE"},
+				},
+			},
+		}
+
+		result, err := convertStatement(stmt)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.RegexMatchStatement)
+		assert.Equal(t, "^/admin/.*$", *result.RegexMatchStatement.RegexString)
+	})
+}

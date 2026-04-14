@@ -244,10 +244,6 @@ type AwsWebAclNoneAction struct {
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type AwsWebAclRuleStatement struct {
-	// IPSet - Match requests from specific IP addresses/ranges (inline definition)
-	// +optional
-	IPSet *AwsWebAclIPSetStatement `json:"ipSet,omitempty"`
-
 	// GeoMatch - Match requests from specific countries
 	// +optional
 	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
@@ -279,6 +275,10 @@ type AwsWebAclRuleStatement struct {
 	// XssMatch - Detect cross-site scripting attacks
 	// +optional
 	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+
+	// RegexMatch - Match using regular expression patterns
+	// +optional
+	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
 }
 
 type AwsWebAclSqliMatchStatement struct {
@@ -304,6 +304,23 @@ type AwsWebAclXssMatchStatement struct {
 	FieldToMatch AwsWebAclFieldToMatch `json:"fieldToMatch"`
 
 	// TextTransformations - Transformations to apply before inspection
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
+}
+
+type AwsWebAclRegexMatchStatement struct {
+	// RegexString - Regular expression pattern to match (max 512 chars)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=512
+	RegexString string `json:"regexString"`
+
+	// FieldToMatch - Part of the request to inspect
+	// +kubebuilder:validation:Required
+	FieldToMatch AwsWebAclFieldToMatch `json:"fieldToMatch"`
+
+	// TextTransformations - Transformations to apply before matching
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
 	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
@@ -344,15 +361,6 @@ type AwsWebAclLabelMatchStatement struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=LABEL;NAMESPACE
 	Scope string `json:"scope"`
-}
-
-type AwsWebAclIPSetStatement struct {
-	// IPAddresses in CIDR notation (e.g., "192.0.2.0/24", "2001:db8::/32")
-	// Cloud Manager will create/manage the IPSet resource automatically
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=10000
-	IPAddresses []string `json:"ipAddresses"`
 }
 
 type AwsWebAclGeoMatchStatement struct {
