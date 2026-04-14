@@ -443,17 +443,6 @@ spec:
                         maxProperties: 1
                         minProperties: 1
                         properties:
-                          and:
-                            description: And - Logical AND - all nested statements must match
-                            properties:
-                              statements:
-                                description: Statements to combine with AND logic (min 2)
-                                items: {}
-                                minItems: 2
-                                type: array
-                            required:
-                              - statements
-                            type: object
                           byteMatch:
                             description: ByteMatch - Match specific patterns in requests
                             properties:
@@ -691,25 +680,6 @@ spec:
                               - name
                               - vendorName
                             type: object
-                          not:
-                            description: Not - Logical NOT - negates the nested statement
-                            properties:
-                              statement:
-                                description: Statement to negate
-                            required:
-                              - statement
-                            type: object
-                          or:
-                            description: Or - Logical OR - at least one nested statement must match
-                            properties:
-                              statements:
-                                description: Statements to combine with OR logic (min 2)
-                                items: {}
-                                minItems: 2
-                                type: array
-                            required:
-                              - statements
-                            type: object
                           rateBased:
                             description: RateBased - Rate limiting per IP
                             properties:
@@ -823,6 +793,149 @@ spec:
                               - comparisonOperator
                               - fieldToMatch
                               - size
+                              - textTransformations
+                            type: object
+                          sqliMatch:
+                            description: SqliMatch - Detect SQL injection attacks
+                            properties:
+                              fieldToMatch:
+                                description: FieldToMatch - Part of the request to inspect for SQL injection
+                                maxProperties: 1
+                                minProperties: 1
+                                properties:
+                                  body:
+                                    description: Body matches the request body
+                                    type: boolean
+                                  method:
+                                    description: Method matches the HTTP method
+                                    type: boolean
+                                  queryString:
+                                    description: QueryString matches the query string
+                                    type: boolean
+                                  singleHeader:
+                                    description: SingleHeader matches a specific header by name
+                                    type: string
+                                  uriPath:
+                                    description: UriPath matches the URI path
+                                    type: boolean
+                                type: object
+                              sensitivityLevel:
+                                default: LOW
+                                description: 'SensitivityLevel - Detection sensitivity: LOW (default, fewer false positives) or HIGH (more detections)'
+                                enum:
+                                  - LOW
+                                  - HIGH
+                                type: string
+                              textTransformations:
+                                description: TextTransformations - Transformations to apply before inspection
+                                items:
+                                  properties:
+                                    priority:
+                                      description: Priority determines the order of transformations (lower = first)
+                                      format: int32
+                                      minimum: 0
+                                      type: integer
+                                    type:
+                                      description: Type of transformation
+                                      enum:
+                                        - NONE
+                                        - COMPRESS_WHITE_SPACE
+                                        - HTML_ENTITY_DECODE
+                                        - LOWERCASE
+                                        - CMD_LINE
+                                        - URL_DECODE
+                                        - BASE64_DECODE
+                                        - HEX_DECODE
+                                        - MD5
+                                        - REPLACE_COMMENTS
+                                        - ESCAPE_SEQ_DECODE
+                                        - SQL_HEX_DECODE
+                                        - CSS_DECODE
+                                        - JS_DECODE
+                                        - NORMALIZE_PATH
+                                        - NORMALIZE_PATH_WIN
+                                        - REMOVE_NULLS
+                                        - REPLACE_NULLS
+                                        - BASE64_DECODE_EXT
+                                        - URL_DECODE_UNI
+                                        - UTF8_TO_UNICODE
+                                      type: string
+                                  required:
+                                    - priority
+                                    - type
+                                  type: object
+                                minItems: 1
+                                type: array
+                            required:
+                              - fieldToMatch
+                              - textTransformations
+                            type: object
+                          xssMatch:
+                            description: XssMatch - Detect cross-site scripting attacks
+                            properties:
+                              fieldToMatch:
+                                description: FieldToMatch - Part of the request to inspect for XSS attacks
+                                maxProperties: 1
+                                minProperties: 1
+                                properties:
+                                  body:
+                                    description: Body matches the request body
+                                    type: boolean
+                                  method:
+                                    description: Method matches the HTTP method
+                                    type: boolean
+                                  queryString:
+                                    description: QueryString matches the query string
+                                    type: boolean
+                                  singleHeader:
+                                    description: SingleHeader matches a specific header by name
+                                    type: string
+                                  uriPath:
+                                    description: UriPath matches the URI path
+                                    type: boolean
+                                type: object
+                              textTransformations:
+                                description: TextTransformations - Transformations to apply before inspection
+                                items:
+                                  properties:
+                                    priority:
+                                      description: Priority determines the order of transformations (lower = first)
+                                      format: int32
+                                      minimum: 0
+                                      type: integer
+                                    type:
+                                      description: Type of transformation
+                                      enum:
+                                        - NONE
+                                        - COMPRESS_WHITE_SPACE
+                                        - HTML_ENTITY_DECODE
+                                        - LOWERCASE
+                                        - CMD_LINE
+                                        - URL_DECODE
+                                        - BASE64_DECODE
+                                        - HEX_DECODE
+                                        - MD5
+                                        - REPLACE_COMMENTS
+                                        - ESCAPE_SEQ_DECODE
+                                        - SQL_HEX_DECODE
+                                        - CSS_DECODE
+                                        - JS_DECODE
+                                        - NORMALIZE_PATH
+                                        - NORMALIZE_PATH_WIN
+                                        - REMOVE_NULLS
+                                        - REPLACE_NULLS
+                                        - BASE64_DECODE_EXT
+                                        - URL_DECODE_UNI
+                                        - UTF8_TO_UNICODE
+                                      type: string
+                                  required:
+                                    - priority
+                                    - type
+                                  type: object
+                                minItems: 1
+                                type: array
+                            required:
+                              - fieldToMatch
                               - textTransformations
                             type: object
                         type: object

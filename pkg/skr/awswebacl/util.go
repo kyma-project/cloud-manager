@@ -245,33 +245,6 @@ func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement) (*wafv2
 		count++
 	}
 
-	if stmt.And != nil {
-		andStmt, err := convertAndStatement(stmt.And)
-		if err != nil {
-			return nil, err
-		}
-		statement.AndStatement = andStmt
-		count++
-	}
-
-	if stmt.Or != nil {
-		orStmt, err := convertOrStatement(stmt.Or)
-		if err != nil {
-			return nil, err
-		}
-		statement.OrStatement = orStmt
-		count++
-	}
-
-	if stmt.Not != nil {
-		notStmt, err := convertNotStatement(stmt.Not)
-		if err != nil {
-			return nil, err
-		}
-		statement.NotStatement = notStmt
-		count++
-	}
-
 	if stmt.LabelMatch != nil {
 		labelStmt := convertLabelMatchStatement(stmt.LabelMatch)
 		statement.LabelMatchStatement = labelStmt
@@ -284,6 +257,24 @@ func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement) (*wafv2
 			return nil, err
 		}
 		statement.SizeConstraintStatement = sizeStmt
+		count++
+	}
+
+	if stmt.SqliMatch != nil {
+		sqliStmt, err := convertSqliMatchStatement(stmt.SqliMatch)
+		if err != nil {
+			return nil, err
+		}
+		statement.SqliMatchStatement = sqliStmt
+		count++
+	}
+
+	if stmt.XssMatch != nil {
+		xssStmt, err := convertXssMatchStatement(stmt.XssMatch)
+		if err != nil {
+			return nil, err
+		}
+		statement.XssMatchStatement = xssStmt
 		count++
 	}
 
@@ -714,6 +705,49 @@ func convertSizeConstraintStatement(sizeConstraint *cloudresourcesv1beta1.AwsWeb
 	return &wafv2types.SizeConstraintStatement{
 		ComparisonOperator:  wafv2types.ComparisonOperator(sizeConstraint.ComparisonOperator),
 		Size:                sizeConstraint.Size,
+		FieldToMatch:        fieldToMatch,
+		TextTransformations: transformations,
+	}, nil
+}
+
+func convertSqliMatchStatement(sqliMatch *cloudresourcesv1beta1.AwsWebAclSqliMatchStatement) (*wafv2types.SqliMatchStatement, error) {
+	fieldToMatch, err := convertFieldToMatch(sqliMatch.FieldToMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	transformations, err := convertTextTransformations(sqliMatch.TextTransformations)
+	if err != nil {
+		return nil, err
+	}
+
+	stmt := &wafv2types.SqliMatchStatement{
+		FieldToMatch:        fieldToMatch,
+		TextTransformations: transformations,
+	}
+
+	// SensitivityLevel is optional, default is LOW
+	if sqliMatch.SensitivityLevel != "" {
+		stmt.SensitivityLevel = wafv2types.SensitivityLevel(sqliMatch.SensitivityLevel)
+	} else {
+		stmt.SensitivityLevel = wafv2types.SensitivityLevelLow
+	}
+
+	return stmt, nil
+}
+
+func convertXssMatchStatement(xssMatch *cloudresourcesv1beta1.AwsWebAclXssMatchStatement) (*wafv2types.XssMatchStatement, error) {
+	fieldToMatch, err := convertFieldToMatch(xssMatch.FieldToMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	transformations, err := convertTextTransformations(xssMatch.TextTransformations)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wafv2types.XssMatchStatement{
 		FieldToMatch:        fieldToMatch,
 		TextTransformations: transformations,
 	}, nil

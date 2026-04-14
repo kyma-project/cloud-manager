@@ -724,268 +724,6 @@ func TestConvertRuleWithPerRuleConfigs(t *testing.T) {
 	})
 }
 
-func TestConvertAndStatement(t *testing.T) {
-	t.Run("And statement with two conditions", func(t *testing.T) {
-		and := &cloudresourcesv1beta1.AwsWebAclAndStatement{
-			Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement{
-				{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"CN"},
-					},
-				},
-				{
-					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit: 1000,
-					},
-				},
-			},
-		}
-
-		result, err := convertAndStatement(and)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.Statements, 2)
-		assert.NotNil(t, result.Statements[0].GeoMatchStatement)
-		assert.NotNil(t, result.Statements[1].RateBasedStatement)
-	})
-
-	t.Run("And statement with less than 2 statements returns error", func(t *testing.T) {
-		and := &cloudresourcesv1beta1.AwsWebAclAndStatement{
-			Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement{
-				{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"CN"},
-					},
-				},
-			},
-		}
-
-		result, err := convertAndStatement(and)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "requires at least 2")
-	})
-
-	t.Run("And statement with nested Or and Not", func(t *testing.T) {
-		and := &cloudresourcesv1beta1.AwsWebAclAndStatement{
-			Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement{
-				{
-					Or: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement{
-							{
-								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-									CountryCodes: []string{"CN"},
-								},
-							},
-							{
-								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-									CountryCodes: []string{"RU"},
-								},
-							},
-						},
-					},
-				},
-				{
-					Not: &cloudresourcesv1beta1.AwsWebAclNotStatement{
-						Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-							IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-								IPAddresses: []string{"10.0.0.0/8"},
-							},
-						},
-					},
-				},
-			},
-		}
-
-		result, err := convertAndStatement(and)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.Statements, 2)
-		assert.NotNil(t, result.Statements[0].OrStatement)
-		assert.NotNil(t, result.Statements[1].NotStatement)
-	})
-}
-
-func TestConvertOrStatement(t *testing.T) {
-	t.Run("Or statement with three conditions", func(t *testing.T) {
-		or := &cloudresourcesv1beta1.AwsWebAclOrStatement{
-			Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement{
-				{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"CN"},
-					},
-				},
-				{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"RU"},
-					},
-				},
-				{
-					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit: 5000,
-					},
-				},
-			},
-		}
-
-		result, err := convertOrStatement(or)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.Statements, 3)
-		assert.NotNil(t, result.Statements[0].GeoMatchStatement)
-		assert.NotNil(t, result.Statements[1].GeoMatchStatement)
-		assert.NotNil(t, result.Statements[2].RateBasedStatement)
-	})
-
-	t.Run("Or statement with single statement returns error", func(t *testing.T) {
-		or := &cloudresourcesv1beta1.AwsWebAclOrStatement{
-			Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement{
-				{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"CN"},
-					},
-				},
-			},
-		}
-
-		result, err := convertOrStatement(or)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "requires at least 2")
-	})
-}
-
-func TestConvertNotStatement(t *testing.T) {
-	t.Run("Not statement with IPSet", func(t *testing.T) {
-		not := &cloudresourcesv1beta1.AwsWebAclNotStatement{
-			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-				IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-					IPAddresses: []string{"10.0.0.0/8", "192.168.0.0/16"},
-				},
-			},
-		}
-
-		result, err := convertNotStatement(not)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.Statement)
-		assert.NotNil(t, result.Statement.IPSetReferenceStatement)
-	})
-
-	t.Run("Not statement with GeoMatch", func(t *testing.T) {
-		not := &cloudresourcesv1beta1.AwsWebAclNotStatement{
-			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-				GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-					CountryCodes: []string{"US", "GB"},
-				},
-			},
-		}
-
-		result, err := convertNotStatement(not)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.Statement)
-		assert.NotNil(t, result.Statement.GeoMatchStatement)
-	})
-
-	t.Run("Not statement with nested And", func(t *testing.T) {
-		not := &cloudresourcesv1beta1.AwsWebAclNotStatement{
-			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-				And: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-					Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement{
-						{
-							GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-								CountryCodes: []string{"CN"},
-							},
-						},
-						{
-							RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-								Limit: 100,
-							},
-						},
-					},
-				},
-			},
-		}
-
-		result, err := convertNotStatement(not)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.Statement)
-		assert.NotNil(t, result.Statement.AndStatement)
-		assert.Len(t, result.Statement.AndStatement.Statements, 2)
-	})
-}
-
-func TestConvertStatementWithLogicalOperators(t *testing.T) {
-	t.Run("Statement with And", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
-			And: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-				Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					{
-						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-							CountryCodes: []string{"CN"},
-						},
-					},
-					{
-						RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-							Limit: 1000,
-						},
-					},
-				},
-			},
-		}
-
-		result, err := convertStatement(stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.AndStatement)
-		assert.Len(t, result.AndStatement.Statements, 2)
-	})
-
-	t.Run("Statement with Or", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
-			Or: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-				Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					{
-						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-							CountryCodes: []string{"CN"},
-						},
-					},
-					{
-						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-							CountryCodes: []string{"RU"},
-						},
-					},
-				},
-			},
-		}
-
-		result, err := convertStatement(stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.OrStatement)
-		assert.Len(t, result.OrStatement.Statements, 2)
-	})
-
-	t.Run("Statement with Not", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
-			Not: &cloudresourcesv1beta1.AwsWebAclNotStatement{
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{"10.0.0.0/8"},
-					},
-				},
-			},
-		}
-
-		result, err := convertStatement(stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.NotStatement)
-	})
-}
-
 func TestConvertLabelMatchStatement(t *testing.T) {
 	t.Run("LabelMatch with LABEL scope", func(t *testing.T) {
 		labelMatch := &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
@@ -1094,5 +832,163 @@ func TestConvertStatementWithSizeConstraint(t *testing.T) {
 		assert.NotNil(t, result.SizeConstraintStatement)
 		assert.Equal(t, wafv2types.ComparisonOperatorGt, result.SizeConstraintStatement.ComparisonOperator)
 		assert.Equal(t, int64(10000), result.SizeConstraintStatement.Size)
+	})
+}
+
+func TestConvertSqliMatchStatement(t *testing.T) {
+	t.Run("SqliMatch with LOW sensitivity", func(t *testing.T) {
+		sqliMatch := &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				QueryString: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "URL_DECODE"},
+				{Priority: 1, Type: "HTML_ENTITY_DECODE"},
+			},
+			SensitivityLevel: "LOW",
+		}
+
+		result, err := convertSqliMatchStatement(sqliMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.FieldToMatch.QueryString)
+		assert.Len(t, result.TextTransformations, 2)
+		assert.Equal(t, wafv2types.SensitivityLevelLow, result.SensitivityLevel)
+	})
+
+	t.Run("SqliMatch with HIGH sensitivity", func(t *testing.T) {
+		sqliMatch := &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				Body: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "NONE"},
+			},
+			SensitivityLevel: "HIGH",
+		}
+
+		result, err := convertSqliMatchStatement(sqliMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.FieldToMatch.Body)
+		assert.Equal(t, wafv2types.SensitivityLevelHigh, result.SensitivityLevel)
+	})
+
+	t.Run("SqliMatch with default sensitivity (empty string)", func(t *testing.T) {
+		sqliMatch := &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				UriPath: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "LOWERCASE"},
+			},
+			// SensitivityLevel not set
+		}
+
+		result, err := convertSqliMatchStatement(sqliMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, wafv2types.SensitivityLevelLow, result.SensitivityLevel)
+	})
+}
+
+func TestConvertStatementWithSqliMatch(t *testing.T) {
+	t.Run("Statement with SqliMatch", func(t *testing.T) {
+		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			SqliMatch: &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
+				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+					QueryString: true,
+				},
+				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+					{Priority: 0, Type: "URL_DECODE"},
+				},
+				SensitivityLevel: "HIGH",
+			},
+		}
+
+		result, err := convertStatement(stmt)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.SqliMatchStatement)
+		assert.Equal(t, wafv2types.SensitivityLevelHigh, result.SqliMatchStatement.SensitivityLevel)
+	})
+}
+
+func TestConvertXssMatchStatement(t *testing.T) {
+	t.Run("XssMatch with QueryString", func(t *testing.T) {
+		xssMatch := &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				QueryString: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "URL_DECODE"},
+				{Priority: 1, Type: "HTML_ENTITY_DECODE"},
+			},
+		}
+
+		result, err := convertXssMatchStatement(xssMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.FieldToMatch.QueryString)
+		assert.Len(t, result.TextTransformations, 2)
+		assert.Equal(t, wafv2types.TextTransformationTypeUrlDecode, result.TextTransformations[0].Type)
+		assert.Equal(t, wafv2types.TextTransformationTypeHtmlEntityDecode, result.TextTransformations[1].Type)
+	})
+
+	t.Run("XssMatch with Body", func(t *testing.T) {
+		xssMatch := &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				Body: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "NONE"},
+			},
+		}
+
+		result, err := convertXssMatchStatement(xssMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.FieldToMatch.Body)
+		assert.Len(t, result.TextTransformations, 1)
+	})
+
+	t.Run("XssMatch with UriPath", func(t *testing.T) {
+		xssMatch := &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
+			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+				UriPath: true,
+			},
+			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+				{Priority: 0, Type: "LOWERCASE"},
+				{Priority: 1, Type: "URL_DECODE"},
+			},
+		}
+
+		result, err := convertXssMatchStatement(xssMatch)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.FieldToMatch.UriPath)
+		assert.Len(t, result.TextTransformations, 2)
+	})
+}
+
+func TestConvertStatementWithXssMatch(t *testing.T) {
+	t.Run("Statement with XssMatch", func(t *testing.T) {
+		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			XssMatch: &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
+				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+					QueryString: true,
+				},
+				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+					{Priority: 0, Type: "URL_DECODE"},
+					{Priority: 1, Type: "HTML_ENTITY_DECODE"},
+				},
+			},
+		}
+
+		result, err := convertStatement(stmt)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.XssMatchStatement)
+		assert.NotNil(t, result.XssMatchStatement.FieldToMatch.QueryString)
 	})
 }

@@ -264,18 +264,6 @@ type AwsWebAclRuleStatement struct {
 	// +optional
 	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
 
-	// And - Logical AND - all nested statements must match
-	// +optional
-	And *AwsWebAclAndStatement `json:"and,omitempty"`
-
-	// Or - Logical OR - at least one nested statement must match
-	// +optional
-	Or *AwsWebAclOrStatement `json:"or,omitempty"`
-
-	// Not - Logical NOT - negates the nested statement
-	// +optional
-	Not *AwsWebAclNotStatement `json:"not,omitempty"`
-
 	// LabelMatch - Match based on labels added by previous rules
 	// +optional
 	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
@@ -283,6 +271,42 @@ type AwsWebAclRuleStatement struct {
 	// SizeConstraint - Match based on request component size
 	// +optional
 	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+
+	// SqliMatch - Detect SQL injection attacks
+	// +optional
+	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+
+	// XssMatch - Detect cross-site scripting attacks
+	// +optional
+	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+}
+
+type AwsWebAclSqliMatchStatement struct {
+	// FieldToMatch - Part of the request to inspect for SQL injection
+	// +kubebuilder:validation:Required
+	FieldToMatch AwsWebAclFieldToMatch `json:"fieldToMatch"`
+
+	// TextTransformations - Transformations to apply before inspection
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
+
+	// SensitivityLevel - Detection sensitivity: LOW (default, fewer false positives) or HIGH (more detections)
+	// +optional
+	// +kubebuilder:validation:Enum=LOW;HIGH
+	// +kubebuilder:default="LOW"
+	SensitivityLevel string `json:"sensitivityLevel,omitempty"`
+}
+
+type AwsWebAclXssMatchStatement struct {
+	// FieldToMatch - Part of the request to inspect for XSS attacks
+	// +kubebuilder:validation:Required
+	FieldToMatch AwsWebAclFieldToMatch `json:"fieldToMatch"`
+
+	// TextTransformations - Transformations to apply before inspection
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
 }
 
 type AwsWebAclSizeConstraintStatement struct {

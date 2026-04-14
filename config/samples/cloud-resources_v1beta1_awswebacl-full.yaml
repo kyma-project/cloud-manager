@@ -562,6 +562,69 @@ spec:
         metricName: block-oversized-query
         sampledRequestsEnabled: true
 
+    # ============================================================
+    # RULE 18: SQL INJECTION DETECTION - Block SQL injection attacks
+    # ============================================================
+    # This rule detects SQL injection attempts in query parameters and body.
+    # HIGH sensitivity level catches more attacks but may have more false positives.
+    - name: block-sql-injection
+      priority: 19
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      # Detect SQL injection patterns in query strings
+      statement:
+        sqliMatch:
+          fieldToMatch:
+            queryString: true
+          textTransformations:
+            - priority: 0
+              type: "URL_DECODE"
+            - priority: 1
+              type: "HTML_ENTITY_DECODE"
+          sensitivityLevel: "HIGH"  # More detections, may have false positives
+      ruleLabels:
+        - name: "security:sqli-protection"
+        - name: "block:sql-injection"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-sql-injection
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 19: CROSS-SITE SCRIPTING DETECTION - Block XSS attacks
+    # ============================================================
+    # This rule detects cross-site scripting (XSS) attempts in request fields.
+    # XSS attacks inject malicious scripts that execute in users' browsers.
+    - name: block-xss-attacks
+      priority: 20
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      # Detect XSS patterns in query strings and body
+      statement:
+        xssMatch:
+          fieldToMatch:
+            queryString: true
+          textTransformations:
+            - priority: 0
+              type: "URL_DECODE"
+            - priority: 1
+              type: "HTML_ENTITY_DECODE"
+            - priority: 2
+              type: "JS_DECODE"
+      ruleLabels:
+        - name: "security:xss-protection"
+        - name: "block:xss-attack"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-xss-attacks
+        sampledRequestsEnabled: true
+
 ---
 # ====================
 # API FIELD REFERENCE
@@ -613,6 +676,8 @@ spec:
 # - managedRuleGroup: { vendorName, name, version, excludedRules, managedRuleGroupConfigs, ruleActionOverrides }
 # - labelMatch: { key: "label:name", scope: "LABEL" | "NAMESPACE" }  # Match based on labels from previous rules
 # - sizeConstraint: { comparisonOperator: "EQ|NE|LE|LT|GE|GT", size, fieldToMatch, textTransformations }  # Size-based filtering
+# - sqliMatch: { fieldToMatch, textTransformations, sensitivityLevel: "LOW" | "HIGH" }  # SQL injection detection
+# - xssMatch: { fieldToMatch, textTransformations }  # Cross-site scripting detection
 # - and: { statements: [...] }  # Logical AND (min 2 statements, all must match)
 # - or: { statements: [...] }   # Logical OR (min 2 statements, at least one must match)
 # - not: { statement: {...} }   # Logical NOT (negates nested statement)
