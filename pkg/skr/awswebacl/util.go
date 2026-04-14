@@ -204,11 +204,6 @@ func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement) (*wafv2
 	statement := &wafv2types.Statement{}
 	count := 0
 
-	if stmt.IPSet != nil {
-		statement.IPSetReferenceStatement = convertIPSetStatement(stmt.IPSet)
-		count++
-	}
-
 	if stmt.GeoMatch != nil {
 		geoStmt, err := convertGeoMatchStatement(stmt.GeoMatch)
 		if err != nil {
@@ -278,6 +273,15 @@ func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement) (*wafv2
 		count++
 	}
 
+	if stmt.RegexMatch != nil {
+		regexStmt, err := convertRegexMatchStatement(stmt.RegexMatch)
+		if err != nil {
+			return nil, err
+		}
+		statement.RegexMatchStatement = regexStmt
+		count++
+	}
+
 	if count == 0 {
 		return nil, fmt.Errorf("statement must have exactly one condition set")
 	}
@@ -286,15 +290,6 @@ func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement) (*wafv2
 	}
 
 	return statement, nil
-}
-
-func convertIPSetStatement(ipSet *cloudresourcesv1beta1.AwsWebAclIPSetStatement) *wafv2types.IPSetReferenceStatement {
-	// Note: For inline IP sets, we would need to create an IPSet resource first
-	// and then reference it here. This is a placeholder.
-	// The actual implementation would need to manage IPSet lifecycle.
-	return &wafv2types.IPSetReferenceStatement{
-		ARN: ptr.To(""), // This would be populated after creating the IPSet
-	}
 }
 
 func convertGeoMatchStatement(geo *cloudresourcesv1beta1.AwsWebAclGeoMatchStatement) (*wafv2types.GeoMatchStatement, error) {
@@ -748,6 +743,24 @@ func convertXssMatchStatement(xssMatch *cloudresourcesv1beta1.AwsWebAclXssMatchS
 	}
 
 	return &wafv2types.XssMatchStatement{
+		FieldToMatch:        fieldToMatch,
+		TextTransformations: transformations,
+	}, nil
+}
+
+func convertRegexMatchStatement(regexMatch *cloudresourcesv1beta1.AwsWebAclRegexMatchStatement) (*wafv2types.RegexMatchStatement, error) {
+	fieldToMatch, err := convertFieldToMatch(regexMatch.FieldToMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	transformations, err := convertTextTransformations(regexMatch.TextTransformations)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wafv2types.RegexMatchStatement{
+		RegexString:         ptr.To(regexMatch.RegexString),
 		FieldToMatch:        fieldToMatch,
 		TextTransformations: transformations,
 	}, nil

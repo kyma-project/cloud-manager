@@ -97,11 +97,11 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{"10.0.0.0/8"},
-					},
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
+					},
+					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+						Limit: 2000,
 					},
 				},
 			}),
@@ -115,8 +115,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionAllow(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{"10.0.0.0/8", "192.168.0.0/16"},
+					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+						CountryCodes: []string{"US"},
 					},
 				},
 			}),
@@ -370,8 +370,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionAllow(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{"10.0.0.0/8"},
+					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+						CountryCodes: []string{"US"},
 					},
 				},
 			}),
@@ -384,8 +384,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{"192.0.2.0/24"},
+					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+						CountryCodes: []string{"US"},
 					},
 				},
 			}),
@@ -420,35 +420,33 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		)
 	})
 
-	Context("Scenario: IPSet statement validation", func() {
+	Context("Scenario: GeoMatch statement validation", func() {
 
 		canNotCreateSkr(
-			"AwsWebAcl cannot be created with empty ipAddresses",
+			"AwsWebAcl cannot be created with empty countryCodes",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "empty-ips",
+				Name:     "empty-countries",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{}, // Empty
+					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+						CountryCodes: []string{}, // Empty
 					},
 				},
 			}),
-			"ipAddresses",
+			"countryCodes",
 		)
 
 		canCreateSkr(
-			"AwsWebAcl can be created with IPv4 addresses",
+			"AwsWebAcl can be created with single country code",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "ipv4-rule",
+				Name:     "single-country-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{
-							"10.0.0.0/8",
-							"192.168.1.0/24",
-							"203.0.113.42/32",
+					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+						CountryCodes: []string{
+							"US",
 						},
 					},
 				},
@@ -456,16 +454,17 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		)
 
 		canCreateSkr(
-			"AwsWebAcl can be created with IPv6 addresses",
+			"AwsWebAcl can be created with multiple country codes",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "ipv6-rule",
+				Name:     "multi-country-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{
-							"2001:0db8::/32",
-							"2001:0db8:85a3::8a2e:0370:7334/128",
+					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+						CountryCodes: []string{
+							"US",
+							"GB",
+							"DE",
 						},
 					},
 				},
@@ -473,16 +472,19 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		)
 
 		canCreateSkr(
-			"AwsWebAcl can be created with mixed IPv4 and IPv6 addresses",
+			"AwsWebAcl can be created with GeoMatch and ForwardedIPConfig",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "mixed-ip-rule",
+				Name:     "geo-forwarded-ip-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionAllow(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{
-							"10.0.0.0/8",
-							"2001:0db8::/32",
+					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+						CountryCodes: []string{
+							"US",
+						},
+						ForwardedIPConfig: &cloudresourcesv1beta1.AwsWebAclForwardedIPConfig{
+							HeaderName:       "X-Forwarded-For",
+							FallbackBehavior: "MATCH",
 						},
 					},
 				},
@@ -546,8 +548,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Priority: 0,
 					Action:   cloudresourcesv1beta1.RuleActionAllow(),
 					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-						IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-							IPAddresses: []string{"10.0.0.0/8"},
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"US"},
 						},
 					},
 				},
@@ -605,8 +607,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Priority: 0,
 					Action:   cloudresourcesv1beta1.RuleActionBlock(),
 					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-						IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-							IPAddresses: []string{"10.0.0.0/8"},
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"US"},
 						},
 					},
 				})
@@ -620,17 +622,17 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{"10.0.0.0/8"},
+					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+						CountryCodes: []string{"US"},
 					},
 				},
 			}),
 			func(b Builder[*cloudresourcesv1beta1.AwsWebAcl]) {
 				webacl := b.Build()
-				webacl.Spec.Rules[0].Statement.IPSet.IPAddresses = []string{
-					"10.0.0.0/8",
-					"192.168.0.0/16",
-					"172.16.0.0/12",
+				webacl.Spec.Rules[0].Statement.GeoMatch.CountryCodes = []string{
+					"US",
+					"US",
+					"US",
 				}
 			},
 		)
@@ -642,8 +644,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionCount(),
 				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
-					IPSet: &cloudresourcesv1beta1.AwsWebAclIPSetStatement{
-						IPAddresses: []string{"10.0.0.0/8"},
+					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+						CountryCodes: []string{"US"},
 					},
 				},
 			}),

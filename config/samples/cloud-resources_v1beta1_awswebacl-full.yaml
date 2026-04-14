@@ -108,23 +108,25 @@ spec:
   # ====================
   rules:
     # ============================================================
-    # RULE 1: IP SET with Rule Labels
+    # RULE 1: BYTE MATCH with Rule Labels
     # ============================================================
-    - name: allow-corporate-network
+    - name: allow-api-path
       priority: 0
       action:
         allow:
           customRequestHandling:
             insertHeaders:
-              - name: X-Corporate-Network
+              - name: X-API-Access
                 value: "true"
       statement:
-        ipSet:
-          ipAddresses:
-            - "10.0.0.0/8"
-            - "172.16.0.0/12"
-            - "192.168.0.0/16"
-            - "203.0.113.0/24"
+        byteMatch:
+          searchString: "/api"
+          positionalConstraint: STARTS_WITH
+          fieldToMatch:
+            uriPath: true
+          textTransformations:
+            - priority: 0
+              type: LOWERCASE
       # Apply labels to matching requests for use in subsequent rules
       ruleLabels:
         - name: "trusted:corporate"
@@ -237,9 +239,9 @@ spec:
               - name: X-Captcha-Passed
                 value: "true"
       statement:
-        ipSet:
-          ipAddresses:
-            - "198.51.100.0/24"
+        geoMatch:
+          countryCodes:
+            - "US"
       # Override global CAPTCHA immunity time for this specific rule
       captchaConfig:
         immunityTime: 300  # 5 minutes (shorter for suspicious IPs)
@@ -625,6 +627,37 @@ spec:
         metricName: block-xss-attacks
         sampledRequestsEnabled: true
 
+    # ============================================================
+    # RULE 20: REGEX PATTERN MATCHING - Match complex patterns
+    # ============================================================
+    # This rule uses regular expressions to match sophisticated attack patterns.
+    # Regex matching is more flexible than ByteMatch for complex validation.
+    - name: block-suspicious-patterns
+      priority: 21
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      # Block requests with suspicious patterns in URI path (e.g., admin/root/config paths)
+      statement:
+        regexMatch:
+          regexString: "^/(admin|root|config|backup|wp-admin)/.*$"
+          fieldToMatch:
+            uriPath: true
+          textTransformations:
+            - priority: 0
+              type: "LOWERCASE"
+            - priority: 1
+              type: "URL_DECODE"
+      ruleLabels:
+        - name: "security:regex-protection"
+        - name: "block:suspicious-path"
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: block-suspicious-patterns
+        sampledRequestsEnabled: true
+
 ---
 # ====================
 # API FIELD REFERENCE
@@ -669,7 +702,7 @@ spec:
 # - count: { customRequestHandling: { insertHeaders: [...] } }  # Override all to count
 #
 # STATEMENT TYPES (exactly one per rule):
-# - ipSet: { ipAddresses: [...] }
+# - (ipSet removed - use external IP set management)
 # - geoMatch: { countryCodes: [...], forwardedIPConfig: {...} }
 # - rateBased: { limit: int64, forwardedIPConfig: {...} }
 # - byteMatch: { searchString, positionalConstraint, fieldToMatch, textTransformations }
@@ -678,6 +711,7 @@ spec:
 # - sizeConstraint: { comparisonOperator: "EQ|NE|LE|LT|GE|GT", size, fieldToMatch, textTransformations }  # Size-based filtering
 # - sqliMatch: { fieldToMatch, textTransformations, sensitivityLevel: "LOW" | "HIGH" }  # SQL injection detection
 # - xssMatch: { fieldToMatch, textTransformations }  # Cross-site scripting detection
+# - regexMatch: { regexString, fieldToMatch, textTransformations }  # Regular expression pattern matching
 # - and: { statements: [...] }  # Logical AND (min 2 statements, all must match)
 # - or: { statements: [...] }   # Logical OR (min 2 statements, at least one must match)
 # - not: { statement: {...} }   # Logical NOT (negates nested statement)
