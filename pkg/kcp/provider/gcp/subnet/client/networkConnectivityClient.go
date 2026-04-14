@@ -30,14 +30,14 @@ type NetworkConnectivityClient interface {
 
 func NewNetworkConnectivityClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[NetworkConnectivityClient] {
 	return func(_ string) NetworkConnectivityClient {
-		return NewNetworkConnectivityClient(gcpClients)
+		return NewNetworkConnectivityClientFromWrapped(gcpClients.NetworkConnectivityWrapped())
 	}
 }
 
-func NewNetworkConnectivityClient(gcpClients *gcpclient.GcpClients) NetworkConnectivityClient {
-	return NewNetworkConnectivityClientFromWrapped(gcpClients.NetworkConnectivityWrapped())
-}
-
+// NewNetworkConnectivityClientFromWrapped wraps a gcpclient.NetworkConnectivityClient into a
+// feature-local NetworkConnectivityClient. Cannot be eliminated because the interface has a
+// value-add method (CreateServiceConnectionPolicyForRedis) beyond the embedded wrapped client,
+// so a plain gcpclient.NetworkConnectivityClient does not satisfy the interface.
 func NewNetworkConnectivityClientFromWrapped(ncClient gcpclient.NetworkConnectivityClient) NetworkConnectivityClient {
 	return &networkConnectivityClient{NetworkConnectivityClient: ncClient}
 }

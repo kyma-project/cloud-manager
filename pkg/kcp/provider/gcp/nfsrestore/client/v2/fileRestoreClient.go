@@ -25,17 +25,14 @@ type FileRestoreClient interface {
 // Follows the NEW pattern - accesses clients from GcpClients singleton.
 func NewFileRestoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[FileRestoreClient] {
 	return func(_ string) FileRestoreClient {
-		return NewFileRestoreClient(gcpClients)
+		return NewFileRestoreClientFromFilestoreClient(gcpClients.FilestoreWrapped())
 	}
 }
 
-// NewFileRestoreClient creates a new FileRestoreClient wrapping GcpClients.
-func NewFileRestoreClient(gcpClients *gcpclient.GcpClients) FileRestoreClient {
-	return NewFileRestoreClientFromFilestoreClient(gcpClients.FilestoreWrapped())
-}
-
-// NewFileRestoreClientFromFilestoreClient creates a FileRestoreClient from an existing FilestoreClient.
-// Used by mock2 to wire the subscription store into the feature client.
+// NewFileRestoreClientFromFilestoreClient wraps a gcpclient.FilestoreClient into a FileRestoreClient.
+// Cannot be eliminated because FileRestoreClient has a value-add method (FindRestoreOperation)
+// beyond the embedded gcpclient.FilestoreClient, so a plain FilestoreClient does not satisfy
+// the interface.
 func NewFileRestoreClientFromFilestoreClient(filestoreClient gcpclient.FilestoreClient) FileRestoreClient {
 	return &fileRestoreClient{
 		FilestoreClient: filestoreClient,

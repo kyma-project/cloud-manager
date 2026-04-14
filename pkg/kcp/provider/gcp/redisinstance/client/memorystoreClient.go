@@ -37,14 +37,14 @@ type MemorystoreClient interface {
 
 func NewMemorystoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[MemorystoreClient] {
 	return func(_ string) MemorystoreClient {
-		return NewMemorystoreClient(gcpClients)
+		return NewMemorystoreClientFromRedisInstanceClient(gcpClients.RedisInstanceWrapped())
 	}
 }
 
-func NewMemorystoreClient(gcpClients *gcpclient.GcpClients) MemorystoreClient {
-	return NewMemorystoreClientFromRedisInstanceClient(gcpClients.RedisInstanceWrapped())
-}
-
+// NewMemorystoreClientFromRedisInstanceClient wraps a RedisInstanceClient into a MemorystoreClient.
+// Cannot be eliminated because MemorystoreClient has value-add methods (CreateRedisInstanceWithOptions,
+// GetRedisInstanceWithAuth) beyond the embedded gcpclient.RedisInstanceClient, so a plain
+// RedisInstanceClient does not satisfy the interface.
 func NewMemorystoreClientFromRedisInstanceClient(redisInstanceClient gcpclient.RedisInstanceClient) MemorystoreClient {
 	return &memorystoreClient{
 		RedisInstanceClient: redisInstanceClient,

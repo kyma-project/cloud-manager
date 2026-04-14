@@ -42,6 +42,9 @@ func (s *server) VpcNetworkProvider() gcpclient.GcpClientProvider[gcpvpcnetworkc
 	}
 }
 
+// RedisInstanceProvider cannot return s.GetSubscription() directly because MemorystoreClient
+// has value-add methods (CreateRedisInstanceWithOptions, GetRedisInstanceWithAuth) that Store
+// does not implement.
 func (s *server) RedisInstanceProvider() gcpclient.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient] {
 	return func(projectId string) gcpredisinstanceclient.MemorystoreClient {
 		sub := s.GetSubscription(projectId)
@@ -54,14 +57,13 @@ func (s *server) RedisInstanceProvider() gcpclient.GcpClientProvider[gcpredisins
 
 func (s *server) SubnetComputeProvider() gcpclient.GcpClientProvider[gcpsubnetclient.ComputeClient] {
 	return func(projectId string) gcpsubnetclient.ComputeClient {
-		sub := s.GetSubscription(projectId)
-		if sub == nil {
-			return nil
-		}
-		return gcpsubnetclient.NewComputeClientFromSubnetClient(sub)
+		return s.GetSubscription(projectId)
 	}
 }
 
+// SubnetNetworkConnectivityProvider cannot return s.GetSubscription() directly because
+// NetworkConnectivityClient has a value-add method (CreateServiceConnectionPolicyForRedis)
+// that Store does not implement.
 func (s *server) SubnetNetworkConnectivityProvider() gcpclient.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient] {
 	return func(projectId string) gcpsubnetclient.NetworkConnectivityClient {
 		sub := s.GetSubscription(projectId)
@@ -74,14 +76,13 @@ func (s *server) SubnetNetworkConnectivityProvider() gcpclient.GcpClientProvider
 
 func (s *server) SubnetRegionOperationsProvider() gcpclient.GcpClientProvider[gcpsubnetclient.RegionOperationsClient] {
 	return func(projectId string) gcpsubnetclient.RegionOperationsClient {
-		sub := s.GetSubscription(projectId)
-		if sub == nil {
-			return nil
-		}
-		return gcpsubnetclient.NewRegionOperationsClientFromWrapped(sub)
+		return s.GetSubscription(projectId)
 	}
 }
 
+// RedisClusterProvider cannot return s.GetSubscription() directly because MemorystoreClusterClient
+// has value-add methods (CreateRedisClusterWithOptions, GetRedisClusterCertificateString) that
+// Store does not implement.
 func (s *server) RedisClusterProvider() gcpclient.GcpClientProvider[gcpredisclusterclient.MemorystoreClusterClient] {
 	return func(projectId string) gcpredisclusterclient.MemorystoreClusterClient {
 		sub := s.GetSubscription(projectId)
@@ -94,24 +95,18 @@ func (s *server) RedisClusterProvider() gcpclient.GcpClientProvider[gcpredisclus
 
 func (s *server) NfsInstanceV2Provider() gcpclient.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient] {
 	return func(projectId string) gcpnfsinstancev2client.FilestoreClient {
-		sub := s.GetSubscription(projectId)
-		if sub == nil {
-			return nil
-		}
-		return gcpnfsinstancev2client.NewFilestoreClientFromFilestoreClient(sub)
+		return s.GetSubscription(projectId)
 	}
 }
 
 func (s *server) NfsBackupV2Provider() gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient] {
 	return func(projectId string) gcpnfsbackupclientv2.FileBackupClient {
-		sub := s.GetSubscription(projectId)
-		if sub == nil {
-			return nil
-		}
-		return gcpnfsbackupclientv2.NewFileBackupClientFromFilestoreClient(sub)
+		return s.GetSubscription(projectId)
 	}
 }
 
+// NfsRestoreV2Provider cannot return s.GetSubscription() directly because FileRestoreClient
+// has a value-add method (FindRestoreOperation) that Store does not implement.
 func (s *server) NfsRestoreV2Provider() gcpclient.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient] {
 	return func(projectId string) gcpnfsrestoreclientv2.FileRestoreClient {
 		sub := s.GetSubscription(projectId)

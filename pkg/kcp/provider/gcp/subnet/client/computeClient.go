@@ -13,20 +13,6 @@ type ComputeClient interface {
 
 func NewComputeClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[ComputeClient] {
 	return func(_ string) ComputeClient {
-		return NewComputeClient(gcpClients)
+		return gcpClients.SubnetWrapped()
 	}
 }
-
-func NewComputeClient(gcpClients *gcpclient.GcpClients) ComputeClient {
-	return NewComputeClientFromSubnetClient(gcpClients.SubnetWrapped())
-}
-
-func NewComputeClientFromSubnetClient(subnetClient gcpclient.SubnetClient) ComputeClient {
-	return &computeClient{SubnetClient: subnetClient}
-}
-
-type computeClient struct {
-	gcpclient.SubnetClient
-}
-
-var _ ComputeClient = &computeClient{}

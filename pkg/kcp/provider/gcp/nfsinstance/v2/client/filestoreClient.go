@@ -15,24 +15,6 @@ type FilestoreClient interface {
 // Follows the NEW pattern - accesses clients from GcpClients singleton.
 func NewFilestoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[FilestoreClient] {
 	return func(_ string) FilestoreClient {
-		return NewFilestoreClient(gcpClients)
+		return gcpClients.FilestoreWrapped()
 	}
 }
-
-// NewFilestoreClient creates a new FilestoreClient wrapping GcpClients.
-func NewFilestoreClient(gcpClients *gcpclient.GcpClients) FilestoreClient {
-	return NewFilestoreClientFromFilestoreClient(gcpClients.FilestoreWrapped())
-}
-
-func NewFilestoreClientFromFilestoreClient(filestoreClient gcpclient.FilestoreClient) FilestoreClient {
-	return &filestoreClientImpl{
-		FilestoreClient: filestoreClient,
-	}
-}
-
-// filestoreClientImpl implements FilestoreClient by embedding the wrapped GCP Filestore interface.
-type filestoreClientImpl struct {
-	gcpclient.FilestoreClient
-}
-
-var _ FilestoreClient = &filestoreClientImpl{}

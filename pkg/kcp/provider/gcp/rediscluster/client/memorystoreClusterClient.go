@@ -34,14 +34,14 @@ type MemorystoreClusterClient interface {
 
 func NewMemorystoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[MemorystoreClusterClient] {
 	return func(_ string) MemorystoreClusterClient {
-		return NewMemorystoreClient(gcpClients)
+		return NewMemorystoreClientFromRedisClusterClient(gcpClients.RedisClusterWrapped())
 	}
 }
 
-func NewMemorystoreClient(gcpClients *gcpclient.GcpClients) MemorystoreClusterClient {
-	return NewMemorystoreClientFromRedisClusterClient(gcpClients.RedisClusterWrapped())
-}
-
+// NewMemorystoreClientFromRedisClusterClient wraps a RedisClusterClient into a MemorystoreClusterClient.
+// Cannot be eliminated because MemorystoreClusterClient has value-add methods (CreateRedisClusterWithOptions,
+// GetRedisClusterCertificateString) beyond the embedded gcpclient.RedisClusterClient, so a plain
+// RedisClusterClient does not satisfy the interface.
 func NewMemorystoreClientFromRedisClusterClient(redisClusterClient gcpclient.RedisClusterClient) MemorystoreClusterClient {
 	return &memorystoreClient{
 		RedisClusterClient: redisClusterClient,

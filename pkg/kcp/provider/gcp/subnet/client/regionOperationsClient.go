@@ -13,20 +13,6 @@ type RegionOperationsClient interface {
 
 func NewRegionOperationsClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[RegionOperationsClient] {
 	return func(_ string) RegionOperationsClient {
-		return NewRegionOperationsClient(gcpClients)
+		return gcpClients.RegionOperationsWrapped()
 	}
 }
-
-func NewRegionOperationsClient(gcpClients *gcpclient.GcpClients) RegionOperationsClient {
-	return NewRegionOperationsClientFromWrapped(gcpClients.RegionOperationsWrapped())
-}
-
-func NewRegionOperationsClientFromWrapped(regionalOpsClient gcpclient.ComputeRegionalOperationsClient) RegionOperationsClient {
-	return &regionalOperationsClient{ComputeRegionalOperationsClient: regionalOpsClient}
-}
-
-type regionalOperationsClient struct {
-	gcpclient.ComputeRegionalOperationsClient
-}
-
-var _ RegionOperationsClient = &regionalOperationsClient{}
