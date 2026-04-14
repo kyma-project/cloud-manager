@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
+	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -35,7 +37,9 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	location := backup.Status.Location
 	name := fmt.Sprintf("cm-%.60s", backup.Status.Id)
 
-	opName, err := state.fileBackupClient.DeleteBackup(ctx, project, location, name)
+	op, err := state.fileBackupClient.DeleteFilestoreBackup(ctx, &filestorepb.DeleteBackupRequest{
+		Name: v2client.GetFileBackupPath(project, location, name),
+	})
 
 	if err != nil {
 		// If not found, the backup is already deleted
@@ -58,7 +62,7 @@ func deleteNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupDeleting
-	backup.Status.OpIdentifier = opName
+	backup.Status.OpIdentifier = op.Name()
 	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
 		SuccessErrorNil().

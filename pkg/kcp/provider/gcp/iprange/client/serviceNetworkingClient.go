@@ -30,14 +30,11 @@ import (
 // If cloud.google.com/go/servicenetworking becomes available, only the initialization
 // in gcpClients.go needs to change; the provider pattern remains the same.
 
+// ServiceNetworkingClient embeds the wrapped client.ServiceNetworkingClient interface.
+// The feature-local methods have identical signatures to the wrapped interface,
+// so no additional methods are needed.
 type ServiceNetworkingClient interface {
-	ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error)
-	CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
-	// DeleteServiceConnection: Deletes a private service access connection.
-	// projectNumber: Project number which is different from project id. Get it by calling client.GetProjectNumber(ctx, projectId)
-	DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error)
-	PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
-	GetServiceNetworkingOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error)
+	client.ServiceNetworkingClient
 }
 
 // NewServiceNetworkingClientProvider creates a GcpClientProvider for ServiceNetworkingClient.
@@ -53,7 +50,7 @@ func NewServiceNetworkingClientProvider(gcpClients *client.GcpClients) client.Gc
 // NewServiceNetworkingClientFromWrapped creates a ServiceNetworkingClient from wrapped interface.
 // Used by mock2 for test wiring.
 func NewServiceNetworkingClientFromWrapped(wrapped client.ServiceNetworkingClient) ServiceNetworkingClient {
-	return &serviceNetworkingClientAdapter{wrapped: wrapped}
+	return &serviceNetworkingClientAdapter{ServiceNetworkingClient: wrapped}
 }
 
 // NewServiceNetworkingClientProviderV2 creates a ClientProvider (OLD pattern) for v2 legacy code.
@@ -92,31 +89,13 @@ func NewServiceNetworkingClientForService(svcNet *servicenetworking.APIService, 
 	return &serviceNetworkingClientDirect{svcNet: svcNet, crmService: crmService}
 }
 
-// serviceNetworkingClientAdapter wraps the central gcpclient.ServiceNetworkingClient interface
-// and delegates to it. Used in the NEW pattern.
+// serviceNetworkingClientAdapter embeds the central client.ServiceNetworkingClient interface.
+// Since all methods have identical signatures, the embedded interface provides them directly.
 type serviceNetworkingClientAdapter struct {
-	wrapped client.ServiceNetworkingClient
+	client.ServiceNetworkingClient
 }
 
-func (c *serviceNetworkingClientAdapter) PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
-	return c.wrapped.PatchServiceConnection(ctx, projectId, vpcId, reservedIpRanges)
-}
-
-func (c *serviceNetworkingClientAdapter) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
-	return c.wrapped.DeleteServiceConnection(ctx, projectId, vpcId)
-}
-
-func (c *serviceNetworkingClientAdapter) ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error) {
-	return c.wrapped.ListServiceConnections(ctx, projectId, vpcId)
-}
-
-func (c *serviceNetworkingClientAdapter) CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
-	return c.wrapped.CreateServiceConnection(ctx, projectId, vpcId, reservedIpRanges)
-}
-
-func (c *serviceNetworkingClientAdapter) GetServiceNetworkingOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error) {
-	return c.wrapped.GetServiceNetworkingOperation(ctx, operationName)
-}
+var _ ServiceNetworkingClient = &serviceNetworkingClientAdapter{}
 
 // serviceNetworkingClientDirect is the direct implementation using the legacy API.
 // Used by the deprecated NewServiceNetworkingClient and NewServiceNetworkingClientForService.

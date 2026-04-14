@@ -10,7 +10,9 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 // updateInstance updates an existing Filestore instance in GCP.
@@ -40,8 +42,16 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 	location := state.GetGcpLocation()
 	name := nfsInstance.Name
 
+	updateInstance := state.GetInstance()
+	updateInstance.Name = v2client.GetFilestoreName(project, location, name)
+
 	// Use the modified instance from state (updated by modify actions)
-	operationName, err := state.GetFilestoreClient().UpdateInstance(ctx, project, location, name, state.GetInstance(), state.updateMask)
+	op, err := state.GetFilestoreClient().UpdateFilestoreInstance(ctx, &filestorepb.UpdateInstanceRequest{
+		UpdateMask: &fieldmaskpb.FieldMask{
+			Paths: state.updateMask,
+		},
+		Instance: updateInstance,
+	})
 	if err != nil {
 		logger.Error(err, "Error updating Filestore Instance in GCP")
 		return composed.UpdateStatus(nfsInstance).
@@ -56,6 +66,7 @@ func updateInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
+	operationName := op.Name()
 	if operationName != "" {
 		nfsInstance.Status.OpIdentifier = operationName
 

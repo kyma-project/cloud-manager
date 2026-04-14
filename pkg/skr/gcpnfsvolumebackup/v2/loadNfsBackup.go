@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
+	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,7 +32,9 @@ func loadNfsBackup(ctx context.Context, st composed.State) (error, context.Conte
 	location := backup.Status.Location
 	name := fmt.Sprintf("cm-%.60s", backup.Status.Id)
 
-	bkup, err := state.fileBackupClient.GetBackup(ctx, project, location, name)
+	bkup, err := state.fileBackupClient.GetFilestoreBackup(ctx, &filestorepb.GetBackupRequest{
+		Name: v2client.GetFileBackupPath(project, location, name),
+	})
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			state.fileBackup = nil

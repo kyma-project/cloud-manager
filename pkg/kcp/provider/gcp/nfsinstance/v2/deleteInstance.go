@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -35,7 +36,9 @@ func deleteInstance(ctx context.Context, st composed.State) (error, context.Cont
 	location := state.GetGcpLocation()
 	name := nfsInstance.Name
 
-	operationName, err := state.GetFilestoreClient().DeleteInstance(ctx, project, location, name)
+	op, err := state.GetFilestoreClient().DeleteFilestoreInstance(ctx, &filestorepb.DeleteInstanceRequest{
+		Name: v2client.GetFilestoreName(project, location, name),
+	})
 	if err != nil {
 		logger.Error(err, "Error deleting Filestore Instance in GCP")
 		return composed.UpdateStatus(nfsInstance).
@@ -50,6 +53,7 @@ func deleteInstance(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
+	operationName := op.Name()
 	if operationName != "" {
 		nfsInstance.Status.OpIdentifier = operationName
 
