@@ -2,14 +2,16 @@ package subnet
 
 import (
 	"context"
+	"fmt"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 func createSubnet(ctx context.Context, st composed.State) (error, context.Context) {
@@ -24,15 +26,18 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	opKey, err := state.computeClient.CreateSubnet(ctx, client.CreateSubnetRequest{
-		ProjectId:             gcpScope.Project,
-		Region:                region,
-		Network:               gcpScope.VpcNetwork,
-		Name:                  GetSubnetShortName(state.Obj().GetName()),
-		Cidr:                  subnet.Spec.Cidr,
-		PrivateIpGoogleAccess: true,
-		Purpose:               "PRIVATE",
-		IdempotenceId:         uuid.NewString(),
+	networkNameFull := fmt.Sprintf("projects/%s/global/networks/%s", gcpScope.Project, gcpScope.VpcNetwork)
+	op, err := state.computeClient.InsertSubnet(ctx, &computepb.InsertSubnetworkRequest{
+		Project: gcpScope.Project,
+		Region:  region,
+		SubnetworkResource: &computepb.Subnetwork{
+			IpCidrRange:           ptr.To(subnet.Spec.Cidr),
+			Name:                  ptr.To(GetSubnetShortName(state.Obj().GetName())),
+			Network:               ptr.To(networkNameFull),
+			PrivateIpGoogleAccess: ptr.To(true),
+			Purpose:               ptr.To("PRIVATE"),
+		},
+		RequestId: ptr.To(uuid.NewString()),
 	})
 
 	if err != nil {
@@ -57,7 +62,7 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 	}
 
-	subnet.Status.SubnetCreationOperationName = opKey
+	subnet.Status.SubnetCreationOperationName = op.Name()
 
 	return composed.UpdateStatus(subnet).
 		SuccessError(composed.StopWithRequeue).

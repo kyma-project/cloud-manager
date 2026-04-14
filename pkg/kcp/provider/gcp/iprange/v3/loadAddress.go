@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -39,12 +40,18 @@ func loadAddress(ctx context.Context, st composed.State) (error, context.Context
 	logger.Info("Loading GCP Address")
 
 	// Try loading with new name format
-	addr, err := state.computeClient.GetIpRange(ctx, project, remoteName)
+	addr, err := state.computeClient.GetGlobalAddress(ctx, &computepb.GetGlobalAddressRequest{
+		Project: project,
+		Address: remoteName,
+	})
 
 	if gcpmeta.IsNotFound(err) {
 		// Fallback to old name for backward compatibility
 		logger.Info("New IpRange name not found, checking fallback name")
-		fallbackAddr, err2 := state.computeClient.GetIpRange(ctx, project, remoteFallbackName)
+		fallbackAddr, err2 := state.computeClient.GetGlobalAddress(ctx, &computepb.GetGlobalAddressRequest{
+			Project: project,
+			Address: remoteFallbackName,
+		})
 
 		if gcpmeta.IsNotFound(err2) {
 			// Neither name exists - resource not yet created

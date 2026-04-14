@@ -117,7 +117,10 @@ func checkComputeOperation(ctx context.Context, state *State, opName string) (er
 	ipRange := state.ObjAsIpRange()
 
 	project := state.Scope().Spec.Scope.Gcp.Project
-	op, err := state.computeClient.GetGlobalOperation(ctx, project, opName)
+	op, err := state.computeClient.GetComputeGlobalOperation(ctx, &computepb.GetGlobalOperationRequest{
+		Project:   project,
+		Operation: opName,
+	})
 	if err != nil {
 		logger.Error(err, "Error getting Compute Operation from GCP")
 		return composed.PatchStatus(ipRange).

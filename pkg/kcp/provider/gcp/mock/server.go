@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/googleapis/gax-go/v2"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
@@ -192,24 +193,28 @@ func (s *server) CreatePscIpRange(ctx context.Context, projectId, vpcName, name,
 	return s.iprangeStore.CreatePscIpRange(ctx, projectId, vpcName, name, description, address, prefixLength)
 }
 
-func (s *server) DeleteIpRange(ctx context.Context, projectId, name string) (string, error) {
-	return s.iprangeStore.DeleteIpRange(ctx, projectId, name)
+func (s *server) GetGlobalAddress(ctx context.Context, req *computepb.GetGlobalAddressRequest, opts ...gax.CallOption) (*computepb.Address, error) {
+	return s.iprangeStore.GetGlobalAddress(ctx, req, opts...)
 }
 
-func (s *server) GetIpRange(ctx context.Context, projectId, name string) (*computepb.Address, error) {
-	return s.iprangeStore.GetIpRange(ctx, projectId, name)
+func (s *server) DeleteGlobalAddress(ctx context.Context, req *computepb.DeleteGlobalAddressRequest, opts ...gax.CallOption) (client.VoidOperation, error) {
+	return s.iprangeStore.DeleteGlobalAddress(ctx, req, opts...)
 }
 
-func (s *server) ListGlobalAddresses(ctx context.Context, projectId, vpc string) ([]*computepb.Address, error) {
-	return s.iprangeStore.ListGlobalAddresses(ctx, projectId, vpc)
+func (s *server) InsertGlobalAddress(ctx context.Context, req *computepb.InsertGlobalAddressRequest, opts ...gax.CallOption) (client.VoidOperation, error) {
+	return s.iprangeStore.InsertGlobalAddress(ctx, req, opts...)
 }
 
-func (s *server) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*computepb.Operation, error) {
-	return s.iprangeStore.GetGlobalOperation(ctx, projectId, operationName)
+func (s *server) ListGlobalAddresses(ctx context.Context, req *computepb.ListGlobalAddressesRequest, opts ...gax.CallOption) client.Iterator[*computepb.Address] {
+	return s.iprangeStore.ListGlobalAddresses(ctx, req, opts...)
 }
 
-func (s *server) WaitGlobalOperation(ctx context.Context, projectId, operationName string) error {
-	return s.iprangeStore.WaitGlobalOperation(ctx, projectId, operationName)
+func (s *server) GetComputeGlobalOperation(ctx context.Context, req *computepb.GetGlobalOperationRequest, opts ...gax.CallOption) (*computepb.Operation, error) {
+	return s.iprangeStore.GetComputeGlobalOperation(ctx, req, opts...)
+}
+
+func (s *server) ListComputeGlobalOperations(ctx context.Context, req *computepb.ListGlobalOperationsRequest, opts ...gax.CallOption) client.Iterator[*computepb.Operation] {
+	return s.iprangeStore.ListComputeGlobalOperations(ctx, req, opts...)
 }
 
 func (s *server) CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {

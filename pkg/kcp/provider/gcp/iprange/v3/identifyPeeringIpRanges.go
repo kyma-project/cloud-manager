@@ -6,6 +6,8 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	"google.golang.org/protobuf/proto"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -40,23 +42,27 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 	vpc := gcpScope.VpcNetwork
 
 	// List all global addresses in the VPC
-	list, err := state.computeClient.ListGlobalAddresses(ctx, project, vpc)
-	if err != nil {
-		logger.Error(err, "Error listing Global Addresses from GCP")
-		return composed.PatchStatus(ipRange).
-			SetExclusiveConditions(metav1.Condition{
-				Type:    v1beta1.ConditionTypeError,
-				Status:  metav1.ConditionTrue,
-				Reason:  v1beta1.ReasonGcpError,
-				Message: "Error listing Global Addresses from GCP",
-			}).
-			SuccessError(composed.StopWithRequeue).
-			Run(ctx, state)
-	}
+	filter := gcpclient.GetNetworkFilter(project, vpc)
+	it := state.computeClient.ListGlobalAddresses(ctx, &computepb.ListGlobalAddressesRequest{
+		Project: project,
+		Filter:  proto.String(filter),
+	})
 
 	// Load the address names into a map (only PSA purpose addresses)
 	tmpMap := map[string]struct{}{}
-	for _, addr := range list {
+	for addr, err := range it.All() {
+		if err != nil {
+			logger.Error(err, "Error listing Global Addresses from GCP")
+			return composed.PatchStatus(ipRange).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    v1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  v1beta1.ReasonGcpError,
+					Message: "Error listing Global Addresses from GCP",
+				}).
+				SuccessError(composed.StopWithRequeue).
+				Run(ctx, state)
+		}
 		if isPsaPurpose(addr) {
 			if addr.Name != nil {
 				tmpMap[*addr.Name] = struct{}{}
