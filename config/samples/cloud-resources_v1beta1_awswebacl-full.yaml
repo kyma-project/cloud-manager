@@ -1,7 +1,7 @@
 # Complete AwsWebAcl Example with All Features
 # ============================================
 # This example demonstrates every available field in the AwsWebAcl CRD including:
-# - All statement types (IPSet, GeoMatch, RateBased, ByteMatch, ManagedRuleGroup)
+# - All statement types (GeoMatch, RateBased, ByteMatch, ManagedRuleGroup, etc.)
 # - All action types (Allow, Block, Count, Captcha, Challenge)
 # - Custom request handling and custom responses
 # - Rule labels for advanced filtering
@@ -9,6 +9,9 @@
 # - Association config for request body inspection limits
 # - Token domains for CAPTCHA/Challenge
 # - Custom response bodies
+#
+# NOTE: Logical operators (And/Or/Not) are NOT supported due to Kubernetes API limitations
+# NOTE: IPSet statements are NOT supported - use separate AwsIPSet resource (future)
 
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AwsWebAcl
@@ -87,21 +90,6 @@ spec:
   # Default immunity time after passing Challenge (60-259200 seconds)
   challengeConfig:
     immunityTime: 7200  # 2 hours
-
-  # ====================
-  # ASSOCIATION CONFIG (Optional)
-  # ====================
-  # Custom request body size inspection limits per resource type
-  # NOTE: ALB and AppSync are fixed at 8KB and cannot be customized
-  # Valid resource types: CLOUDFRONT, API_GATEWAY, COGNITO_USER_POOL, APP_RUNNER_SERVICE, VERIFIED_ACCESS_INSTANCE
-  associationConfig:
-    requestBody:
-      CLOUDFRONT:
-        defaultSizeInspectionLimit: KB_32
-      API_GATEWAY:
-        defaultSizeInspectionLimit: KB_16
-      COGNITO_USER_POOL:
-        defaultSizeInspectionLimit: KB_8
 
   # ====================
   # RULES (Optional, max 100)
@@ -365,152 +353,6 @@ spec:
         metricName: AWS-AWSManagedRulesSQLiRuleSet
         sampledRequestsEnabled: true
 
-    # ============================================================
-    # RULE 12: LOGICAL AND - Block if ALL conditions match
-    # ============================================================
-    - name: block-high-risk-traffic
-      priority: 13
-      action:
-        block: {}
-      # Block if: (from CN OR RU) AND rate > 500 AND NOT from corporate network
-      statement:
-        AndStatement:
-          statements:
-            # First condition: Country is CN or RU
-            - OrStatement:
-                statements:
-                  - geoMatch:
-                      countryCodes: ["CN"]
-                  - geoMatch:
-                      countryCodes: ["RU"]
-            # Second condition: Rate exceeds limit
-            - rateBased:
-                limit: 500
-            # Third condition: NOT from corporate network
-            - NotStatement:
-                statement:
-                  ipSet:
-                    ipAddresses: ["10.0.0.0/8"]
-      ruleLabels:
-        - name: "protection:advanced-logic"
-        - name: "block:high-risk-combined"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-high-risk-traffic
-        sampledRequestsEnabled: true
-
-    # ============================================================
-    # RULE 13: LOGICAL OR - Block if ANY condition matches
-    # ============================================================
-    - name: block-multiple-threats
-      priority: 14
-      action:
-        block: {}
-      # Block if ANY of these match: suspicious UA OR path traversal OR high rate
-      statement:
-        OrStatement:
-          statements:
-            # Suspicious user agent
-            - byteMatch:
-                searchString: "sqlmap"
-                positionalConstraint: CONTAINS
-                fieldToMatch:
-                  singleHeader: "user-agent"
-                textTransformations:
-                  - priority: 0
-                    type: LOWERCASE
-            # Path traversal attempt
-            - byteMatch:
-                searchString: "../"
-                positionalConstraint: CONTAINS
-                fieldToMatch:
-                  queryString: true
-                textTransformations:
-                  - priority: 0
-                    type: URL_DECODE
-            # High rate
-            - rateBased:
-                limit: 100
-      ruleLabels:
-        - name: "protection:multi-threat"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-multiple-threats
-        sampledRequestsEnabled: true
-
-    # ============================================================
-    # RULE 14: LOGICAL NOT - Allow only trusted traffic
-    # ============================================================
-    - name: allow-only-trusted-sources
-      priority: 15
-      action:
-        block: {}
-      # Block if NOT from trusted sources (inverted logic: block everything except trusted)
-      statement:
-        NotStatement:
-          statement:
-            OrStatement:
-              statements:
-                # Trusted corporate network
-                - ipSet:
-                    ipAddresses: ["10.0.0.0/8", "172.16.0.0/12"]
-                # Trusted countries
-                - geoMatch:
-                    countryCodes: ["US", "GB", "DE"]
-      ruleLabels:
-        - name: "protection:inverted-logic"
-        - name: "allow:trusted-only"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: allow-only-trusted-sources
-        sampledRequestsEnabled: true
-
-    # ============================================================
-    # RULE 15: COMPLEX NESTED LOGIC
-    # ============================================================
-    - name: advanced-threat-detection
-      priority: 16
-      action:
-        captcha: {}
-      # CAPTCHA if: ((CN OR RU) AND rate > 200) OR (suspicious UA AND NOT from trusted IPs)
-      statement:
-        OrStatement:
-          statements:
-            # First branch: High-risk countries with moderate rate
-            - and:
-                statements:
-                  - OrStatement:
-                      statements:
-                        - geoMatch:
-                            countryCodes: ["CN"]
-                        - geoMatch:
-                            countryCodes: ["RU"]
-                  - rateBased:
-                      limit: 200
-            # Second branch: Suspicious user agent from untrusted IPs
-            - and:
-                statements:
-                  - byteMatch:
-                      searchString: "bot"
-                      positionalConstraint: CONTAINS
-                      fieldToMatch:
-                        singleHeader: "user-agent"
-                      textTransformations:
-                        - priority: 0
-                          type: LOWERCASE
-                  - NotStatement:
-                      statement:
-                        ipSet:
-                          ipAddresses: ["10.0.0.0/8"]
-      ruleLabels:
-        - name: "protection:complex-logic"
-        - name: "challenge:adaptive"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: advanced-threat-detection
-        sampledRequestsEnabled: true
-
-    # ============================================================
     # RULE 16: LABEL MATCH - Block based on labels from previous rules
     # ============================================================
     # This rule demonstrates label-based filtering, matching requests
@@ -684,6 +526,7 @@ spec:
         metricName: block-suspicious-asns
         sampledRequestsEnabled: true
 
+
 ---
 # ====================
 # API FIELD REFERENCE
@@ -702,7 +545,6 @@ spec:
 # - spec.customResponseBodies (map[string]AwsWebAclCustomResponseBody)
 # - spec.captchaConfig.immunityTime (int64, 60-259200 seconds)
 # - spec.challengeConfig.immunityTime (int64, 60-259200 seconds)
-# - spec.associationConfig.requestBody (map of resource type to size limit)
 #
 # RULE REQUIRED FIELDS:
 # - name (string, 1-128 chars, pattern: ^[0-9A-Za-z_-]+$)
@@ -728,7 +570,6 @@ spec:
 # - count: { customRequestHandling: { insertHeaders: [...] } }  # Override all to count
 #
 # STATEMENT TYPES (exactly one per rule):
-# - (ipSet removed - use external IP set management)
 # - geoMatch: { countryCodes: [...], forwardedIPConfig: {...} }
 # - rateBased: { limit: int64, forwardedIPConfig: {...} }
 # - byteMatch: { searchString, positionalConstraint, fieldToMatch, textTransformations }
@@ -739,17 +580,6 @@ spec:
 # - xssMatch: { fieldToMatch, textTransformations }  # Cross-site scripting detection
 # - regexMatch: { regexString, fieldToMatch, textTransformations }  # Regular expression pattern matching
 # - asnMatch: { autonomousSystemNumbers: [int64...], forwardedIPConfig: {...} }  # Match by ASN
-# - and: { statements: [...] }  # Logical AND (min 2 statements, all must match)
-# - or: { statements: [...] }   # Logical OR (min 2 statements, at least one must match)
-# - not: { statement: {...} }   # Logical NOT (negates nested statement)
 #
-# LOGICAL OPERATORS:
-# - Statements can be nested arbitrarily deep
-# - Example: and { or { geoMatch, geoMatch }, not { ipSet } }
-# - Use to create complex filtering rules with boolean logic
-# - Each nested statement follows the same rules (exactly one statement type)
-#
-# ASSOCIATION CONFIG SIZE LIMITS:
-# - KB_8, KB_16, KB_32, KB_48, KB_64
-#
-# NOTE: ALB and AppSync are fixed at KB_8 and cannot be customized
+# NOTE: Logical operators (and/or/not) are NOT supported due to Kubernetes API limitations
+# NOTE: IPSet statements are NOT supported - use separate AwsIPSet resource (future)

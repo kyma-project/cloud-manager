@@ -55,38 +55,6 @@ spec:
             spec:
               description: spec defines the desired state of AwsWebAcl
               properties:
-                associationConfig:
-                  description: |-
-                    AssociationConfig - Custom request body size limits for protected resources
-                    Note: ALB and AppSync are fixed at 8KB and cannot be customized
-                    This config only applies to: CLOUDFRONT, API_GATEWAY, COGNITO_USER_POOL, APP_RUNNER_SERVICE, VERIFIED_ACCESS_INSTANCE
-                  properties:
-                    requestBody:
-                      additionalProperties:
-                        description: AwsWebAclRequestBodyConfig defines request body inspection limits
-                        properties:
-                          defaultSizeInspectionLimit:
-                            description: |-
-                              DefaultSizeInspectionLimit - Maximum body size to inspect
-                              Valid values: KB_8, KB_16, KB_32, KB_48, KB_64
-                              Default is KB_16 (16384 bytes) for configurable resources
-                              ALB/AppSync are always KB_8 (8192 bytes) regardless of this setting
-                            enum:
-                              - KB_8
-                              - KB_16
-                              - KB_32
-                              - KB_48
-                              - KB_64
-                            type: string
-                        required:
-                          - defaultSizeInspectionLimit
-                        type: object
-                      description: |-
-                        RequestBody - Map of resource type to body size limit
-                        Valid keys: CLOUDFRONT, API_GATEWAY, COGNITO_USER_POOL, APP_RUNNER_SERVICE, VERIFIED_ACCESS_INSTANCE
-                        Note: ALB and AppSync always use 8KB and cannot be configured here
-                      type: object
-                  type: object
                 captchaConfig:
                   description: CaptchaConfig - Global default CAPTCHA immunity time
                   properties:
@@ -616,6 +584,9 @@ spec:
                               excludedRules:
                                 description: ExcludedRules to disable specific rules within the managed group
                                 items:
+                                  description: |-
+                                    AwsWebAclAssociationConfig specifies custom request body inspection limits
+                                    Note: ALB and AppSync are fixed at 8KB. This only applies to CloudFront, API Gateway, etc.
                                   properties:
                                     name:
                                       description: Name of the rule to exclude from the managed rule group
