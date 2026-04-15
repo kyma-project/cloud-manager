@@ -604,23 +604,6 @@ func convertChallengeConfig(config *cloudresourcesv1beta1.AwsWebAclChallengeConf
 	}
 }
 
-func convertAssociationConfig(config *cloudresourcesv1beta1.AwsWebAclAssociationConfig) *wafv2types.AssociationConfig {
-	if config == nil || len(config.RequestBody) == 0 {
-		return nil
-	}
-
-	requestBody := make(map[string]wafv2types.RequestBodyAssociatedResourceTypeConfig)
-	for resourceType, bodyConfig := range config.RequestBody {
-		requestBody[resourceType] = wafv2types.RequestBodyAssociatedResourceTypeConfig{
-			DefaultSizeInspectionLimit: wafv2types.SizeInspectionLimit(bodyConfig.DefaultSizeInspectionLimit),
-		}
-	}
-
-	return &wafv2types.AssociationConfig{
-		RequestBody: requestBody,
-	}
-}
-
 func convertRuleLabels(labels []cloudresourcesv1beta1.AwsWebAclLabel) []wafv2types.Label {
 	if len(labels) == 0 {
 		return nil

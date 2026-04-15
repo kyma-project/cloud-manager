@@ -543,39 +543,6 @@ func TestConvertManagedRuleGroupStatementWithConfigs(t *testing.T) {
 	})
 }
 
-func TestConvertAssociationConfig(t *testing.T) {
-	t.Run("With request body config", func(t *testing.T) {
-		config := &cloudresourcesv1beta1.AwsWebAclAssociationConfig{
-			RequestBody: map[string]cloudresourcesv1beta1.AwsWebAclRequestBodyConfig{
-				"CLOUDFRONT": {
-					DefaultSizeInspectionLimit: "KB_32",
-				},
-				"API_GATEWAY": {
-					DefaultSizeInspectionLimit: "KB_16",
-				},
-			},
-		}
-		result := convertAssociationConfig(config)
-		assert.NotNil(t, result)
-		assert.Len(t, result.RequestBody, 2)
-		assert.Equal(t, wafv2types.SizeInspectionLimitKb32, result.RequestBody["CLOUDFRONT"].DefaultSizeInspectionLimit)
-		assert.Equal(t, wafv2types.SizeInspectionLimitKb16, result.RequestBody["API_GATEWAY"].DefaultSizeInspectionLimit)
-	})
-
-	t.Run("With nil config returns nil", func(t *testing.T) {
-		result := convertAssociationConfig(nil)
-		assert.Nil(t, result)
-	})
-
-	t.Run("With empty RequestBody returns nil", func(t *testing.T) {
-		config := &cloudresourcesv1beta1.AwsWebAclAssociationConfig{
-			RequestBody: map[string]cloudresourcesv1beta1.AwsWebAclRequestBodyConfig{},
-		}
-		result := convertAssociationConfig(config)
-		assert.Nil(t, result)
-	})
-}
-
 func TestConvertRuleLabels(t *testing.T) {
 	t.Run("With multiple labels", func(t *testing.T) {
 		labels := []cloudresourcesv1beta1.AwsWebAclLabel{
