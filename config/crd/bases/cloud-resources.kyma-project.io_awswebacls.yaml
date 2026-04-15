@@ -584,9 +584,6 @@ spec:
                               excludedRules:
                                 description: ExcludedRules to disable specific rules within the managed group
                                 items:
-                                  description: |-
-                                    AwsWebAclAssociationConfig specifies custom request body inspection limits
-                                    Note: ALB and AppSync are fixed at 8KB. This only applies to CloudFront, API Gateway, etc.
                                   properties:
                                     name:
                                       description: Name of the rule to exclude from the managed rule group
