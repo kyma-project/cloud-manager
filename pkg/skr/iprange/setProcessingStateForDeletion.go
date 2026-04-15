@@ -5,6 +5,8 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -17,6 +19,12 @@ func setProcessingStateForDeletion(ctx context.Context, st composed.State) (erro
 	}
 	if state.KcpIpRange == nil || composed.IsMarkedForDeletion(state.KcpIpRange) {
 		return nil, ctx // KCP IpRange is already marked for deletion, so it already passed Processing state
+	}
+
+	// Skip setting Processing if a DeleteWhileUsed warning exists to avoid ping-pong with preventDeleteOn* actions
+	warningCondition := meta.FindStatusCondition(*state.ObjAsIpRange().Conditions(), cloudresourcesv1beta1.ConditionTypeWarning)
+	if warningCondition != nil && warningCondition.Status == metav1.ConditionTrue && warningCondition.Reason == cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed {
+		return nil, ctx
 	}
 
 	if state.ObjAsIpRange().State() != cloudresourcesv1beta1.StateProcessing {

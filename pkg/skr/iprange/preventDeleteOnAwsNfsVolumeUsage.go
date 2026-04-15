@@ -6,6 +6,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -18,12 +19,17 @@ func preventDeleteOnAwsNfsVolumeUsage(ctx context.Context, st composed.State) (e
 		cloudresourcesv1beta1.IpRangeField,
 		func(ctx context.Context, st composed.State, _ client.ObjectList, usedByNames []string) (error, context.Context) {
 			state := st.(*State)
+			msg := fmt.Sprintf("Can not be deleted while used by: %v", usedByNames)
+			existing := meta.FindStatusCondition(*state.ObjAsIpRange().Conditions(), cloudresourcesv1beta1.ConditionTypeWarning)
+			if existing != nil && existing.Status == metav1.ConditionTrue && existing.Reason == cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed && existing.Message == msg {
+				return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+			}
 			return composed.UpdateStatus(state.ObjAsIpRange()).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudresourcesv1beta1.ConditionTypeWarning,
 					Status:  metav1.ConditionTrue,
 					Reason:  cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed,
-					Message: fmt.Sprintf("Can not be deleted while used by: %v", usedByNames),
+					Message: msg,
 				}).
 				DeriveStateFromConditions(state.MapConditionToState()).
 				ErrorLogMessage("Error updating IpRange status with Warning condition for delete while in use").
