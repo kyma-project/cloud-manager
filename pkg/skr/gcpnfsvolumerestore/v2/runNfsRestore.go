@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -36,7 +37,13 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 	dstFullPath := gcpnfsrestoreclientv2.GetFilestoreInstancePath(project, dstLocation, nfsInstanceName)
 	dstFileShare := state.GcpNfsVolume.Spec.FileShareName
 
-	opName, err := state.fileRestoreClient.RestoreFile(ctx, project, dstFullPath, dstFileShare, state.SrcBackupFullPath)
+	op, err := state.fileRestoreClient.RestoreFilestoreInstance(ctx, &filestorepb.RestoreInstanceRequest{
+		Name:      dstFullPath,
+		FileShare: dstFileShare,
+		Source: &filestorepb.RestoreInstanceRequest_SourceBackup{
+			SourceBackup: state.SrcBackupFullPath,
+		},
+	})
 
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateError
@@ -52,8 +59,8 @@ func runNfsRestore(ctx context.Context, st composed.State) (error, context.Conte
 			Run(ctx, state)
 	}
 
-	if opName != "" {
-		restore.Status.OpIdentifier = opName
+	if op != nil {
+		restore.Status.OpIdentifier = op.Name()
 		restore.Status.State = cloudresourcesv1beta1.JobStateInProgress
 		return composed.PatchStatus(restore).
 			SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpOperationWaitTime)).

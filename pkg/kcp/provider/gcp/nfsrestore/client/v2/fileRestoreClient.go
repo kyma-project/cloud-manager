@@ -4,22 +4,18 @@ import (
 	"context"
 	"fmt"
 
-	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
 
-// FileRestoreClient defines operations for GCP Filestore restore.
-// This interface abstracts the GCP Filestore Restore API for easier testing and mocking.
+// FileRestoreClient embeds the wrapped gcpclient.FilestoreClient interface and adds
+// the FindRestoreOperation method which contains real business logic (filter construction,
+// iteration to find running operations).
+// Actions call the wrapped methods directly (e.g., RestoreFilestoreInstance, GetFilestoreOperation)
+// using name-building utilities from util.go.
 type FileRestoreClient interface {
-	// RestoreFile triggers a restore from a backup to a Filestore instance.
-	// Returns the operation name for tracking.
-	RestoreFile(ctx context.Context, projectId, destFileFullPath, destFileShareName, srcBackupFullPath string) (string, error)
-
-	// GetRestoreOperation retrieves status of a long-running restore operation.
-	// Returns the full operation object to allow callers to check Done status and Error.
-	GetRestoreOperation(ctx context.Context, operationName string) (*longrunningpb.Operation, error)
+	gcpclient.FilestoreClient
 
 	// FindRestoreOperation lists operations for an instance to find a running restore.
 	FindRestoreOperation(ctx context.Context, projectId, location, instanceId string) (*longrunningpb.Operation, error)
@@ -29,67 +25,27 @@ type FileRestoreClient interface {
 // Follows the NEW pattern - accesses clients from GcpClients singleton.
 func NewFileRestoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[FileRestoreClient] {
 	return func(_ string) FileRestoreClient {
-		return NewFileRestoreClient(gcpClients)
+		return NewFileRestoreClientFromFilestoreClient(gcpClients.FilestoreWrapped())
 	}
 }
 
-// NewFileRestoreClient creates a new FileRestoreClient wrapping GcpClients.
-func NewFileRestoreClient(gcpClients *gcpclient.GcpClients) FileRestoreClient {
-	return NewFileRestoreClientFromFilestoreClient(gcpClients.FilestoreWrapped())
-}
-
-// NewFileRestoreClientFromFilestoreClient creates a FileRestoreClient from an existing FilestoreClient.
-// Used by mock2 to wire the subscription store into the feature client.
+// NewFileRestoreClientFromFilestoreClient wraps a gcpclient.FilestoreClient into a FileRestoreClient.
+// Cannot be eliminated because FileRestoreClient has a value-add method (FindRestoreOperation)
+// beyond the embedded gcpclient.FilestoreClient, so a plain FilestoreClient does not satisfy
+// the interface.
 func NewFileRestoreClientFromFilestoreClient(filestoreClient gcpclient.FilestoreClient) FileRestoreClient {
 	return &fileRestoreClient{
-		filestoreClient: filestoreClient,
+		FilestoreClient: filestoreClient,
 	}
 }
 
-// fileRestoreClient implements FileRestoreClient using the wrapped FilestoreClient interface.
+// fileRestoreClient implements FileRestoreClient by embedding the wrapped gcpclient.FilestoreClient.
+// Only FindRestoreOperation is kept as an additional method (value-add: filter construction + iteration).
 type fileRestoreClient struct {
-	filestoreClient gcpclient.FilestoreClient
+	gcpclient.FilestoreClient
 }
 
 var _ FileRestoreClient = &fileRestoreClient{}
-
-func (c *fileRestoreClient) RestoreFile(ctx context.Context, projectId, destFileFullPath, destFileShareName, srcBackupFullPath string) (string, error) {
-	logger := composed.LoggerFromCtx(ctx)
-
-	req := &filestorepb.RestoreInstanceRequest{
-		Name:      destFileFullPath,
-		FileShare: destFileShareName,
-		Source: &filestorepb.RestoreInstanceRequest_SourceBackup{
-			SourceBackup: srcBackupFullPath,
-		},
-	}
-
-	op, err := c.filestoreClient.RestoreFilestoreInstance(ctx, req)
-	if err != nil {
-		logger.Error(err, "RestoreFile",
-			"projectId", projectId,
-			"destFileFullPath", destFileFullPath,
-			"destFileShareName", destFileShareName,
-			"srcBackupFullPath", srcBackupFullPath)
-		return "", err
-	}
-
-	return op.Name(), nil
-}
-
-func (c *fileRestoreClient) GetRestoreOperation(ctx context.Context, operationName string) (*longrunningpb.Operation, error) {
-	logger := composed.LoggerFromCtx(ctx)
-
-	op, err := c.filestoreClient.GetFilestoreOperation(ctx, &longrunningpb.GetOperationRequest{
-		Name: operationName,
-	})
-	if err != nil {
-		logger.Error(err, "GetRestoreOperation", "operationName", operationName)
-		return nil, err
-	}
-
-	return op, nil
-}
 
 func (c *fileRestoreClient) FindRestoreOperation(ctx context.Context, projectId, location, instanceId string) (*longrunningpb.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
@@ -100,7 +56,7 @@ func (c *fileRestoreClient) FindRestoreOperation(ctx context.Context, projectId,
 	verbFilter := "metadata.verb=\"restore\""
 	filters := fmt.Sprintf("%s AND %s", targetFilter, verbFilter)
 
-	it := c.filestoreClient.ListFilestoreOperations(ctx, &longrunningpb.ListOperationsRequest{
+	it := c.ListFilestoreOperations(ctx, &longrunningpb.ListOperationsRequest{
 		Name:   filestoreParentPath,
 		Filter: filters,
 	})

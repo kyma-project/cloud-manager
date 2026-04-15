@@ -3,10 +3,10 @@ package subnet
 import (
 	"context"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,10 +24,10 @@ func loadSubnet(ctx context.Context, st composed.State) (error, context.Context)
 	region := state.Scope().Spec.Region
 
 	logger.Info("loading GCP Subnet")
-	subnet, err := state.computeClient.GetSubnet(ctx, client.GetSubnetRequest{
-		ProjectId: gcpScope.Project,
-		Region:    region,
-		Name:      GetSubnetShortName(state.Obj().GetName()),
+	subnet, err := state.computeClient.GetSubnet(ctx, &computepb.GetSubnetworkRequest{
+		Project:    gcpScope.Project,
+		Region:     region,
+		Subnetwork: GetSubnetShortName(state.Obj().GetName()),
 	})
 
 	if err != nil {

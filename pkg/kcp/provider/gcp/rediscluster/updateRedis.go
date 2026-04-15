@@ -3,9 +3,11 @@ package rediscluster
 import (
 	"context"
 
+	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -39,7 +41,10 @@ func updateRedis(ctx context.Context, st composed.State) (error, context.Context
 	if len(state.updateMask) > 0 {
 		updateSubmask = state.updateMask[:1] // max one param per update can be changed
 	}
-	err = state.memorystoreClient.UpdateRedisCluster(ctx, state.gcpRedisCluster, updateSubmask)
+	_, err = state.memorystoreClient.UpdateRedisCluster(ctx, &clusterpb.UpdateClusterRequest{
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: updateSubmask},
+		Cluster:    state.gcpRedisCluster,
+	})
 
 	if err != nil {
 		logger.Error(err, "Error updating GCP Redis")

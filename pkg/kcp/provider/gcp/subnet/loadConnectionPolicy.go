@@ -3,6 +3,7 @@ package subnet
 import (
 	"context"
 
+	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
@@ -25,7 +26,9 @@ func loadConnectionPolicy(ctx context.Context, st composed.State) (error, contex
 	logger.Info("loading GCP Service Connection Policy")
 	connectionPolicy, err := state.networkConnectivityClient.GetServiceConnectionPolicy(
 		ctx,
-		GetServiceConnectionPolicyFullName(gcpScope.Project, region, gcpScope.VpcNetwork),
+		&networkconnectivitypb.GetServiceConnectionPolicyRequest{
+			Name: GetServiceConnectionPolicyFullName(gcpScope.Project, region, gcpScope.VpcNetwork),
+		},
 	)
 
 	if err != nil {

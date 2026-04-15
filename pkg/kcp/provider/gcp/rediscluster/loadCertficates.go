@@ -25,7 +25,7 @@ func loadCertificates(ctx context.Context, st composed.State) (error, context.Co
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	certs, err := state.memorystoreClient.GetRedisClusterCertificateAuthority(ctx, gcpScope.Project, region, state.GetRemoteRedisName())
+	certs, err := state.memorystoreClient.GetRedisClusterCertificateString(ctx, gcpScope.Project, region, state.GetRemoteRedisName())
 
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {

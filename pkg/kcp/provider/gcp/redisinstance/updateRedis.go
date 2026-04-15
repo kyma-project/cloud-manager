@@ -3,9 +3,11 @@ package redisinstance
 import (
 	"context"
 
+	"cloud.google.com/go/redis/apiv1/redispb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -35,7 +37,10 @@ func updateRedis(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	logger.Info("Updating redis")
-	err = state.memorystoreClient.UpdateRedisInstance(ctx, state.gcpRedisInstance, state.updateMask)
+	_, err = state.memorystoreClient.UpdateRedisInstance(ctx, &redispb.UpdateInstanceRequest{
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: state.updateMask},
+		Instance:   state.gcpRedisInstance,
+	})
 
 	if err != nil {
 		logger.Error(err, "Error updating GCP Redis")

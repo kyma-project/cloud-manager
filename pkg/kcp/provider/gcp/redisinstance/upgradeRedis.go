@@ -3,8 +3,10 @@ package redisinstance
 import (
 	"context"
 
+	"cloud.google.com/go/redis/apiv1/redispb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,7 +40,10 @@ func upgradeRedis(ctx context.Context, st composed.State) (error, context.Contex
 	logger.Info("Updating redis")
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
-	err = state.memorystoreClient.UpgradeRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName(), redisInstance.Spec.Instance.Gcp.RedisVersion)
+	_, err = state.memorystoreClient.UpgradeRedisInstance(ctx, &redispb.UpgradeInstanceRequest{
+		Name:         client.GetGcpMemoryStoreRedisName(gcpScope.Project, region, state.GetRemoteRedisName()),
+		RedisVersion: redisInstance.Spec.Instance.Gcp.RedisVersion,
+	})
 
 	if err != nil {
 		logger.Error(err, "Error updating GCP Redis")

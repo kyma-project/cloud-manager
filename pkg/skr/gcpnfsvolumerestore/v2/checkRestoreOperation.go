@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -26,7 +27,9 @@ func checkRestoreOperation(ctx context.Context, st composed.State) (error, conte
 		return nil, nil
 	}
 
-	op, err := state.fileRestoreClient.GetRestoreOperation(ctx, opName)
+	op, err := state.fileRestoreClient.GetFilestoreOperation(ctx, &longrunningpb.GetOperationRequest{
+		Name: opName,
+	})
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			restore.Status.OpIdentifier = ""

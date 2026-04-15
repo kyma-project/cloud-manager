@@ -25,7 +25,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	redisInstance, redisAuth, err := state.memorystoreClient.GetRedisInstance(ctx, gcpScope.Project, region, state.GetRemoteRedisName())
+	redisInstance, redisAuth, err := state.memorystoreClient.GetRedisInstanceWithAuth(ctx, gcpScope.Project, region, state.GetRemoteRedisName())
 
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {

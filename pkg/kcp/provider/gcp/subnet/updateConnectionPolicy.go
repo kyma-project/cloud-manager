@@ -3,9 +3,12 @@ package subnet
 import (
 	"context"
 
+	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
+	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -28,7 +31,13 @@ func updateConnectionPolicy(ctx context.Context, st composed.State) (error, cont
 		return nil, ctx
 	}
 
-	err := state.networkConnectivityClient.UpdateServiceConnectionPolicy(ctx, state.serviceConnectionPolicy, state.updateMask)
+	_, err := state.networkConnectivityClient.UpdateServiceConnectionPolicy(ctx, &networkconnectivitypb.UpdateServiceConnectionPolicyRequest{
+		ServiceConnectionPolicy: state.serviceConnectionPolicy,
+		RequestId:               uuid.NewString(),
+		UpdateMask: &fieldmaskpb.FieldMask{
+			Paths: state.updateMask,
+		},
+	})
 
 	if err != nil {
 		logger.Error(err, "Error updating GCP Connection Policy")
