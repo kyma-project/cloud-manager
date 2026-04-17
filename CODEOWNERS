@@ -5,7 +5,6 @@
 /docs/user/ @kyma-project/technical-writers
 
 # Proposals directory (Phoenix team owns these docs)
-/docs/proposals/ @kyma-project/Phoenix
-
+/docs/specs/ @kyma-project/Phoenix
 # All .md files
 *.md @kyma-project/technical-writers
