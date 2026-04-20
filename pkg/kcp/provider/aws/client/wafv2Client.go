@@ -9,9 +9,9 @@ import (
 )
 
 type Wafv2Client interface {
-	CreateWebACL(ctx context.Context, name, description string, scope wafv2types.Scope, defaultAction *wafv2types.DefaultAction, rules []wafv2types.Rule, visibilityConfig *wafv2types.VisibilityConfig, tags []wafv2types.Tag) (*wafv2types.WebACL, string, error)
+	CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error)
 	GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error)
-	UpdateWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, defaultAction *wafv2types.DefaultAction, rules []wafv2types.Rule, visibilityConfig *wafv2types.VisibilityConfig, lockToken string) error
+	UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error
 	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
 	ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error)
 }
@@ -28,28 +28,14 @@ type wafv2Client struct {
 	svc *wafv2.Client
 }
 
-func (c *wafv2Client) CreateWebACL(ctx context.Context, name, description string, scope wafv2types.Scope, defaultAction *wafv2types.DefaultAction, rules []wafv2types.Rule, visibilityConfig *wafv2types.VisibilityConfig, tags []wafv2types.Tag) (*wafv2types.WebACL, string, error) {
-	in := &wafv2.CreateWebACLInput{
-		Name:             ptr.To(name),
-		Scope:            scope,
-		DefaultAction:    defaultAction,
-		Rules:            rules,
-		VisibilityConfig: visibilityConfig,
-	}
-	if description != "" {
-		in.Description = ptr.To(description)
-	}
-	if len(tags) > 0 {
-		in.Tags = tags
-	}
-
-	out, err := c.svc.CreateWebACL(ctx, in)
+func (c *wafv2Client) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error) {
+	out, err := c.svc.CreateWebACL(ctx, input)
 	if err != nil {
 		return nil, "", err
 	}
 
 	// Get the full WebACL details
-	webACL, lockToken, err := c.GetWebACL(ctx, name, ptr.Deref(out.Summary.Id, ""), scope)
+	webACL, lockToken, err := c.GetWebACL(ctx, ptr.Deref(input.Name, ""), ptr.Deref(out.Summary.Id, ""), input.Scope)
 	if err != nil {
 		return nil, "", err
 	}
@@ -72,18 +58,8 @@ func (c *wafv2Client) GetWebACL(ctx context.Context, name, id string, scope wafv
 	return out.WebACL, ptr.Deref(out.LockToken, ""), nil
 }
 
-func (c *wafv2Client) UpdateWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, defaultAction *wafv2types.DefaultAction, rules []wafv2types.Rule, visibilityConfig *wafv2types.VisibilityConfig, lockToken string) error {
-	in := &wafv2.UpdateWebACLInput{
-		Name:             ptr.To(name),
-		Id:               ptr.To(id),
-		Scope:            scope,
-		DefaultAction:    defaultAction,
-		Rules:            rules,
-		VisibilityConfig: visibilityConfig,
-		LockToken:        ptr.To(lockToken),
-	}
-
-	_, err := c.svc.UpdateWebACL(ctx, in)
+func (c *wafv2Client) UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error {
+	_, err := c.svc.UpdateWebACL(ctx, input)
 	return err
 }
 

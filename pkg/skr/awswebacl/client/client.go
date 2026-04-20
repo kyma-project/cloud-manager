@@ -35,21 +35,7 @@ type client struct {
 }
 
 func (c *client) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error) {
-	description := ""
-	if input.Description != nil {
-		description = *input.Description
-	}
-	// Call underlying client which builds its own input from parameters
-	return c.wafv2Client.CreateWebACL(
-		ctx,
-		*input.Name,
-		description,
-		input.Scope,
-		input.DefaultAction,
-		input.Rules,
-		input.VisibilityConfig,
-		input.Tags,
-	)
+	return c.wafv2Client.CreateWebACL(ctx, input)
 }
 
 func (c *client) GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error) {
@@ -57,17 +43,7 @@ func (c *client) GetWebACL(ctx context.Context, name, id string, scope wafv2type
 }
 
 func (c *client) UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error {
-	// Call underlying client which builds its own input from parameters
-	return c.wafv2Client.UpdateWebACL(
-		ctx,
-		*input.Name,
-		*input.Id,
-		input.Scope,
-		input.DefaultAction,
-		input.Rules,
-		input.VisibilityConfig,
-		*input.LockToken,
-	)
+	return c.wafv2Client.UpdateWebACL(ctx, input)
 }
 
 func (c *client) DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error {
