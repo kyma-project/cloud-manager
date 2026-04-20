@@ -7,7 +7,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
 	cloud.google.com/go/compute v1.60.0
 	cloud.google.com/go/filestore v1.13.0
-	cloud.google.com/go/longrunning v0.9.0
+	cloud.google.com/go/longrunning v0.11.0
 	cloud.google.com/go/networkconnectivity v1.24.0
 	cloud.google.com/go/redis v1.21.0
 	cloud.google.com/go/resourcemanager v1.13.0
@@ -70,7 +70,7 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.1
 	golang.org/x/oauth2 v0.36.0
-	google.golang.org/api v0.274.0
+	google.golang.org/api v0.276.0
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9
 	google.golang.org/grpc v1.80.0
