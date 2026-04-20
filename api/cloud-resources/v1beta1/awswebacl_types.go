@@ -238,6 +238,18 @@ type AwsWebAclNoneAction struct {
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type AwsWebAclRuleStatement struct {
+	// AndStatement - Logical AND (all nested statements must match)
+	// +optional
+	AndStatement *AwsWebAclAndStatement `json:"andStatement,omitempty"`
+
+	// OrStatement - Logical OR (at least one nested statement must match)
+	// +optional
+	OrStatement *AwsWebAclOrStatement `json:"orStatement,omitempty"`
+
+	// NotStatement - Logical NOT (negates nested statement)
+	// +optional
+	NotStatement *AwsWebAclNotStatement `json:"notStatement,omitempty"`
+
 	// GeoMatch - Match requests from specific countries
 	// +optional
 	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
@@ -597,30 +609,79 @@ type AwsWebAclVisibilityConfig struct {
 	SampledRequestsEnabled bool `json:"sampledRequestsEnabled"`
 }
 
+// AwsWebAclRuleStatement1 - Level 1 nested statement (only leaf statements, no further logical operators)
+// This enables future expansion to AwsWebAclRuleStatement2, AwsWebAclRuleStatement3, etc.
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type AwsWebAclRuleStatement1 struct {
+	// GeoMatch - Match requests from specific countries
+	// +optional
+	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+
+	// RateBased - Rate limiting per IP
+	// +optional
+	RateBased *AwsWebAclRateBasedStatement `json:"rateBased,omitempty"`
+
+	// ManagedRuleGroup - Use AWS-managed rule sets
+	// +optional
+	ManagedRuleGroup *AwsWebAclManagedRuleGroupStatement `json:"managedRuleGroup,omitempty"`
+
+	// ByteMatch - Match specific patterns in requests
+	// +optional
+	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+
+	// LabelMatch - Match based on labels added by previous rules
+	// +optional
+	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+
+	// SizeConstraint - Match based on request component size
+	// +optional
+	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+
+	// SqliMatch - Detect SQL injection attacks
+	// +optional
+	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+
+	// XssMatch - Detect cross-site scripting attacks
+	// +optional
+	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+
+	// RegexMatch - Match using regular expression patterns
+	// +optional
+	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+
+	// AsnMatch - Match requests from specific Autonomous System Numbers
+	// +optional
+	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
+}
+
 // AwsWebAclAndStatement - Logical AND operation combining multiple statements
 // All nested statements must match for the And statement to match
+// Note: Nesting is limited to first level - nested statements can only be leaf statements (no And/Or/Not)
 type AwsWebAclAndStatement struct {
 	// Statements to combine with AND logic (min 2)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclRuleStatement `json:"statements"`
+	Statements []AwsWebAclRuleStatement1 `json:"statements"`
 }
 
 // AwsWebAclOrStatement - Logical OR operation combining multiple statements
 // At least one nested statement must match for the Or statement to match
+// Note: Nesting is limited to first level - nested statements can only be leaf statements (no And/Or/Not)
 type AwsWebAclOrStatement struct {
 	// Statements to combine with OR logic (min 2)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclRuleStatement `json:"statements"`
+	Statements []AwsWebAclRuleStatement1 `json:"statements"`
 }
 
 // AwsWebAclNotStatement - Logical NOT operation negating a statement
 // Matches when the nested statement does NOT match
+// Note: Nesting is limited to first level - nested statement can only be a leaf statement (no And/Or/Not)
 type AwsWebAclNotStatement struct {
 	// Statement to negate
 	// +kubebuilder:validation:Required
-	Statement AwsWebAclRuleStatement `json:"statement"`
+	Statement AwsWebAclRuleStatement1 `json:"statement"`
 }
 
 // AwsWebAclStatus defines the observed state of AwsWebAcl.
