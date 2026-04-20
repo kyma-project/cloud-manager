@@ -649,7 +649,6 @@ type AwsWebAclStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
-// +kubebuilder:printcolumn:name="Default Action",type="string",JSONPath=".spec.defaultAction"
 // +kubebuilder:printcolumn:name="Capacity",type="integer",JSONPath=".status.capacity"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 

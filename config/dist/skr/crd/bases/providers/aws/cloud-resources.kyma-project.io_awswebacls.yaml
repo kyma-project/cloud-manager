@@ -21,9 +21,6 @@ spec:
         - jsonPath: .status.state
           name: State
           type: string
-        - jsonPath: .spec.defaultAction
-          name: Default Action
-          type: string
         - jsonPath: .status.capacity
           name: Capacity
           type: integer
