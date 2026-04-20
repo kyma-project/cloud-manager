@@ -33,54 +33,6 @@ func TestConvertDefaultAction(t *testing.T) {
 	})
 }
 
-func TestConvertRuleAction(t *testing.T) {
-	t.Run("Allow action", func(t *testing.T) {
-		result, err := convertRuleAction(cloudresourcesv1beta1.AwsWebAclRuleActionAllow)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.Allow)
-		assert.Nil(t, result.Block)
-		assert.Nil(t, result.Count)
-		assert.Nil(t, result.Captcha)
-	})
-
-	t.Run("Block action", func(t *testing.T) {
-		result, err := convertRuleAction(cloudresourcesv1beta1.AwsWebAclRuleActionBlock)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Nil(t, result.Allow)
-		assert.NotNil(t, result.Block)
-		assert.Nil(t, result.Count)
-		assert.Nil(t, result.Captcha)
-	})
-
-	t.Run("Count action", func(t *testing.T) {
-		result, err := convertRuleAction(cloudresourcesv1beta1.AwsWebAclRuleActionCount)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Nil(t, result.Allow)
-		assert.Nil(t, result.Block)
-		assert.NotNil(t, result.Count)
-		assert.Nil(t, result.Captcha)
-	})
-
-	t.Run("Captcha action", func(t *testing.T) {
-		result, err := convertRuleAction(cloudresourcesv1beta1.AwsWebAclRuleActionCaptcha)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Nil(t, result.Allow)
-		assert.Nil(t, result.Block)
-		assert.Nil(t, result.Count)
-		assert.NotNil(t, result.Captcha)
-	})
-
-	t.Run("Unknown action", func(t *testing.T) {
-		result, err := convertRuleAction("invalid")
-		assert.Error(t, err)
-		assert.Nil(t, result)
-	})
-}
-
 func TestConvertVisibilityConfig(t *testing.T) {
 	t.Run("With config", func(t *testing.T) {
 		config := &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
@@ -523,12 +475,16 @@ func TestConvertManagedRuleGroupStatementWithConfigs(t *testing.T) {
 			Name:       "AWSManagedRulesCommonRuleSet",
 			RuleActionOverrides: []cloudresourcesv1beta1.AwsWebAclRuleActionOverride{
 				{
-					Name:        "SizeRestrictions_BODY",
-					ActionToUse: cloudresourcesv1beta1.AwsWebAclRuleActionCount,
+					Name: "SizeRestrictions_BODY",
+					ActionToUse: &cloudresourcesv1beta1.AwsWebAclRuleAction{
+						Count: &cloudresourcesv1beta1.AwsWebAclCountAction{},
+					},
 				},
 				{
-					Name:        "GenericRFI_BODY",
-					ActionToUse: cloudresourcesv1beta1.AwsWebAclRuleActionAllow,
+					Name: "GenericRFI_BODY",
+					ActionToUse: &cloudresourcesv1beta1.AwsWebAclRuleAction{
+						Allow: &cloudresourcesv1beta1.AwsWebAclAllowAction{},
+					},
 				},
 			},
 		}
@@ -566,7 +522,7 @@ func TestConvertRuleLabels(t *testing.T) {
 
 func TestConvertRuleActionTypeWithChallenge(t *testing.T) {
 	t.Run("Challenge action", func(t *testing.T) {
-		actionType := &cloudresourcesv1beta1.AwsWebAclRuleActionType{
+		actionType := &cloudresourcesv1beta1.AwsWebAclRuleAction{
 			Challenge: &cloudresourcesv1beta1.AwsWebAclChallengeAction{},
 		}
 		result, err := convertRuleActionType(actionType)
@@ -580,7 +536,7 @@ func TestConvertRuleActionTypeWithChallenge(t *testing.T) {
 	})
 
 	t.Run("Challenge action with custom request handling", func(t *testing.T) {
-		actionType := &cloudresourcesv1beta1.AwsWebAclRuleActionType{
+		actionType := &cloudresourcesv1beta1.AwsWebAclRuleAction{
 			Challenge: &cloudresourcesv1beta1.AwsWebAclChallengeAction{
 				CustomRequestHandling: &cloudresourcesv1beta1.AwsWebAclCustomRequestHandling{
 					InsertHeaders: []cloudresourcesv1beta1.AwsWebAclCustomHTTPHeader{

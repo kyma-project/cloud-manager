@@ -82,15 +82,6 @@ type AwsWebAclCustomHTTPHeader struct {
 	Value string `json:"value"`
 }
 
-type AwsWebAclRuleAction string
-
-const (
-	AwsWebAclRuleActionAllow   AwsWebAclRuleAction = "Allow"
-	AwsWebAclRuleActionBlock   AwsWebAclRuleAction = "Block"
-	AwsWebAclRuleActionCount   AwsWebAclRuleAction = "Count"
-	AwsWebAclRuleActionCaptcha AwsWebAclRuleAction = "Captcha"
-)
-
 // AwsWebAclSpec defines the desired state of AwsWebAcl
 type AwsWebAclSpec struct {
 	// DefaultAction specifies what to do when no rules match
@@ -144,7 +135,7 @@ type AwsWebAclRule struct {
 
 	// Action when rule matches (use for regular rules, mutually exclusive with OverrideAction)
 	// +optional
-	Action *AwsWebAclRuleActionType `json:"action,omitempty"`
+	Action *AwsWebAclRuleAction `json:"action,omitempty"`
 
 	// OverrideAction for managed rule groups (mutually exclusive with Action)
 	// +optional
@@ -173,11 +164,11 @@ type AwsWebAclRule struct {
 	VisibilityConfig *AwsWebAclVisibilityConfig `json:"visibilityConfig,omitempty"`
 }
 
-// AwsWebAclRuleActionType represents the action to take when a rule matches
+// AwsWebAclRuleAction represents the action to take when a rule matches
 // Exactly one action type must be set
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
-type AwsWebAclRuleActionType struct {
+type AwsWebAclRuleAction struct {
 	// Allow - Permit the request
 	// +optional
 	Allow *AwsWebAclAllowAction `json:"allow,omitempty"`
@@ -484,8 +475,7 @@ type AwsWebAclRuleActionOverride struct {
 
 	// ActionToUse to replace the original action
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=Allow;Block;Count;Captcha
-	ActionToUse AwsWebAclRuleAction `json:"actionToUse"`
+	ActionToUse *AwsWebAclRuleAction `json:"actionToUse"`
 }
 
 type AwsWebAclCustomResponseBody struct {
