@@ -57,36 +57,36 @@ func DefaultActionBlock() AwsWebAclDefaultAction {
 }
 
 // RuleActionAllow returns a simple Allow rule action
-func RuleActionAllow() *AwsWebAclRuleActionType {
-	return &AwsWebAclRuleActionType{
+func RuleActionAllow() *AwsWebAclRuleAction {
+	return &AwsWebAclRuleAction{
 		Allow: &AwsWebAclAllowAction{},
 	}
 }
 
 // RuleActionBlock returns a simple Block rule action
-func RuleActionBlock() *AwsWebAclRuleActionType {
-	return &AwsWebAclRuleActionType{
+func RuleActionBlock() *AwsWebAclRuleAction {
+	return &AwsWebAclRuleAction{
 		Block: &AwsWebAclBlockAction{},
 	}
 }
 
 // RuleActionCount returns a simple Count rule action
-func RuleActionCount() *AwsWebAclRuleActionType {
-	return &AwsWebAclRuleActionType{
+func RuleActionCount() *AwsWebAclRuleAction {
+	return &AwsWebAclRuleAction{
 		Count: &AwsWebAclCountAction{},
 	}
 }
 
 // RuleActionCaptcha returns a simple Captcha rule action
-func RuleActionCaptcha() *AwsWebAclRuleActionType {
-	return &AwsWebAclRuleActionType{
+func RuleActionCaptcha() *AwsWebAclRuleAction {
+	return &AwsWebAclRuleAction{
 		Captcha: &AwsWebAclCaptchaAction{},
 	}
 }
 
 // RuleActionChallenge returns a simple Challenge rule action
-func RuleActionChallenge() *AwsWebAclRuleActionType {
-	return &AwsWebAclRuleActionType{
+func RuleActionChallenge() *AwsWebAclRuleAction {
+	return &AwsWebAclRuleAction{
 		Challenge: &AwsWebAclChallengeAction{},
 	}
 }

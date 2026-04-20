@@ -106,30 +106,7 @@ func convertRule(rule cloudresourcesv1beta1.AwsWebAclRule) (*wafv2types.Rule, er
 	return wafRule, nil
 }
 
-func convertRuleAction(action cloudresourcesv1beta1.AwsWebAclRuleAction) (*wafv2types.RuleAction, error) {
-	switch action {
-	case cloudresourcesv1beta1.AwsWebAclRuleActionAllow:
-		return &wafv2types.RuleAction{
-			Allow: &wafv2types.AllowAction{},
-		}, nil
-	case cloudresourcesv1beta1.AwsWebAclRuleActionBlock:
-		return &wafv2types.RuleAction{
-			Block: &wafv2types.BlockAction{},
-		}, nil
-	case cloudresourcesv1beta1.AwsWebAclRuleActionCount:
-		return &wafv2types.RuleAction{
-			Count: &wafv2types.CountAction{},
-		}, nil
-	case cloudresourcesv1beta1.AwsWebAclRuleActionCaptcha:
-		return &wafv2types.RuleAction{
-			Captcha: &wafv2types.CaptchaAction{},
-		}, nil
-	default:
-		return nil, fmt.Errorf("unknown rule action: %s", action)
-	}
-}
-
-func convertRuleActionType(actionType *cloudresourcesv1beta1.AwsWebAclRuleActionType) (*wafv2types.RuleAction, error) {
+func convertRuleActionType(actionType *cloudresourcesv1beta1.AwsWebAclRuleAction) (*wafv2types.RuleAction, error) {
 	result := &wafv2types.RuleAction{}
 
 	if actionType.Allow != nil {
@@ -410,7 +387,7 @@ func convertManagedRuleGroupStatement(managed *cloudresourcesv1beta1.AwsWebAclMa
 	if len(managed.RuleActionOverrides) > 0 {
 		stmt.RuleActionOverrides = make([]wafv2types.RuleActionOverride, 0, len(managed.RuleActionOverrides))
 		for _, override := range managed.RuleActionOverrides {
-			action, err := convertRuleAction(override.ActionToUse)
+			action, err := convertRuleActionType(override.ActionToUse)
 			if err != nil {
 				return nil, fmt.Errorf("error converting rule action override for rule %s: %w", override.Name, err)
 			}
