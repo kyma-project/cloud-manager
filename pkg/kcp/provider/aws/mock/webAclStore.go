@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/aws/smithy-go"
 	"github.com/elliotchance/pie/v2"
@@ -41,13 +42,16 @@ func newWebAclStore(account, region string) *webAclStore {
 	}
 }
 
-func (s *webAclStore) CreateWebACL(ctx context.Context, name, description string, scope types.Scope, defaultAction *types.DefaultAction, rules []types.Rule, visibilityConfig *types.VisibilityConfig, tags []types.Tag) (*types.WebACL, string, error) {
+func (s *webAclStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*types.WebACL, string, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	name := ptr.Deref(input.Name, "")
+	description := ptr.Deref(input.Description, "")
+
 	// Check if WebACL with this name already exists
 	for _, x := range s.items {
-		if ptr.Equal(x.webAcl.Name, ptr.To(name)) {
+		if ptr.Equal(x.webAcl.Name, input.Name) {
 			return nil, "", &smithy.GenericAPIError{
 				Code:    "WAFDuplicateItemException",
 				Message: fmt.Sprintf("WebACL with name %s already exists", name),
@@ -60,28 +64,33 @@ func (s *webAclStore) CreateWebACL(ctx context.Context, name, description string
 	lockToken := uuid.NewString()
 
 	// Deep copy inputs to avoid shared references
-	defaultActionCopy, err := util.JsonClone(defaultAction)
+	defaultActionCopy, err := util.JsonClone(input.DefaultAction)
 	if err != nil {
 		return nil, "", err
 	}
-	rulesCopy, err := util.JsonClone(rules)
+	rulesCopy, err := util.JsonClone(input.Rules)
 	if err != nil {
 		return nil, "", err
 	}
-	visibilityConfigCopy, err := util.JsonClone(visibilityConfig)
+	visibilityConfigCopy, err := util.JsonClone(input.VisibilityConfig)
+	if err != nil {
+		return nil, "", err
+	}
+	customResponseBodiesCopy, err := util.JsonClone(input.CustomResponseBodies)
 	if err != nil {
 		return nil, "", err
 	}
 
 	webAcl := types.WebACL{
-		Id:               ptr.To(id),
-		Name:             ptr.To(name),
-		ARN:              ptr.To(arn),
-		Description:      ptr.To(description),
-		DefaultAction:    defaultActionCopy,
-		Rules:            rulesCopy,
-		VisibilityConfig: visibilityConfigCopy,
-		Capacity:         100,
+		Id:                   ptr.To(id),
+		Name:                 ptr.To(name),
+		ARN:                  ptr.To(arn),
+		Description:          ptr.To(description),
+		DefaultAction:        defaultActionCopy,
+		Rules:                rulesCopy,
+		VisibilityConfig:     visibilityConfigCopy,
+		CustomResponseBodies: customResponseBodiesCopy,
+		Capacity:             100,
 	}
 
 	item := &webAclEntry{
@@ -141,16 +150,19 @@ func (s *webAclStore) findWebAcl(name, id string) (*types.WebACL, error) {
 	return &entry.webAcl, nil
 }
 
-func (s *webAclStore) UpdateWebACL(ctx context.Context, name, id string, scope types.Scope, defaultAction *types.DefaultAction, rules []types.Rule, visibilityConfig *types.VisibilityConfig, lockToken string) error {
+func (s *webAclStore) UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error {
 	s.m.Lock()
 	defer s.m.Unlock()
+
+	id := ptr.Deref(input.Id, "")
+	lockToken := ptr.Deref(input.LockToken, "")
 
 	if err, ok := s.errorMap[id]; ok && err != nil {
 		return err
 	}
 
 	for _, x := range s.items {
-		if ptr.Equal(x.webAcl.Id, ptr.To(id)) {
+		if ptr.Equal(x.webAcl.Id, input.Id) {
 			if x.lockToken != lockToken {
 				return &smithy.GenericAPIError{
 					Code:    "WAFOptimisticLockException",
@@ -159,15 +171,19 @@ func (s *webAclStore) UpdateWebACL(ctx context.Context, name, id string, scope t
 			}
 
 			// Update the WebACL with deep copies to avoid shared references
-			defaultActionCopy, err := util.JsonClone(defaultAction)
+			defaultActionCopy, err := util.JsonClone(input.DefaultAction)
 			if err != nil {
 				return err
 			}
-			rulesCopy, err := util.JsonClone(rules)
+			rulesCopy, err := util.JsonClone(input.Rules)
 			if err != nil {
 				return err
 			}
-			visibilityConfigCopy, err := util.JsonClone(visibilityConfig)
+			visibilityConfigCopy, err := util.JsonClone(input.VisibilityConfig)
+			if err != nil {
+				return err
+			}
+			customResponseBodiesCopy, err := util.JsonClone(input.CustomResponseBodies)
 			if err != nil {
 				return err
 			}
@@ -175,6 +191,7 @@ func (s *webAclStore) UpdateWebACL(ctx context.Context, name, id string, scope t
 			x.webAcl.DefaultAction = defaultActionCopy
 			x.webAcl.Rules = rulesCopy
 			x.webAcl.VisibilityConfig = visibilityConfigCopy
+			x.webAcl.CustomResponseBodies = customResponseBodiesCopy
 			x.lockToken = uuid.NewString()
 
 			return nil

@@ -41,33 +41,11 @@ func (s *accountRegionStore) Region() string {
 // WebAclClient adapter methods - wrap webAclStore methods to match Client interface
 
 func (s *accountRegionStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error) {
-	description := ""
-	if input.Description != nil {
-		description = *input.Description
-	}
-	return s.webAclStore.CreateWebACL(
-		ctx,
-		*input.Name,
-		description,
-		input.Scope,
-		input.DefaultAction,
-		input.Rules,
-		input.VisibilityConfig,
-		input.Tags,
-	)
+	return s.webAclStore.CreateWebACL(ctx, input)
 }
 
 func (s *accountRegionStore) UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error {
-	return s.webAclStore.UpdateWebACL(
-		ctx,
-		*input.Name,
-		*input.Id,
-		input.Scope,
-		input.DefaultAction,
-		input.Rules,
-		input.VisibilityConfig,
-		*input.LockToken,
-	)
+	return s.webAclStore.UpdateWebACL(ctx, input)
 }
 
 func (s *accountRegionStore) DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error {
