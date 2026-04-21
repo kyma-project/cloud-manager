@@ -599,11 +599,61 @@ type AwsWebAclVisibilityConfig struct {
 	SampledRequestsEnabled bool `json:"sampledRequestsEnabled"`
 }
 
-// AwsWebAclStatement1 - Level 1 nested statement (only leaf statements, no further logical operators)
-// This enables future expansion to AwsWebAclStatement2, AwsWebAclStatement3, etc.
+// AwsWebAclNestedStatement - Statement used inside logical operators (AND/OR/top-level NOT)
+// AWS WAF allows only NOT at this nesting level, plus all leaf statement types
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
-type AwsWebAclStatement1 struct {
+type AwsWebAclNestedStatement struct {
+	// NotStatement - Logical NOT (negates nested statement)
+	// +optional
+	NotStatement *AwsWebAclNestedNotStatement `json:"notStatement,omitempty"`
+
+	// GeoMatch - Match requests from specific countries
+	// +optional
+	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+
+	// RateBased - Rate limiting per IP
+	// +optional
+	RateBased *AwsWebAclRateBasedStatement `json:"rateBased,omitempty"`
+
+	// ManagedRuleGroup - Use AWS-managed rule sets
+	// +optional
+	ManagedRuleGroup *AwsWebAclManagedRuleGroupStatement `json:"managedRuleGroup,omitempty"`
+
+	// ByteMatch - Match specific patterns in requests
+	// +optional
+	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+
+	// LabelMatch - Match based on labels added by previous rules
+	// +optional
+	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+
+	// SizeConstraint - Match based on request component size
+	// +optional
+	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+
+	// SqliMatch - Detect SQL injection attacks
+	// +optional
+	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+
+	// XssMatch - Detect cross-site scripting attacks
+	// +optional
+	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+
+	// RegexMatch - Match using regular expression patterns
+	// +optional
+	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+
+	// AsnMatch - Match requests from specific Autonomous System Numbers
+	// +optional
+	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
+}
+
+// AwsWebAclLeafStatement - Deepest nesting level statement (leaf statements only, no logical operators)
+// This is the terminal nesting level allowed by AWS WAF
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type AwsWebAclLeafStatement struct {
 	// GeoMatch - Match requests from specific countries
 	// +optional
 	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
@@ -647,31 +697,36 @@ type AwsWebAclStatement1 struct {
 
 // AwsWebAclAndStatement - Logical AND operation combining multiple statements
 // All nested statements must match for the And statement to match
-// Note: Nesting is limited to first level - nested statements can only be leaf statements (no And/Or/Not)
 type AwsWebAclAndStatement struct {
 	// Statements to combine with AND logic (min 2)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclStatement1 `json:"statements"`
+	Statements []AwsWebAclNestedStatement `json:"statements"`
 }
 
 // AwsWebAclOrStatement - Logical OR operation combining multiple statements
 // At least one nested statement must match for the Or statement to match
-// Note: Nesting is limited to first level - nested statements can only be leaf statements (no And/Or/Not)
 type AwsWebAclOrStatement struct {
 	// Statements to combine with OR logic (min 2)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclStatement1 `json:"statements"`
+	Statements []AwsWebAclNestedStatement `json:"statements"`
 }
 
-// AwsWebAclNotStatement - Logical NOT operation negating a statement
+// AwsWebAclNotStatement - Logical NOT operation negating a statement (top-level)
 // Matches when the nested statement does NOT match
-// Note: Nesting is limited to first level - nested statement can only be a leaf statement (no And/Or/Not)
 type AwsWebAclNotStatement struct {
 	// Statement to negate
 	// +kubebuilder:validation:Required
-	Statement AwsWebAclStatement1 `json:"statement"`
+	Statement AwsWebAclNestedStatement `json:"statement"`
+}
+
+// AwsWebAclNestedNotStatement - Logical NOT operation at nested level (inside AND/OR)
+// Matches when the nested statement does NOT match
+type AwsWebAclNestedNotStatement struct {
+	// Statement to negate
+	// +kubebuilder:validation:Required
+	Statement AwsWebAclLeafStatement `json:"statement"`
 }
 
 // AwsWebAclStatus defines the observed state of AwsWebAcl.

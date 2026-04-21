@@ -666,7 +666,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
+						Statements: []cloudresourcesv1beta1.AwsWebAclNestedStatement{
 							{
 								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 									CountryCodes: []string{"CN", "RU"},
@@ -690,6 +690,84 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			}),
 		)
 
+		canCreateSkr(
+			"AwsWebAcl can be created with nested logical statements (2 levels deep)",
+			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
+				Name:     "nested-logical-rule",
+				Priority: 0,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+					AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
+						Statements: []cloudresourcesv1beta1.AwsWebAclNestedStatement{
+							{
+								// First condition: NOT from trusted country
+								NotStatement: &cloudresourcesv1beta1.AwsWebAclNestedNotStatement{
+									Statement: cloudresourcesv1beta1.AwsWebAclLeafStatement{
+										GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+											CountryCodes: []string{"US", "GB", "DE"},
+										},
+									},
+								},
+							},
+							{
+								// Second condition: ByteMatch for suspicious path
+								ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
+									SearchString:         "/wp-admin",
+									PositionalConstraint: "STARTS_WITH",
+									FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+										UriPath: true,
+									},
+									TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+										{Priority: 0, Type: "LOWERCASE"},
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		)
+
+		canCreateSkr(
+			"AwsWebAcl can be created with OrStatement containing NotStatement (mimics AWS example)",
+			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
+				Name:     "or-with-not-rule",
+				Priority: 0,
+				Action:   cloudresourcesv1beta1.RuleActionBlock(),
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+					// Mimics the OrTest example from yelb.json
+					OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
+						Statements: []cloudresourcesv1beta1.AwsWebAclNestedStatement{
+							{
+								// Level 1: NOT statement wrapping LabelMatch
+								NotStatement: &cloudresourcesv1beta1.AwsWebAclNestedNotStatement{
+									Statement: cloudresourcesv1beta1.AwsWebAclLeafStatement{
+										LabelMatch: &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
+											Scope: "LABEL",
+											Key:   "awswaf:managed:aws:bot-control:bot:name:aasa_bot",
+										},
+									},
+								},
+							},
+							{
+								// Level 1: SizeConstraint leaf statement
+								SizeConstraint: &cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement{
+									ComparisonOperator: "EQ",
+									Size:               7777,
+									FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+										Method: true,
+									},
+									TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+										{Priority: 0, Type: "NONE"},
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		)
+
 		canNotCreateSkr(
 			"AwsWebAcl cannot be created with AndStatement with only one statement",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
@@ -698,7 +776,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
+						Statements: []cloudresourcesv1beta1.AwsWebAclNestedStatement{
 							{
 								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 									CountryCodes: []string{"US"},
@@ -719,7 +797,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
+						Statements: []cloudresourcesv1beta1.AwsWebAclNestedStatement{
 							{
 								ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 									SearchString:         "sqlmap",
@@ -751,7 +829,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
+						Statements: []cloudresourcesv1beta1.AwsWebAclNestedStatement{
 							{
 								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 									CountryCodes: []string{"US"},
@@ -772,7 +850,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Action:   cloudresourcesv1beta1.RuleActionAllow(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					NotStatement: &cloudresourcesv1beta1.AwsWebAclNotStatement{
-						Statement: cloudresourcesv1beta1.AwsWebAclStatement1{
+						Statement: cloudresourcesv1beta1.AwsWebAclNestedStatement{
 							GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 								CountryCodes: []string{"CN", "RU", "KP"},
 							},
@@ -791,7 +869,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Action:   cloudresourcesv1beta1.RuleActionBlock(),
 					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-							Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
+							Statements: []cloudresourcesv1beta1.AwsWebAclNestedStatement{
 								{
 									GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 										CountryCodes: []string{"CN"},
@@ -812,7 +890,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Action:   cloudresourcesv1beta1.RuleActionBlock(),
 					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-							Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
+							Statements: []cloudresourcesv1beta1.AwsWebAclNestedStatement{
 								{
 									ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 										SearchString:         "bot",
@@ -840,7 +918,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Action:   cloudresourcesv1beta1.RuleActionAllow(),
 					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						NotStatement: &cloudresourcesv1beta1.AwsWebAclNotStatement{
-							Statement: cloudresourcesv1beta1.AwsWebAclStatement1{
+							Statement: cloudresourcesv1beta1.AwsWebAclNestedStatement{
 								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 									CountryCodes: []string{"KP"},
 								},

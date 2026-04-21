@@ -415,8 +415,8 @@ spec:
                                 description: Statements to combine with AND logic (min 2)
                                 items:
                                   description: |-
-                                    AwsWebAclStatement1 - Level 1 nested statement (only leaf statements, no further logical operators)
-                                    This enables future expansion to AwsWebAclStatement2, AwsWebAclStatement3, etc.
+                                    AwsWebAclNestedStatement - Statement used inside logical operators (AND/OR/top-level NOT)
+                                    AWS WAF allows only NOT at this nesting level, plus all leaf statement types
                                   maxProperties: 1
                                   minProperties: 1
                                   properties:
@@ -810,6 +810,741 @@ spec:
                                       required:
                                         - name
                                         - vendorName
+                                      type: object
+                                    notStatement:
+                                      description: NotStatement - Logical NOT (negates nested statement)
+                                      properties:
+                                        statement:
+                                          description: Statement to negate
+                                          maxProperties: 1
+                                          minProperties: 1
+                                          properties:
+                                            asnMatch:
+                                              description: AsnMatch - Match requests from specific Autonomous System Numbers
+                                              properties:
+                                                autonomousSystemNumbers:
+                                                  description: |-
+                                                    AutonomousSystemNumbers - List of ASNs to match (e.g., [64512, 64513])
+                                                    Valid range: 0 to 4294967295
+                                                  items:
+                                                    format: int64
+                                                    type: integer
+                                                  minItems: 1
+                                                  type: array
+                                                forwardedIPConfig:
+                                                  description: ForwardedIPConfig - Configuration for inspecting forwarded IP headers
+                                                  properties:
+                                                    fallbackBehavior:
+                                                      description: FallbackBehavior when header is missing or invalid
+                                                      enum:
+                                                        - MATCH
+                                                        - NO_MATCH
+                                                      type: string
+                                                    headerName:
+                                                      description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                                      pattern: ^[a-zA-Z0-9._$-]+$
+                                                      type: string
+                                                  required:
+                                                    - fallbackBehavior
+                                                    - headerName
+                                                  type: object
+                                              required:
+                                                - autonomousSystemNumbers
+                                              type: object
+                                            byteMatch:
+                                              description: ByteMatch - Match specific patterns in requests
+                                              properties:
+                                                fieldToMatch:
+                                                  description: FieldToMatch specifies where to search
+                                                  maxProperties: 1
+                                                  minProperties: 1
+                                                  properties:
+                                                    body:
+                                                      description: Body matches the request body
+                                                      type: boolean
+                                                    method:
+                                                      description: Method matches the HTTP method
+                                                      type: boolean
+                                                    queryString:
+                                                      description: QueryString matches the query string
+                                                      type: boolean
+                                                    singleHeader:
+                                                      description: SingleHeader matches a specific header by name
+                                                      type: string
+                                                    uriPath:
+                                                      description: UriPath matches the URI path
+                                                      type: boolean
+                                                  type: object
+                                                positionalConstraint:
+                                                  description: PositionalConstraint defines match location
+                                                  enum:
+                                                    - EXACTLY
+                                                    - STARTS_WITH
+                                                    - ENDS_WITH
+                                                    - CONTAINS
+                                                    - CONTAINS_WORD
+                                                  type: string
+                                                searchString:
+                                                  description: SearchString to match
+                                                  maxLength: 200
+                                                  minLength: 1
+                                                  type: string
+                                                textTransformations:
+                                                  description: TextTransformations to apply before inspecting (required by AWS)
+                                                  items:
+                                                    properties:
+                                                      priority:
+                                                        description: Priority determines the order of transformations (lower = first)
+                                                        format: int32
+                                                        minimum: 0
+                                                        type: integer
+                                                      type:
+                                                        description: Type of transformation
+                                                        enum:
+                                                          - NONE
+                                                          - COMPRESS_WHITE_SPACE
+                                                          - HTML_ENTITY_DECODE
+                                                          - LOWERCASE
+                                                          - CMD_LINE
+                                                          - URL_DECODE
+                                                          - BASE64_DECODE
+                                                          - HEX_DECODE
+                                                          - MD5
+                                                          - REPLACE_COMMENTS
+                                                          - ESCAPE_SEQ_DECODE
+                                                          - SQL_HEX_DECODE
+                                                          - CSS_DECODE
+                                                          - JS_DECODE
+                                                          - NORMALIZE_PATH
+                                                          - NORMALIZE_PATH_WIN
+                                                          - REMOVE_NULLS
+                                                          - REPLACE_NULLS
+                                                          - BASE64_DECODE_EXT
+                                                          - URL_DECODE_UNI
+                                                          - UTF8_TO_UNICODE
+                                                        type: string
+                                                    required:
+                                                      - priority
+                                                      - type
+                                                    type: object
+                                                  maxItems: 10
+                                                  minItems: 1
+                                                  type: array
+                                              required:
+                                                - fieldToMatch
+                                                - positionalConstraint
+                                                - searchString
+                                                - textTransformations
+                                              type: object
+                                            geoMatch:
+                                              description: GeoMatch - Match requests from specific countries
+                                              properties:
+                                                countryCodes:
+                                                  description: CountryCodes using ISO 3166-1 alpha-2 codes (e.g., "US", "GB", "DE")
+                                                  items:
+                                                    type: string
+                                                  minItems: 1
+                                                  type: array
+                                                forwardedIPConfig:
+                                                  description: ForwardedIPConfig for inspecting geo location from forwarded IP headers
+                                                  properties:
+                                                    fallbackBehavior:
+                                                      description: FallbackBehavior when header is missing or invalid
+                                                      enum:
+                                                        - MATCH
+                                                        - NO_MATCH
+                                                      type: string
+                                                    headerName:
+                                                      description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                                      pattern: ^[a-zA-Z0-9._$-]+$
+                                                      type: string
+                                                  required:
+                                                    - fallbackBehavior
+                                                    - headerName
+                                                  type: object
+                                              required:
+                                                - countryCodes
+                                              type: object
+                                            labelMatch:
+                                              description: LabelMatch - Match based on labels added by previous rules
+                                              properties:
+                                                key:
+                                                  description: |-
+                                                    Key - Label key to match against (e.g., "aws:acl:name" or namespace like "aws:acl")
+                                                    Can include namespace specifications separated by colons
+                                                  maxLength: 1024
+                                                  minLength: 1
+                                                  pattern: ^[0-9A-Za-z_\-:]+$
+                                                  type: string
+                                                scope:
+                                                  description: 'Scope - Match scope: "LABEL" (full label) or "NAMESPACE" (namespace prefix)'
+                                                  enum:
+                                                    - LABEL
+                                                    - NAMESPACE
+                                                  type: string
+                                              required:
+                                                - key
+                                                - scope
+                                              type: object
+                                            managedRuleGroup:
+                                              description: ManagedRuleGroup - Use AWS-managed rule sets
+                                              properties:
+                                                excludedRules:
+                                                  description: ExcludedRules to disable specific rules within the managed group
+                                                  items:
+                                                    properties:
+                                                      name:
+                                                        description: Name of the rule to exclude from the managed rule group
+                                                        type: string
+                                                    required:
+                                                      - name
+                                                    type: object
+                                                  type: array
+                                                managedRuleGroupConfigs:
+                                                  description: ManagedRuleGroupConfigs for ATP/ACFP/Bot Control configuration
+                                                  items:
+                                                    properties:
+                                                      loginPath:
+                                                        description: LoginPath for ATP/ACFP (e.g., "/login")
+                                                        type: string
+                                                      passwordField:
+                                                        description: PasswordField for extracting password from requests
+                                                        properties:
+                                                          identifier:
+                                                            description: Identifier path (e.g., "/username" for JSON, "username" for form)
+                                                            type: string
+                                                        required:
+                                                          - identifier
+                                                        type: object
+                                                      payloadType:
+                                                        description: PayloadType for request body parsing
+                                                        enum:
+                                                          - JSON
+                                                          - FORM_ENCODED
+                                                        type: string
+                                                      usernameField:
+                                                        description: UsernameField for extracting username from requests
+                                                        properties:
+                                                          identifier:
+                                                            description: Identifier path (e.g., "/username" for JSON, "username" for form)
+                                                            type: string
+                                                        required:
+                                                          - identifier
+                                                        type: object
+                                                    type: object
+                                                  type: array
+                                                name:
+                                                  description: |-
+                                                    Name of the managed rule group
+                                                    Common AWS managed rules:
+                                                    - AWSManagedRulesCommonRuleSet
+                                                    - AWSManagedRulesKnownBadInputsRuleSet
+                                                    - AWSManagedRulesSQLiRuleSet
+                                                    - AWSManagedRulesLinuxRuleSet
+                                                    - AWSManagedRulesUnixRuleSet
+                                                  type: string
+                                                ruleActionOverrides:
+                                                  description: RuleActionOverrides to override actions for specific rules
+                                                  items:
+                                                    properties:
+                                                      actionToUse:
+                                                        description: ActionToUse to replace the original action
+                                                        maxProperties: 1
+                                                        minProperties: 1
+                                                        properties:
+                                                          allow:
+                                                            description: Allow - Permit the request
+                                                            properties:
+                                                              customRequestHandling:
+                                                                description: CustomRequestHandling - Insert custom headers into allowed requests
+                                                                properties:
+                                                                  insertHeaders:
+                                                                    description: InsertHeaders - Headers to insert into the request
+                                                                    items:
+                                                                      properties:
+                                                                        name:
+                                                                          description: Name - Header name
+                                                                          type: string
+                                                                        value:
+                                                                          description: Value - Header value
+                                                                          type: string
+                                                                      required:
+                                                                        - name
+                                                                        - value
+                                                                      type: object
+                                                                    maxItems: 100
+                                                                    type: array
+                                                                required:
+                                                                  - insertHeaders
+                                                                type: object
+                                                            type: object
+                                                          block:
+                                                            description: Block - Block the request
+                                                            properties:
+                                                              customResponse:
+                                                                description: CustomResponse - Send custom response for blocked requests
+                                                                properties:
+                                                                  customResponseBodyKey:
+                                                                    description: CustomResponseBodyKey - Reference to custom response body in spec.customResponseBodies
+                                                                    type: string
+                                                                  responseCode:
+                                                                    description: ResponseCode - HTTP status code to return (200-599)
+                                                                    format: int32
+                                                                    maximum: 599
+                                                                    minimum: 200
+                                                                    type: integer
+                                                                  responseHeaders:
+                                                                    description: ResponseHeaders - Custom headers to include in response
+                                                                    items:
+                                                                      properties:
+                                                                        name:
+                                                                          description: Name - Header name
+                                                                          type: string
+                                                                        value:
+                                                                          description: Value - Header value
+                                                                          type: string
+                                                                      required:
+                                                                        - name
+                                                                        - value
+                                                                      type: object
+                                                                    maxItems: 100
+                                                                    type: array
+                                                                required:
+                                                                  - responseCode
+                                                                type: object
+                                                            type: object
+                                                          captcha:
+                                                            description: Captcha - Require CAPTCHA challenge
+                                                            properties:
+                                                              customRequestHandling:
+                                                                description: CustomRequestHandling - Insert custom headers
+                                                                properties:
+                                                                  insertHeaders:
+                                                                    description: InsertHeaders - Headers to insert into the request
+                                                                    items:
+                                                                      properties:
+                                                                        name:
+                                                                          description: Name - Header name
+                                                                          type: string
+                                                                        value:
+                                                                          description: Value - Header value
+                                                                          type: string
+                                                                      required:
+                                                                        - name
+                                                                        - value
+                                                                      type: object
+                                                                    maxItems: 100
+                                                                    type: array
+                                                                required:
+                                                                  - insertHeaders
+                                                                type: object
+                                                            type: object
+                                                          challenge:
+                                                            description: Challenge - Require silent challenge (similar to CAPTCHA but without visual puzzle)
+                                                            properties:
+                                                              customRequestHandling:
+                                                                description: CustomRequestHandling - Insert custom headers when challenge token is valid
+                                                                properties:
+                                                                  insertHeaders:
+                                                                    description: InsertHeaders - Headers to insert into the request
+                                                                    items:
+                                                                      properties:
+                                                                        name:
+                                                                          description: Name - Header name
+                                                                          type: string
+                                                                        value:
+                                                                          description: Value - Header value
+                                                                          type: string
+                                                                      required:
+                                                                        - name
+                                                                        - value
+                                                                      type: object
+                                                                    maxItems: 100
+                                                                    type: array
+                                                                required:
+                                                                  - insertHeaders
+                                                                type: object
+                                                            type: object
+                                                          count:
+                                                            description: Count - Count the request but don't take action
+                                                            properties:
+                                                              customRequestHandling:
+                                                                description: CustomRequestHandling - Insert custom headers
+                                                                properties:
+                                                                  insertHeaders:
+                                                                    description: InsertHeaders - Headers to insert into the request
+                                                                    items:
+                                                                      properties:
+                                                                        name:
+                                                                          description: Name - Header name
+                                                                          type: string
+                                                                        value:
+                                                                          description: Value - Header value
+                                                                          type: string
+                                                                      required:
+                                                                        - name
+                                                                        - value
+                                                                      type: object
+                                                                    maxItems: 100
+                                                                    type: array
+                                                                required:
+                                                                  - insertHeaders
+                                                                type: object
+                                                            type: object
+                                                        type: object
+                                                      name:
+                                                        description: Name of the rule to override
+                                                        type: string
+                                                    required:
+                                                      - actionToUse
+                                                      - name
+                                                    type: object
+                                                  type: array
+                                                vendorName:
+                                                  description: VendorName (typically "AWS" for AWS managed rules)
+                                                  type: string
+                                                version:
+                                                  description: Version of the rule group (optional, uses latest if not specified)
+                                                  type: string
+                                              required:
+                                                - name
+                                                - vendorName
+                                              type: object
+                                            rateBased:
+                                              description: RateBased - Rate limiting per IP
+                                              properties:
+                                                forwardedIPConfig:
+                                                  description: ForwardedIPConfig for rate limiting based on forwarded IP headers
+                                                  properties:
+                                                    fallbackBehavior:
+                                                      description: FallbackBehavior when header is missing or invalid
+                                                      enum:
+                                                        - MATCH
+                                                        - NO_MATCH
+                                                      type: string
+                                                    headerName:
+                                                      description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                                      pattern: ^[a-zA-Z0-9._$-]+$
+                                                      type: string
+                                                  required:
+                                                    - fallbackBehavior
+                                                    - headerName
+                                                  type: object
+                                                limit:
+                                                  description: Limit - Max requests per 5 minutes from a single IP
+                                                  format: int64
+                                                  maximum: 2000000000
+                                                  minimum: 100
+                                                  type: integer
+                                              required:
+                                                - limit
+                                              type: object
+                                            regexMatch:
+                                              description: RegexMatch - Match using regular expression patterns
+                                              properties:
+                                                fieldToMatch:
+                                                  description: FieldToMatch - Part of the request to inspect
+                                                  maxProperties: 1
+                                                  minProperties: 1
+                                                  properties:
+                                                    body:
+                                                      description: Body matches the request body
+                                                      type: boolean
+                                                    method:
+                                                      description: Method matches the HTTP method
+                                                      type: boolean
+                                                    queryString:
+                                                      description: QueryString matches the query string
+                                                      type: boolean
+                                                    singleHeader:
+                                                      description: SingleHeader matches a specific header by name
+                                                      type: string
+                                                    uriPath:
+                                                      description: UriPath matches the URI path
+                                                      type: boolean
+                                                  type: object
+                                                regexString:
+                                                  description: RegexString - Regular expression pattern to match (max 512 chars)
+                                                  maxLength: 512
+                                                  minLength: 1
+                                                  type: string
+                                                textTransformations:
+                                                  description: TextTransformations - Transformations to apply before matching
+                                                  items:
+                                                    properties:
+                                                      priority:
+                                                        description: Priority determines the order of transformations (lower = first)
+                                                        format: int32
+                                                        minimum: 0
+                                                        type: integer
+                                                      type:
+                                                        description: Type of transformation
+                                                        enum:
+                                                          - NONE
+                                                          - COMPRESS_WHITE_SPACE
+                                                          - HTML_ENTITY_DECODE
+                                                          - LOWERCASE
+                                                          - CMD_LINE
+                                                          - URL_DECODE
+                                                          - BASE64_DECODE
+                                                          - HEX_DECODE
+                                                          - MD5
+                                                          - REPLACE_COMMENTS
+                                                          - ESCAPE_SEQ_DECODE
+                                                          - SQL_HEX_DECODE
+                                                          - CSS_DECODE
+                                                          - JS_DECODE
+                                                          - NORMALIZE_PATH
+                                                          - NORMALIZE_PATH_WIN
+                                                          - REMOVE_NULLS
+                                                          - REPLACE_NULLS
+                                                          - BASE64_DECODE_EXT
+                                                          - URL_DECODE_UNI
+                                                          - UTF8_TO_UNICODE
+                                                        type: string
+                                                    required:
+                                                      - priority
+                                                      - type
+                                                    type: object
+                                                  minItems: 1
+                                                  type: array
+                                              required:
+                                                - fieldToMatch
+                                                - regexString
+                                                - textTransformations
+                                              type: object
+                                            sizeConstraint:
+                                              description: SizeConstraint - Match based on request component size
+                                              properties:
+                                                comparisonOperator:
+                                                  description: ComparisonOperator - Comparison operator to use
+                                                  enum:
+                                                    - EQ
+                                                    - NE
+                                                    - LE
+                                                    - LT
+                                                    - GE
+                                                    - GT
+                                                  type: string
+                                                fieldToMatch:
+                                                  description: FieldToMatch - Part of the request to inspect
+                                                  maxProperties: 1
+                                                  minProperties: 1
+                                                  properties:
+                                                    body:
+                                                      description: Body matches the request body
+                                                      type: boolean
+                                                    method:
+                                                      description: Method matches the HTTP method
+                                                      type: boolean
+                                                    queryString:
+                                                      description: QueryString matches the query string
+                                                      type: boolean
+                                                    singleHeader:
+                                                      description: SingleHeader matches a specific header by name
+                                                      type: string
+                                                    uriPath:
+                                                      description: UriPath matches the URI path
+                                                      type: boolean
+                                                  type: object
+                                                size:
+                                                  description: Size - Size in bytes to compare against (0 to 21,474,836,480)
+                                                  format: int64
+                                                  maximum: 21474836480
+                                                  minimum: 0
+                                                  type: integer
+                                                textTransformations:
+                                                  description: TextTransformations - Transformations to apply before size check
+                                                  items:
+                                                    properties:
+                                                      priority:
+                                                        description: Priority determines the order of transformations (lower = first)
+                                                        format: int32
+                                                        minimum: 0
+                                                        type: integer
+                                                      type:
+                                                        description: Type of transformation
+                                                        enum:
+                                                          - NONE
+                                                          - COMPRESS_WHITE_SPACE
+                                                          - HTML_ENTITY_DECODE
+                                                          - LOWERCASE
+                                                          - CMD_LINE
+                                                          - URL_DECODE
+                                                          - BASE64_DECODE
+                                                          - HEX_DECODE
+                                                          - MD5
+                                                          - REPLACE_COMMENTS
+                                                          - ESCAPE_SEQ_DECODE
+                                                          - SQL_HEX_DECODE
+                                                          - CSS_DECODE
+                                                          - JS_DECODE
+                                                          - NORMALIZE_PATH
+                                                          - NORMALIZE_PATH_WIN
+                                                          - REMOVE_NULLS
+                                                          - REPLACE_NULLS
+                                                          - BASE64_DECODE_EXT
+                                                          - URL_DECODE_UNI
+                                                          - UTF8_TO_UNICODE
+                                                        type: string
+                                                    required:
+                                                      - priority
+                                                      - type
+                                                    type: object
+                                                  minItems: 1
+                                                  type: array
+                                              required:
+                                                - comparisonOperator
+                                                - fieldToMatch
+                                                - size
+                                                - textTransformations
+                                              type: object
+                                            sqliMatch:
+                                              description: SqliMatch - Detect SQL injection attacks
+                                              properties:
+                                                fieldToMatch:
+                                                  description: FieldToMatch - Part of the request to inspect for SQL injection
+                                                  maxProperties: 1
+                                                  minProperties: 1
+                                                  properties:
+                                                    body:
+                                                      description: Body matches the request body
+                                                      type: boolean
+                                                    method:
+                                                      description: Method matches the HTTP method
+                                                      type: boolean
+                                                    queryString:
+                                                      description: QueryString matches the query string
+                                                      type: boolean
+                                                    singleHeader:
+                                                      description: SingleHeader matches a specific header by name
+                                                      type: string
+                                                    uriPath:
+                                                      description: UriPath matches the URI path
+                                                      type: boolean
+                                                  type: object
+                                                sensitivityLevel:
+                                                  default: LOW
+                                                  description: 'SensitivityLevel - Detection sensitivity: LOW (default, fewer false positives) or HIGH (more detections)'
+                                                  enum:
+                                                    - LOW
+                                                    - HIGH
+                                                  type: string
+                                                textTransformations:
+                                                  description: TextTransformations - Transformations to apply before inspection
+                                                  items:
+                                                    properties:
+                                                      priority:
+                                                        description: Priority determines the order of transformations (lower = first)
+                                                        format: int32
+                                                        minimum: 0
+                                                        type: integer
+                                                      type:
+                                                        description: Type of transformation
+                                                        enum:
+                                                          - NONE
+                                                          - COMPRESS_WHITE_SPACE
+                                                          - HTML_ENTITY_DECODE
+                                                          - LOWERCASE
+                                                          - CMD_LINE
+                                                          - URL_DECODE
+                                                          - BASE64_DECODE
+                                                          - HEX_DECODE
+                                                          - MD5
+                                                          - REPLACE_COMMENTS
+                                                          - ESCAPE_SEQ_DECODE
+                                                          - SQL_HEX_DECODE
+                                                          - CSS_DECODE
+                                                          - JS_DECODE
+                                                          - NORMALIZE_PATH
+                                                          - NORMALIZE_PATH_WIN
+                                                          - REMOVE_NULLS
+                                                          - REPLACE_NULLS
+                                                          - BASE64_DECODE_EXT
+                                                          - URL_DECODE_UNI
+                                                          - UTF8_TO_UNICODE
+                                                        type: string
+                                                    required:
+                                                      - priority
+                                                      - type
+                                                    type: object
+                                                  minItems: 1
+                                                  type: array
+                                              required:
+                                                - fieldToMatch
+                                                - textTransformations
+                                              type: object
+                                            xssMatch:
+                                              description: XssMatch - Detect cross-site scripting attacks
+                                              properties:
+                                                fieldToMatch:
+                                                  description: FieldToMatch - Part of the request to inspect for XSS attacks
+                                                  maxProperties: 1
+                                                  minProperties: 1
+                                                  properties:
+                                                    body:
+                                                      description: Body matches the request body
+                                                      type: boolean
+                                                    method:
+                                                      description: Method matches the HTTP method
+                                                      type: boolean
+                                                    queryString:
+                                                      description: QueryString matches the query string
+                                                      type: boolean
+                                                    singleHeader:
+                                                      description: SingleHeader matches a specific header by name
+                                                      type: string
+                                                    uriPath:
+                                                      description: UriPath matches the URI path
+                                                      type: boolean
+                                                  type: object
+                                                textTransformations:
+                                                  description: TextTransformations - Transformations to apply before inspection
+                                                  items:
+                                                    properties:
+                                                      priority:
+                                                        description: Priority determines the order of transformations (lower = first)
+                                                        format: int32
+                                                        minimum: 0
+                                                        type: integer
+                                                      type:
+                                                        description: Type of transformation
+                                                        enum:
+                                                          - NONE
+                                                          - COMPRESS_WHITE_SPACE
+                                                          - HTML_ENTITY_DECODE
+                                                          - LOWERCASE
+                                                          - CMD_LINE
+                                                          - URL_DECODE
+                                                          - BASE64_DECODE
+                                                          - HEX_DECODE
+                                                          - MD5
+                                                          - REPLACE_COMMENTS
+                                                          - ESCAPE_SEQ_DECODE
+                                                          - SQL_HEX_DECODE
+                                                          - CSS_DECODE
+                                                          - JS_DECODE
+                                                          - NORMALIZE_PATH
+                                                          - NORMALIZE_PATH_WIN
+                                                          - REMOVE_NULLS
+                                                          - REPLACE_NULLS
+                                                          - BASE64_DECODE_EXT
+                                                          - URL_DECODE_UNI
+                                                          - UTF8_TO_UNICODE
+                                                        type: string
+                                                    required:
+                                                      - priority
+                                                      - type
+                                                    type: object
+                                                  minItems: 1
+                                                  type: array
+                                              required:
+                                                - fieldToMatch
+                                                - textTransformations
+                                              type: object
+                                          type: object
+                                      required:
+                                        - statement
                                       type: object
                                     rateBased:
                                       description: RateBased - Rate limiting per IP
@@ -1939,6 +2674,741 @@ spec:
                                       - name
                                       - vendorName
                                     type: object
+                                  notStatement:
+                                    description: NotStatement - Logical NOT (negates nested statement)
+                                    properties:
+                                      statement:
+                                        description: Statement to negate
+                                        maxProperties: 1
+                                        minProperties: 1
+                                        properties:
+                                          asnMatch:
+                                            description: AsnMatch - Match requests from specific Autonomous System Numbers
+                                            properties:
+                                              autonomousSystemNumbers:
+                                                description: |-
+                                                  AutonomousSystemNumbers - List of ASNs to match (e.g., [64512, 64513])
+                                                  Valid range: 0 to 4294967295
+                                                items:
+                                                  format: int64
+                                                  type: integer
+                                                minItems: 1
+                                                type: array
+                                              forwardedIPConfig:
+                                                description: ForwardedIPConfig - Configuration for inspecting forwarded IP headers
+                                                properties:
+                                                  fallbackBehavior:
+                                                    description: FallbackBehavior when header is missing or invalid
+                                                    enum:
+                                                      - MATCH
+                                                      - NO_MATCH
+                                                    type: string
+                                                  headerName:
+                                                    description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                                    pattern: ^[a-zA-Z0-9._$-]+$
+                                                    type: string
+                                                required:
+                                                  - fallbackBehavior
+                                                  - headerName
+                                                type: object
+                                            required:
+                                              - autonomousSystemNumbers
+                                            type: object
+                                          byteMatch:
+                                            description: ByteMatch - Match specific patterns in requests
+                                            properties:
+                                              fieldToMatch:
+                                                description: FieldToMatch specifies where to search
+                                                maxProperties: 1
+                                                minProperties: 1
+                                                properties:
+                                                  body:
+                                                    description: Body matches the request body
+                                                    type: boolean
+                                                  method:
+                                                    description: Method matches the HTTP method
+                                                    type: boolean
+                                                  queryString:
+                                                    description: QueryString matches the query string
+                                                    type: boolean
+                                                  singleHeader:
+                                                    description: SingleHeader matches a specific header by name
+                                                    type: string
+                                                  uriPath:
+                                                    description: UriPath matches the URI path
+                                                    type: boolean
+                                                type: object
+                                              positionalConstraint:
+                                                description: PositionalConstraint defines match location
+                                                enum:
+                                                  - EXACTLY
+                                                  - STARTS_WITH
+                                                  - ENDS_WITH
+                                                  - CONTAINS
+                                                  - CONTAINS_WORD
+                                                type: string
+                                              searchString:
+                                                description: SearchString to match
+                                                maxLength: 200
+                                                minLength: 1
+                                                type: string
+                                              textTransformations:
+                                                description: TextTransformations to apply before inspecting (required by AWS)
+                                                items:
+                                                  properties:
+                                                    priority:
+                                                      description: Priority determines the order of transformations (lower = first)
+                                                      format: int32
+                                                      minimum: 0
+                                                      type: integer
+                                                    type:
+                                                      description: Type of transformation
+                                                      enum:
+                                                        - NONE
+                                                        - COMPRESS_WHITE_SPACE
+                                                        - HTML_ENTITY_DECODE
+                                                        - LOWERCASE
+                                                        - CMD_LINE
+                                                        - URL_DECODE
+                                                        - BASE64_DECODE
+                                                        - HEX_DECODE
+                                                        - MD5
+                                                        - REPLACE_COMMENTS
+                                                        - ESCAPE_SEQ_DECODE
+                                                        - SQL_HEX_DECODE
+                                                        - CSS_DECODE
+                                                        - JS_DECODE
+                                                        - NORMALIZE_PATH
+                                                        - NORMALIZE_PATH_WIN
+                                                        - REMOVE_NULLS
+                                                        - REPLACE_NULLS
+                                                        - BASE64_DECODE_EXT
+                                                        - URL_DECODE_UNI
+                                                        - UTF8_TO_UNICODE
+                                                      type: string
+                                                  required:
+                                                    - priority
+                                                    - type
+                                                  type: object
+                                                maxItems: 10
+                                                minItems: 1
+                                                type: array
+                                            required:
+                                              - fieldToMatch
+                                              - positionalConstraint
+                                              - searchString
+                                              - textTransformations
+                                            type: object
+                                          geoMatch:
+                                            description: GeoMatch - Match requests from specific countries
+                                            properties:
+                                              countryCodes:
+                                                description: CountryCodes using ISO 3166-1 alpha-2 codes (e.g., "US", "GB", "DE")
+                                                items:
+                                                  type: string
+                                                minItems: 1
+                                                type: array
+                                              forwardedIPConfig:
+                                                description: ForwardedIPConfig for inspecting geo location from forwarded IP headers
+                                                properties:
+                                                  fallbackBehavior:
+                                                    description: FallbackBehavior when header is missing or invalid
+                                                    enum:
+                                                      - MATCH
+                                                      - NO_MATCH
+                                                    type: string
+                                                  headerName:
+                                                    description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                                    pattern: ^[a-zA-Z0-9._$-]+$
+                                                    type: string
+                                                required:
+                                                  - fallbackBehavior
+                                                  - headerName
+                                                type: object
+                                            required:
+                                              - countryCodes
+                                            type: object
+                                          labelMatch:
+                                            description: LabelMatch - Match based on labels added by previous rules
+                                            properties:
+                                              key:
+                                                description: |-
+                                                  Key - Label key to match against (e.g., "aws:acl:name" or namespace like "aws:acl")
+                                                  Can include namespace specifications separated by colons
+                                                maxLength: 1024
+                                                minLength: 1
+                                                pattern: ^[0-9A-Za-z_\-:]+$
+                                                type: string
+                                              scope:
+                                                description: 'Scope - Match scope: "LABEL" (full label) or "NAMESPACE" (namespace prefix)'
+                                                enum:
+                                                  - LABEL
+                                                  - NAMESPACE
+                                                type: string
+                                            required:
+                                              - key
+                                              - scope
+                                            type: object
+                                          managedRuleGroup:
+                                            description: ManagedRuleGroup - Use AWS-managed rule sets
+                                            properties:
+                                              excludedRules:
+                                                description: ExcludedRules to disable specific rules within the managed group
+                                                items:
+                                                  properties:
+                                                    name:
+                                                      description: Name of the rule to exclude from the managed rule group
+                                                      type: string
+                                                  required:
+                                                    - name
+                                                  type: object
+                                                type: array
+                                              managedRuleGroupConfigs:
+                                                description: ManagedRuleGroupConfigs for ATP/ACFP/Bot Control configuration
+                                                items:
+                                                  properties:
+                                                    loginPath:
+                                                      description: LoginPath for ATP/ACFP (e.g., "/login")
+                                                      type: string
+                                                    passwordField:
+                                                      description: PasswordField for extracting password from requests
+                                                      properties:
+                                                        identifier:
+                                                          description: Identifier path (e.g., "/username" for JSON, "username" for form)
+                                                          type: string
+                                                      required:
+                                                        - identifier
+                                                      type: object
+                                                    payloadType:
+                                                      description: PayloadType for request body parsing
+                                                      enum:
+                                                        - JSON
+                                                        - FORM_ENCODED
+                                                      type: string
+                                                    usernameField:
+                                                      description: UsernameField for extracting username from requests
+                                                      properties:
+                                                        identifier:
+                                                          description: Identifier path (e.g., "/username" for JSON, "username" for form)
+                                                          type: string
+                                                      required:
+                                                        - identifier
+                                                      type: object
+                                                  type: object
+                                                type: array
+                                              name:
+                                                description: |-
+                                                  Name of the managed rule group
+                                                  Common AWS managed rules:
+                                                  - AWSManagedRulesCommonRuleSet
+                                                  - AWSManagedRulesKnownBadInputsRuleSet
+                                                  - AWSManagedRulesSQLiRuleSet
+                                                  - AWSManagedRulesLinuxRuleSet
+                                                  - AWSManagedRulesUnixRuleSet
+                                                type: string
+                                              ruleActionOverrides:
+                                                description: RuleActionOverrides to override actions for specific rules
+                                                items:
+                                                  properties:
+                                                    actionToUse:
+                                                      description: ActionToUse to replace the original action
+                                                      maxProperties: 1
+                                                      minProperties: 1
+                                                      properties:
+                                                        allow:
+                                                          description: Allow - Permit the request
+                                                          properties:
+                                                            customRequestHandling:
+                                                              description: CustomRequestHandling - Insert custom headers into allowed requests
+                                                              properties:
+                                                                insertHeaders:
+                                                                  description: InsertHeaders - Headers to insert into the request
+                                                                  items:
+                                                                    properties:
+                                                                      name:
+                                                                        description: Name - Header name
+                                                                        type: string
+                                                                      value:
+                                                                        description: Value - Header value
+                                                                        type: string
+                                                                    required:
+                                                                      - name
+                                                                      - value
+                                                                    type: object
+                                                                  maxItems: 100
+                                                                  type: array
+                                                              required:
+                                                                - insertHeaders
+                                                              type: object
+                                                          type: object
+                                                        block:
+                                                          description: Block - Block the request
+                                                          properties:
+                                                            customResponse:
+                                                              description: CustomResponse - Send custom response for blocked requests
+                                                              properties:
+                                                                customResponseBodyKey:
+                                                                  description: CustomResponseBodyKey - Reference to custom response body in spec.customResponseBodies
+                                                                  type: string
+                                                                responseCode:
+                                                                  description: ResponseCode - HTTP status code to return (200-599)
+                                                                  format: int32
+                                                                  maximum: 599
+                                                                  minimum: 200
+                                                                  type: integer
+                                                                responseHeaders:
+                                                                  description: ResponseHeaders - Custom headers to include in response
+                                                                  items:
+                                                                    properties:
+                                                                      name:
+                                                                        description: Name - Header name
+                                                                        type: string
+                                                                      value:
+                                                                        description: Value - Header value
+                                                                        type: string
+                                                                    required:
+                                                                      - name
+                                                                      - value
+                                                                    type: object
+                                                                  maxItems: 100
+                                                                  type: array
+                                                              required:
+                                                                - responseCode
+                                                              type: object
+                                                          type: object
+                                                        captcha:
+                                                          description: Captcha - Require CAPTCHA challenge
+                                                          properties:
+                                                            customRequestHandling:
+                                                              description: CustomRequestHandling - Insert custom headers
+                                                              properties:
+                                                                insertHeaders:
+                                                                  description: InsertHeaders - Headers to insert into the request
+                                                                  items:
+                                                                    properties:
+                                                                      name:
+                                                                        description: Name - Header name
+                                                                        type: string
+                                                                      value:
+                                                                        description: Value - Header value
+                                                                        type: string
+                                                                    required:
+                                                                      - name
+                                                                      - value
+                                                                    type: object
+                                                                  maxItems: 100
+                                                                  type: array
+                                                              required:
+                                                                - insertHeaders
+                                                              type: object
+                                                          type: object
+                                                        challenge:
+                                                          description: Challenge - Require silent challenge (similar to CAPTCHA but without visual puzzle)
+                                                          properties:
+                                                            customRequestHandling:
+                                                              description: CustomRequestHandling - Insert custom headers when challenge token is valid
+                                                              properties:
+                                                                insertHeaders:
+                                                                  description: InsertHeaders - Headers to insert into the request
+                                                                  items:
+                                                                    properties:
+                                                                      name:
+                                                                        description: Name - Header name
+                                                                        type: string
+                                                                      value:
+                                                                        description: Value - Header value
+                                                                        type: string
+                                                                    required:
+                                                                      - name
+                                                                      - value
+                                                                    type: object
+                                                                  maxItems: 100
+                                                                  type: array
+                                                              required:
+                                                                - insertHeaders
+                                                              type: object
+                                                          type: object
+                                                        count:
+                                                          description: Count - Count the request but don't take action
+                                                          properties:
+                                                            customRequestHandling:
+                                                              description: CustomRequestHandling - Insert custom headers
+                                                              properties:
+                                                                insertHeaders:
+                                                                  description: InsertHeaders - Headers to insert into the request
+                                                                  items:
+                                                                    properties:
+                                                                      name:
+                                                                        description: Name - Header name
+                                                                        type: string
+                                                                      value:
+                                                                        description: Value - Header value
+                                                                        type: string
+                                                                    required:
+                                                                      - name
+                                                                      - value
+                                                                    type: object
+                                                                  maxItems: 100
+                                                                  type: array
+                                                              required:
+                                                                - insertHeaders
+                                                              type: object
+                                                          type: object
+                                                      type: object
+                                                    name:
+                                                      description: Name of the rule to override
+                                                      type: string
+                                                  required:
+                                                    - actionToUse
+                                                    - name
+                                                  type: object
+                                                type: array
+                                              vendorName:
+                                                description: VendorName (typically "AWS" for AWS managed rules)
+                                                type: string
+                                              version:
+                                                description: Version of the rule group (optional, uses latest if not specified)
+                                                type: string
+                                            required:
+                                              - name
+                                              - vendorName
+                                            type: object
+                                          rateBased:
+                                            description: RateBased - Rate limiting per IP
+                                            properties:
+                                              forwardedIPConfig:
+                                                description: ForwardedIPConfig for rate limiting based on forwarded IP headers
+                                                properties:
+                                                  fallbackBehavior:
+                                                    description: FallbackBehavior when header is missing or invalid
+                                                    enum:
+                                                      - MATCH
+                                                      - NO_MATCH
+                                                    type: string
+                                                  headerName:
+                                                    description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                                    pattern: ^[a-zA-Z0-9._$-]+$
+                                                    type: string
+                                                required:
+                                                  - fallbackBehavior
+                                                  - headerName
+                                                type: object
+                                              limit:
+                                                description: Limit - Max requests per 5 minutes from a single IP
+                                                format: int64
+                                                maximum: 2000000000
+                                                minimum: 100
+                                                type: integer
+                                            required:
+                                              - limit
+                                            type: object
+                                          regexMatch:
+                                            description: RegexMatch - Match using regular expression patterns
+                                            properties:
+                                              fieldToMatch:
+                                                description: FieldToMatch - Part of the request to inspect
+                                                maxProperties: 1
+                                                minProperties: 1
+                                                properties:
+                                                  body:
+                                                    description: Body matches the request body
+                                                    type: boolean
+                                                  method:
+                                                    description: Method matches the HTTP method
+                                                    type: boolean
+                                                  queryString:
+                                                    description: QueryString matches the query string
+                                                    type: boolean
+                                                  singleHeader:
+                                                    description: SingleHeader matches a specific header by name
+                                                    type: string
+                                                  uriPath:
+                                                    description: UriPath matches the URI path
+                                                    type: boolean
+                                                type: object
+                                              regexString:
+                                                description: RegexString - Regular expression pattern to match (max 512 chars)
+                                                maxLength: 512
+                                                minLength: 1
+                                                type: string
+                                              textTransformations:
+                                                description: TextTransformations - Transformations to apply before matching
+                                                items:
+                                                  properties:
+                                                    priority:
+                                                      description: Priority determines the order of transformations (lower = first)
+                                                      format: int32
+                                                      minimum: 0
+                                                      type: integer
+                                                    type:
+                                                      description: Type of transformation
+                                                      enum:
+                                                        - NONE
+                                                        - COMPRESS_WHITE_SPACE
+                                                        - HTML_ENTITY_DECODE
+                                                        - LOWERCASE
+                                                        - CMD_LINE
+                                                        - URL_DECODE
+                                                        - BASE64_DECODE
+                                                        - HEX_DECODE
+                                                        - MD5
+                                                        - REPLACE_COMMENTS
+                                                        - ESCAPE_SEQ_DECODE
+                                                        - SQL_HEX_DECODE
+                                                        - CSS_DECODE
+                                                        - JS_DECODE
+                                                        - NORMALIZE_PATH
+                                                        - NORMALIZE_PATH_WIN
+                                                        - REMOVE_NULLS
+                                                        - REPLACE_NULLS
+                                                        - BASE64_DECODE_EXT
+                                                        - URL_DECODE_UNI
+                                                        - UTF8_TO_UNICODE
+                                                      type: string
+                                                  required:
+                                                    - priority
+                                                    - type
+                                                  type: object
+                                                minItems: 1
+                                                type: array
+                                            required:
+                                              - fieldToMatch
+                                              - regexString
+                                              - textTransformations
+                                            type: object
+                                          sizeConstraint:
+                                            description: SizeConstraint - Match based on request component size
+                                            properties:
+                                              comparisonOperator:
+                                                description: ComparisonOperator - Comparison operator to use
+                                                enum:
+                                                  - EQ
+                                                  - NE
+                                                  - LE
+                                                  - LT
+                                                  - GE
+                                                  - GT
+                                                type: string
+                                              fieldToMatch:
+                                                description: FieldToMatch - Part of the request to inspect
+                                                maxProperties: 1
+                                                minProperties: 1
+                                                properties:
+                                                  body:
+                                                    description: Body matches the request body
+                                                    type: boolean
+                                                  method:
+                                                    description: Method matches the HTTP method
+                                                    type: boolean
+                                                  queryString:
+                                                    description: QueryString matches the query string
+                                                    type: boolean
+                                                  singleHeader:
+                                                    description: SingleHeader matches a specific header by name
+                                                    type: string
+                                                  uriPath:
+                                                    description: UriPath matches the URI path
+                                                    type: boolean
+                                                type: object
+                                              size:
+                                                description: Size - Size in bytes to compare against (0 to 21,474,836,480)
+                                                format: int64
+                                                maximum: 21474836480
+                                                minimum: 0
+                                                type: integer
+                                              textTransformations:
+                                                description: TextTransformations - Transformations to apply before size check
+                                                items:
+                                                  properties:
+                                                    priority:
+                                                      description: Priority determines the order of transformations (lower = first)
+                                                      format: int32
+                                                      minimum: 0
+                                                      type: integer
+                                                    type:
+                                                      description: Type of transformation
+                                                      enum:
+                                                        - NONE
+                                                        - COMPRESS_WHITE_SPACE
+                                                        - HTML_ENTITY_DECODE
+                                                        - LOWERCASE
+                                                        - CMD_LINE
+                                                        - URL_DECODE
+                                                        - BASE64_DECODE
+                                                        - HEX_DECODE
+                                                        - MD5
+                                                        - REPLACE_COMMENTS
+                                                        - ESCAPE_SEQ_DECODE
+                                                        - SQL_HEX_DECODE
+                                                        - CSS_DECODE
+                                                        - JS_DECODE
+                                                        - NORMALIZE_PATH
+                                                        - NORMALIZE_PATH_WIN
+                                                        - REMOVE_NULLS
+                                                        - REPLACE_NULLS
+                                                        - BASE64_DECODE_EXT
+                                                        - URL_DECODE_UNI
+                                                        - UTF8_TO_UNICODE
+                                                      type: string
+                                                  required:
+                                                    - priority
+                                                    - type
+                                                  type: object
+                                                minItems: 1
+                                                type: array
+                                            required:
+                                              - comparisonOperator
+                                              - fieldToMatch
+                                              - size
+                                              - textTransformations
+                                            type: object
+                                          sqliMatch:
+                                            description: SqliMatch - Detect SQL injection attacks
+                                            properties:
+                                              fieldToMatch:
+                                                description: FieldToMatch - Part of the request to inspect for SQL injection
+                                                maxProperties: 1
+                                                minProperties: 1
+                                                properties:
+                                                  body:
+                                                    description: Body matches the request body
+                                                    type: boolean
+                                                  method:
+                                                    description: Method matches the HTTP method
+                                                    type: boolean
+                                                  queryString:
+                                                    description: QueryString matches the query string
+                                                    type: boolean
+                                                  singleHeader:
+                                                    description: SingleHeader matches a specific header by name
+                                                    type: string
+                                                  uriPath:
+                                                    description: UriPath matches the URI path
+                                                    type: boolean
+                                                type: object
+                                              sensitivityLevel:
+                                                default: LOW
+                                                description: 'SensitivityLevel - Detection sensitivity: LOW (default, fewer false positives) or HIGH (more detections)'
+                                                enum:
+                                                  - LOW
+                                                  - HIGH
+                                                type: string
+                                              textTransformations:
+                                                description: TextTransformations - Transformations to apply before inspection
+                                                items:
+                                                  properties:
+                                                    priority:
+                                                      description: Priority determines the order of transformations (lower = first)
+                                                      format: int32
+                                                      minimum: 0
+                                                      type: integer
+                                                    type:
+                                                      description: Type of transformation
+                                                      enum:
+                                                        - NONE
+                                                        - COMPRESS_WHITE_SPACE
+                                                        - HTML_ENTITY_DECODE
+                                                        - LOWERCASE
+                                                        - CMD_LINE
+                                                        - URL_DECODE
+                                                        - BASE64_DECODE
+                                                        - HEX_DECODE
+                                                        - MD5
+                                                        - REPLACE_COMMENTS
+                                                        - ESCAPE_SEQ_DECODE
+                                                        - SQL_HEX_DECODE
+                                                        - CSS_DECODE
+                                                        - JS_DECODE
+                                                        - NORMALIZE_PATH
+                                                        - NORMALIZE_PATH_WIN
+                                                        - REMOVE_NULLS
+                                                        - REPLACE_NULLS
+                                                        - BASE64_DECODE_EXT
+                                                        - URL_DECODE_UNI
+                                                        - UTF8_TO_UNICODE
+                                                      type: string
+                                                  required:
+                                                    - priority
+                                                    - type
+                                                  type: object
+                                                minItems: 1
+                                                type: array
+                                            required:
+                                              - fieldToMatch
+                                              - textTransformations
+                                            type: object
+                                          xssMatch:
+                                            description: XssMatch - Detect cross-site scripting attacks
+                                            properties:
+                                              fieldToMatch:
+                                                description: FieldToMatch - Part of the request to inspect for XSS attacks
+                                                maxProperties: 1
+                                                minProperties: 1
+                                                properties:
+                                                  body:
+                                                    description: Body matches the request body
+                                                    type: boolean
+                                                  method:
+                                                    description: Method matches the HTTP method
+                                                    type: boolean
+                                                  queryString:
+                                                    description: QueryString matches the query string
+                                                    type: boolean
+                                                  singleHeader:
+                                                    description: SingleHeader matches a specific header by name
+                                                    type: string
+                                                  uriPath:
+                                                    description: UriPath matches the URI path
+                                                    type: boolean
+                                                type: object
+                                              textTransformations:
+                                                description: TextTransformations - Transformations to apply before inspection
+                                                items:
+                                                  properties:
+                                                    priority:
+                                                      description: Priority determines the order of transformations (lower = first)
+                                                      format: int32
+                                                      minimum: 0
+                                                      type: integer
+                                                    type:
+                                                      description: Type of transformation
+                                                      enum:
+                                                        - NONE
+                                                        - COMPRESS_WHITE_SPACE
+                                                        - HTML_ENTITY_DECODE
+                                                        - LOWERCASE
+                                                        - CMD_LINE
+                                                        - URL_DECODE
+                                                        - BASE64_DECODE
+                                                        - HEX_DECODE
+                                                        - MD5
+                                                        - REPLACE_COMMENTS
+                                                        - ESCAPE_SEQ_DECODE
+                                                        - SQL_HEX_DECODE
+                                                        - CSS_DECODE
+                                                        - JS_DECODE
+                                                        - NORMALIZE_PATH
+                                                        - NORMALIZE_PATH_WIN
+                                                        - REMOVE_NULLS
+                                                        - REPLACE_NULLS
+                                                        - BASE64_DECODE_EXT
+                                                        - URL_DECODE_UNI
+                                                        - UTF8_TO_UNICODE
+                                                      type: string
+                                                  required:
+                                                    - priority
+                                                    - type
+                                                  type: object
+                                                minItems: 1
+                                                type: array
+                                            required:
+                                              - fieldToMatch
+                                              - textTransformations
+                                            type: object
+                                        type: object
+                                    required:
+                                      - statement
+                                    type: object
                                   rateBased:
                                     description: RateBased - Rate limiting per IP
                                     properties:
@@ -2282,8 +3752,8 @@ spec:
                                 description: Statements to combine with OR logic (min 2)
                                 items:
                                   description: |-
-                                    AwsWebAclStatement1 - Level 1 nested statement (only leaf statements, no further logical operators)
-                                    This enables future expansion to AwsWebAclStatement2, AwsWebAclStatement3, etc.
+                                    AwsWebAclNestedStatement - Statement used inside logical operators (AND/OR/top-level NOT)
+                                    AWS WAF allows only NOT at this nesting level, plus all leaf statement types
                                   maxProperties: 1
                                   minProperties: 1
                                   properties:
@@ -2677,6 +4147,741 @@ spec:
                                       required:
                                         - name
                                         - vendorName
+                                      type: object
+                                    notStatement:
+                                      description: NotStatement - Logical NOT (negates nested statement)
+                                      properties:
+                                        statement:
+                                          description: Statement to negate
+                                          maxProperties: 1
+                                          minProperties: 1
+                                          properties:
+                                            asnMatch:
+                                              description: AsnMatch - Match requests from specific Autonomous System Numbers
+                                              properties:
+                                                autonomousSystemNumbers:
+                                                  description: |-
+                                                    AutonomousSystemNumbers - List of ASNs to match (e.g., [64512, 64513])
+                                                    Valid range: 0 to 4294967295
+                                                  items:
+                                                    format: int64
+                                                    type: integer
+                                                  minItems: 1
+                                                  type: array
+                                                forwardedIPConfig:
+                                                  description: ForwardedIPConfig - Configuration for inspecting forwarded IP headers
+                                                  properties:
+                                                    fallbackBehavior:
+                                                      description: FallbackBehavior when header is missing or invalid
+                                                      enum:
+                                                        - MATCH
+                                                        - NO_MATCH
+                                                      type: string
+                                                    headerName:
+                                                      description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                                      pattern: ^[a-zA-Z0-9._$-]+$
+                                                      type: string
+                                                  required:
+                                                    - fallbackBehavior
+                                                    - headerName
+                                                  type: object
+                                              required:
+                                                - autonomousSystemNumbers
+                                              type: object
+                                            byteMatch:
+                                              description: ByteMatch - Match specific patterns in requests
+                                              properties:
+                                                fieldToMatch:
+                                                  description: FieldToMatch specifies where to search
+                                                  maxProperties: 1
+                                                  minProperties: 1
+                                                  properties:
+                                                    body:
+                                                      description: Body matches the request body
+                                                      type: boolean
+                                                    method:
+                                                      description: Method matches the HTTP method
+                                                      type: boolean
+                                                    queryString:
+                                                      description: QueryString matches the query string
+                                                      type: boolean
+                                                    singleHeader:
+                                                      description: SingleHeader matches a specific header by name
+                                                      type: string
+                                                    uriPath:
+                                                      description: UriPath matches the URI path
+                                                      type: boolean
+                                                  type: object
+                                                positionalConstraint:
+                                                  description: PositionalConstraint defines match location
+                                                  enum:
+                                                    - EXACTLY
+                                                    - STARTS_WITH
+                                                    - ENDS_WITH
+                                                    - CONTAINS
+                                                    - CONTAINS_WORD
+                                                  type: string
+                                                searchString:
+                                                  description: SearchString to match
+                                                  maxLength: 200
+                                                  minLength: 1
+                                                  type: string
+                                                textTransformations:
+                                                  description: TextTransformations to apply before inspecting (required by AWS)
+                                                  items:
+                                                    properties:
+                                                      priority:
+                                                        description: Priority determines the order of transformations (lower = first)
+                                                        format: int32
+                                                        minimum: 0
+                                                        type: integer
+                                                      type:
+                                                        description: Type of transformation
+                                                        enum:
+                                                          - NONE
+                                                          - COMPRESS_WHITE_SPACE
+                                                          - HTML_ENTITY_DECODE
+                                                          - LOWERCASE
+                                                          - CMD_LINE
+                                                          - URL_DECODE
+                                                          - BASE64_DECODE
+                                                          - HEX_DECODE
+                                                          - MD5
+                                                          - REPLACE_COMMENTS
+                                                          - ESCAPE_SEQ_DECODE
+                                                          - SQL_HEX_DECODE
+                                                          - CSS_DECODE
+                                                          - JS_DECODE
+                                                          - NORMALIZE_PATH
+                                                          - NORMALIZE_PATH_WIN
+                                                          - REMOVE_NULLS
+                                                          - REPLACE_NULLS
+                                                          - BASE64_DECODE_EXT
+                                                          - URL_DECODE_UNI
+                                                          - UTF8_TO_UNICODE
+                                                        type: string
+                                                    required:
+                                                      - priority
+                                                      - type
+                                                    type: object
+                                                  maxItems: 10
+                                                  minItems: 1
+                                                  type: array
+                                              required:
+                                                - fieldToMatch
+                                                - positionalConstraint
+                                                - searchString
+                                                - textTransformations
+                                              type: object
+                                            geoMatch:
+                                              description: GeoMatch - Match requests from specific countries
+                                              properties:
+                                                countryCodes:
+                                                  description: CountryCodes using ISO 3166-1 alpha-2 codes (e.g., "US", "GB", "DE")
+                                                  items:
+                                                    type: string
+                                                  minItems: 1
+                                                  type: array
+                                                forwardedIPConfig:
+                                                  description: ForwardedIPConfig for inspecting geo location from forwarded IP headers
+                                                  properties:
+                                                    fallbackBehavior:
+                                                      description: FallbackBehavior when header is missing or invalid
+                                                      enum:
+                                                        - MATCH
+                                                        - NO_MATCH
+                                                      type: string
+                                                    headerName:
+                                                      description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                                      pattern: ^[a-zA-Z0-9._$-]+$
+                                                      type: string
+                                                  required:
+                                                    - fallbackBehavior
+                                                    - headerName
+                                                  type: object
+                                              required:
+                                                - countryCodes
+                                              type: object
+                                            labelMatch:
+                                              description: LabelMatch - Match based on labels added by previous rules
+                                              properties:
+                                                key:
+                                                  description: |-
+                                                    Key - Label key to match against (e.g., "aws:acl:name" or namespace like "aws:acl")
+                                                    Can include namespace specifications separated by colons
+                                                  maxLength: 1024
+                                                  minLength: 1
+                                                  pattern: ^[0-9A-Za-z_\-:]+$
+                                                  type: string
+                                                scope:
+                                                  description: 'Scope - Match scope: "LABEL" (full label) or "NAMESPACE" (namespace prefix)'
+                                                  enum:
+                                                    - LABEL
+                                                    - NAMESPACE
+                                                  type: string
+                                              required:
+                                                - key
+                                                - scope
+                                              type: object
+                                            managedRuleGroup:
+                                              description: ManagedRuleGroup - Use AWS-managed rule sets
+                                              properties:
+                                                excludedRules:
+                                                  description: ExcludedRules to disable specific rules within the managed group
+                                                  items:
+                                                    properties:
+                                                      name:
+                                                        description: Name of the rule to exclude from the managed rule group
+                                                        type: string
+                                                    required:
+                                                      - name
+                                                    type: object
+                                                  type: array
+                                                managedRuleGroupConfigs:
+                                                  description: ManagedRuleGroupConfigs for ATP/ACFP/Bot Control configuration
+                                                  items:
+                                                    properties:
+                                                      loginPath:
+                                                        description: LoginPath for ATP/ACFP (e.g., "/login")
+                                                        type: string
+                                                      passwordField:
+                                                        description: PasswordField for extracting password from requests
+                                                        properties:
+                                                          identifier:
+                                                            description: Identifier path (e.g., "/username" for JSON, "username" for form)
+                                                            type: string
+                                                        required:
+                                                          - identifier
+                                                        type: object
+                                                      payloadType:
+                                                        description: PayloadType for request body parsing
+                                                        enum:
+                                                          - JSON
+                                                          - FORM_ENCODED
+                                                        type: string
+                                                      usernameField:
+                                                        description: UsernameField for extracting username from requests
+                                                        properties:
+                                                          identifier:
+                                                            description: Identifier path (e.g., "/username" for JSON, "username" for form)
+                                                            type: string
+                                                        required:
+                                                          - identifier
+                                                        type: object
+                                                    type: object
+                                                  type: array
+                                                name:
+                                                  description: |-
+                                                    Name of the managed rule group
+                                                    Common AWS managed rules:
+                                                    - AWSManagedRulesCommonRuleSet
+                                                    - AWSManagedRulesKnownBadInputsRuleSet
+                                                    - AWSManagedRulesSQLiRuleSet
+                                                    - AWSManagedRulesLinuxRuleSet
+                                                    - AWSManagedRulesUnixRuleSet
+                                                  type: string
+                                                ruleActionOverrides:
+                                                  description: RuleActionOverrides to override actions for specific rules
+                                                  items:
+                                                    properties:
+                                                      actionToUse:
+                                                        description: ActionToUse to replace the original action
+                                                        maxProperties: 1
+                                                        minProperties: 1
+                                                        properties:
+                                                          allow:
+                                                            description: Allow - Permit the request
+                                                            properties:
+                                                              customRequestHandling:
+                                                                description: CustomRequestHandling - Insert custom headers into allowed requests
+                                                                properties:
+                                                                  insertHeaders:
+                                                                    description: InsertHeaders - Headers to insert into the request
+                                                                    items:
+                                                                      properties:
+                                                                        name:
+                                                                          description: Name - Header name
+                                                                          type: string
+                                                                        value:
+                                                                          description: Value - Header value
+                                                                          type: string
+                                                                      required:
+                                                                        - name
+                                                                        - value
+                                                                      type: object
+                                                                    maxItems: 100
+                                                                    type: array
+                                                                required:
+                                                                  - insertHeaders
+                                                                type: object
+                                                            type: object
+                                                          block:
+                                                            description: Block - Block the request
+                                                            properties:
+                                                              customResponse:
+                                                                description: CustomResponse - Send custom response for blocked requests
+                                                                properties:
+                                                                  customResponseBodyKey:
+                                                                    description: CustomResponseBodyKey - Reference to custom response body in spec.customResponseBodies
+                                                                    type: string
+                                                                  responseCode:
+                                                                    description: ResponseCode - HTTP status code to return (200-599)
+                                                                    format: int32
+                                                                    maximum: 599
+                                                                    minimum: 200
+                                                                    type: integer
+                                                                  responseHeaders:
+                                                                    description: ResponseHeaders - Custom headers to include in response
+                                                                    items:
+                                                                      properties:
+                                                                        name:
+                                                                          description: Name - Header name
+                                                                          type: string
+                                                                        value:
+                                                                          description: Value - Header value
+                                                                          type: string
+                                                                      required:
+                                                                        - name
+                                                                        - value
+                                                                      type: object
+                                                                    maxItems: 100
+                                                                    type: array
+                                                                required:
+                                                                  - responseCode
+                                                                type: object
+                                                            type: object
+                                                          captcha:
+                                                            description: Captcha - Require CAPTCHA challenge
+                                                            properties:
+                                                              customRequestHandling:
+                                                                description: CustomRequestHandling - Insert custom headers
+                                                                properties:
+                                                                  insertHeaders:
+                                                                    description: InsertHeaders - Headers to insert into the request
+                                                                    items:
+                                                                      properties:
+                                                                        name:
+                                                                          description: Name - Header name
+                                                                          type: string
+                                                                        value:
+                                                                          description: Value - Header value
+                                                                          type: string
+                                                                      required:
+                                                                        - name
+                                                                        - value
+                                                                      type: object
+                                                                    maxItems: 100
+                                                                    type: array
+                                                                required:
+                                                                  - insertHeaders
+                                                                type: object
+                                                            type: object
+                                                          challenge:
+                                                            description: Challenge - Require silent challenge (similar to CAPTCHA but without visual puzzle)
+                                                            properties:
+                                                              customRequestHandling:
+                                                                description: CustomRequestHandling - Insert custom headers when challenge token is valid
+                                                                properties:
+                                                                  insertHeaders:
+                                                                    description: InsertHeaders - Headers to insert into the request
+                                                                    items:
+                                                                      properties:
+                                                                        name:
+                                                                          description: Name - Header name
+                                                                          type: string
+                                                                        value:
+                                                                          description: Value - Header value
+                                                                          type: string
+                                                                      required:
+                                                                        - name
+                                                                        - value
+                                                                      type: object
+                                                                    maxItems: 100
+                                                                    type: array
+                                                                required:
+                                                                  - insertHeaders
+                                                                type: object
+                                                            type: object
+                                                          count:
+                                                            description: Count - Count the request but don't take action
+                                                            properties:
+                                                              customRequestHandling:
+                                                                description: CustomRequestHandling - Insert custom headers
+                                                                properties:
+                                                                  insertHeaders:
+                                                                    description: InsertHeaders - Headers to insert into the request
+                                                                    items:
+                                                                      properties:
+                                                                        name:
+                                                                          description: Name - Header name
+                                                                          type: string
+                                                                        value:
+                                                                          description: Value - Header value
+                                                                          type: string
+                                                                      required:
+                                                                        - name
+                                                                        - value
+                                                                      type: object
+                                                                    maxItems: 100
+                                                                    type: array
+                                                                required:
+                                                                  - insertHeaders
+                                                                type: object
+                                                            type: object
+                                                        type: object
+                                                      name:
+                                                        description: Name of the rule to override
+                                                        type: string
+                                                    required:
+                                                      - actionToUse
+                                                      - name
+                                                    type: object
+                                                  type: array
+                                                vendorName:
+                                                  description: VendorName (typically "AWS" for AWS managed rules)
+                                                  type: string
+                                                version:
+                                                  description: Version of the rule group (optional, uses latest if not specified)
+                                                  type: string
+                                              required:
+                                                - name
+                                                - vendorName
+                                              type: object
+                                            rateBased:
+                                              description: RateBased - Rate limiting per IP
+                                              properties:
+                                                forwardedIPConfig:
+                                                  description: ForwardedIPConfig for rate limiting based on forwarded IP headers
+                                                  properties:
+                                                    fallbackBehavior:
+                                                      description: FallbackBehavior when header is missing or invalid
+                                                      enum:
+                                                        - MATCH
+                                                        - NO_MATCH
+                                                      type: string
+                                                    headerName:
+                                                      description: HeaderName to extract client IP from (e.g., "X-Forwarded-For")
+                                                      pattern: ^[a-zA-Z0-9._$-]+$
+                                                      type: string
+                                                  required:
+                                                    - fallbackBehavior
+                                                    - headerName
+                                                  type: object
+                                                limit:
+                                                  description: Limit - Max requests per 5 minutes from a single IP
+                                                  format: int64
+                                                  maximum: 2000000000
+                                                  minimum: 100
+                                                  type: integer
+                                              required:
+                                                - limit
+                                              type: object
+                                            regexMatch:
+                                              description: RegexMatch - Match using regular expression patterns
+                                              properties:
+                                                fieldToMatch:
+                                                  description: FieldToMatch - Part of the request to inspect
+                                                  maxProperties: 1
+                                                  minProperties: 1
+                                                  properties:
+                                                    body:
+                                                      description: Body matches the request body
+                                                      type: boolean
+                                                    method:
+                                                      description: Method matches the HTTP method
+                                                      type: boolean
+                                                    queryString:
+                                                      description: QueryString matches the query string
+                                                      type: boolean
+                                                    singleHeader:
+                                                      description: SingleHeader matches a specific header by name
+                                                      type: string
+                                                    uriPath:
+                                                      description: UriPath matches the URI path
+                                                      type: boolean
+                                                  type: object
+                                                regexString:
+                                                  description: RegexString - Regular expression pattern to match (max 512 chars)
+                                                  maxLength: 512
+                                                  minLength: 1
+                                                  type: string
+                                                textTransformations:
+                                                  description: TextTransformations - Transformations to apply before matching
+                                                  items:
+                                                    properties:
+                                                      priority:
+                                                        description: Priority determines the order of transformations (lower = first)
+                                                        format: int32
+                                                        minimum: 0
+                                                        type: integer
+                                                      type:
+                                                        description: Type of transformation
+                                                        enum:
+                                                          - NONE
+                                                          - COMPRESS_WHITE_SPACE
+                                                          - HTML_ENTITY_DECODE
+                                                          - LOWERCASE
+                                                          - CMD_LINE
+                                                          - URL_DECODE
+                                                          - BASE64_DECODE
+                                                          - HEX_DECODE
+                                                          - MD5
+                                                          - REPLACE_COMMENTS
+                                                          - ESCAPE_SEQ_DECODE
+                                                          - SQL_HEX_DECODE
+                                                          - CSS_DECODE
+                                                          - JS_DECODE
+                                                          - NORMALIZE_PATH
+                                                          - NORMALIZE_PATH_WIN
+                                                          - REMOVE_NULLS
+                                                          - REPLACE_NULLS
+                                                          - BASE64_DECODE_EXT
+                                                          - URL_DECODE_UNI
+                                                          - UTF8_TO_UNICODE
+                                                        type: string
+                                                    required:
+                                                      - priority
+                                                      - type
+                                                    type: object
+                                                  minItems: 1
+                                                  type: array
+                                              required:
+                                                - fieldToMatch
+                                                - regexString
+                                                - textTransformations
+                                              type: object
+                                            sizeConstraint:
+                                              description: SizeConstraint - Match based on request component size
+                                              properties:
+                                                comparisonOperator:
+                                                  description: ComparisonOperator - Comparison operator to use
+                                                  enum:
+                                                    - EQ
+                                                    - NE
+                                                    - LE
+                                                    - LT
+                                                    - GE
+                                                    - GT
+                                                  type: string
+                                                fieldToMatch:
+                                                  description: FieldToMatch - Part of the request to inspect
+                                                  maxProperties: 1
+                                                  minProperties: 1
+                                                  properties:
+                                                    body:
+                                                      description: Body matches the request body
+                                                      type: boolean
+                                                    method:
+                                                      description: Method matches the HTTP method
+                                                      type: boolean
+                                                    queryString:
+                                                      description: QueryString matches the query string
+                                                      type: boolean
+                                                    singleHeader:
+                                                      description: SingleHeader matches a specific header by name
+                                                      type: string
+                                                    uriPath:
+                                                      description: UriPath matches the URI path
+                                                      type: boolean
+                                                  type: object
+                                                size:
+                                                  description: Size - Size in bytes to compare against (0 to 21,474,836,480)
+                                                  format: int64
+                                                  maximum: 21474836480
+                                                  minimum: 0
+                                                  type: integer
+                                                textTransformations:
+                                                  description: TextTransformations - Transformations to apply before size check
+                                                  items:
+                                                    properties:
+                                                      priority:
+                                                        description: Priority determines the order of transformations (lower = first)
+                                                        format: int32
+                                                        minimum: 0
+                                                        type: integer
+                                                      type:
+                                                        description: Type of transformation
+                                                        enum:
+                                                          - NONE
+                                                          - COMPRESS_WHITE_SPACE
+                                                          - HTML_ENTITY_DECODE
+                                                          - LOWERCASE
+                                                          - CMD_LINE
+                                                          - URL_DECODE
+                                                          - BASE64_DECODE
+                                                          - HEX_DECODE
+                                                          - MD5
+                                                          - REPLACE_COMMENTS
+                                                          - ESCAPE_SEQ_DECODE
+                                                          - SQL_HEX_DECODE
+                                                          - CSS_DECODE
+                                                          - JS_DECODE
+                                                          - NORMALIZE_PATH
+                                                          - NORMALIZE_PATH_WIN
+                                                          - REMOVE_NULLS
+                                                          - REPLACE_NULLS
+                                                          - BASE64_DECODE_EXT
+                                                          - URL_DECODE_UNI
+                                                          - UTF8_TO_UNICODE
+                                                        type: string
+                                                    required:
+                                                      - priority
+                                                      - type
+                                                    type: object
+                                                  minItems: 1
+                                                  type: array
+                                              required:
+                                                - comparisonOperator
+                                                - fieldToMatch
+                                                - size
+                                                - textTransformations
+                                              type: object
+                                            sqliMatch:
+                                              description: SqliMatch - Detect SQL injection attacks
+                                              properties:
+                                                fieldToMatch:
+                                                  description: FieldToMatch - Part of the request to inspect for SQL injection
+                                                  maxProperties: 1
+                                                  minProperties: 1
+                                                  properties:
+                                                    body:
+                                                      description: Body matches the request body
+                                                      type: boolean
+                                                    method:
+                                                      description: Method matches the HTTP method
+                                                      type: boolean
+                                                    queryString:
+                                                      description: QueryString matches the query string
+                                                      type: boolean
+                                                    singleHeader:
+                                                      description: SingleHeader matches a specific header by name
+                                                      type: string
+                                                    uriPath:
+                                                      description: UriPath matches the URI path
+                                                      type: boolean
+                                                  type: object
+                                                sensitivityLevel:
+                                                  default: LOW
+                                                  description: 'SensitivityLevel - Detection sensitivity: LOW (default, fewer false positives) or HIGH (more detections)'
+                                                  enum:
+                                                    - LOW
+                                                    - HIGH
+                                                  type: string
+                                                textTransformations:
+                                                  description: TextTransformations - Transformations to apply before inspection
+                                                  items:
+                                                    properties:
+                                                      priority:
+                                                        description: Priority determines the order of transformations (lower = first)
+                                                        format: int32
+                                                        minimum: 0
+                                                        type: integer
+                                                      type:
+                                                        description: Type of transformation
+                                                        enum:
+                                                          - NONE
+                                                          - COMPRESS_WHITE_SPACE
+                                                          - HTML_ENTITY_DECODE
+                                                          - LOWERCASE
+                                                          - CMD_LINE
+                                                          - URL_DECODE
+                                                          - BASE64_DECODE
+                                                          - HEX_DECODE
+                                                          - MD5
+                                                          - REPLACE_COMMENTS
+                                                          - ESCAPE_SEQ_DECODE
+                                                          - SQL_HEX_DECODE
+                                                          - CSS_DECODE
+                                                          - JS_DECODE
+                                                          - NORMALIZE_PATH
+                                                          - NORMALIZE_PATH_WIN
+                                                          - REMOVE_NULLS
+                                                          - REPLACE_NULLS
+                                                          - BASE64_DECODE_EXT
+                                                          - URL_DECODE_UNI
+                                                          - UTF8_TO_UNICODE
+                                                        type: string
+                                                    required:
+                                                      - priority
+                                                      - type
+                                                    type: object
+                                                  minItems: 1
+                                                  type: array
+                                              required:
+                                                - fieldToMatch
+                                                - textTransformations
+                                              type: object
+                                            xssMatch:
+                                              description: XssMatch - Detect cross-site scripting attacks
+                                              properties:
+                                                fieldToMatch:
+                                                  description: FieldToMatch - Part of the request to inspect for XSS attacks
+                                                  maxProperties: 1
+                                                  minProperties: 1
+                                                  properties:
+                                                    body:
+                                                      description: Body matches the request body
+                                                      type: boolean
+                                                    method:
+                                                      description: Method matches the HTTP method
+                                                      type: boolean
+                                                    queryString:
+                                                      description: QueryString matches the query string
+                                                      type: boolean
+                                                    singleHeader:
+                                                      description: SingleHeader matches a specific header by name
+                                                      type: string
+                                                    uriPath:
+                                                      description: UriPath matches the URI path
+                                                      type: boolean
+                                                  type: object
+                                                textTransformations:
+                                                  description: TextTransformations - Transformations to apply before inspection
+                                                  items:
+                                                    properties:
+                                                      priority:
+                                                        description: Priority determines the order of transformations (lower = first)
+                                                        format: int32
+                                                        minimum: 0
+                                                        type: integer
+                                                      type:
+                                                        description: Type of transformation
+                                                        enum:
+                                                          - NONE
+                                                          - COMPRESS_WHITE_SPACE
+                                                          - HTML_ENTITY_DECODE
+                                                          - LOWERCASE
+                                                          - CMD_LINE
+                                                          - URL_DECODE
+                                                          - BASE64_DECODE
+                                                          - HEX_DECODE
+                                                          - MD5
+                                                          - REPLACE_COMMENTS
+                                                          - ESCAPE_SEQ_DECODE
+                                                          - SQL_HEX_DECODE
+                                                          - CSS_DECODE
+                                                          - JS_DECODE
+                                                          - NORMALIZE_PATH
+                                                          - NORMALIZE_PATH_WIN
+                                                          - REMOVE_NULLS
+                                                          - REPLACE_NULLS
+                                                          - BASE64_DECODE_EXT
+                                                          - URL_DECODE_UNI
+                                                          - UTF8_TO_UNICODE
+                                                        type: string
+                                                    required:
+                                                      - priority
+                                                      - type
+                                                    type: object
+                                                  minItems: 1
+                                                  type: array
+                                              required:
+                                                - fieldToMatch
+                                                - textTransformations
+                                              type: object
+                                          type: object
+                                      required:
+                                        - statement
                                       type: object
                                     rateBased:
                                       description: RateBased - Rate limiting per IP
