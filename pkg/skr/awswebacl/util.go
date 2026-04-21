@@ -622,11 +622,21 @@ func convertRuleLabels(labels []cloudresourcesv1beta1.AwsWebAclLabel) []wafv2typ
 	return result
 }
 
-// convertStatement1 converts a level 1 statement (used within And/Or/Not) to AWS WAF format
-// Level 1 statements can only be leaf statements - no further logical operators allowed
-func convertStatement1(stmt cloudresourcesv1beta1.AwsWebAclStatement1) (*wafv2types.Statement, error) {
+// convertNestedStatement converts a nested statement (used within And/Or/top-level Not) to AWS WAF format
+// Nested statements can contain NOT operator plus all leaf statement types
+func convertNestedStatement(stmt cloudresourcesv1beta1.AwsWebAclNestedStatement) (*wafv2types.Statement, error) {
 	statement := &wafv2types.Statement{}
 	count := 0
+
+	// Handle nested NOT statement
+	if stmt.NotStatement != nil {
+		notStmt, err := convertNestedNotStatement(stmt.NotStatement)
+		if err != nil {
+			return nil, err
+		}
+		statement.NotStatement = notStmt
+		count++
+	}
 
 	if stmt.GeoMatch != nil {
 		geoStmt, err := convertGeoMatchStatement(stmt.GeoMatch)
@@ -732,7 +742,7 @@ func convertAndStatement(and *cloudresourcesv1beta1.AwsWebAclAndStatement) (*waf
 
 	statements := make([]wafv2types.Statement, 0, len(and.Statements))
 	for i, stmt := range and.Statements {
-		converted, err := convertStatement1(stmt)
+		converted, err := convertNestedStatement(stmt)
 		if err != nil {
 			return nil, fmt.Errorf("error converting and statement[%d]: %w", i, err)
 		}
@@ -751,7 +761,7 @@ func convertOrStatement(or *cloudresourcesv1beta1.AwsWebAclOrStatement) (*wafv2t
 
 	statements := make([]wafv2types.Statement, 0, len(or.Statements))
 	for i, stmt := range or.Statements {
-		converted, err := convertStatement1(stmt)
+		converted, err := convertNestedStatement(stmt)
 		if err != nil {
 			return nil, fmt.Errorf("error converting or statement[%d]: %w", i, err)
 		}
@@ -768,7 +778,7 @@ func convertNotStatement(not *cloudresourcesv1beta1.AwsWebAclNotStatement) (*waf
 		return nil, fmt.Errorf("not statement cannot be nil")
 	}
 
-	converted, err := convertStatement1(not.Statement)
+	converted, err := convertNestedStatement(not.Statement)
 	if err != nil {
 		return nil, fmt.Errorf("error converting not statement: %w", err)
 	}
@@ -776,6 +786,126 @@ func convertNotStatement(not *cloudresourcesv1beta1.AwsWebAclNotStatement) (*waf
 	return &wafv2types.NotStatement{
 		Statement: converted,
 	}, nil
+}
+
+// convertNestedNotStatement converts a nested NOT statement (used within AND/OR) to AWS WAF format
+// Nested NOT wraps a leaf statement
+func convertNestedNotStatement(not *cloudresourcesv1beta1.AwsWebAclNestedNotStatement) (*wafv2types.NotStatement, error) {
+	if not == nil {
+		return nil, fmt.Errorf("nested not statement cannot be nil")
+	}
+
+	converted, err := convertLeafStatement(not.Statement)
+	if err != nil {
+		return nil, fmt.Errorf("error converting nested not statement: %w", err)
+	}
+
+	return &wafv2types.NotStatement{
+		Statement: converted,
+	}, nil
+}
+
+// convertLeafStatement converts a leaf statement (deepest nesting level) to AWS WAF format
+// Leaf statements contain only leaf statement types - no logical operators
+func convertLeafStatement(stmt cloudresourcesv1beta1.AwsWebAclLeafStatement) (*wafv2types.Statement, error) {
+	statement := &wafv2types.Statement{}
+	count := 0
+
+	if stmt.GeoMatch != nil {
+		geoStmt, err := convertGeoMatchStatement(stmt.GeoMatch)
+		if err != nil {
+			return nil, err
+		}
+		statement.GeoMatchStatement = geoStmt
+		count++
+	}
+
+	if stmt.RateBased != nil {
+		rateStmt, err := convertRateBasedStatement(stmt.RateBased)
+		if err != nil {
+			return nil, err
+		}
+		statement.RateBasedStatement = rateStmt
+		count++
+	}
+
+	if stmt.ManagedRuleGroup != nil {
+		managedStmt, err := convertManagedRuleGroupStatement(stmt.ManagedRuleGroup)
+		if err != nil {
+			return nil, err
+		}
+		statement.ManagedRuleGroupStatement = managedStmt
+		count++
+	}
+
+	if stmt.ByteMatch != nil {
+		byteStmt, err := convertByteMatchStatement(stmt.ByteMatch)
+		if err != nil {
+			return nil, err
+		}
+		statement.ByteMatchStatement = byteStmt
+		count++
+	}
+
+	if stmt.LabelMatch != nil {
+		labelStmt := convertLabelMatchStatement(stmt.LabelMatch)
+		statement.LabelMatchStatement = labelStmt
+		count++
+	}
+
+	if stmt.SizeConstraint != nil {
+		sizeStmt, err := convertSizeConstraintStatement(stmt.SizeConstraint)
+		if err != nil {
+			return nil, err
+		}
+		statement.SizeConstraintStatement = sizeStmt
+		count++
+	}
+
+	if stmt.SqliMatch != nil {
+		sqliStmt, err := convertSqliMatchStatement(stmt.SqliMatch)
+		if err != nil {
+			return nil, err
+		}
+		statement.SqliMatchStatement = sqliStmt
+		count++
+	}
+
+	if stmt.XssMatch != nil {
+		xssStmt, err := convertXssMatchStatement(stmt.XssMatch)
+		if err != nil {
+			return nil, err
+		}
+		statement.XssMatchStatement = xssStmt
+		count++
+	}
+
+	if stmt.RegexMatch != nil {
+		regexStmt, err := convertRegexMatchStatement(stmt.RegexMatch)
+		if err != nil {
+			return nil, err
+		}
+		statement.RegexMatchStatement = regexStmt
+		count++
+	}
+
+	if stmt.AsnMatch != nil {
+		asnStmt, err := convertAsnMatchStatement(stmt.AsnMatch)
+		if err != nil {
+			return nil, err
+		}
+		statement.AsnMatchStatement = asnStmt
+		count++
+	}
+
+	if count == 0 {
+		return nil, fmt.Errorf("leaf statement must have exactly one condition set")
+	}
+	if count > 1 {
+		return nil, fmt.Errorf("leaf statement must have exactly one condition set, found %d", count)
+	}
+
+	return statement, nil
 }
 
 func convertLabelMatchStatement(labelMatch *cloudresourcesv1beta1.AwsWebAclLabelMatchStatement) *wafv2types.LabelMatchStatement {
