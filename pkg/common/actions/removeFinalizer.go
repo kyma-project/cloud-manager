@@ -11,10 +11,8 @@ import (
 )
 
 func PatchRemoveCommonFinalizer() composed.Action {
-	// Until the pkg/migrateFinalizers is executed there's a risk old finalizers still would be present
+	// Until all old finalizers are removed there's a risk old finalizers still would be present
 	// so to be sure we removed them all, have to strip all three of them, two old, and one new
-	// The migration is executed concurrently with reconcilers, and it can add new finalizers on objects with deletion timestamp
-	// so there's a risk some of the resources being deleted will remain with old finalizers
 	return composed.ComposeActionsNoName(
 		PatchRemoveFinalizer(api.DO_NOT_USE_OLD_KcpFinalizer),
 		PatchRemoveFinalizer(api.DO_NOT_USE_OLD_SkrFinalizer),

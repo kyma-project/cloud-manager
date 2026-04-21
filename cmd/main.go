@@ -84,7 +84,6 @@ import (
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
-	"github.com/kyma-project/cloud-manager/pkg/migrateFinalizers"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
@@ -540,17 +539,6 @@ func main() {
 		})
 		if err != nil {
 			rootLogger.Error(err, "Error from config watcher")
-		}
-	}()
-
-	// TODO: Remove in next release - after 1.2.5 is released, aka in the 1.2.6
-	// Finalizer migration
-	func() {
-		migLogger := setupLog.WithName("kcpFinalizerMigration")
-		mig := migrateFinalizers.NewMigrationForKcp(mgr.GetAPIReader(), mgr.GetClient(), migLogger)
-		_, err := mig.Run(ctx)
-		if err != nil {
-			migLogger.Error(err, "error running KCP finalizer migration")
 		}
 	}()
 
