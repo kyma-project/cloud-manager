@@ -415,8 +415,8 @@ spec:
                                 description: Statements to combine with AND logic (min 2)
                                 items:
                                   description: |-
-                                    AwsWebAclRuleStatement1 - Level 1 nested statement (only leaf statements, no further logical operators)
-                                    This enables future expansion to AwsWebAclRuleStatement2, AwsWebAclRuleStatement3, etc.
+                                    AwsWebAclStatement1 - Level 1 nested statement (only leaf statements, no further logical operators)
+                                    This enables future expansion to AwsWebAclStatement2, AwsWebAclStatement3, etc.
                                   maxProperties: 1
                                   minProperties: 1
                                   properties:
@@ -2282,8 +2282,8 @@ spec:
                                 description: Statements to combine with OR logic (min 2)
                                 items:
                                   description: |-
-                                    AwsWebAclRuleStatement1 - Level 1 nested statement (only leaf statements, no further logical operators)
-                                    This enables future expansion to AwsWebAclRuleStatement2, AwsWebAclRuleStatement3, etc.
+                                    AwsWebAclStatement1 - Level 1 nested statement (only leaf statements, no further logical operators)
+                                    This enables future expansion to AwsWebAclStatement2, AwsWebAclStatement3, etc.
                                   maxProperties: 1
                                   minProperties: 1
                                   properties:

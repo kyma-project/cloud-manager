@@ -85,7 +85,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:      "empty-statement",
 				Priority:  0,
 				Action:    cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{}, // Empty - no statement type
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{}, // Empty - no statement type
 			}),
 			"statement",
 		)
@@ -96,7 +96,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "multiple-statements",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
@@ -114,7 +114,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "ipset-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionAllow(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
@@ -128,7 +128,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "geo-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"CN", "RU"},
 					},
@@ -142,7 +142,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "rate-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit: 2000,
 					},
@@ -156,7 +156,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:           "managed-rule",
 				Priority:       0,
 				OverrideAction: cloudresourcesv1beta1.OverrideActionNone(), // Use OverrideAction for managed rules
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 						VendorName: "AWS",
 						Name:       "AWSManagedRulesCommonRuleSet",
@@ -171,7 +171,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "byte-match-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "../",
 						PositionalConstraint: "CONTAINS",
@@ -195,7 +195,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "empty-field",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "test",
 						PositionalConstraint: "CONTAINS",
@@ -215,7 +215,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "multiple-fields",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "test",
 						PositionalConstraint: "CONTAINS",
@@ -238,7 +238,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "mixed-fields",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "test",
 						PositionalConstraint: "CONTAINS",
@@ -261,7 +261,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "uri-path-match",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "/admin",
 						PositionalConstraint: "STARTS_WITH",
@@ -282,7 +282,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "query-match",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "../",
 						PositionalConstraint: "CONTAINS",
@@ -303,7 +303,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "method-match",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "DELETE",
 						PositionalConstraint: "EXACTLY",
@@ -324,7 +324,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "header-match",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "bot",
 						PositionalConstraint: "CONTAINS",
@@ -345,7 +345,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "body-match",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "<script>",
 						PositionalConstraint: "CONTAINS",
@@ -369,7 +369,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "allow-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionAllow(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
@@ -383,7 +383,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "block-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
@@ -397,7 +397,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "count-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionCount(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit: 1000,
 					},
@@ -411,7 +411,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "captcha-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionCaptcha(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"CN"},
 					},
@@ -428,7 +428,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "empty-countries",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{}, // Empty
 					},
@@ -443,7 +443,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "single-country-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{
 							"US",
@@ -459,7 +459,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "multi-country-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{
 							"US",
@@ -477,7 +477,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "geo-forwarded-ip-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionAllow(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{
 							"US",
@@ -500,7 +500,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "low-rate",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit: 99,
 					},
@@ -515,7 +515,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "min-rate",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit: 100,
 					},
@@ -529,7 +529,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "normal-rate",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit: 2000,
 					},
@@ -547,7 +547,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Name:     "rule-1-ipset",
 					Priority: 0,
 					Action:   cloudresourcesv1beta1.RuleActionAllow(),
-					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 							CountryCodes: []string{"US"},
 						},
@@ -557,7 +557,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Name:     "rule-2-geo",
 					Priority: 1,
 					Action:   cloudresourcesv1beta1.RuleActionBlock(),
-					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 							CountryCodes: []string{"CN"},
 						},
@@ -567,7 +567,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Name:     "rule-3-rate",
 					Priority: 2,
 					Action:   cloudresourcesv1beta1.RuleActionBlock(),
-					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 							Limit: 1000,
 						},
@@ -606,7 +606,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Name:     "new-rule",
 					Priority: 0,
 					Action:   cloudresourcesv1beta1.RuleActionBlock(),
-					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 							CountryCodes: []string{"US"},
 						},
@@ -621,7 +621,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "ipset-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
@@ -643,7 +643,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "action-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionCount(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
@@ -664,9 +664,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "and-statement-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement1{
+						Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
 							{
 								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 									CountryCodes: []string{"CN", "RU"},
@@ -696,9 +696,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "and-single-statement",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement1{
+						Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
 							{
 								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 									CountryCodes: []string{"US"},
@@ -717,9 +717,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "or-statement-rule",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement1{
+						Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
 							{
 								ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 									SearchString:         "sqlmap",
@@ -749,9 +749,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "or-single-statement",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement1{
+						Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
 							{
 								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 									CountryCodes: []string{"US"},
@@ -770,9 +770,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Name:     "not-geo-statement",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionAllow(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					NotStatement: &cloudresourcesv1beta1.AwsWebAclNotStatement{
-						Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement1{
+						Statement: cloudresourcesv1beta1.AwsWebAclStatement1{
 							GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 								CountryCodes: []string{"CN", "RU", "KP"},
 							},
@@ -789,9 +789,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Name:     "rule-and",
 					Priority: 0,
 					Action:   cloudresourcesv1beta1.RuleActionBlock(),
-					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-							Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement1{
+							Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
 								{
 									GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 										CountryCodes: []string{"CN"},
@@ -810,9 +810,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Name:     "rule-or",
 					Priority: 1,
 					Action:   cloudresourcesv1beta1.RuleActionBlock(),
-					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-							Statements: []cloudresourcesv1beta1.AwsWebAclRuleStatement1{
+							Statements: []cloudresourcesv1beta1.AwsWebAclStatement1{
 								{
 									ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 										SearchString:         "bot",
@@ -838,9 +838,9 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Name:     "rule-not",
 					Priority: 2,
 					Action:   cloudresourcesv1beta1.RuleActionAllow(),
-					Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						NotStatement: &cloudresourcesv1beta1.AwsWebAclNotStatement{
-							Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement1{
+							Statement: cloudresourcesv1beta1.AwsWebAclStatement1{
 								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 									CountryCodes: []string{"KP"},
 								},
