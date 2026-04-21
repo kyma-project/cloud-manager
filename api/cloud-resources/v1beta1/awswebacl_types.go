@@ -143,7 +143,7 @@ type AwsWebAclRule struct {
 
 	// Statement defines the match condition (exactly one must be set)
 	// +kubebuilder:validation:Required
-	Statement AwsWebAclRuleStatement `json:"statement"`
+	Statement AwsWebAclStatement `json:"statement"`
 
 	// RuleLabels - Labels to apply to matching requests (max 100)
 	// Can be used with LabelMatchStatement in subsequent rules
@@ -228,7 +228,7 @@ type AwsWebAclNoneAction struct {
 
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
-type AwsWebAclRuleStatement struct {
+type AwsWebAclStatement struct {
 	// AndStatement - Logical AND (all nested statements must match)
 	// +optional
 	AndStatement *AwsWebAclAndStatement `json:"andStatement,omitempty"`
@@ -599,11 +599,11 @@ type AwsWebAclVisibilityConfig struct {
 	SampledRequestsEnabled bool `json:"sampledRequestsEnabled"`
 }
 
-// AwsWebAclRuleStatement1 - Level 1 nested statement (only leaf statements, no further logical operators)
-// This enables future expansion to AwsWebAclRuleStatement2, AwsWebAclRuleStatement3, etc.
+// AwsWebAclStatement1 - Level 1 nested statement (only leaf statements, no further logical operators)
+// This enables future expansion to AwsWebAclStatement2, AwsWebAclStatement3, etc.
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
-type AwsWebAclRuleStatement1 struct {
+type AwsWebAclStatement1 struct {
 	// GeoMatch - Match requests from specific countries
 	// +optional
 	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
@@ -652,7 +652,7 @@ type AwsWebAclAndStatement struct {
 	// Statements to combine with AND logic (min 2)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclRuleStatement1 `json:"statements"`
+	Statements []AwsWebAclStatement1 `json:"statements"`
 }
 
 // AwsWebAclOrStatement - Logical OR operation combining multiple statements
@@ -662,7 +662,7 @@ type AwsWebAclOrStatement struct {
 	// Statements to combine with OR logic (min 2)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclRuleStatement1 `json:"statements"`
+	Statements []AwsWebAclStatement1 `json:"statements"`
 }
 
 // AwsWebAclNotStatement - Logical NOT operation negating a statement
@@ -671,7 +671,7 @@ type AwsWebAclOrStatement struct {
 type AwsWebAclNotStatement struct {
 	// Statement to negate
 	// +kubebuilder:validation:Required
-	Statement AwsWebAclRuleStatement1 `json:"statement"`
+	Statement AwsWebAclStatement1 `json:"statement"`
 }
 
 // AwsWebAclStatus defines the observed state of AwsWebAcl.

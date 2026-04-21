@@ -177,7 +177,7 @@ func convertOverrideAction(overrideAction *cloudresourcesv1beta1.AwsWebAclOverri
 	return nil, fmt.Errorf("overrideAction must have either none or count set")
 }
 
-func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement) (*wafv2types.Statement, error) {
+func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclStatement) (*wafv2types.Statement, error) {
 	statement := &wafv2types.Statement{}
 	count := 0
 
@@ -622,9 +622,9 @@ func convertRuleLabels(labels []cloudresourcesv1beta1.AwsWebAclLabel) []wafv2typ
 	return result
 }
 
-// convertRuleStatement1 converts a level 1 statement (used within And/Or/Not) to AWS WAF format
+// convertStatement1 converts a level 1 statement (used within And/Or/Not) to AWS WAF format
 // Level 1 statements can only be leaf statements - no further logical operators allowed
-func convertRuleStatement1(stmt cloudresourcesv1beta1.AwsWebAclRuleStatement1) (*wafv2types.Statement, error) {
+func convertStatement1(stmt cloudresourcesv1beta1.AwsWebAclStatement1) (*wafv2types.Statement, error) {
 	statement := &wafv2types.Statement{}
 	count := 0
 
@@ -732,7 +732,7 @@ func convertAndStatement(and *cloudresourcesv1beta1.AwsWebAclAndStatement) (*waf
 
 	statements := make([]wafv2types.Statement, 0, len(and.Statements))
 	for i, stmt := range and.Statements {
-		converted, err := convertRuleStatement1(stmt)
+		converted, err := convertStatement1(stmt)
 		if err != nil {
 			return nil, fmt.Errorf("error converting and statement[%d]: %w", i, err)
 		}
@@ -751,7 +751,7 @@ func convertOrStatement(or *cloudresourcesv1beta1.AwsWebAclOrStatement) (*wafv2t
 
 	statements := make([]wafv2types.Statement, 0, len(or.Statements))
 	for i, stmt := range or.Statements {
-		converted, err := convertRuleStatement1(stmt)
+		converted, err := convertStatement1(stmt)
 		if err != nil {
 			return nil, fmt.Errorf("error converting or statement[%d]: %w", i, err)
 		}
@@ -768,7 +768,7 @@ func convertNotStatement(not *cloudresourcesv1beta1.AwsWebAclNotStatement) (*waf
 		return nil, fmt.Errorf("not statement cannot be nil")
 	}
 
-	converted, err := convertRuleStatement1(not.Statement)
+	converted, err := convertStatement1(not.Statement)
 	if err != nil {
 		return nil, fmt.Errorf("error converting not statement: %w", err)
 	}

@@ -120,7 +120,7 @@ func TestConvertManagedRuleGroupStatement(t *testing.T) {
 
 func TestConvertStatement(t *testing.T) {
 	t.Run("GeoMatch statement", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 				CountryCodes: []string{"US"},
 			},
@@ -135,7 +135,7 @@ func TestConvertStatement(t *testing.T) {
 	})
 
 	t.Run("ManagedRuleGroup statement", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 				VendorName: "AWS",
 				Name:       "AWSManagedRulesCommonRuleSet",
@@ -151,7 +151,7 @@ func TestConvertStatement(t *testing.T) {
 	})
 
 	t.Run("Multiple statements returns error", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 				CountryCodes: []string{"US"},
 			},
@@ -167,7 +167,7 @@ func TestConvertStatement(t *testing.T) {
 	})
 
 	t.Run("No statements returns error", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{}
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{}
 		result, err := convertStatement(stmt)
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -181,7 +181,7 @@ func TestConvertRule(t *testing.T) {
 			Name:     "test-rule",
 			Priority: 10,
 			Action:   cloudresourcesv1beta1.RuleActionBlock(),
-			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 				GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 					CountryCodes: []string{"US"},
 				},
@@ -207,7 +207,7 @@ func TestConvertRule(t *testing.T) {
 			Name:           "managed-rule",
 			Priority:       5,
 			OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
-			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 				ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 					VendorName: "AWS",
 					Name:       "AWSManagedRulesCommonRuleSet",
@@ -231,7 +231,7 @@ func TestConvertRules(t *testing.T) {
 				Name:     "rule-1",
 				Priority: 1,
 				Action:   cloudresourcesv1beta1.RuleActionAllow(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
@@ -241,7 +241,7 @@ func TestConvertRules(t *testing.T) {
 				Name:           "rule-2",
 				Priority:       2,
 				OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 						VendorName: "AWS",
 						Name:       "AWSManagedRulesCommonRuleSet",
@@ -267,7 +267,7 @@ func TestConvertRules(t *testing.T) {
 			{
 				Name:      "invalid-rule",
 				Priority:  1,
-				Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{}, // No statement
+				Statement: cloudresourcesv1beta1.AwsWebAclStatement{}, // No statement
 			},
 		}
 		result, err := convertRules(rules)
@@ -561,7 +561,7 @@ func TestConvertRuleWithPerRuleConfigs(t *testing.T) {
 			Name:     "captcha-rule-with-override",
 			Priority: 10,
 			Action:   cloudresourcesv1beta1.RuleActionCaptcha(),
-			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 				GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 					CountryCodes: []string{"US"},
 				},
@@ -582,7 +582,7 @@ func TestConvertRuleWithPerRuleConfigs(t *testing.T) {
 			Name:     "challenge-rule-with-override",
 			Priority: 20,
 			Action:   cloudresourcesv1beta1.RuleActionChallenge(),
-			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 				GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 					CountryCodes: []string{"CN"},
 				},
@@ -603,7 +603,7 @@ func TestConvertRuleWithPerRuleConfigs(t *testing.T) {
 			Name:     "rule-with-both-configs",
 			Priority: 30,
 			Action:   cloudresourcesv1beta1.RuleActionCount(),
-			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 				RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 					Limit: 2000,
 				},
@@ -633,7 +633,7 @@ func TestConvertRuleWithPerRuleConfigs(t *testing.T) {
 			Name:     "simple-rule",
 			Priority: 40,
 			Action:   cloudresourcesv1beta1.RuleActionAllow(),
-			Statement: cloudresourcesv1beta1.AwsWebAclRuleStatement{
+			Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 				GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 					CountryCodes: []string{"US"},
 				},
@@ -675,7 +675,7 @@ func TestConvertLabelMatchStatement(t *testing.T) {
 
 func TestConvertStatementWithLabelMatch(t *testing.T) {
 	t.Run("Statement with LabelMatch", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			LabelMatch: &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
 				Key:   "protection:advanced-logic",
 				Scope: "LABEL",
@@ -736,7 +736,7 @@ func TestConvertSizeConstraintStatement(t *testing.T) {
 
 func TestConvertStatementWithSizeConstraint(t *testing.T) {
 	t.Run("Statement with SizeConstraint", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			SizeConstraint: &cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement{
 				ComparisonOperator: "GT",
 				Size:               10000,
@@ -817,7 +817,7 @@ func TestConvertSqliMatchStatement(t *testing.T) {
 
 func TestConvertStatementWithSqliMatch(t *testing.T) {
 	t.Run("Statement with SqliMatch", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			SqliMatch: &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
 				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
 					QueryString: true,
@@ -896,7 +896,7 @@ func TestConvertXssMatchStatement(t *testing.T) {
 
 func TestConvertStatementWithXssMatch(t *testing.T) {
 	t.Run("Statement with XssMatch", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			XssMatch: &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
 				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
 					QueryString: true,
@@ -975,7 +975,7 @@ func TestConvertRegexMatchStatement(t *testing.T) {
 
 func TestConvertStatementWithRegexMatch(t *testing.T) {
 	t.Run("Statement with RegexMatch", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			RegexMatch: &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
 				RegexString: "^/admin/.*$",
 				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
@@ -1055,7 +1055,7 @@ func TestConvertAsnMatchStatement(t *testing.T) {
 
 func TestConvertStatementWithAsnMatch(t *testing.T) {
 	t.Run("Statement with AsnMatch", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclRuleStatement{
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			AsnMatch: &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
 				AutonomousSystemNumbers: []int64{64512, 64513},
 			},
