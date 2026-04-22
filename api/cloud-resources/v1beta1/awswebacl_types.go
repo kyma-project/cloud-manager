@@ -664,11 +664,9 @@ type AwsWebAclNotStatement struct {
 
 // AwsWebAclStatement1 - Statement at nesting Level 1
 // Can contain: Logical operators + leaf statements (NO RateBased, NO ManagedRuleGroup)
-// CEL validation prevents same-operator nesting (AND-in-AND, OR-in-OR)
+// Type safety prevents same-operator nesting (AND-in-AND, OR-in-OR)
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
-// +kubebuilder:validation:XValidation:rule="!(has(self.andStatement) && self.andStatement.statements.exists(s, has(s.andStatement)))", message="AND cannot nest inside AND"
-// +kubebuilder:validation:XValidation:rule="!(has(self.orStatement) && self.orStatement.statements.exists(s, has(s.orStatement)))", message="OR cannot nest inside OR"
 type AwsWebAclStatement1 struct {
 	// AndStatement - Logical AND (all nested statements must match)
 	// +optional
@@ -741,11 +739,9 @@ type AwsWebAclNotStatement1 struct {
 
 // AwsWebAclStatement2 - Statement at nesting Level 2
 // Can contain: Logical operators + leaf statements (NO RateBased, NO ManagedRuleGroup)
-// CEL validation prevents same-operator nesting (AND-in-AND, OR-in-OR)
+// Type safety prevents same-operator nesting (AND-in-AND, OR-in-OR)
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
-// +kubebuilder:validation:XValidation:rule="!(has(self.andStatement) && self.andStatement.statements.exists(s, has(s.andStatement)))", message="AND cannot nest inside AND"
-// +kubebuilder:validation:XValidation:rule="!(has(self.orStatement) && self.orStatement.statements.exists(s, has(s.orStatement)))", message="OR cannot nest inside OR"
 type AwsWebAclStatement2 struct {
 	// AndStatement - Logical AND (all nested statements must match)
 	// +optional
@@ -818,11 +814,9 @@ type AwsWebAclNotStatement2 struct {
 
 // AwsWebAclStatement3 - Statement at nesting Level 3
 // Can contain: Logical operators + leaf statements (NO RateBased, NO ManagedRuleGroup)
-// CEL validation prevents same-operator nesting (AND-in-AND, OR-in-OR)
+// Type safety prevents same-operator nesting (AND-in-AND, OR-in-OR)
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
-// +kubebuilder:validation:XValidation:rule="!(has(self.andStatement) && self.andStatement.statements.exists(s, has(s.andStatement)))", message="AND cannot nest inside AND"
-// +kubebuilder:validation:XValidation:rule="!(has(self.orStatement) && self.orStatement.statements.exists(s, has(s.orStatement)))", message="OR cannot nest inside OR"
 type AwsWebAclStatement3 struct {
 	// AndStatement - Logical AND (all nested statements must match)
 	// +optional
