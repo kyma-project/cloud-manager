@@ -75,7 +75,7 @@ spec:
           <head><title>Access Denied</title></head>
           <body><h1>Access Denied</h1><p>Your request was blocked by our Web Application Firewall.</p></body>
         </html>
-    json-errOrStatement:
+    json-error:
       contentType: APPLICATION_JSON
       content: '{"error": "forbidden", "message": "Request blocked by WAF"}'
 
@@ -631,41 +631,6 @@ spec:
         sampledRequestsEnabled: true
 
     # ============================================================
-    # RULE 25: AND STATEMENT - Combining injection detection with rate limit
-    # ============================================================
-    # Block requests that show SQL injection AND are rate-limited.
-    - name: block-sqli-and-rate-limit
-      priority: 26
-      action:
-        block:
-          customResponse:
-            responseCode: 403
-            customResponseBodyKey: json-error
-      statement:
-        andStatement:
-          statements:
-            # Level 1 statement - SQL injection detection
-            - sqliMatch:
-                fieldToMatch:
-                  queryString: true
-                textTransformations:
-                  - priority: 0
-                    type: URL_DECODE
-                  - priority: 1
-                    type: HTML_ENTITY_DECODE
-                sensitivityLevel: "HIGH"
-            # Level 1 statement - Rate limiting
-            - rateBased:
-                limit: 500
-      ruleLabels:
-        - name: "logical:and-sqli-rate"
-        - name: "security:combined-protection"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: and-sqli-rate
-        sampledRequestsEnabled: true
-
-    # ============================================================
     # RULE 26: OR STATEMENT - Combining XSS and SQLi detection
     # ============================================================
     # Block requests with either SQL injection OR XSS patterns.
@@ -752,7 +717,7 @@ spec:
 # - orStatement: { statements: [...] }  # Logical OR - at least one nested statement must match (first-level nesting only)
 # - notStatement: { statement: {...} }  # Logical NOT - negates nested statement (first-level nesting only)
 # - geoMatch: { countryCodes: [...], forwardedIPConfig: {...} }
-# - rateBased: { limit: int64, forwardedIPConfig: {...} }
+# - rateBased: { limit: int64, forwardedIPConfig: {...} }  # IMPORTANT: Cannot be nested within AND/OR/NOT - root level only
 # - byteMatch: { searchString, positionalConstraint, fieldToMatch, textTransformations }
 # - managedRuleGroup: { vendorName, name, version, excludedRules, managedRuleGroupConfigs, ruleActionOverrides }
 # - labelMatch: { key: "label:name", scope: "LABEL" | "NAMESPACE" }  # Match based on labels from previous rules

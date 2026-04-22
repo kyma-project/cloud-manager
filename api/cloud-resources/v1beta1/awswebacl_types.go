@@ -599,134 +599,243 @@ type AwsWebAclVisibilityConfig struct {
 	SampledRequestsEnabled bool `json:"sampledRequestsEnabled"`
 }
 
-// AwsWebAclNestedStatement - Statement used inside logical operators (AND/OR/top-level NOT)
-// AWS WAF allows only NOT at this nesting level, plus all leaf statement types
-// +kubebuilder:validation:MinProperties=1
-// +kubebuilder:validation:MaxProperties=1
-type AwsWebAclNestedStatement struct {
-	// NotStatement - Logical NOT (negates nested statement)
-	// +optional
-	NotStatement *AwsWebAclNestedNotStatement `json:"notStatement,omitempty"`
+// ===== Level 0 Logical Operators (root level) =====
 
-	// GeoMatch - Match requests from specific countries
-	// +optional
-	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+// ===== Level 0 Operator Types =====
 
-	// RateBased - Rate limiting per IP
-	// +optional
-	RateBased *AwsWebAclRateBasedStatement `json:"rateBased,omitempty"`
-
-	// ManagedRuleGroup - Use AWS-managed rule sets
-	// +optional
-	ManagedRuleGroup *AwsWebAclManagedRuleGroupStatement `json:"managedRuleGroup,omitempty"`
-
-	// ByteMatch - Match specific patterns in requests
-	// +optional
-	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
-
-	// LabelMatch - Match based on labels added by previous rules
-	// +optional
-	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
-
-	// SizeConstraint - Match based on request component size
-	// +optional
-	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
-
-	// SqliMatch - Detect SQL injection attacks
-	// +optional
-	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
-
-	// XssMatch - Detect cross-site scripting attacks
-	// +optional
-	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
-
-	// RegexMatch - Match using regular expression patterns
-	// +optional
-	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
-
-	// AsnMatch - Match requests from specific Autonomous System Numbers
-	// +optional
-	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
-}
-
-// AwsWebAclLeafStatement - Deepest nesting level statement (leaf statements only, no logical operators)
-// This is the terminal nesting level allowed by AWS WAF
-// +kubebuilder:validation:MinProperties=1
-// +kubebuilder:validation:MaxProperties=1
-type AwsWebAclLeafStatement struct {
-	// GeoMatch - Match requests from specific countries
-	// +optional
-	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
-
-	// RateBased - Rate limiting per IP
-	// +optional
-	RateBased *AwsWebAclRateBasedStatement `json:"rateBased,omitempty"`
-
-	// ManagedRuleGroup - Use AWS-managed rule sets
-	// +optional
-	ManagedRuleGroup *AwsWebAclManagedRuleGroupStatement `json:"managedRuleGroup,omitempty"`
-
-	// ByteMatch - Match specific patterns in requests
-	// +optional
-	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
-
-	// LabelMatch - Match based on labels added by previous rules
-	// +optional
-	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
-
-	// SizeConstraint - Match based on request component size
-	// +optional
-	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
-
-	// SqliMatch - Detect SQL injection attacks
-	// +optional
-	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
-
-	// XssMatch - Detect cross-site scripting attacks
-	// +optional
-	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
-
-	// RegexMatch - Match using regular expression patterns
-	// +optional
-	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
-
-	// AsnMatch - Match requests from specific Autonomous System Numbers
-	// +optional
-	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
-}
-
-// AwsWebAclAndStatement - Logical AND operation combining multiple statements
-// All nested statements must match for the And statement to match
+// AwsWebAclAndStatement - Logical AND at Level 0 (root)
 type AwsWebAclAndStatement struct {
 	// Statements to combine with AND logic (min 2)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclNestedStatement `json:"statements"`
+	Statements []AwsWebAclStatement1 `json:"statements"`
 }
 
-// AwsWebAclOrStatement - Logical OR operation combining multiple statements
-// At least one nested statement must match for the Or statement to match
+// AwsWebAclOrStatement - Logical OR at Level 0 (root)
 type AwsWebAclOrStatement struct {
 	// Statements to combine with OR logic (min 2)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclNestedStatement `json:"statements"`
+	Statements []AwsWebAclStatement1 `json:"statements"`
 }
 
-// AwsWebAclNotStatement - Logical NOT operation negating a statement (top-level)
-// Matches when the nested statement does NOT match
+// AwsWebAclNotStatement - Logical NOT at Level 0 (root)
 type AwsWebAclNotStatement struct {
 	// Statement to negate
 	// +kubebuilder:validation:Required
-	Statement AwsWebAclNestedStatement `json:"statement"`
+	Statement AwsWebAclStatement1 `json:"statement"`
 }
 
-// AwsWebAclNestedNotStatement - Logical NOT operation at nested level (inside AND/OR)
-// Matches when the nested statement does NOT match
-type AwsWebAclNestedNotStatement struct {
-	// Statement to negate
+// ===== Level 1 Statement Type =====
+
+// AwsWebAclStatement1 - Statement at nesting Level 1
+// Can contain: Logical operators + leaf statements (NO RateBased, NO ManagedRuleGroup)
+// CEL validation prevents same-operator nesting (AND-in-AND, OR-in-OR)
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:XValidation:rule="!(has(self.andStatement) && self.andStatement.statements.exists(s, has(s.andStatement)))", message="AND cannot nest inside AND"
+// +kubebuilder:validation:XValidation:rule="!(has(self.orStatement) && self.orStatement.statements.exists(s, has(s.orStatement)))", message="OR cannot nest inside OR"
+type AwsWebAclStatement1 struct {
+	// Logical operators
+	// +optional
+	AndStatement *AwsWebAclAndStatement1 `json:"andStatement,omitempty"`
+	// +optional
+	OrStatement *AwsWebAclOrStatement1 `json:"orStatement,omitempty"`
+	// +optional
+	NotStatement *AwsWebAclNotStatement1 `json:"notStatement,omitempty"`
+
+	// NO RateBased (compile-time exclusion)
+	// NO ManagedRuleGroup (compile-time exclusion)
+
+	// Leaf statements (same as root level)
+	// +optional
+	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+	// +optional
+	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+	// +optional
+	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+	// +optional
+	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+	// +optional
+	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+	// +optional
+	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+	// +optional
+	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+	// +optional
+	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
+}
+
+// ===== Level 1 Logical Operators =====
+
+// AwsWebAclAndStatement1 - Logical AND at Level 1
+type AwsWebAclAndStatement1 struct {
 	// +kubebuilder:validation:Required
-	Statement AwsWebAclLeafStatement `json:"statement"`
+	// +kubebuilder:validation:MinItems=2
+	Statements []AwsWebAclStatement2 `json:"statements"`
+}
+
+// AwsWebAclOrStatement1 - Logical OR at Level 1
+type AwsWebAclOrStatement1 struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=2
+	Statements []AwsWebAclStatement2 `json:"statements"`
+}
+
+// AwsWebAclNotStatement1 - Logical NOT at Level 1
+type AwsWebAclNotStatement1 struct {
+	// +kubebuilder:validation:Required
+	Statement AwsWebAclStatement2 `json:"statement"`
+}
+
+// ===== Level 2 Statement Type =====
+
+// AwsWebAclStatement2 - Statement at nesting Level 2
+// Can contain: Logical operators + leaf statements (NO RateBased, NO ManagedRuleGroup)
+// CEL validation prevents same-operator nesting (AND-in-AND, OR-in-OR)
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:XValidation:rule="!(has(self.andStatement) && self.andStatement.statements.exists(s, has(s.andStatement)))", message="AND cannot nest inside AND"
+// +kubebuilder:validation:XValidation:rule="!(has(self.orStatement) && self.orStatement.statements.exists(s, has(s.orStatement)))", message="OR cannot nest inside OR"
+type AwsWebAclStatement2 struct {
+	// Logical operators
+	// +optional
+	AndStatement *AwsWebAclAndStatement2 `json:"andStatement,omitempty"`
+	// +optional
+	OrStatement *AwsWebAclOrStatement2 `json:"orStatement,omitempty"`
+	// +optional
+	NotStatement *AwsWebAclNotStatement2 `json:"notStatement,omitempty"`
+
+	// Leaf statements
+	// +optional
+	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+	// +optional
+	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+	// +optional
+	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+	// +optional
+	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+	// +optional
+	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+	// +optional
+	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+	// +optional
+	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+	// +optional
+	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
+}
+
+// ===== Level 2 Logical Operators =====
+
+// AwsWebAclAndStatement2 - Logical AND at Level 2
+type AwsWebAclAndStatement2 struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=2
+	Statements []AwsWebAclStatement3 `json:"statements"`
+}
+
+// AwsWebAclOrStatement2 - Logical OR at Level 2
+type AwsWebAclOrStatement2 struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=2
+	Statements []AwsWebAclStatement3 `json:"statements"`
+}
+
+// AwsWebAclNotStatement2 - Logical NOT at Level 2
+type AwsWebAclNotStatement2 struct {
+	// +kubebuilder:validation:Required
+	Statement AwsWebAclStatement3 `json:"statement"`
+}
+
+// ===== Level 3 Statement Type =====
+
+// AwsWebAclStatement3 - Statement at nesting Level 3
+// Can contain: Logical operators + leaf statements (NO RateBased, NO ManagedRuleGroup)
+// CEL validation prevents same-operator nesting (AND-in-AND, OR-in-OR)
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:XValidation:rule="!(has(self.andStatement) && self.andStatement.statements.exists(s, has(s.andStatement)))", message="AND cannot nest inside AND"
+// +kubebuilder:validation:XValidation:rule="!(has(self.orStatement) && self.orStatement.statements.exists(s, has(s.orStatement)))", message="OR cannot nest inside OR"
+type AwsWebAclStatement3 struct {
+	// Logical operators
+	// +optional
+	AndStatement *AwsWebAclAndStatement3 `json:"andStatement,omitempty"`
+	// +optional
+	OrStatement *AwsWebAclOrStatement3 `json:"orStatement,omitempty"`
+	// +optional
+	NotStatement *AwsWebAclNotStatement3 `json:"notStatement,omitempty"`
+
+	// Leaf statements
+	// +optional
+	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+	// +optional
+	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+	// +optional
+	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+	// +optional
+	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+	// +optional
+	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+	// +optional
+	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+	// +optional
+	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+	// +optional
+	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
+}
+
+// ===== Level 3 Logical Operators =====
+
+// AwsWebAclAndStatement3 - Logical AND at Level 3
+type AwsWebAclAndStatement3 struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=2
+	Statements []AwsWebAclStatement4 `json:"statements"`
+}
+
+// AwsWebAclOrStatement3 - Logical OR at Level 3
+type AwsWebAclOrStatement3 struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=2
+	Statements []AwsWebAclStatement4 `json:"statements"`
+}
+
+// AwsWebAclNotStatement3 - Logical NOT at Level 3
+type AwsWebAclNotStatement3 struct {
+	// +kubebuilder:validation:Required
+	Statement AwsWebAclStatement4 `json:"statement"`
+}
+
+// ===== Level 4 Statement Type (Leaf Only) =====
+
+// AwsWebAclStatement4 - Statement at nesting Level 4 (deepest level, leaf statements only)
+// Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type AwsWebAclStatement4 struct {
+	// NO AndStatement
+	// NO OrStatement
+	// NO NotStatement
+	// NO RateBased
+	// NO ManagedRuleGroup
+
+	// ONLY leaf statements
+	// +optional
+	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+	// +optional
+	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+	// +optional
+	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+	// +optional
+	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+	// +optional
+	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+	// +optional
+	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+	// +optional
+	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+	// +optional
+	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
 }
 
 // AwsWebAclStatus defines the observed state of AwsWebAcl.
