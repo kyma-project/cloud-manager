@@ -226,40 +226,6 @@ type AwsWebAclNoneAction struct {
 	// No fields - empty struct
 }
 
-type AwsWebAclLeafStatement struct {
-	// GeoMatch - Match requests from specific countries
-	// +optional
-	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
-
-	// ByteMatch - Match specific patterns in requests
-	// +optional
-	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
-
-	// LabelMatch - Match based on labels added by previous rules
-	// +optional
-	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
-
-	// SizeConstraint - Match based on request component size
-	// +optional
-	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
-
-	// SqliMatch - Detect SQL injection attacks
-	// +optional
-	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
-
-	// XssMatch - Detect cross-site scripting attacks
-	// +optional
-	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
-
-	// RegexMatch - Match using regular expression patterns
-	// +optional
-	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
-
-	// AsnMatch - Match requests from specific Autonomous System Numbers
-	// +optional
-	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
-}
-
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type AwsWebAclStatement struct {
