@@ -1068,3 +1068,33 @@ func TestConvertStatementWithAsnMatch(t *testing.T) {
 		assert.Len(t, result.AsnMatchStatement.AsnList, 2)
 	})
 }
+
+// TestRateBasedStatementNestingValidation verifies that rate-based statements
+// cannot be nested within AND/OR/NOT operators per AWS WAF API constraints
+// Note: This is now enforced at compile-time by removing RateBased from nested statement types
+func TestRateBasedStatementNestingValidation(t *testing.T) {
+	// This test demonstrates that rate-based statements are now type-safe
+	// The API types prevent nesting RateBased in AND/OR/NOT at compile time
+
+	t.Run("RateBased at root level succeeds", func(t *testing.T) {
+		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
+			RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+				Limit: 1000,
+			},
+		}
+
+		result, err := convertStatement(stmt)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.RateBasedStatement)
+		assert.Equal(t, int64(1000), *result.RateBasedStatement.Limit)
+	})
+
+	// The following test cases would not compile because RateBased is not available
+	// in AwsWebAclNestedStatement or AwsWebAclLeafStatement:
+	//
+	// ❌ stmt.AndStatement.Statements[0].RateBased - compile error
+	// ❌ stmt.OrStatement.Statements[0].RateBased - compile error
+	// ❌ stmt.NotStatement.Statement.RateBased - compile error
+	// ❌ stmt.AndStatement.Statements[0].NotStatement.Statement.RateBased - compile error
+}
