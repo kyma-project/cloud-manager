@@ -226,6 +226,40 @@ type AwsWebAclNoneAction struct {
 	// No fields - empty struct
 }
 
+type AwsWebAclLeafStatement struct {
+	// GeoMatch - Match requests from specific countries
+	// +optional
+	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+
+	// ByteMatch - Match specific patterns in requests
+	// +optional
+	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+
+	// LabelMatch - Match based on labels added by previous rules
+	// +optional
+	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+
+	// SizeConstraint - Match based on request component size
+	// +optional
+	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+
+	// SqliMatch - Detect SQL injection attacks
+	// +optional
+	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+
+	// XssMatch - Detect cross-site scripting attacks
+	// +optional
+	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+
+	// RegexMatch - Match using regular expression patterns
+	// +optional
+	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+
+	// AsnMatch - Match requests from specific Autonomous System Numbers
+	// +optional
+	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
+}
+
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type AwsWebAclStatement struct {
@@ -241,10 +275,6 @@ type AwsWebAclStatement struct {
 	// +optional
 	NotStatement *AwsWebAclNotStatement `json:"notStatement,omitempty"`
 
-	// GeoMatch - Match requests from specific countries
-	// +optional
-	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
-
 	// RateBased - Rate limiting per IP
 	// +optional
 	RateBased *AwsWebAclRateBasedStatement `json:"rateBased,omitempty"`
@@ -252,6 +282,10 @@ type AwsWebAclStatement struct {
 	// ManagedRuleGroup - Use AWS-managed rule sets
 	// +optional
 	ManagedRuleGroup *AwsWebAclManagedRuleGroupStatement `json:"managedRuleGroup,omitempty"`
+
+	// GeoMatch - Match requests from specific countries
+	// +optional
+	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
 
 	// ByteMatch - Match specific patterns in requests
 	// +optional
@@ -636,32 +670,47 @@ type AwsWebAclNotStatement struct {
 // +kubebuilder:validation:XValidation:rule="!(has(self.andStatement) && self.andStatement.statements.exists(s, has(s.andStatement)))", message="AND cannot nest inside AND"
 // +kubebuilder:validation:XValidation:rule="!(has(self.orStatement) && self.orStatement.statements.exists(s, has(s.orStatement)))", message="OR cannot nest inside OR"
 type AwsWebAclStatement1 struct {
-	// Logical operators
+	// AndStatement - Logical AND (all nested statements must match)
 	// +optional
 	AndStatement *AwsWebAclAndStatement1 `json:"andStatement,omitempty"`
+
+	// OrStatement - Logical OR (at least one nested statement must match)
 	// +optional
 	OrStatement *AwsWebAclOrStatement1 `json:"orStatement,omitempty"`
+
+	// NotStatement - Logical NOT (negates nested statement)
 	// +optional
 	NotStatement *AwsWebAclNotStatement1 `json:"notStatement,omitempty"`
 
-	// NO RateBased (compile-time exclusion)
-	// NO ManagedRuleGroup (compile-time exclusion)
-
-	// Leaf statements (same as root level)
+	// GeoMatch - Match requests from specific countries
 	// +optional
 	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+
+	// ByteMatch - Match specific patterns in requests
 	// +optional
 	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+
+	// LabelMatch - Match based on labels added by previous rules
 	// +optional
 	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+
+	// SizeConstraint - Match based on request component size
 	// +optional
 	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+
+	// SqliMatch - Detect SQL injection attacks
 	// +optional
 	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+
+	// XssMatch - Detect cross-site scripting attacks
 	// +optional
 	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+
+	// RegexMatch - Match using regular expression patterns
 	// +optional
 	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+
+	// AsnMatch - Match requests from specific Autonomous System Numbers
 	// +optional
 	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
 }
@@ -698,29 +747,47 @@ type AwsWebAclNotStatement1 struct {
 // +kubebuilder:validation:XValidation:rule="!(has(self.andStatement) && self.andStatement.statements.exists(s, has(s.andStatement)))", message="AND cannot nest inside AND"
 // +kubebuilder:validation:XValidation:rule="!(has(self.orStatement) && self.orStatement.statements.exists(s, has(s.orStatement)))", message="OR cannot nest inside OR"
 type AwsWebAclStatement2 struct {
-	// Logical operators
+	// AndStatement - Logical AND (all nested statements must match)
 	// +optional
 	AndStatement *AwsWebAclAndStatement2 `json:"andStatement,omitempty"`
+
+	// OrStatement - Logical OR (at least one nested statement must match)
 	// +optional
 	OrStatement *AwsWebAclOrStatement2 `json:"orStatement,omitempty"`
+
+	// NotStatement - Logical NOT (negates nested statement)
 	// +optional
 	NotStatement *AwsWebAclNotStatement2 `json:"notStatement,omitempty"`
 
-	// Leaf statements
+	// GeoMatch - Match requests from specific countries
 	// +optional
 	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+
+	// ByteMatch - Match specific patterns in requests
 	// +optional
 	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+
+	// LabelMatch - Match based on labels added by previous rules
 	// +optional
 	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+
+	// SizeConstraint - Match based on request component size
 	// +optional
 	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+
+	// SqliMatch - Detect SQL injection attacks
 	// +optional
 	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+
+	// XssMatch - Detect cross-site scripting attacks
 	// +optional
 	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+
+	// RegexMatch - Match using regular expression patterns
 	// +optional
 	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+
+	// AsnMatch - Match requests from specific Autonomous System Numbers
 	// +optional
 	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
 }
@@ -757,29 +824,47 @@ type AwsWebAclNotStatement2 struct {
 // +kubebuilder:validation:XValidation:rule="!(has(self.andStatement) && self.andStatement.statements.exists(s, has(s.andStatement)))", message="AND cannot nest inside AND"
 // +kubebuilder:validation:XValidation:rule="!(has(self.orStatement) && self.orStatement.statements.exists(s, has(s.orStatement)))", message="OR cannot nest inside OR"
 type AwsWebAclStatement3 struct {
-	// Logical operators
+	// AndStatement - Logical AND (all nested statements must match)
 	// +optional
 	AndStatement *AwsWebAclAndStatement3 `json:"andStatement,omitempty"`
+
+	// OrStatement - Logical OR (at least one nested statement must match)
 	// +optional
 	OrStatement *AwsWebAclOrStatement3 `json:"orStatement,omitempty"`
+
+	// NotStatement - Logical NOT (negates nested statement)
 	// +optional
 	NotStatement *AwsWebAclNotStatement3 `json:"notStatement,omitempty"`
 
-	// Leaf statements
+	// GeoMatch - Match requests from specific countries
 	// +optional
 	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+
+	// ByteMatch - Match specific patterns in requests
 	// +optional
 	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+
+	// LabelMatch - Match based on labels added by previous rules
 	// +optional
 	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+
+	// SizeConstraint - Match based on request component size
 	// +optional
 	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+
+	// SqliMatch - Detect SQL injection attacks
 	// +optional
 	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+
+	// XssMatch - Detect cross-site scripting attacks
 	// +optional
 	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+
+	// RegexMatch - Match using regular expression patterns
 	// +optional
 	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+
+	// AsnMatch - Match requests from specific Autonomous System Numbers
 	// +optional
 	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
 }
@@ -813,27 +898,35 @@ type AwsWebAclNotStatement3 struct {
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type AwsWebAclStatement4 struct {
-	// NO AndStatement
-	// NO OrStatement
-	// NO NotStatement
-	// NO RateBased
-	// NO ManagedRuleGroup
-
-	// ONLY leaf statements
+	// GeoMatch - Match requests from specific countries
 	// +optional
 	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
+
+	// ByteMatch - Match specific patterns in requests
 	// +optional
 	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
+
+	// LabelMatch - Match based on labels added by previous rules
 	// +optional
 	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
+
+	// SizeConstraint - Match based on request component size
 	// +optional
 	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
+
+	// SqliMatch - Detect SQL injection attacks
 	// +optional
 	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
+
+	// XssMatch - Detect cross-site scripting attacks
 	// +optional
 	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
+
+	// RegexMatch - Match using regular expression patterns
 	// +optional
 	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
+
+	// AsnMatch - Match requests from specific Autonomous System Numbers
 	// +optional
 	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
 }
