@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 
+	logstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 )
@@ -16,6 +17,7 @@ type accountRegionStore struct {
 	*elastiCacheClientFake
 	*routeTablesStore
 	*webAclStore
+	*logsStore
 
 	region  string
 	account string
@@ -31,6 +33,7 @@ func newAccountRegionStore(account, region string) *accountRegionStore {
 		nfsStore:              &nfsStore{},
 		routeTablesStore:      &routeTablesStore{},
 		webAclStore:           newWebAclStore(account, region),
+		logsStore:             newLogsStore(),
 	}
 }
 
@@ -58,4 +61,41 @@ func (s *accountRegionStore) GetWebACL(ctx context.Context, name, id string, sco
 
 func (s *accountRegionStore) ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error) {
 	return s.webAclStore.ListWebACLs(ctx, scope)
+}
+
+func (s *accountRegionStore) PutLoggingConfiguration(ctx context.Context, input *wafv2.PutLoggingConfigurationInput) error {
+	return s.webAclStore.PutLoggingConfiguration(ctx, input)
+}
+
+func (s *accountRegionStore) GetLoggingConfiguration(ctx context.Context, resourceArn string) (*wafv2types.LoggingConfiguration, error) {
+	return s.webAclStore.GetLoggingConfiguration(ctx, resourceArn)
+}
+
+func (s *accountRegionStore) DeleteLoggingConfiguration(ctx context.Context, resourceArn string) error {
+	return s.webAclStore.DeleteLoggingConfiguration(ctx, resourceArn)
+}
+
+// CloudWatch Logs adapter methods
+func (s *accountRegionStore) CreateLogGroup(ctx context.Context, logGroupName string) error {
+	return s.logsStore.CreateLogGroup(ctx, logGroupName)
+}
+
+func (s *accountRegionStore) DeleteLogGroup(ctx context.Context, logGroupName string) error {
+	return s.logsStore.DeleteLogGroup(ctx, logGroupName)
+}
+
+func (s *accountRegionStore) GetLogGroup(ctx context.Context, logGroupName string) (*logstypes.LogGroup, error) {
+	return s.logsStore.GetLogGroup(ctx, logGroupName)
+}
+
+func (s *accountRegionStore) DescribeLogGroups(ctx context.Context, prefix string) ([]logstypes.LogGroup, error) {
+	return s.logsStore.DescribeLogGroups(ctx, prefix)
+}
+
+func (s *accountRegionStore) PutRetentionPolicy(ctx context.Context, logGroupName string, retentionDays int32) error {
+	return s.logsStore.PutRetentionPolicy(ctx, logGroupName, retentionDays)
+}
+
+func (s *accountRegionStore) TagLogGroup(ctx context.Context, logGroupName string, tags map[string]string) error {
+	return s.logsStore.TagLogGroup(ctx, logGroupName, tags)
 }

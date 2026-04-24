@@ -14,6 +14,9 @@ type Wafv2Client interface {
 	UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error
 	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
 	ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error)
+	PutLoggingConfiguration(ctx context.Context, input *wafv2.PutLoggingConfigurationInput) error
+	GetLoggingConfiguration(ctx context.Context, resourceArn string) (*wafv2types.LoggingConfiguration, error)
+	DeleteLoggingConfiguration(ctx context.Context, resourceArn string) error
 }
 
 func NewWafv2Client(svc *wafv2.Client) Wafv2Client {
@@ -86,4 +89,26 @@ func (c *wafv2Client) ListWebACLs(ctx context.Context, scope wafv2types.Scope) (
 	}
 
 	return out.WebACLs, nil
+}
+
+func (c *wafv2Client) PutLoggingConfiguration(ctx context.Context, input *wafv2.PutLoggingConfigurationInput) error {
+	_, err := c.svc.PutLoggingConfiguration(ctx, input)
+	return err
+}
+
+func (c *wafv2Client) GetLoggingConfiguration(ctx context.Context, resourceArn string) (*wafv2types.LoggingConfiguration, error) {
+	out, err := c.svc.GetLoggingConfiguration(ctx, &wafv2.GetLoggingConfigurationInput{
+		ResourceArn: ptr.To(resourceArn),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out.LoggingConfiguration, nil
+}
+
+func (c *wafv2Client) DeleteLoggingConfiguration(ctx context.Context, resourceArn string) error {
+	_, err := c.svc.DeleteLoggingConfiguration(ctx, &wafv2.DeleteLoggingConfigurationInput{
+		ResourceArn: ptr.To(resourceArn),
+	})
+	return err
 }
