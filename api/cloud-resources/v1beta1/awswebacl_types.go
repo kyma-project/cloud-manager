@@ -891,19 +891,15 @@ type AwsWebAclLoggingConfiguration struct {
 	// +kubebuilder:validation:MaxItems=100
 	RedactedFields []AwsWebAclFieldToMatch `json:"redactedFields,omitempty"`
 
-	// Destination specifies where logs are sent
+	// Destination specifies where logs are sent (CloudWatch Logs only)
 	// +optional
 	Destination *AwsWebAclLoggingDestination `json:"destination,omitempty"`
 }
 
-// AwsWebAclLoggingDestination defines log destination (exactly one type must be set)
+// AwsWebAclLoggingDestination defines log destination (CloudWatch Logs only)
 type AwsWebAclLoggingDestination struct {
 	// +optional
 	CloudWatchLogs *AwsWebAclCloudWatchLogsConfig `json:"cloudWatchLogs,omitempty"`
-	// +optional
-	S3 *AwsWebAclS3Config `json:"s3,omitempty"`
-	// +optional
-	KinesisFirehose *AwsWebAclKinesisFirehoseConfig `json:"kinesisFirehose,omitempty"`
 }
 
 // AwsWebAclCloudWatchLogsConfig defines CloudWatch Logs destination
@@ -913,20 +909,6 @@ type AwsWebAclCloudWatchLogsConfig struct {
 	// +kubebuilder:default=30
 	// +kubebuilder:validation:Enum=1;3;5;7;14;30;60;90;120;150;180;365;400;545;731;1096;1827;2192;2557;2922;3288;3653
 	RetentionDays int32 `json:"retentionDays,omitempty"`
-}
-
-// AwsWebAclS3Config defines S3 bucket destination (Phase 2 - future)
-type AwsWebAclS3Config struct {
-	// +kubebuilder:validation:Required
-	BucketArn string `json:"bucketArn"`
-	// +optional
-	Prefix string `json:"prefix,omitempty"`
-}
-
-// AwsWebAclKinesisFirehoseConfig defines Kinesis Data Firehose destination (Phase 3 - future)
-type AwsWebAclKinesisFirehoseConfig struct {
-	// +kubebuilder:validation:Required
-	DeliveryStreamArn string `json:"deliveryStreamArn"`
 }
 
 // AwsWebAclLoggingStatus tracks logging configuration state

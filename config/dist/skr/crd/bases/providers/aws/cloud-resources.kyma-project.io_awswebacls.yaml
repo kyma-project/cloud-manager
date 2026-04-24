@@ -171,7 +171,7 @@ spec:
                   description: LoggingConfiguration defines WAF request logging settings
                   properties:
                     destination:
-                      description: Destination specifies where logs are sent
+                      description: Destination specifies where logs are sent (CloudWatch Logs only)
                       properties:
                         cloudWatchLogs:
                           description: AwsWebAclCloudWatchLogsConfig defines CloudWatch Logs destination
@@ -204,24 +204,6 @@ spec:
                                 - 3653
                               format: int32
                               type: integer
-                          type: object
-                        kinesisFirehose:
-                          description: AwsWebAclKinesisFirehoseConfig defines Kinesis Data Firehose destination (Phase 3 - future)
-                          properties:
-                            deliveryStreamArn:
-                              type: string
-                          required:
-                            - deliveryStreamArn
-                          type: object
-                        s3:
-                          description: AwsWebAclS3Config defines S3 bucket destination (Phase 2 - future)
-                          properties:
-                            bucketArn:
-                              type: string
-                            prefix:
-                              type: string
-                          required:
-                            - bucketArn
                           type: object
                       type: object
                     enabled:
