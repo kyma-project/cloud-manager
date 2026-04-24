@@ -118,6 +118,10 @@ type AwsWebAclSpec struct {
 	// ChallengeConfig - Global default Challenge immunity time
 	// +optional
 	ChallengeConfig *AwsWebAclChallengeConfig `json:"challengeConfig,omitempty"`
+
+	// LoggingConfiguration defines WAF request logging settings
+	// +optional
+	LoggingConfiguration *AwsWebAclLoggingConfiguration `json:"loggingConfiguration,omitempty"`
 }
 
 type AwsWebAclRule struct {
@@ -763,6 +767,10 @@ type AwsWebAclStatus struct {
 
 	// +optional
 	State string `json:"state,omitempty"`
+
+	// LoggingStatus tracks logging configuration state
+	// +optional
+	LoggingStatus *AwsWebAclLoggingStatus `json:"loggingStatus,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -869,6 +877,64 @@ type AwsWebAclList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AwsWebAcl `json:"items"`
+}
+
+// AwsWebAclLoggingConfiguration defines WAF logging settings
+type AwsWebAclLoggingConfiguration struct {
+	// Enabled controls whether logging is active
+	// +optional
+	// +kubebuilder:default=false
+	Enabled bool `json:"enabled,omitempty"`
+
+	// RedactedFields specifies request fields to redact from logs (PII protection)
+	// +optional
+	// +kubebuilder:validation:MaxItems=100
+	RedactedFields []AwsWebAclFieldToMatch `json:"redactedFields,omitempty"`
+
+	// Destination specifies where logs are sent
+	// +optional
+	Destination *AwsWebAclLoggingDestination `json:"destination,omitempty"`
+}
+
+// AwsWebAclLoggingDestination defines log destination (exactly one type must be set)
+type AwsWebAclLoggingDestination struct {
+	// +optional
+	CloudWatchLogs *AwsWebAclCloudWatchLogsConfig `json:"cloudWatchLogs,omitempty"`
+	// +optional
+	S3 *AwsWebAclS3Config `json:"s3,omitempty"`
+	// +optional
+	KinesisFirehose *AwsWebAclKinesisFirehoseConfig `json:"kinesisFirehose,omitempty"`
+}
+
+// AwsWebAclCloudWatchLogsConfig defines CloudWatch Logs destination
+type AwsWebAclCloudWatchLogsConfig struct {
+	// RetentionDays for auto-managed log groups
+	// +optional
+	// +kubebuilder:default=30
+	// +kubebuilder:validation:Enum=1;3;5;7;14;30;60;90;120;150;180;365;400;545;731;1096;1827;2192;2557;2922;3288;3653
+	RetentionDays int32 `json:"retentionDays,omitempty"`
+}
+
+// AwsWebAclS3Config defines S3 bucket destination (Phase 2 - future)
+type AwsWebAclS3Config struct {
+	// +kubebuilder:validation:Required
+	BucketArn string `json:"bucketArn"`
+	// +optional
+	Prefix string `json:"prefix,omitempty"`
+}
+
+// AwsWebAclKinesisFirehoseConfig defines Kinesis Data Firehose destination (Phase 3 - future)
+type AwsWebAclKinesisFirehoseConfig struct {
+	// +kubebuilder:validation:Required
+	DeliveryStreamArn string `json:"deliveryStreamArn"`
+}
+
+// AwsWebAclLoggingStatus tracks logging configuration state
+type AwsWebAclLoggingStatus struct {
+	Enabled           bool         `json:"enabled"`
+	LogDestinationArn string       `json:"logDestinationArn,omitempty"`
+	ManagedLogGroup   bool         `json:"managedLogGroup,omitempty"`
+	LastConfigured    *metav1.Time `json:"lastConfigured,omitempty"`
 }
 
 func init() {

@@ -22,8 +22,9 @@ type WebAclConfig interface {
 }
 
 type webAclEntry struct {
-	webAcl    types.WebACL
-	lockToken string
+	webAcl        types.WebACL
+	lockToken     string
+	loggingConfig *types.LoggingConfiguration
 }
 
 type webAclStore struct {
@@ -284,6 +285,53 @@ func (s *webAclStore) InitiateWebAcl(id, name string, scope types.Scope) {
 	}
 
 	s.items = append(s.items, item)
+}
+
+func (s *webAclStore) PutLoggingConfiguration(ctx context.Context, input *wafv2.PutLoggingConfigurationInput) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	arn := ptr.Deref(input.LoggingConfiguration.ResourceArn, "")
+	for _, item := range s.items {
+		if ptr.Deref(item.webAcl.ARN, "") == arn {
+			item.loggingConfig = input.LoggingConfiguration
+			return nil
+		}
+	}
+	return fmt.Errorf("WebACL with ARN %s not found", arn)
+}
+
+func (s *webAclStore) GetLoggingConfiguration(ctx context.Context, resourceArn string) (*types.LoggingConfiguration, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, item := range s.items {
+		if ptr.Deref(item.webAcl.ARN, "") == resourceArn {
+			if item.loggingConfig == nil {
+				return nil, &types.WAFNonexistentItemException{
+					Message: ptr.To("The logging configuration for the specified resource does not exist"),
+				}
+			}
+			return item.loggingConfig, nil
+		}
+	}
+	return nil, &types.WAFNonexistentItemException{
+		Message: ptr.To(fmt.Sprintf("WebACL with ARN %s not found", resourceArn)),
+	}
+}
+
+func (s *webAclStore) DeleteLoggingConfiguration(ctx context.Context, resourceArn string) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, item := range s.items {
+		if ptr.Deref(item.webAcl.ARN, "") == resourceArn {
+			item.loggingConfig = nil
+			return nil
+		}
+	}
+	// Idempotent - no error if not found
+	return nil
 }
 
 func (s *webAclStore) WafClient() awsclient.Wafv2Client {

@@ -600,3 +600,31 @@ func convertAsnMatchStatement(asnMatch *cloudresourcesv1beta1.AwsWebAclAsnMatchS
 
 	return stmt, nil
 }
+
+// convertRedactedFields converts API redacted fields to AWS types
+func convertRedactedFields(fields []cloudresourcesv1beta1.AwsWebAclFieldToMatch) ([]wafv2types.FieldToMatch, error) {
+	if len(fields) == 0 {
+		return nil, nil
+	}
+	result := make([]wafv2types.FieldToMatch, 0, len(fields))
+	for _, field := range fields {
+		awsField, err := convertFieldToMatch(field)
+		if err != nil {
+			return nil, fmt.Errorf("error converting redacted field: %w", err)
+		}
+		result = append(result, *awsField)
+	}
+	return result, nil
+}
+
+// ManagedLogGroupName returns the CloudWatch Logs log group name for a WebACL
+// Each WebACL gets its own dedicated log group with the naming pattern: aws-waf-logs-<webacl-name>
+//
+// Name length safety:
+//   - Prefix "aws-waf-logs-" = 14 chars
+//   - WebACL name (K8s cluster-scoped): max 253 chars
+//   - Total max: 267 chars
+//   - AWS CloudWatch Logs limit: 512 chars ✓
+func ManagedLogGroupName(webAcl *cloudresourcesv1beta1.AwsWebAcl) string {
+	return fmt.Sprintf("aws-waf-logs-%s", webAcl.Name)
+}

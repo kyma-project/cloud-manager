@@ -22,6 +22,10 @@ Feature: AwsWebAcl feature
           cloudWatchMetricsEnabled: true
           metricName: E2ETestWebACL
           sampledRequestsEnabled: true
+        loggingConfiguration:
+          enabled: true
+          redactedFields:
+            - singleHeader: "authorization"
         rules:
           # Rule 1: Block high-risk countries
           - name: block-high-risk-countries
@@ -210,6 +214,11 @@ Feature: AwsWebAcl feature
           cloudWatchMetricsEnabled: true
           metricName: E2EComprehensiveWebACL
           sampledRequestsEnabled: true
+        loggingConfiguration:
+          enabled: true
+          redactedFields:
+            - singleHeader: "authorization"
+            - queryString: true
         tokenDomains:
           - example.com
         captchaConfig:
@@ -509,6 +518,17 @@ Feature: AwsWebAcl feature
     And "findConditionTrue(webacl, 'Ready')" is ok
     And "webacl.status.arn" is ok
     And "webacl.status.capacity > 0" is ok
+
+    # Disable logging
+    When resource "webacl" is updated:
+      """
+      spec:
+        loggingConfiguration:
+          enabled: false
+      """
+
+    Then eventually "webacl.status.state == 'Ready'" is ok
+    And "webacl.spec.loggingConfiguration.enabled == false" is ok
 
     # Clean up
     When resource "webacl" is deleted
