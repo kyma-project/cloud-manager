@@ -6,6 +6,9 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	awsruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/runtime"
+	azureruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/runtime"
+	gcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/runtime"
 	kcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -15,7 +18,12 @@ func SetupRuntimeReconciler(
 	mgr ctrl.Manager,
 ) error {
 	return NewRuntimeController(
-		kcpruntime.NewRuntimeReconciler(composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr))),
+		kcpruntime.NewRuntimeReconciler(
+			composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr)),
+			awsruntime.NewStateFactory(),
+			azureruntime.NewStateFactory(),
+			gcpruntime.NewStateFactory(),
+		),
 	).SetupWithManager(ctx, mgr)
 }
 

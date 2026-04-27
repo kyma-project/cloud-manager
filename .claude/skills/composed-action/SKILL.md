@@ -7,7 +7,8 @@ description: |
   - Understanding composed action flow, state hierarchies, or provider branching
   - Implementing cloud provider client facades in reconciler state
   Trigger phrases: "create reconciler", "add provider flow", "composed action",
-  "KCP reconciler", "SKR reconciler", "state factory", "provider branching"
+  "KCP reconciler", "SKR reconciler", "state factory", "provider branching", "provider skeleton",
+  "reconciler skeleton", "composed action flow"
 ---
 
 # Composed Reconciler Pattern

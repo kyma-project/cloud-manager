@@ -6,6 +6,9 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	awsruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/runtime"
+	azureruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/runtime"
+	gcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -18,15 +21,24 @@ type RuntimeReconciler interface {
 
 type runtimeReconciler struct {
 	composedStateFactory composed.StateFactory
+	awsStateFactory      awsruntime.StateFactory
+	azureStateFactory    azureruntime.StateFactory
+	gcpStateFactory      gcpruntime.StateFactory
 }
 
 var _ reconcile.Reconciler = &runtimeReconciler{}
 
 func NewRuntimeReconciler(
 	composedStateFactory composed.StateFactory,
+	awsStateFactory awsruntime.StateFactory,
+	azureStateFactory azureruntime.StateFactory,
+	gcpStateFactory gcpruntime.StateFactory,
 ) RuntimeReconciler {
 	return &runtimeReconciler{
 		composedStateFactory: composedStateFactory,
+		awsStateFactory:      awsStateFactory,
+		azureStateFactory:    azureStateFactory,
+		gcpStateFactory:      gcpStateFactory,
 	}
 }
 
@@ -65,6 +77,12 @@ func (r *runtimeReconciler) newAction() composed.Action {
 			composed.If(
 				predicateSecurityEnabled,
 				subscriptionWaitReady,
+				composed.Switch(
+					nil,
+					composed.NewCase(awsProviderPredicate, awsruntime.New(r.awsStateFactory)),
+					composed.NewCase(azureProviderPredicate, azureruntime.New(r.azureStateFactory)),
+					composed.NewCase(gcpProviderPredicate, gcpruntime.New(r.gcpStateFactory)),
+				),
 			),
 		),
 	)

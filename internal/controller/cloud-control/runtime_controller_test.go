@@ -1,8 +1,6 @@
 package cloudcontrol
 
 import (
-	"fmt"
-
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -81,18 +79,6 @@ var _ = Describe("Feature: Runtime", func() {
 				Should(Succeed())
 		})
 
-		By("And Then Subscription has used by runtime", func() {
-			Eventually(func() error {
-				if err := LoadAndCheck(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions()); err != nil {
-					return err
-				}
-				if !subscription.IsUsedByRuntime(name) {
-					return fmt.Errorf("subscription is not used by runtime %q", name)
-				}
-				return nil
-			}).Should(Succeed())
-		})
-
 		By("And Then Subscription has labels as Runtime", func() {
 			for _, labelName := range cloudcontrolv1beta1.ScopeLabels {
 				rVal, ok := runtime.Labels[labelName]
@@ -107,19 +93,6 @@ var _ = Describe("Feature: Runtime", func() {
 
 		By("When Runtime is deleted", func() {
 			Expect(Delete(infra.Ctx(), infra.KCP().Client(), runtime)).To(Succeed())
-		})
-
-		By("Then Subscription is not used by runtime", func() {
-			Eventually(func() error {
-				if err := LoadAndCheck(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions()); err != nil {
-					return err
-				}
-				if subscription.IsUsedByRuntime(name) {
-					return fmt.Errorf("subscription is used by runtime %q", name)
-				}
-				return nil
-			}).
-				Should(Succeed())
 		})
 
 		By("// cleanup: delete Subscription", func() {

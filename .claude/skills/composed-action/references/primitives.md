@@ -94,6 +94,21 @@ Factory pattern for creating State instances with a shared cluster reference.
 
 **File**: `pkg/composed/action.go`
 
+### IMPORTANT: Prefer Nameless Primitives
+
+Many composition functions have two variants:
+- **Nameless (PREFERRED)**: `Switch`, `ComposeActionsNoName`
+- **Named (DEPRECATED)**: `BuildSwitchAction`, `ComposeActions`
+
+The named variants accept a `name string` as the first parameter, but this parameter is **ignored** - it exists only for backward compatibility with legacy code.
+
+**Always use the nameless variant in new code:**
+
+| Instead of | Use |
+|------------|-----|
+| `ComposeActions(name, ...)` | `ComposeActionsNoName(...)` |
+| `BuildSwitchAction(name, ...)` | `Switch(...)` |
+
 ### ComposeActionsNoName (PREFERRED)
 
 ```go
@@ -215,13 +230,13 @@ providerFlow := composed.Switch(
 )
 ```
 
-### BuildSwitchAction
+### BuildSwitchAction (DEPRECATED)
 
 ```go
 func BuildSwitchAction(name string, defaultAction Action, cases ...Case) Action
 ```
 
-Same as Switch but with a name. Used in legacy code.
+**DEPRECATED**: The `name` parameter is ignored. Always use `Switch()` instead.
 
 ### BreakIf
 
