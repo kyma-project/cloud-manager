@@ -2,7 +2,6 @@ package vpcnetwork
 
 import (
 	"context"
-	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -11,11 +10,9 @@ import (
 func infraCreateUpdate(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	name := fmt.Sprintf("cm-%s", state.ObjAsVpcNetwork().Name)
-
 	out, err := CreateInfra(
 		ctx,
-		WithName(name),
+		WithName(state.ObjAsVpcNetwork().Status.Identifiers.Name),
 		// panic is intended if gcp is nil, controller runtime will recover and log error
 		WithGcpProjectId(state.Subscription().Status.SubscriptionInfo.Gcp.Project),
 		WithClient(state.gcpClient),

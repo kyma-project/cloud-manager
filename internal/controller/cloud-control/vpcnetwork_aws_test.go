@@ -87,6 +87,10 @@ var _ = Describe("Feature: VpcNetwork", func() {
 			Expect(vpcNetwork.Status.Identifiers.Vpc).NotTo(BeEmpty())
 		})
 
+		By("Then VpcNetwork status has name", func() {
+			Expect(vpcNetwork.Status.Identifiers.Name).NotTo(BeEmpty())
+		})
+
 		awsMock := awsAccount.Region(region)
 
 		var vpc *ec2types.Vpc

@@ -84,7 +84,7 @@ func (r *vpcNetworkReconciler) newAction() composed.Action {
 		func(ctx context.Context, st composed.State) (error, context.Context) {
 			return composed.ComposeActionsNoName(
 				// vpc network actions
-				composed.Noop,
+				nameDetermine,
 				composed.IfElse(
 					composed.MarkedForDeletionPredicate,
 					composed.ComposeActionsNoName(

@@ -33,6 +33,11 @@ const (
 
 // VpcNetworkSpec defines the desired state of VpcNetwork.
 type VpcNetworkSpec struct {
+
+	// +optional
+	// +kubebuilder:validation:XValidation:rule=self == oldSelf, message="The vpcNetworkName is immutable."
+	VpcNetworkName *string `json:"vpcNetworkName"`
+
 	// +optional
 	// +kubebuilder:default=kyma
 	// +kubebuilder:validation:XValidation:rule=self == oldSelf, message="The type is immutable."
@@ -80,6 +85,9 @@ type VpcNetworkStatus struct {
 type VpcNetworkStatusIdentifiers struct {
 	// +optional
 	Vpc string `json:"vpc"`
+
+	// +optional
+	Name string `json:"name"`
 
 	// +optional
 	Router string `json:"router"`

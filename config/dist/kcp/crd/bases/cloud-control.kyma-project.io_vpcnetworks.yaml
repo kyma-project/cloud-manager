@@ -79,6 +79,11 @@ spec:
                 x-kubernetes-validations:
                 - message: The type is immutable.
                   rule: self == oldSelf
+              vpcNetworkName:
+                type: string
+                x-kubernetes-validations:
+                - message: The vpcNetworkName is immutable.
+                  rule: self == oldSelf
             required:
             - cidrBlocks
             - region
@@ -155,6 +160,8 @@ spec:
               identifiers:
                 properties:
                   internetGateway:
+                    type: string
+                  name:
                     type: string
                   resourceGroup:
                     type: string

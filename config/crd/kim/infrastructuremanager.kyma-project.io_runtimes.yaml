@@ -218,12 +218,21 @@ spec:
                             - failureTolerance
                           type: object
                       type: object
+                    enableNvidiaOpenshell:
+                      type: boolean
                     enforceSeedLocation:
                       type: boolean
                     kubernetes:
                       properties:
                         kubeAPIServer:
                           properties:
+                            acl:
+                              properties:
+                                allowedCIDRs:
+                                  items:
+                                    type: string
+                                  type: array
+                              type: object
                             additionalOidcConfig:
                               items:
                                 description: |-
@@ -241,7 +250,7 @@ spec:
                                       ClientAuthentication can optionally contain client configuration used for kubeconfig generation.
                                       
                                       Deprecated: This field has no implemented use and will be forbidden starting from Kubernetes 1.31.
-                                      It's use was planned for genereting OIDC kubeconfig https://github.com/gardener/gardener/issues/1433
+                                      It's use was planned for generating OIDC kubeconfig https://github.com/gardener/gardener/issues/1433
                                     properties:
                                       extraConfig:
                                         additionalProperties:
@@ -328,7 +337,7 @@ spec:
                                     ClientAuthentication can optionally contain client configuration used for kubeconfig generation.
                                     
                                     Deprecated: This field has no implemented use and will be forbidden starting from Kubernetes 1.31.
-                                    It's use was planned for genereting OIDC kubeconfig https://github.com/gardener/gardener/issues/1433
+                                    It's use was planned for generating OIDC kubeconfig https://github.com/gardener/gardener/issues/1433
                                   properties:
                                     extraConfig:
                                       additionalProperties:
@@ -403,6 +412,8 @@ spec:
                       type: string
                     networking:
                       properties:
+                        dualStack:
+                          type: boolean
                         nodes:
                           type: string
                         pods:
@@ -410,6 +421,8 @@ spec:
                         services:
                           type: string
                         type:
+                          type: string
+                        vpcNetwork:
                           type: string
                       required:
                         - nodes
@@ -535,27 +548,8 @@ spec:
                                         description: Region is a region name. This field
                                           is immutable.
                                         type: string
-                                      secretRef:
-                                        description: |-
-                                          SecretRef is a reference to a Secret object containing the cloud provider credentials for
-                                          the object store where backups should be stored. It should have enough privileges to manipulate
-                                          the objects as well as buckets.
-                                          Deprecated: This field will be removed after v1.121.0 has been released. Use `CredentialsRef` instead.
-                                          Until removed, this field is synced with the `CredentialsRef` field when it refers to a secret.
-                                        properties:
-                                          name:
-                                            description: name is unique within a namespace
-                                              to reference a secret resource.
-                                            type: string
-                                          namespace:
-                                            description: namespace defines the space
-                                              within which the secret name must be unique.
-                                            type: string
-                                        type: object
-                                        x-kubernetes-map-type: atomic
                                     required:
                                       - provider
-                                      - secretRef
                                     type: object
                                 type: object
                               cri:
@@ -1170,9 +1164,8 @@ spec:
                                         to a node.
                                       type: string
                                     timeAdded:
-                                      description: |-
-                                        TimeAdded represents the time at which the taint was added.
-                                        It is only written for NoExecute taints.
+                                      description: TimeAdded represents the time at
+                                        which the taint was added.
                                       format: date-time
                                       type: string
                                     value:
@@ -1234,6 +1227,7 @@ spec:
                             - azure
                             - gcp
                             - openstack
+                            - alicloud
                           type: string
                         workers:
                           items:
@@ -1350,27 +1344,8 @@ spec:
                                         description: Region is a region name. This field
                                           is immutable.
                                         type: string
-                                      secretRef:
-                                        description: |-
-                                          SecretRef is a reference to a Secret object containing the cloud provider credentials for
-                                          the object store where backups should be stored. It should have enough privileges to manipulate
-                                          the objects as well as buckets.
-                                          Deprecated: This field will be removed after v1.121.0 has been released. Use `CredentialsRef` instead.
-                                          Until removed, this field is synced with the `CredentialsRef` field when it refers to a secret.
-                                        properties:
-                                          name:
-                                            description: name is unique within a namespace
-                                              to reference a secret resource.
-                                            type: string
-                                          namespace:
-                                            description: namespace defines the space
-                                              within which the secret name must be unique.
-                                            type: string
-                                        type: object
-                                        x-kubernetes-map-type: atomic
                                     required:
                                       - provider
-                                      - secretRef
                                     type: object
                                 type: object
                               cri:
@@ -1985,9 +1960,8 @@ spec:
                                         to a node.
                                       type: string
                                     timeAdded:
-                                      description: |-
-                                        TimeAdded represents the time at which the taint was added.
-                                        It is only written for NoExecute taints.
+                                      description: TimeAdded represents the time at
+                                        which the taint was added.
                                       format: date-time
                                       type: string
                                     value:
@@ -2126,6 +2100,67 @@ spec:
                   description: ProvisioningCompleted indicates if the initial provisioning
                     of the cluster is completed
                   type: boolean
+                shootLastErrors:
+                  description: LastError indicates the last occurred error for an operation
+                    on a Gardener's `shoot` resource.
+                  items:
+                    description: LastError indicates the last occurred error for an
+                      operation on a resource.
+                    properties:
+                      codes:
+                        description: Well-defined error codes of the last error(s).
+                        items:
+                          description: ErrorCode is a string alias.
+                          type: string
+                        type: array
+                      description:
+                        description: A human readable message indicating details about
+                          the last error.
+                        type: string
+                      lastUpdateTime:
+                        description: Last time the error was reported
+                        format: date-time
+                        type: string
+                      taskID:
+                        description: ID of the task which caused this last error
+                        type: string
+                    required:
+                      - description
+                    type: object
+                  type: array
+                shootLastOperation:
+                  description: |-
+                    LastOperation indicates the type and the state of the last operation of Gardener's `shoot`, along with a description
+                    message and a progress indicator.
+                  properties:
+                    description:
+                      description: A human readable message indicating details about
+                        the last operation.
+                      type: string
+                    lastUpdateTime:
+                      description: Last time the operation state transitioned from one
+                        to another.
+                      format: date-time
+                      type: string
+                    progress:
+                      description: The progress in percentage (0-100) of the last operation.
+                      format: int32
+                      type: integer
+                    state:
+                      description: Status of the last operation, one of Aborted, Processing,
+                        Succeeded, Error, Failed.
+                      type: string
+                    type:
+                      description: Type of the last operation, one of Create, Reconcile,
+                        Delete, Migrate, Restore.
+                      type: string
+                  required:
+                    - description
+                    - lastUpdateTime
+                    - progress
+                    - state
+                    - type
+                  type: object
                 state:
                   description: State signifies current state of Runtime
                   enum:
