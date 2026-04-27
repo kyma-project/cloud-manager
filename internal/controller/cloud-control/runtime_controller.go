@@ -2,7 +2,6 @@ package cloudcontrol
 
 import (
 	"context"
-	"time"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
@@ -45,10 +44,7 @@ func (r *RuntimeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *RuntimeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
-
+func (r *RuntimeReconciler) SetupWithManager(_ context.Context, mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrastructuremanagerv1.Runtime{}).
 		Complete(r)
