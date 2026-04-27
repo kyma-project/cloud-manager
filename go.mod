@@ -55,7 +55,7 @@ require (
 	github.com/imdario/mergo v0.3.16
 	github.com/kyma-project/kim-snatch v0.0.0-20250827080002-9adca756fa16
 	github.com/mitchellh/copystructure v1.2.0
-	github.com/onsi/ginkgo/v2 v2.28.1
+	github.com/onsi/ginkgo/v2 v2.28.2
 	github.com/onsi/gomega v1.39.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/peterbourgon/mergemap v0.0.1
