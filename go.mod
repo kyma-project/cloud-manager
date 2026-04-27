@@ -26,12 +26,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.16
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.15
 	github.com/aws/aws-sdk-go-v2/service/backup v1.55.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.297.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.299.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.15
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.0
-	github.com/aws/smithy-go v1.25.0
+	github.com/aws/smithy-go v1.25.1
 	github.com/cucumber/godog v0.15.1
 	github.com/cucumber/messages/go/v21 v21.0.1
 	github.com/dop251/goja v0.0.0-20251008123653-cf18d89f3cf6
