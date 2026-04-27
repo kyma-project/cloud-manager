@@ -29,6 +29,15 @@ var _ = ginkgo.Describe("Feature: KCP VpcNetwork", func() {
 	)
 
 	canCreateKcp(
+		"VpcNetwork can be created with vpcNetworkName, subscription, region, and cidrBlocks",
+		b().
+			WithVpcNetworkName(new("my-vpc-network")).
+			WithSubscription("my-subscription").
+			WithRegion("some-region").
+			WithCidrBlocks("10.250.0.0/16"),
+	)
+
+	canCreateKcp(
 		"VpcNetwork can be created with kyma type, subscription, region, and cidrBlocks",
 		b().
 			WithType(cloudcontrolv1beta1.VpcNetworkTypeKyma).
@@ -106,6 +115,19 @@ var _ = ginkgo.Describe("Feature: KCP VpcNetwork", func() {
 			bb(b).WithType(cloudcontrolv1beta1.VpcNetworkTypeGardener)
 		},
 		"The type is immutable",
+	)
+
+	canNotChangeKcp(
+		"VpcNetwork vpcNetworkName is not editable",
+		b().
+			WithVpcNetworkName(new("my-vpc-network")).
+			WithSubscription("my-subscription").
+			WithRegion("some-region").
+			WithCidrBlocks("10.250.0.0/16"),
+		func(b Builder[*cloudcontrolv1beta1.VpcNetwork]) {
+			bb(b).WithVpcNetworkName(new("other-vpc-network"))
+		},
+		"The vpcNetworkName is immutable",
 	)
 
 	canNotChangeKcp(

@@ -53,5 +53,19 @@ func (r *runtimeReconciler) newAction() composed.Action {
 	return composed.ComposeActionsNoName(
 		feature.LoadFeatureContextFromObj(&infrastructuremanagerv1.Runtime{}),
 		composed.LoadObj,
+		subscriptionLoad,
+		composed.If(
+			// delete =======================================
+			composed.MarkedForDeletionPredicate,
+		),
+		composed.If(
+			// create/update =======================================
+			composed.NotMarkedForDeletionPredicate,
+			subscriptionCreate,
+			composed.If(
+				predicateSecurityEnabled,
+				subscriptionWaitReady,
+			),
+		),
 	)
 }

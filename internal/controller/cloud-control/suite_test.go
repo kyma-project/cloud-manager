@@ -191,6 +191,11 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().SubscriptionGardenProvider(),
 	)).To(Succeed())
+	// Runtime
+	Expect(SetupRuntimeReconciler(
+		infra.Ctx(),
+		infra.KcpManager(),
+	)).To(Succeed())
 
 	// Start controllers
 	infra.StartKcpControllers(context.Background())

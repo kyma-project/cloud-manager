@@ -2,7 +2,6 @@ package vpcnetwork
 
 import (
 	"context"
-	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -11,11 +10,9 @@ import (
 func infraDelete(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	name := fmt.Sprintf("cm-%s", state.ObjAsVpcNetwork().Name)
-
 	err := DeleteInfra(
 		ctx,
-		WithName(name),
+		WithName(state.ObjAsVpcNetwork().Status.Identifiers.Name),
 		WithGcpProjectId(state.Subscription().Status.SubscriptionInfo.Gcp.Project),
 		WithClient(state.gcpClient),
 		WithRegion(state.ObjAsVpcNetwork().Spec.Region),

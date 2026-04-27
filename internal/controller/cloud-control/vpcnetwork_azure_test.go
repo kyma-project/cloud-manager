@@ -106,6 +106,10 @@ var _ = Describe("Feature: VpcNetwork", func() {
 			Expect(resourceGroupID.ResourceGroup).To(Equal(vpcID.ResourceGroup))
 		})
 
+		By("Then VpcNetwork status has name", func() {
+			Expect(vpcNetwork.Status.Identifiers.Name).NotTo(BeEmpty())
+		})
+
 		var azureVirtualNetwork *armnetwork.VirtualNetwork
 
 		By("Then Azure VPC Network exists", func() {
