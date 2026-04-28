@@ -482,10 +482,7 @@ spec:
                               statements:
                                 description: Statements to combine with AND logic (min 2)
                                 items:
-                                  description: |-
-                                    AwsWebAclStatement1 - Statement at nesting Level 1
-                                    Can contain: Logical operators + leaf statements (NO RateBased, NO ManagedRuleGroup)
-                                    Type safety prevents same-operator nesting (AND-in-AND, OR-in-OR)
+                                  description: AwsWebAclStatement1 - Statement at nesting Level 1
                                   maxProperties: 1
                                   minProperties: 1
                                   properties:
@@ -494,9 +491,7 @@ spec:
                                       properties:
                                         statements:
                                           items:
-                                            description: |-
-                                              AwsWebAclStatement2 - Statement at nesting Level 2 (deepest level, leaf statements only)
-                                              Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+                                            description: AwsWebAclStatement2 - Statement at nesting Level 2
                                             maxProperties: 1
                                             minProperties: 1
                                             properties:
@@ -1147,9 +1142,7 @@ spec:
                                       description: NotStatement - Logical NOT (negates nested statement)
                                       properties:
                                         statement:
-                                          description: |-
-                                            AwsWebAclStatement2 - Statement at nesting Level 2 (deepest level, leaf statements only)
-                                            Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+                                          description: AwsWebAclStatement2 - Statement at nesting Level 2
                                           maxProperties: 1
                                           minProperties: 1
                                           properties:
@@ -1632,9 +1625,7 @@ spec:
                                       properties:
                                         statements:
                                           items:
-                                            description: |-
-                                              AwsWebAclStatement2 - Statement at nesting Level 2 (deepest level, leaf statements only)
-                                              Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+                                            description: AwsWebAclStatement2 - Statement at nesting Level 2
                                             maxProperties: 1
                                             minProperties: 1
                                             properties:
@@ -2827,9 +2818,7 @@ spec:
                                     properties:
                                       statements:
                                         items:
-                                          description: |-
-                                            AwsWebAclStatement2 - Statement at nesting Level 2 (deepest level, leaf statements only)
-                                            Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+                                          description: AwsWebAclStatement2 - Statement at nesting Level 2
                                           maxProperties: 1
                                           minProperties: 1
                                           properties:
@@ -3480,9 +3469,7 @@ spec:
                                     description: NotStatement - Logical NOT (negates nested statement)
                                     properties:
                                       statement:
-                                        description: |-
-                                          AwsWebAclStatement2 - Statement at nesting Level 2 (deepest level, leaf statements only)
-                                          Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+                                        description: AwsWebAclStatement2 - Statement at nesting Level 2
                                         maxProperties: 1
                                         minProperties: 1
                                         properties:
@@ -3965,9 +3952,7 @@ spec:
                                     properties:
                                       statements:
                                         items:
-                                          description: |-
-                                            AwsWebAclStatement2 - Statement at nesting Level 2 (deepest level, leaf statements only)
-                                            Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+                                          description: AwsWebAclStatement2 - Statement at nesting Level 2
                                           maxProperties: 1
                                           minProperties: 1
                                           properties:
@@ -4760,10 +4745,7 @@ spec:
                               statements:
                                 description: Statements to combine with OR logic (min 2)
                                 items:
-                                  description: |-
-                                    AwsWebAclStatement1 - Statement at nesting Level 1
-                                    Can contain: Logical operators + leaf statements (NO RateBased, NO ManagedRuleGroup)
-                                    Type safety prevents same-operator nesting (AND-in-AND, OR-in-OR)
+                                  description: AwsWebAclStatement1 - Statement at nesting Level 1
                                   maxProperties: 1
                                   minProperties: 1
                                   properties:
@@ -4772,9 +4754,7 @@ spec:
                                       properties:
                                         statements:
                                           items:
-                                            description: |-
-                                              AwsWebAclStatement2 - Statement at nesting Level 2 (deepest level, leaf statements only)
-                                              Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+                                            description: AwsWebAclStatement2 - Statement at nesting Level 2
                                             maxProperties: 1
                                             minProperties: 1
                                             properties:
@@ -5425,9 +5405,7 @@ spec:
                                       description: NotStatement - Logical NOT (negates nested statement)
                                       properties:
                                         statement:
-                                          description: |-
-                                            AwsWebAclStatement2 - Statement at nesting Level 2 (deepest level, leaf statements only)
-                                            Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+                                          description: AwsWebAclStatement2 - Statement at nesting Level 2
                                           maxProperties: 1
                                           minProperties: 1
                                           properties:
@@ -5910,9 +5888,7 @@ spec:
                                       properties:
                                         statements:
                                           items:
-                                            description: |-
-                                              AwsWebAclStatement2 - Statement at nesting Level 2 (deepest level, leaf statements only)
-                                              Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+                                            description: AwsWebAclStatement2 - Statement at nesting Level 2
                                             maxProperties: 1
                                             minProperties: 1
                                             properties:
@@ -7053,7 +7029,6 @@ spec:
                             type: boolean
                         required:
                           - cloudWatchMetricsEnabled
-                          - metricName
                           - sampledRequestsEnabled
                         type: object
                     required:
@@ -7088,7 +7063,6 @@ spec:
                       type: boolean
                   required:
                     - cloudWatchMetricsEnabled
-                    - metricName
                     - sampledRequestsEnabled
                   type: object
               required:

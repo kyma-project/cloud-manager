@@ -289,9 +289,15 @@ func convertVisibilityConfig(config *cloudresourcesv1beta1.AwsWebAclVisibilityCo
 		}
 	}
 
+	// Default metricName to defaultName if not specified
+	metricName := config.MetricName
+	if metricName == "" {
+		metricName = defaultName
+	}
+
 	return &wafv2types.VisibilityConfig{
 		CloudWatchMetricsEnabled: config.CloudWatchMetricsEnabled,
-		MetricName:               ptr.To(config.MetricName),
+		MetricName:               ptr.To(metricName),
 		SampledRequestsEnabled:   config.SampledRequestsEnabled,
 	}
 }
