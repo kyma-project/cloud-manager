@@ -666,6 +666,14 @@ func resourceDoesNotExist(ctx context.Context, alias string) (context.Context, e
 }
 
 func logsOfContainerInPodContain(ctx context.Context, containerName string, alias string, content string) (context.Context, error) {
+	return logsOfContainerInPodContainWithOptions(ctx, containerName, alias, content, nil)
+}
+
+func logsOfContainerInPodContainEventually(ctx context.Context, containerName string, alias string, content string, options *godog.Table) (context.Context, error) {
+	return logsOfContainerInPodContainWithOptions(ctx, containerName, alias, content, options)
+}
+
+func logsOfContainerInPodContainWithOptions(ctx context.Context, containerName string, alias string, content string, options *godog.Table) (context.Context, error) {
 	session := GetCurrentScenarioSession(ctx)
 	if session == nil {
 		return ctx, ErrNoSession
@@ -689,13 +697,71 @@ func logsOfContainerInPodContain(ctx context.Context, containerName string, alia
 		return ctx, fmt.Errorf("resource with alias %s is not loaded/does not exist", alias)
 	}
 
-	logs, err := session.CurrentCluster().PodLogs(ctx, ri.Namespace, ri.Name, containerName)
+	expectedContent, err := eval.EvalTemplate(content)
 	if err != nil {
-		return ctx, fmt.Errorf("failed to get logs of container %s in pod %s: %w", containerName, alias, err)
+		return ctx, fmt.Errorf("failed to evaluate expected logs content %q: %w", content, err)
 	}
 
-	if !strings.Contains(logs, content) {
-		return ctx, fmt.Errorf("logs of container %s in pod %s do not contain expected content:\n%s", containerName, alias, logs)
+	checkLogs := func(ctx context.Context) (bool, string, error) {
+		logs, err := session.CurrentCluster().PodLogs(ctx, ri.Namespace, ri.Name, containerName)
+		if err != nil {
+			return false, "", fmt.Errorf("failed to get logs of container %s in pod %s: %w", containerName, alias, err)
+		}
+		if !strings.Contains(logs, expectedContent) {
+			return false, logs, nil
+		}
+		return true, logs, nil
+	}
+
+	if options == nil {
+		ok, logs, err := checkLogs(ctx)
+		if err != nil {
+			return ctx, err
+		}
+		if !ok {
+			return ctx, fmt.Errorf("logs of container %s in pod %s do not contain expected content %q:\n%s", containerName, alias, expectedContent, logs)
+		}
+		return ctx, nil
+	}
+
+	interval := session.Timing().EventuallyInterval
+	timeout := session.Timing().EventuallyTimeout
+	for _, row := range options.Rows {
+		if len(row.Cells) == 0 {
+			continue
+		}
+		option := strings.TrimSpace(row.Cells[0].Value)
+		if !strings.HasPrefix(option, "#") {
+			continue
+		}
+		parts := strings.SplitN(strings.TrimSpace(strings.TrimPrefix(option, "#")), "=", 2)
+		if len(parts) != 2 {
+			return ctx, fmt.Errorf("invalid option %q, expected #key=value", option)
+		}
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+		d, err := time.ParseDuration(value)
+		if err != nil {
+			return ctx, fmt.Errorf("invalid %s value in %q: %w", key, option, err)
+		}
+		switch key {
+		case "timeout":
+			timeout = d
+		case "interval":
+			interval = d
+		default:
+			return ctx, fmt.Errorf("unsupported option %q", option)
+		}
+	}
+
+	var lastLogs string
+	err = wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx context.Context) (done bool, err error) {
+		done, logs, err := checkLogs(ctx)
+		lastLogs = logs
+		return done, err
+	})
+	if err != nil {
+		return ctx, fmt.Errorf("timeout waiting for logs of container %s in pod %s to contain %q: %w\n%s", containerName, alias, expectedContent, err, lastLogs)
 	}
 
 	return ctx, nil
