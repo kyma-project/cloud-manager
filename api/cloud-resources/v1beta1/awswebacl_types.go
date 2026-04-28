@@ -591,11 +591,11 @@ type AwsWebAclVisibilityConfig struct {
 	CloudWatchMetricsEnabled bool `json:"cloudWatchMetricsEnabled"`
 
 	// MetricName for CloudWatch (must be unique)
-	// +kubebuilder:validation:Required
+	// +optional
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=128
 	// +kubebuilder:validation:Pattern=`^[0-9A-Za-z_-]+$`
-	MetricName string `json:"metricName"`
+	MetricName string `json:"metricName,omitempty"`
 
 	// SampledRequestsEnabled enables request sampling in AWS console
 	// +kubebuilder:validation:Required
@@ -633,8 +633,6 @@ type AwsWebAclNotStatement struct {
 // ===== Level 1 Statement Type =====
 
 // AwsWebAclStatement1 - Statement at nesting Level 1
-// Can contain: Logical operators + leaf statements (NO RateBased, NO ManagedRuleGroup)
-// Type safety prevents same-operator nesting (AND-in-AND, OR-in-OR)
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type AwsWebAclStatement1 struct {
@@ -707,10 +705,7 @@ type AwsWebAclNotStatement1 struct {
 
 // ===== Level 2 Statement Type =====
 
-// ===== Level 2 Statement Type (Leaf Only) =====
-
-// AwsWebAclStatement2 - Statement at nesting Level 2 (deepest level, leaf statements only)
-// Can contain: ONLY leaf statements (NO logical operators, NO RateBased, NO ManagedRuleGroup)
+// AwsWebAclStatement2 - Statement at nesting Level 2
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type AwsWebAclStatement2 struct {

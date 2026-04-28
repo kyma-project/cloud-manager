@@ -51,8 +51,9 @@ spec:
   # ====================
   visibilityConfig:
     cloudWatchMetricsEnabled: true
-    metricName: ComprehensiveWebAclMetrics
     sampledRequestsEnabled: true
+    # metricName is optional - defaults to metadata.name if omitted
+    # metricName: ComprehensiveWebAclMetrics  # Uncomment to override default
 
   # ====================
   # TOKEN DOMAINS (Optional, max 10)
@@ -94,6 +95,30 @@ spec:
     immunityTime: 7200  # 2 hours
 
   # ====================
+  # LOGGING CONFIGURATION (Optional)
+  # ====================
+  # Enable WAF request logging to CloudWatch Logs for security auditing
+  loggingConfiguration:
+    # Enable logging (defaults to false if omitted)
+    enabled: true
+
+    # Optional: Redact sensitive fields from logs (PII protection)
+    # If omitted, no fields are redacted
+    redactedFields:
+      - singleHeader: "authorization"  # Redact Authorization header
+      - singleHeader: "cookie"         # Redact cookies
+      - singleHeader: "x-api-key"      # Redact API keys
+
+    # Optional: CloudWatch Logs destination configuration
+    # If omitted, uses default 30-day retention
+    destination:
+      cloudWatchLogs:
+        retentionDays: 30  # Log retention (1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653)
+
+    # Auto-managed log group: aws-waf-logs-<webacl-name>
+    # Cloud Manager automatically creates, configures, and deletes the log group
+
+  # ====================
   # RULES (Optional, max 100)
   # ====================
   rules:
@@ -121,10 +146,12 @@ spec:
       ruleLabels:
         - name: "trusted:corporate"
         - name: "source:internal"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: allow-corporate-network
-        sampledRequestsEnabled: true
+      # visibilityConfig is optional at rule level - inherits from WebACL with metricName = rule name
+      # Uncomment to override per-rule settings:
+      # visibilityConfig:
+      #   cloudWatchMetricsEnabled: true
+      #   metricName: allow-corporate-network  # Optional - defaults to rule name if omitted
+      #   sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 2: GEO MATCH - Block with custom response
@@ -148,10 +175,7 @@ spec:
       ruleLabels:
         - name: "block:geo-restricted"
         - name: "severity:high"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-high-risk-countries
-        sampledRequestsEnabled: true
+      # visibilityConfig omitted - uses defaults (inherits from WebACL, metricName = "block-high-risk-countries")
 
     # ============================================================
     # RULE 3: RATE BASED - Rate limiting
@@ -168,10 +192,7 @@ spec:
           limit: 2000
       ruleLabels:
         - name: "protection:rate-limit"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: rate-limit-per-ip
-        sampledRequestsEnabled: true
+      # visibilityConfig omitted - uses defaults
 
     # ============================================================
     # RULE 4: BYTE MATCH - Pattern in query string
@@ -191,10 +212,7 @@ spec:
               type: URL_DECODE
             - priority: 1
               type: LOWERCASE
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-path-traversal
-        sampledRequestsEnabled: true
+      # visibilityConfig omitted - uses defaults
 
     # ============================================================
     # RULE 5: BYTE MATCH - Header inspection
@@ -212,10 +230,7 @@ spec:
           textTransformations:
             - priority: 0
               type: LOWERCASE
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-malicious-user-agents
-        sampledRequestsEnabled: true
+      # visibilityConfig omitted - uses defaults
 
     # ============================================================
     # RULE 6: CAPTCHA with per-rule immunity override
@@ -238,10 +253,6 @@ spec:
       ruleLabels:
         - name: "challenge:captcha"
         - name: "risk:medium"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: captcha-challenge-suspicious-ips
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 7: CHALLENGE action (silent bot verification)
@@ -263,10 +274,6 @@ spec:
       ruleLabels:
         - name: "challenge:silent-verification"
         - name: "protection:bot-control"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: challenge-bots
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 8: COUNT action (monitoring mode)
@@ -291,10 +298,6 @@ spec:
       ruleLabels:
         - name: "monitOrStatement:admin-path"
         - name: "action:count"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: monitor-admin-access
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 9: MANAGED RULE GROUP with OverrideAction
@@ -312,10 +315,6 @@ spec:
           name: AWSManagedRulesBotControlRuleSet
           version: ""  # Empty means latest version
           excludedRules: []
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: AWS-AWSManagedRulesBotControlRuleSet
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 10: MANAGED RULE GROUP - OWASP Top 10
@@ -330,10 +329,6 @@ spec:
           name: AWSManagedRulesCommonRuleSet
           version: ""
           excludedRules: []
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: AWS-AWSManagedRulesCommonRuleSet
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 11: MANAGED RULE GROUP - SQL Injection with exclusions
@@ -350,10 +345,6 @@ spec:
           # Exclude specific rules that cause false positives
           excludedRules:
             - name: SQLi_QUERYARGUMENTS
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: AWS-AWSManagedRulesSQLiRuleSet
-        sampledRequestsEnabled: true
 
     # RULE 16: LABEL MATCH - Block based on labels from previous rules
     # ============================================================
@@ -373,10 +364,6 @@ spec:
         labelMatch:
           key: "block:high-risk-combined"
           scope: "LABEL"  # LABEL = exact match, NAMESPACE = prefix match
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-labeled-threats
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 17: SIZE CONSTRAINT - Block oversized requests (DDoS protection)
@@ -403,10 +390,6 @@ spec:
       ruleLabels:
         - name: "protection:size-limit"
         - name: "block:oversized-request"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-oversized-query
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 18: SQL INJECTION DETECTION - Block SQL injection attacks
@@ -434,10 +417,6 @@ spec:
       ruleLabels:
         - name: "security:sqli-protection"
         - name: "block:sql-injection"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-sql-injection
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 19: CROSS-SITE SCRIPTING DETECTION - Block XSS attacks
@@ -466,10 +445,6 @@ spec:
       ruleLabels:
         - name: "security:xss-protection"
         - name: "block:xss-attack"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-xss-attacks
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 20: REGEX PATTERN MATCHING - Match complex patterns
@@ -497,10 +472,6 @@ spec:
       ruleLabels:
         - name: "security:regex-protection"
         - name: "block:suspicious-path"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-suspicious-patterns
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 21: ASN MATCHING - Match by Autonomous System Number
@@ -523,10 +494,6 @@ spec:
       ruleLabels:
         - name: "security:asn-block"
         - name: "block:suspicious-network"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: block-suspicious-asns
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 22: AND STATEMENT - Combine multiple conditions with AND logic
@@ -558,10 +525,6 @@ spec:
       ruleLabels:
         - name: "logical:and-statement"
         - name: "security:admin-geo-block"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: and-admin-geo-block
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 23: OR STATEMENT - Combine multiple conditions with OR logic
@@ -601,10 +564,6 @@ spec:
       ruleLabels:
         - name: "logical:or-statement"
         - name: "security:multi-threat-detection"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: or-multi-threat
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 24: NOT STATEMENT - Negate a condition
@@ -625,10 +584,6 @@ spec:
       ruleLabels:
         - name: "logical:not-statement"
         - name: "policy:geo-allow-except"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: not-geo-allow
-        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 26: OR STATEMENT - Combining XSS and SQLi detection
@@ -664,10 +619,6 @@ spec:
       ruleLabels:
         - name: "logical:or-injection"
         - name: "security:injection-protection"
-      visibilityConfig:
-        cloudWatchMetricsEnabled: true
-        metricName: or-injection-attacks
-        sampledRequestsEnabled: true
 
 
 ---
@@ -678,16 +629,20 @@ spec:
 # REQUIRED FIELDS:
 # - spec.defaultAction (exactly one: allow or block)
 # - spec.visibilityConfig.cloudWatchMetricsEnabled (bool)
-# - spec.visibilityConfig.metricName (string, 1-128 chars)
 # - spec.visibilityConfig.sampledRequestsEnabled (bool)
 #
 # OPTIONAL TOP-LEVEL FIELDS:
 # - spec.description (string, max 256 chars)
+# - spec.visibilityConfig.metricName (string, 1-128 chars) - defaults to metadata.name if omitted
 # - spec.rules[] (array, max 100)
 # - spec.tokenDomains[] (array, max 10)
 # - spec.customResponseBodies (map[string]AwsWebAclCustomResponseBody)
 # - spec.captchaConfig.immunityTime (int64, 60-259200 seconds)
 # - spec.challengeConfig.immunityTime (int64, 60-259200 seconds)
+# - spec.loggingConfiguration:
+#     - enabled (bool, default: false)
+#     - redactedFields[] (array, max 100) - fields to redact from logs
+#     - destination.cloudWatchLogs.retentionDays (int32, default: 30)
 #
 # RULE REQUIRED FIELDS:
 # - name (string, 1-128 chars, pattern: ^[0-9A-Za-z_-]+$)
@@ -699,7 +654,10 @@ spec:
 # - ruleLabels[] (array, max 100, name: 1-1024 chars)
 # - captchaConfig.immunityTime (overrides global)
 # - challengeConfig.immunityTime (overrides global)
-# - visibilityConfig (overrides WebACL-level)
+# - visibilityConfig (optional - inherits from WebACL if omitted)
+#   - cloudWatchMetricsEnabled (bool) - inherits from WebACL
+#   - metricName (string) - defaults to rule name if omitted
+#   - sampledRequestsEnabled (bool) - inherits from WebACL
 #
 # ACTION TYPES (for regular rules):
 # - allow: { customRequestHandling: { insertHeaders: [...] } }
