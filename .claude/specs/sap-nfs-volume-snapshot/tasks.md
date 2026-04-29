@@ -51,12 +51,12 @@
   - Run `make manifests` then `config/sync.sh`
   - _Requirements: 3.6 (new-volume restore needs SnapshotId propagation)_
 
-- [ ] 5. OpenStack snapshot client
-- [ ] 5.1 Implement `SnapshotClient` interface and client
+- [x] 5. OpenStack snapshot client
+- [x] 5.1 Implement `SnapshotClient` interface and client
   - Create `pkg/kcp/provider/sap/client/clientSnapshot.go` with `SnapshotClient` interface (`CreateSnapshot`, `GetSnapshot`, `DeleteSnapshot`, `ListSnapshots`, `RevertShareToSnapshot`) and `snapshotClient` struct implementation using gophercloud `snapshots` and `shares.Revert` packages; set microversion `2.27` for `RevertShareToSnapshot`
   - _Requirements: 1.1, 2.1, 3.1_
 
-- [ ] 5.2 Register `SnapshotClient` in `ClientFactory`
+- [x] 5.2 Register `SnapshotClient` in `ClientFactory`
   - Add `SnapshotClient(ctx) (SnapshotClient, error)` method to `ClientFactory` in `pkg/kcp/provider/sap/client/client.go`, reusing the existing `shareSvc`
   - _Requirements: 1.1_
 
