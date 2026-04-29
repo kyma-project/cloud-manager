@@ -19,6 +19,10 @@ apiDisabled:
       query: feature == "vpcdnslink"
       variation: disabled
 
+    - name: Disable WAF
+      query: feature == "waf"
+      variation: disabled
+
     - name: Disable all on trial
       query: brokerPlan == "trial"
       variation: disabled
