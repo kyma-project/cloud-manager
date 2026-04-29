@@ -22,6 +22,7 @@ type Providers interface {
 	NfsInstanceProvider() sapclient.SapClientProvider[sapnfsinstanceclient.Client]
 	ExposedDataProvider() sapclient.SapClientProvider[sapexposeddataclient.Client]
 	VpcNetworkProvider() sapclient.SapClientProvider[sapvpcnetworkclient.Client]
+	SnapshotClientProvider() sapclient.SapClientProvider[sapclient.SnapshotClient]
 }
 
 type Config interface {

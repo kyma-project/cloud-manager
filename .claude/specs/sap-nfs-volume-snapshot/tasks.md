@@ -66,36 +66,37 @@
   - Implement `CreateSnapshot`, `GetSnapshot`, `DeleteSnapshot`, `ListSnapshots`, `RevertShareToSnapshot` on the mock project in `pkg/kcp/provider/sap/mock/` (store in mock state, toggle status from `creating` → `available` after first `GetSnapshot` call)
   - _Requirements: 1.1, 2.1, 3.1_
 
-- [ ] 7. SapNfsVolumeSnapshot reconciler
-- [ ] 7.1 Create state and reconciler skeleton
+- [x] 7. SapNfsVolumeSnapshot reconciler
+- [x] 7.1 Create state and reconciler skeleton
   - Create `pkg/skr/sapnfsvolumesnapshot/state.go` with `State` struct (embedding `composed.State`, fields for `Scope`, `SapNfsVolume`, `snapshot`, `sapClient`, `provider`), `StateFactory`, `NewStateFactory()`, helper `ObjAsSapNfsVolumeSnapshot()`
   - Create `pkg/skr/sapnfsvolumesnapshot/reconcile.go` with `Reconciler` struct, `Run()`, `newState()`, `newAction()`, `NewReconciler()`, and `composeActions()` wiring all actions (feature load, loadObj, loadScope, clientCreate, shortCircuit, markFailed, finalizer, snapshotLoad, sourceVolumeLoad, ttlExpiry, IfElse create/delete paths, StopAndForget)
   - _Requirements: 1.6, 1.8, 1.11, 2.4_
 
-- [ ] 7.2 Implement `loadScope` and `clientCreate` actions
+- [x] 7.2 Implement `loadScope` and `clientCreate` actions
   - Create `pkg/skr/sapnfsvolumesnapshot/loadScope.go` — load `Scope` from KCP cluster by `KymaRef`
   - Create `pkg/skr/sapnfsvolumesnapshot/clientCreate.go` — construct SAP client using `SapClientProvider` with Scope credentials
   - _Requirements: 1.1 (OpenStack client needed for Manila calls)_
 
-- [ ] 7.3 Implement `sourceVolumeLoad` action
+- [x] 7.3 Implement `sourceVolumeLoad` action
   - Create `pkg/skr/sapnfsvolumesnapshot/sourceVolumeLoad.go` — load referenced `SapNfsVolume` from SKR cluster, validate it is in `Ready` state, resolve KCP `NfsInstance` to get Manila `shareId` from `status.stateData`
   - _Requirements: 1.2_
 
-- [ ] 7.4 Implement `snapshotLoad` action
+- [x] 7.4 Implement `snapshotLoad` action
   - Create `pkg/skr/sapnfsvolumesnapshot/snapshotLoad.go` — if `status.openstackId` is set, fetch by ID; otherwise fallback to `ListSnapshots` by name+shareId, persist resolved `openstackId`
   - _Requirements: 1.1 (idempotent snapshot resolution)_
 
-- [ ] 7.5 Implement `snapshotCreate` and `snapshotWaitAvailable` actions
-  - Create `pkg/skr/sapnfsvolumesnapshot/snapshotCreate.go` — generate deterministic name, store in `status.id`, call `CreateSnapshot`, store `status.openstackId`, set state to `Creating`
+- [x] 7.5 Implement `idGenerate`, `snapshotCreate` and `snapshotWaitAvailable` actions
+  - Create `pkg/skr/sapnfsvolumesnapshot/idGenerate.go` — generate deterministic name, store in `status.id`, set state to `Creating`
+  - Create `pkg/skr/sapnfsvolumesnapshot/snapshotCreate.go` — call `CreateSnapshot`, store `status.openstackId`
   - Create `pkg/skr/sapnfsvolumesnapshot/snapshotWaitAvailable.go` — poll Manila snapshot status; if `available` → continue, if `error` → set Error state
   - _Requirements: 1.1, 1.4, 1.5, 1.6_
 
-- [ ] 7.6 Implement `snapshotDelete` and `snapshotWaitDeleted` actions
+- [x] 7.6 Implement `snapshotDelete` and `snapshotWaitDeleted` actions
   - Create `pkg/skr/sapnfsvolumesnapshot/snapshotDelete.go` — call `DeleteSnapshot`; if not found (404), proceed
   - Create `pkg/skr/sapnfsvolumesnapshot/snapshotWaitDeleted.go` — poll until 404 or `error_deleting`
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 7.7 Implement status actions, `shortCircuit`, `ttlExpiry`, and `markFailed`
+- [x] 7.7 Implement status actions, `shortCircuit`, `ttlExpiry`, and `markFailed`
   - Create `pkg/skr/sapnfsvolumesnapshot/statusReady.go` — set state `Ready`, update `sizeGb`
   - Create `pkg/skr/sapnfsvolumesnapshot/statusCreating.go` — set state `Creating`
   - Create `pkg/skr/sapnfsvolumesnapshot/statusDeleting.go` — set state `Deleting`
@@ -104,8 +105,17 @@
   - Create `pkg/skr/sapnfsvolumesnapshot/markFailed.go` — transition from `Error` to `Failed` for scheduled snapshots with newer successors
   - _Requirements: 1.4, 1.7, 1.8, 1.9, 1.10_
 
-- [ ] 7.8 Wire controller: create `SapNfsVolumeSnapshot` controller setup
+- [x] 7.8 Wire controller: create `SapNfsVolumeSnapshot` controller setup
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshot_controller.go` with `SapNfsVolumeSnapshotReconciler`, `SapNfsVolumeSnapshotReconcilerFactory`, RBAC markers, and `SetupSapNfsVolumeSnapshotReconciler()` that registers with `SkrRegistry`
+  - _Requirements: 1.1_
+
+- [x] 7.9 Unit tests for `snapshotLoad` and `ttlExpiry`
+  - Create `pkg/skr/sapnfsvolumesnapshot/snapshotLoad_test.go` — test idempotency: when `openstackId` is missing, falls back to name-based `ListSnapshots` lookup, persists resolved `openstackId`, skips duplicate creation
+  - Create `pkg/skr/sapnfsvolumesnapshot/ttlExpiry_test.go` — test TTL expiry calculation logic
+  - _Requirements: 1.1, 1.7_
+
+- [x] 7.10 Wire `SapNfsVolumeSnapshot` reconciler in `cmd/main.go`
+  - Add `SetupSapNfsVolumeSnapshotReconciler(skrRegistry)` call in `cmd/main.go` alongside other SKR reconciler registrations
   - _Requirements: 1.1_
 
 - [ ] 8. SapNfsVolumeSnapshot controller tests
@@ -116,6 +126,7 @@
   - _Requirements: 1.1, 1.4, 1.7, 2.1, 2.2_
 
 - [ ] 9. SapNfsVolumeSnapshotRestore reconciler
+  - **Convention**: Every time the resource is set to error/failed state, MUST log `logger.Error(...)` before/alongside the state assignment. Use `idGenerate` as a separate dedicated action (not embedded in create actions). Actions MUST always return `ctx` (never `nil`) as the second return value — use `return nil, ctx` to continue, `return composed.StopX, ctx` to stop.
 - [ ] 9.1 Create state and reconciler skeleton
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/state.go` with `State` struct (fields for `Scope`, `SourceSnapshot`, `DestinationVolume`, `CreatedVolume`, `sapClient`, `provider`), `StateFactory`, `NewStateFactory()`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/reconcile.go` with `Reconciler`, `Run()`, `newAction()` wiring all actions (feature load, loadObj, loadScope, clientCreate, finalizer, sourceSnapshotLoad, IfElse non-delete/delete, within non-delete IfElse in-place/new-volume paths, StopAndForget)
@@ -149,6 +160,10 @@
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotrestore_controller.go` with reconciler struct, factory, RBAC markers, and `SetupSapNfsVolumeSnapshotRestoreReconciler()`
   - _Requirements: 3.12_
 
+- [ ] 9.7 Wire `SapNfsVolumeSnapshotRestore` reconciler in `cmd/main.go`
+  - Add `SetupSapNfsVolumeSnapshotRestoreReconciler(skrRegistry)` call in `cmd/main.go` alongside other SKR reconciler registrations
+  - _Requirements: 3.12_
+
 - [ ] 10. SapNfsVolumeSnapshotRestore controller tests
   - Register `SetupSapNfsVolumeSnapshotRestoreReconciler` in `internal/controller/cloud-resources/suite_test.go`
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotrestore_test.go`:
@@ -163,6 +178,7 @@
   - _Requirements: 3.6 (new-volume restore depends on this plumbing)_
 
 - [ ] 12. SapNfsVolumeSnapshotSchedule reconciler
+  - **Convention**: Every time the resource is set to error/failed state, MUST log `logger.Error(...)` before/alongside the state assignment. Use `idGenerate` as a separate dedicated action (not embedded in create actions). Actions MUST always return `ctx` (never `nil`) as the second return value — use `return nil, ctx` to continue, `return composed.StopX, ctx` to stop.
 - [ ] 12.1 Create state and reconciler skeleton
   - Create `pkg/skr/sapnfssnapshotschedule/state.go` with `State` struct implementing `backupschedule.ScheduleState` interface (all methods: `ObjAsBackupSchedule`, `GetScheduleCalculator`, `GetCronExpression`, `SetCronExpression`, `GetNextRunTime`, `SetNextRunTime`, `IsCreateRunCompleted`, `SetCreateRunCompleted`, `IsDeleteRunCompleted`, `SetDeleteRunCompleted`), plus provider-specific fields
   - Create `pkg/skr/sapnfssnapshotschedule/reconcile.go` with `Reconciler`, `Run()`, `NewReconciler()`, and `newAction()` composing shared `backupschedule.*` actions and SAP-specific actions (loadSnapshots, loadScope, loadSource, createSnapshot, deleteSnapshots, setStatusToActive, deleteCascade)
@@ -180,6 +196,10 @@
 
 - [ ] 12.3 Wire controller: create `SapNfsVolumeSnapshotSchedule` controller setup
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotschedule_controller.go` with reconciler struct, factory, RBAC markers, and `SetupSapNfsVolumeSnapshotScheduleReconciler()`
+  - _Requirements: 4.10_
+
+- [ ] 12.4 Wire `SapNfsVolumeSnapshotSchedule` reconciler in `cmd/main.go`
+  - Add `SetupSapNfsVolumeSnapshotScheduleReconciler(skrRegistry)` call in `cmd/main.go` alongside other SKR reconciler registrations
   - _Requirements: 4.10_
 
 - [ ] 13. SapNfsVolumeSnapshotSchedule controller tests
