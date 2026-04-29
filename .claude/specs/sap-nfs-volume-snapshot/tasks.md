@@ -1,27 +1,27 @@
 # Implementation Plan
 
-- [ ] 1. SapNfsVolumeSnapshot CRD and API types
-- [ ] 1.1 Define `SapNfsVolumeSnapshot` API types using kubebuilder
+- [x] 1. SapNfsVolumeSnapshot CRD and API types
+- [x] 1.1 Define `SapNfsVolumeSnapshot` API types using kubebuilder
   - Create `api/cloud-resources/v1beta1/sapnfsvolumesnapshot_types.go` with `SapNfsVolumeSnapshotSpec`, `SapNfsVolumeSnapshotStatus`, kubebuilder markers, CEL immutability validation for `sourceVolume`, and all required interface methods (`State()`, `SetState()`, `Conditions()`, `GetObjectMeta()`, `SpecificToFeature()`, `SpecificToProviders()`, `CloneForPatchStatus()`)
   - Add `AnnotationSnapshotId` constant to a shared annotations file or `api/cloud-resources/v1beta1/`
   - Register types with `SchemeBuilder` in `init()`
   - Run `make manifests` to generate CRDs
   - _Requirements: 1.1, 1.3, 1.6, 1.8_
 
-- [ ] 1.2 Write API validation tests for `SapNfsVolumeSnapshot`
+- [x] 1.2 Write API validation tests for `SapNfsVolumeSnapshot`
   - Create `internal/api-tests/skr_sapnfsvolumesnapshot_test.go` with builder struct and tests:
     - Valid create with sourceVolume (`canCreateSkr`)
     - Immutability of sourceVolume (`canNotChangeSkr` → "SourceVolume is immutable.")
   - _Requirements: 1.3_
 
-- [ ] 2. SapNfsVolumeSnapshotRestore CRD and API types
-- [ ] 2.1 Define `SapNfsVolumeSnapshotRestore` API types using kubebuilder
+- [x] 2. SapNfsVolumeSnapshotRestore CRD and API types
+- [x] 2.1 Define `SapNfsVolumeSnapshotRestore` API types using kubebuilder
   - Create `api/cloud-resources/v1beta1/sapnfsvolumesnapshotrestore_types.go` with `SapNfsVolumeSnapshotRestoreSpec`, `SapNfsVolumeSnapshotRestoreDestination` (MinProperties/MaxProperties XOR), `SapNfsVolumeSnapshotNewVolume`, `SapNfsVolumeSnapshotRestoreStatus`, CEL immutability for `sourceSnapshot` and `destination`, and all interface methods
   - Register types with `SchemeBuilder`
   - Run `make manifests`
   - _Requirements: 3.9_
 
-- [ ] 2.2 Write API validation tests for `SapNfsVolumeSnapshotRestore`
+- [x] 2.2 Write API validation tests for `SapNfsVolumeSnapshotRestore`
   - Create `internal/api-tests/skr_sapnfsvolumesnapshotrestore_test.go` with builder and tests:
     - Valid create with existingVolume (`canCreateSkr`)
     - Valid create with newVolume (`canCreateSkr`)
@@ -31,14 +31,14 @@
     - Immutability of destination (`canNotChangeSkr`)
   - _Requirements: 3.9_
 
-- [ ] 3. SapNfsVolumeSnapshotSchedule CRD and API types
-- [ ] 3.1 Define `SapNfsVolumeSnapshotSchedule` API types using kubebuilder
+- [x] 3. SapNfsVolumeSnapshotSchedule CRD and API types
+- [x] 3.1 Define `SapNfsVolumeSnapshotSchedule` API types using kubebuilder
   - Create `api/cloud-resources/v1beta1/sapnfsvolumesnapshotschedule_types.go` with `SapNfsVolumeSnapshotScheduleSpec`, `SapNfsVolumeSnapshotTemplate`, `SapNfsVolumeSnapshotScheduleStatus`, kubebuilder markers with defaults, and all interface methods including `backupschedule.BackupSchedule` interface (`GetSourceRef`, `SetSourceRef`, `GetSchedule`, `SetSchedule`, `GetPrefix`, `SetPrefix`, `GetStartTime`, `SetStartTime`, `GetEndTime`, `SetEndTime`, `GetMaxRetentionDays`, `SetMaxRetentionDays`, `GetSuspend`, `SetSuspend`, `GetDeleteCascade`, `SetDeleteCascade`, `GetMaxReadyBackups`, `SetMaxReadyBackups`, `GetMaxFailedBackups`, `SetMaxFailedBackups`, and all status accessors)
   - Register types with `SchemeBuilder`
   - Run `make manifests`
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9_
 
-- [ ] 3.2 Write API validation tests for `SapNfsVolumeSnapshotSchedule`
+- [x] 3.2 Write API validation tests for `SapNfsVolumeSnapshotSchedule`
   - Create `internal/api-tests/skr_sapnfsvolumesnapshotschedule_test.go` with builder and tests:
     - Valid create with template + schedule (`canCreateSkr`)
     - Valid create one-time (no schedule) (`canCreateSkr`)
