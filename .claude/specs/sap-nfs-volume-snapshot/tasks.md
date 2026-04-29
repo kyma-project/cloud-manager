@@ -60,8 +60,8 @@
   - Add `SnapshotClient(ctx) (SnapshotClient, error)` method to `ClientFactory` in `pkg/kcp/provider/sap/client/client.go`, reusing the existing `shareSvc`
   - _Requirements: 1.1_
 
-- [ ] 6. SAP mock snapshot operations
-- [ ] 6.1 Add snapshot operations to the SAP mock
+- [x] 6. SAP mock snapshot operations
+- [x] 6.1 Add snapshot operations to the SAP mock
   - Add `SnapshotClient` to `Clients` interface in `pkg/kcp/provider/sap/mock/types.go`
   - Implement `CreateSnapshot`, `GetSnapshot`, `DeleteSnapshot`, `ListSnapshots`, `RevertShareToSnapshot` on the mock project in `pkg/kcp/provider/sap/mock/` (store in mock state, toggle status from `creating` → `available` after first `GetSnapshot` call)
   - _Requirements: 1.1, 2.1, 3.1_

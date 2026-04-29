@@ -17,6 +17,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharenetworks"
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/shares"
+	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/snapshots"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange/allocate"
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	sapmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/meta"
@@ -33,14 +34,16 @@ type NfsConfig interface {
 	AddNetwork(id, name string) *networks.Network
 	AddRouter(id, name string, ipAddresses ...string) *routers.Router
 	SetShareStatus(id, status string)
+	SetSnapshotStatus(id, status string)
 }
 
 func newMainStore() *mainStore {
 	return &mainStore{
-		subnets:       map[string][]subnetInfoType{},
-		shareNetworks: map[string][]*sharenetworks.ShareNetwork{},
-		shares:        map[string][]*shares.Share{},
-		access:        map[string][]*sapclient.ShareAccess{},
+		subnets:        map[string][]subnetInfoType{},
+		shareNetworks:  map[string][]*sharenetworks.ShareNetwork{},
+		shares:         map[string][]*shares.Share{},
+		access:         map[string][]*sapclient.ShareAccess{},
+		shareSnapshots: []*snapshots.Snapshot{},
 	}
 }
 
@@ -59,6 +62,7 @@ type mainStore struct {
 	shareNetworks    map[string][]*sharenetworks.ShareNetwork
 	shares           map[string][]*shares.Share
 	access           map[string][]*sapclient.ShareAccess
+	shareSnapshots   []*snapshots.Snapshot
 }
 
 // NfsConfig implementation ======================================================================
@@ -106,6 +110,18 @@ func (s *mainStore) SetShareStatus(id, status string) {
 				share.Status = status
 				return
 			}
+		}
+	}
+}
+
+func (s *mainStore) SetSnapshotStatus(id, status string) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	for _, snap := range s.shareSnapshots {
+		if snap.ID == id {
+			snap.Status = status
+			return
 		}
 	}
 }
@@ -1418,4 +1434,133 @@ func (s *mainStore) CreateShareOp(ctx context.Context, shareNetworkId, name stri
 		SnapshotID:     snapshotID,
 		Metadata:       metadata,
 	})
+}
+
+// SnapshotClient implementation -----------------------------------------------
+
+func (s *mainStore) CreateSnapshot(ctx context.Context, opts snapshots.CreateOpts) (*snapshots.Snapshot, error) {
+	if util.IsContextDone(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	snap := &snapshots.Snapshot{
+		ID:          uuid.NewString(),
+		ShareID:     opts.ShareID,
+		Name:        opts.Name,
+		Description: opts.Description,
+		Status:      "creating",
+	}
+	s.shareSnapshots = append(s.shareSnapshots, snap)
+	return snap, nil
+}
+
+func (s *mainStore) GetSnapshot(ctx context.Context, snapshotId string) (*snapshots.Snapshot, error) {
+	if util.IsContextDone(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	for _, snap := range s.shareSnapshots {
+		if snap.ID == snapshotId {
+			return snap, nil
+		}
+	}
+	return nil, nil
+}
+
+func (s *mainStore) DeleteSnapshot(ctx context.Context, snapshotId string) error {
+	if util.IsContextDone(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	s.shareSnapshots = pie.Filter(s.shareSnapshots, func(x *snapshots.Snapshot) bool {
+		return x.ID != snapshotId
+	})
+	return nil
+}
+
+func (s *mainStore) ListSnapshots(ctx context.Context, opts snapshots.ListOpts) ([]snapshots.Snapshot, error) {
+	if util.IsContextDone(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	var result []snapshots.Snapshot
+	for _, snap := range s.shareSnapshots {
+		isMatch := true
+		if opts.Name != "" && snap.Name != opts.Name {
+			isMatch = false
+		}
+		if opts.ShareID != "" && snap.ShareID != opts.ShareID {
+			isMatch = false
+		}
+		if opts.Status != "" && snap.Status != opts.Status {
+			isMatch = false
+		}
+		if isMatch {
+			result = append(result, *snap)
+		}
+	}
+	return result, nil
+}
+
+func (s *mainStore) RevertShareToSnapshot(ctx context.Context, shareId string, snapshotId string) error {
+	if util.IsContextDone(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	time.Sleep(time.Millisecond)
+
+	// Verify snapshot exists and belongs to the share
+	var theSnapshot *snapshots.Snapshot
+	for _, snap := range s.shareSnapshots {
+		if snap.ID == snapshotId {
+			theSnapshot = snap
+			break
+		}
+	}
+	if theSnapshot == nil {
+		return &gophercloud.ErrUnexpectedResponseCode{
+			BaseError: gophercloud.BaseError{
+				Info: fmt.Sprintf("snapshot %q does not exist", snapshotId),
+			},
+			Actual: http.StatusNotFound,
+		}
+	}
+	if theSnapshot.ShareID != shareId {
+		return &gophercloud.ErrUnexpectedResponseCode{
+			BaseError: gophercloud.BaseError{
+				Info: fmt.Sprintf("snapshot %q does not belong to share %q", snapshotId, shareId),
+			},
+			Actual: http.StatusBadRequest,
+		}
+	}
+
+	// Set share status to "reverting"
+	for _, arr := range s.shares {
+		for _, share := range arr {
+			if share.ID == shareId {
+				share.Status = "reverting"
+				return nil
+			}
+		}
+	}
+
+	return &gophercloud.ErrUnexpectedResponseCode{
+		BaseError: gophercloud.BaseError{
+			Info: fmt.Sprintf("share %q does not exist", shareId),
+		},
+		Actual: http.StatusNotFound,
+	}
 }

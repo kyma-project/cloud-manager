@@ -13,6 +13,7 @@ type Clients interface {
 	sapclient.PortClient
 	sapclient.RouterClient
 	sapclient.ShareClient
+	sapclient.SnapshotClient
 	sapclient.SubnetClient
 }
 
