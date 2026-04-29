@@ -348,7 +348,6 @@ func reflectingClose(obj any) error {
 	}
 
 	for _, field := range val.Fields() {
-		field := field
 		if field.IsZero() {
 			continue
 		}

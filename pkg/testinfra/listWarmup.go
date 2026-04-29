@@ -30,7 +30,7 @@ func WarmupList(ctx context.Context, group string, skipKinds []string, c client.
 	}
 
 	wg.Add(workerCount)
-	for i := 0; i < workerCount; i++ {
+	for range workerCount {
 		go worker(ctx, jobs, &wg)
 	}
 
