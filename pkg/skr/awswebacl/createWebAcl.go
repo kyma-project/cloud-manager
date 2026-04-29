@@ -15,7 +15,7 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 	webAcl := state.ObjAsAwsWebAcl()
 
 	// Skip if already exists
-	if webAcl.Status.Arn != "" {
+	if state.awsWebAcl != nil {
 		return nil, ctx
 	}
 

@@ -12,11 +12,6 @@ func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context)
 	logger := composed.LoggerFromCtx(ctx)
 	webAcl := state.ObjAsAwsWebAcl()
 
-	// Skip if no ARN yet (not created)
-	if webAcl.Status.Arn == "" {
-		return nil, ctx
-	}
-
 	logger.Info("Loading AWS WebACL")
 
 	scope := ScopeRegional()

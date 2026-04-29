@@ -26,7 +26,6 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
-	"github.com/kyma-project/cloud-manager/pkg/skr/awswebacl"
 	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -58,18 +57,6 @@ func (a *addAwsWebAclRule) Apply(obj client.Object) {
 
 func AddAwsWebAclRule(rule cloudresourcesv1beta1.AwsWebAclRule) ObjAction {
 	return &addAwsWebAclRule{rule: rule}
-}
-
-type setAwsWebAclLogging struct {
-	loggingConfig *cloudresourcesv1beta1.AwsWebAclLoggingConfiguration
-}
-
-func (a *setAwsWebAclLogging) Apply(obj client.Object) {
-	obj.(*cloudresourcesv1beta1.AwsWebAcl).Spec.LoggingConfiguration = a.loggingConfig
-}
-
-func SetAwsWebAclLogging(loggingConfig *cloudresourcesv1beta1.AwsWebAclLoggingConfiguration) ObjAction {
-	return &setAwsWebAclLogging{loggingConfig: loggingConfig}
 }
 
 var _ = Describe("AwsWebAcl Controller", func() {
@@ -116,14 +103,6 @@ var _ = Describe("AwsWebAcl Controller", func() {
 					CloudWatchMetricsEnabled: true,
 					MetricName:               "TestAppWAFMetrics",
 					SampledRequestsEnabled:   true,
-				},
-				LoggingConfiguration: &cloudresourcesv1beta1.AwsWebAclLoggingConfiguration{
-					Enabled: true,
-					RedactedFields: []cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-						{
-							SingleHeader: "authorization",
-						},
-					},
 				},
 				Rules: []cloudresourcesv1beta1.AwsWebAclRule{
 					{
@@ -204,24 +183,6 @@ var _ = Describe("AwsWebAcl Controller", func() {
 			Expect(*awsWebACL.Rules[0].Name).To(Equal("AWS-AWSManagedRulesBotControlRuleSet"))
 			Expect(*awsWebACL.Rules[1].Name).To(Equal("AWS-AWSManagedRulesCommonRuleSet"))
 			Expect(awsWebACL.Capacity).To(Equal(int64(100)), "expected capacity to be 100")
-		})
-
-		By("And Then logging configuration exists in AWS", func() {
-			loggingConfig, err := awsMockLocal.GetLoggingConfiguration(infra.Ctx(), awsWebAcl.Status.Arn)
-			Expect(err).NotTo(HaveOccurred(), "expected logging configuration to exist")
-			Expect(loggingConfig).NotTo(BeNil())
-			Expect(*loggingConfig.ResourceArn).To(Equal(awsWebAcl.Status.Arn))
-			Expect(loggingConfig.RedactedFields).To(HaveLen(1), "expected 1 redacted field")
-			Expect(loggingConfig.RedactedFields[0].SingleHeader).NotTo(BeNil())
-			Expect(*loggingConfig.RedactedFields[0].SingleHeader.Name).To(Equal("authorization"))
-		})
-
-		By("And Then CloudWatch log group exists", func() {
-			expectedLogGroupName := awswebacl.ManagedLogGroupName(awsWebAcl)
-			logGroup, err := awsMockLocal.GetLogGroup(infra.Ctx(), expectedLogGroupName)
-			Expect(err).NotTo(HaveOccurred(), "expected log group to exist")
-			Expect(logGroup).NotTo(BeNil())
-			Expect(*logGroup.LogGroupName).To(Equal(expectedLogGroupName))
 		})
 
 		id := awsutil.ParseArnResourceId(awsWebAcl.Status.Arn)
@@ -310,47 +271,6 @@ var _ = Describe("AwsWebAcl Controller", func() {
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
-		})
-
-		By("When AwsWebAcl logging is disabled", func() {
-			Eventually(Update).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAcl,
-					SetAwsWebAclLogging(&cloudresourcesv1beta1.AwsWebAclLoggingConfiguration{
-						Enabled: false,
-					}),
-				).Should(Succeed())
-		})
-
-		By("Then AwsWebAcl returns to Ready state after disabling logging", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), awsWebAcl,
-					NewObjActions(),
-					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-				).
-				Should(Succeed())
-		})
-
-		By("And Then logging configuration is removed from AWS", func() {
-			Eventually(func() error {
-				_, err := awsMockLocal.GetLoggingConfiguration(infra.Ctx(), awsWebAcl.Status.Arn)
-				if err == nil {
-					return fmt.Errorf("expected logging configuration to be removed")
-				}
-				return nil
-			}).Should(Succeed())
-		})
-
-		By("And Then CloudWatch log group is deleted", func() {
-			expectedLogGroupName := awswebacl.ManagedLogGroupName(awsWebAcl)
-			Eventually(func() bool {
-				_, err := awsMockLocal.GetLogGroup(infra.Ctx(), expectedLogGroupName)
-				if err == nil {
-					return false // Log group still exists
-				}
-				// Should be ResourceNotFoundException
-				return strings.Contains(err.Error(), "ResourceNotFoundException") || strings.Contains(err.Error(), "not found")
-			}).Should(BeTrue())
 		})
 
 		By("When AwsWebAcl is deleted", func() {

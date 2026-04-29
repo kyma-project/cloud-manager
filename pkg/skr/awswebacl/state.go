@@ -22,11 +22,6 @@ type State struct {
 	awsWebAcl    *wafv2types.WebACL // Loaded AWS WebACL
 	lockToken    string             // Transient lock token from loadWebAcl, not persisted
 	updateNeeded bool               // Whether update is needed based on spec vs AWS state
-
-	// Logging state
-	loggingConfig       *wafv2types.LoggingConfiguration
-	loggingUpdateNeeded bool
-	managedLogGroupName string
 }
 
 func newStateFactory(

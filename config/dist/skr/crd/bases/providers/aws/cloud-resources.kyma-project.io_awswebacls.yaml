@@ -167,74 +167,6 @@ spec:
                   description: Description provides context about the WebACL purpose
                   maxLength: 256
                   type: string
-                loggingConfiguration:
-                  description: LoggingConfiguration defines WAF request logging settings
-                  properties:
-                    destination:
-                      description: Destination specifies where logs are sent (CloudWatch Logs only)
-                      properties:
-                        cloudWatchLogs:
-                          description: AwsWebAclCloudWatchLogsConfig defines CloudWatch Logs destination
-                          properties:
-                            retentionDays:
-                              default: 30
-                              description: RetentionDays for auto-managed log groups
-                              enum:
-                                - 1
-                                - 3
-                                - 5
-                                - 7
-                                - 14
-                                - 30
-                                - 60
-                                - 90
-                                - 120
-                                - 150
-                                - 180
-                                - 365
-                                - 400
-                                - 545
-                                - 731
-                                - 1096
-                                - 1827
-                                - 2192
-                                - 2557
-                                - 2922
-                                - 3288
-                                - 3653
-                              format: int32
-                              type: integer
-                          type: object
-                      type: object
-                    enabled:
-                      default: false
-                      description: Enabled controls whether logging is active
-                      type: boolean
-                    redactedFields:
-                      description: RedactedFields specifies request fields to redact from logs (PII protection)
-                      items:
-                        maxProperties: 1
-                        minProperties: 1
-                        properties:
-                          body:
-                            description: Body matches the request body
-                            type: boolean
-                          method:
-                            description: Method matches the HTTP method
-                            type: boolean
-                          queryString:
-                            description: QueryString matches the query string
-                            type: boolean
-                          singleHeader:
-                            description: SingleHeader matches a specific header by name
-                            type: string
-                          uriPath:
-                            description: UriPath matches the URI path
-                            type: boolean
-                        type: object
-                      maxItems: 100
-                      type: array
-                  type: object
                 rules:
                   description: Rules define the filtering logic (evaluated by priority order)
                   items:
@@ -7138,21 +7070,6 @@ spec:
                   x-kubernetes-list-map-keys:
                     - type
                   x-kubernetes-list-type: map
-                loggingStatus:
-                  description: LoggingStatus tracks logging configuration state
-                  properties:
-                    enabled:
-                      type: boolean
-                    lastConfigured:
-                      format: date-time
-                      type: string
-                    logDestinationArn:
-                      type: string
-                    managedLogGroup:
-                      type: boolean
-                  required:
-                    - enabled
-                  type: object
                 observedGeneration:
                   format: int64
                   type: integer
