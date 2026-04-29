@@ -108,53 +108,67 @@
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshot_controller.go` with `SapNfsVolumeSnapshotReconciler`, `SapNfsVolumeSnapshotReconcilerFactory`, RBAC markers, and `SetupSapNfsVolumeSnapshotReconciler()` that registers with `SkrRegistry`
   - _Requirements: 1.1_
 
-- [ ] 8. SapNfsVolumeSnapshotRestore reconciler
-- [ ] 8.1 Create state and reconciler skeleton
+- [ ] 8. SapNfsVolumeSnapshot controller tests
+  - Register `SetupSapNfsVolumeSnapshotReconciler` in `internal/controller/cloud-resources/suite_test.go`
+  - Create `internal/controller/cloud-resources/sapnfsvolumesnapshot_test.go` using testinfra with `Eventually`/`LoadAndCheck`:
+    - Create and delete: create snapshot → verify Manila snapshot created → mock `available` → verify Ready + sizeGb → delete → verify Manila snapshot deleted → finalizer removed
+    - TTL expiry: create with `deleteAfterDays: 1` → advance fake clock → verify deletion triggered → verify removed
+  - _Requirements: 1.1, 1.4, 1.7, 2.1, 2.2_
+
+- [ ] 9. SapNfsVolumeSnapshotRestore reconciler
+- [ ] 9.1 Create state and reconciler skeleton
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/state.go` with `State` struct (fields for `Scope`, `SourceSnapshot`, `DestinationVolume`, `CreatedVolume`, `sapClient`, `provider`), `StateFactory`, `NewStateFactory()`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/reconcile.go` with `Reconciler`, `Run()`, `newAction()` wiring all actions (feature load, loadObj, loadScope, clientCreate, finalizer, sourceSnapshotLoad, IfElse non-delete/delete, within non-delete IfElse in-place/new-volume paths, StopAndForget)
   - _Requirements: 3.10, 3.12_
 
-- [ ] 8.2 Implement `loadScope`, `clientCreate`, and `sourceSnapshotLoad` actions
+- [ ] 9.2 Implement `loadScope`, `clientCreate`, and `sourceSnapshotLoad` actions
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/loadScope.go` — load Scope from KCP cluster
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/clientCreate.go` — construct SAP client
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/sourceSnapshotLoad.go` — load `SapNfsVolumeSnapshot`, validate `Ready` state
   - _Requirements: 3.2, 3.11_
 
-- [ ] 8.3 Implement in-place restore actions
+- [ ] 9.3 Implement in-place restore actions
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/destinationVolumeLoad.go` — load destination `SapNfsVolume`, resolve shareId from KCP `NfsInstance`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/validateInPlace.go` — validate snapshot belongs to destination volume and is the most recent snapshot
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/restoreInPlace.go` — call `RevertShareToSnapshot()` with microversion 2.27, set state `InProgress`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/restoreInPlaceWait.go` — poll share status until `available` or `reverting_error`
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.10_
 
-- [ ] 8.4 Implement new-volume restore actions
+- [ ] 9.4 Implement new-volume restore actions
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/restoreNewVolume.go` — create `SapNfsVolume` CR with snapshot-id annotation from template
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/restoreNewVolumeWait.go` — wait for new `SapNfsVolume` to reach `Ready`, record `createdVolume` in status
   - _Requirements: 3.5, 3.6, 3.7, 3.8_
 
-- [ ] 8.5 Implement status actions
+- [ ] 9.5 Implement status actions
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/statusDone.go` — set state `Done`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/statusFailed.go` — set state `Failed`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/statusInProgress.go` — set state `InProgress`
   - _Requirements: 3.3, 3.4, 3.8, 3.10, 3.11_
 
-- [ ] 8.6 Wire controller: create `SapNfsVolumeSnapshotRestore` controller setup
+- [ ] 9.6 Wire controller: create `SapNfsVolumeSnapshotRestore` controller setup
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotrestore_controller.go` with reconciler struct, factory, RBAC markers, and `SetupSapNfsVolumeSnapshotRestoreReconciler()`
   - _Requirements: 3.12_
 
-- [ ] 9. Existing reconciler changes for snapshot-based volume creation
-- [ ] 9.1 Propagate snapshot ID through SapNfsVolume → NfsInstance → Manila
+- [ ] 10. SapNfsVolumeSnapshotRestore controller tests
+  - Register `SetupSapNfsVolumeSnapshotRestoreReconciler` in `internal/controller/cloud-resources/suite_test.go`
+  - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotrestore_test.go`:
+    - In-place revert: create restore targeting existing volume → verify revert API called → mock `available` → verify Done
+    - New-volume restore: create restore with newVolume → verify SapNfsVolume created with snapshot-id annotation → wait Ready → verify Done + createdVolume
+  - _Requirements: 3.1, 3.3, 3.5, 3.7_
+
+- [ ] 11. Existing reconciler changes for snapshot-based volume creation
+- [ ] 11.1 Propagate snapshot ID through SapNfsVolume → NfsInstance → Manila
   - Modify `pkg/skr/sapnfsvolume/kcpNfsInstanceCreate.go` to read `AnnotationSnapshotId` from the SapNfsVolume and set `SnapshotId` on `NfsInstanceOpenStack`
   - Modify `pkg/kcp/provider/sap/nfsinstance/shareCreate.go` to read `SnapshotId` from `NfsInstance.Spec.Instance.OpenStack` and pass it to `CreateShareOp()` instead of hardcoded `""`
   - _Requirements: 3.6 (new-volume restore depends on this plumbing)_
 
-- [ ] 10. SapNfsVolumeSnapshotSchedule reconciler
-- [ ] 10.1 Create state and reconciler skeleton
+- [ ] 12. SapNfsVolumeSnapshotSchedule reconciler
+- [ ] 12.1 Create state and reconciler skeleton
   - Create `pkg/skr/sapnfssnapshotschedule/state.go` with `State` struct implementing `backupschedule.ScheduleState` interface (all methods: `ObjAsBackupSchedule`, `GetScheduleCalculator`, `GetCronExpression`, `SetCronExpression`, `GetNextRunTime`, `SetNextRunTime`, `IsCreateRunCompleted`, `SetCreateRunCompleted`, `IsDeleteRunCompleted`, `SetDeleteRunCompleted`), plus provider-specific fields
   - Create `pkg/skr/sapnfssnapshotschedule/reconcile.go` with `Reconciler`, `Run()`, `NewReconciler()`, and `newAction()` composing shared `backupschedule.*` actions and SAP-specific actions (loadSnapshots, loadScope, loadSource, createSnapshot, deleteSnapshots, setStatusToActive, deleteCascade)
   - _Requirements: 4.1, 4.2, 4.10_
 
-- [ ] 10.2 Implement schedule-specific actions
+- [ ] 12.2 Implement schedule-specific actions
   - Create `pkg/skr/sapnfssnapshotschedule/loadSnapshots.go` — list `SapNfsVolumeSnapshot` CRs by schedule labels
   - Create `pkg/skr/sapnfssnapshotschedule/loadScope.go` — load Scope from KCP cluster
   - Create `pkg/skr/sapnfssnapshotschedule/loadSource.go` — load source `SapNfsVolume`, validate Ready
@@ -164,34 +178,18 @@
   - Create `pkg/skr/sapnfssnapshotschedule/setStatusToActive.go` — set schedule state to Active
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9_
 
-- [ ] 10.3 Wire controller: create `SapNfsVolumeSnapshotSchedule` controller setup
+- [ ] 12.3 Wire controller: create `SapNfsVolumeSnapshotSchedule` controller setup
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotschedule_controller.go` with reconciler struct, factory, RBAC markers, and `SetupSapNfsVolumeSnapshotScheduleReconciler()`
   - _Requirements: 4.10_
 
-- [ ] 11. Controller tests
-- [ ] 11.1 Register all three new reconcilers in test suite
-  - Add `SetupSapNfsVolumeSnapshotReconciler`, `SetupSapNfsVolumeSnapshotRestoreReconciler`, and `SetupSapNfsVolumeSnapshotScheduleReconciler` calls to `internal/controller/cloud-resources/suite_test.go`
-  - _Requirements: all_
-
-- [ ] 11.2 Write SapNfsVolumeSnapshot controller tests
-  - Create `internal/controller/cloud-resources/sapnfsvolumesnapshot_test.go` using testinfra with `Eventually`/`LoadAndCheck`:
-    - Create and delete: create snapshot → verify Manila snapshot created → mock `available` → verify Ready + sizeGb → delete → verify Manila snapshot deleted → finalizer removed
-    - TTL expiry: create with `deleteAfterDays: 1` → advance fake clock → verify deletion triggered → verify removed
-  - _Requirements: 1.1, 1.4, 1.7, 2.1, 2.2_
-
-- [ ] 11.3 Write SapNfsVolumeSnapshotRestore controller tests
-  - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotrestore_test.go`:
-    - In-place revert: create restore targeting existing volume → verify revert API called → mock `available` → verify Done
-    - New-volume restore: create restore with newVolume → verify SapNfsVolume created with snapshot-id annotation → wait Ready → verify Done + createdVolume
-  - _Requirements: 3.1, 3.3, 3.5, 3.7_
-
-- [ ] 11.4 Write SapNfsVolumeSnapshotSchedule controller tests
+- [ ] 13. SapNfsVolumeSnapshotSchedule controller tests
+  - Register `SetupSapNfsVolumeSnapshotScheduleReconciler` in `internal/controller/cloud-resources/suite_test.go`
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotschedule_test.go`:
     - Recurring schedule with cascade delete: create schedule with cron → verify snapshots created → delete schedule with `deleteCascade: true` → verify all snapshots deleted
     - One-time schedule: create without cron → verify single snapshot created → verify Done
     - Retention count-based: create snapshots exceeding `maxReadySnapshots` → verify oldest evicted
   - _Requirements: 4.1, 4.2, 4.8, 4.9_
 
-- [ ] 12. Build verification
-- [ ] 12.1 Run `make manifests` and `make test` to verify everything compiles, CRDs generate, and all tests pass
+- [ ] 14. Build verification
+- [ ] 14.1 Run `make manifests` and `make test` to verify everything compiles, CRDs generate, and all tests pass
   - _Requirements: all_
