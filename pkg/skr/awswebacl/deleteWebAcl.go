@@ -3,6 +3,7 @@ package awswebacl
 import (
 	"context"
 
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 )
@@ -58,7 +59,16 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 			logger.Info("WebACL not found in AWS, considering as deleted")
 			return nil, ctx
 		}
-		return composed.LogErrorAndReturn(err, "Error deleting WebACL", composed.StopWithRequeue, ctx)
+
+		logger.Error(err, "Error deleting WebACL")
+
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+				acl.SetStatusProviderError(err.Error())
+			}).
+			OnSuccess(composed.Requeue).
+			OnStatusChanged(composed.Log("AwsWebAcl ProviderError")).
+			Run(ctx, state.Cluster().K8sClient())
 	}
 
 	logger.Info("WebACL deleted successfully")
