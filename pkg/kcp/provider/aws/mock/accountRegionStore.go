@@ -63,18 +63,6 @@ func (s *accountRegionStore) ListWebACLs(ctx context.Context, scope wafv2types.S
 	return s.webAclStore.ListWebACLs(ctx, scope)
 }
 
-func (s *accountRegionStore) PutLoggingConfiguration(ctx context.Context, input *wafv2.PutLoggingConfigurationInput) error {
-	return s.webAclStore.PutLoggingConfiguration(ctx, input)
-}
-
-func (s *accountRegionStore) GetLoggingConfiguration(ctx context.Context, resourceArn string) (*wafv2types.LoggingConfiguration, error) {
-	return s.webAclStore.GetLoggingConfiguration(ctx, resourceArn)
-}
-
-func (s *accountRegionStore) DeleteLoggingConfiguration(ctx context.Context, resourceArn string) error {
-	return s.webAclStore.DeleteLoggingConfiguration(ctx, resourceArn)
-}
-
 // CloudWatch Logs adapter methods
 func (s *accountRegionStore) CreateLogGroup(ctx context.Context, logGroupName string) error {
 	return s.logsStore.CreateLogGroup(ctx, logGroupName)

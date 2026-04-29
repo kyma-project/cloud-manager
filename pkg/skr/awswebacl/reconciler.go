@@ -82,17 +82,10 @@ func (r *reconciler) newAction() composed.Action {
 				createWebAcl,
 				checkUpdateNeeded,
 				updateWebAcl,
-				// Logging configuration (after WebACL creation)
-				loadLoggingConfiguration,
-				ensureLogGroup,
-				configureLogging,
 				updateStatus,
 			),
 			composed.ComposeActions(
 				"awsWebAcl-delete",
-				// Logging cleanup (before WebACL deletion)
-				deleteLoggingConfiguration,
-				deleteLogGroupIfManaged,
 				deleteWebAcl,
 				actions.RemoveCommonFinalizer(),
 				composed.StopAndForgetAction,
