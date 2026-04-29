@@ -14,8 +14,7 @@ import (
 )
 
 func TestApiDisabled(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiDisabled.yaml"))
 	assert.NoError(t, err)

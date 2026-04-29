@@ -106,7 +106,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
 				[]ec2types.RouteTableAssociation{
 					{
-						Main: ptr.To(true),
+						Main: new(true),
 					},
 				})
 
@@ -151,7 +151,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags(),
 				[]ec2types.RouteTableAssociation{
 					{
-						Main: ptr.To(true),
+						Main: new(true),
 					},
 				})
 
@@ -431,7 +431,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
 				[]ec2types.RouteTableAssociation{
 					{
-						Main: ptr.To(true),
+						Main: new(true),
 					},
 				})
 
@@ -459,7 +459,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags(),
 				[]ec2types.RouteTableAssociation{
 					{
-						Main: ptr.To(true),
+						Main: new(true),
 					},
 				})
 
@@ -668,7 +668,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
 				[]ec2types.RouteTableAssociation{
 					{
-						Main: ptr.To(true),
+						Main: new(true),
 					},
 				})
 
@@ -696,7 +696,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags(),
 				[]ec2types.RouteTableAssociation{
 					{
-						Main: ptr.To(true),
+						Main: new(true),
 					},
 				})
 
@@ -920,7 +920,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags(fmt.Sprintf("kubernetes.io/cluster/%s", vpcName), "1"),
 				[]ec2types.RouteTableAssociation{
 					{
-						Main: ptr.To(true),
+						Main: new(true),
 					},
 				})
 
@@ -955,7 +955,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 				awsutil.Ec2Tags(),
 				[]ec2types.RouteTableAssociation{
 					{
-						Main: ptr.To(true),
+						Main: new(true),
 					},
 				})
 

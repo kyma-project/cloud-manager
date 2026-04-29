@@ -29,13 +29,13 @@ func Path(subPath string, actions ...PathAction) PathAction {
 //	}
 //}
 
-func DefaultScalar(scalar interface{}) PathAction {
+func DefaultScalar(scalar any) PathAction {
 	return func(cfg Config, path string) {
 		cfg.DefaultScalar(path, scalar)
 	}
 }
 
-func DefaultObj(obj interface{}) PathAction {
+func DefaultObj(obj any) PathAction {
 	return func(cfg Config, path string) {
 		cfg.DefaultObj(path, obj)
 	}
@@ -59,7 +59,7 @@ func SourceEnv(envVarPrefix string) PathAction {
 	}
 }
 
-func Bind(obj interface{}) PathAction {
+func Bind(obj any) PathAction {
 	return func(cfg Config, path string) {
 		cfg.Bind(path, obj)
 	}

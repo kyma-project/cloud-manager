@@ -55,7 +55,7 @@ func (c *config) GetAsString(path string) string {
 	return gjson.Get(c.js, path).String()
 }
 
-func (c *config) DefaultScalar(path string, scalar interface{}) {
+func (c *config) DefaultScalar(path string, scalar any) {
 	changed, err := sjson.Set(c.defaults, path, scalar)
 	if err != nil {
 		return
@@ -63,7 +63,7 @@ func (c *config) DefaultScalar(path string, scalar interface{}) {
 	c.defaults = changed
 }
 
-func (c *config) DefaultObj(path string, obj interface{}) {
+func (c *config) DefaultObj(path string, obj any) {
 	js, err := json.Marshal(obj)
 	if err != nil {
 		return
@@ -229,7 +229,7 @@ func (c *config) PrintJson() string {
 
 func (c *config) PrintYaml() string {
 	js := c.js
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	err := json.Unmarshal([]byte(js), &data)
 	if err != nil {
 		return fmt.Sprintf("error unmarshaling josn: %v", err)

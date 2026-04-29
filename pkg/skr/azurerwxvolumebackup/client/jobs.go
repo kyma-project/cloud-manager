@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"strings"
 	"time"
@@ -29,7 +28,7 @@ func NewJobsClient(bjc *armrecoveryservicesbackup.BackupJobsClient, jdc *armreco
 // If a job is in progress and the destination folder is not populated yet, it returns true as second return value which indicates that this should be retried at a later time
 func (c jobsClient) FindRestoreJobId(ctx context.Context, vaultName string, resourceGroupName string, fileShareName string, startFilter string, restoreFolderPath string) (*string, bool, error) {
 	backupJobsClientOptions := armrecoveryservicesbackup.BackupJobsClientListOptions{
-		Filter: to.Ptr(fmt.Sprintf("backupManagementType eq 'AzureStorage' and operation eq 'Restore' and startTime ge %v", startFilter)),
+		Filter: new(fmt.Sprintf("backupManagementType eq 'AzureStorage' and operation eq 'Restore' and startTime ge %v", startFilter)),
 	}
 	pager := c.NewListPager(vaultName, resourceGroupName, &backupJobsClientOptions)
 	retry := false
@@ -85,7 +84,7 @@ func (c jobsClient) GetLastBackupJobStartTime(ctx context.Context, vaultName str
 	resourceGroupName string, fileShareName string, startTime time.Time) (*time.Time, error) {
 	var lastStartTime *time.Time
 	backupJobsClientOptions := armrecoveryservicesbackup.BackupJobsClientListOptions{
-		Filter: to.Ptr(fmt.Sprintf("backupManagementType eq 'AzureStorage' and operation eq 'Backup' and startTime eq '%v'", ToStorageJobTimeFilter(startTime))),
+		Filter: new(fmt.Sprintf("backupManagementType eq 'AzureStorage' and operation eq 'Backup' and startTime eq '%v'", ToStorageJobTimeFilter(startTime))),
 	}
 	pager := c.NewListPager(vaultName, resourceGroupName, &backupJobsClientOptions)
 	if pager.More() {
@@ -114,7 +113,7 @@ func (c jobsClient) GetLastBackupJobStartTime(ctx context.Context, vaultName str
 func (c jobsClient) FindNextBackupJobId(ctx context.Context, vaultName string,
 	resourceGroupName string, fileShareName string, startTime time.Time) (*string, error) {
 	backupJobsClientOptions := armrecoveryservicesbackup.BackupJobsClientListOptions{
-		Filter: to.Ptr(fmt.Sprintf("backupManagementType eq 'AzureStorage' "+
+		Filter: new(fmt.Sprintf("backupManagementType eq 'AzureStorage' "+
 			"and operation eq 'Backup' and startTime eq '%v'", ToStorageJobTimeFilter(startTime))),
 	}
 	var jobIds []string

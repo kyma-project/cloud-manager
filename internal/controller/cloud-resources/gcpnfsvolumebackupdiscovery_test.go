@@ -12,7 +12,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -45,7 +44,7 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				NetworkResource: &computepb.Network{
-					Name: ptr.To(vpcNetworkName),
+					Name: new(vpcNetworkName),
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())
@@ -61,12 +60,12 @@ var _ = Describe("Feature: SKR GcpNfsVolumeBackupDiscovery", func() {
 			op, err := gcpMock.InsertGlobalAddress(infra.Ctx(), &computepb.InsertGlobalAddressRequest{
 				Project: gcpMock.ProjectId(),
 				AddressResource: &computepb.Address{
-					Name:         ptr.To(addressName),
-					Address:      ptr.To("10.251.0.0"),
-					PrefixLength: ptr.To(int32(16)),
-					Network:      ptr.To(net.GetSelfLink()),
-					AddressType:  ptr.To(computepb.Address_INTERNAL.String()),
-					Purpose:      ptr.To(computepb.Address_VPC_PEERING.String()),
+					Name:         new(addressName),
+					Address:      new("10.251.0.0"),
+					PrefixLength: new(int32(16)),
+					Network:      new(net.GetSelfLink()),
+					AddressType:  new(computepb.Address_INTERNAL.String()),
+					Purpose:      new(computepb.Address_VPC_PEERING.String()),
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())

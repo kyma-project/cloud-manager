@@ -36,7 +36,7 @@ func createAwsBackup(ctx context.Context, st composed.State) (error, context.Con
 		IamRoleArn:        awsutil.RoleArnBackup(state.Scope().Spec.Scope.Aws.AccountId),
 		ResourceArn:       state.GetFileSystemArn(),
 		RecoveryPointTags: state.GetTags(),
-		IdempotencyToken:  ptr.To(backup.Status.IdempotencyToken),
+		IdempotencyToken:  new(backup.Status.IdempotencyToken),
 	})
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating AWS Backup ", composed.StopWithRequeueDelay(time.Second), ctx)

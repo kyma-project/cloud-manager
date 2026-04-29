@@ -29,19 +29,19 @@ func createParameterGroup(getParamGroup func(*State) *elasticachetypes.CachePara
 		out, err := state.awsClient.CreateElastiCacheParameterGroup(ctx, name, family, []elasticachetypes.Tag{
 			{
 				Key:   ptr.To(common.TagCloudManagerRemoteName),
-				Value: ptr.To(redisInstance.Spec.RemoteRef.String()),
+				Value: new(redisInstance.Spec.RemoteRef.String()),
 			},
 			{
 				Key:   ptr.To(common.TagCloudManagerName),
-				Value: ptr.To(state.Name().String()),
+				Value: new(state.Name().String()),
 			},
 			{
 				Key:   ptr.To(common.TagScope),
-				Value: ptr.To(redisInstance.Spec.Scope.Name),
+				Value: new(redisInstance.Spec.Scope.Name),
 			},
 			{
 				Key:   ptr.To(common.TagShoot),
-				Value: ptr.To(state.Scope().Spec.ShootName),
+				Value: new(state.Scope().Spec.ShootName),
 			},
 		})
 		if err != nil {

@@ -340,15 +340,14 @@ type closeable interface {
 func reflectingClose(obj any) error {
 	var result error
 	val := reflect.ValueOf(obj)
-	if val.Kind() == reflect.Ptr {
+	if val.Kind() == reflect.Pointer {
 		val = val.Elem()
 	}
 	if val.Kind() != reflect.Struct {
 		return errors.New("expected a struct")
 	}
 
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
+	for _, field := range val.Fields() {
 		if field.IsZero() {
 			continue
 		}

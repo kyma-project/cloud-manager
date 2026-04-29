@@ -57,7 +57,7 @@ func TestObjectGroupVersionInfo(t *testing.T) {
 
 	gCrd := "apiextensions.k8s.io"
 	kCrd := "CustomResourceDefinition"
-	baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]interface{}{}}
+	baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]any{}}
 	baseCrdUnstructured.SetAPIVersion(gCrd + "/v1")
 	baseCrdUnstructured.SetKind(kCrd)
 
