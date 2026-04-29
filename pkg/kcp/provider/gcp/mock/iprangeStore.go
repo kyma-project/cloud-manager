@@ -8,7 +8,6 @@ import (
 	"github.com/googleapis/gax-go/v2"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/servicenetworking/v1"
-	"google.golang.org/protobuf/proto"
 )
 
 type iprangeStore struct {
@@ -78,7 +77,7 @@ func (s *iprangeStore) GetComputeGlobalOperation(ctx context.Context, req *compu
 	// Mock returns a DONE operation
 	status := computepb.Operation_DONE
 	return &computepb.Operation{
-		Name:   proto.String(req.Operation),
+		Name:   new(req.Operation),
 		Status: &status,
 	}, nil
 }

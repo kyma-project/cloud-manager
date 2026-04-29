@@ -54,8 +54,8 @@ func NewSimpleComputeOperationError(code, message string) *computepb.Error {
 	return &computepb.Error{
 		Errors: []*computepb.Errors{
 			{
-				Code:    ptr.To(code),
-				Message: ptr.To(message),
+				Code:    new(code),
+				Message: new(message),
 			},
 		},
 	}
@@ -77,8 +77,8 @@ func (s *store) ResolveComputeOperation(nd gcputil.NameDetail, httpErrorStatusCo
 		return gcpmeta.NewBadRequestError("operation %s is already done", nd.String())
 	}
 	op.Status = ptr.To(computepb.Operation_DONE)
-	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	op.Progress = ptr.To(int32(100))
+	op.EndTime = new(time.Now().Format(time.RFC3339))
+	op.Progress = new(int32(100))
 	op.Error = err
 	op.HttpErrorStatusCode = httpErrorStatusCode
 	op.HttpErrorMessage = httpErrorMessage
@@ -189,20 +189,20 @@ func (s *store) createComputeOperationNoLock(projectId, region, operationType, t
 	}
 	id := rand.Uint64()
 	op := &computepb.Operation{
-		Id:            ptr.To(id),
-		InsertTime:    ptr.To(time.Now().Format(time.RFC3339)),
-		Kind:          ptr.To("compute#operation"),
-		Name:          ptr.To(nd.ResourceId()),
-		OperationType: ptr.To(operationType),
-		Progress:      ptr.To(int32(1)),
-		SelfLink:      ptr.To(nd.PrefixWithGoogleApisComputeV1()),
+		Id:            new(id),
+		InsertTime:    new(time.Now().Format(time.RFC3339)),
+		Kind:          new("compute#operation"),
+		Name:          new(nd.ResourceId()),
+		OperationType: new(operationType),
+		Progress:      new(int32(1)),
+		SelfLink:      new(nd.PrefixWithGoogleApisComputeV1()),
 		Status:        ptr.To(computepb.Operation_RUNNING),
-		TargetId:      ptr.To(targetId),
-		TargetLink:    ptr.To(targetLink),
-		User:          ptr.To(fmt.Sprintf("user@%s.iam.gserviceaccount.com", projectId)),
+		TargetId:      new(targetId),
+		TargetLink:    new(targetLink),
+		User:          new(fmt.Sprintf("user@%s.iam.gserviceaccount.com", projectId)),
 	}
 	if region != "" {
-		op.Region = ptr.To(gcputil.NewRegionName(projectId, region).PrefixWithGoogleApisComputeV1())
+		op.Region = new(gcputil.NewRegionName(projectId, region).PrefixWithGoogleApisComputeV1())
 	}
 
 	s.computeOperations.Add(op, nd)

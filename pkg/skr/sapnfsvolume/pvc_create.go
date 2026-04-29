@@ -48,7 +48,7 @@ func pvcCreate(ctx context.Context, st composed.State) (error, context.Context) 
 					"storage": state.PV.Spec.Capacity["storage"],
 				},
 			},
-			StorageClassName: ptr.To(""),
+			StorageClassName: new(""),
 			VolumeMode:       ptr.To(corev1.PersistentVolumeFilesystem),
 		},
 	}

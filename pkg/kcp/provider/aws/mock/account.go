@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	"k8s.io/utils/ptr"
 )
 
 type StsClient interface {
@@ -84,7 +83,7 @@ func (a *account) GetCallerIdentity(ctx context.Context) (*sts.GetCallerIdentity
 		return nil, context.Canceled
 	}
 	return &sts.GetCallerIdentityOutput{
-		Account: ptr.To(a.accountId),
+		Account: new(a.accountId),
 		Arn:     nil,
 		UserId:  nil,
 	}, nil

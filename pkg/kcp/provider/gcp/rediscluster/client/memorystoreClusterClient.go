@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/utils/ptr"
-
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
@@ -79,8 +77,8 @@ func (c *memorystoreClient) CreateRedisClusterWithOptions(ctx context.Context, p
 		ClusterId: GetGcpMemoryStoreRedisClusterId(clusterId),
 		Cluster: &clusterpb.Cluster{
 			Name:         GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId),
-			ReplicaCount: ptr.To(options.ReplicaCount),
-			ShardCount:   ptr.To(options.ShardCount),
+			ReplicaCount: new(options.ReplicaCount),
+			ShardCount:   new(options.ShardCount),
 			NodeType:     clusterpb.NodeType(clusterpb.NodeType_value[options.NodeType]),
 			PscConfigs: []*clusterpb.PscConfig{{
 				Network: options.VPCNetworkFullName,
@@ -92,7 +90,7 @@ func (c *memorystoreClient) CreateRedisClusterWithOptions(ctx context.Context, p
 			TransitEncryptionMode:  clusterpb.TransitEncryptionMode_TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION,
 			ZoneDistributionConfig: &clusterpb.ZoneDistributionConfig{Mode: clusterpb.ZoneDistributionConfig_MULTI_ZONE},
 
-			DeletionProtectionEnabled: ptr.To(false),
+			DeletionProtectionEnabled: new(false),
 		},
 	}
 

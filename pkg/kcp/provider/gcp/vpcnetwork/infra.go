@@ -11,7 +11,6 @@ import (
 	"github.com/elliotchance/pie/v2"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
-	"k8s.io/utils/ptr"
 )
 
 type CreateInfraOption func(*createInfraOptions)
@@ -123,8 +122,8 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 		op, err := o.client.InsertNetwork(ctx, &computepb.InsertNetworkRequest{
 			Project: o.gcpProjectId,
 			NetworkResource: &computepb.Network{
-				Name:                  ptr.To(o.name),
-				AutoCreateSubnetworks: ptr.To(false),
+				Name:                  new(o.name),
+				AutoCreateSubnetworks: new(false),
 			},
 		})
 		if err != nil {
@@ -161,8 +160,8 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 			Project: o.gcpProjectId,
 			Region:  o.region,
 			RouterResource: &computepb.Router{
-				Name:    ptr.To(o.name),
-				Network: ptr.To(net.GetSelfLink()),
+				Name:    new(o.name),
+				Network: new(net.GetSelfLink()),
 			},
 		})
 		if err != nil {

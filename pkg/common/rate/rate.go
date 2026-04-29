@@ -10,7 +10,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/util/workqueue"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -105,15 +104,15 @@ func (r *ObjectRateLimiter) Forget(item client.Object) {
 func (r *ObjectRateLimiter) objectKey(obj client.Object) string {
 	var gk *schema.GroupKind
 	if obj.GetObjectKind().GroupVersionKind().Group != "" && obj.GetObjectKind().GroupVersionKind().Kind != "" {
-		gk = ptr.To(obj.GetObjectKind().GroupVersionKind().GroupKind())
+		gk = new(obj.GetObjectKind().GroupVersionKind().GroupKind())
 	} else if arr, _, err := commonscheme.KcpScheme.ObjectKinds(obj); err == nil {
-		gk = ptr.To(arr[0].GroupKind())
+		gk = new(arr[0].GroupKind())
 	} else if arr, _, err := commonscheme.SkrScheme.ObjectKinds(obj); err == nil {
-		gk = ptr.To(arr[0].GroupKind())
+		gk = new(arr[0].GroupKind())
 	} else if arr, _, err := commonscheme.GardenScheme.ObjectKinds(obj); err == nil {
-		gk = ptr.To(arr[0].GroupKind())
+		gk = new(arr[0].GroupKind())
 	} else {
-		gk = ptr.To(schema.GroupKind{Kind: fmt.Sprintf("%T", obj)})
+		gk = new(schema.GroupKind{Kind: fmt.Sprintf("%T", obj)})
 	}
 
 	key := fmt.Sprintf("%s/%s/%s", gk.String(), obj.GetNamespace(), obj.GetName())

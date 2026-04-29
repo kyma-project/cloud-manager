@@ -7,6 +7,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"maps"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -35,9 +36,7 @@ func WithAwsNfsVolumePvLabels(labels map[string]string) ObjAction {
 				if x.Spec.PersistentVolume.Labels == nil {
 					x.Spec.PersistentVolume.Labels = map[string]string{}
 				}
-				for k, v := range labels {
-					x.Spec.PersistentVolume.Labels[k] = v
-				}
+				maps.Copy(x.Spec.PersistentVolume.Labels, labels)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvLabels", obj))
@@ -55,9 +54,7 @@ func WithAwsNfsVolumePvAnnotations(annotations map[string]string) ObjAction {
 				if x.Spec.PersistentVolume.Annotations == nil {
 					x.Spec.PersistentVolume.Annotations = map[string]string{}
 				}
-				for k, v := range annotations {
-					x.Spec.PersistentVolume.Annotations[k] = v
-				}
+				maps.Copy(x.Spec.PersistentVolume.Annotations, annotations)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvAnnotations", obj))
@@ -90,9 +87,7 @@ func WithAwsNfsVolumePvcLabels(labels map[string]string) ObjAction {
 				if x.Spec.PersistentVolumeClaim.Labels == nil {
 					x.Spec.PersistentVolumeClaim.Labels = map[string]string{}
 				}
-				for k, v := range labels {
-					x.Spec.PersistentVolumeClaim.Labels[k] = v
-				}
+				maps.Copy(x.Spec.PersistentVolumeClaim.Labels, labels)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvcLabels", obj))
@@ -110,9 +105,7 @@ func WithAwsNfsVolumePvcAnnotations(annotations map[string]string) ObjAction {
 				if x.Spec.PersistentVolumeClaim.Annotations == nil {
 					x.Spec.PersistentVolumeClaim.Annotations = map[string]string{}
 				}
-				for k, v := range annotations {
-					x.Spec.PersistentVolumeClaim.Annotations[k] = v
-				}
+				maps.Copy(x.Spec.PersistentVolumeClaim.Annotations, annotations)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsNfsVolumePvcAnnotations", obj))

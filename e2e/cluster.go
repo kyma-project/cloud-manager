@@ -34,7 +34,7 @@ type ClusterEvaluationHandle interface {
 	// Get returns resource declared with the given alias from the cache. If resource does not exist, the nil object
 	// and no error are returned. Also, if kind is not registered, nil resource and no error are returned.
 	// Error is returned only if it's some other than NotFound and NoMatch
-	Get(ctx context.Context, alias string) (map[string]interface{}, error)
+	Get(ctx context.Context, alias string) (map[string]any, error)
 
 	RestMapping(alias string) (*meta.RESTMapping, error)
 }
@@ -194,7 +194,7 @@ func (c *defaultCluster) RestMapping(alias string) (*meta.RESTMapping, error) {
 	return mapping, nil
 }
 
-func (c *defaultCluster) Get(ctx context.Context, alias string) (map[string]interface{}, error) {
+func (c *defaultCluster) Get(ctx context.Context, alias string) (map[string]any, error) {
 	ri, ok := c.resources[alias]
 	if !ok {
 		return nil, fmt.Errorf("alias %s not declared", alias)

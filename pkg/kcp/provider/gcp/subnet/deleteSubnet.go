@@ -11,7 +11,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 )
 
 func deleteSubnet(ctx context.Context, st composed.State) (error, context.Context) {
@@ -31,7 +30,7 @@ func deleteSubnet(ctx context.Context, st composed.State) (error, context.Contex
 		Project:    gcpScope.Project,
 		Region:     region,
 		Subnetwork: GetSubnetShortName(state.Obj().GetName()),
-		RequestId:  ptr.To(uuid.NewString()),
+		RequestId:  new(uuid.NewString()),
 	})
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {

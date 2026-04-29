@@ -269,7 +269,7 @@ var _ = Describe("Feature: KCP Subscription", func() {
 		)
 
 		secret, credentialsBinding, subscription := commonInit(provider, subscriptionName, map[string][]byte{
-			"serviceaccount.json": []byte(fmt.Sprintf(`{"project_id":"%s"}`, gcpProjectId)),
+			"serviceaccount.json": fmt.Appendf(nil, `{"project_id":"%s"}`, gcpProjectId),
 		})
 
 		By("When KCP Subscription is created", func() {

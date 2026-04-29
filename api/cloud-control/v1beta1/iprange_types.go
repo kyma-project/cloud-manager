@@ -17,6 +17,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	"slices"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
@@ -158,13 +160,7 @@ func (in IpRangeSubnets) Equals(other IpRangeSubnets) bool {
 		return false
 	}
 	for _, mine := range in {
-		found := false
-		for _, his := range other {
-			if mine == his {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(other, mine)
 		if !found {
 			return false
 		}

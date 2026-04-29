@@ -5,7 +5,6 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 )
 
 func exposedDataSaveToScope(ctx context.Context, st composed.State) (error, context.Context) {
@@ -15,7 +14,7 @@ func exposedDataSaveToScope(ctx context.Context, st composed.State) (error, cont
 		return nil, ctx
 	}
 
-	state.ObjAsScope().Status.ExposedData.ReadTime = ptr.To(metav1.Now())
+	state.ObjAsScope().Status.ExposedData.ReadTime = new(metav1.Now())
 
 	return composed.PatchStatus(state.ObjAsScope()).
 		ErrorLogMessage("Error updating exposed data").

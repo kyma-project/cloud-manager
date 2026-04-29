@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dnsresolver/armdnsresolver"
-	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -26,7 +25,7 @@ func (c *dnsResolverVNetLinkClient) CreateDnsResolverVNetLink(ctx context.Contex
 	parameters := armdnsresolver.VirtualNetworkLink{
 		Properties: &armdnsresolver.VirtualNetworkLinkProperties{
 			VirtualNetwork: &armdnsresolver.SubResource{
-				ID: ptr.To(vnetId),
+				ID: new(vnetId),
 			},
 		},
 	}

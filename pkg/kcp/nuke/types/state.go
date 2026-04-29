@@ -20,7 +20,7 @@ type ProviderResourceKindState struct {
 
 type ProviderResourceObject interface {
 	GetId() string
-	GetObject() interface{}
+	GetObject() any
 }
 
 type State interface {

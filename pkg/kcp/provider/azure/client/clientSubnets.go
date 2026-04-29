@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
-	"k8s.io/utils/ptr"
 )
 
 type SubnetsClient interface {
@@ -24,17 +23,17 @@ func NewSubnetsClient(svc *armnetwork.SubnetsClient) SubnetsClient {
 func NewSubnet(addressPrefix string, securityGroupId string, natGatewayId string) armnetwork.Subnet {
 	subnet := armnetwork.Subnet{
 		Properties: &armnetwork.SubnetPropertiesFormat{
-			AddressPrefix: ptr.To(addressPrefix),
+			AddressPrefix: new(addressPrefix),
 		},
 	}
 	if securityGroupId != "" {
 		subnet.Properties.NetworkSecurityGroup = &armnetwork.SecurityGroup{
-			ID: ptr.To(securityGroupId),
+			ID: new(securityGroupId),
 		}
 	}
 	if natGatewayId != "" {
 		subnet.Properties.NatGateway = &armnetwork.SubResource{
-			ID: ptr.To(natGatewayId),
+			ID: new(natGatewayId),
 		}
 	}
 	return subnet
