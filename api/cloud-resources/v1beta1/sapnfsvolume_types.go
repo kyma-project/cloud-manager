@@ -17,6 +17,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	"maps"
+
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -94,9 +96,7 @@ func (in *SapNfsVolume) GetPVName() string {
 func (in *SapNfsVolume) GetPVLabels() map[string]string {
 	result := make(map[string]string, 10)
 	if in.Spec.PersistentVolume != nil && in.Spec.PersistentVolume.Labels != nil {
-		for k, v := range in.Spec.PersistentVolume.Labels {
-			result[k] = v
-		}
+		maps.Copy(result, in.Spec.PersistentVolume.Labels)
 	}
 	result[LabelNfsVolName] = in.Name
 	result[LabelNfsVolNS] = in.Namespace
@@ -110,9 +110,7 @@ func (in *SapNfsVolume) GetPVAnnotations() map[string]string {
 		return nil
 	}
 	result := make(map[string]string, len(in.Spec.PersistentVolume.Annotations))
-	for k, v := range in.Spec.PersistentVolume.Annotations {
-		result[k] = v
-	}
+	maps.Copy(result, in.Spec.PersistentVolume.Annotations)
 	return result
 }
 
@@ -126,9 +124,7 @@ func (in *SapNfsVolume) GetPVCName() string {
 func (in *SapNfsVolume) GetPVCLabels() map[string]string {
 	result := make(map[string]string, 10)
 	if in.Spec.PersistentVolumeClaim != nil && in.Spec.PersistentVolumeClaim.Labels != nil {
-		for k, v := range in.Spec.PersistentVolumeClaim.Labels {
-			result[k] = v
-		}
+		maps.Copy(result, in.Spec.PersistentVolumeClaim.Labels)
 	}
 	result[LabelNfsVolName] = in.Name
 	result[LabelNfsVolNS] = in.Namespace
@@ -142,9 +138,7 @@ func (in *SapNfsVolume) GetPVCAnnotations() map[string]string {
 		return nil
 	}
 	result := make(map[string]string, len(in.Spec.PersistentVolumeClaim.Annotations))
-	for k, v := range in.Spec.PersistentVolumeClaim.Annotations {
-		result[k] = v
-	}
+	maps.Copy(result, in.Spec.PersistentVolumeClaim.Annotations)
 	return result
 }
 

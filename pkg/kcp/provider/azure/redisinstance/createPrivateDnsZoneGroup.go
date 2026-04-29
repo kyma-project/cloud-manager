@@ -33,9 +33,9 @@ func createPrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, c
 		Properties: &armnetwork.PrivateDNSZoneGroupPropertiesFormat{
 			PrivateDNSZoneConfigs: []*armnetwork.PrivateDNSZoneConfig{
 				{
-					Name: ptr.To(privateDnsZoneInstanceName),
+					Name: new(privateDnsZoneInstanceName),
 					Properties: &armnetwork.PrivateDNSZonePropertiesFormat{
-						PrivateDNSZoneID: ptr.To(azureutil.NewPrivateDnsZoneGroupResourceId(subscriptionId, resourceGroupName, privateDnsZoneInstanceName).String()),
+						PrivateDNSZoneID: new(azureutil.NewPrivateDnsZoneGroupResourceId(subscriptionId, resourceGroupName, privateDnsZoneInstanceName).String()),
 					},
 				},
 			},

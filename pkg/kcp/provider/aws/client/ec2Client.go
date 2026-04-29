@@ -71,8 +71,8 @@ func (c *ec2Client) CreateInternetGateway(ctx context.Context, name string) (*ec
 				ResourceType: ec2types.ResourceTypeInternetGateway,
 				Tags: []ec2types.Tag{
 					{
-						Key:   ptr.To("Name"),
-						Value: ptr.To(name),
+						Key:   new("Name"),
+						Value: new(name),
 					},
 				},
 			},
@@ -87,8 +87,8 @@ func (c *ec2Client) CreateInternetGateway(ctx context.Context, name string) (*ec
 
 func (c *ec2Client) AttachInternetGateway(ctx context.Context, vpcId, internetGatewayId string) error {
 	in := &ec2.AttachInternetGatewayInput{
-		InternetGatewayId: ptr.To(internetGatewayId),
-		VpcId:             ptr.To(vpcId),
+		InternetGatewayId: new(internetGatewayId),
+		VpcId:             new(vpcId),
 	}
 	_, err := c.svc.AttachInternetGateway(ctx, in)
 	if err != nil {
@@ -99,8 +99,8 @@ func (c *ec2Client) AttachInternetGateway(ctx context.Context, vpcId, internetGa
 
 func (c *ec2Client) DetachInternetGateway(ctx context.Context, vpcId, internetGatewayId string) error {
 	in := &ec2.DetachInternetGatewayInput{
-		InternetGatewayId: ptr.To(internetGatewayId),
-		VpcId:             ptr.To(vpcId),
+		InternetGatewayId: new(internetGatewayId),
+		VpcId:             new(vpcId),
 	}
 	_, err := c.svc.DetachInternetGateway(ctx, in)
 	if err != nil {
@@ -114,7 +114,7 @@ func (c *ec2Client) DescribeInternetGateways(ctx context.Context, name string) (
 	if name != "" {
 		in.Filters = []ec2types.Filter{
 			{
-				Name:   ptr.To("tag:Name"),
+				Name:   new("tag:Name"),
 				Values: []string{name},
 			},
 		}
@@ -128,7 +128,7 @@ func (c *ec2Client) DescribeInternetGateways(ctx context.Context, name string) (
 
 func (c *ec2Client) DeleteInternetGateway(ctx context.Context, internetGatewayId string) error {
 	_, err := c.svc.DeleteInternetGateway(ctx, &ec2.DeleteInternetGatewayInput{
-		InternetGatewayId: ptr.To(internetGatewayId),
+		InternetGatewayId: new(internetGatewayId),
 	})
 	return err
 }
@@ -137,7 +137,7 @@ func (c *ec2Client) DescribeNatGateway(ctx context.Context, vpcId string) ([]ec2
 	in := &ec2.DescribeNatGatewaysInput{
 		Filter: []ec2types.Filter{
 			{
-				Name:   ptr.To("vpc-id"),
+				Name:   new("vpc-id"),
 				Values: []string{vpcId},
 			},
 		},
@@ -160,7 +160,7 @@ func (c *ec2Client) AssociateDhcpOptions(ctx context.Context, vpcId string, dhcp
 
 func (c *ec2Client) DeleteDhcpOptions(ctx context.Context, dhcpOptionsId string) error {
 	_, err := c.svc.DeleteDhcpOptions(ctx, &ec2.DeleteDhcpOptionsInput{
-		DhcpOptionsId: ptr.To(dhcpOptionsId),
+		DhcpOptionsId: new(dhcpOptionsId),
 	})
 	return err
 }
@@ -170,17 +170,17 @@ func (c *ec2Client) CreateDhcpOptions(ctx context.Context, name, domainName stri
 		return ptr.Deref(tag.Key, "") == "Name"
 	})
 	tags = pie.Insert(tags, 0, ec2types.Tag{
-		Key:   ptr.To("Name"),
-		Value: ptr.To(name),
+		Key:   new("Name"),
+		Value: new(name),
 	})
 	in := &ec2.CreateDhcpOptionsInput{
 		DhcpConfigurations: []ec2types.NewDhcpConfiguration{
 			{
-				Key:    ptr.To("domain-name"),
+				Key:    new("domain-name"),
 				Values: []string{domainName},
 			},
 			{
-				Key:    ptr.To("domain-name-servers"),
+				Key:    new("domain-name-servers"),
 				Values: []string{"AmazonProvidedDNS"},
 			},
 		},
@@ -203,7 +203,7 @@ func (c *ec2Client) DescribeDhcpOptions(ctx context.Context, name string) ([]ec2
 	if name != "" {
 		in.Filters = []ec2types.Filter{
 			{
-				Name:   ptr.To("tag:Name"),
+				Name:   new("tag:Name"),
 				Values: []string{name},
 			},
 		}
@@ -217,7 +217,7 @@ func (c *ec2Client) DescribeDhcpOptions(ctx context.Context, name string) ([]ec2
 
 func (c *ec2Client) DeleteVpc(ctx context.Context, vpcId string) error {
 	_, err := c.svc.DeleteVpc(ctx, &ec2.DeleteVpcInput{
-		VpcId: ptr.To(vpcId),
+		VpcId: new(vpcId),
 	})
 	return err
 }
@@ -227,11 +227,11 @@ func (c *ec2Client) CreateVpc(ctx context.Context, name, cidr string, tags []ec2
 		return ptr.Deref(tag.Key, "") == "Name"
 	})
 	tags = pie.Insert(tags, 0, ec2types.Tag{
-		Key:   ptr.To("Name"),
-		Value: ptr.To(name),
+		Key:   new("Name"),
+		Value: new(name),
 	})
 	in := &ec2.CreateVpcInput{
-		CidrBlock: ptr.To(cidr),
+		CidrBlock: new(cidr),
 		TagSpecifications: []ec2types.TagSpecification{
 			{
 				ResourceType: ec2types.ResourceTypeVpc,
@@ -247,7 +247,7 @@ func (c *ec2Client) CreateVpc(ctx context.Context, name, cidr string, tags []ec2
 	_, err = c.svc.ModifyVpcAttribute(ctx, &ec2.ModifyVpcAttributeInput{
 		VpcId: out.Vpc.VpcId,
 		EnableDnsSupport: &ec2types.AttributeBooleanValue{
-			Value: ptr.To(true),
+			Value: new(true),
 		},
 	})
 	if err != nil {
@@ -257,7 +257,7 @@ func (c *ec2Client) CreateVpc(ctx context.Context, name, cidr string, tags []ec2
 	_, err = c.svc.ModifyVpcAttribute(ctx, &ec2.ModifyVpcAttributeInput{
 		VpcId: out.Vpc.VpcId,
 		EnableDnsHostnames: &ec2types.AttributeBooleanValue{
-			Value: ptr.To(true),
+			Value: new(true),
 		},
 	})
 	if err != nil {
@@ -285,7 +285,7 @@ func (c *ec2Client) DescribeVpcs(ctx context.Context, name string) ([]ec2types.V
 	if name != "" {
 		in.Filters = []ec2types.Filter{
 			{
-				Name:   ptr.To("tag:Name"),
+				Name:   new("tag:Name"),
 				Values: []string{name},
 			},
 		}
@@ -322,7 +322,7 @@ func (c *ec2Client) DescribeSubnets(ctx context.Context, vpcId string) ([]ec2typ
 	out, err := c.svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
 		Filters: []ec2types.Filter{
 			{
-				Name:   ptr.To("vpc-id"),
+				Name:   new("vpc-id"),
 				Values: []string{vpcId},
 			},
 		},
@@ -335,9 +335,9 @@ func (c *ec2Client) DescribeSubnets(ctx context.Context, vpcId string) ([]ec2typ
 
 func (c *ec2Client) CreateSubnet(ctx context.Context, vpcId, az, cidr string, tags []ec2types.Tag) (*ec2types.Subnet, error) {
 	in := &ec2.CreateSubnetInput{
-		VpcId:            ptr.To(vpcId),
-		AvailabilityZone: ptr.To(az),
-		CidrBlock:        ptr.To(cidr),
+		VpcId:            new(vpcId),
+		AvailabilityZone: new(az),
+		CidrBlock:        new(cidr),
 	}
 	if len(tags) > 0 {
 		in.TagSpecifications = []ec2types.TagSpecification{
@@ -356,7 +356,7 @@ func (c *ec2Client) CreateSubnet(ctx context.Context, vpcId, az, cidr string, ta
 
 func (c *ec2Client) DeleteSubnet(ctx context.Context, subnetId string) error {
 	_, err := c.svc.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
-		SubnetId: ptr.To(subnetId),
+		SubnetId: new(subnetId),
 	})
 	if err != nil {
 		return err
@@ -368,7 +368,7 @@ func (c *ec2Client) DescribeSubnet(ctx context.Context, subnetId string) (*ec2ty
 	out, err := c.svc.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
 		Filters: []ec2types.Filter{
 			{
-				Name:   ptr.To("subnet-id"),
+				Name:   new("subnet-id"),
 				Values: []string{subnetId},
 			},
 		},
@@ -401,15 +401,15 @@ func (c *ec2Client) DescribeSecurityGroups(ctx context.Context, filters []ec2typ
 
 func (c *ec2Client) CreateSecurityGroup(ctx context.Context, vpcId, name string, tags []ec2types.Tag) (string, error) {
 	out, err := c.svc.CreateSecurityGroup(ctx, &ec2.CreateSecurityGroupInput{
-		Description: ptr.To(name),
-		GroupName:   ptr.To(name),
+		Description: new(name),
+		GroupName:   new(name),
 		TagSpecifications: []ec2types.TagSpecification{
 			{
 				ResourceType: ec2types.ResourceTypeSecurityGroup,
 				Tags:         tags,
 			},
 		},
-		VpcId: ptr.To(vpcId),
+		VpcId: new(vpcId),
 	})
 	if err != nil {
 		return "", err
@@ -419,7 +419,7 @@ func (c *ec2Client) CreateSecurityGroup(ctx context.Context, vpcId, name string,
 
 func (c *ec2Client) DeleteSecurityGroup(ctx context.Context, id string) error {
 	in := &ec2.DeleteSecurityGroupInput{
-		GroupId: ptr.To(id),
+		GroupId: new(id),
 	}
 	_, err := c.svc.DeleteSecurityGroup(ctx, in)
 	return err
@@ -427,7 +427,7 @@ func (c *ec2Client) DeleteSecurityGroup(ctx context.Context, id string) error {
 
 func (c *ec2Client) AuthorizeSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2types.IpPermission) error {
 	_, err := c.svc.AuthorizeSecurityGroupIngress(ctx, &ec2.AuthorizeSecurityGroupIngressInput{
-		GroupId:       ptr.To(groupId),
+		GroupId:       new(groupId),
 		IpPermissions: ipPermissions,
 	})
 	if err != nil {
@@ -507,7 +507,7 @@ func (c *ec2Client) DescribeRouteTables(ctx context.Context, vpcId string) ([]ec
 	out, err := c.svc.DescribeRouteTables(ctx, &ec2.DescribeRouteTablesInput{
 		Filters: []ec2types.Filter{
 			{
-				Name:   ptr.To("vpc-id"),
+				Name:   new("vpc-id"),
 				Values: []string{vpcId},
 			},
 		},

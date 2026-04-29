@@ -2,6 +2,7 @@ package gcpnfsvolume
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 
@@ -51,9 +52,7 @@ func getVolumeAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[string
 	if gcpVol.Spec.PersistentVolume == nil {
 		return result
 	}
-	for k, v := range gcpVol.Spec.PersistentVolume.Annotations {
-		result[k] = v
-	}
+	maps.Copy(result, gcpVol.Spec.PersistentVolume.Annotations)
 	return result
 }
 
@@ -82,9 +81,7 @@ func getVolumeClaimAnnotations(gcpVol *cloudresourcesv1beta1.GcpNfsVolume) map[s
 	if gcpVol.Spec.PersistentVolumeClaim == nil {
 		return result
 	}
-	for k, v := range gcpVol.Spec.PersistentVolumeClaim.Annotations {
-		result[k] = v
-	}
+	maps.Copy(result, gcpVol.Spec.PersistentVolumeClaim.Annotations)
 	return result
 }
 

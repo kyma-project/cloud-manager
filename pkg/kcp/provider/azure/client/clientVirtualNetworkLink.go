@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
-	"k8s.io/utils/ptr"
 	"time"
 )
 
@@ -26,12 +25,12 @@ type virtualNetworkLinkClient struct {
 func (c *virtualNetworkLinkClient) CreateVirtualNetworkLink(ctx context.Context, resourceGroupName, privateZoneName, virtualNetworkLinkName, vnetId string) error {
 
 	parameters := armprivatedns.VirtualNetworkLink{
-		Location: ptr.To("global"),
+		Location: new("global"),
 		Properties: &armprivatedns.VirtualNetworkLinkProperties{
 			VirtualNetwork: &armprivatedns.SubResource{
-				ID: ptr.To(vnetId),
+				ID: new(vnetId),
 			},
-			RegistrationEnabled: ptr.To(false),
+			RegistrationEnabled: new(false),
 		},
 	}
 	poller, err := c.svc.BeginCreateOrUpdate(ctx, resourceGroupName, privateZoneName, virtualNetworkLinkName, parameters, nil)

@@ -39,7 +39,7 @@ func NewCrdTypedV1WithKindGroup(_ *testing.T, k, g string) *apiextensionsv1.Cust
 }
 
 func NewBusolaCmTypedKindGroup(t *testing.T, k string) *corev1.ConfigMap {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	err := unstructured.SetNestedField(data, "cloud-resources.kyma-project.io", "resource", "group")
 	assert.NoError(t, err)
 	err = unstructured.SetNestedField(data, k, "resource", "kind")
@@ -65,7 +65,7 @@ func NewBusolaCmTypedKindGroup(t *testing.T, k string) *corev1.ConfigMap {
 }
 
 func NewBusolaCmUnstructuredKindGroup(t *testing.T, k string) *unstructured.Unstructured {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	err := unstructured.SetNestedField(data, "cloud-resources.kyma-project.io", "resource", "group")
 	assert.NoError(t, err)
 	err = unstructured.SetNestedField(data, k, "resource", "kind")
@@ -74,13 +74,13 @@ func NewBusolaCmUnstructuredKindGroup(t *testing.T, k string) *unstructured.Unst
 	b, err := yaml.Marshal(data)
 	assert.NoError(t, err)
 
-	u := &unstructured.Unstructured{Object: map[string]interface{}{}}
+	u := &unstructured.Unstructured{Object: map[string]any{}}
 	u.SetAPIVersion("v1")
 	u.SetKind("ConfigMap")
 	u.SetLabels(map[string]string{
 		"busola.io/extension": "resource",
 	})
-	err = unstructured.SetNestedMap(u.Object, map[string]interface{}{
+	err = unstructured.SetNestedMap(u.Object, map[string]any{
 		"general": string(b),
 	}, "data")
 	assert.NoError(t, err)

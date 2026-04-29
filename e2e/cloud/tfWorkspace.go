@@ -44,7 +44,7 @@ type TFWorkspace interface {
 	Init() error
 	Plan() error
 	Apply() error
-	Outputs() map[string]interface{}
+	Outputs() map[string]any
 	Destroy() error
 
 	Out() string
@@ -65,7 +65,7 @@ type tfWorkspace struct {
 
 	out string
 
-	outputs map[string]interface{}
+	outputs map[string]any
 
 	_dir string
 }
@@ -221,7 +221,7 @@ func (w *tfWorkspace) Plan() error {
 
 type TfOutput struct {
 	Values struct {
-		Value map[string]interface{} `json:"value"`
+		Value map[string]any `json:"value"`
 	} `json:"values"`
 }
 
@@ -256,7 +256,7 @@ func (w *tfWorkspace) Apply() error {
 	return nil
 }
 
-func (w *tfWorkspace) Outputs() map[string]interface{} {
+func (w *tfWorkspace) Outputs() map[string]any {
 	return w.outputs
 }
 

@@ -24,10 +24,7 @@ func WarmupList(ctx context.Context, group string, skipKinds []string, c client.
 
 	jobs := make(chan client.ObjectList)
 	var wg sync.WaitGroup
-	workerCount := 20
-	if len(arrList) < workerCount {
-		workerCount = len(arrList)
-	}
+	workerCount := min(len(arrList), 20)
 	if workerCount == 0 {
 		return
 	}

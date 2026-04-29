@@ -9,7 +9,6 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
-	"k8s.io/utils/ptr"
 )
 
 type NetworkClient interface {
@@ -65,7 +64,7 @@ func (c *networkClient) ListNetworks(ctx context.Context, opts networks.ListOpts
 func (c *networkClient) ListExternalNetworks(ctx context.Context, opts networks.ListOpts) ([]networks.Network, error) {
 	extOpts := external.ListOptsExt{
 		ListOptsBuilder: opts,
-		External:        ptr.To(true),
+		External:        new(true),
 	}
 	page, err := networks.List(c.netSvc, extOpts).AllPages(ctx)
 	if err != nil {
@@ -92,7 +91,7 @@ func (c *networkClient) GetNetwork(ctx context.Context, id string) (*networks.Ne
 func (c *networkClient) CreateExternalNetwork(ctx context.Context, opts networks.CreateOptsBuilder) (*networks.Network, error) {
 	return c.CreateNetwork(ctx, external.CreateOptsExt{
 		CreateOptsBuilder: opts,
-		External:          ptr.To(true),
+		External:          new(true),
 	})
 }
 

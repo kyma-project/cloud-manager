@@ -41,14 +41,14 @@ func (c vaultClient) CreateVault(ctx context.Context, resourceGroupName string, 
 		resourceGroupName,
 		vaultName,
 		armrecoveryservices.Vault{
-			Location: to.Ptr(location),
-			Properties: to.Ptr(armrecoveryservices.VaultProperties{
+			Location: new(location),
+			Properties: new(armrecoveryservices.VaultProperties{
 				PublicNetworkAccess: to.Ptr(armrecoveryservices.PublicNetworkAccessEnabled),
 			}),
-			SKU: to.Ptr(armrecoveryservices.SKU{
+			SKU: new(armrecoveryservices.SKU{
 				Name: to.Ptr(armrecoveryservices.SKUNameStandard),
 			}),
-			Tags: map[string]*string{"cloud-manager": to.Ptr("rwxVolumeBackup")},
+			Tags: map[string]*string{"cloud-manager": new("rwxVolumeBackup")},
 		},
 		nil,
 	)
@@ -88,7 +88,7 @@ func (c vaultClient) DeleteVault(ctx context.Context, resourceGroupName string, 
 		ctx,
 		resourceGroupName,
 		vaultName,
-		to.Ptr(armrecoveryservices.VaultsClientDeleteOptions{}),
+		new(armrecoveryservices.VaultsClientDeleteOptions{}),
 	)
 
 	if err != nil {

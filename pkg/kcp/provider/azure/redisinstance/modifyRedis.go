@@ -3,7 +3,6 @@ package redisinstance
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -77,7 +76,7 @@ func getUpdateParams(state *State) (armredis.UpdateParameters, bool) {
 
 	updateProperties := &armredis.UpdateProperties{
 		SKU: &armredis.SKU{
-			Capacity: to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
+			Capacity: new(int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
 		},
 	}
 

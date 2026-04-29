@@ -57,7 +57,7 @@ func startAwsRestore(ctx context.Context, st composed.State) (error, context.Con
 	restoreJobOutput, err := state.awsClient.StartRestoreJob(ctx, &client.StartRestoreJobInput{
 		BackupVaultName:  state.GetVaultName(),
 		IamRoleArn:       state.GetBackupRoleArn(),
-		IdempotencyToken: ptr.To(restore.Status.IdempotencyToken),
+		IdempotencyToken: new(restore.Status.IdempotencyToken),
 		RecoveryPointArn: restoreMetadataOut.RecoveryPointArn,
 		RestoreMetadata:  restoreMetadataOut.RestoreMetadata,
 	})

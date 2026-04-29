@@ -10,30 +10,30 @@ import (
 
 type freqType struct {
 	l  sync.Mutex
-	mt map[interface{}]int
-	mu map[interface{}]int
+	mt map[any]int
+	mu map[any]int
 }
 
 func newFreqType() *freqType {
 	r := &freqType{
 		l:  sync.Mutex{},
-		mt: make(map[interface{}]int),
-		mu: make(map[interface{}]int),
+		mt: make(map[any]int),
+		mu: make(map[any]int),
 	}
 	return r
 }
 
-func (f *freqType) reset(items ...interface{}) {
+func (f *freqType) reset(items ...any) {
 	f.l.Lock()
 	defer f.l.Unlock()
-	f.mt = make(map[interface{}]int)
-	f.mu = make(map[interface{}]int)
+	f.mt = make(map[any]int)
+	f.mu = make(map[any]int)
 	for _, item := range items {
 		f.mt[item] = 0
 	}
 }
 
-func (f *freqType) inc(item interface{}) {
+func (f *freqType) inc(item any) {
 	f.l.Lock()
 	defer f.l.Unlock()
 	if _, ok := f.mt[item]; ok {
@@ -43,7 +43,7 @@ func (f *freqType) inc(item interface{}) {
 	}
 }
 
-func (f *freqType) unknownItems() map[interface{}]int {
+func (f *freqType) unknownItems() map[any]int {
 	f.l.Lock()
 	defer f.l.Unlock()
 	return f.mu
@@ -62,7 +62,7 @@ func (f *freqType) statsTracked() (int, int, int, float64) {
 // * count of items with freqs greater than zero
 // * difference between max and min freq
 // * relative diff (diff/min)
-func (f *freqType) stats(m map[interface{}]int) (int, int, int, float64) {
+func (f *freqType) stats(m map[any]int) (int, int, int, float64) {
 	minVal := util.MaxInt
 	maxVal := util.MinInt
 	gz := 0
@@ -102,9 +102,9 @@ func (f *freqType) assertUnknown(t *testing.T) {
 }
 
 func TestSmokeCyclicQueue(t *testing.T) {
-	first := []interface{}{"a", "b", "c", "d", "e"}
-	second := []interface{}{"f", "g", "h", "i", "j"}
-	var all []interface{}
+	first := []any{"a", "b", "c", "d", "e"}
+	second := []any{"f", "g", "h", "i", "j"}
+	var all []any
 	all = append(all, first...)
 	all = append(all, second...)
 
@@ -112,7 +112,7 @@ func TestSmokeCyclicQueue(t *testing.T) {
 	freq := newFreqType()
 
 	concurrency := 5
-	for i := 0; i < concurrency; i++ {
+	for range concurrency {
 		go func() {
 			for {
 				itemX, shutdown := q.Get()

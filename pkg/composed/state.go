@@ -157,7 +157,7 @@ func (s *baseState) PatchObjRemoveFinalizer(ctx context.Context, f string) (bool
 	return PatchObjRemoveFinalizer(ctx, f, s.Obj(), s.Cluster().K8sClient())
 }
 
-func MergePatchObj(ctx context.Context, obj client.Object, patch map[string]interface{}, clnt client.Writer) error {
+func MergePatchObj(ctx context.Context, obj client.Object, patch map[string]any, clnt client.Writer) error {
 	p, err := json.Marshal(patch)
 	if err != nil {
 		return fmt.Errorf("error json patching object when marshaling given patch: %w", err)
@@ -172,7 +172,7 @@ func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.StatusCl
 		return err
 	}
 
-	var o map[string]interface{}
+	var o map[string]any
 	if err = json.Unmarshal(objBytes, &o); err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func PatchObjStatus(ctx context.Context, obj client.Object, clnt client.StatusCl
 		return fmt.Errorf("status not found in object %T", obj)
 	}
 
-	patch := []map[string]interface{}{
+	patch := []map[string]any{
 		{
 			"op":    "replace",
 			"path":  "/status",
@@ -204,7 +204,7 @@ func PatchObjAddFinalizer(ctx context.Context, f string, obj client.Object, clnt
 	if !added {
 		return false, nil
 	}
-	p := []byte(fmt.Sprintf(`{"metadata": {"finalizers":["%s"]}}`, f))
+	p := fmt.Appendf(nil, `{"metadata": {"finalizers":["%s"]}}`, f)
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 
@@ -216,7 +216,7 @@ func PatchObjMergeAnnotation(ctx context.Context, k, v string, obj client.Object
 		obj.SetAnnotations(map[string]string{})
 	}
 	obj.GetAnnotations()[k] = v
-	p := []byte(fmt.Sprintf(`{"metadata": {"annotations":{"%s": "%s"}}}`, k, v))
+	p := fmt.Appendf(nil, `{"metadata": {"annotations":{"%s": "%s"}}}`, k, v)
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 
@@ -224,8 +224,8 @@ func PatchObjMergeLabels(ctx context.Context, obj client.Object, clnt client.Wri
 	if obj.GetLabels() == nil {
 		obj.SetLabels(map[string]string{})
 	}
-	data := map[string]interface{}{
-		"metadata": map[string]interface{}{
+	data := map[string]any{
+		"metadata": map[string]any{
 			"labels": labels,
 		},
 	}
@@ -254,7 +254,7 @@ func PatchObjMergeLabel(ctx context.Context, obj client.Object, clnt client.Writ
 		obj.SetLabels(map[string]string{})
 	}
 	obj.GetLabels()[k] = v
-	p := []byte(fmt.Sprintf(`{"metadata": {"labels":{"%s": "%s"}}}`, k, v))
+	p := fmt.Appendf(nil, `{"metadata": {"labels":{"%s": "%s"}}}`, k, v)
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.MergePatchType, p))
 }
 
@@ -270,6 +270,6 @@ func PatchObjRemoveFinalizer(ctx context.Context, f string, obj client.Object, c
 		return false, nil
 	}
 	controllerutil.RemoveFinalizer(obj, f)
-	p := []byte(fmt.Sprintf(`[{"op": "remove", "path": "/metadata/finalizers/%d"}]`, idx))
+	p := fmt.Appendf(nil, `[{"op": "remove", "path": "/metadata/finalizers/%d"}]`, idx)
 	return true, clnt.Patch(ctx, obj, client.RawPatch(types.JSONPatchType, p))
 }

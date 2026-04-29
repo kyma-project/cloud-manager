@@ -81,7 +81,7 @@ func (s *storageStore) changeStatusToCompletedDelayed(ctx context.Context, stora
 	s.m.Lock()
 	defer s.m.Unlock()
 	storageJob.Status = to.Ptr(string(armrecoveryservicesbackup.JobStatusCompleted))
-	storageJob.EndTime = to.Ptr(time.Now())
+	storageJob.EndTime = new(time.Now())
 }
 func (s *storageStore) GetStorageJob(ctx context.Context, _ string, _ string, jobId string) (*armrecoveryservicesbackup.AzureStorageJob, error) {
 	if isContextCanceled(ctx) {
@@ -131,11 +131,11 @@ func (s *storageStore) CreateOrUpdateProtectedItem(ctx context.Context, subscrip
 	vaultId := client.GetVaultPath(s.subscription, resourceGroupName, vaultName)
 	id := client.GetFileSharePath(s.subscription, resourceGroupName, vaultName, containerName, protectedItemName)
 	protected := armrecoveryservicesbackup.ProtectedItemResource{
-		Location: to.Ptr(location),
-		ID:       to.Ptr(id),
+		Location: new(location),
+		ID:       new(id),
 		Properties: &armrecoveryservicesbackup.AzureFileshareProtectedItem{
 			ProtectionState: to.Ptr(armrecoveryservicesbackup.ProtectionStateProtected),
-			FriendlyName:    to.Ptr(protectedItemName),
+			FriendlyName:    new(protectedItemName),
 		},
 	}
 
@@ -210,17 +210,17 @@ func (s *storageStore) CreateVault(ctx context.Context, resourceGroupName string
 
 	id := client.GetVaultPath(s.subscription, resourceGroupName, vaultName)
 	vault := armrecoveryservices.Vault{
-		Location: to.Ptr(location),
-		ID:       to.Ptr(id),
-		Name:     to.Ptr(vaultName),
+		Location: new(location),
+		ID:       new(id),
+		Name:     new(vaultName),
 		Tags: map[string]*string{
-			"cloud-manager": to.Ptr("rwxVolumeBackup"),
+			"cloud-manager": new("rwxVolumeBackup"),
 		},
 		Properties: &armrecoveryservices.VaultProperties{
 			SecuritySettings: &armrecoveryservices.SecuritySettings{
 				SoftDeleteSettings: &armrecoveryservices.SoftDeleteSettings{
 					SoftDeleteState:                 ptr.To(armrecoveryservices.SoftDeleteStateEnabled),
-					SoftDeleteRetentionPeriodInDays: ptr.To(int32(14)),
+					SoftDeleteRetentionPeriodInDays: new(int32(14)),
 				},
 			},
 		},
@@ -237,7 +237,7 @@ func (s *storageStore) DeleteVault(ctx context.Context, resourceGroupName string
 	logger := composed.LoggerFromCtx(ctx)
 
 	temp := s.vaults[:0]
-	id := to.Ptr(client.GetVaultPath(s.subscription, resourceGroupName, vaultName))
+	id := new(client.GetVaultPath(s.subscription, resourceGroupName, vaultName))
 	for _, vault := range s.vaults {
 		if ptr.Deref(vault.ID, "") != ptr.Deref(id, "") {
 			temp = append(temp, vault)
@@ -294,15 +294,15 @@ func (s *storageStore) TriggerRestore(ctx context.Context, request client.Restor
 		JobResource: armrecoveryservicesbackup.JobResource{
 			ID:   &idPath,
 			Name: &jobId,
-			Properties: to.Ptr(armrecoveryservicesbackup.AzureStorageJob{
+			Properties: new(armrecoveryservicesbackup.AzureStorageJob{
 				Status:             &inProgress,
-				EntityFriendlyName: to.Ptr(request.TargetFileShareName),
-				ExtendedInfo: to.Ptr(armrecoveryservicesbackup.AzureStorageJobExtendedInfo{
+				EntityFriendlyName: new(request.TargetFileShareName),
+				ExtendedInfo: new(armrecoveryservicesbackup.AzureStorageJobExtendedInfo{
 					PropertyBag: map[string]*string{
-						"RestoreDestination": to.Ptr(request.TargetFolderName),
+						"RestoreDestination": new(request.TargetFolderName),
 					},
 				}),
-				StartTime: to.Ptr(time.Now()),
+				StartTime: new(time.Now()),
 				Operation: to.Ptr(string(armrecoveryservicesbackup.JobOperationTypeRestore)),
 			}),
 		},
@@ -339,7 +339,7 @@ func newStorageStore(subscription string) *storageStore {
 				ProtectableItemType:         nil,
 				AzureFileShareType:          nil,
 				BackupManagementType:        nil,
-				FriendlyName:                to.Ptr("kh-file-share"),
+				FriendlyName:                new("kh-file-share"),
 				ParentContainerFabricID:     nil,
 				ParentContainerFriendlyName: nil,
 				ProtectionState:             nil,
@@ -347,7 +347,7 @@ func newStorageStore(subscription string) *storageStore {
 			},
 			Tags: nil,
 			ID:   nil,
-			Name: to.Ptr("AzureFileShare;1234"), // unfriendly name
+			Name: new("AzureFileShare;1234"), // unfriendly name
 			Type: nil,
 		},
 	}

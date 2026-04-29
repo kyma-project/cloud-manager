@@ -12,7 +12,6 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: KCP GcpRedisCluster", func() {
@@ -38,7 +37,7 @@ var _ = Describe("Feature: KCP GcpRedisCluster", func() {
 			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				NetworkResource: &computepb.Network{
-					Name: ptr.To(scope.Spec.Scope.Gcp.VpcNetwork),
+					Name: new(scope.Spec.Scope.Gcp.VpcNetwork),
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())

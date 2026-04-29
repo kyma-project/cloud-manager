@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"net/http"
 	"time"
@@ -102,8 +101,8 @@ func (m *jobsMockClient) GetStorageJob(_ context.Context, _ string,
 			if job.status == string(armrecoveryservicesbackup.JobStatusInProgress) {
 				job.status = job.finalStatus
 			}
-			return to.Ptr(armrecoveryservicesbackup.AzureStorageJob{
-				Status: to.Ptr(status),
+			return new(armrecoveryservicesbackup.AzureStorageJob{
+				Status: new(status),
 			}), nil
 		}
 	}
@@ -112,8 +111,8 @@ func (m *jobsMockClient) GetStorageJob(_ context.Context, _ string,
 			if job.status == string(armrecoveryservicesbackup.JobStatusInProgress) {
 				job.status = job.finalStatus
 			}
-			return to.Ptr(armrecoveryservicesbackup.AzureStorageJob{
-				Status: to.Ptr(job.status),
+			return new(armrecoveryservicesbackup.AzureStorageJob{
+				Status: new(job.status),
 			}), nil
 		}
 	}
