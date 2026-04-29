@@ -104,20 +104,8 @@
         "wafv2:GetWebACL",
         "wafv2:ListWebACLs",
         "wafv2:UpdateWebACL",
-        "wafv2:PutLoggingConfiguration",
-        "wafv2:GetLoggingConfiguration",
-        "wafv2:DeleteLoggingConfiguration",
         "wafv2:TagResource",
-        "wafv2:UntagResource",
-        "logs:CreateLogDelivery",
-        "logs:DeleteLogDelivery",
-        "logs:CreateLogGroup",
-        "logs:DeleteLogGroup",
-        "logs:DescribeLogGroups",
-        "logs:PutResourcePolicy",
-        "logs:DescribeResourcePolicies",
-        "logs:PutRetentionPolicy",
-        "logs:TagLogGroup"
+        "wafv2:UntagResource"
       ],
       "Resource": "*"
     },
