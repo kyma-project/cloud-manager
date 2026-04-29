@@ -3,17 +3,18 @@
 # This example demonstrates every available field in the AwsWebAcl CRD including:
 # - All statement types (GeoMatch, RateBased, ByteMatch, ManagedRuleGroup, And, Or, Not, etc.)
 # - All action types (Allow, Block, Count, Captcha, Challenge)
-# - Logical operators (And/Or/Not) with first-level nesting
+# - Logical operators (And/Or/Not) with 4-level nesting support via CEL validation
 # - Custom request handling and custom responses
 # - Rule labels for advanced filtering
 # - Per-rule immunity time overrides
 # - Token domains for CAPTCHA/Challenge
 # - Custom response bodies
 #
-# Type Structure for Logical Operators:
-# - AwsWebAclRuleStatement (root level) - can contain And/Or/Not or leaf statements
-# - AwsWebAclRuleStatement1 (level 1) - can ONLY contain leaf statements (no further nesting)
-# This enables future expansion to AwsWebAclRuleStatement2, AwsWebAclRuleStatement3, etc.
+# Nesting Structure (CEL-validated 4 levels):
+# - Level 0 (AwsWebAclStatement): Root statement in rule - supports all operators (and/or/not) + leaf statements + rateBased + managedRuleGroup
+# - Level 1 (AwsWebAclStatement1): First nesting - supports operators (and/or/not) + leaf statements (NO rateBased/managedRuleGroup)
+# - Level 2 (AwsWebAclStatement2): Second nesting - leaf statements ONLY (NO operators, NO rateBased, NO managedRuleGroup)
+# Leaf statements: geoMatch, byteMatch, labelMatch, sizeConstraint, sqliMatch, xssMatch, regexMatch, asnMatch
 
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AwsWebAcl
@@ -51,9 +52,8 @@ spec:
   # ====================
   visibilityConfig:
     cloudWatchMetricsEnabled: true
+    metricName: comprehensive-webacl-example  # Optional - defaults to metadata.name if omitted
     sampledRequestsEnabled: true
-    # metricName is optional - defaults to metadata.name if omitted
-    # metricName: ComprehensiveWebAclMetrics  # Uncomment to override default
 
   # ====================
   # TOKEN DOMAINS (Optional, max 10)
@@ -95,30 +95,6 @@ spec:
     immunityTime: 7200  # 2 hours
 
   # ====================
-  # LOGGING CONFIGURATION (Optional)
-  # ====================
-  # Enable WAF request logging to CloudWatch Logs for security auditing
-  loggingConfiguration:
-    # Enable logging (defaults to false if omitted)
-    enabled: true
-
-    # Optional: Redact sensitive fields from logs (PII protection)
-    # If omitted, no fields are redacted
-    redactedFields:
-      - singleHeader: "authorization"  # Redact Authorization header
-      - singleHeader: "cookie"         # Redact cookies
-      - singleHeader: "x-api-key"      # Redact API keys
-
-    # Optional: CloudWatch Logs destination configuration
-    # If omitted, uses default 30-day retention
-    destination:
-      cloudWatchLogs:
-        retentionDays: 30  # Log retention (1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653)
-
-    # Auto-managed log group: aws-waf-logs-<webacl-name>
-    # Cloud Manager automatically creates, configures, and deletes the log group
-
-  # ====================
   # RULES (Optional, max 100)
   # ====================
   rules:
@@ -148,10 +124,10 @@ spec:
         - name: "source:internal"
       # visibilityConfig is optional at rule level - inherits from WebACL with metricName = rule name
       # Uncomment to override per-rule settings:
-      # visibilityConfig:
-      #   cloudWatchMetricsEnabled: true
-      #   metricName: allow-corporate-network  # Optional - defaults to rule name if omitted
-      #   sampledRequestsEnabled: true
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: allow-api-path-rule  # Optional - defaults to rule name "allow-api-path" if omitted
+        sampledRequestsEnabled: true
 
     # ============================================================
     # RULE 2: GEO MATCH - Block with custom response
@@ -586,11 +562,53 @@ spec:
         - name: "policy:geo-allow-except"
 
     # ============================================================
-    # RULE 26: OR STATEMENT - Combining XSS and SQLi detection
+    # RULE 26: NESTED AND/OR - 2-level nesting example
+    # ============================================================
+    # This rule demonstrates 2-level nesting: (GeoMatch OR ByteMatch) AND SqliMatch
+    # Level 0: AND [ Level 1: OR [...], Level 1: SqliMatch ]
+    - name: block-injection-from-threats
+      priority: 26
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      statement:
+        # Level 0: AND statement (root)
+        andStatement:
+          statements:
+            # Level 1: OR statement
+            - orStatement:
+                statements:
+                  # Level 2: Leaf statements only
+                  - geoMatch:
+                      countryCodes: ["CN", "RU"]
+                  - byteMatch:
+                      searchString: "sqlmap"
+                      positionalConstraint: CONTAINS
+                      fieldToMatch:
+                        singleHeader: "user-agent"
+                      textTransformations:
+                        - priority: 0
+                          type: LOWERCASE
+            # Level 1: Leaf statement
+            - sqliMatch:
+                fieldToMatch:
+                  queryString: true
+                textTransformations:
+                  - priority: 0
+                    type: URL_DECODE
+                sensitivityLevel: "HIGH"
+      ruleLabels:
+        - name: "logical:nested-2-level"
+        - name: "security:complex-threat-detection"
+
+    # ============================================================
+    # RULE 27: OR STATEMENT - Combining XSS and SQLi detection
     # ============================================================
     # Block requests with either SQL injection OR XSS patterns.
     - name: block-injection-attacks-or
-      priority: 27
+      priority: 28
       action:
         block:
           customResponse:
@@ -639,10 +657,6 @@ spec:
 # - spec.customResponseBodies (map[string]AwsWebAclCustomResponseBody)
 # - spec.captchaConfig.immunityTime (int64, 60-259200 seconds)
 # - spec.challengeConfig.immunityTime (int64, 60-259200 seconds)
-# - spec.loggingConfiguration:
-#     - enabled (bool, default: false)
-#     - redactedFields[] (array, max 100) - fields to redact from logs
-#     - destination.cloudWatchLogs.retentionDays (int32, default: 30)
 #
 # RULE REQUIRED FIELDS:
 # - name (string, 1-128 chars, pattern: ^[0-9A-Za-z_-]+$)
@@ -655,9 +669,9 @@ spec:
 # - captchaConfig.immunityTime (overrides global)
 # - challengeConfig.immunityTime (overrides global)
 # - visibilityConfig (optional - inherits from WebACL if omitted)
-#   - cloudWatchMetricsEnabled (bool) - inherits from WebACL
+#   - cloudWatchMetricsEnabled (bool) - inherits from WebACL if omitted
 #   - metricName (string) - defaults to rule name if omitted
-#   - sampledRequestsEnabled (bool) - inherits from WebACL
+#   - sampledRequestsEnabled (bool) - inherits from WebACL if omitted
 #
 # ACTION TYPES (for regular rules):
 # - allow: { customRequestHandling: { insertHeaders: [...] } }
@@ -671,13 +685,13 @@ spec:
 # - count: { customRequestHandling: { insertHeaders: [...] } }  # Override all to count
 #
 # STATEMENT TYPES (exactly one per rule):
-# - andStatement: { statements: [...] }  # Logical AND - all nested statements must match (first-level nesting only)
-# - orStatement: { statements: [...] }  # Logical OR - at least one nested statement must match (first-level nesting only)
-# - notStatement: { statement: {...} }  # Logical NOT - negates nested statement (first-level nesting only)
+# - andStatement: { statements: [...] }  # Logical AND - all nested statements must match
+# - orStatement: { statements: [...] }  # Logical OR - at least one nested statement must match
+# - notStatement: { statement: {...} }  # Logical NOT - negates nested statement
 # - geoMatch: { countryCodes: [...], forwardedIPConfig: {...} }
-# - rateBased: { limit: int64, forwardedIPConfig: {...} }  # IMPORTANT: Cannot be nested within AND/OR/NOT - root level only
+# - rateBased: { limit: int64, forwardedIPConfig: {...} }  # Root level only - cannot be nested
 # - byteMatch: { searchString, positionalConstraint, fieldToMatch, textTransformations }
-# - managedRuleGroup: { vendorName, name, version, excludedRules, managedRuleGroupConfigs, ruleActionOverrides }
+# - managedRuleGroup: { vendorName, name, version, excludedRules, managedRuleGroupConfigs, ruleActionOverrides }  # Root level only
 # - labelMatch: { key: "label:name", scope: "LABEL" | "NAMESPACE" }  # Match based on labels from previous rules
 # - sizeConstraint: { comparisonOperator: "EQ|NE|LE|LT|GE|GT", size, fieldToMatch, textTransformations }  # Size-based filtering
 # - sqliMatch: { fieldToMatch, textTransformations, sensitivityLevel: "LOW" | "HIGH" }  # SQL injection detection
@@ -685,14 +699,17 @@ spec:
 # - regexMatch: { regexString, fieldToMatch, textTransformations }  # Regular expression pattern matching
 # - asnMatch: { autonomousSystemNumbers: [int64...], forwardedIPConfig: {...} }  # Match by ASN
 #
-# NOTE: Logical operators (and/or/not) support first-level nesting only
-#       Level 1 nested statements can ONLY contain leaf statements (no further and/or/not)
-#       For complex nested logic, use label-based rule chaining
+# LOGICAL OPERATOR NESTING (CEL-validated 4 levels):
+# - Level 0 (root AwsWebAclStatement): All statements supported (and/or/not + rateBased + managedRuleGroup + leaf statements)
+# - Level 1 (AwsWebAclStatement1): Operators (and/or/not) + leaf statements only (NO rateBased/managedRuleGroup)
+# - Level 2 (AwsWebAclStatement2): Leaf statements ONLY (NO operators, NO rateBased, NO managedRuleGroup)
 #
-# LOGICAL OPERATOR NESTING:
-# ✅ Supported: and/or/not at root level containing leaf statements
-# ❌ Not supported: Nesting and/or/not inside and/or/not
+# Example nesting patterns:
+# ✅ Level 0: and [ Level 1: geoMatch, Level 1: byteMatch ]
+# ✅ Level 0: and [ Level 1: or [ Level 2: geoMatch, Level 2: byteMatch ], Level 1: xssMatch ]
+# ❌ Level 0: and [ Level 1: rateBased, ... ] - rateBased only at root
+# ❌ Level 0: and [ Level 1: managedRuleGroup, ... ] - managedRuleGroup only at root
 #
-# Example of label-based workaround for complex logic like (A OR B) AND C:
+# For complex nested logic beyond 2 levels, use label-based rule chaining:
 # Rule 1: Use orStatement for (A OR B), apply label "group1"
 # Rule 2: Use andStatement with labelMatch for "group1" AND C
