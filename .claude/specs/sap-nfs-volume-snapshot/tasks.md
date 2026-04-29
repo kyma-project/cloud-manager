@@ -44,12 +44,12 @@
     - Valid create one-time (no schedule) (`canCreateSkr`)
   - _Requirements: 4.1, 4.2_
 
-- [ ] 4. KCP API change and CRD patch script
-- [ ] 4.1 Add `SnapshotID` to `NfsInstanceOpenStack` and update CRD version patch script
-  - Add `SnapshotID string` field to `NfsInstanceOpenStack` in `api/cloud-control/v1beta1/nfsinstance_types.go`
+- [x] 4. KCP API change and CRD patch script
+- [x] 4.1 Add `SnapshotId` to `NfsInstanceOpenStack` and update CRD version patch script
+  - Add `SnapshotId string` field to `NfsInstanceOpenStack` in `api/cloud-control/v1beta1/nfsinstance_types.go`
   - Add version patch lines for all three new CRDs in `config/patchAfterMakeManifests.sh`
   - Run `make manifests` then `config/sync.sh`
-  - _Requirements: 3.6 (new-volume restore needs SnapshotID propagation)_
+  - _Requirements: 3.6 (new-volume restore needs SnapshotId propagation)_
 
 - [ ] 5. OpenStack snapshot client
 - [ ] 5.1 Implement `SnapshotClient` interface and client
@@ -144,8 +144,8 @@
 
 - [ ] 9. Existing reconciler changes for snapshot-based volume creation
 - [ ] 9.1 Propagate snapshot ID through SapNfsVolume → NfsInstance → Manila
-  - Modify `pkg/skr/sapnfsvolume/kcpNfsInstanceCreate.go` to read `AnnotationSnapshotId` from the SapNfsVolume and set `SnapshotID` on `NfsInstanceOpenStack`
-  - Modify `pkg/kcp/provider/sap/nfsinstance/shareCreate.go` to read `SnapshotID` from `NfsInstance.Spec.Instance.OpenStack` and pass it to `CreateShareOp()` instead of hardcoded `""`
+  - Modify `pkg/skr/sapnfsvolume/kcpNfsInstanceCreate.go` to read `AnnotationSnapshotId` from the SapNfsVolume and set `SnapshotId` on `NfsInstanceOpenStack`
+  - Modify `pkg/kcp/provider/sap/nfsinstance/shareCreate.go` to read `SnapshotId` from `NfsInstance.Spec.Instance.OpenStack` and pass it to `CreateShareOp()` instead of hardcoded `""`
   - _Requirements: 3.6 (new-volume restore depends on this plumbing)_
 
 - [ ] 10. SapNfsVolumeSnapshotSchedule reconciler
