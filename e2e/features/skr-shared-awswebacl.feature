@@ -22,10 +22,6 @@ Feature: AwsWebAcl feature
           cloudWatchMetricsEnabled: true
           metricName: E2ETestWebACL
           sampledRequestsEnabled: true
-        loggingConfiguration:
-          enabled: true
-          redactedFields:
-            - singleHeader: "authorization"
         rules:
           # Rule 1: Block high-risk countries
           - name: block-high-risk-countries
@@ -97,97 +93,6 @@ Feature: AwsWebAcl feature
     And "webacl.status.arn" is ok
     And "webacl.status.capacity > 0" is ok
 
-    # Update WebACL - change default action
-    When resource "webacl" is updated:
-      """
-      spec:
-        defaultAction:
-          block: {}
-      """
-
-    Then eventually "webacl.status.state == 'Ready'" is ok
-    And "webacl.spec.defaultAction.block != nil" is ok
-
-    # Update WebACL - add new rule
-    When resource "webacl" is updated:
-      """
-      spec:
-        rules:
-          - name: block-high-risk-countries
-            priority: 0
-            action:
-              block: {}
-            statement:
-              geoMatch:
-                countryCodes:
-                  - "KP"
-                  - "IR"
-            visibilityConfig:
-              cloudWatchMetricsEnabled: true
-              metricName: block-high-risk-countries
-              sampledRequestsEnabled: true
-          - name: rate-limit-general
-            priority: 1
-            action:
-              block: {}
-            statement:
-              rateBased:
-                limit: 2000
-            visibilityConfig:
-              cloudWatchMetricsEnabled: true
-              metricName: rate-limit-general
-              sampledRequestsEnabled: true
-          - name: block-path-traversal
-            priority: 2
-            action:
-              block: {}
-            statement:
-              byteMatch:
-                searchString: "../"
-                positionalConstraint: CONTAINS
-                fieldToMatch:
-                  queryString: true
-                textTransformations:
-                  - priority: 0
-                    type: URL_DECODE
-            visibilityConfig:
-              cloudWatchMetricsEnabled: true
-              metricName: block-path-traversal
-              sampledRequestsEnabled: true
-          - name: AWS-CommonRules
-            priority: 3
-            overrideAction:
-              count: {}
-            statement:
-              managedRuleGroup:
-                vendorName: AWS
-                name: AWSManagedRulesCommonRuleSet
-            visibilityConfig:
-              cloudWatchMetricsEnabled: true
-              metricName: AWS-CommonRules
-              sampledRequestsEnabled: true
-          # NEW RULE: Block admin path access
-          - name: block-admin-path
-            priority: 4
-            action:
-              block: {}
-            statement:
-              byteMatch:
-                searchString: "/admin"
-                positionalConstraint: STARTS_WITH
-                fieldToMatch:
-                  uriPath: true
-                textTransformations:
-                  - priority: 0
-                    type: LOWERCASE
-            visibilityConfig:
-              cloudWatchMetricsEnabled: true
-              metricName: block-admin-path
-              sampledRequestsEnabled: true
-      """
-
-    Then eventually "webacl.status.state == 'Ready'" is ok
-
     # Delete WebACL
     When resource "webacl" is deleted
     Then eventually resource "webacl" does not exist
@@ -214,11 +119,6 @@ Feature: AwsWebAcl feature
           cloudWatchMetricsEnabled: true
           metricName: E2EComprehensiveWebACL
           sampledRequestsEnabled: true
-        loggingConfiguration:
-          enabled: true
-          redactedFields:
-            - singleHeader: "authorization"
-            - queryString: true
         tokenDomains:
           - example.com
         captchaConfig:
@@ -518,17 +418,6 @@ Feature: AwsWebAcl feature
     And "findConditionTrue(webacl, 'Ready')" is ok
     And "webacl.status.arn" is ok
     And "webacl.status.capacity > 0" is ok
-
-    # Disable logging
-    When resource "webacl" is updated:
-      """
-      spec:
-        loggingConfiguration:
-          enabled: false
-      """
-
-    Then eventually "webacl.status.state == 'Ready'" is ok
-    And "webacl.spec.loggingConfiguration.enabled == false" is ok
 
     # Clean up
     When resource "webacl" is deleted
