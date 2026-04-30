@@ -11,6 +11,7 @@ import (
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/clock"
 )
 
 type State struct {
@@ -26,6 +27,7 @@ type State struct {
 
 	snapshotClient sapclient.SnapshotClient
 	provider       sapclient.SapClientProvider[sapclient.SnapshotClient]
+	clock          clock.Clock
 }
 
 func (s *State) ObjAsSapNfsVolumeSnapshot() *cloudresourcesv1beta1.SapNfsVolumeSnapshot {
@@ -45,12 +47,14 @@ func NewStateFactory(
 	kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster,
 	provider sapclient.SapClientProvider[sapclient.SnapshotClient],
+	clk clock.Clock,
 ) StateFactory {
 	return &stateFactory{
 		scopeProvider: scopeProvider,
 		kcpCluster:    kcpCluster,
 		skrCluster:    skrCluster,
 		provider:      provider,
+		clock:         clk,
 	}
 }
 
@@ -59,6 +63,7 @@ type stateFactory struct {
 	kcpCluster    composed.StateCluster
 	skrCluster    composed.StateCluster
 	provider      sapclient.SapClientProvider[sapclient.SnapshotClient]
+	clock         clock.Clock
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
@@ -72,6 +77,7 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 		KcpCluster: f.kcpCluster,
 		SkrCluster: f.skrCluster,
 		provider:   f.provider,
+		clock:      f.clock,
 	}, nil
 }
 
@@ -86,9 +92,10 @@ func (f *ReconcilerFactory) New(
 	kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster,
 	provider sapclient.SapClientProvider[sapclient.SnapshotClient],
+	clk clock.Clock,
 ) *Reconciler {
 	composedStateFactory := composed.NewStateFactory(skrCluster)
-	stateFactory := NewStateFactory(scopeProvider, kcpCluster, skrCluster, provider)
+	stateFactory := NewStateFactory(scopeProvider, kcpCluster, skrCluster, provider, clk)
 	return &Reconciler{
 		composedStateFactory: composedStateFactory,
 		stateFactory:         stateFactory,

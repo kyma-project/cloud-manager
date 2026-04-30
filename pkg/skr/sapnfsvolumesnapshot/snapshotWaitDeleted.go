@@ -3,10 +3,10 @@ package sapnfsvolumesnapshot
 import (
 	"context"
 	"fmt"
-	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,7 +32,7 @@ func snapshotWaitDeleted(ctx context.Context, st composed.State) (error, context
 
 	switch manilaSnapshot.Status {
 	case "deleting":
-		return composed.StopWithRequeueDelay(10 * time.Second), ctx
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 
 	case "error_deleting":
 		logger := composed.LoggerFromCtx(ctx)
@@ -49,6 +49,6 @@ func snapshotWaitDeleted(ctx context.Context, st composed.State) (error, context
 			Run(ctx, state)
 
 	default:
-		return composed.StopWithRequeueDelay(10 * time.Second), ctx
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 }

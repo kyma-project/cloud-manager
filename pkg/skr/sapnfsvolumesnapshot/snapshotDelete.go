@@ -3,10 +3,10 @@ package sapnfsvolumesnapshot
 import (
 	"context"
 	"fmt"
-	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -42,5 +42,5 @@ func snapshotDelete(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	return composed.StopWithRequeueDelay(5 * time.Second), ctx
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }

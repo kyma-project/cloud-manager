@@ -100,3 +100,15 @@ func WithSapNfsVolumePvcAnnotations(pvcAnnotations map[string]string) ObjAction 
 		},
 	}
 }
+
+func WithSapNfsVolumeStatusId(id string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudresourcesv1beta1.SapNfsVolume); ok {
+				x.Status.Id = id
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithSapNfsVolumeStatusId", obj))
+		},
+	}
+}

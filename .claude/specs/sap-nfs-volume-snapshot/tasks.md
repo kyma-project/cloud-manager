@@ -118,7 +118,7 @@
   - Add `SetupSapNfsVolumeSnapshotReconciler(skrRegistry)` call in `cmd/main.go` alongside other SKR reconciler registrations
   - _Requirements: 1.1_
 
-- [ ] 8. SapNfsVolumeSnapshot controller tests
+- [x] 8. SapNfsVolumeSnapshot controller tests
   - Register `SetupSapNfsVolumeSnapshotReconciler` in `internal/controller/cloud-resources/suite_test.go`
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshot_test.go` using testinfra with `Eventually`/`LoadAndCheck`:
     - Create and delete: create snapshot → verify Manila snapshot created → mock `available` → verify Ready + sizeGb → delete → verify Manila snapshot deleted → finalizer removed

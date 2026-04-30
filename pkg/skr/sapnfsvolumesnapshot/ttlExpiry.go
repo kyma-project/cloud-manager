@@ -29,7 +29,7 @@ func ttlExpiry(ctx context.Context, st composed.State) (error, context.Context) 
 	ttl := time.Duration(snapshot.Spec.DeleteAfterDays) * 24 * time.Hour
 	expiryTime := creationTime.Add(ttl)
 
-	if time.Now().Before(expiryTime) {
+	if state.clock.Now().Before(expiryTime) {
 		return nil, ctx
 	}
 

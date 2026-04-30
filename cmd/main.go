@@ -326,7 +326,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupSapNfsVolumeSnapshotReconciler(skrRegistry, sapnfsvolumesnapshot.NewSnapshotClientProvider()); err != nil {
+	if err = cloudresourcescontroller.SetupSapNfsVolumeSnapshotReconciler(skrRegistry, sapnfsvolumesnapshot.NewSnapshotClientProvider(), clock.RealClock{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SapNfsVolumeSnapshot")
 		os.Exit(1)
 	}

@@ -25,6 +25,7 @@ import (
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshot"
+	"k8s.io/utils/clock"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -32,6 +33,7 @@ import (
 
 type SapNfsVolumeSnapshotReconcilerFactory struct {
 	snapshotClientProvider sapclient.SapClientProvider[sapclient.SnapshotClient]
+	clock                  clock.Clock
 }
 
 func (f *SapNfsVolumeSnapshotReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
@@ -42,6 +44,7 @@ func (f *SapNfsVolumeSnapshotReconcilerFactory) New(args reconcile2.ReconcilerAr
 		kcpCluster,
 		skrCluster,
 		f.snapshotClientProvider,
+		f.clock,
 	)
 	return &SapNfsVolumeSnapshotReconciler{reconciler: r}
 }
@@ -62,10 +65,12 @@ func (r *SapNfsVolumeSnapshotReconciler) Reconcile(ctx context.Context, req ctrl
 func SetupSapNfsVolumeSnapshotReconciler(
 	reg skrruntime.SkrRegistry,
 	snapshotClientProvider sapclient.SapClientProvider[sapclient.SnapshotClient],
+	clk clock.Clock,
 ) error {
 	return reg.Register().
 		WithFactory(&SapNfsVolumeSnapshotReconcilerFactory{
 			snapshotClientProvider: snapshotClientProvider,
+			clock:                  clk,
 		}).
 		For(&cloudresourcesv1beta1.SapNfsVolumeSnapshot{}).
 		Complete()

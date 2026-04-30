@@ -3,10 +3,10 @@ package sapnfsvolumesnapshot
 import (
 	"context"
 	"fmt"
-	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -23,7 +23,7 @@ func snapshotWaitAvailable(ctx context.Context, st composed.State) (error, conte
 		return nil, ctx
 
 	case "creating":
-		return composed.StopWithRequeueDelay(10 * time.Second), ctx
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 
 	case "error":
 		logger := composed.LoggerFromCtx(ctx)
@@ -40,6 +40,6 @@ func snapshotWaitAvailable(ctx context.Context, st composed.State) (error, conte
 			Run(ctx, state)
 
 	default:
-		return composed.StopWithRequeueDelay(10 * time.Second), ctx
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 }

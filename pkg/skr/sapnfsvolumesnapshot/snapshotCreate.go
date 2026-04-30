@@ -3,11 +3,11 @@ package sapnfsvolumesnapshot
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/snapshots"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -60,5 +60,5 @@ func snapshotCreate(ctx context.Context, st composed.State) (error, context.Cont
 	}
 
 	state.snapshot = manilaSnapshot
-	return composed.StopWithRequeueDelay(5 * time.Second), ctx
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }

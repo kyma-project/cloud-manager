@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	clocktesting "k8s.io/utils/clock/testing"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -19,8 +20,10 @@ func TestTTLExpiry(t *testing.T) {
 
 		var obj *cloudresourcesv1beta1.SapNfsVolumeSnapshot
 		var state *State
+		var fakeClock *clocktesting.FakeClock
 
 		setupTest := func() {
+			fakeClock = clocktesting.NewFakeClock(time.Now())
 			obj = &cloudresourcesv1beta1.SapNfsVolumeSnapshot{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:              "snap-1",
@@ -48,6 +51,7 @@ func TestTTLExpiry(t *testing.T) {
 			state = &State{
 				State:      baseState,
 				SkrCluster: skrCluster,
+				clock:      fakeClock,
 			}
 		}
 
