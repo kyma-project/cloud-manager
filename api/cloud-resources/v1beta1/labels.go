@@ -1,6 +1,8 @@
 package v1beta1
 
 const (
+	AnnotationSnapshotId = "cloud-resources.kyma-project.io/snapshot-id"
+
 	LabelCloudManaged    = "cloud-resources.kyma-project.io/managed"
 	LabelId              = "cloud-resources.kyma-project.io/id"
 	LabelNfsVolName      = "cloud-resources.kyma-project.io/nfsVolumeName"

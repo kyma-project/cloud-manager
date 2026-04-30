@@ -39,6 +39,9 @@ resources:
 - bases/cloud-control.kyma-project.io_vpcnetworks.yaml
 - bases/cloud-control.kyma-project.io_subscriptions.yaml
 - bases/cloud-resources.kyma-project.io_gcpnfsvolumebackupdiscoveries.yaml
+- bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshots.yaml
+- bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotrestores.yaml
+- bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotschedules.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
@@ -102,6 +105,9 @@ patches:
 #- path: patches/cainjection_in_cloud-resources_gcpsubnets.yaml
 #- path: patches/cainjection_in_cloud-resources_azurevnetlinks.yaml
 #- path: patches/cainjection_in_cloud-resources_gcpnfsvolumebackupdiscoveries.yaml
+#- path: patches/cainjection_in_cloud-resources_sapnfsvolumesnapshots.yaml
+#- path: patches/cainjection_in_cloud-resources_sapnfsvolumesnapshotrestores.yaml
+#- path: patches/cainjection_in_cloud-resources_sapnfsvolumesnapshotschedules.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # [WEBHOOK] To enable webhook, uncomment the following section

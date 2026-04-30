@@ -63,6 +63,16 @@ func (s *server) VpcNetworkProvider() sapclient.SapClientProvider[sapvpcnetworkc
 	}
 }
 
+func (s *server) SnapshotClientProvider() sapclient.SapClientProvider[sapclient.SnapshotClient] {
+	return func(ctx context.Context, pp sapclient.ProviderParams) (sapclient.SnapshotClient, error) {
+		p := s.GetProjectByProviderParams(pp)
+		if p == nil {
+			return nil, fmt.Errorf("no project found for %s", pp.String())
+		}
+		return s.GetProjectByProviderParams(pp), nil
+	}
+}
+
 func (s *server) GetProjectByProviderParams(pp sapclient.ProviderParams) Project {
 	return s.GetProject(pp.DomainName, pp.ProjectName, pp.RegionName)
 }

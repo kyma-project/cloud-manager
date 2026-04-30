@@ -36,6 +36,10 @@ type reconciler struct {
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	if Ignore.ShouldIgnoreKey(request) {
+		return ctrl.Result{}, nil
+	}
+
 	state, err := r.factory.NewState(ctx, request)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("error creating SapNfsVolume state: %w", err)

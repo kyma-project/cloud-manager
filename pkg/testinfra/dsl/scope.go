@@ -346,3 +346,34 @@ func GivenScopeAzureExists(ctx context.Context, infra testinfra.Infra, scope *cl
 	}
 	return nil
 }
+
+func GivenScopeOpenStackExists(ctx context.Context, infra testinfra.Infra, scope *cloudcontrolv1beta1.Scope, pp sapclient.ProviderParams, opts ...ObjAction) error {
+	if scope == nil {
+		scope = &cloudcontrolv1beta1.Scope{}
+	}
+	NewObjActions(opts...).
+		Append(
+			WithNamespace(DefaultKcpNamespace),
+		).
+		ApplyOnObject(scope)
+
+	err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(scope), scope)
+	if client.IgnoreNotFound(err) != nil {
+		return err
+	}
+	if apierrors.IsNotFound(err) {
+		return CreateScopeOpenStack(ctx, infra, scope, pp, opts...)
+	}
+	// Update spec to match new provider params
+	scope.Spec.Provider = cloudcontrolv1beta1.ProviderOpenStack
+	scope.Spec.Region = pp.RegionName
+	scope.Spec.Scope.Gcp = nil
+	scope.Spec.Scope.Azure = nil
+	scope.Spec.Scope.Aws = nil
+	if scope.Spec.Scope.OpenStack == nil {
+		scope.Spec.Scope.OpenStack = &cloudcontrolv1beta1.OpenStackScope{}
+	}
+	scope.Spec.Scope.OpenStack.DomainName = pp.DomainName
+	scope.Spec.Scope.OpenStack.TenantName = pp.ProjectName
+	return infra.KCP().Client().Update(ctx, scope)
+}
