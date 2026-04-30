@@ -1,4 +1,4 @@
-package runtime
+package security
 
 import (
 	"context"
@@ -8,6 +8,6 @@ import (
 
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, state composed.State) (error, context.Context) {
-		return nil, nil
+		return nil, ctx
 	}
 }

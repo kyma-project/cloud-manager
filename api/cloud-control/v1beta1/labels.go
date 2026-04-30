@@ -10,3 +10,7 @@ const (
 const (
 	LabelIgnore = "cloud-manager.kyma-project.io/ignore"
 )
+
+const (
+	LabelSubscriptionBindingName = "cloud-manager.kyma-project.io/subscriptionBindingName"
+)

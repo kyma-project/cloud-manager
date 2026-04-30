@@ -6,16 +6,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"regexp"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"io"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net/http"
-	"regexp"
 )
 
 const (
@@ -108,6 +109,20 @@ func IsUnauthorized(err error) bool {
 	return false
 }
 
+func NewAzureStorageAccountNameConflictError() error {
+	return &azcore.ResponseError{
+		ErrorCode:  "StorageAccountNameConflict",
+		StatusCode: http.StatusConflict,
+	}
+}
+
+func IsStorageAccountNameConflict(err error) bool {
+	if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
+		return respErr.ErrorCode == "StorageAccountAlreadyTaken"
+	}
+	return false
+}
+
 func IsUnauthenticated(err error) bool {
 	var auth *azidentity.AuthenticationFailedError
 	if ok := errors.As(err, &auth); ok {
@@ -130,9 +145,8 @@ func LogErrorAndReturn(err error, msg string, ctx context.Context) (error, conte
 }
 
 func GetErrorMessage(err error, def string) (string, bool) {
-	var respErr *azcore.ResponseError
 
-	if errors.As(err, &respErr) {
+	if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 		switch respErr.ErrorCode {
 		case RemotePeeringIsDisconnected:
 			return RemotePeeringIsDisconnectedMessage, true

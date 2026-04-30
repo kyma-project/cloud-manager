@@ -1,0 +1,156 @@
+package security
+
+import (
+	"context"
+	"fmt"
+	"regexp"
+	"strings"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
+	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
+	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
+	runtimetypes "github.com/kyma-project/cloud-manager/pkg/kcp/runtime/types"
+	"github.com/kyma-project/cloud-manager/pkg/util"
+)
+
+func NewStateFactory(azureClientProvider azureclient.ClientProvider[azuresecurityclient.Client]) StateFactory {
+	return &stateFactory{
+		azureClientProvider: azureClientProvider,
+	}
+}
+
+type StateFactory interface {
+	NewState(ctx context.Context, runtimeState runtimetypes.State) (context.Context, composed.State, error)
+}
+
+type stateFactory struct {
+	azureClientProvider azureclient.ClientProvider[azuresecurityclient.Client]
+}
+
+func (f *stateFactory) NewState(ctx context.Context, runtimeState runtimetypes.State) (context.Context, composed.State, error) {
+	clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
+	clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret
+	if runtimeState.Subscription().Status.Provider != cloudcontrolv1beta1.ProviderAzure {
+		return ctx, nil, fmt.Errorf("subscription for Runtime must be of provider Azure, but subscription %q is of provider %q", runtimeState.Subscription().Name, runtimeState.Subscription().Status.Provider)
+	}
+	tenantId := runtimeState.Subscription().Status.SubscriptionInfo.Azure.TenantId
+	subscriptionId := runtimeState.Subscription().Status.SubscriptionInfo.Azure.SubscriptionId
+
+	c, err := f.azureClientProvider(ctx, clientId, clientSecret, subscriptionId, tenantId)
+	if err != nil {
+		return ctx, nil, fmt.Errorf("error creating azure client: %w", err)
+	}
+
+	logger := composed.LoggerFromCtx(ctx).
+		WithValues(
+			"azureSubscriptionId", subscriptionId,
+			"azureTenantId", tenantId,
+		)
+	ctx = composed.LoggerIntoCtx(ctx, logger)
+
+	return ctx, newState(runtimeState, c), nil
+}
+
+func newState(runtimeState runtimetypes.State, azureClient azuresecurityclient.Client) *State {
+	return &State{
+		State:       runtimeState,
+		azureClient: azureClient,
+	}
+}
+
+type State struct {
+	runtimetypes.State
+
+	azureClient azuresecurityclient.Client
+
+	// resourceGroupData one per runtime, with name pattern "kyma-security-{shootName}" and is used for:
+	// * storage account
+	// * log analytics workspace
+	// * flow log
+	resourceGroupData *armresources.ResourceGroup
+
+	// resourceGroupWatcher has fixed name "NetworkWatcherRG" and is used for:
+	// * watcher
+	resourceGroupWatcher *armresources.ResourceGroup
+
+	// watcher from resourceGroupWatcher, one per location with name pattern "NetworkWatcher_{location}", ie NetworkWatcher_westeurope
+	// This network watcher is only created when missing, but is not deleted when security is disabled
+	watcher *armnetwork.Watcher
+
+	// storageAccount from RG resourceGroupData, one per runtime, with name pattern "sapkymasec{shootName}{optional-sufix}"
+	// Since Azure storage account must be globally unique it might happen prefer name is not available, thus optional
+	// sufix is used to achieve global uniqueness. To load runtime related storage account, all from the RG have to be
+	// listed and one matching the tag tagKymaRuntimeId = runtime.name picked and set to state
+	storageAccount *armstorage.Account
+
+	// logAnalyticsWorkspace from RG resourceGroupData, one per runtime, with name pattern "kyma-security-{shootName}"
+	logAnalyticsWorkspace *armoperationalinsights.Workspace
+
+	// flowLog from RG resourceGroupData, one per runtime, with name pattern "kyma-security-{shootName}"
+	flowLog *armnetwork.FlowLog
+
+	// loadedSecurityPricing Defender for Cloud plans used to determine service on/off action
+	loadedSecurityPricing []*armsecurity.Pricing
+}
+
+const (
+	storageAccountPrefix        = "kymasec" // 7 chars
+	maxStorageAccountNameLength = 24        // Azure constraint
+	maxShootNamePart            = 12        // this leaves 5 chars for random suffix
+
+	tagKymaRuntimeId = "kyma.runtime-id"
+	tagKymaShootName = "kyma.shoot-name"
+)
+
+func (s *State) shootName() string {
+	return s.ObjAsRuntime().Spec.Shoot.Name
+}
+
+func (s *State) location() string {
+	return s.ObjAsRuntime().Spec.Shoot.Region
+}
+
+func (s *State) resourceGroupDataName() string {
+	return fmt.Sprintf("kyma-security-%s", s.shootName())
+}
+
+func (s *State) resourceGroupWatcherName() string {
+	return "NetworkWatcherRG"
+}
+
+func (s *State) networkWatcherName() string {
+	return fmt.Sprintf("NetworkWatcher_%s", s.location())
+}
+
+func (s *State) logAnalyticsWorkspaceName() string {
+	return fmt.Sprintf("kyma-security-%s", s.shootName())
+}
+
+func (s *State) storageAccountBaseName() string {
+	name := strings.ToLower(s.shootName())
+	name = regexp.MustCompile(`[^a-z0-9]`).ReplaceAllString(name, "")
+	maxShootPart := maxStorageAccountNameLength - len(storageAccountPrefix)
+	if len(name) > maxShootPart {
+		name = name[:maxShootPart]
+	}
+	return fmt.Sprintf("%s%s", storageAccountPrefix, name)
+}
+
+func (s *State) storageAccountNameAttempt() string {
+	baseName := s.storageAccountBaseName()
+	suffixLen := maxStorageAccountNameLength - len(storageAccountPrefix)
+	suffix := strings.ToLower(util.RandomString(suffixLen))
+	return fmt.Sprintf("%s%s", baseName, suffix)
+}
+
+func (s *State) ObjAsRuntime() *infrastructuremanagerv1.Runtime {
+	return s.Obj().(*infrastructuremanagerv1.Runtime)
+}

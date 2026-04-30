@@ -1,4 +1,4 @@
-package runtime
+package security
 
 import (
 	"context"
@@ -16,4 +16,12 @@ type StateFactory interface {
 
 func NewStateFactory() StateFactory {
 	return nil
+}
+
+type stateFactory struct{}
+
+func (f *stateFactory) NewState(ctx context.Context, runtimeState runtimetypes.State) (*State, error) {
+	return &State{
+		State: runtimeState,
+	}, nil
 }

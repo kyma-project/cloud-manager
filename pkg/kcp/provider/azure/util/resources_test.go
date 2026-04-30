@@ -1,8 +1,9 @@
 package util
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResourceDetails(t *testing.T) {
@@ -53,6 +54,14 @@ func TestResourceDetails(t *testing.T) {
 			rd         ResourceDetails
 			err        bool
 		}{
+			{
+				"/subscriptions/00000000-00000000-00000000-00000000",
+				"",
+				ResourceDetails{
+					Subscription: "00000000-00000000-00000000-00000000",
+				},
+				false,
+			},
 			{
 				"/subscriptions/00000000-00000000-00000000-00000001/resourceGroups/RESOURCE_GROUP_01",
 				"",

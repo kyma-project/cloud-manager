@@ -2,14 +2,18 @@ package cloudcontrol
 
 import (
 	"context"
+	"time"
 
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
-	awsruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/runtime"
-	azureruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/runtime"
-	gcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/runtime"
+	awsruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/security"
+	azureruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security"
+	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
+	gcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/security"
 	kcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func SetupRuntimeReconciler(
@@ -20,7 +24,7 @@ func SetupRuntimeReconciler(
 		kcpruntime.NewRuntimeReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr)),
 			awsruntime.NewStateFactory(),
-			azureruntime.NewStateFactory(),
+			azureruntime.NewStateFactory(azuresecurityclient.NewClientProvider()),
 			gcpruntime.NewStateFactory(),
 		),
 	).SetupWithManager(ctx, mgr)
@@ -44,7 +48,22 @@ func (r *RuntimeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *RuntimeReconciler) SetupWithManager(_ context.Context, mgr ctrl.Manager) error {
+func (r *RuntimeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	// index runtimes by binding name
+	if err := mgr.GetFieldIndexer().IndexField(
+		ctx, &infrastructuremanagerv1.Runtime{},
+		cloudcontrolv1beta1.RuntimeFiledBindingName,
+		func(rawObj client.Object) []string {
+			x := rawObj.(*infrastructuremanagerv1.Runtime)
+			return []string{x.Spec.Shoot.SecretBindingName}
+		},
+	); err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrastructuremanagerv1.Runtime{}).
 		Complete(r)

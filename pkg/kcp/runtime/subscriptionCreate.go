@@ -12,7 +12,7 @@ import (
 func subscriptionCreate(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if state.Subscription != nil {
+	if state.subscription != nil {
 		return nil, ctx
 	}
 
@@ -45,7 +45,7 @@ func subscriptionCreate(ctx context.Context, st composed.State) (error, context.
 		return err, ctx
 	}
 
-	state.Subscription = subscription
+	state.subscription = subscription
 
 	composed.LoggerFromCtx(ctx).Info("KCP Subscription created")
 

@@ -1,0 +1,32 @@
+package security
+
+import (
+	"context"
+
+	runtimetypes "github.com/kyma-project/cloud-manager/pkg/kcp/runtime/types"
+)
+
+type State struct {
+	runtimetypes.State
+}
+
+type StateFactory interface {
+	NewState(ctx context.Context, runtimeState runtimetypes.State) (context.Context, *State, error)
+}
+
+func NewStateFactory() StateFactory {
+	return &stateFactory{}
+}
+
+type stateFactory struct {
+}
+
+func (f *stateFactory) NewState(ctx context.Context, runtimeState runtimetypes.State) (context.Context, *State, error) {
+	return ctx, newState(runtimeState), nil
+}
+
+func newState(baseState runtimetypes.State) *State {
+	return &State{
+		State: baseState,
+	}
+}

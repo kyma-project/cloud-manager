@@ -68,6 +68,7 @@ func (r *subscriptionReconciler) newAction() composed.Action {
 			// create
 			actions.PatchAddCommonFinalizer(),
 			statusInitial,
+			labelBindingName,
 			composed.IfElse(
 				isGardenerSubscription,
 				composed.ComposeActionsNoName(

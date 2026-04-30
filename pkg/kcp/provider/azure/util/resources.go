@@ -2,10 +2,11 @@ package util
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
-	"strings"
 )
 
 type ResourceDetails struct {
@@ -69,10 +70,15 @@ func (rd *ResourceDetails) IsValid() bool {
 func (rd *ResourceDetails) String() string {
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf(
-		"/subscriptions/%s/resourceGroups/%s",
+		"/subscriptions/%s",
 		rd.Subscription,
-		rd.ResourceGroup,
 	))
+	if rd.ResourceGroup != "" {
+		builder.WriteString(fmt.Sprintf(
+			"/resourceGroups/%s",
+			rd.ResourceGroup,
+		))
+	}
 	if rd.Provider != "" {
 		builder.WriteString(fmt.Sprintf(
 			"/providers/%s/%s/%s",
@@ -106,6 +112,19 @@ func ParseResourceID(resourceID string) (ResourceDetails, error) {
 	rd.valid = true
 
 	return rd, nil
+}
+
+type SubscriptionResourceId struct {
+	*ResourceDetails
+}
+
+func NewSubscriptionResourceId(subscription string) *SubscriptionResourceId {
+	return &SubscriptionResourceId{
+		ResourceDetails: &ResourceDetails{
+			Subscription: subscription,
+			valid:        len(subscription) > 0,
+		},
+	}
 }
 
 func NewResourceGroupResourceId(subscription, resourceGroup string) *ResourceDetails {

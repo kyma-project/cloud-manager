@@ -32,6 +32,10 @@ const (
 	SubscriptionLabel = "cloud-manager.kyma-project.io/subscription"
 )
 
+const (
+	RuntimeFiledBindingName = ".spec.shoot.secretBindingName"
+)
+
 // SubscriptionSpec defines the desired state of Subscription.
 // +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Subscription spec is immutable"
 type SubscriptionSpec struct {
