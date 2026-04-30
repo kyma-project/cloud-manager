@@ -57,7 +57,7 @@ type AwsNfsBackupScheduleReconcilerFactory struct {
 
 func (f *AwsNfsBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &AwsNfsBackupScheduleReconciler{
-		Reconciler: backupschedule.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.env, backupschedule.AwsNfsBackupSchedule),
+		Reconciler: backupschedule.NewReconciler(args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, backupschedule.AwsNfsBackupSchedule),
 	}
 }
 

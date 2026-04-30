@@ -58,6 +58,7 @@ on:
 
 jobs:
   test:
+    name: Test ${{ inputs.provider }}
     runs-on: ubuntu-latest
     env:
       AWS_ROLE_NAME: CloudManagerRole
@@ -109,9 +110,9 @@ jobs:
           echo "INPUTSOK='true'" >> $GITHUB_ENV
           
           echo "# Runtime info :information_source:" >> $GITHUB_STEP_SUMMARY
-          echo " * Provider: \\`$PROVIDER\\`" >> $GITHUB_STEP_SUMMARY
-          echo " * Tags: \\`$TAGS\\`" >> $GITHUB_STEP_SUMMARY
-          echo " * Debug: \\`$DEBUG\\`" >> $GITHUB_STEP_SUMMARY
+          echo " * Provider: $PROVIDER" >> $GITHUB_STEP_SUMMARY
+          echo " * Tags: $TAGS" >> $GITHUB_STEP_SUMMARY
+          echo " * Debug: $DEBUG" >> $GITHUB_STEP_SUMMARY
 
       - name: Initialize E2E environment
         uses: ./.github/actions/e2e-init
@@ -221,3 +222,5 @@ jobs:
         if: always() && env.INPUTSOK != ''
         uses: ./.github/actions/e2e-destroy
         id: e2e-destroy
+        with:
+          logs-suffix: ${{ inputs.provider }}

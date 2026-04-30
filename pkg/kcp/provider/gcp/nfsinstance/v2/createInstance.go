@@ -12,6 +12,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -39,7 +40,11 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 		instance.Protocol = filestorepb.Instance_NFS_V4_1
 	}
 
-	operationName, err := state.GetFilestoreClient().CreateInstance(ctx, project, location, name, instance)
+	op, err := state.GetFilestoreClient().CreateFilestoreInstance(ctx, &filestorepb.CreateInstanceRequest{
+		Parent:     v2client.GetFilestoreParentPath(project, location),
+		InstanceId: v2client.GetFilestoreInstanceId(name),
+		Instance:   instance,
+	})
 	if err != nil {
 		logger.Error(err, "Error creating Filestore Instance in GCP")
 		return composed.UpdateStatus(nfsInstance).
@@ -53,6 +58,8 @@ func createInstance(ctx context.Context, st composed.State) (error, context.Cont
 			SuccessLogMsg("Error creating Filestore Instance in GCP").
 			Run(ctx, state)
 	}
+
+	operationName := op.Name()
 
 	changed := false
 

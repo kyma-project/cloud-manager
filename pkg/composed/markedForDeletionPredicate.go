@@ -31,3 +31,7 @@ func MarkedForDeletionPredicate(_ context.Context, state State) bool {
 func NotMarkedForDeletionPredicate(_ context.Context, state State) bool {
 	return !IsMarkedForDeletion(state.Obj())
 }
+
+func ObjIsNil(_ context.Context, state State) bool {
+	return state.Obj() == nil
+}

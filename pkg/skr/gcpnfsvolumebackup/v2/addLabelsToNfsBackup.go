@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,14 +36,21 @@ func addLabelsToNfsBackup(ctx context.Context, st composed.State) (error, contex
 
 	logger.Info("Adding missing labels to GCP File Backup")
 
-	// Get GCP details.
-	project := state.Scope.Spec.Scope.Gcp.Project
-	location := backup.Status.Location
-	name := fmt.Sprintf("cm-%.60s", backup.Status.Id)
+	// Set the backup name for the update request
+	state.fileBackup.Name = v2client.GetFileBackupPath(
+		state.Scope.Spec.Scope.Gcp.Project,
+		backup.Status.Location,
+		fmt.Sprintf("cm-%.60s", backup.Status.Id),
+	)
 
 	state.SetFilestoreLabels()
 
-	_, err := state.fileBackupClient.UpdateBackup(ctx, project, location, name, state.fileBackup, []string{"labels"})
+	_, err := state.fileBackupClient.UpdateFilestoreBackup(ctx, &filestorepb.UpdateBackupRequest{
+		Backup: state.fileBackup,
+		UpdateMask: &fieldmaskpb.FieldMask{
+			Paths: []string{"labels"},
+		},
+	})
 
 	if err != nil {
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError

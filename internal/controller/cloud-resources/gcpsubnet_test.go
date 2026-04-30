@@ -12,8 +12,10 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcprediscluster"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR GcpSubnet", func() {
@@ -21,6 +23,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 	It("Scenario: SKR GcpSubnet is created with specified CIDR", func() {
 
 		gcpSubnetName := "skr-a6db5917-390d-4ee2-bea4-93bafbdade96"
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: gcpSubnetName}))
 		gcpSubnet := &cloudresourcesv1beta1.GcpSubnet{}
 		gcpSubnetCidr := "10.252.0.0/24"
 
@@ -44,8 +47,8 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					infra.SKR().Client(),
 					gcpSubnet,
 					NewObjActions(),
-					HavingGcpSubnetStatusId(),
-					HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR GcpSubnet to get status.id")
 
@@ -61,13 +64,13 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 				Should(Succeed())
 
 			By("And has annotaton cloud-manager.kyma-project.io/kymaName")
-			Expect(kcpGcpSubnet.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpGcpSubnet.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(skrKymaRef.Name))
 
 			By("And has annotaton cloud-manager.kyma-project.io/remoteName")
 			Expect(kcpGcpSubnet.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(gcpSubnet.Name))
 
 			By("And has spec.scope.name equal to SKR Cluster kyma name")
-			Expect(kcpGcpSubnet.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpGcpSubnet.Spec.Scope.Name).To(Equal(skrKymaRef.Name))
 
 			By("And has spec.remoteRef matching to to SKR GcpSubnet")
 			Expect(kcpGcpSubnet.Spec.RemoteRef.Name).To(Equal(gcpSubnet.Name))
@@ -79,7 +82,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 			Expect(kcpGcpSubnet.Spec.Purpose).To(Equal(cloudcontrolv1beta1.GcpSubnetPurpose_PRIVATE))
 
 			By("And has spec.network.name set to be kyma network name")
-			Expect(kcpGcpSubnet.Spec.Network.Name).To(Equal(common.KcpNetworkKymaCommonName(infra.SkrKymaRef().Name)))
+			Expect(kcpGcpSubnet.Spec.Network.Name).To(Equal(common.KcpNetworkKymaCommonName(skrKymaRef.Name)))
 
 		})
 
@@ -103,7 +106,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					gcpSubnet,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -140,8 +143,8 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					infra.SKR().Client(),
 					gcpSubnet,
 					NewObjActions(),
-					HavingGcpSubnetStatusId(),
-					HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR GcpSubnet to get status.id")
 
@@ -180,7 +183,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					gcpSubnet,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed(), "expected GcpSubnet to exist and have Ready condition")
 		})
@@ -201,7 +204,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					gcpSubnet,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.StateDeleting),
-					HavingGcpSubnetStatusState(cloudresourcesv1beta1.StateDeleting),
+					HavingFieldValue(cloudresourcesv1beta1.StateDeleting, "status", "state"),
 				).
 				Should(Succeed(), "expected GcpSubnet to have Deleting state")
 		})
@@ -253,7 +256,7 @@ var _ = Describe("Feature: SKR GcpSubnet", func() {
 					infra.SKR().Client(),
 					skrGcpSubnet,
 					NewObjActions(),
-					HavingGcpSubnetStatusId(),
+					HavingFieldSet("status", "id"),
 				).
 				Should(Succeed(), "expected SKR GcpSubnet to get status.id, but it didn't")
 

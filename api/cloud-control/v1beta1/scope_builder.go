@@ -4,6 +4,8 @@ func NewScopeBuilder() *ScopeBuilder {
 	return &ScopeBuilder{}
 }
 
+// +kubebuilder:object:generate=false
+
 type ScopeBuilder struct {
 	Scope Scope
 }

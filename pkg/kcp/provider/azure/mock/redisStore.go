@@ -10,6 +10,7 @@ import (
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
+	"maps"
 	"sync"
 )
 
@@ -67,7 +68,7 @@ func (s *redisStore) AzureSetRedisInstanceState(ctx context.Context, resourceGro
 		return err
 	}
 
-	info.redis.Properties.ProvisioningState = ptr.To(state)
+	info.redis.Properties.ProvisioningState = new(state)
 
 	return nil
 }
@@ -101,26 +102,26 @@ func (s *redisStore) CreateRedisInstance(ctx context.Context, resourceGroupName,
 	}
 
 	props.ProvisioningState = ptr.To(armredis.ProvisioningStateSucceeded)
-	props.HostName = ptr.To("redis.tcp")
-	props.SSLPort = ptr.To(int32(6380))
+	props.HostName = new("redis.tcp")
+	props.SSLPort = new(int32(6380))
 	if props.SKU == nil {
 		props.SKU = &armredis.SKU{
-			Capacity: ptr.To(int32(1)),
+			Capacity: new(int32(1)),
 		}
 	}
 
 	item := &instanceInfo{
 		redis: &armredis.ResourceInfo{
 			Location:   parameters.Location,
-			Name:       ptr.To(redisInstanceName),
+			Name:       new(redisInstanceName),
 			Properties: props,
 			Identity:   parameters.Identity,
 			Tags:       parameters.Tags,
 			Zones:      parameters.Zones,
 		},
 		accessKeys: &armredis.AccessKeys{
-			PrimaryKey:   ptr.To(uuid.NewString()),
-			SecondaryKey: ptr.To(uuid.NewString()),
+			PrimaryKey:   new(uuid.NewString()),
+			SecondaryKey: new(uuid.NewString()),
 		},
 	}
 
@@ -165,9 +166,7 @@ func (s *redisStore) UpdateRedisInstance(ctx context.Context, resourceGroupName,
 		}
 	}
 	if parameters.Tags != nil {
-		for k, v := range parameters.Tags {
-			info.redis.Tags[k] = v
-		}
+		maps.Copy(info.redis.Tags, parameters.Tags)
 	}
 
 	return nil

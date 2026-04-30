@@ -51,8 +51,9 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
+			scopeState, _ := commonscope.NewStateFactory(kcpCluster, scopeProvider).NewState(context.Background(), types.NamespacedName{}, composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore))
 			return &State{
-				State: commonscope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore)),
+				State: scopeState,
 			}
 		}
 
@@ -114,8 +115,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: load Bound pvc", func(t *testing.T) {
 			setupTest(true, corev1.ClaimBound)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolumeClaim(ctx, state)
 
@@ -127,8 +127,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: fail pvc that is not Bound", func(t *testing.T) {
 			setupTest(true, corev1.ClaimPending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolumeClaim(ctx, state)
 
@@ -139,8 +138,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: fail pvc with invalid provisioner", func(t *testing.T) {
 			setupTest(true, corev1.ClaimPending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			// patch the annotations to have invalid provisioner
 			pvc.Annotations["volume.kubernetes.io/storage-provisioner"] = "invalid.provisioner"
 			err := k8sClient.Patch(ctx, pvc, client.MergeFrom(pvc), client.FieldOwner("test"))
@@ -154,8 +152,7 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: error out if APIServer cant find requested pvc", func(t *testing.T) {
 			setupTest(false, corev1.ClaimPending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolumeClaim(ctx, state)
 

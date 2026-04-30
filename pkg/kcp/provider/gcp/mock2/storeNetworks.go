@@ -129,18 +129,18 @@ func (s *store) InsertNetwork(ctx context.Context, req *computepb.InsertNetworkR
 
 	id := rand.Uint64()
 	name := gcputil.NewGlobalNetworkName(req.Project, req.NetworkResource.GetName())
-	net.Id = ptr.To(id)
-	net.SelfLink = ptr.To(name.PrefixWithGoogleApisComputeV1())
-	net.SelfLinkWithId = ptr.To(gcputil.NewGlobalNetworkName(req.Project, fmt.Sprintf("%d", id)).PrefixWithGoogleApisComputeV1())
-	net.Kind = ptr.To("compute#network")
+	net.Id = new(id)
+	net.SelfLink = new(name.PrefixWithGoogleApisComputeV1())
+	net.SelfLinkWithId = new(gcputil.NewGlobalNetworkName(req.Project, fmt.Sprintf("%d", id)).PrefixWithGoogleApisComputeV1())
+	net.Kind = new("compute#network")
 
 	s.addressSpaces[name.String()] = newAddressSpace()
 	s.networks.Add(net, name)
 
 	compOp := s.createComputeOperationNoLock(req.Project, "", "insert", net.GetSelfLink(), id)
 	compOp.Status = ptr.To(computepb.Operation_DONE)
-	compOp.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	compOp.Progress = ptr.To(int32(100))
+	compOp.EndTime = new(time.Now().Format(time.RFC3339))
+	compOp.Progress = new(int32(100))
 
 	return newComputeOperation(compOp), nil
 }
@@ -209,8 +209,8 @@ func (s *store) DeleteNetwork(ctx context.Context, req *computepb.DeleteNetworkR
 
 	compOp := s.createComputeOperationNoLock(req.Project, "", "delete", nd.PrefixWithGoogleApisComputeV1(), ptr.Deref(net.Id, 0))
 	compOp.Status = ptr.To(computepb.Operation_DONE)
-	compOp.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	compOp.Progress = ptr.To(int32(100))
+	compOp.EndTime = new(time.Now().Format(time.RFC3339))
+	compOp.Progress = new(int32(100))
 
 	return newComputeOperation(compOp), nil
 }
@@ -282,8 +282,8 @@ func (s *store) AddPeering(ctx context.Context, req *computepb.AddPeeringNetwork
 	if err != nil {
 		return nil, gcpmeta.NewInternalServerError("%v: failed to clone peering: %v", common.ErrLogical, err)
 	}
-	peeringLocal.Network = ptr.To(netRemoteNd.PrefixWithGoogleApisComputeV1())
-	peeringLocal.State = ptr.To(computepb.NetworkPeering_INACTIVE.String())
+	peeringLocal.Network = new(netRemoteNd.PrefixWithGoogleApisComputeV1())
+	peeringLocal.State = new(computepb.NetworkPeering_INACTIVE.String())
 	netLocal.Peerings = append(netLocal.Peerings, peeringLocal)
 
 	// look for remote peering to establish connection
@@ -296,14 +296,14 @@ func (s *store) AddPeering(ctx context.Context, req *computepb.AddPeeringNetwork
 	}
 	// establish the connection, since peerings exist on both sides
 	if peeringRemote != nil {
-		peeringRemote.State = ptr.To(computepb.NetworkPeering_ACTIVE.String())
-		peeringLocal.State = ptr.To(computepb.NetworkPeering_ACTIVE.String())
+		peeringRemote.State = new(computepb.NetworkPeering_ACTIVE.String())
+		peeringLocal.State = new(computepb.NetworkPeering_ACTIVE.String())
 	}
 
 	op := s.createComputeOperationNoLock(s.projectId, "", "addPeering", netLocalNd.PrefixWithGoogleApisComputeV1(), netLocal.GetId())
 	op.Status = ptr.To(computepb.Operation_DONE)
-	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	op.Progress = ptr.To(int32(100))
+	op.EndTime = new(time.Now().Format(time.RFC3339))
+	op.Progress = new(int32(100))
 
 	return newComputeOperation(op), nil
 }
@@ -359,15 +359,15 @@ func (s *store) RemovePeering(ctx context.Context, req *computepb.RemovePeeringN
 	if err == nil {
 		for _, peering := range netRemote.Peerings {
 			if netLocalNd.EqualString(peering.GetNetwork()) {
-				peering.State = ptr.To(computepb.NetworkPeering_INACTIVE.String())
+				peering.State = new(computepb.NetworkPeering_INACTIVE.String())
 			}
 		}
 	}
 
 	op := s.createComputeOperationNoLock(s.projectId, "", "removePeering", netLocal.GetSelfLink(), netLocal.GetId())
 	op.Status = ptr.To(computepb.Operation_DONE)
-	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	op.Progress = ptr.To(int32(100))
+	op.EndTime = new(time.Now().Format(time.RFC3339))
+	op.Progress = new(int32(100))
 
 	return newComputeOperation(op), nil
 }

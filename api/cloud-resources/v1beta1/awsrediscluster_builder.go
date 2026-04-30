@@ -8,6 +8,8 @@ func NewAwsRedisClusterBuilder() *AwsRedisClusterBuilder {
 	}
 }
 
+// +kubebuilder:object:generate=false
+
 type AwsRedisClusterBuilder struct {
 	AwsRedisCluster AwsRedisCluster
 }

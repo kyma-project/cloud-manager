@@ -3,8 +3,10 @@ package v2
 import (
 	"context"
 
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -23,7 +25,9 @@ func loadBackup(ctx context.Context, st composed.State) (error, context.Context)
 	project := gcpScope.Project
 	name := extractBackupName(restore.Spec.Source.BackupUrl)
 
-	backup, err := state.fileBackupClient.GetBackup(ctx, project, location, name)
+	backup, err := state.fileBackupClient.GetFilestoreBackup(ctx, &filestorepb.GetBackupRequest{
+		Name: v2client.GetFileBackupPath(project, location, name),
+	})
 
 	if err != nil {
 		restore.Status.State = cloudresourcesv1beta1.JobStateFailed

@@ -58,7 +58,7 @@ type GcpNfsVolumeBackupDiscoveryReconcilerFactory struct {
 
 func (f *GcpNfsVolumeBackupDiscoveryReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &GcpNfsVolumeBackupDiscoveryReconciler{
-		Reconciler: gcpnfsvolumebackupdiscovery.NewReconciler(args.KymaRef, args.KcpCluster, args.SkrCluster, f.fileBackupClientProvider),
+		Reconciler: gcpnfsvolumebackupdiscovery.NewReconciler(args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.fileBackupClientProvider),
 	}
 }
 

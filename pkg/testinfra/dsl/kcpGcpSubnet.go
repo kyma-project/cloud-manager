@@ -3,7 +3,6 @@ package dsl
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"k8s.io/klog/v2"
@@ -74,30 +73,6 @@ func WithKcpGcpSubnetRemoteRef(name string) ObjAction {
 				x.Spec.RemoteRef.Name = name
 			}
 		},
-	}
-}
-
-func HavingKcpGcpSubnetStatusCidr(cidr string) ObjAssertion {
-	return func(obj client.Object) error {
-		if x, ok := obj.(*cloudcontrolv1beta1.GcpSubnet); ok {
-			if x.Status.Cidr == cidr {
-				return nil
-			}
-			return fmt.Errorf("the KCP GcpSubnet expected status cidr %s, but it has %s", cidr, x.Status.Cidr)
-		}
-		return fmt.Errorf("unhandled type %T", obj)
-	}
-}
-
-func HavingKcpGcpSubnetCreationOperationDefined() ObjAssertion {
-	return func(obj client.Object) error {
-		if x, ok := obj.(*cloudcontrolv1beta1.GcpSubnet); ok {
-			if x.Status.SubnetCreationOperationName != "" {
-				return nil
-			}
-			return fmt.Errorf("the KCP GcpSubnet expected status subnetCreationOperationName to be defined")
-		}
-		return fmt.Errorf("unhandled type %T", obj)
 	}
 }
 

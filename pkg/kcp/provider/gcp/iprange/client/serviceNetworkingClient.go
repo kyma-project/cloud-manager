@@ -30,14 +30,11 @@ import (
 // If cloud.google.com/go/servicenetworking becomes available, only the initialization
 // in gcpClients.go needs to change; the provider pattern remains the same.
 
+// ServiceNetworkingClient embeds the wrapped client.ServiceNetworkingClient interface.
+// The feature-local methods have identical signatures to the wrapped interface,
+// so no additional methods are needed.
 type ServiceNetworkingClient interface {
-	ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error)
-	CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
-	// DeleteServiceConnection: Deletes a private service access connection.
-	// projectNumber: Project number which is different from project id. Get it by calling client.GetProjectNumber(ctx, projectId)
-	DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error)
-	PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error)
-	GetServiceNetworkingOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error)
+	client.ServiceNetworkingClient
 }
 
 // NewServiceNetworkingClientProvider creates a GcpClientProvider for ServiceNetworkingClient.
@@ -46,21 +43,21 @@ type ServiceNetworkingClient interface {
 // The clients are initialized in GcpClients and injected here for consistency with other providers.
 func NewServiceNetworkingClientProvider(gcpClients *client.GcpClients) client.GcpClientProvider[ServiceNetworkingClient] {
 	return func(_ string) ServiceNetworkingClient {
-		return NewServiceNetworkingClientForService(
-			gcpClients.ServiceNetworking,
-			gcpClients.CloudResourceManager,
-		)
+		return NewServiceNetworkingClientFromWrapped(gcpClients.ServiceNetworkingWrapped())
 	}
+}
+
+// NewServiceNetworkingClientFromWrapped creates a ServiceNetworkingClient from wrapped interface.
+// Used by mock2 for test wiring.
+func NewServiceNetworkingClientFromWrapped(wrapped client.ServiceNetworkingClient) ServiceNetworkingClient {
+	return &serviceNetworkingClientAdapter{ServiceNetworkingClient: wrapped}
 }
 
 // NewServiceNetworkingClientProviderV2 creates a ClientProvider (OLD pattern) for v2 legacy code.
 // This wraps the clients from GcpClients to avoid duplicate client creation.
 func NewServiceNetworkingClientProviderV2(gcpClients *client.GcpClients) client.ClientProvider[ServiceNetworkingClient] {
 	return func(ctx context.Context, credentialsFile string) (ServiceNetworkingClient, error) {
-		return NewServiceNetworkingClientForService(
-			gcpClients.ServiceNetworking,
-			gcpClients.CloudResourceManager,
-		), nil
+		return NewServiceNetworkingClientFromWrapped(gcpClients.ServiceNetworkingWrapped()), nil
 	}
 }
 
@@ -89,15 +86,25 @@ func NewServiceNetworkingClient() client.ClientProvider[ServiceNetworkingClient]
 }
 
 func NewServiceNetworkingClientForService(svcNet *servicenetworking.APIService, crmService *cloudresourcemanager.Service) ServiceNetworkingClient {
-	return &serviceNetworkingClient{svcNet: svcNet, crmService: crmService}
+	return &serviceNetworkingClientDirect{svcNet: svcNet, crmService: crmService}
 }
 
-type serviceNetworkingClient struct {
+// serviceNetworkingClientAdapter embeds the central client.ServiceNetworkingClient interface.
+// Since all methods have identical signatures, the embedded interface provides them directly.
+type serviceNetworkingClientAdapter struct {
+	client.ServiceNetworkingClient
+}
+
+var _ ServiceNetworkingClient = &serviceNetworkingClientAdapter{}
+
+// serviceNetworkingClientDirect is the direct implementation using the legacy API.
+// Used by the deprecated NewServiceNetworkingClient and NewServiceNetworkingClientForService.
+type serviceNetworkingClientDirect struct {
 	svcNet     *servicenetworking.APIService
 	crmService *cloudresourcemanager.Service
 }
 
-func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
+func (c *serviceNetworkingClientDirect) PatchServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	network := client.GetVPCPath(projectId, vpcId)
 	operation, err := c.svcNet.Services.Connections.Patch(client.ServiceNetworkingServiceConnectionName, &servicenetworking.Connection{
@@ -108,7 +115,7 @@ func (c *serviceNetworkingClient) PatchServiceConnection(ctx context.Context, pr
 	return operation, err
 }
 
-func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
+func (c *serviceNetworkingClientDirect) DeleteServiceConnection(ctx context.Context, projectId, vpcId string) (*servicenetworking.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	ProjectNumber, err := client.GetCachedProjectNumber(projectId, c.crmService)
 	if err != nil {
@@ -122,7 +129,7 @@ func (c *serviceNetworkingClient) DeleteServiceConnection(ctx context.Context, p
 	return operation, err
 }
 
-func (c *serviceNetworkingClient) ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error) {
+func (c *serviceNetworkingClientDirect) ListServiceConnections(ctx context.Context, projectId, vpcId string) ([]*servicenetworking.Connection, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	network := client.GetVPCPath(projectId, vpcId)
 	out, err := c.svcNet.Services.Connections.List(client.ServiceNetworkingServicePath).Network(network).Do()
@@ -133,7 +140,7 @@ func (c *serviceNetworkingClient) ListServiceConnections(ctx context.Context, pr
 	return out.Connections, nil
 }
 
-func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
+func (c *serviceNetworkingClientDirect) CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	network := client.GetVPCPath(projectId, vpcId)
 	operation, err := c.svcNet.Services.Connections.Create(client.ServiceNetworkingServicePath, &servicenetworking.Connection{
@@ -144,7 +151,7 @@ func (c *serviceNetworkingClient) CreateServiceConnection(ctx context.Context, p
 	return operation, err
 }
 
-func (c *serviceNetworkingClient) GetServiceNetworkingOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error) {
+func (c *serviceNetworkingClientDirect) GetServiceNetworkingOperation(ctx context.Context, operationName string) (*servicenetworking.Operation, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	operation, err := c.svcNet.Operations.Get(operationName).Do()
 	if err != nil {

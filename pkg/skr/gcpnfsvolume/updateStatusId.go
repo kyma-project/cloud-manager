@@ -13,17 +13,17 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 	logger := composed.LoggerFromCtx(ctx).WithValues("id", obj.Name)
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if obj.Status.Id != "" {
 		logger.Info("Field .status.id is already set")
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.KcpNfsInstance == nil {
 		logger.Info("KCP NfsInstance does not exist")
-		return nil, nil
+		return nil, ctx
 	}
 
 	obj.Status.Id = state.KcpNfsInstance.Name

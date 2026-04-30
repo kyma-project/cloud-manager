@@ -2,11 +2,12 @@ package subnet
 
 import (
 	"context"
+
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
-	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,11 +26,11 @@ func deleteSubnet(ctx context.Context, st composed.State) (error, context.Contex
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	err := state.computeClient.DeleteSubnet(ctx, gcpsubnetclient.DeleteSubnetRequest{
-		ProjectId:     gcpScope.Project,
-		Region:        region,
-		Name:          GetSubnetShortName(state.Obj().GetName()),
-		IdempotenceId: uuid.NewString(),
+	_, err := state.computeClient.DeleteSubnet(ctx, &computepb.DeleteSubnetworkRequest{
+		Project:    gcpScope.Project,
+		Region:     region,
+		Subnetwork: GetSubnetShortName(state.Obj().GetName()),
+		RequestId:  new(uuid.NewString()),
 	})
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {

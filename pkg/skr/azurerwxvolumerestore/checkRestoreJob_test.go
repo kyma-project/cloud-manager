@@ -50,8 +50,9 @@ func TestCheckRestoreJob(t *testing.T) {
 
 		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
+			scopeState, _ := commonscope.NewStateFactory(kcpCluster, scopeProvider).NewState(context.Background(), types.NamespacedName{}, composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore))
 			return &State{
-				State: commonscope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore)),
+				State: scopeState,
 			}
 		}
 
@@ -116,8 +117,7 @@ func TestCheckRestoreJob(t *testing.T) {
 			backupRecoveryPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
 			backupStorageAccountPath := "test-storage-account-path"
 			setupTest(true, backupRecoveryPointId, backupStorageAccountPath)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
 
@@ -153,8 +153,7 @@ func TestCheckRestoreJob(t *testing.T) {
 			backupRecoveryPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
 			backupStorageAccountPath := "test-storage-account-path"
 			setupTest(true, backupRecoveryPointId, backupStorageAccountPath)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
 
@@ -192,8 +191,7 @@ func TestCheckRestoreJob(t *testing.T) {
 			backupRecoveryPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
 			backupStorageAccountPath := "test-storage-account-path"
 			setupTest(true, backupRecoveryPointId, backupStorageAccountPath)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
 
@@ -230,8 +228,7 @@ func TestCheckRestoreJob(t *testing.T) {
 			backupRecoveryPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
 			backupStorageAccountPath := "test-storage-account-path"
 			setupTest(true, backupRecoveryPointId, backupStorageAccountPath)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
 
@@ -268,8 +265,7 @@ func TestCheckRestoreJob(t *testing.T) {
 			backupRecoveryPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
 			backupStorageAccountPath := "test-storage-account-path"
 			setupTest(true, backupRecoveryPointId, backupStorageAccountPath)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
 
@@ -306,8 +302,7 @@ func TestCheckRestoreJob(t *testing.T) {
 			backupRecoveryPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
 			backupStorageAccountPath := "test-storage-account-path"
 			setupTest(true, backupRecoveryPointId, backupStorageAccountPath)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
 
@@ -343,8 +338,7 @@ func TestCheckRestoreJob(t *testing.T) {
 			backupRecoveryPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
 			backupStorageAccountPath := "test-storage-account-path"
 			setupTest(true, backupRecoveryPointId, backupStorageAccountPath)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
 
@@ -374,8 +368,7 @@ func TestCheckRestoreJob(t *testing.T) {
 		t.Run("Should: fail if recoveryPointId is invalid in backup status ", func(t *testing.T) {
 			backupStorageAccountPath := "test-storage-account-path"
 			setupTest(true, "invalidRecoveryPointId", backupStorageAccountPath)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			restore := state.ObjAsAzureRwxVolumeRestore()
 			restore.Status.RestoredDir = "test-restore-dir"
 

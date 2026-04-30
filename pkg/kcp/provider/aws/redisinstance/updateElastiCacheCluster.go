@@ -72,8 +72,8 @@ func updateElastiCacheCluster() composed.Action {
 func upgradeElastiCacheCluster() composed.Action {
 	return modifyElastiCacheReplicationGroup(func(s *State) client.ModifyElastiCacheClusterOptions {
 		return client.ModifyElastiCacheClusterOptions{
-			EngineVersion:      ptr.To(s.ObjAsRedisInstance().Spec.Instance.Aws.EngineVersion),
-			ParameterGroupName: ptr.To(s.GetUpgradeParamGroupName()),
+			EngineVersion:      new(s.ObjAsRedisInstance().Spec.Instance.Aws.EngineVersion),
+			ParameterGroupName: new(s.GetUpgradeParamGroupName()),
 		}
 	})
 }

@@ -78,7 +78,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 
 		By("When NfsInstance is created", func() {
-			Eventually(CreateNfsInstance).
+			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(name),
 					WithRemoteRef("foo"),
@@ -94,7 +94,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 			theEfs = awsMock.GetFileSystemById(nfsInstance.Status.Id)
 			awsMock.SetFileSystemStatusCapacityById(nfsInstance.Status.Id, resource.MustParse("10Gi"))
@@ -122,7 +122,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusCapacity(resource.MustParse("10Gi")),
+					HavingFieldValue("10Gi", "status", "capacity"),
 				).
 				Should(Succeed(), "expected NfsInstance.status.capacity to be set to 10Gi")
 		})
@@ -146,7 +146,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusCapacity(resource.MustParse("20Gi")),
+					HavingFieldValue("20Gi", "status", "capacity"),
 				).
 				Should(Succeed(), "expected NfsInstance to have updated capacity, but it didn't")
 		})

@@ -5,6 +5,7 @@ package cloudcontrol
 import (
 	"context"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -31,12 +32,26 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 		scope := &cloudcontrolv1beta1.Scope{}
 		ipRange := &cloudcontrolv1beta1.IpRange{}
 
+		gcpMock := infra.GcpMock2().NewSubscription("iprange-v3-cidr")
+		defer gcpMock.Delete()
+
 		By("Given Scope exists", func() {
 			kcpscope.Ignore.AddName(kymaName)
 
-			Eventually(CreateScopeGcp).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+			Eventually(CreateScopeGcp2).
+				WithArguments(infra.Ctx(), infra, scope, gcpMock.ProjectId(), WithName(kymaName)).
 				Should(Succeed())
+		})
+
+		By("And Given GCP VPC network exists", func() {
+			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				NetworkResource: &computepb.Network{
+					Name: new(scope.Spec.Scope.Gcp.VpcNetwork),
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(op.Wait(infra.Ctx())).To(Succeed())
 		})
 
 		var kcpNetworkKyma *cloudcontrolv1beta1.Network
@@ -89,22 +104,28 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 
 		By("And Then GCP global address is created", func() {
 			Eventually(func() error {
-				_, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+				_, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+					Project: gcpMock.ProjectId(),
+					Address: "cm-" + ipRange.Name,
+				})
 				return err
 			}).Should(Succeed())
 		})
 
 		By("And Then GCP global address has correct properties", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				Address: "cm-" + ipRange.Name,
+			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gcpGlobalAddress).NotTo(BeNil())
-			Expect(gcpGlobalAddress.Name).To(Equal("cm-" + ipRange.Name))
-			Expect(gcpGlobalAddress.AddressType).To(Equal(string(gcpclient.AddressTypeInternal)))
+			Expect(gcpGlobalAddress.GetName()).To(Equal("cm-" + ipRange.Name))
+			Expect(gcpGlobalAddress.GetAddressType()).To(Equal(string(gcpclient.AddressTypeInternal)))
 		})
 
 		By("And Then GCP PSA connection is created", func() {
 			Eventually(func() error {
-				connections, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+				connections, err := gcpMock.ListServiceConnections(infra.Ctx(), gcpMock.ProjectId(), scope.Spec.Scope.Gcp.VpcNetwork)
 				if err != nil {
 					return err
 				}
@@ -116,7 +137,7 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 		})
 
 		By("And Then GCP PSA connection includes the IP range", func() {
-			connections, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			connections, err := gcpMock.ListServiceConnections(infra.Ctx(), gcpMock.ProjectId(), scope.Spec.Scope.Gcp.VpcNetwork)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(connections).NotTo(BeEmpty())
 			Expect(connections[0].ReservedPeeringRanges).To(ContainElement("cm-" + ipRange.Name))
@@ -137,13 +158,15 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 		})
 
 		By("And Then GCP global address does not exist", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
-			Expect(gcpGlobalAddress).To(BeNil())
+			_, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				Address: "cm-" + ipRange.Name,
+			})
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})
 
 		By("And Then GCP PSA connection no longer includes the IP range", func() {
-			connections, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			connections, err := gcpMock.ListServiceConnections(infra.Ctx(), gcpMock.ProjectId(), scope.Spec.Scope.Gcp.VpcNetwork)
 			Expect(err).NotTo(HaveOccurred())
 			if len(connections) > 0 {
 				Expect(connections[0].ReservedPeeringRanges).NotTo(ContainElement("cm-" + ipRange.Name))
@@ -164,12 +187,26 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 		scope := &cloudcontrolv1beta1.Scope{}
 		ipRange := &cloudcontrolv1beta1.IpRange{}
 
+		gcpMock := infra.GcpMock2().NewSubscription("iprange-v3-nocidr")
+		defer gcpMock.Delete()
+
 		By("Given Scope exists", func() {
 			kcpscope.Ignore.AddName(kymaName)
 
-			Eventually(CreateScopeGcp).
-				WithArguments(infra.Ctx(), infra, scope, WithName(kymaName)).
+			Eventually(CreateScopeGcp2).
+				WithArguments(infra.Ctx(), infra, scope, gcpMock.ProjectId(), WithName(kymaName)).
 				Should(Succeed())
+		})
+
+		By("And Given GCP VPC network exists", func() {
+			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
+				Project: gcpMock.ProjectId(),
+				NetworkResource: &computepb.Network{
+					Name: new(scope.Spec.Scope.Gcp.VpcNetwork),
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(op.Wait(infra.Ctx())).To(Succeed())
 		})
 
 		var kcpNetworkKyma *cloudcontrolv1beta1.Network
@@ -223,22 +260,28 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 
 		By("And Then GCP global address is created", func() {
 			Eventually(func() error {
-				_, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+				_, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+					Project: gcpMock.ProjectId(),
+					Address: "cm-" + ipRange.Name,
+				})
 				return err
 			}).Should(Succeed())
 		})
 
 		By("And Then GCP global address has correct properties", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
+			gcpGlobalAddress, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				Address: "cm-" + ipRange.Name,
+			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gcpGlobalAddress).NotTo(BeNil())
-			Expect(gcpGlobalAddress.Name).To(Equal("cm-" + ipRange.Name))
-			Expect(gcpGlobalAddress.AddressType).To(Equal(string(gcpclient.AddressTypeInternal)))
+			Expect(gcpGlobalAddress.GetName()).To(Equal("cm-" + ipRange.Name))
+			Expect(gcpGlobalAddress.GetAddressType()).To(Equal(string(gcpclient.AddressTypeInternal)))
 		})
 
 		By("And Then GCP PSA connection is created", func() {
 			Eventually(func() error {
-				connections, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+				connections, err := gcpMock.ListServiceConnections(infra.Ctx(), gcpMock.ProjectId(), scope.Spec.Scope.Gcp.VpcNetwork)
 				if err != nil {
 					return err
 				}
@@ -250,7 +293,7 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 		})
 
 		By("And Then GCP PSA connection includes the IP range", func() {
-			connections, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			connections, err := gcpMock.ListServiceConnections(infra.Ctx(), gcpMock.ProjectId(), scope.Spec.Scope.Gcp.VpcNetwork)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(connections).NotTo(BeEmpty())
 			Expect(connections[0].ReservedPeeringRanges).To(ContainElement("cm-" + ipRange.Name))
@@ -271,13 +314,15 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 		})
 
 		By("And Then GCP global address does not exist", func() {
-			gcpGlobalAddress, err := infra.GcpMock().GetIpRangeDiscovery(infra.Ctx(), scope.Spec.Scope.Gcp.Project, "cm-"+ipRange.Name)
-			Expect(gcpGlobalAddress).To(BeNil())
+			_, err := gcpMock.GetGlobalAddress(infra.Ctx(), &computepb.GetGlobalAddressRequest{
+				Project: gcpMock.ProjectId(),
+				Address: "cm-" + ipRange.Name,
+			})
 			Expect(gcpmeta.IsNotFound(err)).To(BeTrue())
 		})
 
 		By("And Then GCP PSA connection no longer includes the IP range", func() {
-			connections, err := infra.GcpMock().ListServiceConnections(infra.Ctx(), scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
+			connections, err := gcpMock.ListServiceConnections(infra.Ctx(), gcpMock.ProjectId(), scope.Spec.Scope.Gcp.VpcNetwork)
 			Expect(err).NotTo(HaveOccurred())
 			if len(connections) > 0 {
 				Expect(connections[0].ReservedPeeringRanges).NotTo(ContainElement("cm-" + ipRange.Name))

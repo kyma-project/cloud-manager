@@ -29,11 +29,11 @@ func (s *store) PatchServiceConnection(ctx context.Context, projectId, vpcId str
 	for _, reservedIpRange := range reservedIpRanges {
 		// reservedIpRange is the name of the address
 		addrNd := gcputil.NewGlobalAddressName(projectId, reservedIpRange)
-		addr, found := s.addresses.FindByName(addrNd)
+		_, found := s.addresses.FindByName(addrNd)
 		if !found {
 			return nil, gcpmeta.NewBadRequestError("address %s not found", addrNd)
 		}
-		reservedPeeringRanges = append(reservedPeeringRanges, addr.GetSelfLink())
+		reservedPeeringRanges = append(reservedPeeringRanges, reservedIpRange)
 	}
 
 	con, found := s.serviceConnections.FindByName(netNd)
@@ -116,11 +116,11 @@ func (s *store) CreateServiceConnection(ctx context.Context, projectId, vpcId st
 	for _, reservedIpRange := range reservedIpRanges {
 		// reservedIpRange is the name of the address
 		addrNd := gcputil.NewGlobalAddressName(projectId, reservedIpRange)
-		addr, found := s.addresses.FindByName(addrNd)
+		_, found := s.addresses.FindByName(addrNd)
 		if !found {
 			return nil, gcpmeta.NewBadRequestError("address %s not found", addrNd)
 		}
-		reservedPeeringRanges = append(reservedPeeringRanges, addr.GetSelfLink())
+		reservedPeeringRanges = append(reservedPeeringRanges, reservedIpRange)
 	}
 
 	con := &servicenetworking.Connection{

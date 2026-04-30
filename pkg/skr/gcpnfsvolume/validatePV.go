@@ -17,7 +17,7 @@ func validatePV(ctx context.Context, st composed.State) (error, context.Context)
 	nfsVolume := state.ObjAsGcpNfsVolume()
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	pvName := getVolumeName(nfsVolume)
@@ -25,7 +25,7 @@ func validatePV(ctx context.Context, st composed.State) (error, context.Context)
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, pv)
 
 	if apierrors.IsNotFound(err) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if err != nil {
@@ -35,11 +35,13 @@ func validatePV(ctx context.Context, st composed.State) (error, context.Context)
 	parentName, parentNameExists := pv.Labels[cloudresourcesv1beta1.LabelNfsVolName]
 	parentNamespace, parentNamespaceExists := pv.Labels[cloudresourcesv1beta1.LabelNfsVolNS]
 	if parentNameExists && parentNamespaceExists && parentName == nfsVolume.Name && parentNamespace == nfsVolume.Namespace {
-		return nil, nil
+		return nil, ctx
 	}
 
 	nfsVolume.Status.State = cloudresourcesv1beta1.GcpNfsVolumeError
 	errorMsg := fmt.Sprintf("Desired PV(%s) already exists with different owner", pvName)
+
+	composed.LoggerFromCtx(ctx).Info(errorMsg)
 
 	return composed.PatchStatus(nfsVolume).
 		SetExclusiveConditions(metav1.Condition{

@@ -1,6 +1,8 @@
 package azurerwxpv
 
 import (
+	"context"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
@@ -34,14 +36,19 @@ type stateFactory struct {
 	clientProvider          azureclient.ClientProvider[client.Client]
 }
 
-func (f *stateFactory) NewState(req ctrl.Request) *State {
-
-	return &State{
-		State: f.commonScopeStateFactory.NewState(
-			f.baseStateFactory.NewState(req.NamespacedName, &corev1.PersistentVolume{}),
-		),
-		clientProvider: f.clientProvider,
+func (f *stateFactory) NewState(ctx context.Context, req ctrl.Request) (*State, error) {
+	scopeState, err := f.commonScopeStateFactory.NewState(
+		ctx,
+		req.NamespacedName,
+		f.baseStateFactory.NewState(req.NamespacedName, &corev1.PersistentVolume{}),
+	)
+	if err != nil {
+		return nil, err
 	}
+	return &State{
+		State:          scopeState,
+		clientProvider: f.clientProvider,
+	}, nil
 }
 
 func newStateFactory(

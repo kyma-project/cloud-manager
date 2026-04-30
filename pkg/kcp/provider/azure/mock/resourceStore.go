@@ -7,7 +7,6 @@ import (
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/ptr"
 	"sync"
 )
 
@@ -63,13 +62,13 @@ func (s *resourceStore) CreateResourceGroup(ctx context.Context, name string, lo
 
 	rgTags := make(map[string]*string, len(tags))
 	for k, v := range tags {
-		rgTags[k] = ptr.To(v)
+		rgTags[k] = new(v)
 	}
 	rg := &armresources.ResourceGroup{
-		Location: ptr.To(location),
+		Location: new(location),
 		Tags:     rgTags,
-		ID:       ptr.To(azureutil.NewResourceGroupResourceId(s.subscription, name).String()),
-		Name:     ptr.To(name),
+		ID:       new(azureutil.NewResourceGroupResourceId(s.subscription, name).String()),
+		Name:     new(name),
 	}
 
 	s.items[name] = rg

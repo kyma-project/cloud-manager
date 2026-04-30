@@ -38,7 +38,7 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 
 	// Setting the uuid as id to prevent duplicate backups if updateStatus fails.
 	if backup.Status.Id == "" {
-		location := getLocation(state)
+		location := getLocation(backup.Spec.Location, state.Scope.Spec.Region)
 		backup.Status.Location = location
 		backup.Status.Id = uuid.NewString()
 		return composed.PatchStatus(backup).
@@ -55,7 +55,11 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 		SourceInstance:  v2client.GetFilestoreInstancePath(project, state.GcpNfsVolume.Status.Location, nfsInstanceName),
 		Labels:          map[string]string{gcpclient.ManagedByKey: gcpclient.ManagedByValue, gcpclient.ScopeNameKey: state.Scope.Name},
 	}
-	opName, err := state.fileBackupClient.CreateBackup(ctx, project, backup.Status.Location, name, fileBackup)
+	op, err := state.fileBackupClient.CreateFilestoreBackup(ctx, &filestorepb.CreateBackupRequest{
+		Parent:   v2client.GetFilestoreParentPath(project, backup.Status.Location),
+		BackupId: name,
+		Backup:   fileBackup,
+	})
 
 	if err != nil {
 		backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupError
@@ -72,18 +76,10 @@ func createNfsBackup(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	backup.Status.State = cloudresourcesv1beta1.GcpNfsBackupCreating
-	backup.Status.OpIdentifier = opName
+	backup.Status.OpIdentifier = op.Name()
 	return composed.PatchStatus(backup).
 		SetExclusiveConditions().
 		// Give some time for backup to get created.
 		SuccessError(composed.StopWithRequeueDelay(config.GcpConfig.GcpRetryWaitTime)).
 		Run(ctx, state)
-}
-
-func getLocation(state *State) string {
-	location := state.ObjAsGcpNfsVolumeBackup().Spec.Location
-	if len(location) != 0 {
-		return location
-	}
-	return state.Scope.Spec.Region
 }

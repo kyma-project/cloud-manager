@@ -6,8 +6,10 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	cmutil "github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR AzureVpcPeering", func() {
@@ -18,7 +20,10 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 			remoteResourceGroup = "MyResourceGroup"
 			remoteVnetName      = "MyVnet"
 		)
+		azureVpcPeeringName := "0d247cc0-dffb-40c1-a9f3-fbd3b4591f9f"
 		azureVpcPeering := &cloudresourcesv1beta1.AzureVpcPeering{}
+
+		skrKymaRef := cmutil.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: azureVpcPeeringName}))
 
 		remoteVnetId := util.NewVirtualNetworkResourceId(remoteSubscription, remoteResourceGroup, remoteVnetName).String()
 
@@ -26,7 +31,7 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 			Eventually(CreateAzureVpcPeering).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), azureVpcPeering,
-					WithName("0d247cc0-dffb-40c1-a9f3-fbd3b4591f9f"),
+					WithName(azureVpcPeeringName),
 					WithAzureRemotePeeringName("b5d42fd8-2623-49d6-8792-1fb50f7e1fb6"),
 					WithAzureRemoteVnet(remoteVnetId),
 				).Should(Succeed())
@@ -97,7 +102,7 @@ var _ = Describe("Feature: SKR AzureVpcPeering", func() {
 		})
 
 		By("And Then KCP VpcPeering has annotations", func() {
-			Expect(vpcPeering.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			Expect(vpcPeering.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(skrKymaRef.Name))
 			Expect(vpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(azureVpcPeering.Name))
 			Expect(vpcPeering.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(azureVpcPeering.Namespace))
 		})

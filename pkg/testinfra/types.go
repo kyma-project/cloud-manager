@@ -10,13 +10,13 @@ import (
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
 	gcpmock2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock2"
 	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog/v2"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -57,8 +57,8 @@ type InfraEnv interface {
 	GcpMock2() gcpmock2.Server
 	AzureMock() azuremock.Server
 	SapMock() sapmock.Server
-	SkrKymaRef() klog.ObjectRef
 	SkrRunner() skrruntime.SkrRunner
+	ScopeProvider() scopeprovider.ScopeProviderRegistry
 	Config() config.Config
 
 	StartKcpControllers(ctx context.Context)
@@ -80,6 +80,7 @@ type InfraDSL interface {
 	WhenKymaModuleStateUpdates(kymaName string, state util.KymaModuleState) error
 	GivenGardenShootGcpExists(name string) error
 	GivenScopeGcpExists(name string) error
+	GivenScopeGcpExistsWithProject(name, project string) error
 }
 
 type ClusterDSL interface {

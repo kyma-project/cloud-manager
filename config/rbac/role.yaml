@@ -182,6 +182,7 @@ rules:
   - infrastructuremanager.kyma-project.io
   resources:
   - gardenerclusters
+  - runtimes
   verbs:
   - get
   - list
@@ -198,6 +199,7 @@ rules:
   - infrastructuremanager.kyma-project.io
   resources:
   - gardenerclusters/status
+  - runtimes/status
   verbs:
   - get
 - apiGroups:

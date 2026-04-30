@@ -1,5 +1,9 @@
 package v1beta1
 
+import "k8s.io/utils/ptr"
+
+// +kubebuilder:object:generate=false
+
 type VpcNetworkBuilder struct {
 	obj *VpcNetwork
 }
@@ -60,5 +64,19 @@ func (b *VpcNetworkBuilder) WithRegion(v string) *VpcNetworkBuilder {
 
 func (b *VpcNetworkBuilder) WithCidrBlocks(cidrs ...string) *VpcNetworkBuilder {
 	b.obj.Spec.CidrBlocks = append(b.obj.Spec.CidrBlocks, cidrs...)
+	return b
+}
+
+func (b *VpcNetworkBuilder) WithVpcNetworkName(v *string) *VpcNetworkBuilder {
+	if v == nil {
+		b.obj.Spec.VpcNetworkName = nil
+	} else {
+		vv := ptr.Deref(v, "")
+		if vv == "" {
+			b.obj.Spec.VpcNetworkName = nil
+		} else {
+			b.obj.Spec.VpcNetworkName = &vv
+		}
+	}
 	return b
 }

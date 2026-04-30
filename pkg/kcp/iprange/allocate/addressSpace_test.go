@@ -56,8 +56,8 @@ func TestAddressSpace(t *testing.T) {
 				assert.NoError(t, err)
 				for j, mask := range data.request {
 					cidr, err := as.Allocate(mask)
-					if strings.HasPrefix(data.allocated[j], "err:") {
-						expectedErr := strings.TrimPrefix(data.allocated[j], "err:")
+					if after, ok := strings.CutPrefix(data.allocated[j], "err:"); ok {
+						expectedErr := after
 						if assert.Errorf(t, err, "item %d", j) {
 							assert.Equalf(t, expectedErr, err.Error(), "item %d", j)
 						}

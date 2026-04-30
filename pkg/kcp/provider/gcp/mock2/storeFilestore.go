@@ -56,6 +56,38 @@ func (s *store) getFilestoreNoLock(name string) (*filestorepb.Instance, error) {
 
 // Filestore =====================================================================================
 
+func (s *store) ListFilestoreInstances(ctx context.Context, req *filestorepb.ListInstancesRequest, opts ...gax.CallOption) gcpclient.Iterator[*filestorepb.Instance] {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return &iteratorMocked[*filestorepb.Instance]{
+			err: ctx.Err(),
+		}
+	}
+
+	list := s.filestores
+	if req.Parent != "" {
+		parentNd, err := gcputil.ParseNameDetail(req.Parent)
+		if err != nil {
+			return &iteratorMocked[*filestorepb.Instance]{
+				err: fmt.Errorf("invalid parent name: %w", err),
+			}
+		}
+		list = list.FilterByParent(parentNd)
+	}
+	var err error
+	if req.Filter != "" {
+		list, err = list.FilterByExpression(&req.Filter)
+		if err != nil {
+			return &iteratorMocked[*filestorepb.Instance]{
+				err: fmt.Errorf("invalid filter: %w", err),
+			}
+		}
+	}
+
+	return list.ToIterator()
+}
+
 func (s *store) GetFilestoreInstance(ctx context.Context, req *filestorepb.GetInstanceRequest, _ ...gax.CallOption) (*filestorepb.Instance, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -137,10 +169,10 @@ func (s *store) CreateFilestoreInstance(ctx context.Context, req *filestorepb.Cr
 			return netName.EqualString(item.Obj.Network)
 		}).
 		FilterByCallback(func(item FilterableListItem[*servicenetworking.Connection]) bool {
-			return pie.Contains(item.Obj.ReservedPeeringRanges, addr.GetSelfLink())
+			return pie.Contains(item.Obj.ReservedPeeringRanges, addrName.ResourceId())
 		})
 	if serviceConnections.Len() == 0 {
-		return nil, gcpmeta.NewNotFoundError("service connection in network %s linked to address %s not found", netName.String(), addr.GetSelfLink())
+		return nil, gcpmeta.NewNotFoundError("service connection in network %s linked to address %s not found", netName.String(), addrName.ResourceId())
 	}
 
 	// validate file shares
@@ -341,9 +373,7 @@ func (s *store) ListFilestoreBackups(ctx context.Context, req *filestorepb.ListB
 				err: gcpmeta.NewBadRequestError("invalid file store backup parent name: %v", err),
 			}
 		}
-		list = list.FilterByCallback(func(item FilterableListItem[*filestorepb.Backup]) bool {
-			return item.Name.ProjectId() == parentNd.ProjectId() && item.Name.LocationRegionId() == parentNd.LocationRegionId()
-		})
+		list = list.FilterByParent(parentNd)
 	}
 	if req.Filter != "" {
 		list, err = list.FilterByExpression(&req.Filter)
@@ -453,4 +483,37 @@ func (s *store) DeleteFilestoreBackup(ctx context.Context, req *filestorepb.Dele
 	s.longRunningOperations.Add(b, opName)
 
 	return b.BuildVoidOperation(), nil
+}
+
+// Restore =====================================================================================
+
+func (s *store) RestoreFilestoreInstance(ctx context.Context, req *filestorepb.RestoreInstanceRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*filestorepb.Instance], error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return nil, ctx.Err()
+	}
+
+	if req.Name == "" {
+		return nil, gcpmeta.NewBadRequestError("instance name is required")
+	}
+	fsName, err := gcputil.ParseNameDetail(req.Name)
+	if err != nil {
+		return nil, gcpmeta.NewBadRequestError("invalid filestore instance name: %v", err)
+	}
+	fs, err := s.getFilestoreNoLock(req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	fs.State = filestorepb.Instance_RESTORING
+
+	opName := s.newLongRunningOperationName()
+	b := NewOperationLongRunningBuilder(opName.String(), fsName)
+	if err := b.WithCommonMetadata(fsName, "restore"); err != nil {
+		return nil, fmt.Errorf("%w: failed setting restore filestore operation metadata: %w", common.ErrLogical, err)
+	}
+	s.longRunningOperations.Add(b, opName)
+
+	return NewResultOperation[*filestorepb.Instance](b.GetOperationPB()), nil
 }

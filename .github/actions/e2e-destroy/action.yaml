@@ -1,5 +1,12 @@
 name: E2E Destroy Action
 description: Destroys the environment after E2E tests
+inputs:
+  # If multiple actions run in the same workflow they MUST produce logs with different name
+  # Otherwise error is
+  # Failed request: (409) Conflict: an artifact with this name already exists on the workflow run
+  logs-suffix:
+    required: true
+    description: Log name suffix
 runs:
   using: composite
   steps:
@@ -39,7 +46,7 @@ runs:
     - name: Upload logs
       uses: actions/upload-artifact@v6
       with:
-        name: logs
+        name: logs-${{ inputs.logs-suffix }}
         path: |
           tmp/envtest.log
           tmp/sim.log

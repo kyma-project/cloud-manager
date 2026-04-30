@@ -16,7 +16,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
@@ -51,7 +50,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				NetworkResource: &computepb.Network{
-					Name: ptr.To(vpcNetworkName),
+					Name: new(vpcNetworkName),
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())
@@ -68,12 +67,12 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			op, err := gcpMock.InsertGlobalAddress(infra.Ctx(), &computepb.InsertGlobalAddressRequest{
 				Project: gcpMock.ProjectId(),
 				AddressResource: &computepb.Address{
-					Name:         ptr.To(addressName),
-					Address:      ptr.To("10.251.0.0"),
-					PrefixLength: ptr.To(int32(16)),
-					Network:      ptr.To(net.GetSelfLink()),
-					AddressType:  ptr.To(computepb.Address_INTERNAL.String()),
-					Purpose:      ptr.To(computepb.Address_VPC_PEERING.String()),
+					Name:         new(addressName),
+					Address:      new("10.251.0.0"),
+					PrefixLength: new(int32(16)),
+					Network:      new(net.GetSelfLink()),
+					AddressType:  new(computepb.Address_INTERNAL.String()),
+					Purpose:      new(computepb.Address_VPC_PEERING.String()),
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())
@@ -129,7 +128,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 
 		By("When NfsInstance is created", func() {
-			Eventually(CreateNfsInstance).
+			Eventually(CreateObj).
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(kymaName),
@@ -145,7 +144,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 
 			// Get instance from mock2 using the correct GCP instance name
@@ -231,8 +230,9 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusCapacityGb(expectedCapacityGb),
-					HavingNfsInstanceStatusCapacity(expectedCapacity)).
+					HavingFieldValue(expectedCapacityGb, "status", "capacityGb"),
+					HavingFieldValue(expectedCapacity.String(), "status", "capacity"),
+				).
 				Should(Succeed())
 		})
 
@@ -286,7 +286,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				NetworkResource: &computepb.Network{
-					Name: ptr.To(vpcNetworkName),
+					Name: new(vpcNetworkName),
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())
@@ -303,12 +303,12 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			op, err := gcpMock.InsertGlobalAddress(infra.Ctx(), &computepb.InsertGlobalAddressRequest{
 				Project: gcpMock.ProjectId(),
 				AddressResource: &computepb.Address{
-					Name:         ptr.To(addressName),
-					Address:      ptr.To("10.251.0.0"),
-					PrefixLength: ptr.To(int32(16)),
-					Network:      ptr.To(net.GetSelfLink()),
-					AddressType:  ptr.To(computepb.Address_INTERNAL.String()),
-					Purpose:      ptr.To(computepb.Address_VPC_PEERING.String()),
+					Name:         new(addressName),
+					Address:      new("10.251.0.0"),
+					PrefixLength: new(int32(16)),
+					Network:      new(net.GetSelfLink()),
+					AddressType:  new(computepb.Address_INTERNAL.String()),
+					Purpose:      new(computepb.Address_VPC_PEERING.String()),
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())
@@ -365,7 +365,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 		sourceBackupPath := "projects/test-project/locations/us-central1/backups/my-backup"
 
 		By("When NfsInstance is created with SourceBackup", func() {
-			Eventually(CreateNfsInstance).
+			Eventually(CreateObj).
 				WithArguments(
 					infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					WithName(kymaName),
@@ -382,7 +382,7 @@ var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
 					NewObjActions(),
-					HavingNfsInstanceStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected NfsInstance to get status.id")
 
 			// Get instance from mock2 using the correct GCP instance name

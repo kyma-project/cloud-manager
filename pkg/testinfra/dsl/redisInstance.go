@@ -52,32 +52,6 @@ func WithRedisInstanceAuthString(authString string) ObjStatusAction {
 	}
 }
 
-func HavingRedisInstanceStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudcontrolv1beta1.RedisInstance)
-		if !ok {
-			return fmt.Errorf("the object %T is not KCP RedisInstance", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the KCP RedisInstance .status.id not set")
-		}
-		return nil
-	}
-}
-
-func HavingRedisClusterStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudcontrolv1beta1.RedisCluster)
-		if !ok {
-			return fmt.Errorf("the object %T is not KCP RedisCluster", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the KCP RedisCluster .status.id not set")
-		}
-		return nil
-	}
-}
-
 func CreateRedisInstance(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.RedisInstance, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudcontrolv1beta1.RedisInstance{}

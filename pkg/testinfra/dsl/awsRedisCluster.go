@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -165,9 +166,7 @@ func WithAwsRedisClusterAuthSecretLabels(labels map[string]string) ObjAction {
 				if awsRedisCluster.Spec.AuthSecret.Labels == nil {
 					awsRedisCluster.Spec.AuthSecret.Labels = map[string]string{}
 				}
-				for k, v := range labels {
-					awsRedisCluster.Spec.AuthSecret.Labels[k] = v
-				}
+				maps.Copy(awsRedisCluster.Spec.AuthSecret.Labels, labels)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsRedisClusterAuthSecretLabels", obj))
@@ -185,9 +184,7 @@ func WithAwsRedisClusterAuthSecretAnnotations(annotations map[string]string) Obj
 				if awsRedisCluster.Spec.AuthSecret.Annotations == nil {
 					awsRedisCluster.Spec.AuthSecret.Annotations = map[string]string{}
 				}
-				for k, v := range annotations {
-					awsRedisCluster.Spec.AuthSecret.Annotations[k] = v
-				}
+				maps.Copy(awsRedisCluster.Spec.AuthSecret.Annotations, annotations)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsRedisClusterAuthSecretAnnotations", obj))
@@ -205,38 +202,10 @@ func WithAwsRedisClusterAuthSecretExtraData(extraData map[string]string) ObjActi
 				if awsRedisCluster.Spec.AuthSecret.ExtraData == nil {
 					awsRedisCluster.Spec.AuthSecret.ExtraData = map[string]string{}
 				}
-				for k, v := range extraData {
-					awsRedisCluster.Spec.AuthSecret.ExtraData[k] = v
-				}
+				maps.Copy(awsRedisCluster.Spec.AuthSecret.ExtraData, extraData)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAwsRedisClusterAuthSecretExtraData", obj))
 		},
-	}
-}
-
-func HavingAwsRedisClusterStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AwsRedisCluster)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR AwsRedisCluster", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the SKR AwsRedisCluster ID not set")
-		}
-		return nil
-	}
-}
-
-func HavingAwsRedisClusterStatusState(state string) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.AwsRedisCluster)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR AwsRedisCluster", obj)
-		}
-		if x.Status.State != state {
-			return fmt.Errorf("the SKR AwsRedisCluster State does not match. expected: %s, got: %s", state, x.Status.State)
-		}
-		return nil
 	}
 }

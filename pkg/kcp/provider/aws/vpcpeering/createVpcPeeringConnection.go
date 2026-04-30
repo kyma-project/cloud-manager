@@ -25,24 +25,24 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 
 	tags := []ec2types.Tag{
 		{
-			Key:   ptr.To("Name"),
-			Value: ptr.To(state.Obj().GetName()),
+			Key:   new("Name"),
+			Value: new(state.Obj().GetName()),
 		},
 		{
 			Key:   ptr.To(common.TagCloudManagerName),
-			Value: ptr.To(state.Name().String()),
+			Value: new(state.Name().String()),
 		},
 		{
 			Key:   ptr.To(common.TagCloudManagerRemoteName),
-			Value: ptr.To(state.ObjAsVpcPeering().Spec.RemoteRef.String()),
+			Value: new(state.ObjAsVpcPeering().Spec.RemoteRef.String()),
 		},
 		{
 			Key:   ptr.To(common.TagScope),
-			Value: ptr.To(state.ObjAsVpcPeering().Spec.Scope.Name),
+			Value: new(state.ObjAsVpcPeering().Spec.Scope.Name),
 		},
 		{
 			Key:   ptr.To(common.TagShoot),
-			Value: ptr.To(state.Scope().Spec.ShootName),
+			Value: new(state.Scope().Spec.ShootName),
 		},
 	}
 
@@ -52,7 +52,7 @@ func createVpcPeeringConnection(ctx context.Context, st composed.State) (error, 
 		ctx,
 		state.vpc.VpcId,
 		state.remoteVpc.VpcId,
-		ptr.To(remoteRegion),
+		new(remoteRegion),
 		state.remoteVpc.OwnerId,
 		tags)
 

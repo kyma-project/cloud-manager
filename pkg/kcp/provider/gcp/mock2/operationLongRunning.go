@@ -194,7 +194,7 @@ func (o *resultOperationLongRunning[T]) Wait(ctx context.Context, _ ...gax.CallO
 	var result T
 	t := reflect.TypeOf(result)
 
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		// T is a pointer type (e.g., *Instance), create new instance of the element type
 		result = reflect.New(t.Elem()).Interface().(T)
 	} else {

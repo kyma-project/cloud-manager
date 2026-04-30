@@ -10,9 +10,11 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -34,10 +36,12 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 		skrNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
 		scope := &cloudcontrolv1beta1.Scope{}
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: scheduleName}))
+
 		By("Given KCP Scope exists", func() {
-			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
+			Expect(infra.GivenScopeGcpExists(skrKymaRef.Name)).NotTo(HaveOccurred())
 			Eventually(func() (bool, error) {
-				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
+				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(skrKymaRef.Name), scope)
 				return err == nil, client.IgnoreNotFound(err)
 			}).Should(BeTrue(), "expected Scope to get created")
 		})
@@ -74,7 +78,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), schedule,
 					NewObjActions(),
-					HavingStatusActive(),
+					HavingFieldValue(cloudresourcesv1beta1.JobStateActive, "status", "state"),
 				).Should(Succeed())
 			Expect(len(schedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
 		})
@@ -143,10 +147,12 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 		startTime := time.Date(fakeNow.Year(), fakeNow.Month(), fakeNow.Day(),
 			fakeNow.Hour(), fakeNow.Minute()+2, 0, 0, time.UTC)
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: scheduleName}))
+
 		By("Given KCP Scope exists", func() {
-			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
+			Expect(infra.GivenScopeGcpExists(skrKymaRef.Name)).NotTo(HaveOccurred())
 			Eventually(func() (bool, error) {
-				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
+				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(skrKymaRef.Name), scope)
 				return err == nil, client.IgnoreNotFound(err)
 			}).Should(BeTrue(), "expected Scope to get created")
 		})
@@ -182,7 +188,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), schedule,
 					NewObjActions(),
-					HavingStatusActive(),
+					HavingFieldValue(cloudresourcesv1beta1.JobStateActive, "status", "state"),
 				).Should(Succeed())
 		})
 
@@ -228,10 +234,12 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 
 		accessibleFrom := []string{"shoot-1", "shoot-2"}
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: scheduleName}))
+
 		By("Given KCP Scope exists", func() {
-			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
+			Expect(infra.GivenScopeGcpExists(skrKymaRef.Name)).NotTo(HaveOccurred())
 			Eventually(func() (bool, error) {
-				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
+				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(skrKymaRef.Name), scope)
 				return err == nil, client.IgnoreNotFound(err)
 			}).Should(BeTrue(), "expected Scope to get created")
 		})
@@ -269,7 +277,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), schedule,
 					NewObjActions(),
-					HavingStatusActive(),
+					HavingFieldValue(cloudresourcesv1beta1.JobStateActive, "status", "state"),
 				).Should(Succeed())
 			Expect(len(schedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
 		})
@@ -309,10 +317,12 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 		skrNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
 		scope := &cloudcontrolv1beta1.Scope{}
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: scheduleName}))
+
 		By("Given KCP Scope exists", func() {
-			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
+			Expect(infra.GivenScopeGcpExists(skrKymaRef.Name)).NotTo(HaveOccurred())
 			Eventually(func() (bool, error) {
-				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
+				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(skrKymaRef.Name), scope)
 				return err == nil, client.IgnoreNotFound(err)
 			}).Should(BeTrue(), "expected Scope to get created")
 		})
@@ -346,7 +356,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), schedule,
 					NewObjActions(),
-					HavingStatusActive(),
+					HavingFieldValue(cloudresourcesv1beta1.JobStateActive, "status", "state"),
 				).Should(Succeed())
 			Expect(len(schedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
 		})
@@ -392,10 +402,12 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 		skrNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
 		scope := &cloudcontrolv1beta1.Scope{}
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: scheduleName}))
+
 		By("Given KCP Scope exists", func() {
-			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
+			Expect(infra.GivenScopeGcpExists(skrKymaRef.Name)).NotTo(HaveOccurred())
 			Eventually(func() (bool, error) {
-				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
+				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(skrKymaRef.Name), scope)
 				return err == nil, client.IgnoreNotFound(err)
 			}).Should(BeTrue(), "expected Scope to get created")
 		})
@@ -461,10 +473,12 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 		skrNfsVolume := &cloudresourcesv1beta1.GcpNfsVolume{}
 		scope := &cloudcontrolv1beta1.Scope{}
 
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: scheduleName}))
+
 		By("Given KCP Scope exists", func() {
-			Expect(infra.GivenScopeGcpExists(infra.SkrKymaRef().Name)).NotTo(HaveOccurred())
+			Expect(infra.GivenScopeGcpExists(skrKymaRef.Name)).NotTo(HaveOccurred())
 			Eventually(func() (bool, error) {
-				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(infra.SkrKymaRef().Name), scope)
+				err := infra.KCP().Client().Get(infra.Ctx(), infra.KCP().ObjKey(skrKymaRef.Name), scope)
 				return err == nil, client.IgnoreNotFound(err)
 			}).Should(BeTrue(), "expected Scope to get created")
 		})
@@ -498,7 +512,7 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), schedule,
 					NewObjActions(),
-					HavingStatusActive(),
+					HavingFieldValue(cloudresourcesv1beta1.JobStateActive, "status", "state"),
 				).Should(Succeed())
 
 			testFakeClock.Step(2 * time.Minute)

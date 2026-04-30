@@ -58,29 +58,3 @@ func WithSkrGcpSubnetStatusId(id string) ObjStatusAction {
 		},
 	}
 }
-
-func HavingGcpSubnetStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.GcpSubnet)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR GcpSubnet", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the SKR GcpSubnet ID not set")
-		}
-		return nil
-	}
-}
-
-func HavingGcpSubnetStatusState(state string) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudresourcesv1beta1.GcpSubnet)
-		if !ok {
-			return fmt.Errorf("the object %T is not SKR GcpSubnet", obj)
-		}
-		if x.Status.State != state {
-			return fmt.Errorf("the SKR GcpSubnet State does not match. expected: %s, got: %s", state, x.Status.State)
-		}
-		return nil
-	}
-}

@@ -52,26 +52,26 @@ func (s *natGatewayStore) CreateNatGateway(ctx context.Context, resourceGroupNam
 	}
 
 	natGateway := &armnetwork.NatGateway{
-		ID:       ptr.To(azureutil.NewNatGatewayResourceId(s.subscription, resourceGroupName, natGatewayName).String()),
-		Name:     ptr.To(natGatewayName),
-		Location: ptr.To(location),
-		Zones:    []*string{ptr.To(zone)},
+		ID:       new(azureutil.NewNatGatewayResourceId(s.subscription, resourceGroupName, natGatewayName).String()),
+		Name:     new(natGatewayName),
+		Location: new(location),
+		Zones:    []*string{new(zone)},
 		SKU: &armnetwork.NatGatewaySKU{
 			Name: ptr.To(armnetwork.NatGatewaySKUNameStandard),
 		},
-		Type: ptr.To("Microsoft.Network/natGateways"),
+		Type: new("Microsoft.Network/natGateways"),
 		Properties: &armnetwork.NatGatewayPropertiesFormat{
 			ProvisioningState: ptr.To(armnetwork.ProvisioningStateSucceeded),
 		},
 	}
 	if subnetIds != nil {
 		natGateway.Properties.Subnets = pie.Map(subnetIds, func(subnetId string) *armnetwork.SubResource {
-			return &armnetwork.SubResource{ID: ptr.To(subnetId)}
+			return &armnetwork.SubResource{ID: new(subnetId)}
 		})
 	}
 	if publicIpAddressIds != nil {
 		natGateway.Properties.PublicIPAddresses = pie.Map(publicIpAddressIds, func(publicIpAddressId string) *armnetwork.SubResource {
-			return &armnetwork.SubResource{ID: ptr.To(publicIpAddressId)}
+			return &armnetwork.SubResource{ID: new(publicIpAddressId)}
 		})
 	}
 

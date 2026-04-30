@@ -15,6 +15,7 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
 	v2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/klog/v2"
 )
@@ -40,13 +41,13 @@ type StateFactory interface {
 }
 
 func NewStateFactory(
-	kymaRef klog.ObjectRef,
+	scopeProvider scopeprovider.ScopeProvider,
 	kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster,
 	fileBackupClientProvider gcpclient.GcpClientProvider[v2client.FileBackupClient],
 ) StateFactory {
 	return &stateFactory{
-		kymaRef:                  kymaRef,
+		scopeProvider:            scopeProvider,
 		kcpCluster:               kcpCluster,
 		skrCluster:               skrCluster,
 		fileBackupClientProvider: fileBackupClientProvider,
@@ -54,16 +55,20 @@ func NewStateFactory(
 }
 
 type stateFactory struct {
-	kymaRef                  klog.ObjectRef
+	scopeProvider            scopeprovider.ScopeProvider
 	kcpCluster               composed.StateCluster
 	skrCluster               composed.StateCluster
 	fileBackupClientProvider gcpclient.GcpClientProvider[v2client.FileBackupClient]
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
+	kymaRef, err := f.scopeProvider.GetScope(ctx, baseState.Name())
+	if err != nil {
+		return nil, err
+	}
 	return &State{
 		State:                    baseState,
-		KymaRef:                  f.kymaRef,
+		KymaRef:                  kymaRef,
 		KcpCluster:               f.kcpCluster,
 		SkrCluster:               f.skrCluster,
 		fileBackupClientProvider: f.fileBackupClientProvider,

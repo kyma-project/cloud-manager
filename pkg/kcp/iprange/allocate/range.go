@@ -20,7 +20,7 @@ func parseRange(s string) (*rng, error) {
 	}
 
 	ipAllFfs := make(net.IP, len(n.IP))
-	for i := 0; i < len(ipAllFfs); i++ {
+	for i := range ipAllFfs {
 		ipAllFfs[i] = 255
 	}
 

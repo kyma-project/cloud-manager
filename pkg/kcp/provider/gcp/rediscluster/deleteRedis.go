@@ -7,6 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,7 +30,9 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 	gcpScope := state.Scope().Spec.Scope.Gcp
 	region := state.Scope().Spec.Region
 
-	err := state.memorystoreClient.DeleteRedisCluster(ctx, gcpScope.Project, region, state.GetRemoteRedisName())
+	_, err := state.memorystoreClient.DeleteRedisCluster(ctx, &clusterpb.DeleteClusterRequest{
+		Name: client.GetGcpMemoryStoreRedisClusterName(gcpScope.Project, region, state.GetRemoteRedisName()),
+	})
 	if err != nil {
 		if gcpmeta.IsNotFound(err) {
 			logger.Info("target redis instance for delete not found, continuing to next loop")

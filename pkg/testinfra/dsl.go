@@ -16,7 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -141,7 +140,7 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 				},
 				// SA1019 keep using SecretBinding until migrated to CredentialsBinding
 				// nolint:staticcheck
-				SecretBindingName: ptr.To(name),
+				SecretBindingName: new(name),
 			},
 		}
 		err := dsl.i.Garden().Client().Create(dsl.i.Ctx(), shoot)
@@ -198,7 +197,15 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
 	shootNamespace := scopeconfig.ScopeConfig.GardenerNamespace // os.Getenv("GARDENER_NAMESPACE")
 	project := strings.TrimPrefix(shootNamespace, "garden-")
-	scope := &cloudcontrolv1beta1.Scope{
+	return dsl.givenScopeGcpExistsWithProject(name, project)
+}
+
+func (dsl *infraDSL) GivenScopeGcpExistsWithProject(name, project string) error {
+	return dsl.givenScopeGcpExistsWithProject(name, project)
+}
+
+func (dsl *infraDSL) givenScopeGcpExistsWithProject(name, project string) error {
+	desired := &cloudcontrolv1beta1.Scope{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: dsl.i.KCP().Namespace(),
 			Name:      name,
@@ -226,15 +233,18 @@ func (dsl *infraDSL) GivenScopeGcpExists(name string) error {
 			},
 		},
 	}
-	err := dsl.i.KCP().Client().Get(dsl.i.Ctx(), client.ObjectKeyFromObject(scope), scope)
+	existing := &cloudcontrolv1beta1.Scope{}
+	err := dsl.i.KCP().Client().Get(dsl.i.Ctx(), client.ObjectKeyFromObject(desired), existing)
 	if client.IgnoreNotFound(err) != nil {
 		return err
 	}
 	if apierrors.IsNotFound(err) {
-		err := dsl.i.KCP().Client().Create(dsl.i.Ctx(), scope)
-		if err != nil {
-			return err
-		}
+		return dsl.i.KCP().Client().Create(dsl.i.Ctx(), desired)
+	}
+	// Update spec if project has changed (e.g., between test scenarios using mock2)
+	if existing.Spec.Scope.Gcp.Project != project {
+		existing.Spec = desired.Spec
+		return dsl.i.KCP().Client().Update(dsl.i.Ctx(), existing)
 	}
 	return nil
 }

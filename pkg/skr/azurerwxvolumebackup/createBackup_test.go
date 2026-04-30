@@ -9,11 +9,11 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog/v2"
 
 	"testing"
 
@@ -64,10 +64,7 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 		},
 	}
 
-	kymaRef := klog.ObjectRef{
-		Name:      "skr",
-		Namespace: "test",
-	}
+	kymaRef := scopeprovider.Always("test", "skr")
 
 	kcpClient := fake.NewClientBuilder().
 		WithScheme(commonscheme.KcpScheme).
@@ -75,8 +72,9 @@ func setupDefaultState(ctx context.Context, backup *cloudresourcesv1beta1.AzureR
 		Build()
 	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
+	scopeState, _ := commonscope.NewStateFactory(kcpCluster, kymaRef).NewState(context.Background(), types.NamespacedName{}, composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, backup))
 	state := &State{
-		State: commonscope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, backup)),
+		State: scopeState,
 	}
 
 	state.client, _ = azurerwxvolumebackupclient.NewMockClient()(ctx, "", "", "", "")

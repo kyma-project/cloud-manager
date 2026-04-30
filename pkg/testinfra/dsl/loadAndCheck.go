@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -82,5 +83,5 @@ func IsDeleted(ctx context.Context, clnt client.Client, obj client.Object, opts 
 	if obj.GetDeletionTimestamp() != nil {
 		txtDT = "with deletion timestamp"
 	}
-	return fmt.Errorf("object is not deleted, found %s in state %s with conditions %v", txtDT, state, conditions)
+	return fmt.Errorf("%s: object is not deleted, found %s in state %s with conditions %v", time.Now().Format(time.RFC3339Nano), txtDT, state, conditions)
 }

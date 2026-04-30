@@ -15,17 +15,17 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR GcpNfsVolume is NOT marked for deletion, do not delete mirror in KCP
-		return nil, nil
+		return nil, ctx
 	}
 
 	nfsVolume := state.ObjAsGcpNfsVolume()
 
 	if !meta.IsStatusConditionTrue(nfsVolume.Status.Conditions, v1beta1.ConditionTypeReady) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PVC == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	expectedLabels := getVolumeClaimLabels(nfsVolume)
@@ -43,7 +43,7 @@ func modifyPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 	}
 
 	if !labelsChanged && !annotationsDesynced {
-		return nil, nil
+		return nil, ctx
 	}
 
 	err := state.Cluster().K8sClient().Update(ctx, state.PVC)

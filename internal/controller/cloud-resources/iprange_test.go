@@ -20,8 +20,10 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR IpRange", func() {
@@ -40,10 +42,12 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				}
 			}
 
+			skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: skrIpRangeName}))
+
 			skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 			By("When SKR IpRange is created", func() {
-				args := []interface{}{
+				args := []any{
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
 				}
@@ -80,7 +84,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			})
 
 			By("And Then KCP IpRange has label cloud-manager.kyma-project.io/kymaName", func() {
-				Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+				Expect(kcpIpRange.Labels[cloudcontrolv1beta1.LabelKymaName]).To(Equal(skrKymaRef.Name))
 			})
 
 			By("And Then KCP IpRange has label cloud-manager.kyma-project.io/remoteName", func() {
@@ -92,7 +96,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			})
 
 			By("And Then KCP IpRange has spec.scope.name equal to SKR Cluster kyma name", func() {
-				Expect(kcpIpRange.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
+				Expect(kcpIpRange.Spec.Scope.Name).To(Equal(skrKymaRef.Name))
 			})
 
 			By("And Then KCP IpRange has spec.cidr equal to SKR IpRange cidr", func() {
@@ -179,7 +183,7 @@ var _ = Describe("Feature: SKR IpRange", func() {
 			skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 			By("Given SKR IpRange exists", func() {
-				args := []interface{}{
+				args := []any{
 					infra.Ctx(), infra.SKR().Client(), skrIpRange,
 					WithName(skrIpRangeName),
 				}

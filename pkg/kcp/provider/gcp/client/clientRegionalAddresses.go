@@ -7,7 +7,6 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2"
-	"k8s.io/utils/ptr"
 )
 
 type RegionalAddressesClient interface {
@@ -34,7 +33,7 @@ func (c *regionalAddressesClient) GetRouterIpAddresses(ctx context.Context, proj
 	it := c.ListAddresses(ctx, &computepb.ListAddressesRequest{
 		Project: project,
 		Region:  region,
-		Filter:  ptr.To(`purpose="NAT_AUTO"`), // the API does not work with users filter, so have to do this
+		Filter:  new(`purpose="NAT_AUTO"`), // the API does not work with users filter, so have to do this
 	}).All()
 	var results []*computepb.Address
 	for x, err := range it {

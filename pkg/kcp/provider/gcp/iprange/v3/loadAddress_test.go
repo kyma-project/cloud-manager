@@ -8,11 +8,13 @@ import (
 	"testing"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/googleapis/gax-go/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
@@ -120,37 +122,41 @@ func (c *computeClientStub) CreatePscIpRange(ctx context.Context, projectId, vpc
 	panic("unimplemented")
 }
 
-func (c *computeClientStub) DeleteIpRange(ctx context.Context, projectId, name string) (string, error) {
+func (c *computeClientStub) DeleteGlobalAddress(ctx context.Context, req *computepb.DeleteGlobalAddressRequest, opts ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	panic("unimplemented")
 }
 
-func (c *computeClientStub) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*computepb.Operation, error) {
+func (c *computeClientStub) InsertGlobalAddress(ctx context.Context, req *computepb.InsertGlobalAddressRequest, opts ...gax.CallOption) (gcpclient.VoidOperation, error) {
 	panic("unimplemented")
 }
 
-func (c *computeClientStub) WaitGlobalOperation(ctx context.Context, projectId, operationName string) error {
+func (c *computeClientStub) ListGlobalAddresses(ctx context.Context, req *computepb.ListGlobalAddressesRequest, opts ...gax.CallOption) gcpclient.Iterator[*computepb.Address] {
 	panic("unimplemented")
 }
 
-func (c *computeClientStub) GetIpRange(ctx context.Context, projectId, name string) (*computepb.Address, error) {
+func (c *computeClientStub) GetComputeGlobalOperation(ctx context.Context, req *computepb.GetGlobalOperationRequest, opts ...gax.CallOption) (*computepb.Operation, error) {
+	panic("unimplemented")
+}
+
+func (c *computeClientStub) ListComputeGlobalOperations(ctx context.Context, req *computepb.ListGlobalOperationsRequest, opts ...gax.CallOption) gcpclient.Iterator[*computepb.Operation] {
+	panic("unimplemented")
+}
+
+func (c *computeClientStub) GetGlobalAddress(ctx context.Context, req *computepb.GetGlobalAddressRequest, opts ...gax.CallOption) (*computepb.Address, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	c.callCount = c.callCount + 1
 	if c.callCount == 1 {
-		c.firstCallName = name
+		c.firstCallName = req.Address
 		return c.firstCallAddress, c.firstCallErr
 	}
 	if c.callCount == 2 {
-		c.secondCallName = name
+		c.secondCallName = req.Address
 		return c.secondCallAddress, c.secondCallErr
 	}
 
 	panic("unexpected call")
-}
-
-func (c *computeClientStub) ListGlobalAddresses(ctx context.Context, projectId, vpc string) ([]*computepb.Address, error) {
-	panic("unimplemented")
 }
 
 func newComputeClientStub() gcpiprangeclient.ComputeClient {
@@ -234,8 +240,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: load IpRange (new name)", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			networkUrl := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
 			address = &computepb.Address{
@@ -254,8 +259,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: fallback and load IpRange with old name", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			networkUrl := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
 			address = &computepb.Address{
@@ -276,8 +280,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: skip loaded fallback IpRange if it belongs to other VPC", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			otherNetwork := "some-other-network"
 			address = &computepb.Address{
@@ -298,8 +301,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: do nothing if IpRange doesnt exist (new or old name)", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			computeClient.(computeClientStubUtils).ReturnOnFirstCall(nil, notFoundError)
 			computeClient.(computeClientStubUtils).ReturnOnSecondCall(nil, notFoundError)
 
@@ -315,8 +317,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: set error if obtained IpRange (new name) belongs to another VPC", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			// VPC name is different but has same suffix
 			networkUrl := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/another-%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork)
@@ -336,8 +337,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: set error if its unable to get IpRange (new name)", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			computeClient.(computeClientStubUtils).ReturnOnFirstCall(nil, errors.New("Random error"))
 
 			err, res := loadAddress(ctx, state)
@@ -351,8 +351,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: set error if its unable to get IpRange (fallback name)", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			computeClient.(computeClientStubUtils).ReturnOnFirstCall(nil, notFoundError)
 			computeClient.(computeClientStubUtils).ReturnOnSecondCall(nil, errors.New("Random error"))
 

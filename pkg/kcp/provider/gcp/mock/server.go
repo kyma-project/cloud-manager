@@ -9,21 +9,12 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
-	"cloud.google.com/go/networkconnectivity/apiv1/networkconnectivitypb"
-	"cloud.google.com/go/redis/apiv1/redispb"
-	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/googleapis/gax-go/v2"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
-	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
-	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
-	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
-	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
-	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
-	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
@@ -33,11 +24,6 @@ import (
 var _ Server = &server{}
 
 func New() Server {
-
-	regionalOperationsClientfake := &regionalOperationsClientFake{
-		mutex:      sync.Mutex{},
-		operations: map[string]*computepb.Operation{},
-	}
 
 	// Create shared address storage that both iprangeStore and iprangeStoreLegacy can use
 	// Thread-safety: sharedAddressStore has its own mutex and protects all access to addresses.
@@ -67,55 +53,26 @@ func New() Server {
 			addressStore:    sharedAddresses,
 			connectionStore: sharedConnections,
 		},
-		computeClientFake: &computeClientFake{
-			mutex:                 sync.Mutex{},
-			subnets:               map[string]*computepb.Subnetwork{},
-			operationsClientUtils: regionalOperationsClientfake,
-		},
-		networkConnectivityClientFake: &networkConnectivityClientFake{
-			mutex:              sync.Mutex{},
-			connectionPolicies: map[string]*networkconnectivitypb.ServiceConnectionPolicy{},
-		},
-		nfsStore:              &nfsStore{},
-		filestoreClientFakeV2: newFilestoreClientFakeV2(),
-		serviceUsageStore:     &serviceUsageStore{},
-		nfsRestoreStore:       &nfsRestoreStore{},
-		nfsRestoreStoreV2:     &nfsRestoreStoreV2{},
-		nfsBackupStore:        &nfsBackupStore{},
-		nfsBackupStoreV2:      &nfsBackupStoreV2{},
-		vpcPeeringStore:       &vpcPeeringStore{},
-		memoryStoreClientFake: &memoryStoreClientFake{
-			mutex:          sync.Mutex{},
-			redisInstances: map[string]*redispb.Instance{},
-		},
-		memoryStoreClusterClientFake: &memoryStoreClusterClientFake{
-			mutex:         sync.Mutex{},
-			redisClusters: map[string]*clusterpb.Cluster{},
-		},
+		nfsStore:          &nfsStore{},
+		serviceUsageStore: &serviceUsageStore{},
+		nfsRestoreStore:   &nfsRestoreStore{},
+		nfsBackupStore:    &nfsBackupStore{},
+		vpcPeeringStore:   &vpcPeeringStore{},
 		exposedDataStore: &exposedDataStore{
 			ipPool: util.Must(iprangeallocate.NewAddressSpace("33.0.0.0/16")),
 		},
-		regionalOperationsClientFake: regionalOperationsClientfake,
 	}
 }
 
 type server struct {
 	iprangeStore       *iprangeStore
 	iprangeStoreLegacy *iprangeStoreLegacy
-	*computeClientFake
-	*networkConnectivityClientFake
 	*nfsStore
-	*filestoreClientFakeV2
 	*serviceUsageStore
 	*nfsRestoreStore
-	*nfsRestoreStoreV2
 	*nfsBackupStore
-	*nfsBackupStoreV2
 	*vpcPeeringStore
-	*memoryStoreClientFake
-	*memoryStoreClusterClientFake
 	*exposedDataStore
-	*regionalOperationsClientFake
 }
 
 func (s *server) SetCreateError(err *googleapi.Error) {
@@ -156,8 +113,6 @@ func (s *server) SetSuIsEnabledError(err *googleapi.Error) {
 
 func (s *server) ServiceNetworkingClientProvider() client.ClientProvider[gcpiprangeclient.ServiceNetworkingClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ServiceNetworkingClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP ServiceNetworkingClientProvider mock...")
 		// Return the legacy store for v2 - it implements ServiceNetworkingClient with Discovery API types
 		return s.iprangeStoreLegacy, nil
 	}
@@ -173,8 +128,6 @@ func (s *server) ServiceNetworkingClientProviderGcp() client.GcpClientProvider[g
 
 func (s *server) ComputeClientProvider() client.ClientProvider[gcpiprangeclient.ComputeClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.ComputeClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP ComputeClientProvider mock...")
 		// For NEW pattern (refactored), return the new gRPC-based store
 		return s.iprangeStore, nil
 	}
@@ -192,95 +145,37 @@ func (s *server) ComputeClientProviderGcp() client.GcpClientProvider[gcpiprangec
 // Returns an adapter that converts between gRPC types (mock) and Discovery API types (v2)
 func (s *server) OldComputeClientProvider() client.ClientProvider[gcpiprangeclient.OldComputeClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.OldComputeClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP OldComputeClientProvider mock...")
 		// Return the legacy store directly - it already implements OldComputeClient interface with Discovery API types
 		return s.iprangeStoreLegacy, nil
 	}
 }
 
-func (s *server) SubnetComputeClientProvider() client.GcpClientProvider[gcpsubnetclient.ComputeClient] {
-	return func(_ string) gcpsubnetclient.ComputeClient {
-		return s
-	}
-}
-
-func (s *server) SubnetRegionOperationsClientProvider() client.GcpClientProvider[gcpsubnetclient.RegionOperationsClient] {
-	return func(_ string) gcpsubnetclient.RegionOperationsClient {
-		return s
-	}
-}
-
-func (s *server) SubnetNetworkConnectivityProvider() client.GcpClientProvider[gcpsubnetclient.NetworkConnectivityClient] {
-	return func(_ string) gcpsubnetclient.NetworkConnectivityClient {
-		return s
-	}
-}
-
 func (s *server) FilestoreClientProvider() client.ClientProvider[gcpnfsinstancev1client.FilestoreClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpnfsinstancev1client.FilestoreClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP FilestoreClientProvider mock...")
 		return s, nil
-	}
-}
-
-func (s *server) FilestoreClientProviderV2() client.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient] {
-	return func(_ string) gcpnfsinstancev2client.FilestoreClient {
-		return s
 	}
 }
 
 func (s *server) ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient] {
 	return func(ctx context.Context, credentialsFile string) (client.ServiceUsageClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP FilestoreClientProvider mock...")
 		return s, nil
 	}
 }
 
 func (s *server) FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclientv1.FileRestoreClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpnfsrestoreclientv1.FileRestoreClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP FilerestoreClientProvider mock...")
 		return s.nfsRestoreStore, nil
-	}
-}
-
-func (s *server) FileRestoreClientProviderV2() client.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient] {
-	return func(_ string) gcpnfsrestoreclientv2.FileRestoreClient {
-		return s.nfsRestoreStoreV2
 	}
 }
 
 func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient] {
 	return func(ctx context.Context, credentialsFile string) (gcpnfsbackupclientv1.FileBackupClient, error) {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Inside the GCP FileBackupClientProvider mock...")
 		return s, nil
-	}
-}
-
-func (s *server) FileBackupClientProviderV2() client.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient] {
-	return func(_ string) gcpnfsbackupclientv2.FileBackupClient {
-		return s.nfsBackupStoreV2
 	}
 }
 
 func (s *server) VpcPeeringProvider() client.GcpClientProvider[gcpvpcpeeringclient.VpcPeeringClient] {
 	return func(_ string) gcpvpcpeeringclient.VpcPeeringClient {
-		return s
-	}
-}
-
-func (s *server) MemoryStoreProviderFake() client.GcpClientProvider[gcpredisinstanceclient.MemorystoreClient] {
-	return func(_ string) gcpredisinstanceclient.MemorystoreClient {
-		return s
-	}
-}
-
-func (s *server) MemoryStoreClusterProviderFake() client.GcpClientProvider[gcpredisclusterclient.MemorystoreClusterClient] {
-	return func(_ string) gcpredisclusterclient.MemorystoreClusterClient {
 		return s
 	}
 }
@@ -298,24 +193,28 @@ func (s *server) CreatePscIpRange(ctx context.Context, projectId, vpcName, name,
 	return s.iprangeStore.CreatePscIpRange(ctx, projectId, vpcName, name, description, address, prefixLength)
 }
 
-func (s *server) DeleteIpRange(ctx context.Context, projectId, name string) (string, error) {
-	return s.iprangeStore.DeleteIpRange(ctx, projectId, name)
+func (s *server) GetGlobalAddress(ctx context.Context, req *computepb.GetGlobalAddressRequest, opts ...gax.CallOption) (*computepb.Address, error) {
+	return s.iprangeStore.GetGlobalAddress(ctx, req, opts...)
 }
 
-func (s *server) GetIpRange(ctx context.Context, projectId, name string) (*computepb.Address, error) {
-	return s.iprangeStore.GetIpRange(ctx, projectId, name)
+func (s *server) DeleteGlobalAddress(ctx context.Context, req *computepb.DeleteGlobalAddressRequest, opts ...gax.CallOption) (client.VoidOperation, error) {
+	return s.iprangeStore.DeleteGlobalAddress(ctx, req, opts...)
 }
 
-func (s *server) ListGlobalAddresses(ctx context.Context, projectId, vpc string) ([]*computepb.Address, error) {
-	return s.iprangeStore.ListGlobalAddresses(ctx, projectId, vpc)
+func (s *server) InsertGlobalAddress(ctx context.Context, req *computepb.InsertGlobalAddressRequest, opts ...gax.CallOption) (client.VoidOperation, error) {
+	return s.iprangeStore.InsertGlobalAddress(ctx, req, opts...)
 }
 
-func (s *server) GetGlobalOperation(ctx context.Context, projectId, operationName string) (*computepb.Operation, error) {
-	return s.iprangeStore.GetGlobalOperation(ctx, projectId, operationName)
+func (s *server) ListGlobalAddresses(ctx context.Context, req *computepb.ListGlobalAddressesRequest, opts ...gax.CallOption) client.Iterator[*computepb.Address] {
+	return s.iprangeStore.ListGlobalAddresses(ctx, req, opts...)
 }
 
-func (s *server) WaitGlobalOperation(ctx context.Context, projectId, operationName string) error {
-	return s.iprangeStore.WaitGlobalOperation(ctx, projectId, operationName)
+func (s *server) GetComputeGlobalOperation(ctx context.Context, req *computepb.GetGlobalOperationRequest, opts ...gax.CallOption) (*computepb.Operation, error) {
+	return s.iprangeStore.GetComputeGlobalOperation(ctx, req, opts...)
+}
+
+func (s *server) ListComputeGlobalOperations(ctx context.Context, req *computepb.ListGlobalOperationsRequest, opts ...gax.CallOption) client.Iterator[*computepb.Operation] {
+	return s.iprangeStore.ListComputeGlobalOperations(ctx, req, opts...)
 }
 
 func (s *server) CreateServiceConnection(ctx context.Context, projectId, vpcId string, reservedIpRanges []string) (*servicenetworking.Operation, error) {

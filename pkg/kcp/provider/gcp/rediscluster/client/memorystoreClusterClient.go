@@ -5,14 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/ptr"
-
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
-
-	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 type CreateRedisClusterRequest struct {
@@ -23,37 +17,44 @@ type CreateRedisClusterRequest struct {
 	ShardCount         int32
 }
 
+// MemorystoreClusterClient embeds the wrapped gcpclient.RedisClusterClient interface and adds
+// value-add methods that contain real business logic.
+// Actions call the wrapped methods directly for simple operations (e.g., UpdateRedisCluster,
+// DeleteRedisCluster, GetRedisCluster) using name-building utilities from util.go.
 type MemorystoreClusterClient interface {
-	CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options CreateRedisClusterRequest) error
-	GetRedisCluster(ctx context.Context, projectId, locationId, clusterId string) (*clusterpb.Cluster, error)
-	GetRedisClusterCertificateAuthority(ctx context.Context, projectId, locationId, clusterId string) (string, error)
-	UpdateRedisCluster(ctx context.Context, redisCluster *clusterpb.Cluster, updateMask []string) error
-	DeleteRedisCluster(ctx context.Context, projectId, locationId, clusterId string) error
+	gcpclient.RedisClusterClient
+
+	// CreateRedisClusterWithOptions creates a Redis cluster with complex options-to-protobuf conversion.
+	CreateRedisClusterWithOptions(ctx context.Context, projectId, locationId, clusterId string, options CreateRedisClusterRequest) error
+	// GetRedisClusterCertificateString retrieves and extracts the certificate string from nested CA certs structure.
+	GetRedisClusterCertificateString(ctx context.Context, projectId, locationId, clusterId string) (string, error)
 }
 
 func NewMemorystoreClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[MemorystoreClusterClient] {
 	return func(_ string) MemorystoreClusterClient {
-		return NewMemorystoreClient(gcpClients)
+		return NewMemorystoreClientFromRedisClusterClient(gcpClients.RedisClusterWrapped())
 	}
 }
 
-func NewMemorystoreClient(gcpClients *gcpclient.GcpClients) MemorystoreClusterClient {
-	return NewMemorystoreClientFromRedisClusterClient(gcpClients.RedisClusterWrapped())
-}
-
+// NewMemorystoreClientFromRedisClusterClient wraps a RedisClusterClient into a MemorystoreClusterClient.
+// Cannot be eliminated because MemorystoreClusterClient has value-add methods (CreateRedisClusterWithOptions,
+// GetRedisClusterCertificateString) beyond the embedded gcpclient.RedisClusterClient, so a plain
+// RedisClusterClient does not satisfy the interface.
 func NewMemorystoreClientFromRedisClusterClient(redisClusterClient gcpclient.RedisClusterClient) MemorystoreClusterClient {
 	return &memorystoreClient{
-		redisClusterClient: redisClusterClient,
+		RedisClusterClient: redisClusterClient,
 	}
 }
 
 type memorystoreClient struct {
-	redisClusterClient gcpclient.RedisClusterClient
+	gcpclient.RedisClusterClient
 }
 
-func (memorystoreClient *memorystoreClient) GetRedisClusterCertificateAuthority(ctx context.Context, projectId, locationId, clusterId string) (string, error) {
+var _ MemorystoreClusterClient = &memorystoreClient{}
+
+func (c *memorystoreClient) GetRedisClusterCertificateString(ctx context.Context, projectId, locationId, clusterId string) (string, error) {
 	name := GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
-	response, err := memorystoreClient.redisClusterClient.GetRedisClusterCertificateAuthority(ctx, &clusterpb.GetClusterCertificateAuthorityRequest{
+	response, err := c.GetRedisClusterCertificateAuthority(ctx, &clusterpb.GetClusterCertificateAuthorityRequest{
 		Name: name,
 	})
 
@@ -69,33 +70,15 @@ func (memorystoreClient *memorystoreClient) GetRedisClusterCertificateAuthority(
 	return "", nil
 }
 
-func (memorystoreClient *memorystoreClient) UpdateRedisCluster(ctx context.Context, redisCluster *clusterpb.Cluster, updateMask []string) error {
-	req := &clusterpb.UpdateClusterRequest{
-		UpdateMask: &fieldmaskpb.FieldMask{
-			Paths: updateMask,
-		},
-		Cluster: redisCluster,
-	}
-
-	_, err := memorystoreClient.redisClusterClient.UpdateRedisCluster(ctx, req)
-	if err != nil {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Error(err, "Failed to update redis cluster", "redisCluster", redisCluster.Name)
-		return err
-	}
-
-	return nil
-}
-
-func (memorystoreClient *memorystoreClient) CreateRedisCluster(ctx context.Context, projectId, locationId, clusterId string, options CreateRedisClusterRequest) error {
+func (c *memorystoreClient) CreateRedisClusterWithOptions(ctx context.Context, projectId, locationId, clusterId string, options CreateRedisClusterRequest) error {
 	parent := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
 	req := &clusterpb.CreateClusterRequest{
 		Parent:    parent,
 		ClusterId: GetGcpMemoryStoreRedisClusterId(clusterId),
 		Cluster: &clusterpb.Cluster{
 			Name:         GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId),
-			ReplicaCount: ptr.To(options.ReplicaCount),
-			ShardCount:   ptr.To(options.ShardCount),
+			ReplicaCount: new(options.ReplicaCount),
+			ShardCount:   new(options.ShardCount),
 			NodeType:     clusterpb.NodeType(clusterpb.NodeType_value[options.NodeType]),
 			PscConfigs: []*clusterpb.PscConfig{{
 				Network: options.VPCNetworkFullName,
@@ -107,54 +90,10 @@ func (memorystoreClient *memorystoreClient) CreateRedisCluster(ctx context.Conte
 			TransitEncryptionMode:  clusterpb.TransitEncryptionMode_TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION,
 			ZoneDistributionConfig: &clusterpb.ZoneDistributionConfig{Mode: clusterpb.ZoneDistributionConfig_MULTI_ZONE},
 
-			DeletionProtectionEnabled: ptr.To(false),
+			DeletionProtectionEnabled: new(false),
 		},
 	}
 
-	_, err := memorystoreClient.redisClusterClient.CreateRedisCluster(ctx, req)
-
-	if err != nil {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Error(err, "CreateRedisCluster", "projectId", projectId, "locationId", locationId, "clusterId", clusterId)
-		return err
-	}
-
-	return nil
-}
-
-func (memorystoreClient *memorystoreClient) GetRedisCluster(ctx context.Context, projectId, locationId, clusterId string) (*clusterpb.Cluster, error) {
-	logger := composed.LoggerFromCtx(ctx).WithValues("projectId", projectId, "locationId", locationId, "clusterId", clusterId)
-
-	name := GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId)
-	req := &clusterpb.GetClusterRequest{
-		Name: name,
-	}
-
-	instanceResponse, err := memorystoreClient.redisClusterClient.GetRedisCluster(ctx, req)
-	if err != nil {
-		if gcpmeta.IsNotFound(err) {
-			logger.Info("target Redis instance not found")
-			return nil, err
-		}
-		logger.Error(err, "Failed to get Redis instance")
-		return nil, err
-	}
-
-	return instanceResponse, nil
-}
-
-func (memorystoreClient *memorystoreClient) DeleteRedisCluster(ctx context.Context, projectId string, locationId string, clusterId string) error {
-	req := &clusterpb.DeleteClusterRequest{
-		Name: GetGcpMemoryStoreRedisClusterName(projectId, locationId, clusterId),
-	}
-
-	_, err := memorystoreClient.redisClusterClient.DeleteRedisCluster(ctx, req)
-
-	if err != nil {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Error(err, "DeleteRedisCluster", "projectId", projectId, "locationId", locationId, "clusterId", clusterId)
-		return err
-	}
-
-	return nil
+	_, err := c.CreateRedisCluster(ctx, req)
+	return err
 }

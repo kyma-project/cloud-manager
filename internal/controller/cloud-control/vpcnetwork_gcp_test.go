@@ -68,6 +68,10 @@ var _ = Describe("Feature: VpcNetwork", func() {
 			Expect(vpcNetwork.Labels[cloudcontrolv1beta1.SubscriptionLabelProvider]).To(Equal(string(cloudcontrolv1beta1.ProviderGCP)))
 		})
 
+		By("Then VpcNetwork status has name", func() {
+			Expect(vpcNetwork.Status.Identifiers.Name).NotTo(BeEmpty())
+		})
+
 		By("Then VpcNetwork status has vpcID", func() {
 			Expect(vpcNetwork.Status.Identifiers.Vpc).NotTo(BeEmpty())
 		})

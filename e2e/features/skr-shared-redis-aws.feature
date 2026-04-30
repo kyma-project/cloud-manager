@@ -5,8 +5,6 @@ Feature: AwsRedisInstance feature
 
     Given there is shared SKR with "AWS" provider
 
-    Given eventually timeout is "30m"
-
     And resource declaration:
       | Alias  | Kind             | ApiVersion                              | Name                         | Namespace |
       | redis  | AwsRedisInstance | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                  |           |
@@ -28,6 +26,7 @@ Feature: AwsRedisInstance feature
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
       | redis.status.state == 'Error' |
+      | #timeout=20m                  |
 
     And "findConditionTrue(redis, 'Ready')" is ok
 

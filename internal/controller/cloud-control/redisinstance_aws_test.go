@@ -64,7 +64,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		cacheNodeType := "cache.m5.large"
 		engineVersion := "6.x"
 		autoMinorVersionUpgrade := true
-		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
+		preferredMaintenanceWindow := new("sun:23:00-mon:01:30")
 		authEnabled := true
 		readReplicas := 1
 
@@ -98,7 +98,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					NewObjActions(),
-					HavingRedisInstanceStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected RedisInstance to get status.id")
 			awsElastiCacheClusterInstance = awsMock.GetAwsElastiCacheByName(redisInstance.Status.Id)
 		})
@@ -216,7 +216,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		cacheNodeType := "cache.m5.large"
 		engineVersion := "6.x"
 		autoMinorVersionUpgrade := true
-		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
+		preferredMaintenanceWindow := new("sun:23:00-mon:01:30")
 		authEnabled := true
 		readReplicas := 1
 
@@ -250,7 +250,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					NewObjActions(),
-					HavingRedisInstanceStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected RedisInstance to get status.id")
 			awsElastiCacheClusterInstance = awsMock.GetAwsElastiCacheByName(redisInstance.Status.Id)
 		})
@@ -401,7 +401,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 		cacheNodeType := "cache.m5.large"
 		engineVersion := "7.0"
 		autoMinorVersionUpgrade := true
-		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
+		preferredMaintenanceWindow := new("sun:23:00-mon:01:30")
 		authEnabled := true
 		readReplicas := 1
 
@@ -435,7 +435,7 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					NewObjActions(),
-					HavingRedisInstanceStatusId()).
+					HavingFieldSet("status", "id")).
 				Should(Succeed(), "expected RedisInstance to get status.id")
 			awsElastiCacheClusterInstance = awsMock.GetAwsElastiCacheByName(redisInstance.Status.Id)
 		})

@@ -1,5 +1,7 @@
 package v1beta1
 
+// +kubebuilder:object:generate=false
+
 type SubscriptionBuilder struct {
 	Obj *Subscription
 }

@@ -49,8 +49,9 @@ func TestLoadPersistentVolume(t *testing.T) {
 
 		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
+			scopeState, _ := commonscope.NewStateFactory(kcpCluster, scopeProvider).NewState(context.Background(), types.NamespacedName{}, composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore))
 			return &State{
-				State: commonscope.NewStateFactory(kcpCluster, kymaRef).NewState(composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore)),
+				State: scopeState,
 			}
 		}
 
@@ -128,8 +129,7 @@ func TestLoadPersistentVolume(t *testing.T) {
 
 		t.Run("Should: load Bound PV", func(t *testing.T) {
 			setupTest(true, corev1.VolumeBound)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolume(ctx, state)
 
@@ -143,8 +143,7 @@ func TestLoadPersistentVolume(t *testing.T) {
 
 		t.Run("Should: fail PV that is not Bound", func(t *testing.T) {
 			setupTest(true, corev1.VolumePending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolume(ctx, state)
 
@@ -157,8 +156,7 @@ func TestLoadPersistentVolume(t *testing.T) {
 
 		t.Run("Should: error out if APIServer cant find requested PV", func(t *testing.T) {
 			setupTest(false, corev1.VolumePending)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := loadPersistentVolume(ctx, state)
 

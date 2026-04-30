@@ -34,8 +34,8 @@ func updateSize(ctx context.Context, st composed.State) (error, context.Context)
 		).
 		Info("Updating KCP NfsInstance capacity for SapNfsVolume")
 
-	p := map[string]interface{}{
-		"spec": map[string]interface{}{
+	p := map[string]any{
+		"spec": map[string]any{
 			"capacityGb": state.KcpNfsInstance.Spec.Instance.OpenStack.SizeGb,
 		},
 	}

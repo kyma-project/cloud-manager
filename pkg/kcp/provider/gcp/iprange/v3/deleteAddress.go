@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/compute/apiv1/computepb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -45,7 +46,10 @@ func deleteAddress(ctx context.Context, st composed.State) (error, context.Conte
 	ipRange.Status.State = gcpclient.DeleteAddress
 
 	// Delete the global address
-	operationName, err := state.computeClient.DeleteIpRange(ctx, project, addressName)
+	op, err := state.computeClient.DeleteGlobalAddress(ctx, &computepb.DeleteGlobalAddressRequest{
+		Project: project,
+		Address: addressName,
+	})
 
 	if err != nil {
 		logger.Error(err, "Error deleting Address from GCP")
@@ -62,6 +66,10 @@ func deleteAddress(ctx context.Context, st composed.State) (error, context.Conte
 	}
 
 	// Store operation identifier for tracking
+	operationName := ""
+	if op != nil {
+		operationName = op.Name()
+	}
 	ipRange.Status.OpIdentifier = operationName
 
 	logger.Info("Address deletion initiated", "operation", operationName)

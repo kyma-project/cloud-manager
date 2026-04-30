@@ -9,12 +9,12 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 )
@@ -54,13 +54,11 @@ func (r *Reconciler) newAction() composed.Action {
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsVolume{}),
 		composed.LoadObj,
 		loadScope,
-		composed.ComposeActions(
-			"crGcpNfsVolumeValidateSpec",
-			validateIpRange, validatePV, validatePVC),
+		validatePV,
+		validatePVC,
 		setProcessing,
 		defaultiprange.New(),
 		addFinalizer,
-		loadKcpIpRange,
 		loadKcpNfsInstance,
 		updateStatusId,
 		composed.IfElse(
@@ -94,7 +92,7 @@ func (r *Reconciler) newAction() composed.Action {
 }
 
 func NewReconciler(
-	kymaRef klog.ObjectRef,
+	scopeProvider scopeprovider.ScopeProvider,
 	kcpCluster cluster.Cluster,
 	skrCluster cluster.Cluster,
 	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
@@ -103,7 +101,7 @@ func NewReconciler(
 	compSkrCluster := composed.NewStateClusterFromCluster(skrCluster)
 	compKcpCluster := composed.NewStateClusterFromCluster(kcpCluster)
 	composedStateFactory := composed.NewStateFactory(compSkrCluster)
-	stateFactory := NewStateFactory(kymaRef, compKcpCluster, compSkrCluster, fileBackupClientProvider, env)
+	stateFactory := NewStateFactory(scopeProvider, compKcpCluster, compSkrCluster, fileBackupClientProvider, env)
 	return Reconciler{
 		composedStateFactory: composedStateFactory,
 		stateFactory:         stateFactory,

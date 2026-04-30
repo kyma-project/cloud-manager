@@ -15,7 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/utils/ptr"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Feature: SKR AwsRedisCluster", func() {
@@ -49,6 +49,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 		})
 
 		awsRedisClusterName := "07d85fea-6005-4747-9800-831173d7c11b"
+		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: awsRedisClusterName}))
 		awsRedisCluster := &cloudresourcesv1beta1.AwsRedisCluster{}
 
 		const (
@@ -68,7 +69,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 		shardCount := int32(10)
 		replicasPerShard := int32(2)
 
-		preferredMaintenanceWindow := ptr.To("sun:23:00-mon:01:30")
+		preferredMaintenanceWindow := new("sun:23:00-mon:01:30")
 
 		parameterKey := "active-defrag-cycle-max"
 		parameterValue := "85"
@@ -113,8 +114,8 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					infra.SKR().Client(),
 					awsRedisCluster,
 					NewObjActions(),
-					HavingAwsRedisClusterStatusId(),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR AwsRedisCluster to get status.id")
 
@@ -130,7 +131,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 				Should(Succeed())
 
 			By("And has annotaton cloud-manager.kyma-project.io/kymaName")
-			Expect(kcpRedisCluster.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpRedisCluster.Annotations[cloudcontrolv1beta1.LabelKymaName]).To(Equal(skrKymaRef.Name))
 
 			By("And has annotaton cloud-manager.kyma-project.io/remoteName")
 			Expect(kcpRedisCluster.Annotations[cloudcontrolv1beta1.LabelRemoteName]).To(Equal(awsRedisCluster.Name))
@@ -139,7 +140,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 			Expect(kcpRedisCluster.Annotations[cloudcontrolv1beta1.LabelRemoteNamespace]).To(Equal(awsRedisCluster.Namespace))
 
 			By("And has spec.scope.name equal to SKR Cluster kyma name")
-			Expect(kcpRedisCluster.Spec.Scope.Name).To(Equal(infra.SkrKymaRef().Name))
+			Expect(kcpRedisCluster.Spec.Scope.Name).To(Equal(skrKymaRef.Name))
 
 			By("And has spec.remoteRef matching to to SKR IpRange")
 			Expect(kcpRedisCluster.Spec.RemoteRef.Namespace).To(Equal(awsRedisCluster.Namespace))
@@ -183,7 +184,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					awsRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -279,8 +280,8 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					infra.SKR().Client(),
 					awsRedisCluster,
 					NewObjActions(),
-					HavingAwsRedisClusterStatusId(),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR AwsRedisCluster to get status.id")
 
@@ -319,7 +320,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					awsRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed(), "expected AwsRedisCluster to exist and have Ready condition")
 		})
@@ -355,7 +356,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					awsRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.StateDeleting),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateDeleting),
+					HavingFieldValue(cloudresourcesv1beta1.StateDeleting, "status", "state"),
 				).
 				Should(Succeed(), "expected AwsRedisCluster to have Deleting state")
 		})
@@ -462,8 +463,8 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					infra.SKR().Client(),
 					awsRedisCluster,
 					NewObjActions(),
-					HavingAwsRedisClusterStatusId(),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR AwsRedisCluster to get status.id and status creating")
 
@@ -499,7 +500,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					awsRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -600,8 +601,8 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					infra.SKR().Client(),
 					awsRedisCluster,
 					NewObjActions(),
-					HavingAwsRedisClusterStatusId(),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed(), "expected SKR AwsRedisCluster to get status.id and status creating")
 
@@ -637,7 +638,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					awsRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})
@@ -751,8 +752,8 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					infra.SKR().Client(),
 					awsRedisCluster,
 					NewObjActions(),
-					HavingAwsRedisClusterStatusId(),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateCreating),
+					HavingFieldSet("status", "id"),
+					HavingFieldValue(cloudresourcesv1beta1.StateCreating, "status", "state"),
 				).
 				Should(Succeed())
 
@@ -792,7 +793,7 @@ var _ = Describe("Feature: SKR AwsRedisCluster", func() {
 					awsRedisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-					HavingAwsRedisClusterStatusState(cloudresourcesv1beta1.StateReady),
+					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
 		})

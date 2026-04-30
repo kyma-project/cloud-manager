@@ -3,7 +3,6 @@ package dsl
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -135,24 +134,6 @@ func WithSourceBackup(backupPath string) ObjAction {
 	}
 }
 
-func CreateNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.NfsInstance, opts ...ObjAction) error {
-	if obj == nil {
-		obj = &cloudcontrolv1beta1.NfsInstance{}
-	}
-	NewObjActions(opts...).
-		Append(
-			WithNamespace(DefaultKcpNamespace),
-		).
-		ApplyOnObject(obj)
-
-	if obj.Name == "" {
-		return errors.New("the KCP NfsInstance must have name set")
-	}
-
-	err := clnt.Create(ctx, obj)
-	return err
-}
-
 func GivenNfsInstanceExists(ctx context.Context, clnt client.Client, obj *cloudcontrolv1beta1.NfsInstance, opts ...ObjAction) error {
 	if obj == nil {
 		obj = &cloudcontrolv1beta1.NfsInstance{}
@@ -214,46 +195,4 @@ func DeleteNfsInstance(ctx context.Context, clnt client.Client, obj *cloudcontro
 
 	err := clnt.Delete(ctx, obj)
 	return err
-}
-
-func HavingNfsInstanceStatusId() ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
-		if !ok {
-			return fmt.Errorf("the object %T is not KCP NfsInstance", obj)
-		}
-		if x.Status.Id == "" {
-			return errors.New("the KCP NfsInstance status.id is not set")
-		}
-		return nil
-	}
-}
-
-func HavingNfsInstanceStatusCapacity(capacity resource.Quantity) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
-		if !ok {
-			return fmt.Errorf("the object %T is not KCP NfsInstance", obj)
-		}
-		if x.Status.Capacity.IsZero() {
-			return errors.New("the KCP NfsInstance status.capacity is not set")
-		}
-		if !x.Status.Capacity.Equal(capacity) {
-			return fmt.Errorf("the KCP NfsInstance status.capacity is %v, but expected %v", x.Status.Capacity, capacity)
-		}
-		return nil
-	}
-}
-
-func HavingNfsInstanceStatusCapacityGb(expectedCapacityGb int) ObjAssertion {
-	return func(obj client.Object) error {
-		x, ok := obj.(*cloudcontrolv1beta1.NfsInstance)
-		if !ok {
-			return fmt.Errorf("the object %T is not KCP NfsInstance", obj)
-		}
-		if x.Status.CapacityGb != expectedCapacityGb {
-			return fmt.Errorf("the KCP NfsInstance status.capacityGb is %d, expected %d", x.Status.CapacityGb, expectedCapacityGb)
-		}
-		return nil
-	}
 }

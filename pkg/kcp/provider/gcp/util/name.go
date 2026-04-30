@@ -201,7 +201,14 @@ func (n NameDetail) StartsWith(prefix NameDetail) bool {
 		return false
 	}
 	for i := range prefix.parts {
-		if n.parts[i].defn.format != prefix.parts[i].defn.format || n.parts[i].value != prefix.parts[i].value {
+		if n.parts[i].defn.format != prefix.parts[i].defn.format {
+			return false
+		}
+		// "-" is the GCP wildcard meaning "all" for that part (e.g. all locations)
+		if prefix.parts[i].value == "-" {
+			continue
+		}
+		if n.parts[i].value != prefix.parts[i].value {
 			return false
 		}
 	}
