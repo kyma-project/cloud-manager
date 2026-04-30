@@ -26,10 +26,6 @@ import (
 // SapNfsVolumeSnapshotScheduleSpec defines the desired state of SapNfsVolumeSnapshotSchedule
 type SapNfsVolumeSnapshotScheduleSpec struct {
 
-	// NfsVolumeRef specifies the source SapNfsVolume resource.
-	// +kubebuilder:validation:Required
-	NfsVolumeRef corev1.ObjectReference `json:"nfsVolumeRef"`
-
 	// Schedule is a cron expression. If empty, creates a one-time snapshot.
 	// +optional
 	Schedule string `json:"schedule,omitempty"`
@@ -141,9 +137,9 @@ type SapNfsVolumeSnapshotScheduleStatus struct {
 	// +optional
 	Schedule string `json:"schedule,omitempty"`
 
-	// BackupIndex specifies the current index of the snapshot created by this schedule.
+	// SnapshotIndex is the monotonically incrementing index for snapshot naming.
 	// +kubebuilder:default=0
-	BackupIndex int `json:"backupIndex,omitempty"`
+	SnapshotIndex int `json:"snapshotIndex,omitempty"`
 
 	// BackupCount specifies the number of snapshots currently present in the system.
 	// +kubebuilder:default=0
@@ -191,11 +187,11 @@ func (sc *SapNfsVolumeSnapshotSchedule) SetState(state string) {
 }
 
 func (sc *SapNfsVolumeSnapshotSchedule) GetSourceRef() corev1.ObjectReference {
-	return sc.Spec.NfsVolumeRef
+	return sc.Spec.Template.Spec.SourceVolume
 }
 
 func (sc *SapNfsVolumeSnapshotSchedule) SetSourceRef(ref corev1.ObjectReference) {
-	sc.Spec.NfsVolumeRef = ref
+	sc.Spec.Template.Spec.SourceVolume = ref
 }
 
 func (sc *SapNfsVolumeSnapshotSchedule) GetSchedule() string {
@@ -327,11 +323,11 @@ func (sc *SapNfsVolumeSnapshotSchedule) SetActiveSchedule(schedule string) {
 }
 
 func (sc *SapNfsVolumeSnapshotSchedule) GetBackupIndex() int {
-	return sc.Status.BackupIndex
+	return sc.Status.SnapshotIndex
 }
 
 func (sc *SapNfsVolumeSnapshotSchedule) SetBackupIndex(index int) {
-	sc.Status.BackupIndex = index
+	sc.Status.SnapshotIndex = index
 }
 
 func (sc *SapNfsVolumeSnapshotSchedule) GetBackupCount() int {

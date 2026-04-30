@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -28,7 +29,7 @@ type SapNfsVolumeSnapshotRestoreSpec struct {
 	// SourceSnapshot references the SapNfsVolumeSnapshot to restore from.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="SourceSnapshot is immutable."
-	SourceSnapshot SapNfsVolumeSnapshotRef `json:"sourceSnapshot"`
+	SourceSnapshot corev1.ObjectReference `json:"sourceSnapshot"`
 
 	// Destination specifies where to restore the snapshot data.
 	// Exactly one of ExistingVolume or NewVolume must be set.
@@ -37,25 +38,13 @@ type SapNfsVolumeSnapshotRestoreSpec struct {
 	Destination SapNfsVolumeSnapshotRestoreDestination `json:"destination"`
 }
 
-// SapNfsVolumeSnapshotRef references a SapNfsVolumeSnapshot resource.
-type SapNfsVolumeSnapshotRef struct {
-	// Name specifies the name of the SapNfsVolumeSnapshot resource.
-	// +kubebuilder:validation:Required
-	Name string `json:"name"`
-
-	// Namespace specifies the namespace of the SapNfsVolumeSnapshot resource.
-	// If not specified then namespace of the parent resource is used.
-	// +optional
-	Namespace string `json:"namespace,omitempty"`
-}
-
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type SapNfsVolumeSnapshotRestoreDestination struct {
 	// ExistingVolume references an existing SapNfsVolume to revert in-place.
 	// The snapshot must be the most recent snapshot of this volume.
 	// +optional
-	ExistingVolume *SapNfsVolumeRef `json:"existingVolume,omitempty"`
+	ExistingVolume *corev1.ObjectReference `json:"existingVolume,omitempty"`
 
 	// NewVolume defines a new SapNfsVolume to create from the snapshot.
 	// +optional
@@ -63,28 +52,15 @@ type SapNfsVolumeSnapshotRestoreDestination struct {
 }
 
 type SapNfsVolumeSnapshotNewVolume struct {
-	// Name for the new SapNfsVolume resource.
+	// Metadata for the new SapNfsVolume (name, labels, annotations).
+	// name is required; namespace defaults to the restore's namespace.
 	// +kubebuilder:validation:Required
-	Name string `json:"name"`
+	Metadata metav1.ObjectMeta `json:"metadata"`
 
-	// Namespace for the new SapNfsVolume resource.
-	// If not specified then namespace of the restore resource is used.
-	// +optional
-	Namespace string `json:"namespace,omitempty"`
-
-	// Labels to apply to the new SapNfsVolume resource.
-	// +optional
-	Labels map[string]string `json:"labels,omitempty"`
-
-	// Annotations to apply to the new SapNfsVolume resource.
-	// +optional
-	Annotations map[string]string `json:"annotations,omitempty"`
-
-	// CapacityGb is the capacity in GiB for the new SapNfsVolume.
-	// Must be >= the snapshot's source share size.
+	// Spec is the template for the new SapNfsVolume (same type as SapNfsVolumeSpec).
+	// capacityGb must be >= the snapshot's source share size.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self > 0), message="The field capacityGb must be greater than zero"
-	CapacityGb int `json:"capacityGb"`
+	Spec SapNfsVolumeSpec `json:"spec"`
 }
 
 // SapNfsVolumeSnapshotRestoreStatus defines the observed state of SapNfsVolumeSnapshotRestore
@@ -95,7 +71,7 @@ type SapNfsVolumeSnapshotRestoreStatus struct {
 
 	// CreatedVolume references the SapNfsVolume created (new-volume restore only).
 	// +optional
-	CreatedVolume string `json:"createdVolume,omitempty"`
+	CreatedVolume *corev1.ObjectReference `json:"createdVolume,omitempty"`
 
 	// List of status conditions
 	// +optional

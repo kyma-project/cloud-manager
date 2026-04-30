@@ -14,17 +14,13 @@ func newTestSapNfsVolumeSnapshotScheduleBuilder() *testSapNfsVolumeSnapshotSched
 	return &testSapNfsVolumeSnapshotScheduleBuilder{
 		instance: cloudresourcesv1beta1.SapNfsVolumeSnapshotSchedule{
 			Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotScheduleSpec{
-				NfsVolumeRef: corev1.ObjectReference{
-					Name:      "test-volume",
-					Namespace: "default",
-				},
 				Schedule:           "0 0 * * *",
 				MaxRetentionDays:   375,
 				MaxReadySnapshots:  50,
 				MaxFailedSnapshots: 5,
 				Template: cloudresourcesv1beta1.SapNfsVolumeSnapshotTemplate{
 					Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotSpec{
-						SourceVolume: cloudresourcesv1beta1.SapNfsVolumeRef{
+						SourceVolume: corev1.ObjectReference{
 							Name: "test-volume",
 						},
 					},

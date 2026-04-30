@@ -13,6 +13,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -90,7 +91,7 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshot", func() {
 		By("When SapNfsVolumeSnapshot is created", func() {
 			snapshot.Name = snapshotName
 			snapshot.Namespace = DefaultSkrNamespace
-			snapshot.Spec.SourceVolume = cloudresourcesv1beta1.SapNfsVolumeRef{
+			snapshot.Spec.SourceVolume = corev1.ObjectReference{
 				Name: sapNfsVolumeName,
 			}
 			Eventually(func() error {
@@ -232,7 +233,7 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshot", func() {
 		By("When SapNfsVolumeSnapshot is created with deleteAfterDays=1", func() {
 			snapshot.Name = snapshotName
 			snapshot.Namespace = DefaultSkrNamespace
-			snapshot.Spec.SourceVolume = cloudresourcesv1beta1.SapNfsVolumeRef{
+			snapshot.Spec.SourceVolume = corev1.ObjectReference{
 				Name: sapNfsVolumeName,
 			}
 			snapshot.Spec.DeleteAfterDays = 1
@@ -297,7 +298,7 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshot", func() {
 		By("When SapNfsVolumeSnapshot is created referencing a non-existent volume", func() {
 			snapshot.Name = snapshotName
 			snapshot.Namespace = DefaultSkrNamespace
-			snapshot.Spec.SourceVolume = cloudresourcesv1beta1.SapNfsVolumeRef{
+			snapshot.Spec.SourceVolume = corev1.ObjectReference{
 				Name: nonExistentVolumeName,
 			}
 			Eventually(func() error {

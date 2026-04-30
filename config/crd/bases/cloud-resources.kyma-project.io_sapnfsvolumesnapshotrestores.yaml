@@ -64,49 +64,103 @@ spec:
                         ExistingVolume references an existing SapNfsVolume to revert in-place.
                         The snapshot must be the most recent snapshot of this volume.
                       properties:
+                        apiVersion:
+                          description: API version of the referent.
+                          type: string
+                        fieldPath:
+                          description: |-
+                            If referring to a piece of an object instead of an entire object, this string
+                            should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                            For example, if the object reference is to a container within a pod, this would take on a value like:
+                            "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                            the event) or if no container name is specified "spec.containers[2]" (container with
+                            index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                            referencing a part of an object.
+                          type: string
+                        kind:
+                          description: |-
+                            Kind of the referent.
+                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                          type: string
                         name:
-                          description: Name specifies the name of the SapNfsVolume resource.
+                          description: |-
+                            Name of the referent.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
                           type: string
                         namespace:
                           description: |-
-                            Namespace specifies the namespace of the SapNfsVolume resource.
-                            If not specified then namespace of the parent resource is used.
+                            Namespace of the referent.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
                           type: string
-                      required:
-                        - name
+                        resourceVersion:
+                          description: |-
+                            Specific resourceVersion to which this reference is made, if any.
+                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                          type: string
+                        uid:
+                          description: |-
+                            UID of the referent.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                          type: string
                       type: object
+                      x-kubernetes-map-type: atomic
                     newVolume:
                       description: NewVolume defines a new SapNfsVolume to create from the snapshot.
                       properties:
-                        annotations:
-                          additionalProperties:
-                            type: string
-                          description: Annotations to apply to the new SapNfsVolume resource.
-                          type: object
-                        capacityGb:
+                        metadata:
                           description: |-
-                            CapacityGb is the capacity in GiB for the new SapNfsVolume.
-                            Must be >= the snapshot's source share size.
-                          type: integer
-                          x-kubernetes-validations:
-                            - message: The field capacityGb must be greater than zero
-                              rule: (self > 0)
-                        labels:
-                          additionalProperties:
-                            type: string
-                          description: Labels to apply to the new SapNfsVolume resource.
+                            Metadata for the new SapNfsVolume (name, labels, annotations).
+                            name is required; namespace defaults to the restore's namespace.
                           type: object
-                        name:
-                          description: Name for the new SapNfsVolume resource.
-                          type: string
-                        namespace:
+                        spec:
                           description: |-
-                            Namespace for the new SapNfsVolume resource.
-                            If not specified then namespace of the restore resource is used.
-                          type: string
+                            Spec is the template for the new SapNfsVolume (same type as SapNfsVolumeSpec).
+                            capacityGb must be >= the snapshot's source share size.
+                          properties:
+                            capacityGb:
+                              type: integer
+                              x-kubernetes-validations:
+                                - message: The field capacityGb must be greater than zero
+                                  rule: (self > 0)
+                            ipRange:
+                              properties:
+                                name:
+                                  type: string
+                              required:
+                                - name
+                              type: object
+                            volume:
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                name:
+                                  type: string
+                              type: object
+                            volumeClaim:
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                name:
+                                  type: string
+                              type: object
+                          required:
+                            - capacityGb
+                          type: object
                       required:
-                        - capacityGb
-                        - name
+                        - metadata
+                        - spec
                       type: object
                   type: object
                   x-kubernetes-validations:
@@ -115,17 +169,46 @@ spec:
                 sourceSnapshot:
                   description: SourceSnapshot references the SapNfsVolumeSnapshot to restore from.
                   properties:
+                    apiVersion:
+                      description: API version of the referent.
+                      type: string
+                    fieldPath:
+                      description: |-
+                        If referring to a piece of an object instead of an entire object, this string
+                        should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                        For example, if the object reference is to a container within a pod, this would take on a value like:
+                        "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                        the event) or if no container name is specified "spec.containers[2]" (container with
+                        index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                        referencing a part of an object.
+                      type: string
+                    kind:
+                      description: |-
+                        Kind of the referent.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                      type: string
                     name:
-                      description: Name specifies the name of the SapNfsVolumeSnapshot resource.
+                      description: |-
+                        Name of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
                       type: string
                     namespace:
                       description: |-
-                        Namespace specifies the namespace of the SapNfsVolumeSnapshot resource.
-                        If not specified then namespace of the parent resource is used.
+                        Namespace of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
                       type: string
-                  required:
-                    - name
+                    resourceVersion:
+                      description: |-
+                        Specific resourceVersion to which this reference is made, if any.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                      type: string
+                    uid:
+                      description: |-
+                        UID of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                      type: string
                   type: object
+                  x-kubernetes-map-type: atomic
                   x-kubernetes-validations:
                     - message: SourceSnapshot is immutable.
                       rule: (self == oldSelf)
@@ -197,7 +280,47 @@ spec:
                   x-kubernetes-list-type: map
                 createdVolume:
                   description: CreatedVolume references the SapNfsVolume created (new-volume restore only).
-                  type: string
+                  properties:
+                    apiVersion:
+                      description: API version of the referent.
+                      type: string
+                    fieldPath:
+                      description: |-
+                        If referring to a piece of an object instead of an entire object, this string
+                        should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                        For example, if the object reference is to a container within a pod, this would take on a value like:
+                        "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                        the event) or if no container name is specified "spec.containers[2]" (container with
+                        index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                        referencing a part of an object.
+                      type: string
+                    kind:
+                      description: |-
+                        Kind of the referent.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                      type: string
+                    name:
+                      description: |-
+                        Name of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                      type: string
+                    resourceVersion:
+                      description: |-
+                        Specific resourceVersion to which this reference is made, if any.
+                        More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                      type: string
+                    uid:
+                      description: |-
+                        UID of the referent.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
                 state:
                   description: State of the restore operation.
                   type: string

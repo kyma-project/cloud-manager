@@ -3,6 +3,7 @@ package api_tests
 import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
+	corev1 "k8s.io/api/core/v1"
 )
 
 type testSapNfsVolumeSnapshotBuilder struct {
@@ -13,7 +14,7 @@ func newTestSapNfsVolumeSnapshotBuilder() *testSapNfsVolumeSnapshotBuilder {
 	return &testSapNfsVolumeSnapshotBuilder{
 		instance: cloudresourcesv1beta1.SapNfsVolumeSnapshot{
 			Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotSpec{
-				SourceVolume: cloudresourcesv1beta1.SapNfsVolumeRef{
+				SourceVolume: corev1.ObjectReference{
 					Name: "test-volume",
 				},
 			},

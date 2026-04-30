@@ -8,6 +8,7 @@ import (
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	clocktesting "k8s.io/utils/clock/testing"
@@ -31,7 +32,7 @@ func TestTTLExpiry(t *testing.T) {
 					CreationTimestamp: metav1.Time{Time: time.Now().Add(-1 * time.Hour)},
 				},
 				Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotSpec{
-					SourceVolume:    cloudresourcesv1beta1.SapNfsVolumeRef{Name: "vol-1"},
+					SourceVolume:    corev1.ObjectReference{Name: "vol-1"},
 					DeleteAfterDays: 7,
 				},
 				Status: cloudresourcesv1beta1.SapNfsVolumeSnapshotStatus{

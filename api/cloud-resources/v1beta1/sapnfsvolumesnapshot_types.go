@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -28,24 +29,12 @@ type SapNfsVolumeSnapshotSpec struct {
 	// SourceVolume references the SapNfsVolume to snapshot.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="SourceVolume is immutable."
-	SourceVolume SapNfsVolumeRef `json:"sourceVolume"`
+	SourceVolume corev1.ObjectReference `json:"sourceVolume"`
 
 	// DeleteAfterDays specifies the number of days after which the snapshot
 	// will be automatically deleted. 0 means no automatic deletion.
 	// +optional
 	DeleteAfterDays int `json:"deleteAfterDays,omitempty"`
-}
-
-// SapNfsVolumeRef references a SapNfsVolume resource.
-type SapNfsVolumeRef struct {
-	// Name specifies the name of the SapNfsVolume resource.
-	// +kubebuilder:validation:Required
-	Name string `json:"name"`
-
-	// Namespace specifies the namespace of the SapNfsVolume resource.
-	// If not specified then namespace of the parent resource is used.
-	// +optional
-	Namespace string `json:"namespace,omitempty"`
 }
 
 // SapNfsVolumeSnapshotStatus defines the observed state of SapNfsVolumeSnapshot

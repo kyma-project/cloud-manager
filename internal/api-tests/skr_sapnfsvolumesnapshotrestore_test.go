@@ -3,6 +3,8 @@ package api_tests
 import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type testSapNfsVolumeSnapshotRestoreBuilder struct {
@@ -13,11 +15,11 @@ func newTestSapNfsVolumeSnapshotRestoreExistingVolumeBuilder() *testSapNfsVolume
 	return &testSapNfsVolumeSnapshotRestoreBuilder{
 		instance: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestore{
 			Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestoreSpec{
-				SourceSnapshot: cloudresourcesv1beta1.SapNfsVolumeSnapshotRef{
+				SourceSnapshot: corev1.ObjectReference{
 					Name: "test-snapshot",
 				},
 				Destination: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestoreDestination{
-					ExistingVolume: &cloudresourcesv1beta1.SapNfsVolumeRef{
+					ExistingVolume: &corev1.ObjectReference{
 						Name: "test-volume",
 					},
 				},
@@ -30,13 +32,17 @@ func newTestSapNfsVolumeSnapshotRestoreNewVolumeBuilder() *testSapNfsVolumeSnaps
 	return &testSapNfsVolumeSnapshotRestoreBuilder{
 		instance: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestore{
 			Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestoreSpec{
-				SourceSnapshot: cloudresourcesv1beta1.SapNfsVolumeSnapshotRef{
+				SourceSnapshot: corev1.ObjectReference{
 					Name: "test-snapshot",
 				},
 				Destination: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestoreDestination{
 					NewVolume: &cloudresourcesv1beta1.SapNfsVolumeSnapshotNewVolume{
-						Name:       "new-volume",
-						CapacityGb: 100,
+						Metadata: metav1.ObjectMeta{
+							Name: "new-volume",
+						},
+						Spec: cloudresourcesv1beta1.SapNfsVolumeSpec{
+							CapacityGb: 100,
+						},
 					},
 				},
 			},
@@ -48,16 +54,20 @@ func newTestSapNfsVolumeSnapshotRestoreBothBuilder() *testSapNfsVolumeSnapshotRe
 	return &testSapNfsVolumeSnapshotRestoreBuilder{
 		instance: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestore{
 			Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestoreSpec{
-				SourceSnapshot: cloudresourcesv1beta1.SapNfsVolumeSnapshotRef{
+				SourceSnapshot: corev1.ObjectReference{
 					Name: "test-snapshot",
 				},
 				Destination: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestoreDestination{
-					ExistingVolume: &cloudresourcesv1beta1.SapNfsVolumeRef{
+					ExistingVolume: &corev1.ObjectReference{
 						Name: "test-volume",
 					},
 					NewVolume: &cloudresourcesv1beta1.SapNfsVolumeSnapshotNewVolume{
-						Name:       "new-volume",
-						CapacityGb: 100,
+						Metadata: metav1.ObjectMeta{
+							Name: "new-volume",
+						},
+						Spec: cloudresourcesv1beta1.SapNfsVolumeSpec{
+							CapacityGb: 100,
+						},
 					},
 				},
 			},
@@ -69,7 +79,7 @@ func newTestSapNfsVolumeSnapshotRestoreNeitherBuilder() *testSapNfsVolumeSnapsho
 	return &testSapNfsVolumeSnapshotRestoreBuilder{
 		instance: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestore{
 			Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestoreSpec{
-				SourceSnapshot: cloudresourcesv1beta1.SapNfsVolumeSnapshotRef{
+				SourceSnapshot: corev1.ObjectReference{
 					Name: "test-snapshot",
 				},
 				Destination: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestoreDestination{},
@@ -88,7 +98,7 @@ func (b *testSapNfsVolumeSnapshotRestoreBuilder) WithSourceSnapshot(name string)
 }
 
 func (b *testSapNfsVolumeSnapshotRestoreBuilder) WithExistingVolume(name string) *testSapNfsVolumeSnapshotRestoreBuilder {
-	b.instance.Spec.Destination.ExistingVolume = &cloudresourcesv1beta1.SapNfsVolumeRef{Name: name}
+	b.instance.Spec.Destination.ExistingVolume = &corev1.ObjectReference{Name: name}
 	b.instance.Spec.Destination.NewVolume = nil
 	return b
 }
