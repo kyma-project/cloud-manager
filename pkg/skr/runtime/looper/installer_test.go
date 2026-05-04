@@ -33,6 +33,19 @@ func TestInstaller(t *testing.T) {
 		assert.NoError(t, instlr.Handle(ctx, string(provider), clstr))
 
 		checker := NewSkrStatusChecker(skrStatus).InstallerManifest()
+
+		// Assert common aggregated RBAC ClusterRoles (deployed to all providers)
+		for _, name := range []string{"kyma-cloud-manager-admin", "kyma-cloud-manager-edit", "kyma-cloud-manager-view"} {
+			checker.Obj("clusterrole.rbac.authorization.k8s.io").Name(name)
+			h := checker.Check(t)
+			if h != nil {
+				assert.Equal(t, "InstallerManifest", h.title)
+				assert.Equal(t, []string{"Creating"}, h.outcomes)
+				assert.True(t, h.ok)
+			}
+		}
+		checker.Name("")
+
 		checker.CheckAll(t, testCases)
 
 		uncheker := checker.Unchecked()
@@ -122,4 +135,21 @@ func TestInstaller(t *testing.T) {
 			{"sapnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 		})
 	})
+}
+
+func TestInstallerFailsWhenCommonDirMissing(t *testing.T) {
+	ctx := context.Background()
+	skrStatus := NewSkrStatus(ctx)
+	instlr := &installer{
+		skrStatus:        skrStatus,
+		skrProvidersPath: "../../../../config/dist/skr/crd/does-not-exist/providers",
+		logger:           logr.Discard(),
+	}
+
+	clnt := fake.NewFakeClient()
+	clstr := NewCluster(commonscheme.SkrScheme, clnt, clnt)
+
+	err := instlr.Handle(ctx, string(cloudcontrolv1beta1.ProviderGCP), clstr)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
 }
