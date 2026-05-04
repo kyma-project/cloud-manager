@@ -442,33 +442,6 @@ func TestConvertRateBasedStatementWithForwardedIP(t *testing.T) {
 }
 
 func TestConvertManagedRuleGroupStatementWithConfigs(t *testing.T) {
-	t.Run("With ManagedRuleGroupConfigs", func(t *testing.T) {
-		managed := &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-			VendorName: "AWS",
-			Name:       "AWSManagedRulesATPRuleSet",
-			ManagedRuleGroupConfigs: []cloudresourcesv1beta1.AwsWebAclManagedRuleGroupConfig{
-				{
-					LoginPath:   "/login",
-					PayloadType: "JSON",
-					UsernameField: &cloudresourcesv1beta1.AwsWebAclFieldIdentifier{
-						Identifier: "/username",
-					},
-					PasswordField: &cloudresourcesv1beta1.AwsWebAclFieldIdentifier{
-						Identifier: "/password",
-					},
-				},
-			},
-		}
-		result, err := convertManagedRuleGroupStatement(managed)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.ManagedRuleGroupConfigs, 1)
-		assert.Equal(t, "/login", *result.ManagedRuleGroupConfigs[0].LoginPath)
-		assert.Equal(t, wafv2types.PayloadTypeJson, result.ManagedRuleGroupConfigs[0].PayloadType)
-		assert.Equal(t, "/username", *result.ManagedRuleGroupConfigs[0].UsernameField.Identifier)
-		assert.Equal(t, "/password", *result.ManagedRuleGroupConfigs[0].PasswordField.Identifier)
-	})
-
 	t.Run("With RuleActionOverrides", func(t *testing.T) {
 		managed := &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 			VendorName: "AWS",

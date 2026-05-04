@@ -106,18 +106,18 @@ var _ = Describe("AwsWebAcl Controller", func() {
 				},
 				Rules: []cloudresourcesv1beta1.AwsWebAclRule{
 					{
-						Name:           "AWS-AWSManagedRulesBotControlRuleSet",
+						Name:           "AWS-AWSManagedRulesKnownBadInputsRuleSet",
 						Priority:       0,
 						OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
 						Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 							ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 								VendorName: "AWS",
-								Name:       "AWSManagedRulesBotControlRuleSet",
+								Name:       "AWSManagedRulesKnownBadInputsRuleSet",
 							},
 						},
 						VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
 							CloudWatchMetricsEnabled: true,
-							MetricName:               "AWS-AWSManagedRulesBotControlRuleSet",
+							MetricName:               "AWS-AWSManagedRulesKnownBadInputsRuleSet",
 							SampledRequestsEnabled:   true,
 						},
 					},
@@ -180,7 +180,7 @@ var _ = Describe("AwsWebAcl Controller", func() {
 			Expect(*awsWebACL.Name).To(Equal(awsWebAcl.Name))
 			Expect(*awsWebACL.Description).To(Equal(awsWebAcl.Spec.Description))
 			Expect(awsWebACL.Rules).To(HaveLen(2), "expected 2 rules")
-			Expect(*awsWebACL.Rules[0].Name).To(Equal("AWS-AWSManagedRulesBotControlRuleSet"))
+			Expect(*awsWebACL.Rules[0].Name).To(Equal("AWS-AWSManagedRulesKnownBadInputsRuleSet"))
 			Expect(*awsWebACL.Rules[1].Name).To(Equal("AWS-AWSManagedRulesCommonRuleSet"))
 			Expect(awsWebACL.Capacity).To(Equal(int64(100)), "expected capacity to be 100")
 		})

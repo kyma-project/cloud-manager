@@ -411,6 +411,7 @@ type AwsWebAclRateBasedStatement struct {
 	ForwardedIPConfig *AwsWebAclForwardedIPConfig `json:"forwardedIPConfig,omitempty"`
 }
 
+// +kubebuilder:validation:XValidation:rule="self.vendorName == 'AWS' && (self.name == 'AWSManagedRulesCommonRuleSet' || self.name == 'AWSManagedRulesKnownBadInputsRuleSet' || self.name == 'AWSManagedRulesSQLiRuleSet' || self.name == 'AWSManagedRulesLinuxRuleSet' || self.name == 'AWSManagedRulesUnixRuleSet')", message="Only free AWS managed rules are supported: AWSManagedRulesCommonRuleSet, AWSManagedRulesKnownBadInputsRuleSet, AWSManagedRulesSQLiRuleSet, AWSManagedRulesLinuxRuleSet, AWSManagedRulesUnixRuleSet. Paid AWS rules and marketplace vendor rules require subscriptions in the service provider's AWS account."
 type AwsWebAclManagedRuleGroupStatement struct {
 	// VendorName (typically "AWS" for AWS managed rules)
 	// +kubebuilder:validation:Required
@@ -434,38 +435,9 @@ type AwsWebAclManagedRuleGroupStatement struct {
 	// +optional
 	ExcludedRules []AwsWebAclExcludedRule `json:"excludedRules,omitempty"`
 
-	// ManagedRuleGroupConfigs for ATP/ACFP/Bot Control configuration
-	// +optional
-	ManagedRuleGroupConfigs []AwsWebAclManagedRuleGroupConfig `json:"managedRuleGroupConfigs,omitempty"`
-
 	// RuleActionOverrides to override actions for specific rules
 	// +optional
 	RuleActionOverrides []AwsWebAclRuleActionOverride `json:"ruleActionOverrides,omitempty"`
-}
-
-type AwsWebAclManagedRuleGroupConfig struct {
-	// LoginPath for ATP/ACFP (e.g., "/login")
-	// +optional
-	LoginPath string `json:"loginPath,omitempty"`
-
-	// PayloadType for request body parsing
-	// +optional
-	// +kubebuilder:validation:Enum=JSON;FORM_ENCODED
-	PayloadType string `json:"payloadType,omitempty"`
-
-	// UsernameField for extracting username from requests
-	// +optional
-	UsernameField *AwsWebAclFieldIdentifier `json:"usernameField,omitempty"`
-
-	// PasswordField for extracting password from requests
-	// +optional
-	PasswordField *AwsWebAclFieldIdentifier `json:"passwordField,omitempty"`
-}
-
-type AwsWebAclFieldIdentifier struct {
-	// Identifier path (e.g., "/username" for JSON, "username" for form)
-	// +kubebuilder:validation:Required
-	Identifier string `json:"identifier"`
 }
 
 type AwsWebAclRuleActionOverride struct {

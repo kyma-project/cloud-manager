@@ -2527,39 +2527,6 @@ spec:
                                     - name
                                   type: object
                                 type: array
-                              managedRuleGroupConfigs:
-                                description: ManagedRuleGroupConfigs for ATP/ACFP/Bot Control configuration
-                                items:
-                                  properties:
-                                    loginPath:
-                                      description: LoginPath for ATP/ACFP (e.g., "/login")
-                                      type: string
-                                    passwordField:
-                                      description: PasswordField for extracting password from requests
-                                      properties:
-                                        identifier:
-                                          description: Identifier path (e.g., "/username" for JSON, "username" for form)
-                                          type: string
-                                      required:
-                                        - identifier
-                                      type: object
-                                    payloadType:
-                                      description: PayloadType for request body parsing
-                                      enum:
-                                        - JSON
-                                        - FORM_ENCODED
-                                      type: string
-                                    usernameField:
-                                      description: UsernameField for extracting username from requests
-                                      properties:
-                                        identifier:
-                                          description: Identifier path (e.g., "/username" for JSON, "username" for form)
-                                          type: string
-                                      required:
-                                        - identifier
-                                      type: object
-                                  type: object
-                                type: array
                               name:
                                 description: |-
                                   Name of the managed rule group
@@ -2737,6 +2704,9 @@ spec:
                               - name
                               - vendorName
                             type: object
+                            x-kubernetes-validations:
+                              - message: 'Only free AWS managed rules are supported: AWSManagedRulesCommonRuleSet, AWSManagedRulesKnownBadInputsRuleSet, AWSManagedRulesSQLiRuleSet, AWSManagedRulesLinuxRuleSet, AWSManagedRulesUnixRuleSet. Paid AWS rules and marketplace vendor rules require subscriptions in the service provider''s AWS account.'
+                                rule: self.vendorName == 'AWS' && (self.name == 'AWSManagedRulesCommonRuleSet' || self.name == 'AWSManagedRulesKnownBadInputsRuleSet' || self.name == 'AWSManagedRulesSQLiRuleSet' || self.name == 'AWSManagedRulesLinuxRuleSet' || self.name == 'AWSManagedRulesUnixRuleSet')
                           notStatement:
                             description: NotStatement - Logical NOT (negates nested statement)
                             properties:
