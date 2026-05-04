@@ -56,6 +56,9 @@ on:
         required: false
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test ${{ inputs.provider }}
