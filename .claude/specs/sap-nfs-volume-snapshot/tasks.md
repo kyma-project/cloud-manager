@@ -125,42 +125,42 @@
     - TTL expiry: create with `deleteAfterDays: 1` → advance fake clock → verify deletion triggered → verify removed
   - _Requirements: 1.1, 1.4, 1.7, 2.1, 2.2_
 
-- [ ] 9. SapNfsVolumeSnapshotRestore reconciler
+- [x] 9. SapNfsVolumeSnapshotRestore reconciler
   - **Convention**: Every time the resource is set to error/failed state, MUST log `logger.Error(...)` before/alongside the state assignment. Use `idGenerate` as a separate dedicated action (not embedded in create actions). Actions MUST always return `ctx` (never `nil`) as the second return value — use `return nil, ctx` to continue, `return composed.StopX, ctx` to stop.
-- [ ] 9.1 Create state and reconciler skeleton
+- [x] 9.1 Create state and reconciler skeleton
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/state.go` with `State` struct (fields for `Scope`, `SourceSnapshot`, `DestinationVolume`, `CreatedVolume`, `sapClient`, `provider`), `StateFactory`, `NewStateFactory()`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/reconcile.go` with `Reconciler`, `Run()`, `newAction()` wiring all actions (feature load, loadObj, loadScope, clientCreate, finalizer, sourceSnapshotLoad, IfElse non-delete/delete, within non-delete IfElse in-place/new-volume paths, StopAndForget)
   - _Requirements: 3.10, 3.12_
 
-- [ ] 9.2 Implement `loadScope`, `clientCreate`, and `sourceSnapshotLoad` actions
+- [x] 9.2 Implement `loadScope`, `clientCreate`, and `sourceSnapshotLoad` actions
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/loadScope.go` — load Scope from KCP cluster
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/clientCreate.go` — construct SAP client
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/sourceSnapshotLoad.go` — load `SapNfsVolumeSnapshot`, validate `Ready` state
   - _Requirements: 3.2, 3.11_
 
-- [ ] 9.3 Implement in-place restore actions
+- [x] 9.3 Implement in-place restore actions
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/destinationVolumeLoad.go` — load destination `SapNfsVolume`, resolve shareId from KCP `NfsInstance`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/validateInPlace.go` — validate snapshot belongs to destination volume and is the most recent snapshot
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/restoreInPlace.go` — call `RevertShareToSnapshot()` with microversion 2.27, set state `InProgress`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/restoreInPlaceWait.go` — poll share status until `available` or `reverting_error`
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.10_
 
-- [ ] 9.4 Implement new-volume restore actions
+- [x] 9.4 Implement new-volume restore actions
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/restoreNewVolume.go` — create `SapNfsVolume` CR with snapshot-id annotation from template
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/restoreNewVolumeWait.go` — wait for new `SapNfsVolume` to reach `Ready`, record `createdVolume` in status
   - _Requirements: 3.5, 3.6, 3.7, 3.8_
 
-- [ ] 9.5 Implement status actions
+- [x] 9.5 Implement status actions
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/statusDone.go` — set state `Done`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/statusFailed.go` — set state `Failed`
   - Create `pkg/skr/sapnfsvolumesnapshotrestore/statusInProgress.go` — set state `InProgress`
   - _Requirements: 3.3, 3.4, 3.8, 3.10, 3.11_
 
-- [ ] 9.6 Wire controller: create `SapNfsVolumeSnapshotRestore` controller setup
+- [x] 9.6 Wire controller: create `SapNfsVolumeSnapshotRestore` controller setup
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotrestore_controller.go` with reconciler struct, factory, RBAC markers, and `SetupSapNfsVolumeSnapshotRestoreReconciler()`
   - _Requirements: 3.12_
 
-- [ ] 9.7 Wire `SapNfsVolumeSnapshotRestore` reconciler in `cmd/main.go`
+- [x] 9.7 Wire `SapNfsVolumeSnapshotRestore` reconciler in `cmd/main.go`
   - Add `SetupSapNfsVolumeSnapshotRestoreReconciler(skrRegistry)` call in `cmd/main.go` alongside other SKR reconciler registrations
   - _Requirements: 3.12_
 

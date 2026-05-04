@@ -69,6 +69,11 @@ type SapNfsVolumeSnapshotRestoreStatus struct {
 	// +optional
 	State string `json:"state,omitempty"`
 
+	// RevertInitiated indicates that the Manila revert API call was successfully made.
+	// Used for idempotency — prevents calling revert again on requeue.
+	// +optional
+	RevertInitiated bool `json:"revertInitiated,omitempty"`
+
 	// CreatedVolume references the SapNfsVolume created (new-volume restore only).
 	// +optional
 	CreatedVolume *corev1.ObjectReference `json:"createdVolume,omitempty"`
