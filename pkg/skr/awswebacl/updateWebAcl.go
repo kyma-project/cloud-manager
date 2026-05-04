@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/ptr"
 )
 
 func updateWebAcl(ctx context.Context, st composed.State) (error, context.Context) {
@@ -51,13 +50,13 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Build UpdateWebACLInput
 	input := &wafv2.UpdateWebACLInput{
-		Name:             ptr.To(webAcl.Name),
+		Name:             new(webAcl.Name),
 		Id:               state.awsWebAcl.Id,
 		Scope:            ScopeRegional(),
 		DefaultAction:    defaultAction,
 		Rules:            rules,
 		VisibilityConfig: visibilityConfig,
-		LockToken:        ptr.To(state.lockToken),
+		LockToken:        new(state.lockToken),
 	}
 
 	// Add optional fields from spec

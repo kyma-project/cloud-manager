@@ -45,8 +45,8 @@ func (c *wafv2Client) CreateWebACL(ctx context.Context, input *wafv2.CreateWebAC
 
 func (c *wafv2Client) GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error) {
 	in := &wafv2.GetWebACLInput{
-		Name:  ptr.To(name),
-		Id:    ptr.To(id),
+		Name:  new(name),
+		Id:    new(id),
 		Scope: scope,
 	}
 
@@ -65,10 +65,10 @@ func (c *wafv2Client) UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebAC
 
 func (c *wafv2Client) DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error {
 	in := &wafv2.DeleteWebACLInput{
-		Name:      ptr.To(name),
-		Id:        ptr.To(id),
+		Name:      new(name),
+		Id:        new(id),
 		Scope:     scope,
-		LockToken: ptr.To(lockToken),
+		LockToken: new(lockToken),
 	}
 
 	_, err := c.svc.DeleteWebACL(ctx, in)

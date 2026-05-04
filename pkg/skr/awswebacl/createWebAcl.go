@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/ptr"
 )
 
 func createWebAcl(ctx context.Context, st composed.State) (error, context.Context) {
@@ -46,8 +45,8 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Build CreateWebACLInput
 	input := &wafv2.CreateWebACLInput{
-		Name:             ptr.To(webAcl.Name),
-		Description:      ptr.To(webAcl.Spec.Description),
+		Name:             new(webAcl.Name),
+		Description:      new(webAcl.Spec.Description),
 		Scope:            ScopeRegional(),
 		DefaultAction:    defaultAction,
 		Rules:            rules,

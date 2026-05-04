@@ -82,10 +82,10 @@ func (s *webAclStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebAC
 	}
 
 	webAcl := types.WebACL{
-		Id:                   ptr.To(id),
-		Name:                 ptr.To(name),
-		ARN:                  ptr.To(arn),
-		Description:          ptr.To(description),
+		Id:                   new(id),
+		Name:                 new(name),
+		ARN:                  new(arn),
+		Description:          new(description),
 		DefaultAction:        defaultActionCopy,
 		Rules:                rulesCopy,
 		VisibilityConfig:     visibilityConfigCopy,
@@ -131,7 +131,7 @@ func (s *webAclStore) GetWebACL(ctx context.Context, name, id string, scope type
 
 func (s *webAclStore) findWebAclEntry(name, id string) (*webAclEntry, error) {
 	for _, x := range s.items {
-		if ptr.Equal(x.webAcl.Id, ptr.To(id)) || ptr.Equal(x.webAcl.Name, ptr.To(name)) {
+		if ptr.Equal(x.webAcl.Id, new(id)) || ptr.Equal(x.webAcl.Name, new(name)) {
 			return x, nil
 		}
 	}
@@ -206,7 +206,7 @@ func (s *webAclStore) DeleteWebACL(ctx context.Context, name, id string, scope t
 
 	deleted := false
 	for _, x := range s.items {
-		if ptr.Equal(x.webAcl.Id, ptr.To(id)) {
+		if ptr.Equal(x.webAcl.Id, new(id)) {
 			if x.lockToken != lockToken {
 				return &smithy.GenericAPIError{
 					Code:    "WAFOptimisticLockException",
@@ -226,7 +226,7 @@ func (s *webAclStore) DeleteWebACL(ctx context.Context, name, id string, scope t
 	}
 
 	s.items = pie.Filter(s.items, func(x *webAclEntry) bool {
-		return !ptr.Equal(x.webAcl.Id, ptr.To(id))
+		return !ptr.Equal(x.webAcl.Id, new(id))
 	})
 
 	return nil
@@ -242,7 +242,7 @@ func (s *webAclStore) ListWebACLs(ctx context.Context, scope types.Scope) ([]typ
 			Name:        e.webAcl.Name,
 			ARN:         e.webAcl.ARN,
 			Description: e.webAcl.Description,
-			LockToken:   ptr.To(e.lockToken),
+			LockToken:   new(e.lockToken),
 		}
 	})
 
@@ -267,9 +267,9 @@ func (s *webAclStore) InitiateWebAcl(id, name string, scope types.Scope) {
 
 	item := &webAclEntry{
 		webAcl: types.WebACL{
-			Id:       ptr.To(id),
-			Name:     ptr.To(name),
-			ARN:      ptr.To(arn),
+			Id:       new(id),
+			Name:     new(name),
+			ARN:      new(arn),
 			Capacity: 100,
 		},
 		lockToken: lockToken,
