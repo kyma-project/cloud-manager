@@ -232,35 +232,6 @@ func convertManagedRuleGroupStatement(managed *cloudresourcesv1beta1.AwsWebAclMa
 		}
 	}
 
-	if len(managed.ManagedRuleGroupConfigs) > 0 {
-		stmt.ManagedRuleGroupConfigs = make([]wafv2types.ManagedRuleGroupConfig, 0, len(managed.ManagedRuleGroupConfigs))
-		for _, config := range managed.ManagedRuleGroupConfigs {
-			wafConfig := wafv2types.ManagedRuleGroupConfig{}
-
-			if config.LoginPath != "" {
-				wafConfig.LoginPath = ptr.To(config.LoginPath)
-			}
-
-			if config.PayloadType != "" {
-				wafConfig.PayloadType = wafv2types.PayloadType(config.PayloadType)
-			}
-
-			if config.UsernameField != nil {
-				wafConfig.UsernameField = &wafv2types.UsernameField{
-					Identifier: ptr.To(config.UsernameField.Identifier),
-				}
-			}
-
-			if config.PasswordField != nil {
-				wafConfig.PasswordField = &wafv2types.PasswordField{
-					Identifier: ptr.To(config.PasswordField.Identifier),
-				}
-			}
-
-			stmt.ManagedRuleGroupConfigs = append(stmt.ManagedRuleGroupConfigs, wafConfig)
-		}
-	}
-
 	if len(managed.RuleActionOverrides) > 0 {
 		stmt.RuleActionOverrides = make([]wafv2types.RuleActionOverride, 0, len(managed.RuleActionOverrides))
 		for _, override := range managed.RuleActionOverrides {

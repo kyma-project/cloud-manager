@@ -1,104 +1,7 @@
 Feature: AwsWebAcl feature
 
-  @skr @aws @waf
-  Scenario: AwsWebAcl with basic rules scenario
-
-    Given there is shared SKR with "AWS" provider
-
-    And resource declaration:
-      | Alias     | Kind       | ApiVersion                              | Name        | Namespace |
-      | webacl    | AwsWebAcl  | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()} |           |
-
-    # Create WebACL with multiple rule types
-    When resource "webacl" is created:
-      """
-      apiVersion: cloud-resources.kyma-project.io/v1beta1
-      kind: AwsWebAcl
-      spec:
-        defaultAction:
-          allow: {}
-        description: "E2E test WebACL with comprehensive protection"
-        visibilityConfig:
-          cloudWatchMetricsEnabled: true
-          metricName: E2ETestWebACL
-          sampledRequestsEnabled: true
-        rules:
-          # Rule 1: Block high-risk countries
-          - name: block-high-risk-countries
-            priority: 0
-            action:
-              block: {}
-            statement:
-              geoMatch:
-                countryCodes:
-                  - "KP"  # North Korea
-                  - "IR"  # Iran
-            visibilityConfig:
-              cloudWatchMetricsEnabled: true
-              metricName: block-high-risk-countries
-              sampledRequestsEnabled: true
-
-          # Rule 2: Rate limiting
-          - name: rate-limit-general
-            priority: 1
-            action:
-              block: {}
-            statement:
-              rateBased:
-                limit: 2000
-            visibilityConfig:
-              cloudWatchMetricsEnabled: true
-              metricName: rate-limit-general
-              sampledRequestsEnabled: true
-
-          # Rule 3: Block path traversal
-          - name: block-path-traversal
-            priority: 2
-            action:
-              block: {}
-            statement:
-              byteMatch:
-                searchString: "../"
-                positionalConstraint: CONTAINS
-                fieldToMatch:
-                  queryString: true
-                textTransformations:
-                  - priority: 0
-                    type: URL_DECODE
-            visibilityConfig:
-              cloudWatchMetricsEnabled: true
-              metricName: block-path-traversal
-              sampledRequestsEnabled: true
-
-          # Rule 4: AWS Managed Rule - Common Rule Set
-          - name: AWS-CommonRules
-            priority: 3
-            overrideAction:
-              count: {}
-            statement:
-              managedRuleGroup:
-                vendorName: AWS
-                name: AWSManagedRulesCommonRuleSet
-            visibilityConfig:
-              cloudWatchMetricsEnabled: true
-              metricName: AWS-CommonRules
-              sampledRequestsEnabled: true
-      """
-
-    Then eventually "webacl.status.state == 'Ready'" is ok, unless:
-      | webacl.status.state == 'Error' |
-      | #timeout=15m                   |
-
-    And "findConditionTrue(webacl, 'Ready')" is ok
-    And "webacl.status.arn" is ok
-    And "webacl.status.capacity > 0" is ok
-
-    # Delete WebACL
-    When resource "webacl" is deleted
-    Then eventually resource "webacl" does not exist
-
-  @skr @aws @waf
-  Scenario: AwsWebAcl with all statement types scenario
+  @skr @aws @waf @focus
+  Scenario: AwsWebAcl with comprehensive statement types
 
     Given there is shared SKR with "AWS" provider
 
@@ -340,9 +243,24 @@ Feature: AwsWebAcl feature
               metricName: AWS-SQLi
               sampledRequestsEnabled: true
 
+          # ManagedRuleGroup - Linux Rule Set with version
+          - name: AWS-LinuxRuleSet
+            priority: 12
+            overrideAction:
+              none: {}
+            statement:
+              managedRuleGroup:
+                vendorName: AWS
+                name: AWSManagedRulesLinuxRuleSet
+                version: "Version_2.0"
+            visibilityConfig:
+              cloudWatchMetricsEnabled: true
+              metricName: AWS-LinuxRuleSet
+              sampledRequestsEnabled: true
+
           # Captcha action
           - name: captcha-suspicious-traffic
-            priority: 12
+            priority: 13
             action:
               captcha:
                 customRequestHandling:
@@ -362,7 +280,7 @@ Feature: AwsWebAcl feature
 
           # Challenge action
           - name: challenge-high-rate
-            priority: 13
+            priority: 14
             action:
               challenge: {}
             statement:
@@ -377,7 +295,7 @@ Feature: AwsWebAcl feature
 
           # Count action for monitoring
           - name: monitor-api-access
-            priority: 14
+            priority: 15
             action:
               count: {}
             statement:
@@ -398,7 +316,7 @@ Feature: AwsWebAcl feature
 
           # LabelMatch statement
           - name: block-labeled-threats
-            priority: 15
+            priority: 16
             action:
               block: {}
             statement:

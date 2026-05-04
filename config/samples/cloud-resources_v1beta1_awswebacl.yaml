@@ -272,7 +272,7 @@ spec:
     # ============================================================
     # RULE 9: MANAGED RULE GROUP with OverrideAction
     # ============================================================
-    - name: AWS-AWSManagedRulesBotControlRuleSet
+    - name: AWS-AWSManagedRulesKnownBadInputsRuleSet
       priority: 10
       # For managed rule groups, use OverrideAction instead of Action
       overrideAction:
@@ -282,7 +282,7 @@ spec:
       statement:
         managedRuleGroup:
           vendorName: AWS
-          name: AWSManagedRulesBotControlRuleSet
+          name: AWSManagedRulesKnownBadInputsRuleSet
           version: ""  # Empty means latest version
           excludedRules: []
 
