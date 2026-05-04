@@ -35,3 +35,4 @@ yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshots.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotrestores.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotschedules.yaml
+yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awswebacls.yaml

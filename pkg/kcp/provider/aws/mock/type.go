@@ -9,6 +9,7 @@ import (
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
+	awswebaclclient "github.com/kyma-project/cloud-manager/pkg/skr/awswebacl/client"
 )
 
 type IpRangeClient interface {
@@ -43,6 +44,10 @@ type VpcNetworkClient interface {
 	awsvpcnetworkclient.Client
 }
 
+type WebAclClient interface {
+	awswebaclclient.Client
+}
+
 type Clients interface {
 	IpRangeClient
 	NfsClient
@@ -50,6 +55,7 @@ type Clients interface {
 	ElastiCacheClient
 	ExposedDataClient
 	VpcNetworkClient
+	WebAclClient
 }
 
 type Providers interface {
@@ -61,6 +67,7 @@ type Providers interface {
 	ElastiCacheProviderFake() awsclient.SkrClientProvider[awsclient.ElastiCacheClient]
 	ExposedDataProvider() awsclient.SkrClientProvider[awsexposeddataclient.Client]
 	VpcNetworkProvider() awsclient.SkrClientProvider[awsvpcnetworkclient.Client]
+	WebAclProvider() awsclient.SkrClientProvider[awswebaclclient.Client]
 }
 
 type Configs interface {
@@ -69,6 +76,7 @@ type Configs interface {
 	VpcPeeringConfig
 	RouteTableConfig
 	AwsElastiCacheMockUtils
+	WebAclConfig
 }
 
 type AccountRegion interface {

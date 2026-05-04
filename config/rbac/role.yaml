@@ -87,6 +87,7 @@ rules:
   - awsredisclusters
   - awsredisinstances
   - awsvpcpeerings
+  - awswebacls
   - azureredisClusters
   - azureredisinstances
   - azurerwxbackupschedules
@@ -125,6 +126,7 @@ rules:
   - awsredisclusters/finalizers
   - awsredisinstances/finalizers
   - awsvpcpeerings/finalizers
+  - awswebacls/finalizers
   - azureredisClusters/finalizers
   - azureredisinstances/finalizers
   - azurerwxbackupschedules/finalizers
@@ -157,6 +159,7 @@ rules:
   - awsredisclusters/status
   - awsredisinstances/status
   - awsvpcpeerings/status
+  - awswebacls/status
   - azureredisClusters/status
   - azureredisinstances/status
   - azurerwxbackupschedules/status

@@ -1,0 +1,633 @@
+# Complete AwsWebAcl Example with All Features
+# ============================================
+# This example demonstrates every available field in the AwsWebAcl CRD including:
+# - All statement types (GeoMatch, RateBased, ByteMatch, ManagedRuleGroup, And, Or, Not, etc.)
+# - All action types (Allow, Block, Count, Captcha, Challenge)
+# - Logical operators (And/Or/Not) with 4-level nesting support via CEL validation
+# - Custom request handling and custom responses
+# - Rule labels for advanced filtering
+# - Per-rule immunity time overrides
+# - Token domains for CAPTCHA/Challenge
+# - Custom response bodies
+
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AwsWebAcl
+metadata:
+  name: comprehensive-webacl-example
+  namespace: default
+  labels:
+    app: my-application
+    environment: production
+    team: security
+
+spec:
+  # ====================
+  # DEFAULT ACTION (Required)
+  # ====================
+  # What to do when no rules match - exactly one of allow or block must be set
+  defaultAction:
+    allow: {}
+    # Alternatively use block with custom response:
+    # block:
+    #   customResponse:
+    #     responseCode: 403
+    #     customResponseBodyKey: "block-page"
+    #     responseHeaders:
+    #       - name: X-Custom-Header
+    #         value: blocked-by-waf
+
+  # ====================
+  # DESCRIPTION (Optional)
+  # ====================
+  description: "Production WebACL with comprehensive protection: bot control, geo-blocking, IP filtering, rate limiting, and custom pattern matching"
+
+  # ====================
+  # VISIBILITY CONFIG (Required)
+  # ====================
+  visibilityConfig:
+    cloudWatchMetricsEnabled: true
+    metricName: comprehensive-webacl-example  # Optional - defaults to metadata.name if omitted
+    sampledRequestsEnabled: true
+
+  # ====================
+  # TOKEN DOMAINS (Optional, max 10)
+  # ====================
+  # Domains where CAPTCHA/Challenge tokens are valid (cross-domain support)
+  tokenDomains:
+    - example.com
+    - api.example.com
+    - www.example.com
+
+  # ====================
+  # CUSTOM RESPONSE BODIES (Optional)
+  # ====================
+  # Custom HTML/JSON content for block actions
+  customResponseBodies:
+    block-page:
+      contentType: TEXT_HTML
+      content: |
+        <html>
+          <head><title>Access Denied</title></head>
+          <body><h1>Access Denied</h1><p>Your request was blocked by our Web Application Firewall.</p></body>
+        </html>
+    json-error:
+      contentType: APPLICATION_JSON
+      content: '{"error": "forbidden", "message": "Request blocked by WAF"}'
+
+  # ====================
+  # GLOBAL CAPTCHA CONFIG (Optional)
+  # ====================
+  # Default immunity time after passing CAPTCHA (60-259200 seconds)
+  captchaConfig:
+    immunityTime: 3600  # 1 hour
+
+  # ====================
+  # GLOBAL CHALLENGE CONFIG (Optional)
+  # ====================
+  # Default immunity time after passing Challenge (60-259200 seconds)
+  challengeConfig:
+    immunityTime: 7200  # 2 hours
+
+  # ====================
+  # RULES (Optional, max 100)
+  # ====================
+  rules:
+    # ============================================================
+    # RULE 1: BYTE MATCH with Rule Labels
+    # ============================================================
+    - name: allow-api-path
+      priority: 0
+      action:
+        allow:
+          customRequestHandling:
+            insertHeaders:
+              - name: X-API-Access
+                value: "true"
+      statement:
+        byteMatch:
+          searchString: "/api"
+          positionalConstraint: STARTS_WITH
+          fieldToMatch:
+            uriPath: true
+          textTransformations:
+            - priority: 0
+              type: LOWERCASE
+      # Apply labels to matching requests for use in subsequent rules
+      ruleLabels:
+        - name: "trusted:corporate"
+        - name: "source:internal"
+      # visibilityConfig is optional at rule level - inherits from WebACL with metricName = rule name
+      # Uncomment to override per-rule settings:
+      visibilityConfig:
+        cloudWatchMetricsEnabled: true
+        metricName: allow-api-path-rule  # Optional - defaults to rule name "allow-api-path" if omitted
+        sampledRequestsEnabled: true
+
+    # ============================================================
+    # RULE 2: GEO MATCH - Block with custom response
+    # ============================================================
+    - name: block-high-risk-countries
+      priority: 1
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: "block-page"
+            responseHeaders:
+              - name: X-Block-Reason
+                value: geo-restricted
+      statement:
+        geoMatch:
+          countryCodes:
+            - "CN"
+            - "RU"
+            - "KP"
+      ruleLabels:
+        - name: "block:geo-restricted"
+        - name: "severity:high"
+      # visibilityConfig omitted - uses defaults (inherits from WebACL, metricName = "block-high-risk-countries")
+
+    # ============================================================
+    # RULE 3: RATE BASED - Rate limiting
+    # ============================================================
+    - name: rate-limit-per-ip
+      priority: 2
+      action:
+        block:
+          customResponse:
+            responseCode: 429
+            customResponseBodyKey: "json-error"
+      statement:
+        rateBased:
+          limit: 2000
+      ruleLabels:
+        - name: "protection:rate-limit"
+      # visibilityConfig omitted - uses defaults
+
+    # ============================================================
+    # RULE 4: BYTE MATCH - Pattern in query string
+    # ============================================================
+    - name: block-path-traversal
+      priority: 3
+      action:
+        block: {}
+      statement:
+        byteMatch:
+          searchString: "../"
+          positionalConstraint: CONTAINS
+          fieldToMatch:
+            queryString: true
+          textTransformations:
+            - priority: 0
+              type: URL_DECODE
+            - priority: 1
+              type: LOWERCASE
+      # visibilityConfig omitted - uses defaults
+
+    # ============================================================
+    # RULE 5: BYTE MATCH - Header inspection
+    # ============================================================
+    - name: block-malicious-user-agents
+      priority: 4
+      action:
+        block: {}
+      statement:
+        byteMatch:
+          searchString: "sqlmap"
+          positionalConstraint: CONTAINS
+          fieldToMatch:
+            singleHeader: "user-agent"
+          textTransformations:
+            - priority: 0
+              type: LOWERCASE
+      # visibilityConfig omitted - uses defaults
+
+    # ============================================================
+    # RULE 6: CAPTCHA with per-rule immunity override
+    # ============================================================
+    - name: captcha-challenge-suspicious-ips
+      priority: 5
+      action:
+        captcha:
+          customRequestHandling:
+            insertHeaders:
+              - name: X-Captcha-Passed
+                value: "true"
+      statement:
+        geoMatch:
+          countryCodes:
+            - "US"
+      # Override global CAPTCHA immunity time for this specific rule
+      captchaConfig:
+        immunityTime: 300  # 5 minutes (shorter for suspicious IPs)
+      ruleLabels:
+        - name: "challenge:captcha"
+        - name: "risk:medium"
+
+    # ============================================================
+    # RULE 7: CHALLENGE action (silent bot verification)
+    # ============================================================
+    - name: challenge-bots
+      priority: 6
+      action:
+        challenge:
+          customRequestHandling:
+            insertHeaders:
+              - name: X-Challenge-Passed
+                value: "true"
+      statement:
+        rateBased:
+          limit: 500
+      # Override global Challenge immunity time for this rule
+      challengeConfig:
+        immunityTime: 600  # 10 minutes
+      ruleLabels:
+        - name: "challenge:silent-verification"
+        - name: "protection:bot-control"
+
+    # ============================================================
+    # RULE 8: COUNT action (monitoring mode)
+    # ============================================================
+    - name: monitor-admin-access
+      priority: 7
+      action:
+        count:
+          customRequestHandling:
+            insertHeaders:
+              - name: X-Admin-Access-Logged
+                value: "true"
+      statement:
+        byteMatch:
+          searchString: "/admin"
+          positionalConstraint: STARTS_WITH
+          fieldToMatch:
+            uriPath: true
+          textTransformations:
+            - priority: 0
+              type: LOWERCASE
+      ruleLabels:
+        - name: "monitOrStatement:admin-path"
+        - name: "action:count"
+
+    # ============================================================
+    # RULE 9: MANAGED RULE GROUP with OverrideAction
+    # ============================================================
+    - name: AWS-AWSManagedRulesKnownBadInputsRuleSet
+      priority: 10
+      # For managed rule groups, use OverrideAction instead of Action
+      overrideAction:
+        count: {}  # Override all rules in the group to Count (monitoring mode)
+        # Alternatively use none to keep the group's default actions:
+        # none: {}
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesKnownBadInputsRuleSet
+          version: ""  # Empty means latest version
+          excludedRules: []
+
+    # ============================================================
+    # RULE 10: MANAGED RULE GROUP - OWASP Top 10
+    # ============================================================
+    - name: AWS-AWSManagedRulesCommonRuleSet
+      priority: 11
+      overrideAction:
+        none: {}  # Use the rule group's default actions
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesCommonRuleSet
+          version: ""
+          excludedRules: []
+
+    # ============================================================
+    # RULE 11: MANAGED RULE GROUP - SQL Injection with exclusions
+    # ============================================================
+    - name: AWS-AWSManagedRulesSQLiRuleSet
+      priority: 12
+      overrideAction:
+        none: {}
+      statement:
+        managedRuleGroup:
+          vendorName: AWS
+          name: AWSManagedRulesSQLiRuleSet
+          version: ""
+          # Exclude specific rules that cause false positives
+          excludedRules:
+            - name: SQLi_QUERYARGUMENTS
+
+    # RULE 16: LABEL MATCH - Block based on labels from previous rules
+    # ============================================================
+    # This rule demonstrates label-based filtering, matching requests
+    # that have been labeled by previous rules. Useful for creating
+    # rule chains where earlier rules classify traffic and later rules
+    # take action based on those classifications.
+    - name: block-labeled-threats
+      priority: 17
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      # Block if request has been labeled as "block:high-risk-combined" by Rule 12
+      statement:
+        labelMatch:
+          key: "block:high-risk-combined"
+          scope: "LABEL"  # LABEL = exact match, NAMESPACE = prefix match
+
+    # ============================================================
+    # RULE 17: SIZE CONSTRAINT - Block oversized requests (DDoS protection)
+    # ============================================================
+    # This rule blocks requests with query strings larger than 8KB,
+    # commonly used in DDoS attacks or attempts to exploit parsing vulnerabilities.
+    - name: block-oversized-query
+      priority: 18
+      action:
+        block:
+          customResponse:
+            responseCode: 413  # Request Entity Too Large
+            customResponseBodyKey: json-error
+      # Block if query string exceeds 8192 bytes after URL decoding
+      statement:
+        sizeConstraint:
+          comparisonOperator: "GT"  # Greater than
+          size: 8192  # 8 KB
+          fieldToMatch:
+            queryString: true
+          textTransformations:
+            - priority: 0
+              type: "URL_DECODE"
+      ruleLabels:
+        - name: "protection:size-limit"
+        - name: "block:oversized-request"
+
+    # ============================================================
+    # RULE 18: SQL INJECTION DETECTION - Block SQL injection attacks
+    # ============================================================
+    # This rule detects SQL injection attempts in query parameters and body.
+    # HIGH sensitivity level catches more attacks but may have more false positives.
+    - name: block-sql-injection
+      priority: 19
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      # Detect SQL injection patterns in query strings
+      statement:
+        sqliMatch:
+          fieldToMatch:
+            queryString: true
+          textTransformations:
+            - priority: 0
+              type: "URL_DECODE"
+            - priority: 1
+              type: "HTML_ENTITY_DECODE"
+          sensitivityLevel: "HIGH"  # More detections, may have false positives
+      ruleLabels:
+        - name: "security:sqli-protection"
+        - name: "block:sql-injection"
+
+    # ============================================================
+    # RULE 19: CROSS-SITE SCRIPTING DETECTION - Block XSS attacks
+    # ============================================================
+    # This rule detects cross-site scripting (XSS) attempts in request fields.
+    # XSS attacks inject malicious scripts that execute in users' browsers.
+    - name: block-xss-attacks
+      priority: 20
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      # Detect XSS patterns in query strings and body
+      statement:
+        xssMatch:
+          fieldToMatch:
+            queryString: true
+          textTransformations:
+            - priority: 0
+              type: "URL_DECODE"
+            - priority: 1
+              type: "HTML_ENTITY_DECODE"
+            - priority: 2
+              type: "JS_DECODE"
+      ruleLabels:
+        - name: "security:xss-protection"
+        - name: "block:xss-attack"
+
+    # ============================================================
+    # RULE 20: REGEX PATTERN MATCHING - Match complex patterns
+    # ============================================================
+    # This rule uses regular expressions to match sophisticated attack patterns.
+    # Regex matching is more flexible than ByteMatch for complex validation.
+    - name: block-suspicious-patterns
+      priority: 21
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      # Block requests with suspicious patterns in URI path (e.g., admin/root/config paths)
+      statement:
+        regexMatch:
+          regexString: "^/(admin|root|config|backup|wp-admin)/.*$"
+          fieldToMatch:
+            uriPath: true
+          textTransformations:
+            - priority: 0
+              type: "LOWERCASE"
+            - priority: 1
+              type: "URL_DECODE"
+      ruleLabels:
+        - name: "security:regex-protection"
+        - name: "block:suspicious-path"
+
+    # ============================================================
+    # RULE 21: ASN MATCHING - Match by Autonomous System Number
+    # ============================================================
+    # This rule blocks traffic from specific ASNs (network providers).
+    # Useful for blocking known malicious hosting providers or data centers.
+    - name: block-suspicious-asns
+      priority: 22
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      # Block requests from specific ASNs (e.g., suspicious hosting providers)
+      statement:
+        asnMatch:
+          autonomousSystemNumbers:
+            - 64496  # Reserved for documentation/examples
+            - 64497  # Reserved for documentation/examples
+      ruleLabels:
+        - name: "security:asn-block"
+        - name: "block:suspicious-network"
+
+    # ============================================================
+    # RULE 22: AND STATEMENT - Combine multiple conditions with AND logic
+    # ============================================================
+    # This rule demonstrates combining conditions with AND - all must match.
+    # Block admin access from high-risk countries (both conditions must be true).
+    - name: block-admin-from-high-risk
+      priority: 23
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      statement:
+        # Root level - can use andStatement
+        andStatement:
+          statements:
+            # Level 1 statements - leaf statements only (no further and/or/not)
+            - geoMatch:
+                countryCodes: ["CN", "RU", "KP"]
+            - byteMatch:
+                searchString: "/admin"
+                positionalConstraint: STARTS_WITH
+                fieldToMatch:
+                  uriPath: true
+                textTransformations:
+                  - priority: 0
+                    type: LOWERCASE
+      ruleLabels:
+        - name: "logical:and-statement"
+        - name: "security:admin-geo-block"
+
+    # ============================================================
+    # RULE 23: OR STATEMENT - Combine multiple conditions with OR logic
+    # ============================================================
+    # This rule demonstrates combining conditions with OR - any can match.
+    # Block requests with malicious patterns OR from high-risk ASN.
+    - name: block-threats-or-suspicious-asn
+      priority: 24
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      statement:
+        # Root level - can use orStatement
+        orStatement:
+          statements:
+            # Level 1 statements - leaf statements only
+            - byteMatch:
+                searchString: "sqlmap"
+                positionalConstraint: CONTAINS
+                fieldToMatch:
+                  singleHeader: "user-agent"
+                textTransformations:
+                  - priority: 0
+                    type: LOWERCASE
+            - byteMatch:
+                searchString: "../"
+                positionalConstraint: CONTAINS
+                fieldToMatch:
+                  queryString: true
+                textTransformations:
+                  - priority: 0
+                    type: URL_DECODE
+            - asnMatch:
+                autonomousSystemNumbers: [64496, 64497]
+      ruleLabels:
+        - name: "logical:or-statement"
+        - name: "security:multi-threat-detection"
+
+    # ============================================================
+    # RULE 24: NOT STATEMENT - Negate a condition
+    # ============================================================
+    # This rule demonstrates negating a condition with NOT.
+    # Allow all requests EXCEPT those from blocked countries.
+    - name: allow-except-blocked-countries
+      priority: 25
+      action:
+        allow: {}
+      statement:
+        # Root level - can use notStatement
+        notStatement:
+          # Level 1 statement - leaf statement only
+          statement:
+            geoMatch:
+              countryCodes: ["CN", "RU", "KP"]
+      ruleLabels:
+        - name: "logical:not-statement"
+        - name: "policy:geo-allow-except"
+
+    # ============================================================
+    # RULE 26: NESTED AND/OR - 2-level nesting example
+    # ============================================================
+    # This rule demonstrates 2-level nesting: (GeoMatch OR ByteMatch) AND SqliMatch
+    # Level 0: AND [ Level 1: OR [...], Level 1: SqliMatch ]
+    - name: block-injection-from-threats
+      priority: 26
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      statement:
+        # Level 0: AND statement (root)
+        andStatement:
+          statements:
+            # Level 1: OR statement
+            - orStatement:
+                statements:
+                  # Level 2: Leaf statements only
+                  - geoMatch:
+                      countryCodes: ["CN", "RU"]
+                  - byteMatch:
+                      searchString: "sqlmap"
+                      positionalConstraint: CONTAINS
+                      fieldToMatch:
+                        singleHeader: "user-agent"
+                      textTransformations:
+                        - priority: 0
+                          type: LOWERCASE
+            # Level 1: Leaf statement
+            - sqliMatch:
+                fieldToMatch:
+                  queryString: true
+                textTransformations:
+                  - priority: 0
+                    type: URL_DECODE
+                sensitivityLevel: "HIGH"
+      ruleLabels:
+        - name: "logical:nested-2-level"
+        - name: "security:complex-threat-detection"
+
+    # ============================================================
+    # RULE 27: OR STATEMENT - Combining XSS and SQLi detection
+    # ============================================================
+    # Block requests with either SQL injection OR XSS patterns.
+    - name: block-injection-attacks-or
+      priority: 28
+      action:
+        block:
+          customResponse:
+            responseCode: 403
+            customResponseBodyKey: json-error
+      statement:
+        orStatement:
+          statements:
+            # Level 1 statement - SQL injection
+            - sqliMatch:
+                fieldToMatch:
+                  queryString: true
+                textTransformations:
+                  - priority: 0
+                    type: URL_DECODE
+                sensitivityLevel: "HIGH"
+            # Level 1 statement - XSS
+            - xssMatch:
+                fieldToMatch:
+                  queryString: true
+                textTransformations:
+                  - priority: 0
+                    type: URL_DECODE
+                  - priority: 1
+                    type: HTML_ENTITY_DECODE
+      ruleLabels:
+        - name: "logical:or-injection"
+        - name: "security:injection-protection"
