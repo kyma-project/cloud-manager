@@ -5,12 +5,12 @@ go 1.26.2
 require (
 	cloud.google.com/go/auth v0.20.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/compute v1.60.0
-	cloud.google.com/go/filestore v1.13.0
-	cloud.google.com/go/longrunning v0.11.0
-	cloud.google.com/go/networkconnectivity v1.24.0
-	cloud.google.com/go/redis v1.21.0
-	cloud.google.com/go/resourcemanager v1.13.0
+	cloud.google.com/go/compute v1.61.0
+	cloud.google.com/go/filestore v1.14.0
+	cloud.google.com/go/longrunning v0.12.0
+	cloud.google.com/go/networkconnectivity v1.25.0
+	cloud.google.com/go/redis v1.22.0
+	cloud.google.com/go/resourcemanager v1.14.0
 	github.com/3th1nk/cidr v0.3.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
@@ -69,10 +69,10 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.27.1
 	golang.org/x/oauth2 v0.36.0
-	google.golang.org/api v0.276.0
+	google.golang.org/api v0.277.0
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260406210006-6f92a3bedf2d
-	google.golang.org/grpc v1.80.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260427160629-7cedc36a6bc4
+	google.golang.org/grpc v1.81.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.35.3
@@ -144,7 +144,7 @@ require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/pprof v0.0.0-20260115054156-294ebfa9ad83 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.3.14 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.15 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-memdb v1.3.4 // indirect
