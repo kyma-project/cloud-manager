@@ -142,14 +142,6 @@ func (s *webAclStore) findWebAclEntry(name, id string) (*webAclEntry, error) {
 	}
 }
 
-func (s *webAclStore) findWebAcl(name, id string) (*types.WebACL, error) {
-	entry, err := s.findWebAclEntry(name, id)
-	if err != nil {
-		return nil, err
-	}
-	return &entry.webAcl, nil
-}
-
 func (s *webAclStore) UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error {
 	s.m.Lock()
 	defer s.m.Unlock()
