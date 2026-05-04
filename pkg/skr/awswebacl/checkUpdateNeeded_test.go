@@ -5,7 +5,6 @@ import (
 
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/utils/ptr"
 )
 
 func TestCompareDefaultAction(t *testing.T) {
@@ -52,7 +51,7 @@ func TestCompareVisibilityConfig(t *testing.T) {
 	t.Run("One nil", func(t *testing.T) {
 		result := compareVisibilityConfig(&wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: true,
-			MetricName:               ptr.To("test"),
+			MetricName:               new("test"),
 			SampledRequestsEnabled:   false,
 		}, nil)
 		assert.False(t, result)
@@ -61,12 +60,12 @@ func TestCompareVisibilityConfig(t *testing.T) {
 	t.Run("Identical configs", func(t *testing.T) {
 		aws := &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: true,
-			MetricName:               ptr.To("test-metric"),
+			MetricName:               new("test-metric"),
 			SampledRequestsEnabled:   false,
 		}
 		spec := &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: true,
-			MetricName:               ptr.To("test-metric"),
+			MetricName:               new("test-metric"),
 			SampledRequestsEnabled:   false,
 		}
 		result := compareVisibilityConfig(aws, spec)
@@ -76,12 +75,12 @@ func TestCompareVisibilityConfig(t *testing.T) {
 	t.Run("Different CloudWatchMetricsEnabled", func(t *testing.T) {
 		aws := &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: true,
-			MetricName:               ptr.To("test"),
+			MetricName:               new("test"),
 			SampledRequestsEnabled:   false,
 		}
 		spec := &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: false,
-			MetricName:               ptr.To("test"),
+			MetricName:               new("test"),
 			SampledRequestsEnabled:   false,
 		}
 		result := compareVisibilityConfig(aws, spec)
@@ -91,12 +90,12 @@ func TestCompareVisibilityConfig(t *testing.T) {
 	t.Run("Different SampledRequestsEnabled", func(t *testing.T) {
 		aws := &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: true,
-			MetricName:               ptr.To("test"),
+			MetricName:               new("test"),
 			SampledRequestsEnabled:   true,
 		}
 		spec := &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: true,
-			MetricName:               ptr.To("test"),
+			MetricName:               new("test"),
 			SampledRequestsEnabled:   false,
 		}
 		result := compareVisibilityConfig(aws, spec)
@@ -106,12 +105,12 @@ func TestCompareVisibilityConfig(t *testing.T) {
 	t.Run("Different MetricName", func(t *testing.T) {
 		aws := &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: true,
-			MetricName:               ptr.To("metric-1"),
+			MetricName:               new("metric-1"),
 			SampledRequestsEnabled:   false,
 		}
 		spec := &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: true,
-			MetricName:               ptr.To("metric-2"),
+			MetricName:               new("metric-2"),
 			SampledRequestsEnabled:   false,
 		}
 		result := compareVisibilityConfig(aws, spec)
@@ -126,7 +125,7 @@ func TestCompareVisibilityConfig(t *testing.T) {
 		}
 		spec := &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: true,
-			MetricName:               ptr.To("metric"),
+			MetricName:               new("metric"),
 			SampledRequestsEnabled:   false,
 		}
 		result := compareVisibilityConfig(aws, spec)
@@ -233,7 +232,7 @@ func TestCompareRule(t *testing.T) {
 
 	t.Run("One nil", func(t *testing.T) {
 		result := compareRule(&wafv2types.Rule{
-			Name:     ptr.To("test"),
+			Name:     new("test"),
 			Priority: 10,
 		}, nil)
 		assert.False(t, result)
@@ -247,19 +246,19 @@ func TestCompareRule(t *testing.T) {
 		}
 		visConfig := &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: true,
-			MetricName:               ptr.To("test"),
+			MetricName:               new("test"),
 			SampledRequestsEnabled:   false,
 		}
 
 		aws := &wafv2types.Rule{
-			Name:             ptr.To("test-rule"),
+			Name:             new("test-rule"),
 			Priority:         10,
 			Action:           &wafv2types.RuleAction{Block: &wafv2types.BlockAction{}},
 			Statement:        statement,
 			VisibilityConfig: visConfig,
 		}
 		spec := &wafv2types.Rule{
-			Name:             ptr.To("test-rule"),
+			Name:             new("test-rule"),
 			Priority:         10,
 			Action:           &wafv2types.RuleAction{Block: &wafv2types.BlockAction{}},
 			Statement:        statement,
@@ -271,11 +270,11 @@ func TestCompareRule(t *testing.T) {
 
 	t.Run("Different names", func(t *testing.T) {
 		aws := &wafv2types.Rule{
-			Name:     ptr.To("rule-1"),
+			Name:     new("rule-1"),
 			Priority: 10,
 		}
 		spec := &wafv2types.Rule{
-			Name:     ptr.To("rule-2"),
+			Name:     new("rule-2"),
 			Priority: 10,
 		}
 		result := compareRule(aws, spec)
@@ -284,11 +283,11 @@ func TestCompareRule(t *testing.T) {
 
 	t.Run("Different priorities", func(t *testing.T) {
 		aws := &wafv2types.Rule{
-			Name:     ptr.To("test-rule"),
+			Name:     new("test-rule"),
 			Priority: 10,
 		}
 		spec := &wafv2types.Rule{
-			Name:     ptr.To("test-rule"),
+			Name:     new("test-rule"),
 			Priority: 20,
 		}
 		result := compareRule(aws, spec)
@@ -297,12 +296,12 @@ func TestCompareRule(t *testing.T) {
 
 	t.Run("Different actions", func(t *testing.T) {
 		aws := &wafv2types.Rule{
-			Name:     ptr.To("test-rule"),
+			Name:     new("test-rule"),
 			Priority: 10,
 			Action:   &wafv2types.RuleAction{Allow: &wafv2types.AllowAction{}},
 		}
 		spec := &wafv2types.Rule{
-			Name:     ptr.To("test-rule"),
+			Name:     new("test-rule"),
 			Priority: 10,
 			Action:   &wafv2types.RuleAction{Block: &wafv2types.BlockAction{}},
 		}
@@ -313,19 +312,19 @@ func TestCompareRule(t *testing.T) {
 	t.Run("Identical rules with override action (managed rule group)", func(t *testing.T) {
 		statement := &wafv2types.Statement{
 			ManagedRuleGroupStatement: &wafv2types.ManagedRuleGroupStatement{
-				VendorName: ptr.To("AWS"),
-				Name:       ptr.To("AWSManagedRulesCommonRuleSet"),
+				VendorName: new("AWS"),
+				Name:       new("AWSManagedRulesCommonRuleSet"),
 			},
 		}
 
 		aws := &wafv2types.Rule{
-			Name:           ptr.To("managed-rule"),
+			Name:           new("managed-rule"),
 			Priority:       5,
 			OverrideAction: &wafv2types.OverrideAction{None: &wafv2types.NoneAction{}},
 			Statement:      statement,
 		}
 		spec := &wafv2types.Rule{
-			Name:           ptr.To("managed-rule"),
+			Name:           new("managed-rule"),
 			Priority:       5,
 			OverrideAction: &wafv2types.OverrideAction{None: &wafv2types.NoneAction{}},
 			Statement:      statement,
@@ -343,11 +342,11 @@ func TestCompareRules(t *testing.T) {
 
 	t.Run("Different lengths", func(t *testing.T) {
 		aws := []wafv2types.Rule{
-			{Name: ptr.To("rule-1"), Priority: 1},
+			{Name: new("rule-1"), Priority: 1},
 		}
 		spec := []wafv2types.Rule{
-			{Name: ptr.To("rule-1"), Priority: 1},
-			{Name: ptr.To("rule-2"), Priority: 2},
+			{Name: new("rule-1"), Priority: 1},
+			{Name: new("rule-2"), Priority: 2},
 		}
 		result := compareRules(aws, spec)
 		assert.False(t, result)
@@ -362,13 +361,13 @@ func TestCompareRules(t *testing.T) {
 
 		aws := []wafv2types.Rule{
 			{
-				Name:      ptr.To("rule-1"),
+				Name:      new("rule-1"),
 				Priority:  1,
 				Action:    &wafv2types.RuleAction{Allow: &wafv2types.AllowAction{}},
 				Statement: statement,
 			},
 			{
-				Name:      ptr.To("rule-2"),
+				Name:      new("rule-2"),
 				Priority:  2,
 				Action:    &wafv2types.RuleAction{Block: &wafv2types.BlockAction{}},
 				Statement: statement,
@@ -376,13 +375,13 @@ func TestCompareRules(t *testing.T) {
 		}
 		spec := []wafv2types.Rule{
 			{
-				Name:      ptr.To("rule-1"),
+				Name:      new("rule-1"),
 				Priority:  1,
 				Action:    &wafv2types.RuleAction{Allow: &wafv2types.AllowAction{}},
 				Statement: statement,
 			},
 			{
-				Name:      ptr.To("rule-2"),
+				Name:      new("rule-2"),
 				Priority:  2,
 				Action:    &wafv2types.RuleAction{Block: &wafv2types.BlockAction{}},
 				Statement: statement,
@@ -401,7 +400,7 @@ func TestCompareRules(t *testing.T) {
 
 		aws := []wafv2types.Rule{
 			{
-				Name:      ptr.To("rule-1"),
+				Name:      new("rule-1"),
 				Priority:  1,
 				Action:    &wafv2types.RuleAction{Allow: &wafv2types.AllowAction{}},
 				Statement: statement,
@@ -409,7 +408,7 @@ func TestCompareRules(t *testing.T) {
 		}
 		spec := []wafv2types.Rule{
 			{
-				Name:      ptr.To("rule-1"),
+				Name:      new("rule-1"),
 				Priority:  1,
 				Action:    &wafv2types.RuleAction{Block: &wafv2types.BlockAction{}}, // Different action
 				Statement: statement,
