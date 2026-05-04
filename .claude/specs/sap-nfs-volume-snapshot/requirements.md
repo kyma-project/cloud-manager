@@ -155,7 +155,7 @@ The `SapNfsVolumeSnapshotRestore` resource supports two restore paths via a disc
 
 9. WHEN the `SapNfsVolumeSnapshotRestore` resource is created THEN the source snapshot and destination choice SHALL be immutable after creation.
 10. WHEN a restore is in progress THEN the system SHALL set the state to `InProgress`.
-11. WHEN validation fails (references not found, wrong state, snapshot not latest for in-place) THEN the system SHALL set the state to `Error` with a descriptive message.
+11. WHEN a transient validation failure occurs (source snapshot or destination volume not yet ready) THEN the system SHALL set the state to `Error` and retry. WHEN a permanent validation failure occurs (snapshot does not belong to the destination volume, snapshot is not the most recent) THEN the system SHALL set the state to `Failed` with a descriptive message and stop processing.
 12. WHEN the `nfsBackup` feature flag is disabled THEN the restore reconciler SHALL be inactive.
 
 **References:**

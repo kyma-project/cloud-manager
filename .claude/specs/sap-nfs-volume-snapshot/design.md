@@ -129,6 +129,11 @@ type SapNfsVolumeSnapshotRestoreStatus struct {
     // +optional
     State string `json:"state,omitempty"`
 
+    // RevertInitiated indicates that the Manila revert API call was successfully made.
+    // Used for idempotency — prevents calling revert again on requeue.
+    // +optional
+    RevertInitiated bool `json:"revertInitiated,omitempty"`
+
     // CreatedVolume references the SapNfsVolume created (new-volume restore only).
     // +optional
     CreatedVolume *corev1.ObjectReference `json:"createdVolume,omitempty"`
@@ -419,7 +424,7 @@ type SnapshotClient interface {
 }
 ```
 
-The `SnapshotClient` reuses the existing `shareSvc *gophercloud.ServiceClient` from the share client — both snapshot and share operations use the same Manila service endpoint. For the `RevertShareToSnapshot` call, the client sets `shareSvc.Microversion = "2.27"` before calling `shares.Revert()`.
+The `SnapshotClient` reuses the existing `shareSvc *gophercloud.ServiceClient` from the share client — both snapshot and share operations use the same Manila service endpoint. The `RevertShareToSnapshot` call requires microversion ≥ 2.27; the shared `shareSvc` is already configured at 2.65 (set in `ensureShareSvc`), which satisfies this requirement without any per-call microversion override.
 
 **Integration:** The existing `Client` composite struct in `pkg/kcp/provider/sap/client/client.go` will embed `SnapshotClient` alongside the existing `ShareClient`, `NetworkClient`, `SubnetClient`, etc.
 
@@ -549,20 +554,26 @@ type State struct {
 
 **Location:** `pkg/skr/sapnfsvolumesnapshotrestore/`
 
-Uses the same `loadScope` → `clientCreate` pattern as the snapshot reconciler. Client type is `sapclient.Client` from `pkg/kcp/provider/sap/client/`.
+Uses the same `loadScope` → `clientCreate` pattern as the snapshot reconciler. Client type is `sapclient.SnapshotClient` from `pkg/kcp/provider/sap/client/`.
 
 **Files:**
 - `reconcile.go` — Action composition
 - `state.go` — State struct + StateFactory
+- `provider.go` — SnapshotClient provider
+- `predicate.go` — `isInPlaceRestore` predicate
+- `util.go` — Lease naming helpers
 - `loadScope.go` — Load Scope from KCP cluster
 - `clientCreate.go` — Create OpenStack client from Scope
+- `shortCircuitCompleted.go` — Skip reconciliation if already Done/Failed
 - `sourceSnapshotLoad.go` — Load the referenced `SapNfsVolumeSnapshot`, validate Ready
 - `destinationVolumeLoad.go` — Load the destination `SapNfsVolume` (for in-place)
-- `restoreInPlace.go` — Execute `RevertShareToSnapshot()` for in-place revert
-- `restoreInPlaceWait.go` — Poll share status until `available` (done reverting) or `reverting_error`
+- `acquireLease.go` — Acquire lease on destination volume (prevents concurrent restores)
+- `validateInPlace.go` — Validate in-place constraints (snapshot belongs to volume, is most recent)
+- `restoreInPlace.go` — Execute `RevertShareToSnapshot()`, guarded by `status.revertInitiated`
+- `restoreInPlaceWait.go` — Poll share status until `available` (Done) or `reverting_error` (Failed)
+- `releaseLease.go` — Release lease on destination volume
 - `restoreNewVolume.go` — Create a new `SapNfsVolume` CR with snapshot ID annotation
 - `restoreNewVolumeWait.go` — Wait for the new `SapNfsVolume` to reach Ready
-- `validateInPlace.go` — Validate in-place constraints (snapshot belongs to volume, is most recent)
 - `statusDone.go` — Set state to Done
 - `statusFailed.go` — Set state to Failed
 - `statusInProgress.go` — Set state to InProgress
@@ -576,22 +587,26 @@ sapNfsVolumeSnapshotRestoreMain:
   sapNfsVolumeSnapshotRestore:
     loadScope
     clientCreate
+    shortCircuitCompleted        ← stops if already Done/Failed
     actions.AddCommonFinalizer()
     sourceSnapshotLoad
     IfElse(!MarkedForDeletion):
       NON-DELETE path:
+        statusInProgress
         IfElse(isInPlaceRestore):
           IN-PLACE path:
             destinationVolumeLoad
             validateInPlace
-            restoreInPlace
-            restoreInPlaceWait
-            statusDone
+            acquireLease             ← prevents concurrent restores on same volume
+            restoreInPlace           ← guarded by status.revertInitiated
+            restoreInPlaceWait       ← sets Done/Failed, continues to releaseLease
+            releaseLease
           NEW-VOLUME path:
             restoreNewVolume
             restoreNewVolumeWait
             statusDone
       DELETE path:
+        releaseLease
         actions.RemoveCommonFinalizer()
     composed.StopAndForgetAction
 ```
@@ -609,8 +624,12 @@ type State struct {
     SourceSnapshot       *cloudresourcesv1beta1.SapNfsVolumeSnapshot
     DestinationVolume    *cloudresourcesv1beta1.SapNfsVolume    // for in-place
     CreatedVolume        *cloudresourcesv1beta1.SapNfsVolume    // for new-resource
-    sapClient            sapclient.Client                       // from pkg/kcp/provider/sap/client
-    provider             sapclient.SapClientProvider[sapclient.Client]
+
+    shareId              string                                 // Manila share ID of destination volume
+    share                *shares.Share                          // current Manila share state (polling)
+
+    snapshotClient       sapclient.SnapshotClient
+    provider             sapclient.SapClientProvider[sapclient.SnapshotClient]
 }
 ```
 
@@ -620,9 +639,17 @@ type State struct {
 2. Resolve the `SapNfsVolume` → KCP `NfsInstance` → `status.stateData["shareId"]` to get the Manila share ID
 3. Resolve the `SapNfsVolumeSnapshot` → `status.openstackId` to get the Manila snapshot ID
 4. List all snapshots for the share, verify the target snapshot is the most recent (newest `created_at`)
-5. Call `shares.Revert(ctx, client, shareId, shares.RevertOpts{SnapshotID: snapshotId})` with microversion 2.27
-6. Poll share status: `reverting` → `available` (success) or `reverting_error` (failure)
-7. Set restore state to `Done` or `Failed`
+5. Acquire a lease on the destination volume (prevents concurrent in-place restores)
+6. Check `status.revertInitiated` — if `true`, skip calling revert (idempotency guard)
+7. Call `shares.Revert(ctx, client, shareId, shares.RevertOpts{SnapshotID: snapshotId})`
+8. Persist `status.revertInitiated = true` immediately after successful API call
+9. Poll share status: `reverting` → requeue, `available` → Done, `reverting_error` → Failed
+10. Release the lease
+11. `shortCircuitCompleted` prevents re-entry on subsequent reconciliations (state is Done/Failed)
+
+**Concurrency control:**
+- A Kubernetes Lease object (name: `restore-{volumeName}`) prevents multiple `SapNfsVolumeSnapshotRestore` resources from reverting the same volume simultaneously. If another restore holds the lease, the reconciler requeues with backoff.
+- The lease is released in both the success/failure path (after `restoreInPlaceWait`) and the deletion path.
 
 #### New-Volume Restore Flow
 
@@ -857,24 +884,29 @@ This is the same pattern used by the SAP NFS volume reconciler to bridge between
 | Manila snapshot status `error` | Set Error condition, requeue | `Error` |
 | Manila snapshot not found during delete | Proceed with cleanup (idempotent) | (continue) |
 | Manila snapshot delete returns `error_deleting` | Set Error condition, requeue | `Error` |
-| Scope not found | Return error, requeue with backoff | (requeue) |
+| Scope not found | Set Error condition, stop and forget (permanent config error) | `Error` |
 | Scheduled snapshot in Error with newer successor | Transition to `Failed` (terminal) | `Failed` |
 
 ### Restore Reconciler
 
 | Condition | Action | State |
 |---|---|---|
-| Source snapshot not found or not Ready | Set Error, do not retry | `Error` |
-| Dest volume not found (in-place) | Set Error, do not retry | `Error` |
-| Snapshot not from dest volume (in-place) | Set Error, do not retry | `Error` |
-| Snapshot not most recent (in-place) | Set Error, do not retry | `Error` |
-| Revert API returns `reverting_error` | Set Failed | `Failed` |
-| New `SapNfsVolume` creation fails | Set Error, retry | `Error` |
-| New `SapNfsVolume` reaches Error state | Set Failed | `Failed` |
+| Source snapshot not found or not Ready | Set Error, retry (snapshot may not be ready yet) | `Error` |
+| Dest volume not found (in-place) | Set Error, retry (volume may not be ready yet) | `Error` |
+| Snapshot not from dest volume (in-place) | Set Failed, stop (permanent validation failure) | `Failed` |
+| Snapshot not most recent (in-place) | Set Failed, stop (permanent validation failure) | `Failed` |
+| Revert API returns `reverting_error` | Set Failed, stop | `Failed` |
+| New `SapNfsVolume` creation fails | Set Error, retry (transient K8s API errors) or Failed (permanent, e.g. invalid spec) | `Error`/`Failed` |
+| New `SapNfsVolume` reaches Error state | Set Failed, stop | `Failed` |
+| Scope not found | Set Error, stop and forget (permanent config error) | `Error` |
 
 ### Schedule Reconciler
 
 Error handling is delegated to the shared `pkg/skr/backupschedule/` framework. Snapshot creation failures result in the snapshot CR being in `Error` state, which the schedule tracks via its retention logic.
+
+| Condition | Action | State |
+|---|---|---|
+| Scope not found | Set Error condition, stop and forget (permanent config error) | `Error` |
 
 ---
 
