@@ -100,6 +100,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^eventually resource "([^"]*)" does not exist$`, eventuallyResourceDoesNotExist)
 	ctx.Step(`^resource "([^"]*)" does not exist$`, resourceDoesNotExist)
 	ctx.Step(`^logs of container "([^"]*)" in pod "([^"]*)" contain "([^"]*)"$`, logsOfContainerInPodContain)
+	ctx.Step(`^logs of container "([^"]*)" in pod "([^"]*)" contain "([^"]*)":$`, logsOfContainerInPodContainEventually)
 	ctx.Step(`^HTTP operation succeeds:$`, httpOperationSucceeds)
 	ctx.Step(`^Redis "([^"]*)" gives "([^"]*)" with:$`, redisGivesWith)
 	ctx.Step(`^tf module "([^"]*)" is applied:$`, tfModuleIsApplied)
