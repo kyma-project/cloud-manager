@@ -1,6 +1,6 @@
 Feature: AwsWebAcl feature
 
-  @skr @aws @waf @focus
+  @skr @aws @waf
   Scenario: AwsWebAcl with comprehensive statement types
 
     Given there is shared SKR with "AWS" provider
