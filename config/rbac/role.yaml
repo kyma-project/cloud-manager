@@ -106,6 +106,7 @@ rules:
   - gcpvpcpeerings
   - ipranges
   - sapnfsvolumes
+  - sapnfsvolumesnapshotrestores
   - sapnfsvolumesnapshots
   verbs:
   - create
@@ -144,6 +145,7 @@ rules:
   - gcpvpcpeerings/finalizers
   - ipranges/finalizers
   - sapnfsvolumes/finalizers
+  - sapnfsvolumesnapshotrestores/finalizers
   - sapnfsvolumesnapshots/finalizers
   verbs:
   - update
@@ -176,6 +178,7 @@ rules:
   - gcpvpcpeerings/status
   - ipranges/status
   - sapnfsvolumes/status
+  - sapnfsvolumesnapshotrestores/status
   - sapnfsvolumesnapshots/status
   verbs:
   - get

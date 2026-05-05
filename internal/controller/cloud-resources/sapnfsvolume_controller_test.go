@@ -313,4 +313,83 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 		})
 
 	})
+
+	It("Scenario: SKR SapNfsVolume with snapshot-id annotation propagates SnapshotId to KCP NfsInstance", func() {
+		sapNfsVolumeName := "22dddcba-3884-4720-acf9-15b22eabd70d"
+		sapNfsVolume := &cloudresourcesv1beta1.SapNfsVolume{}
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		capacityGb := 100
+		snapshotId := "manila-snapshot-id-12345"
+
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		skrIpRangeId := "e5f68641-3d05-45a8-a4d2-9169f482cf42"
+
+		skriprange.Ignore.AddName("default")
+
+		By("Given default SKR IpRange exists and is Ready", func() {
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName("default"), WithNamespace("kyma-system")).
+				Should(Succeed())
+
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		By("When SapNfsVolume is created with snapshot-id annotation", func() {
+			sapNfsVolume.Name = sapNfsVolumeName
+			sapNfsVolume.Namespace = DefaultSkrNamespace
+			sapNfsVolume.Annotations = map[string]string{
+				cloudresourcesv1beta1.AnnotationSnapshotId: snapshotId,
+			}
+			sapNfsVolume.Spec.CapacityGb = capacityGb
+			Eventually(func() error {
+				return infra.SKR().Client().Create(infra.Ctx(), sapNfsVolume)
+			}).Should(Succeed())
+		})
+
+		By("Then KCP NfsInstance is created with SnapshotId field set", func() {
+			// load SKR SapNfsVolume to get ID
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					sapNfsVolume,
+					NewObjActions(),
+					HavingFieldSet("status", "id"),
+				).
+				Should(Succeed(), "expected SKR SapNfsVolume to get status.id")
+
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.KCP().Client(),
+					kcpNfsInstance,
+					NewObjActions(
+						WithName(sapNfsVolume.Status.Id),
+					),
+				).
+				Should(Succeed(), "expected KCP NfsInstance to be created")
+
+			Expect(kcpNfsInstance.Spec.Instance.OpenStack).NotTo(BeNil())
+			Expect(kcpNfsInstance.Spec.Instance.OpenStack.SnapshotId).To(Equal(snapshotId))
+		})
+
+		By("// cleanup", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume).
+				Should(Succeed())
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
+	})
 })

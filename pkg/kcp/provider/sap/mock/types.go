@@ -23,6 +23,7 @@ type Providers interface {
 	ExposedDataProvider() sapclient.SapClientProvider[sapexposeddataclient.Client]
 	VpcNetworkProvider() sapclient.SapClientProvider[sapvpcnetworkclient.Client]
 	SnapshotClientProvider() sapclient.SapClientProvider[sapclient.SnapshotClient]
+	ShareClientProvider() sapclient.SapClientProvider[sapclient.ShareClient]
 }
 
 type Config interface {

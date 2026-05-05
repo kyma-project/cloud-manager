@@ -4,7 +4,6 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type testSapNfsVolumeSnapshotRestoreBuilder struct {
@@ -37,7 +36,7 @@ func newTestSapNfsVolumeSnapshotRestoreNewVolumeBuilder() *testSapNfsVolumeSnaps
 				},
 				Destination: cloudresourcesv1beta1.SapNfsVolumeSnapshotRestoreDestination{
 					NewVolume: &cloudresourcesv1beta1.SapNfsVolumeSnapshotNewVolume{
-						Metadata: metav1.ObjectMeta{
+						Metadata: cloudresourcesv1beta1.SapNfsVolumeSnapshotNewVolumeMetadata{
 							Name: "new-volume",
 						},
 						Spec: cloudresourcesv1beta1.SapNfsVolumeSpec{
@@ -62,7 +61,7 @@ func newTestSapNfsVolumeSnapshotRestoreBothBuilder() *testSapNfsVolumeSnapshotRe
 						Name: "test-volume",
 					},
 					NewVolume: &cloudresourcesv1beta1.SapNfsVolumeSnapshotNewVolume{
-						Metadata: metav1.ObjectMeta{
+						Metadata: cloudresourcesv1beta1.SapNfsVolumeSnapshotNewVolumeMetadata{
 							Name: "new-volume",
 						},
 						Spec: cloudresourcesv1beta1.SapNfsVolumeSpec{

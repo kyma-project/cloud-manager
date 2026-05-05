@@ -92,6 +92,7 @@ import (
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshot"
+	"github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshotrestore"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -328,6 +329,11 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupSapNfsVolumeSnapshotReconciler(skrRegistry, sapnfsvolumesnapshot.NewSnapshotClientProvider(), clock.RealClock{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SapNfsVolumeSnapshot")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupSapNfsVolumeSnapshotRestoreReconciler(skrRegistry, sapnfsvolumesnapshotrestore.NewSnapshotClientProvider(), sapnfsvolumesnapshotrestore.NewShareClientProvider()); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SapNfsVolumeSnapshotRestore")
 		os.Exit(1)
 	}
 
