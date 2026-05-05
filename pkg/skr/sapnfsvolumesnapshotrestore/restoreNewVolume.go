@@ -3,6 +3,7 @@ package sapnfsvolumesnapshotrestore
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -75,11 +76,7 @@ func restoreNewVolume(ctx context.Context, st composed.State) (error, context.Co
 
 func mergeAnnotations(base map[string]string, extra map[string]string) map[string]string {
 	result := make(map[string]string, len(base)+len(extra))
-	for k, v := range base {
-		result[k] = v
-	}
-	for k, v := range extra {
-		result[k] = v
-	}
+	maps.Copy(result, base)
+	maps.Copy(result, extra)
 	return result
 }
