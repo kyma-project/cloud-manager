@@ -171,8 +171,8 @@
     - New-volume restore: create restore with newVolume → verify SapNfsVolume created with snapshot-id annotation → wait Ready → verify Done + createdVolume
   - _Requirements: 3.1, 3.3, 3.5, 3.7_
 
-- [ ] 11. Existing reconciler changes for snapshot-based volume creation
-- [ ] 11.1 Propagate snapshot ID through SapNfsVolume → NfsInstance → Manila
+- [x] 11. Existing reconciler changes for snapshot-based volume creation
+- [x] 11.1 Propagate snapshot ID through SapNfsVolume → NfsInstance → Manila
   - Modify `pkg/skr/sapnfsvolume/kcpNfsInstanceCreate.go` to read `AnnotationSnapshotId` from the SapNfsVolume and set `SnapshotId` on `NfsInstanceOpenStack`
   - Modify `pkg/kcp/provider/sap/nfsinstance/shareCreate.go` to read `SnapshotId` from `NfsInstance.Spec.Instance.OpenStack` and pass it to `CreateShareOp()` instead of hardcoded `""`
   - _Requirements: 3.6 (new-volume restore depends on this plumbing)_

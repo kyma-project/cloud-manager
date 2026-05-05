@@ -34,7 +34,7 @@ func shareCreate(ctx context.Context, st composed.State) (error, context.Context
 		state.shareNetwork.ID,
 		state.ShareName(),
 		state.ObjAsNfsInstance().Spec.Instance.OpenStack.SizeGb,
-		"",
+		state.ObjAsNfsInstance().Spec.Instance.OpenStack.SnapshotId,
 		metadata,
 	)
 	if err != nil {
