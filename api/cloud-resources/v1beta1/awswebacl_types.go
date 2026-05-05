@@ -402,7 +402,7 @@ type AwsWebAclForwardedIPConfig struct {
 type AwsWebAclRateBasedStatement struct {
 	// Limit - Max requests per 5 minutes from a single IP
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Minimum=100
+	// +kubebuilder:validation:Minimum=10
 	// +kubebuilder:validation:Maximum=2000000000
 	Limit int64 `json:"limit"`
 
