@@ -100,9 +100,10 @@ func (f *ReconcilerFactory) New(
 	kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster,
 	provider sapclient.SapClientProvider[sapclient.SnapshotClient],
+	shareProvider sapclient.SapClientProvider[sapclient.ShareClient],
 ) *Reconciler {
 	composedStateFactory := composed.NewStateFactory(skrCluster)
-	stateFactory := NewStateFactory(scopeProvider, kcpCluster, skrCluster, provider)
+	stateFactory := NewStateFactory(scopeProvider, kcpCluster, skrCluster, provider, shareProvider)
 	return &Reconciler{
 		composedStateFactory: composedStateFactory,
 		stateFactory:         stateFactory,

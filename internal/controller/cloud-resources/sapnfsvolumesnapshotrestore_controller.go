@@ -32,6 +32,7 @@ import (
 
 type SapNfsVolumeSnapshotRestoreReconcilerFactory struct {
 	snapshotClientProvider sapclient.SapClientProvider[sapclient.SnapshotClient]
+	shareClientProvider    sapclient.SapClientProvider[sapclient.ShareClient]
 }
 
 func (f *SapNfsVolumeSnapshotRestoreReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
@@ -42,6 +43,7 @@ func (f *SapNfsVolumeSnapshotRestoreReconcilerFactory) New(args reconcile2.Recon
 		kcpCluster,
 		skrCluster,
 		f.snapshotClientProvider,
+		f.shareClientProvider,
 	)
 	return &SapNfsVolumeSnapshotRestoreReconciler{reconciler: r}
 }
@@ -62,10 +64,12 @@ func (r *SapNfsVolumeSnapshotRestoreReconciler) Reconcile(ctx context.Context, r
 func SetupSapNfsVolumeSnapshotRestoreReconciler(
 	reg skrruntime.SkrRegistry,
 	snapshotClientProvider sapclient.SapClientProvider[sapclient.SnapshotClient],
+	shareClientProvider sapclient.SapClientProvider[sapclient.ShareClient],
 ) error {
 	return reg.Register().
 		WithFactory(&SapNfsVolumeSnapshotRestoreReconcilerFactory{
 			snapshotClientProvider: snapshotClientProvider,
+			shareClientProvider:    shareClientProvider,
 		}).
 		For(&cloudresourcesv1beta1.SapNfsVolumeSnapshotRestore{}).
 		Complete()

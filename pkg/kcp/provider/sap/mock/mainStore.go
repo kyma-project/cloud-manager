@@ -1452,6 +1452,7 @@ func (s *mainStore) CreateSnapshot(ctx context.Context, opts snapshots.CreateOpt
 		Name:        opts.Name,
 		Description: opts.Description,
 		Status:      "creating",
+		CreatedAt:   time.Now(),
 	}
 	s.shareSnapshots = append(s.shareSnapshots, snap)
 	return snap, nil

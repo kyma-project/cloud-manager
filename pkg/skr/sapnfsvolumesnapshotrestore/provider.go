@@ -12,3 +12,10 @@ func NewSnapshotClientProvider() sapclient.SapClientProvider[sapclient.SnapshotC
 		return f.SnapshotClient(ctx)
 	}
 }
+
+func NewShareClientProvider() sapclient.SapClientProvider[sapclient.ShareClient] {
+	return func(ctx context.Context, pp sapclient.ProviderParams) (sapclient.ShareClient, error) {
+		f := sapclient.NewClientFactory(pp)
+		return f.ShareClient(ctx)
+	}
+}

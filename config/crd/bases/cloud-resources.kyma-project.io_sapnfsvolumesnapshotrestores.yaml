@@ -111,6 +111,25 @@ spec:
                           description: |-
                             Metadata for the new SapNfsVolume (name, labels, annotations).
                             name is required; namespace defaults to the restore's namespace.
+                          properties:
+                            annotations:
+                              additionalProperties:
+                                type: string
+                              description: Annotations for the new SapNfsVolume.
+                              type: object
+                            labels:
+                              additionalProperties:
+                                type: string
+                              description: Labels for the new SapNfsVolume.
+                              type: object
+                            name:
+                              description: Name of the new SapNfsVolume.
+                              type: string
+                            namespace:
+                              description: Namespace of the new SapNfsVolume. Defaults to the restore's namespace if not specified.
+                              type: string
+                          required:
+                            - name
                           type: object
                         spec:
                           description: |-

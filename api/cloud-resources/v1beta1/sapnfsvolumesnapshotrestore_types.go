@@ -23,6 +23,26 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// SapNfsVolumeSnapshotNewVolumeMetadata defines metadata for the new SapNfsVolume
+// to be created from a snapshot restore.
+type SapNfsVolumeSnapshotNewVolumeMetadata struct {
+	// Name of the new SapNfsVolume.
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Namespace of the new SapNfsVolume. Defaults to the restore's namespace if not specified.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+
+	// Labels for the new SapNfsVolume.
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// Annotations for the new SapNfsVolume.
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
 // SapNfsVolumeSnapshotRestoreSpec defines the desired state of SapNfsVolumeSnapshotRestore
 type SapNfsVolumeSnapshotRestoreSpec struct {
 
@@ -55,7 +75,7 @@ type SapNfsVolumeSnapshotNewVolume struct {
 	// Metadata for the new SapNfsVolume (name, labels, annotations).
 	// name is required; namespace defaults to the restore's namespace.
 	// +kubebuilder:validation:Required
-	Metadata metav1.ObjectMeta `json:"metadata"`
+	Metadata SapNfsVolumeSnapshotNewVolumeMetadata `json:"metadata"`
 
 	// Spec is the template for the new SapNfsVolume (same type as SapNfsVolumeSpec).
 	// capacityGb must be >= the snapshot's source share size.

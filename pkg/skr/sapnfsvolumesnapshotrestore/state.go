@@ -31,6 +31,7 @@ type State struct {
 	snapshotClient sapclient.SnapshotClient
 	shareClient    sapclient.ShareClient
 	provider       sapclient.SapClientProvider[sapclient.SnapshotClient]
+	shareProvider  sapclient.SapClientProvider[sapclient.ShareClient]
 }
 
 func (s *State) ObjAsSapNfsVolumeSnapshotRestore() *cloudresourcesv1beta1.SapNfsVolumeSnapshotRestore {
@@ -46,12 +47,14 @@ func NewStateFactory(
 	kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster,
 	provider sapclient.SapClientProvider[sapclient.SnapshotClient],
+	shareProvider sapclient.SapClientProvider[sapclient.ShareClient],
 ) StateFactory {
 	return &stateFactory{
 		scopeProvider: scopeProvider,
 		kcpCluster:    kcpCluster,
 		skrCluster:    skrCluster,
 		provider:      provider,
+		shareProvider: shareProvider,
 	}
 }
 
@@ -60,6 +63,7 @@ type stateFactory struct {
 	kcpCluster    composed.StateCluster
 	skrCluster    composed.StateCluster
 	provider      sapclient.SapClientProvider[sapclient.SnapshotClient]
+	shareProvider sapclient.SapClientProvider[sapclient.ShareClient]
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
@@ -68,10 +72,11 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 		return nil, err
 	}
 	return &State{
-		State:      baseState,
-		KymaRef:    kymaRef,
-		KcpCluster: f.kcpCluster,
-		SkrCluster: f.skrCluster,
-		provider:   f.provider,
+		State:         baseState,
+		KymaRef:       kymaRef,
+		KcpCluster:    f.kcpCluster,
+		SkrCluster:    f.skrCluster,
+		provider:      f.provider,
+		shareProvider: f.shareProvider,
 	}, nil
 }

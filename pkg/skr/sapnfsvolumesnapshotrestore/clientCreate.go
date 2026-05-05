@@ -29,7 +29,7 @@ func clientCreate(ctx context.Context, st composed.State) (error, context.Contex
 
 	state.snapshotClient = client
 
-	shareClient, err := sapclient.NewClientFactory(pp).ShareClient(ctx)
+	shareClient, err := state.shareProvider(ctx, pp)
 	if err != nil {
 		return composed.LogErrorAndReturn(
 			fmt.Errorf("error creating SAP share client: %w", err),

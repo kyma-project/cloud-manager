@@ -164,7 +164,7 @@
   - Add `SetupSapNfsVolumeSnapshotRestoreReconciler(skrRegistry)` call in `cmd/main.go` alongside other SKR reconciler registrations
   - _Requirements: 3.12_
 
-- [ ] 10. SapNfsVolumeSnapshotRestore controller tests
+- [x] 10. SapNfsVolumeSnapshotRestore controller tests
   - Register `SetupSapNfsVolumeSnapshotRestoreReconciler` in `internal/controller/cloud-resources/suite_test.go`
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotrestore_test.go`:
     - In-place revert: create restore targeting existing volume → verify revert API called → mock `available` → verify Done
