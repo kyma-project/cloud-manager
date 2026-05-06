@@ -50,16 +50,15 @@ func (r *Reconciler) newAction() composed.Action {
 func composeActions() composed.Action {
 	return composed.ComposeActions(
 		"sapNfsVolumeSnapshotRestore",
-		loadScope,
-		clientCreate,
 		shortCircuitCompleted,
 		actions.PatchAddCommonFinalizer(),
-
-		sourceSnapshotLoad,
 
 		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 			composed.ComposeActions(
 				"sapNfsVolumeSnapshotRestore-create",
+				loadScope,
+				clientCreate,
+				sourceSnapshotLoad,
 				statusInProgress,
 				composed.IfElse(isInPlaceRestore,
 					composed.ComposeActions(
