@@ -203,11 +203,17 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotRestore", func() {
 
 		// CleanUp
 		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), snapshot).
+			Should(SucceedIgnoreNotFound())
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume).
+			Should(SucceedIgnoreNotFound())
+		Eventually(Delete).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), restore).
 			Should(Succeed())
 		Eventually(IsDeleted).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), restore).
-			Should(Succeed(), "expected restore to be deleted")
+			Should(Succeed(), "expected restore to be deleted even when snapshot and volume are gone")
 	})
 
 	It("Scenario: New-volume restore creates SapNfsVolume and completes", func() {
@@ -407,13 +413,19 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotRestore", func() {
 			Expect(restore.Status.CreatedVolume.Name).To(Equal(newVolumeName))
 		})
 
-		// CleanUp
+		// CleanUp: delete snapshot and volume first, then verify restore can still be deleted
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), snapshot).
+			Should(SucceedIgnoreNotFound())
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume).
+			Should(SucceedIgnoreNotFound())
 		Eventually(Delete).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), restore).
 			Should(Succeed())
 		Eventually(IsDeleted).
 			WithArguments(infra.Ctx(), infra.SKR().Client(), restore).
-			Should(Succeed(), "expected restore to be deleted")
+			Should(Succeed(), "expected restore to be deleted even when snapshot and volume are gone")
 	})
 
 })
