@@ -385,6 +385,95 @@ func TestConvertFieldToMatch(t *testing.T) {
 		assert.NotNil(t, result.Body)
 		assert.Equal(t, wafv2types.OversizeHandlingNoMatch, result.Body.OversizeHandling)
 	})
+
+	t.Run("AllQueryArguments", func(t *testing.T) {
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+			AllQueryArguments: &cloudresourcesv1beta1.AwsWebAclAllQueryArguments{},
+		}
+		result, err := convertFieldToMatch(field)
+		assert.NoError(t, err)
+		assert.NotNil(t, result.AllQueryArguments)
+	})
+
+	t.Run("SingleQueryArgument", func(t *testing.T) {
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+			SingleQueryArgument: &cloudresourcesv1beta1.AwsWebAclSingleQueryArgument{
+				Name: "userId",
+			},
+		}
+		result, err := convertFieldToMatch(field)
+		assert.NoError(t, err)
+		assert.NotNil(t, result.SingleQueryArgument)
+		assert.Equal(t, "userId", *result.SingleQueryArgument.Name)
+	})
+
+	t.Run("JsonBody with All pattern", func(t *testing.T) {
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+			JsonBody: &cloudresourcesv1beta1.AwsWebAclJsonBody{
+				MatchPattern: cloudresourcesv1beta1.AwsWebAclJsonMatchPattern{
+					All: &cloudresourcesv1beta1.AwsWebAclAll{},
+				},
+				MatchScope:              "ALL",
+				InvalidFallbackBehavior: "MATCH",
+			},
+		}
+		result, err := convertFieldToMatch(field)
+		assert.NoError(t, err)
+		assert.NotNil(t, result.JsonBody)
+		assert.NotNil(t, result.JsonBody.MatchPattern.All)
+		assert.Equal(t, wafv2types.JsonMatchScopeAll, result.JsonBody.MatchScope)
+		assert.Equal(t, wafv2types.BodyParsingFallbackBehaviorMatch, result.JsonBody.InvalidFallbackBehavior)
+	})
+
+	t.Run("JsonBody with IncludedPaths", func(t *testing.T) {
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+			JsonBody: &cloudresourcesv1beta1.AwsWebAclJsonBody{
+				MatchPattern: cloudresourcesv1beta1.AwsWebAclJsonMatchPattern{
+					IncludedPaths: []string{"/user/name", "/user/email"},
+				},
+				MatchScope:              "VALUE",
+				InvalidFallbackBehavior: "NO_MATCH",
+			},
+		}
+		result, err := convertFieldToMatch(field)
+		assert.NoError(t, err)
+		assert.NotNil(t, result.JsonBody)
+		assert.Len(t, result.JsonBody.MatchPattern.IncludedPaths, 2)
+		assert.Equal(t, "/user/name", result.JsonBody.MatchPattern.IncludedPaths[0])
+	})
+
+	t.Run("Cookies with IncludedCookies", func(t *testing.T) {
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+			Cookies: &cloudresourcesv1beta1.AwsWebAclCookies{
+				MatchPattern: cloudresourcesv1beta1.AwsWebAclCookieMatchPattern{
+					IncludedCookies: []string{"session-id", "session-token"},
+				},
+				MatchScope: "VALUE",
+			},
+		}
+		result, err := convertFieldToMatch(field)
+		assert.NoError(t, err)
+		assert.NotNil(t, result.Cookies)
+		assert.Len(t, result.Cookies.MatchPattern.IncludedCookies, 2)
+		assert.Equal(t, wafv2types.MapMatchScopeValue, result.Cookies.MatchScope)
+	})
+
+	t.Run("Headers with ExcludedHeaders", func(t *testing.T) {
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+			Headers: &cloudresourcesv1beta1.AwsWebAclHeaders{
+				MatchPattern: cloudresourcesv1beta1.AwsWebAclHeaderMatchPattern{
+					ExcludedHeaders: []string{"host", "content-length"},
+				},
+				MatchScope:       "KEY",
+				OversizeHandling: "MATCH",
+			},
+		}
+		result, err := convertFieldToMatch(field)
+		assert.NoError(t, err)
+		assert.NotNil(t, result.Headers)
+		assert.Len(t, result.Headers.MatchPattern.ExcludedHeaders, 2)
+		assert.Equal(t, wafv2types.OversizeHandlingMatch, result.Headers.OversizeHandling)
+	})
 }
 
 func TestConvertTextTransformations(t *testing.T) {

@@ -541,6 +541,26 @@ type AwsWebAclFieldToMatch struct {
 	// Body matches the request body
 	// +optional
 	Body *AwsWebAclBody `json:"body,omitempty"`
+
+	// AllQueryArguments matches all query arguments
+	// +optional
+	AllQueryArguments *AwsWebAclAllQueryArguments `json:"allQueryArguments,omitempty"`
+
+	// SingleQueryArgument matches a specific query argument by name
+	// +optional
+	SingleQueryArgument *AwsWebAclSingleQueryArgument `json:"singleQueryArgument,omitempty"`
+
+	// JsonBody matches and parses JSON request body
+	// +optional
+	JsonBody *AwsWebAclJsonBody `json:"jsonBody,omitempty"`
+
+	// Cookies matches HTTP cookies
+	// +optional
+	Cookies *AwsWebAclCookies `json:"cookies,omitempty"`
+
+	// Headers matches multiple HTTP headers
+	// +optional
+	Headers *AwsWebAclHeaders `json:"headers,omitempty"`
 }
 
 // AwsWebAclUriPath matches the URI path component of the request
@@ -571,6 +591,138 @@ type AwsWebAclBody struct {
 	// +kubebuilder:validation:Enum=CONTINUE;MATCH;NO_MATCH
 	// +kubebuilder:default=CONTINUE
 	OversizeHandling string `json:"oversizeHandling,omitempty"`
+}
+
+// AwsWebAclAllQueryArguments matches all query arguments
+type AwsWebAclAllQueryArguments struct {
+}
+
+// AwsWebAclSingleQueryArgument matches a specific query argument by name
+type AwsWebAclSingleQueryArgument struct {
+	// Name - The name of the query argument to inspect (max 30 chars, case-insensitive)
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=30
+	Name string `json:"name"`
+}
+
+// AwsWebAclJsonBody matches and parses JSON request body
+type AwsWebAclJsonBody struct {
+	// MatchPattern - Which JSON elements to inspect
+	// +kubebuilder:validation:Required
+	MatchPattern AwsWebAclJsonMatchPattern `json:"matchPattern"`
+
+	// MatchScope - Whether to match against keys, values, or all elements
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=ALL;KEY;VALUE
+	MatchScope string `json:"matchScope"`
+
+	// InvalidFallbackBehavior - What to do if JSON parsing fails
+	// MATCH: Treat as matching the rule
+	// NO_MATCH: Treat as not matching the rule
+	// EVALUATE_AS_STRING: Inspect as plain text
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=MATCH;NO_MATCH;EVALUATE_AS_STRING
+	InvalidFallbackBehavior string `json:"invalidFallbackBehavior"`
+
+	// OversizeHandling - What to do when body exceeds inspection limit
+	// +optional
+	// +kubebuilder:validation:Enum=CONTINUE;MATCH;NO_MATCH
+	// +kubebuilder:default=CONTINUE
+	OversizeHandling string `json:"oversizeHandling,omitempty"`
+}
+
+// AwsWebAclJsonMatchPattern specifies which JSON elements to inspect
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type AwsWebAclJsonMatchPattern struct {
+	// All - Inspect all JSON elements
+	// +optional
+	All *AwsWebAclAll `json:"all,omitempty"`
+
+	// IncludedPaths - JSON Pointer paths to inspect (RFC 6901)
+	// Example: ["/dogs/0/name", "/dogs/1/name"]
+	// +optional
+	// +kubebuilder:validation:MinItems=1
+	IncludedPaths []string `json:"includedPaths,omitempty"`
+}
+
+// AwsWebAclAll is a marker type indicating "match all"
+type AwsWebAclAll struct {
+}
+
+// AwsWebAclCookies matches HTTP cookies
+type AwsWebAclCookies struct {
+	// MatchPattern - Which cookies to inspect
+	// +kubebuilder:validation:Required
+	MatchPattern AwsWebAclCookieMatchPattern `json:"matchPattern"`
+
+	// MatchScope - Whether to match against keys, values, or all cookie data
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=ALL;KEY;VALUE
+	MatchScope string `json:"matchScope"`
+
+	// OversizeHandling - What to do when cookies exceed inspection limit (8 KB)
+	// +optional
+	// +kubebuilder:validation:Enum=CONTINUE;MATCH;NO_MATCH
+	// +kubebuilder:default=CONTINUE
+	OversizeHandling string `json:"oversizeHandling,omitempty"`
+}
+
+// AwsWebAclCookieMatchPattern specifies which cookies to inspect
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type AwsWebAclCookieMatchPattern struct {
+	// All - Inspect all cookies
+	// +optional
+	All *AwsWebAclAll `json:"all,omitempty"`
+
+	// IncludedCookies - Inspect only these cookie keys
+	// +optional
+	// +kubebuilder:validation:MinItems=1
+	IncludedCookies []string `json:"includedCookies,omitempty"`
+
+	// ExcludedCookies - Inspect all cookies EXCEPT these keys
+	// +optional
+	// +kubebuilder:validation:MinItems=1
+	ExcludedCookies []string `json:"excludedCookies,omitempty"`
+}
+
+// AwsWebAclHeaders matches multiple HTTP headers
+type AwsWebAclHeaders struct {
+	// MatchPattern - Which headers to inspect
+	// +kubebuilder:validation:Required
+	MatchPattern AwsWebAclHeaderMatchPattern `json:"matchPattern"`
+
+	// MatchScope - Whether to match against keys, values, or all header data
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=ALL;KEY;VALUE
+	MatchScope string `json:"matchScope"`
+
+	// OversizeHandling - What to do when headers exceed inspection limit (8 KB)
+	// +optional
+	// +kubebuilder:validation:Enum=CONTINUE;MATCH;NO_MATCH
+	// +kubebuilder:default=CONTINUE
+	OversizeHandling string `json:"oversizeHandling,omitempty"`
+}
+
+// AwsWebAclHeaderMatchPattern specifies which headers to inspect
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type AwsWebAclHeaderMatchPattern struct {
+	// All - Inspect all headers
+	// +optional
+	All *AwsWebAclAll `json:"all,omitempty"`
+
+	// IncludedHeaders - Inspect only these header keys
+	// +optional
+	// +kubebuilder:validation:MinItems=1
+	IncludedHeaders []string `json:"includedHeaders,omitempty"`
+
+	// ExcludedHeaders - Inspect all headers EXCEPT these keys
+	// +optional
+	// +kubebuilder:validation:MinItems=1
+	ExcludedHeaders []string `json:"excludedHeaders,omitempty"`
 }
 
 type AwsWebAclLabel struct {

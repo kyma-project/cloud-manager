@@ -363,6 +363,89 @@ func convertFieldToMatch(field cloudresourcesv1beta1.AwsWebAclFieldToMatch) (*wa
 		return result, nil
 	}
 
+	if field.AllQueryArguments != nil {
+		result.AllQueryArguments = &wafv2types.AllQueryArguments{}
+		return result, nil
+	}
+
+	if field.SingleQueryArgument != nil {
+		result.SingleQueryArgument = &wafv2types.SingleQueryArgument{
+			Name: aws.String(field.SingleQueryArgument.Name),
+		}
+		return result, nil
+	}
+
+	if field.JsonBody != nil {
+		jsonBody := &wafv2types.JsonBody{
+			MatchScope:              wafv2types.JsonMatchScope(field.JsonBody.MatchScope),
+			InvalidFallbackBehavior: wafv2types.BodyParsingFallbackBehavior(field.JsonBody.InvalidFallbackBehavior),
+			OversizeHandling:        wafv2types.OversizeHandlingContinue,
+		}
+
+		if field.JsonBody.OversizeHandling != "" {
+			jsonBody.OversizeHandling = wafv2types.OversizeHandling(field.JsonBody.OversizeHandling)
+		}
+
+		// Convert MatchPattern
+		jsonBody.MatchPattern = &wafv2types.JsonMatchPattern{}
+		if field.JsonBody.MatchPattern.All != nil {
+			jsonBody.MatchPattern.All = &wafv2types.All{}
+		} else if len(field.JsonBody.MatchPattern.IncludedPaths) > 0 {
+			jsonBody.MatchPattern.IncludedPaths = field.JsonBody.MatchPattern.IncludedPaths
+		}
+
+		result.JsonBody = jsonBody
+		return result, nil
+	}
+
+	if field.Cookies != nil {
+		cookies := &wafv2types.Cookies{
+			MatchScope:       wafv2types.MapMatchScope(field.Cookies.MatchScope),
+			OversizeHandling: wafv2types.OversizeHandlingContinue,
+		}
+
+		if field.Cookies.OversizeHandling != "" {
+			cookies.OversizeHandling = wafv2types.OversizeHandling(field.Cookies.OversizeHandling)
+		}
+
+		// Convert MatchPattern
+		cookies.MatchPattern = &wafv2types.CookieMatchPattern{}
+		if field.Cookies.MatchPattern.All != nil {
+			cookies.MatchPattern.All = &wafv2types.All{}
+		} else if len(field.Cookies.MatchPattern.IncludedCookies) > 0 {
+			cookies.MatchPattern.IncludedCookies = field.Cookies.MatchPattern.IncludedCookies
+		} else if len(field.Cookies.MatchPattern.ExcludedCookies) > 0 {
+			cookies.MatchPattern.ExcludedCookies = field.Cookies.MatchPattern.ExcludedCookies
+		}
+
+		result.Cookies = cookies
+		return result, nil
+	}
+
+	if field.Headers != nil {
+		headers := &wafv2types.Headers{
+			MatchScope:       wafv2types.MapMatchScope(field.Headers.MatchScope),
+			OversizeHandling: wafv2types.OversizeHandlingContinue,
+		}
+
+		if field.Headers.OversizeHandling != "" {
+			headers.OversizeHandling = wafv2types.OversizeHandling(field.Headers.OversizeHandling)
+		}
+
+		// Convert MatchPattern
+		headers.MatchPattern = &wafv2types.HeaderMatchPattern{}
+		if field.Headers.MatchPattern.All != nil {
+			headers.MatchPattern.All = &wafv2types.All{}
+		} else if len(field.Headers.MatchPattern.IncludedHeaders) > 0 {
+			headers.MatchPattern.IncludedHeaders = field.Headers.MatchPattern.IncludedHeaders
+		} else if len(field.Headers.MatchPattern.ExcludedHeaders) > 0 {
+			headers.MatchPattern.ExcludedHeaders = field.Headers.MatchPattern.ExcludedHeaders
+		}
+
+		result.Headers = headers
+		return result, nil
+	}
+
 	return nil, fmt.Errorf("no field to match specified")
 }
 
