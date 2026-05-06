@@ -80,8 +80,8 @@ spec:
                   additionalProperties:
                     properties:
                       content:
-                        description: Content - Response body content (max 10,240 bytes)
-                        maxLength: 10240
+                        description: Content - Response body content (max 4,096 bytes per AWS quota)
+                        maxLength: 4096
                         type: string
                       contentType:
                         description: ContentType - Response content type
@@ -619,8 +619,8 @@ spec:
                                                         type: boolean
                                                     type: object
                                                   regexString:
-                                                    description: RegexString - Regular expression pattern to match (max 512 chars)
-                                                    maxLength: 512
+                                                    description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                                    maxLength: 200
                                                     minLength: 1
                                                     type: string
                                                   textTransformations:
@@ -1270,8 +1270,8 @@ spec:
                                                       type: boolean
                                                   type: object
                                                 regexString:
-                                                  description: RegexString - Regular expression pattern to match (max 512 chars)
-                                                  maxLength: 512
+                                                  description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                                  maxLength: 200
                                                   minLength: 1
                                                   type: string
                                                 textTransformations:
@@ -1753,8 +1753,8 @@ spec:
                                                         type: boolean
                                                     type: object
                                                   regexString:
-                                                    description: RegexString - Regular expression pattern to match (max 512 chars)
-                                                    maxLength: 512
+                                                    description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                                    maxLength: 200
                                                     minLength: 1
                                                     type: string
                                                   textTransformations:
@@ -2062,8 +2062,8 @@ spec:
                                               type: boolean
                                           type: object
                                         regexString:
-                                          description: RegexString - Regular expression pattern to match (max 512 chars)
-                                          maxLength: 512
+                                          description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                          maxLength: 200
                                           minLength: 1
                                           type: string
                                         textTransformations:
@@ -2916,8 +2916,8 @@ spec:
                                                       type: boolean
                                                   type: object
                                                 regexString:
-                                                  description: RegexString - Regular expression pattern to match (max 512 chars)
-                                                  maxLength: 512
+                                                  description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                                  maxLength: 200
                                                   minLength: 1
                                                   type: string
                                                 textTransformations:
@@ -3567,8 +3567,8 @@ spec:
                                                     type: boolean
                                                 type: object
                                               regexString:
-                                                description: RegexString - Regular expression pattern to match (max 512 chars)
-                                                maxLength: 512
+                                                description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                                maxLength: 200
                                                 minLength: 1
                                                 type: string
                                               textTransformations:
@@ -4050,8 +4050,8 @@ spec:
                                                       type: boolean
                                                   type: object
                                                 regexString:
-                                                  description: RegexString - Regular expression pattern to match (max 512 chars)
-                                                  maxLength: 512
+                                                  description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                                  maxLength: 200
                                                   minLength: 1
                                                   type: string
                                                 textTransformations:
@@ -4359,8 +4359,8 @@ spec:
                                             type: boolean
                                         type: object
                                       regexString:
-                                        description: RegexString - Regular expression pattern to match (max 512 chars)
-                                        maxLength: 512
+                                        description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                        maxLength: 200
                                         minLength: 1
                                         type: string
                                       textTransformations:
@@ -4852,8 +4852,8 @@ spec:
                                                         type: boolean
                                                     type: object
                                                   regexString:
-                                                    description: RegexString - Regular expression pattern to match (max 512 chars)
-                                                    maxLength: 512
+                                                    description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                                    maxLength: 200
                                                     minLength: 1
                                                     type: string
                                                   textTransformations:
@@ -5503,8 +5503,8 @@ spec:
                                                       type: boolean
                                                   type: object
                                                 regexString:
-                                                  description: RegexString - Regular expression pattern to match (max 512 chars)
-                                                  maxLength: 512
+                                                  description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                                  maxLength: 200
                                                   minLength: 1
                                                   type: string
                                                 textTransformations:
@@ -5986,8 +5986,8 @@ spec:
                                                         type: boolean
                                                     type: object
                                                   regexString:
-                                                    description: RegexString - Regular expression pattern to match (max 512 chars)
-                                                    maxLength: 512
+                                                    description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                                    maxLength: 200
                                                     minLength: 1
                                                     type: string
                                                   textTransformations:
@@ -6295,8 +6295,8 @@ spec:
                                               type: boolean
                                           type: object
                                         regexString:
-                                          description: RegexString - Regular expression pattern to match (max 512 chars)
-                                          maxLength: 512
+                                          description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                          maxLength: 200
                                           minLength: 1
                                           type: string
                                         textTransformations:
@@ -6603,7 +6603,7 @@ spec:
                                 description: Limit - Max requests per 5 minutes from a single IP
                                 format: int64
                                 maximum: 2000000000
-                                minimum: 100
+                                minimum: 10
                                 type: integer
                             required:
                               - limit
@@ -6633,8 +6633,8 @@ spec:
                                     type: boolean
                                 type: object
                               regexString:
-                                description: RegexString - Regular expression pattern to match (max 512 chars)
-                                maxLength: 512
+                                description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
+                                maxLength: 200
                                 minLength: 1
                                 type: string
                               textTransformations:

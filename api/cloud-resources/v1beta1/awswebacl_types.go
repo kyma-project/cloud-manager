@@ -311,10 +311,10 @@ type AwsWebAclXssMatchStatement struct {
 }
 
 type AwsWebAclRegexMatchStatement struct {
-	// RegexString - Regular expression pattern to match (max 512 chars)
+	// RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=512
+	// +kubebuilder:validation:MaxLength=200
 	RegexString string `json:"regexString"`
 
 	// FieldToMatch - Part of the request to inspect
@@ -456,9 +456,9 @@ type AwsWebAclCustomResponseBody struct {
 	// +kubebuilder:validation:Enum=TEXT_PLAIN;TEXT_HTML;APPLICATION_JSON
 	ContentType string `json:"contentType"`
 
-	// Content - Response body content (max 10,240 bytes)
+	// Content - Response body content (max 4,096 bytes per AWS quota)
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MaxLength=10240
+	// +kubebuilder:validation:MaxLength=4096
 	Content string `json:"content"`
 }
 
