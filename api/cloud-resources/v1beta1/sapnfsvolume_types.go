@@ -30,6 +30,9 @@ import (
 type SapNfsVolumeSpec struct {
 
 	// +optional
+	Foo string `json:"foo,omitempty"`
+
+	// +optional
 	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
