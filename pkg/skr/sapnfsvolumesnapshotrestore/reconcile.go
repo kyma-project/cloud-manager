@@ -53,7 +53,7 @@ func composeActions() composed.Action {
 		loadScope,
 		clientCreate,
 		shortCircuitCompleted,
-		actions.AddCommonFinalizer(),
+		actions.PatchAddCommonFinalizer(),
 
 		sourceSnapshotLoad,
 
@@ -82,7 +82,7 @@ func composeActions() composed.Action {
 			composed.ComposeActions(
 				"sapNfsVolumeSnapshotRestore-delete",
 				releaseLease,
-				actions.RemoveCommonFinalizer(),
+				actions.PatchRemoveCommonFinalizer(),
 			),
 		),
 		composed.StopAndForgetAction,
