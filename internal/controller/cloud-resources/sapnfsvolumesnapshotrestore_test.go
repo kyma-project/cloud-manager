@@ -200,6 +200,14 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotRestore", func() {
 					HavingFieldValue(cloudresourcesv1beta1.JobStateDone, "status", "state"),
 				).Should(Succeed(), "expected restore to be Done")
 		})
+
+		// CleanUp
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), restore).
+			Should(Succeed())
+		Eventually(IsDeleted).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), restore).
+			Should(Succeed(), "expected restore to be deleted")
 	})
 
 	It("Scenario: New-volume restore creates SapNfsVolume and completes", func() {
@@ -398,6 +406,14 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotRestore", func() {
 			Expect(restore.Status.CreatedVolume).NotTo(BeNil())
 			Expect(restore.Status.CreatedVolume.Name).To(Equal(newVolumeName))
 		})
+
+		// CleanUp
+		Eventually(Delete).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), restore).
+			Should(Succeed())
+		Eventually(IsDeleted).
+			WithArguments(infra.Ctx(), infra.SKR().Client(), restore).
+			Should(Succeed(), "expected restore to be deleted")
 	})
 
 })

@@ -11,6 +11,10 @@ func shortCircuitCompleted(ctx context.Context, st composed.State) (error, conte
 	state := st.(*State)
 	restore := state.ObjAsSapNfsVolumeSnapshotRestore()
 
+	if composed.IsMarkedForDeletion(restore) {
+		return nil, ctx
+	}
+
 	if restore.Status.State == cloudresourcesv1beta1.JobStateDone ||
 		restore.Status.State == cloudresourcesv1beta1.JobStateFailed {
 		return composed.StopAndForget, ctx
