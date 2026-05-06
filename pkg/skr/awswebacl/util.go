@@ -3,6 +3,7 @@ package awswebacl
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 )
@@ -322,31 +323,42 @@ func convertByteMatchStatement(byteMatch *cloudresourcesv1beta1.AwsWebAclByteMat
 func convertFieldToMatch(field cloudresourcesv1beta1.AwsWebAclFieldToMatch) (*wafv2types.FieldToMatch, error) {
 	result := &wafv2types.FieldToMatch{}
 
-	if field.UriPath {
+	if field.UriPath != nil {
 		result.UriPath = &wafv2types.UriPath{}
 		return result, nil
 	}
 
-	if field.QueryString {
+	if field.QueryString != nil {
 		result.QueryString = &wafv2types.QueryString{}
 		return result, nil
 	}
 
-	if field.Method {
+	if field.Method != nil {
 		result.Method = &wafv2types.Method{}
 		return result, nil
 	}
 
-	if field.SingleHeader != "" {
+	if field.SingleHeader != nil {
 		result.SingleHeader = &wafv2types.SingleHeader{
-			Name: new(field.SingleHeader),
+			Name: aws.String(field.SingleHeader.Name),
 		}
 		return result, nil
 	}
 
-	if field.Body {
+	if field.Body != nil {
+		oversizeHandling := wafv2types.OversizeHandlingContinue
+		if field.Body.OversizeHandling != "" {
+			switch field.Body.OversizeHandling {
+			case "CONTINUE":
+				oversizeHandling = wafv2types.OversizeHandlingContinue
+			case "MATCH":
+				oversizeHandling = wafv2types.OversizeHandlingMatch
+			case "NO_MATCH":
+				oversizeHandling = wafv2types.OversizeHandlingNoMatch
+			}
+		}
 		result.Body = &wafv2types.Body{
-			OversizeHandling: wafv2types.OversizeHandlingContinue,
+			OversizeHandling: oversizeHandling,
 		}
 		return result, nil
 	}

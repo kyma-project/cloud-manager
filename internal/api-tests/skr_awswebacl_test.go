@@ -176,7 +176,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						SearchString:         "../",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-							QueryString: true,
+							QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
 						},
 						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 							{Priority: 0, Type: "NONE"},
@@ -220,8 +220,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						SearchString:         "test",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-							UriPath:     true,
-							QueryString: true, // Two fields set
+							UriPath:     &cloudresourcesv1beta1.AwsWebAclUriPath{},
+							QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{}, // Two fields set
 						},
 						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 							{Priority: 0, Type: "NONE"},
@@ -243,8 +243,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						SearchString:         "test",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-							UriPath:      true,
-							SingleHeader: "user-agent", // Two fields set
+							UriPath:      &cloudresourcesv1beta1.AwsWebAclUriPath{},
+							SingleHeader: &cloudresourcesv1beta1.AwsWebAclSingleHeader{Name: "user-agent"}, // Two fields set
 						},
 						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 							{Priority: 0, Type: "NONE"},
@@ -266,7 +266,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						SearchString:         "/admin",
 						PositionalConstraint: "STARTS_WITH",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-							UriPath: true,
+							UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 						},
 						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 							{Priority: 0, Type: "LOWERCASE"},
@@ -287,7 +287,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						SearchString:         "../",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-							QueryString: true,
+							QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
 						},
 						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 							{Priority: 0, Type: "URL_DECODE"},
@@ -308,7 +308,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						SearchString:         "DELETE",
 						PositionalConstraint: "EXACTLY",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-							Method: true,
+							Method: &cloudresourcesv1beta1.AwsWebAclMethod{},
 						},
 						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 							{Priority: 0, Type: "NONE"},
@@ -329,7 +329,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						SearchString:         "bot",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-							SingleHeader: "user-agent",
+							SingleHeader: &cloudresourcesv1beta1.AwsWebAclSingleHeader{Name: "user-agent"},
 						},
 						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 							{Priority: 0, Type: "LOWERCASE"},
@@ -350,7 +350,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						SearchString:         "<script>",
 						PositionalConstraint: "CONTAINS",
 						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-							Body: true,
+							Body: &cloudresourcesv1beta1.AwsWebAclBody{},
 						},
 						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 							{Priority: 0, Type: "HTML_ENTITY_DECODE"},
@@ -495,14 +495,14 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 	Context("Scenario: RateBased statement validation", func() {
 
 		canNotCreateSkr(
-			"AwsWebAcl cannot be created with rate limit below minimum (100)",
+			"AwsWebAcl cannot be created with rate limit below minimum (10)",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
 				Name:     "low-rate",
 				Priority: 0,
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit: 99,
+						Limit: 9,
 					},
 				},
 			}),
@@ -677,7 +677,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 									SearchString:         "/admin",
 									PositionalConstraint: "STARTS_WITH",
 									FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-										UriPath: true,
+										UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 									},
 									TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 										{Priority: 0, Type: "LOWERCASE"},
@@ -715,7 +715,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 									SearchString:         "/wp-admin",
 									PositionalConstraint: "STARTS_WITH",
 									FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-										UriPath: true,
+										UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 									},
 									TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 										{Priority: 0, Type: "LOWERCASE"},
@@ -755,7 +755,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 									ComparisonOperator: "EQ",
 									Size:               7777,
 									FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-										Method: true,
+										Method: &cloudresourcesv1beta1.AwsWebAclMethod{},
 									},
 									TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 										{Priority: 0, Type: "NONE"},
@@ -803,7 +803,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 									SearchString:         "sqlmap",
 									PositionalConstraint: "CONTAINS",
 									FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-										SingleHeader: "user-agent",
+										SingleHeader: &cloudresourcesv1beta1.AwsWebAclSingleHeader{Name: "user-agent"},
 									},
 									TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 										{Priority: 0, Type: "LOWERCASE"},
@@ -880,7 +880,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 										SearchString:         "/admin",
 										PositionalConstraint: "STARTS_WITH",
 										FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-											UriPath: true,
+											UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 										},
 										TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 											{Priority: 0, Type: "LOWERCASE"},
@@ -903,7 +903,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 										SearchString:         "bot",
 										PositionalConstraint: "CONTAINS",
 										FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-											SingleHeader: "user-agent",
+											SingleHeader: &cloudresourcesv1beta1.AwsWebAclSingleHeader{Name: "user-agent"},
 										},
 										TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 											{Priority: 0, Type: "LOWERCASE"},

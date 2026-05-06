@@ -524,23 +524,53 @@ type AwsWebAclTextTransformation struct {
 type AwsWebAclFieldToMatch struct {
 	// UriPath matches the URI path
 	// +optional
-	UriPath bool `json:"uriPath,omitempty"`
+	UriPath *AwsWebAclUriPath `json:"uriPath,omitempty"`
 
 	// QueryString matches the query string
 	// +optional
-	QueryString bool `json:"queryString,omitempty"`
+	QueryString *AwsWebAclQueryString `json:"queryString,omitempty"`
 
 	// Method matches the HTTP method
 	// +optional
-	Method bool `json:"method,omitempty"`
+	Method *AwsWebAclMethod `json:"method,omitempty"`
 
 	// SingleHeader matches a specific header by name
 	// +optional
-	SingleHeader string `json:"singleHeader,omitempty"`
+	SingleHeader *AwsWebAclSingleHeader `json:"singleHeader,omitempty"`
 
 	// Body matches the request body
 	// +optional
-	Body bool `json:"body,omitempty"`
+	Body *AwsWebAclBody `json:"body,omitempty"`
+}
+
+// AwsWebAclUriPath matches the URI path component of the request
+type AwsWebAclUriPath struct {
+}
+
+// AwsWebAclQueryString matches the query string component of the request
+type AwsWebAclQueryString struct {
+}
+
+// AwsWebAclMethod matches the HTTP method
+type AwsWebAclMethod struct {
+}
+
+// AwsWebAclSingleHeader matches a specific HTTP header by name
+type AwsWebAclSingleHeader struct {
+	// Name - The name of the header to inspect
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=64
+	Name string `json:"name"`
+}
+
+// AwsWebAclBody matches the request body
+type AwsWebAclBody struct {
+	// OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+	// +optional
+	// +kubebuilder:validation:Enum=CONTINUE;MATCH;NO_MATCH
+	// +kubebuilder:default=CONTINUE
+	OversizeHandling string `json:"oversizeHandling,omitempty"`
 }
 
 type AwsWebAclLabel struct {

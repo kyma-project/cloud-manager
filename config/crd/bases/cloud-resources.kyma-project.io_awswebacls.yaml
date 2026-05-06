@@ -469,19 +469,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   positionalConstraint:
                                                     description: PositionalConstraint defines match location
@@ -604,19 +621,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   regexString:
                                                     description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -688,19 +722,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   size:
                                                     description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -764,19 +815,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   sensitivityLevel:
                                                     default: LOW
@@ -839,19 +907,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   textTransformations:
                                                     description: TextTransformations - Transformations to apply before inspection
@@ -945,19 +1030,36 @@ spec:
                                           properties:
                                             body:
                                               description: Body matches the request body
-                                              type: boolean
+                                              properties:
+                                                oversizeHandling:
+                                                  default: CONTINUE
+                                                  description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                  enum:
+                                                    - CONTINUE
+                                                    - MATCH
+                                                    - NO_MATCH
+                                                  type: string
+                                              type: object
                                             method:
                                               description: Method matches the HTTP method
-                                              type: boolean
+                                              type: object
                                             queryString:
                                               description: QueryString matches the query string
-                                              type: boolean
+                                              type: object
                                             singleHeader:
                                               description: SingleHeader matches a specific header by name
-                                              type: string
+                                              properties:
+                                                name:
+                                                  description: Name - The name of the header to inspect
+                                                  maxLength: 64
+                                                  minLength: 1
+                                                  type: string
+                                              required:
+                                                - name
+                                              type: object
                                             uriPath:
                                               description: UriPath matches the URI path
-                                              type: boolean
+                                              type: object
                                           type: object
                                         positionalConstraint:
                                           description: PositionalConstraint defines match location
@@ -1120,19 +1222,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 positionalConstraint:
                                                   description: PositionalConstraint defines match location
@@ -1255,19 +1374,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 regexString:
                                                   description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -1339,19 +1475,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 size:
                                                   description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -1415,19 +1568,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 sensitivityLevel:
                                                   default: LOW
@@ -1490,19 +1660,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 textTransformations:
                                                   description: TextTransformations - Transformations to apply before inspection
@@ -1603,19 +1790,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   positionalConstraint:
                                                     description: PositionalConstraint defines match location
@@ -1738,19 +1942,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   regexString:
                                                     description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -1822,19 +2043,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   size:
                                                     description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -1898,19 +2136,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   sensitivityLevel:
                                                     default: LOW
@@ -1973,19 +2228,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   textTransformations:
                                                     description: TextTransformations - Transformations to apply before inspection
@@ -2047,19 +2319,36 @@ spec:
                                           properties:
                                             body:
                                               description: Body matches the request body
-                                              type: boolean
+                                              properties:
+                                                oversizeHandling:
+                                                  default: CONTINUE
+                                                  description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                  enum:
+                                                    - CONTINUE
+                                                    - MATCH
+                                                    - NO_MATCH
+                                                  type: string
+                                              type: object
                                             method:
                                               description: Method matches the HTTP method
-                                              type: boolean
+                                              type: object
                                             queryString:
                                               description: QueryString matches the query string
-                                              type: boolean
+                                              type: object
                                             singleHeader:
                                               description: SingleHeader matches a specific header by name
-                                              type: string
+                                              properties:
+                                                name:
+                                                  description: Name - The name of the header to inspect
+                                                  maxLength: 64
+                                                  minLength: 1
+                                                  type: string
+                                              required:
+                                                - name
+                                              type: object
                                             uriPath:
                                               description: UriPath matches the URI path
-                                              type: boolean
+                                              type: object
                                           type: object
                                         regexString:
                                           description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -2131,19 +2420,36 @@ spec:
                                           properties:
                                             body:
                                               description: Body matches the request body
-                                              type: boolean
+                                              properties:
+                                                oversizeHandling:
+                                                  default: CONTINUE
+                                                  description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                  enum:
+                                                    - CONTINUE
+                                                    - MATCH
+                                                    - NO_MATCH
+                                                  type: string
+                                              type: object
                                             method:
                                               description: Method matches the HTTP method
-                                              type: boolean
+                                              type: object
                                             queryString:
                                               description: QueryString matches the query string
-                                              type: boolean
+                                              type: object
                                             singleHeader:
                                               description: SingleHeader matches a specific header by name
-                                              type: string
+                                              properties:
+                                                name:
+                                                  description: Name - The name of the header to inspect
+                                                  maxLength: 64
+                                                  minLength: 1
+                                                  type: string
+                                              required:
+                                                - name
+                                              type: object
                                             uriPath:
                                               description: UriPath matches the URI path
-                                              type: boolean
+                                              type: object
                                           type: object
                                         size:
                                           description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -2207,19 +2513,36 @@ spec:
                                           properties:
                                             body:
                                               description: Body matches the request body
-                                              type: boolean
+                                              properties:
+                                                oversizeHandling:
+                                                  default: CONTINUE
+                                                  description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                  enum:
+                                                    - CONTINUE
+                                                    - MATCH
+                                                    - NO_MATCH
+                                                  type: string
+                                              type: object
                                             method:
                                               description: Method matches the HTTP method
-                                              type: boolean
+                                              type: object
                                             queryString:
                                               description: QueryString matches the query string
-                                              type: boolean
+                                              type: object
                                             singleHeader:
                                               description: SingleHeader matches a specific header by name
-                                              type: string
+                                              properties:
+                                                name:
+                                                  description: Name - The name of the header to inspect
+                                                  maxLength: 64
+                                                  minLength: 1
+                                                  type: string
+                                              required:
+                                                - name
+                                              type: object
                                             uriPath:
                                               description: UriPath matches the URI path
-                                              type: boolean
+                                              type: object
                                           type: object
                                         sensitivityLevel:
                                           default: LOW
@@ -2282,19 +2605,36 @@ spec:
                                           properties:
                                             body:
                                               description: Body matches the request body
-                                              type: boolean
+                                              properties:
+                                                oversizeHandling:
+                                                  default: CONTINUE
+                                                  description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                  enum:
+                                                    - CONTINUE
+                                                    - MATCH
+                                                    - NO_MATCH
+                                                  type: string
+                                              type: object
                                             method:
                                               description: Method matches the HTTP method
-                                              type: boolean
+                                              type: object
                                             queryString:
                                               description: QueryString matches the query string
-                                              type: boolean
+                                              type: object
                                             singleHeader:
                                               description: SingleHeader matches a specific header by name
-                                              type: string
+                                              properties:
+                                                name:
+                                                  description: Name - The name of the header to inspect
+                                                  maxLength: 64
+                                                  minLength: 1
+                                                  type: string
+                                              required:
+                                                - name
+                                              type: object
                                             uriPath:
                                               description: UriPath matches the URI path
-                                              type: boolean
+                                              type: object
                                           type: object
                                         textTransformations:
                                           description: TextTransformations - Transformations to apply before inspection
@@ -2388,19 +2728,36 @@ spec:
                                 properties:
                                   body:
                                     description: Body matches the request body
-                                    type: boolean
+                                    properties:
+                                      oversizeHandling:
+                                        default: CONTINUE
+                                        description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                        enum:
+                                          - CONTINUE
+                                          - MATCH
+                                          - NO_MATCH
+                                        type: string
+                                    type: object
                                   method:
                                     description: Method matches the HTTP method
-                                    type: boolean
+                                    type: object
                                   queryString:
                                     description: QueryString matches the query string
-                                    type: boolean
+                                    type: object
                                   singleHeader:
                                     description: SingleHeader matches a specific header by name
-                                    type: string
+                                    properties:
+                                      name:
+                                        description: Name - The name of the header to inspect
+                                        maxLength: 64
+                                        minLength: 1
+                                        type: string
+                                    required:
+                                      - name
+                                    type: object
                                   uriPath:
                                     description: UriPath matches the URI path
-                                    type: boolean
+                                    type: object
                                 type: object
                               positionalConstraint:
                                 description: PositionalConstraint defines match location
@@ -2766,19 +3123,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 positionalConstraint:
                                                   description: PositionalConstraint defines match location
@@ -2901,19 +3275,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 regexString:
                                                   description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -2985,19 +3376,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 size:
                                                   description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -3061,19 +3469,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 sensitivityLevel:
                                                   default: LOW
@@ -3136,19 +3561,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 textTransformations:
                                                   description: TextTransformations - Transformations to apply before inspection
@@ -3242,19 +3684,36 @@ spec:
                                         properties:
                                           body:
                                             description: Body matches the request body
-                                            type: boolean
+                                            properties:
+                                              oversizeHandling:
+                                                default: CONTINUE
+                                                description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                enum:
+                                                  - CONTINUE
+                                                  - MATCH
+                                                  - NO_MATCH
+                                                type: string
+                                            type: object
                                           method:
                                             description: Method matches the HTTP method
-                                            type: boolean
+                                            type: object
                                           queryString:
                                             description: QueryString matches the query string
-                                            type: boolean
+                                            type: object
                                           singleHeader:
                                             description: SingleHeader matches a specific header by name
-                                            type: string
+                                            properties:
+                                              name:
+                                                description: Name - The name of the header to inspect
+                                                maxLength: 64
+                                                minLength: 1
+                                                type: string
+                                            required:
+                                              - name
+                                            type: object
                                           uriPath:
                                             description: UriPath matches the URI path
-                                            type: boolean
+                                            type: object
                                         type: object
                                       positionalConstraint:
                                         description: PositionalConstraint defines match location
@@ -3417,19 +3876,36 @@ spec:
                                                 properties:
                                                   body:
                                                     description: Body matches the request body
-                                                    type: boolean
+                                                    properties:
+                                                      oversizeHandling:
+                                                        default: CONTINUE
+                                                        description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                        enum:
+                                                          - CONTINUE
+                                                          - MATCH
+                                                          - NO_MATCH
+                                                        type: string
+                                                    type: object
                                                   method:
                                                     description: Method matches the HTTP method
-                                                    type: boolean
+                                                    type: object
                                                   queryString:
                                                     description: QueryString matches the query string
-                                                    type: boolean
+                                                    type: object
                                                   singleHeader:
                                                     description: SingleHeader matches a specific header by name
-                                                    type: string
+                                                    properties:
+                                                      name:
+                                                        description: Name - The name of the header to inspect
+                                                        maxLength: 64
+                                                        minLength: 1
+                                                        type: string
+                                                    required:
+                                                      - name
+                                                    type: object
                                                   uriPath:
                                                     description: UriPath matches the URI path
-                                                    type: boolean
+                                                    type: object
                                                 type: object
                                               positionalConstraint:
                                                 description: PositionalConstraint defines match location
@@ -3552,19 +4028,36 @@ spec:
                                                 properties:
                                                   body:
                                                     description: Body matches the request body
-                                                    type: boolean
+                                                    properties:
+                                                      oversizeHandling:
+                                                        default: CONTINUE
+                                                        description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                        enum:
+                                                          - CONTINUE
+                                                          - MATCH
+                                                          - NO_MATCH
+                                                        type: string
+                                                    type: object
                                                   method:
                                                     description: Method matches the HTTP method
-                                                    type: boolean
+                                                    type: object
                                                   queryString:
                                                     description: QueryString matches the query string
-                                                    type: boolean
+                                                    type: object
                                                   singleHeader:
                                                     description: SingleHeader matches a specific header by name
-                                                    type: string
+                                                    properties:
+                                                      name:
+                                                        description: Name - The name of the header to inspect
+                                                        maxLength: 64
+                                                        minLength: 1
+                                                        type: string
+                                                    required:
+                                                      - name
+                                                    type: object
                                                   uriPath:
                                                     description: UriPath matches the URI path
-                                                    type: boolean
+                                                    type: object
                                                 type: object
                                               regexString:
                                                 description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -3636,19 +4129,36 @@ spec:
                                                 properties:
                                                   body:
                                                     description: Body matches the request body
-                                                    type: boolean
+                                                    properties:
+                                                      oversizeHandling:
+                                                        default: CONTINUE
+                                                        description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                        enum:
+                                                          - CONTINUE
+                                                          - MATCH
+                                                          - NO_MATCH
+                                                        type: string
+                                                    type: object
                                                   method:
                                                     description: Method matches the HTTP method
-                                                    type: boolean
+                                                    type: object
                                                   queryString:
                                                     description: QueryString matches the query string
-                                                    type: boolean
+                                                    type: object
                                                   singleHeader:
                                                     description: SingleHeader matches a specific header by name
-                                                    type: string
+                                                    properties:
+                                                      name:
+                                                        description: Name - The name of the header to inspect
+                                                        maxLength: 64
+                                                        minLength: 1
+                                                        type: string
+                                                    required:
+                                                      - name
+                                                    type: object
                                                   uriPath:
                                                     description: UriPath matches the URI path
-                                                    type: boolean
+                                                    type: object
                                                 type: object
                                               size:
                                                 description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -3712,19 +4222,36 @@ spec:
                                                 properties:
                                                   body:
                                                     description: Body matches the request body
-                                                    type: boolean
+                                                    properties:
+                                                      oversizeHandling:
+                                                        default: CONTINUE
+                                                        description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                        enum:
+                                                          - CONTINUE
+                                                          - MATCH
+                                                          - NO_MATCH
+                                                        type: string
+                                                    type: object
                                                   method:
                                                     description: Method matches the HTTP method
-                                                    type: boolean
+                                                    type: object
                                                   queryString:
                                                     description: QueryString matches the query string
-                                                    type: boolean
+                                                    type: object
                                                   singleHeader:
                                                     description: SingleHeader matches a specific header by name
-                                                    type: string
+                                                    properties:
+                                                      name:
+                                                        description: Name - The name of the header to inspect
+                                                        maxLength: 64
+                                                        minLength: 1
+                                                        type: string
+                                                    required:
+                                                      - name
+                                                    type: object
                                                   uriPath:
                                                     description: UriPath matches the URI path
-                                                    type: boolean
+                                                    type: object
                                                 type: object
                                               sensitivityLevel:
                                                 default: LOW
@@ -3787,19 +4314,36 @@ spec:
                                                 properties:
                                                   body:
                                                     description: Body matches the request body
-                                                    type: boolean
+                                                    properties:
+                                                      oversizeHandling:
+                                                        default: CONTINUE
+                                                        description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                        enum:
+                                                          - CONTINUE
+                                                          - MATCH
+                                                          - NO_MATCH
+                                                        type: string
+                                                    type: object
                                                   method:
                                                     description: Method matches the HTTP method
-                                                    type: boolean
+                                                    type: object
                                                   queryString:
                                                     description: QueryString matches the query string
-                                                    type: boolean
+                                                    type: object
                                                   singleHeader:
                                                     description: SingleHeader matches a specific header by name
-                                                    type: string
+                                                    properties:
+                                                      name:
+                                                        description: Name - The name of the header to inspect
+                                                        maxLength: 64
+                                                        minLength: 1
+                                                        type: string
+                                                    required:
+                                                      - name
+                                                    type: object
                                                   uriPath:
                                                     description: UriPath matches the URI path
-                                                    type: boolean
+                                                    type: object
                                                 type: object
                                               textTransformations:
                                                 description: TextTransformations - Transformations to apply before inspection
@@ -3900,19 +4444,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 positionalConstraint:
                                                   description: PositionalConstraint defines match location
@@ -4035,19 +4596,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 regexString:
                                                   description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -4119,19 +4697,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 size:
                                                   description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -4195,19 +4790,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 sensitivityLevel:
                                                   default: LOW
@@ -4270,19 +4882,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 textTransformations:
                                                   description: TextTransformations - Transformations to apply before inspection
@@ -4344,19 +4973,36 @@ spec:
                                         properties:
                                           body:
                                             description: Body matches the request body
-                                            type: boolean
+                                            properties:
+                                              oversizeHandling:
+                                                default: CONTINUE
+                                                description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                enum:
+                                                  - CONTINUE
+                                                  - MATCH
+                                                  - NO_MATCH
+                                                type: string
+                                            type: object
                                           method:
                                             description: Method matches the HTTP method
-                                            type: boolean
+                                            type: object
                                           queryString:
                                             description: QueryString matches the query string
-                                            type: boolean
+                                            type: object
                                           singleHeader:
                                             description: SingleHeader matches a specific header by name
-                                            type: string
+                                            properties:
+                                              name:
+                                                description: Name - The name of the header to inspect
+                                                maxLength: 64
+                                                minLength: 1
+                                                type: string
+                                            required:
+                                              - name
+                                            type: object
                                           uriPath:
                                             description: UriPath matches the URI path
-                                            type: boolean
+                                            type: object
                                         type: object
                                       regexString:
                                         description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -4428,19 +5074,36 @@ spec:
                                         properties:
                                           body:
                                             description: Body matches the request body
-                                            type: boolean
+                                            properties:
+                                              oversizeHandling:
+                                                default: CONTINUE
+                                                description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                enum:
+                                                  - CONTINUE
+                                                  - MATCH
+                                                  - NO_MATCH
+                                                type: string
+                                            type: object
                                           method:
                                             description: Method matches the HTTP method
-                                            type: boolean
+                                            type: object
                                           queryString:
                                             description: QueryString matches the query string
-                                            type: boolean
+                                            type: object
                                           singleHeader:
                                             description: SingleHeader matches a specific header by name
-                                            type: string
+                                            properties:
+                                              name:
+                                                description: Name - The name of the header to inspect
+                                                maxLength: 64
+                                                minLength: 1
+                                                type: string
+                                            required:
+                                              - name
+                                            type: object
                                           uriPath:
                                             description: UriPath matches the URI path
-                                            type: boolean
+                                            type: object
                                         type: object
                                       size:
                                         description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -4504,19 +5167,36 @@ spec:
                                         properties:
                                           body:
                                             description: Body matches the request body
-                                            type: boolean
+                                            properties:
+                                              oversizeHandling:
+                                                default: CONTINUE
+                                                description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                enum:
+                                                  - CONTINUE
+                                                  - MATCH
+                                                  - NO_MATCH
+                                                type: string
+                                            type: object
                                           method:
                                             description: Method matches the HTTP method
-                                            type: boolean
+                                            type: object
                                           queryString:
                                             description: QueryString matches the query string
-                                            type: boolean
+                                            type: object
                                           singleHeader:
                                             description: SingleHeader matches a specific header by name
-                                            type: string
+                                            properties:
+                                              name:
+                                                description: Name - The name of the header to inspect
+                                                maxLength: 64
+                                                minLength: 1
+                                                type: string
+                                            required:
+                                              - name
+                                            type: object
                                           uriPath:
                                             description: UriPath matches the URI path
-                                            type: boolean
+                                            type: object
                                         type: object
                                       sensitivityLevel:
                                         default: LOW
@@ -4579,19 +5259,36 @@ spec:
                                         properties:
                                           body:
                                             description: Body matches the request body
-                                            type: boolean
+                                            properties:
+                                              oversizeHandling:
+                                                default: CONTINUE
+                                                description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                enum:
+                                                  - CONTINUE
+                                                  - MATCH
+                                                  - NO_MATCH
+                                                type: string
+                                            type: object
                                           method:
                                             description: Method matches the HTTP method
-                                            type: boolean
+                                            type: object
                                           queryString:
                                             description: QueryString matches the query string
-                                            type: boolean
+                                            type: object
                                           singleHeader:
                                             description: SingleHeader matches a specific header by name
-                                            type: string
+                                            properties:
+                                              name:
+                                                description: Name - The name of the header to inspect
+                                                maxLength: 64
+                                                minLength: 1
+                                                type: string
+                                            required:
+                                              - name
+                                            type: object
                                           uriPath:
                                             description: UriPath matches the URI path
-                                            type: boolean
+                                            type: object
                                         type: object
                                       textTransformations:
                                         description: TextTransformations - Transformations to apply before inspection
@@ -4702,19 +5399,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   positionalConstraint:
                                                     description: PositionalConstraint defines match location
@@ -4837,19 +5551,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   regexString:
                                                     description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -4921,19 +5652,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   size:
                                                     description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -4997,19 +5745,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   sensitivityLevel:
                                                     default: LOW
@@ -5072,19 +5837,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   textTransformations:
                                                     description: TextTransformations - Transformations to apply before inspection
@@ -5178,19 +5960,36 @@ spec:
                                           properties:
                                             body:
                                               description: Body matches the request body
-                                              type: boolean
+                                              properties:
+                                                oversizeHandling:
+                                                  default: CONTINUE
+                                                  description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                  enum:
+                                                    - CONTINUE
+                                                    - MATCH
+                                                    - NO_MATCH
+                                                  type: string
+                                              type: object
                                             method:
                                               description: Method matches the HTTP method
-                                              type: boolean
+                                              type: object
                                             queryString:
                                               description: QueryString matches the query string
-                                              type: boolean
+                                              type: object
                                             singleHeader:
                                               description: SingleHeader matches a specific header by name
-                                              type: string
+                                              properties:
+                                                name:
+                                                  description: Name - The name of the header to inspect
+                                                  maxLength: 64
+                                                  minLength: 1
+                                                  type: string
+                                              required:
+                                                - name
+                                              type: object
                                             uriPath:
                                               description: UriPath matches the URI path
-                                              type: boolean
+                                              type: object
                                           type: object
                                         positionalConstraint:
                                           description: PositionalConstraint defines match location
@@ -5353,19 +6152,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 positionalConstraint:
                                                   description: PositionalConstraint defines match location
@@ -5488,19 +6304,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 regexString:
                                                   description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -5572,19 +6405,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 size:
                                                   description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -5648,19 +6498,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 sensitivityLevel:
                                                   default: LOW
@@ -5723,19 +6590,36 @@ spec:
                                                   properties:
                                                     body:
                                                       description: Body matches the request body
-                                                      type: boolean
+                                                      properties:
+                                                        oversizeHandling:
+                                                          default: CONTINUE
+                                                          description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                          enum:
+                                                            - CONTINUE
+                                                            - MATCH
+                                                            - NO_MATCH
+                                                          type: string
+                                                      type: object
                                                     method:
                                                       description: Method matches the HTTP method
-                                                      type: boolean
+                                                      type: object
                                                     queryString:
                                                       description: QueryString matches the query string
-                                                      type: boolean
+                                                      type: object
                                                     singleHeader:
                                                       description: SingleHeader matches a specific header by name
-                                                      type: string
+                                                      properties:
+                                                        name:
+                                                          description: Name - The name of the header to inspect
+                                                          maxLength: 64
+                                                          minLength: 1
+                                                          type: string
+                                                      required:
+                                                        - name
+                                                      type: object
                                                     uriPath:
                                                       description: UriPath matches the URI path
-                                                      type: boolean
+                                                      type: object
                                                   type: object
                                                 textTransformations:
                                                   description: TextTransformations - Transformations to apply before inspection
@@ -5836,19 +6720,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   positionalConstraint:
                                                     description: PositionalConstraint defines match location
@@ -5971,19 +6872,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   regexString:
                                                     description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -6055,19 +6973,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   size:
                                                     description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -6131,19 +7066,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   sensitivityLevel:
                                                     default: LOW
@@ -6206,19 +7158,36 @@ spec:
                                                     properties:
                                                       body:
                                                         description: Body matches the request body
-                                                        type: boolean
+                                                        properties:
+                                                          oversizeHandling:
+                                                            default: CONTINUE
+                                                            description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                            enum:
+                                                              - CONTINUE
+                                                              - MATCH
+                                                              - NO_MATCH
+                                                            type: string
+                                                        type: object
                                                       method:
                                                         description: Method matches the HTTP method
-                                                        type: boolean
+                                                        type: object
                                                       queryString:
                                                         description: QueryString matches the query string
-                                                        type: boolean
+                                                        type: object
                                                       singleHeader:
                                                         description: SingleHeader matches a specific header by name
-                                                        type: string
+                                                        properties:
+                                                          name:
+                                                            description: Name - The name of the header to inspect
+                                                            maxLength: 64
+                                                            minLength: 1
+                                                            type: string
+                                                        required:
+                                                          - name
+                                                        type: object
                                                       uriPath:
                                                         description: UriPath matches the URI path
-                                                        type: boolean
+                                                        type: object
                                                     type: object
                                                   textTransformations:
                                                     description: TextTransformations - Transformations to apply before inspection
@@ -6280,19 +7249,36 @@ spec:
                                           properties:
                                             body:
                                               description: Body matches the request body
-                                              type: boolean
+                                              properties:
+                                                oversizeHandling:
+                                                  default: CONTINUE
+                                                  description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                  enum:
+                                                    - CONTINUE
+                                                    - MATCH
+                                                    - NO_MATCH
+                                                  type: string
+                                              type: object
                                             method:
                                               description: Method matches the HTTP method
-                                              type: boolean
+                                              type: object
                                             queryString:
                                               description: QueryString matches the query string
-                                              type: boolean
+                                              type: object
                                             singleHeader:
                                               description: SingleHeader matches a specific header by name
-                                              type: string
+                                              properties:
+                                                name:
+                                                  description: Name - The name of the header to inspect
+                                                  maxLength: 64
+                                                  minLength: 1
+                                                  type: string
+                                              required:
+                                                - name
+                                              type: object
                                             uriPath:
                                               description: UriPath matches the URI path
-                                              type: boolean
+                                              type: object
                                           type: object
                                         regexString:
                                           description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -6364,19 +7350,36 @@ spec:
                                           properties:
                                             body:
                                               description: Body matches the request body
-                                              type: boolean
+                                              properties:
+                                                oversizeHandling:
+                                                  default: CONTINUE
+                                                  description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                  enum:
+                                                    - CONTINUE
+                                                    - MATCH
+                                                    - NO_MATCH
+                                                  type: string
+                                              type: object
                                             method:
                                               description: Method matches the HTTP method
-                                              type: boolean
+                                              type: object
                                             queryString:
                                               description: QueryString matches the query string
-                                              type: boolean
+                                              type: object
                                             singleHeader:
                                               description: SingleHeader matches a specific header by name
-                                              type: string
+                                              properties:
+                                                name:
+                                                  description: Name - The name of the header to inspect
+                                                  maxLength: 64
+                                                  minLength: 1
+                                                  type: string
+                                              required:
+                                                - name
+                                              type: object
                                             uriPath:
                                               description: UriPath matches the URI path
-                                              type: boolean
+                                              type: object
                                           type: object
                                         size:
                                           description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -6440,19 +7443,36 @@ spec:
                                           properties:
                                             body:
                                               description: Body matches the request body
-                                              type: boolean
+                                              properties:
+                                                oversizeHandling:
+                                                  default: CONTINUE
+                                                  description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                  enum:
+                                                    - CONTINUE
+                                                    - MATCH
+                                                    - NO_MATCH
+                                                  type: string
+                                              type: object
                                             method:
                                               description: Method matches the HTTP method
-                                              type: boolean
+                                              type: object
                                             queryString:
                                               description: QueryString matches the query string
-                                              type: boolean
+                                              type: object
                                             singleHeader:
                                               description: SingleHeader matches a specific header by name
-                                              type: string
+                                              properties:
+                                                name:
+                                                  description: Name - The name of the header to inspect
+                                                  maxLength: 64
+                                                  minLength: 1
+                                                  type: string
+                                              required:
+                                                - name
+                                              type: object
                                             uriPath:
                                               description: UriPath matches the URI path
-                                              type: boolean
+                                              type: object
                                           type: object
                                         sensitivityLevel:
                                           default: LOW
@@ -6515,19 +7535,36 @@ spec:
                                           properties:
                                             body:
                                               description: Body matches the request body
-                                              type: boolean
+                                              properties:
+                                                oversizeHandling:
+                                                  default: CONTINUE
+                                                  description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                                  enum:
+                                                    - CONTINUE
+                                                    - MATCH
+                                                    - NO_MATCH
+                                                  type: string
+                                              type: object
                                             method:
                                               description: Method matches the HTTP method
-                                              type: boolean
+                                              type: object
                                             queryString:
                                               description: QueryString matches the query string
-                                              type: boolean
+                                              type: object
                                             singleHeader:
                                               description: SingleHeader matches a specific header by name
-                                              type: string
+                                              properties:
+                                                name:
+                                                  description: Name - The name of the header to inspect
+                                                  maxLength: 64
+                                                  minLength: 1
+                                                  type: string
+                                              required:
+                                                - name
+                                              type: object
                                             uriPath:
                                               description: UriPath matches the URI path
-                                              type: boolean
+                                              type: object
                                           type: object
                                         textTransformations:
                                           description: TextTransformations - Transformations to apply before inspection
@@ -6618,19 +7655,36 @@ spec:
                                 properties:
                                   body:
                                     description: Body matches the request body
-                                    type: boolean
+                                    properties:
+                                      oversizeHandling:
+                                        default: CONTINUE
+                                        description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                        enum:
+                                          - CONTINUE
+                                          - MATCH
+                                          - NO_MATCH
+                                        type: string
+                                    type: object
                                   method:
                                     description: Method matches the HTTP method
-                                    type: boolean
+                                    type: object
                                   queryString:
                                     description: QueryString matches the query string
-                                    type: boolean
+                                    type: object
                                   singleHeader:
                                     description: SingleHeader matches a specific header by name
-                                    type: string
+                                    properties:
+                                      name:
+                                        description: Name - The name of the header to inspect
+                                        maxLength: 64
+                                        minLength: 1
+                                        type: string
+                                    required:
+                                      - name
+                                    type: object
                                   uriPath:
                                     description: UriPath matches the URI path
-                                    type: boolean
+                                    type: object
                                 type: object
                               regexString:
                                 description: RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
@@ -6702,19 +7756,36 @@ spec:
                                 properties:
                                   body:
                                     description: Body matches the request body
-                                    type: boolean
+                                    properties:
+                                      oversizeHandling:
+                                        default: CONTINUE
+                                        description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                        enum:
+                                          - CONTINUE
+                                          - MATCH
+                                          - NO_MATCH
+                                        type: string
+                                    type: object
                                   method:
                                     description: Method matches the HTTP method
-                                    type: boolean
+                                    type: object
                                   queryString:
                                     description: QueryString matches the query string
-                                    type: boolean
+                                    type: object
                                   singleHeader:
                                     description: SingleHeader matches a specific header by name
-                                    type: string
+                                    properties:
+                                      name:
+                                        description: Name - The name of the header to inspect
+                                        maxLength: 64
+                                        minLength: 1
+                                        type: string
+                                    required:
+                                      - name
+                                    type: object
                                   uriPath:
                                     description: UriPath matches the URI path
-                                    type: boolean
+                                    type: object
                                 type: object
                               size:
                                 description: Size - Size in bytes to compare against (0 to 21,474,836,480)
@@ -6778,19 +7849,36 @@ spec:
                                 properties:
                                   body:
                                     description: Body matches the request body
-                                    type: boolean
+                                    properties:
+                                      oversizeHandling:
+                                        default: CONTINUE
+                                        description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                        enum:
+                                          - CONTINUE
+                                          - MATCH
+                                          - NO_MATCH
+                                        type: string
+                                    type: object
                                   method:
                                     description: Method matches the HTTP method
-                                    type: boolean
+                                    type: object
                                   queryString:
                                     description: QueryString matches the query string
-                                    type: boolean
+                                    type: object
                                   singleHeader:
                                     description: SingleHeader matches a specific header by name
-                                    type: string
+                                    properties:
+                                      name:
+                                        description: Name - The name of the header to inspect
+                                        maxLength: 64
+                                        minLength: 1
+                                        type: string
+                                    required:
+                                      - name
+                                    type: object
                                   uriPath:
                                     description: UriPath matches the URI path
-                                    type: boolean
+                                    type: object
                                 type: object
                               sensitivityLevel:
                                 default: LOW
@@ -6853,19 +7941,36 @@ spec:
                                 properties:
                                   body:
                                     description: Body matches the request body
-                                    type: boolean
+                                    properties:
+                                      oversizeHandling:
+                                        default: CONTINUE
+                                        description: OversizeHandling behavior (CONTINUE/MATCH/NO_MATCH)
+                                        enum:
+                                          - CONTINUE
+                                          - MATCH
+                                          - NO_MATCH
+                                        type: string
+                                    type: object
                                   method:
                                     description: Method matches the HTTP method
-                                    type: boolean
+                                    type: object
                                   queryString:
                                     description: QueryString matches the query string
-                                    type: boolean
+                                    type: object
                                   singleHeader:
                                     description: SingleHeader matches a specific header by name
-                                    type: string
+                                    properties:
+                                      name:
+                                        description: Name - The name of the header to inspect
+                                        maxLength: 64
+                                        minLength: 1
+                                        type: string
+                                    required:
+                                      - name
+                                    type: object
                                   uriPath:
                                     description: UriPath matches the URI path
-                                    type: boolean
+                                    type: object
                                 type: object
                               textTransformations:
                                 description: TextTransformations - Transformations to apply before inspection

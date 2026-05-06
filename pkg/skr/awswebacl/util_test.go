@@ -283,7 +283,7 @@ func TestConvertByteMatchStatement(t *testing.T) {
 			SearchString:         "../",
 			PositionalConstraint: "CONTAINS",
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				QueryString: true,
+				QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "NONE"},
@@ -306,7 +306,7 @@ func TestConvertByteMatchStatement(t *testing.T) {
 			SearchString:         "admin",
 			PositionalConstraint: "STARTS_WITH",
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				UriPath: true,
+				UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "LOWERCASE"},
@@ -324,7 +324,7 @@ func TestConvertByteMatchStatement(t *testing.T) {
 
 func TestConvertFieldToMatch(t *testing.T) {
 	t.Run("UriPath", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{UriPath: true}
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{}}
 		result, err := convertFieldToMatch(field)
 		assert.NoError(t, err)
 		assert.NotNil(t, result.UriPath)
@@ -332,7 +332,7 @@ func TestConvertFieldToMatch(t *testing.T) {
 	})
 
 	t.Run("QueryString", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{QueryString: true}
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{}}
 		result, err := convertFieldToMatch(field)
 		assert.NoError(t, err)
 		assert.NotNil(t, result.QueryString)
@@ -340,14 +340,14 @@ func TestConvertFieldToMatch(t *testing.T) {
 	})
 
 	t.Run("Method", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{Method: true}
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{Method: &cloudresourcesv1beta1.AwsWebAclMethod{}}
 		result, err := convertFieldToMatch(field)
 		assert.NoError(t, err)
 		assert.NotNil(t, result.Method)
 	})
 
 	t.Run("SingleHeader", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{SingleHeader: "user-agent"}
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{SingleHeader: &cloudresourcesv1beta1.AwsWebAclSingleHeader{Name: "user-agent"}}
 		result, err := convertFieldToMatch(field)
 		assert.NoError(t, err)
 		assert.NotNil(t, result.SingleHeader)
@@ -355,11 +355,35 @@ func TestConvertFieldToMatch(t *testing.T) {
 	})
 
 	t.Run("Body", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{Body: true}
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{Body: &cloudresourcesv1beta1.AwsWebAclBody{}}
 		result, err := convertFieldToMatch(field)
 		assert.NoError(t, err)
 		assert.NotNil(t, result.Body)
 		assert.Equal(t, wafv2types.OversizeHandlingContinue, result.Body.OversizeHandling)
+	})
+
+	t.Run("Body with OversizeHandling MATCH", func(t *testing.T) {
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+			Body: &cloudresourcesv1beta1.AwsWebAclBody{
+				OversizeHandling: "MATCH",
+			},
+		}
+		result, err := convertFieldToMatch(field)
+		assert.NoError(t, err)
+		assert.NotNil(t, result.Body)
+		assert.Equal(t, wafv2types.OversizeHandlingMatch, result.Body.OversizeHandling)
+	})
+
+	t.Run("Body with OversizeHandling NO_MATCH", func(t *testing.T) {
+		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+			Body: &cloudresourcesv1beta1.AwsWebAclBody{
+				OversizeHandling: "NO_MATCH",
+			},
+		}
+		result, err := convertFieldToMatch(field)
+		assert.NoError(t, err)
+		assert.NotNil(t, result.Body)
+		assert.Equal(t, wafv2types.OversizeHandlingNoMatch, result.Body.OversizeHandling)
 	})
 }
 
@@ -670,7 +694,7 @@ func TestConvertSizeConstraintStatement(t *testing.T) {
 			ComparisonOperator: "GT",
 			Size:               8192,
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				QueryString: true,
+				QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "NONE"},
@@ -691,7 +715,7 @@ func TestConvertSizeConstraintStatement(t *testing.T) {
 			ComparisonOperator: "LE",
 			Size:               1024,
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				Body: true,
+				Body: &cloudresourcesv1beta1.AwsWebAclBody{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "COMPRESS_WHITE_SPACE"},
@@ -714,7 +738,7 @@ func TestConvertStatementWithSizeConstraint(t *testing.T) {
 				ComparisonOperator: "GT",
 				Size:               10000,
 				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-					UriPath: true,
+					UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 				},
 				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 					{Priority: 0, Type: "URL_DECODE"},
@@ -735,7 +759,7 @@ func TestConvertSqliMatchStatement(t *testing.T) {
 	t.Run("SqliMatch with LOW sensitivity", func(t *testing.T) {
 		sqliMatch := &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				QueryString: true,
+				QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "URL_DECODE"},
@@ -755,7 +779,7 @@ func TestConvertSqliMatchStatement(t *testing.T) {
 	t.Run("SqliMatch with HIGH sensitivity", func(t *testing.T) {
 		sqliMatch := &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				Body: true,
+				Body: &cloudresourcesv1beta1.AwsWebAclBody{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "NONE"},
@@ -773,7 +797,7 @@ func TestConvertSqliMatchStatement(t *testing.T) {
 	t.Run("SqliMatch with default sensitivity (empty string)", func(t *testing.T) {
 		sqliMatch := &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				UriPath: true,
+				UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "LOWERCASE"},
@@ -793,7 +817,7 @@ func TestConvertStatementWithSqliMatch(t *testing.T) {
 		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			SqliMatch: &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
 				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-					QueryString: true,
+					QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
 				},
 				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 					{Priority: 0, Type: "URL_DECODE"},
@@ -814,7 +838,7 @@ func TestConvertXssMatchStatement(t *testing.T) {
 	t.Run("XssMatch with QueryString", func(t *testing.T) {
 		xssMatch := &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				QueryString: true,
+				QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "URL_DECODE"},
@@ -834,7 +858,7 @@ func TestConvertXssMatchStatement(t *testing.T) {
 	t.Run("XssMatch with Body", func(t *testing.T) {
 		xssMatch := &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				Body: true,
+				Body: &cloudresourcesv1beta1.AwsWebAclBody{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "NONE"},
@@ -851,7 +875,7 @@ func TestConvertXssMatchStatement(t *testing.T) {
 	t.Run("XssMatch with UriPath", func(t *testing.T) {
 		xssMatch := &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				UriPath: true,
+				UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "LOWERCASE"},
@@ -872,7 +896,7 @@ func TestConvertStatementWithXssMatch(t *testing.T) {
 		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
 			XssMatch: &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
 				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-					QueryString: true,
+					QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
 				},
 				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 					{Priority: 0, Type: "URL_DECODE"},
@@ -894,7 +918,7 @@ func TestConvertRegexMatchStatement(t *testing.T) {
 		regexMatch := &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
 			RegexString: "^/api/v[0-9]+/.*$",
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				UriPath: true,
+				UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "LOWERCASE"},
@@ -913,7 +937,7 @@ func TestConvertRegexMatchStatement(t *testing.T) {
 		regexMatch := &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
 			RegexString: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				Body: true,
+				Body: &cloudresourcesv1beta1.AwsWebAclBody{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "NONE"},
@@ -931,7 +955,7 @@ func TestConvertRegexMatchStatement(t *testing.T) {
 		regexMatch := &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
 			RegexString: "(?i)(admin|root|superuser)",
 			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				QueryString: true,
+				QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
 			},
 			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 				{Priority: 0, Type: "URL_DECODE"},
@@ -952,7 +976,7 @@ func TestConvertStatementWithRegexMatch(t *testing.T) {
 			RegexMatch: &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
 				RegexString: "^/admin/.*$",
 				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-					UriPath: true,
+					UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 				},
 				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
 					{Priority: 0, Type: "LOWERCASE"},
