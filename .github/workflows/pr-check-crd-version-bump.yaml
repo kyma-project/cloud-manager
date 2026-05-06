@@ -8,6 +8,7 @@ on:
       - 'api/cloud-resources/v1beta1/**'
       - 'config/crd/bases/cloud-resources.kyma-project.io_*.yaml'
       - 'config/patchAfterMakeManifests.sh'
+      - '.github/workflows/pr-check-crd-version-bump.yaml'
 
 jobs:
   check-crd-version-bump:
