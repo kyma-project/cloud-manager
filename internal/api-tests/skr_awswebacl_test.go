@@ -101,7 +101,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 						CountryCodes: []string{"US"},
 					},
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit: 2000,
+						Limit:            2000,
+						AggregateKeyType: "IP",
 					},
 				},
 			}),
@@ -144,7 +145,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit: 2000,
+						Limit:            2000,
+						AggregateKeyType: "IP",
 					},
 				},
 			}),
@@ -399,7 +401,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Action:   cloudresourcesv1beta1.RuleActionCount(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit: 1000,
+						Limit:            1000,
+						AggregateKeyType: "IP",
 					},
 				},
 			}),
@@ -502,7 +505,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit: 9,
+						Limit:            9,
+						AggregateKeyType: "IP",
 					},
 				},
 			}),
@@ -517,7 +521,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit: 100,
+						Limit:            100,
+						AggregateKeyType: "IP",
 					},
 				},
 			}),
@@ -531,7 +536,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 				Action:   cloudresourcesv1beta1.RuleActionBlock(),
 				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit: 2000,
+						Limit:            2000,
+						AggregateKeyType: "IP",
 					},
 				},
 			}),
@@ -569,7 +575,8 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 					Action:   cloudresourcesv1beta1.RuleActionBlock(),
 					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
 						RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-							Limit: 1000,
+							Limit:            1000,
+							AggregateKeyType: "IP",
 						},
 					},
 				},

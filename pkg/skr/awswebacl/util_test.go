@@ -1184,3 +1184,167 @@ func TestRateBasedStatementNestingValidation(t *testing.T) {
 	// ❌ stmt.NotStatement.Statement.RateBased - compile error
 	// ❌ stmt.AndStatement.Statements[0].NotStatement.Statement.RateBased - compile error
 }
+
+func TestConvertRateBasedStatement(t *testing.T) {
+	t.Run("Minimal rate-based (IP aggregation)", func(t *testing.T) {
+		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+			Limit:            100,
+			AggregateKeyType: "IP",
+		}
+		result, err := convertRateBasedStatement(rate)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(100), *result.Limit)
+		assert.Equal(t, wafv2types.RateBasedStatementAggregateKeyTypeIp, result.AggregateKeyType)
+		assert.Equal(t, int64(300), result.EvaluationWindowSec) // Default
+	})
+
+	t.Run("FORWARDED_IP aggregation", func(t *testing.T) {
+		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+			Limit:            200,
+			AggregateKeyType: "FORWARDED_IP",
+			ForwardedIPConfig: &cloudresourcesv1beta1.AwsWebAclForwardedIPConfig{
+				HeaderName:       "X-Forwarded-For",
+				FallbackBehavior: "MATCH",
+			},
+		}
+		result, err := convertRateBasedStatement(rate)
+		assert.NoError(t, err)
+		assert.Equal(t, wafv2types.RateBasedStatementAggregateKeyTypeForwardedIp, result.AggregateKeyType)
+		assert.NotNil(t, result.ForwardedIPConfig)
+		assert.Equal(t, "X-Forwarded-For", *result.ForwardedIPConfig.HeaderName)
+	})
+
+	t.Run("Custom evaluation window", func(t *testing.T) {
+		evalWindow := int32(60)
+		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+			Limit:               100,
+			AggregateKeyType:    "IP",
+			EvaluationWindowSec: &evalWindow,
+		}
+		result, err := convertRateBasedStatement(rate)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(60), result.EvaluationWindowSec)
+	})
+
+	t.Run("CUSTOM_KEYS with header", func(t *testing.T) {
+		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+			Limit:            100,
+			AggregateKeyType: "CUSTOM_KEYS",
+			CustomKeys: []cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey{
+				{
+					Header: &cloudresourcesv1beta1.AwsWebAclRateLimitHeader{
+						Name: "X-API-Key",
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "LOWERCASE"},
+						},
+					},
+				},
+			},
+		}
+		result, err := convertRateBasedStatement(rate)
+		assert.NoError(t, err)
+		assert.Equal(t, wafv2types.RateBasedStatementAggregateKeyTypeCustomKeys, result.AggregateKeyType)
+		assert.Len(t, result.CustomKeys, 1)
+		assert.NotNil(t, result.CustomKeys[0].Header)
+		assert.Equal(t, "X-API-Key", *result.CustomKeys[0].Header.Name)
+	})
+
+	t.Run("CUSTOM_KEYS with multiple keys", func(t *testing.T) {
+		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+			Limit:            100,
+			AggregateKeyType: "CUSTOM_KEYS",
+			CustomKeys: []cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey{
+				{
+					Header: &cloudresourcesv1beta1.AwsWebAclRateLimitHeader{
+						Name: "X-User-ID",
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "NONE"},
+						},
+					},
+				},
+				{
+					HTTPMethod: &cloudresourcesv1beta1.AwsWebAclRateLimitHTTPMethod{},
+				},
+			},
+		}
+		result, err := convertRateBasedStatement(rate)
+		assert.NoError(t, err)
+		assert.Len(t, result.CustomKeys, 2)
+		assert.NotNil(t, result.CustomKeys[0].Header)
+		assert.NotNil(t, result.CustomKeys[1].HTTPMethod)
+	})
+
+	t.Run("CONSTANT aggregation", func(t *testing.T) {
+		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+			Limit:            1000,
+			AggregateKeyType: "CONSTANT",
+		}
+		result, err := convertRateBasedStatement(rate)
+		assert.NoError(t, err)
+		assert.Equal(t, wafv2types.RateBasedStatementAggregateKeyTypeConstant, result.AggregateKeyType)
+	})
+
+	t.Run("CUSTOM_KEYS with Cookie", func(t *testing.T) {
+		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+			Limit:            500,
+			AggregateKeyType: "CUSTOM_KEYS",
+			CustomKeys: []cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey{
+				{
+					Cookie: &cloudresourcesv1beta1.AwsWebAclRateLimitCookie{
+						Name: "session_id",
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "NONE"},
+						},
+					},
+				},
+			},
+		}
+		result, err := convertRateBasedStatement(rate)
+		assert.NoError(t, err)
+		assert.Len(t, result.CustomKeys, 1)
+		assert.NotNil(t, result.CustomKeys[0].Cookie)
+		assert.Equal(t, "session_id", *result.CustomKeys[0].Cookie.Name)
+	})
+
+	t.Run("CUSTOM_KEYS with QueryArgument", func(t *testing.T) {
+		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+			Limit:            200,
+			AggregateKeyType: "CUSTOM_KEYS",
+			CustomKeys: []cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey{
+				{
+					QueryArgument: &cloudresourcesv1beta1.AwsWebAclRateLimitQueryArgument{
+						Name: "user_id",
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "URL_DECODE"},
+						},
+					},
+				},
+			},
+		}
+		result, err := convertRateBasedStatement(rate)
+		assert.NoError(t, err)
+		assert.Len(t, result.CustomKeys, 1)
+		assert.NotNil(t, result.CustomKeys[0].QueryArgument)
+		assert.Equal(t, "user_id", *result.CustomKeys[0].QueryArgument.Name)
+	})
+
+	t.Run("CUSTOM_KEYS with UriPath", func(t *testing.T) {
+		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+			Limit:            300,
+			AggregateKeyType: "CUSTOM_KEYS",
+			CustomKeys: []cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey{
+				{
+					UriPath: &cloudresourcesv1beta1.AwsWebAclRateLimitUriPath{
+						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+							{Priority: 0, Type: "LOWERCASE"},
+						},
+					},
+				},
+			},
+		}
+		result, err := convertRateBasedStatement(rate)
+		assert.NoError(t, err)
+		assert.Len(t, result.CustomKeys, 1)
+		assert.NotNil(t, result.CustomKeys[0].UriPath)
+	})
+}

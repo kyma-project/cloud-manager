@@ -201,16 +201,124 @@ func convertGeoMatchStatement(geo *cloudresourcesv1beta1.AwsWebAclGeoMatchStatem
 
 func convertRateBasedStatement(rate *cloudresourcesv1beta1.AwsWebAclRateBasedStatement) (*wafv2types.RateBasedStatement, error) {
 	stmt := &wafv2types.RateBasedStatement{
-		Limit:               new(rate.Limit),
-		AggregateKeyType:    wafv2types.RateBasedStatementAggregateKeyTypeIp,
-		EvaluationWindowSec: 300, // 5 minutes
+		Limit:            aws.Int64(rate.Limit),
+		AggregateKeyType: wafv2types.RateBasedStatementAggregateKeyType(rate.AggregateKeyType),
 	}
 
+	// EvaluationWindowSec (default 300 if not specified)
+	if rate.EvaluationWindowSec != nil {
+		stmt.EvaluationWindowSec = int64(*rate.EvaluationWindowSec)
+	} else {
+		stmt.EvaluationWindowSec = 300
+	}
+
+	// ForwardedIPConfig
 	if rate.ForwardedIPConfig != nil {
 		stmt.ForwardedIPConfig = convertForwardedIPConfig(rate.ForwardedIPConfig)
 	}
 
+	// TODO: ScopeDownStatement conversion requires Statement1->Statement conversion
+	// This will be implemented separately as it needs a dedicated conversion function
+
+	// CustomKeys (required when AggregateKeyType=CUSTOM_KEYS)
+	if len(rate.CustomKeys) > 0 {
+		stmt.CustomKeys = make([]wafv2types.RateBasedStatementCustomKey, len(rate.CustomKeys))
+		for i, ck := range rate.CustomKeys {
+			converted, err := convertCustomKey(ck)
+			if err != nil {
+				return nil, fmt.Errorf("invalid customKey[%d]: %w", i, err)
+			}
+			stmt.CustomKeys[i] = *converted
+		}
+	}
+
 	return stmt, nil
+}
+
+func convertCustomKey(ck cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey) (*wafv2types.RateBasedStatementCustomKey, error) {
+	result := &wafv2types.RateBasedStatementCustomKey{}
+
+	if ck.Header != nil {
+		transforms, err := convertTextTransformations(ck.Header.TextTransformations)
+		if err != nil {
+			return nil, err
+		}
+		result.Header = &wafv2types.RateLimitHeader{
+			Name:                aws.String(ck.Header.Name),
+			TextTransformations: transforms,
+		}
+		return result, nil
+	}
+
+	if ck.Cookie != nil {
+		transforms, err := convertTextTransformations(ck.Cookie.TextTransformations)
+		if err != nil {
+			return nil, err
+		}
+		result.Cookie = &wafv2types.RateLimitCookie{
+			Name:                aws.String(ck.Cookie.Name),
+			TextTransformations: transforms,
+		}
+		return result, nil
+	}
+
+	if ck.QueryArgument != nil {
+		transforms, err := convertTextTransformations(ck.QueryArgument.TextTransformations)
+		if err != nil {
+			return nil, err
+		}
+		result.QueryArgument = &wafv2types.RateLimitQueryArgument{
+			Name:                aws.String(ck.QueryArgument.Name),
+			TextTransformations: transforms,
+		}
+		return result, nil
+	}
+
+	if ck.QueryString != nil {
+		transforms, err := convertTextTransformations(ck.QueryString.TextTransformations)
+		if err != nil {
+			return nil, err
+		}
+		result.QueryString = &wafv2types.RateLimitQueryString{
+			TextTransformations: transforms,
+		}
+		return result, nil
+	}
+
+	if ck.HTTPMethod != nil {
+		result.HTTPMethod = &wafv2types.RateLimitHTTPMethod{}
+		return result, nil
+	}
+
+	if ck.ForwardedIP != nil {
+		result.ForwardedIP = &wafv2types.RateLimitForwardedIP{}
+		return result, nil
+	}
+
+	if ck.IP != nil {
+		result.IP = &wafv2types.RateLimitIP{}
+		return result, nil
+	}
+
+	if ck.LabelNamespace != nil {
+		result.LabelNamespace = &wafv2types.RateLimitLabelNamespace{
+			Namespace: aws.String(ck.LabelNamespace.Namespace),
+		}
+		return result, nil
+	}
+
+	if ck.UriPath != nil {
+		transforms, err := convertTextTransformations(ck.UriPath.TextTransformations)
+		if err != nil {
+			return nil, err
+		}
+		result.UriPath = &wafv2types.RateLimitUriPath{
+			TextTransformations: transforms,
+		}
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("no custom key type specified")
 }
 
 func convertManagedRuleGroupStatement(managed *cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement) (*wafv2types.ManagedRuleGroupStatement, error) {

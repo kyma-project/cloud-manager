@@ -399,16 +399,151 @@ type AwsWebAclForwardedIPConfig struct {
 	FallbackBehavior string `json:"fallbackBehavior"`
 }
 
+// +kubebuilder:validation:XValidation:rule="self.aggregateKeyType != 'CUSTOM_KEYS' || size(self.customKeys) > 0",message="customKeys is required when aggregateKeyType is CUSTOM_KEYS"
 type AwsWebAclRateBasedStatement struct {
-	// Limit - Max requests per 5 minutes from a single IP
+	// Limit - Max requests per evaluation window
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=10
 	// +kubebuilder:validation:Maximum=2000000000
 	Limit int64 `json:"limit"`
 
+	// AggregateKeyType - How to aggregate rate-based rule counts (REQUIRED by AWS)
+	// IP: Each IP address
+	// FORWARDED_IP: IP from X-Forwarded-For header
+	// CUSTOM_KEYS: Custom aggregation keys
+	// CONSTANT: Single count for all requests
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=IP;FORWARDED_IP;CUSTOM_KEYS;CONSTANT
+	AggregateKeyType string `json:"aggregateKeyType"`
+
+	// EvaluationWindowSec - Time window for rate limiting (60, 120, 300, or 600 seconds)
+	// +optional
+	// +kubebuilder:validation:Enum=60;120;300;600
+	// +kubebuilder:default=300
+	EvaluationWindowSec *int32 `json:"evaluationWindowSec,omitempty"`
+
 	// ForwardedIPConfig for rate limiting based on forwarded IP headers
 	// +optional
 	ForwardedIPConfig *AwsWebAclForwardedIPConfig `json:"forwardedIPConfig,omitempty"`
+
+	// ScopeDownStatement - Narrows the scope of requests that are evaluated
+	// +optional
+	ScopeDownStatement *AwsWebAclStatement1 `json:"scopeDownStatement,omitempty"`
+
+	// CustomKeys - Custom aggregation keys (required when AggregateKeyType=CUSTOM_KEYS)
+	// +optional
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=5
+	CustomKeys []AwsWebAclRateBasedStatementCustomKey `json:"customKeys,omitempty"`
+}
+
+// AwsWebAclRateBasedStatementCustomKey specifies a custom aggregation key
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type AwsWebAclRateBasedStatementCustomKey struct {
+	// Header aggregates by HTTP header value
+	// +optional
+	Header *AwsWebAclRateLimitHeader `json:"header,omitempty"`
+
+	// Cookie aggregates by cookie value
+	// +optional
+	Cookie *AwsWebAclRateLimitCookie `json:"cookie,omitempty"`
+
+	// QueryArgument aggregates by query parameter value
+	// +optional
+	QueryArgument *AwsWebAclRateLimitQueryArgument `json:"queryArgument,omitempty"`
+
+	// QueryString aggregates by entire query string
+	// +optional
+	QueryString *AwsWebAclRateLimitQueryString `json:"queryString,omitempty"`
+
+	// HTTPMethod aggregates by HTTP method
+	// +optional
+	HTTPMethod *AwsWebAclRateLimitHTTPMethod `json:"httpMethod,omitempty"`
+
+	// ForwardedIP aggregates by forwarded IP address
+	// +optional
+	ForwardedIP *AwsWebAclRateLimitForwardedIP `json:"forwardedIP,omitempty"`
+
+	// IP aggregates by source IP address
+	// +optional
+	IP *AwsWebAclRateLimitIP `json:"ip,omitempty"`
+
+	// LabelNamespace aggregates by label namespace
+	// +optional
+	LabelNamespace *AwsWebAclRateLimitLabelNamespace `json:"labelNamespace,omitempty"`
+
+	// UriPath aggregates by URI path
+	// +optional
+	UriPath *AwsWebAclRateLimitUriPath `json:"uriPath,omitempty"`
+}
+
+type AwsWebAclRateLimitHeader struct {
+	// Name - Header name
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=64
+	Name string `json:"name"`
+
+	// TextTransformations - Text transformations to apply
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
+}
+
+type AwsWebAclRateLimitCookie struct {
+	// Name - Cookie name
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=64
+	Name string `json:"name"`
+
+	// TextTransformations - Text transformations to apply
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
+}
+
+type AwsWebAclRateLimitQueryArgument struct {
+	// Name - Query parameter name
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=30
+	Name string `json:"name"`
+
+	// TextTransformations - Text transformations to apply
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
+}
+
+type AwsWebAclRateLimitQueryString struct {
+	// TextTransformations - Text transformations to apply
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
+}
+
+type AwsWebAclRateLimitHTTPMethod struct {
+}
+
+type AwsWebAclRateLimitForwardedIP struct {
+}
+
+type AwsWebAclRateLimitIP struct {
+}
+
+type AwsWebAclRateLimitLabelNamespace struct {
+	// Namespace - Label namespace
+	// +kubebuilder:validation:Required
+	Namespace string `json:"namespace"`
+}
+
+type AwsWebAclRateLimitUriPath struct {
+	// TextTransformations - Text transformations to apply
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
 }
 
 // +kubebuilder:validation:XValidation:rule="self.vendorName == 'AWS' && (self.name == 'AWSManagedRulesCommonRuleSet' || self.name == 'AWSManagedRulesKnownBadInputsRuleSet' || self.name == 'AWSManagedRulesSQLiRuleSet' || self.name == 'AWSManagedRulesLinuxRuleSet' || self.name == 'AWSManagedRulesUnixRuleSet')", message="Only free AWS managed rules are supported: AWSManagedRulesCommonRuleSet, AWSManagedRulesKnownBadInputsRuleSet, AWSManagedRulesSQLiRuleSet, AWSManagedRulesLinuxRuleSet, AWSManagedRulesUnixRuleSet. Paid AWS rules and marketplace vendor rules require subscriptions in the service provider's AWS account."
