@@ -211,3 +211,7 @@ type SapNfsVolumeList struct {
 func init() {
 	SchemeBuilder.Register(&SapNfsVolume{}, &SapNfsVolumeList{})
 }
+
+func foobar() {
+
+}
