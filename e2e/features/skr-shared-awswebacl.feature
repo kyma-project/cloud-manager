@@ -60,6 +60,7 @@ Feature: AwsWebAcl feature
             statement:
               rateBased:
                 limit: 2000
+                aggregateKeyType: IP
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: rate-limit-per-ip
@@ -75,7 +76,7 @@ Feature: AwsWebAcl feature
                 searchString: "../"
                 positionalConstraint: CONTAINS
                 fieldToMatch:
-                  queryString: true
+                  queryString: {}
                 textTransformations:
                   - priority: 0
                     type: URL_DECODE
@@ -94,7 +95,8 @@ Feature: AwsWebAcl feature
                 searchString: "sqlmap"
                 positionalConstraint: CONTAINS
                 fieldToMatch:
-                  singleHeader: "user-agent"
+                  singleHeader:
+                    name: "user-agent"
                 textTransformations:
                   - priority: 0
                     type: LOWERCASE
@@ -113,7 +115,7 @@ Feature: AwsWebAcl feature
                 searchString: "/admin"
                 positionalConstraint: STARTS_WITH
                 fieldToMatch:
-                  uriPath: true
+                  uriPath: {}
                 textTransformations:
                   - priority: 0
                     type: LOWERCASE
@@ -132,7 +134,7 @@ Feature: AwsWebAcl feature
                 comparisonOperator: GT
                 size: 8192
                 fieldToMatch:
-                  queryString: true
+                  queryString: {}
                 textTransformations:
                   - priority: 0
                     type: URL_DECODE
@@ -149,7 +151,7 @@ Feature: AwsWebAcl feature
             statement:
               sqliMatch:
                 fieldToMatch:
-                  queryString: true
+                  queryString: {}
                 textTransformations:
                   - priority: 0
                     type: URL_DECODE
@@ -169,7 +171,7 @@ Feature: AwsWebAcl feature
             statement:
               xssMatch:
                 fieldToMatch:
-                  queryString: true
+                  queryString: {}
                 textTransformations:
                   - priority: 0
                     type: URL_DECODE
@@ -189,7 +191,7 @@ Feature: AwsWebAcl feature
               regexMatch:
                 regexString: "^/(admin|root|config|backup)/.*$"
                 fieldToMatch:
-                  uriPath: true
+                  uriPath: {}
                 textTransformations:
                   - priority: 0
                     type: LOWERCASE
@@ -286,6 +288,7 @@ Feature: AwsWebAcl feature
             statement:
               rateBased:
                 limit: 500
+                aggregateKeyType: IP
             challengeConfig:
               immunityTime: 600
             visibilityConfig:
@@ -303,7 +306,7 @@ Feature: AwsWebAcl feature
                 searchString: "/api"
                 positionalConstraint: STARTS_WITH
                 fieldToMatch:
-                  uriPath: true
+                  uriPath: {}
                 textTransformations:
                   - priority: 0
                     type: LOWERCASE

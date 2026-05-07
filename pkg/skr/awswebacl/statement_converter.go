@@ -165,12 +165,6 @@ func (w *statement1Wrapper) ToWafStatement() (*wafv2types.Statement, error) {
 
 	// Count how many statement types are set
 	count := 0
-	if w.stmt.AndStatement != nil {
-		count++
-	}
-	if w.stmt.OrStatement != nil {
-		count++
-	}
 	if w.stmt.NotStatement != nil {
 		count++
 	}
@@ -207,29 +201,7 @@ func (w *statement1Wrapper) ToWafStatement() (*wafv2types.Statement, error) {
 		return nil, fmt.Errorf("level 1 statement must have exactly one condition set, found %d", count)
 	}
 
-	// Logical operators
-	if w.stmt.AndStatement != nil {
-		andStmt, err := convertLogicalAnd(w.stmt.AndStatement.Statements, func(s cloudresourcesv1beta1.AwsWebAclStatement2) StatementConverter {
-			return WrapStatement2(s)
-		})
-		if err != nil {
-			return nil, err
-		}
-		result.AndStatement = andStmt
-		return result, nil
-	}
-
-	if w.stmt.OrStatement != nil {
-		orStmt, err := convertLogicalOr(w.stmt.OrStatement.Statements, func(s cloudresourcesv1beta1.AwsWebAclStatement2) StatementConverter {
-			return WrapStatement2(s)
-		})
-		if err != nil {
-			return nil, err
-		}
-		result.OrStatement = orStmt
-		return result, nil
-	}
-
+	// Logical operator (only NotStatement at Level 1)
 	if w.stmt.NotStatement != nil {
 		notStmt, err := convertLogicalNot(w.stmt.NotStatement.Statement, WrapStatement2)
 		if err != nil {

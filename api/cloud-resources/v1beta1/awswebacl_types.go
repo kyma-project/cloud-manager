@@ -921,14 +921,6 @@ type AwsWebAclNotStatement struct {
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type AwsWebAclStatement1 struct {
-	// AndStatement - Logical AND (all nested statements must match)
-	// +optional
-	AndStatement *AwsWebAclAndStatement1 `json:"andStatement,omitempty"`
-
-	// OrStatement - Logical OR (at least one nested statement must match)
-	// +optional
-	OrStatement *AwsWebAclOrStatement1 `json:"orStatement,omitempty"`
-
 	// NotStatement - Logical NOT (negates nested statement)
 	// +optional
 	NotStatement *AwsWebAclNotStatement1 `json:"notStatement,omitempty"`
@@ -967,20 +959,6 @@ type AwsWebAclStatement1 struct {
 }
 
 // ===== Level 1 Logical Operators =====
-
-// AwsWebAclAndStatement1 - Logical AND at Level 1
-type AwsWebAclAndStatement1 struct {
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclStatement2 `json:"statements"`
-}
-
-// AwsWebAclOrStatement1 - Logical OR at Level 1
-type AwsWebAclOrStatement1 struct {
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclStatement2 `json:"statements"`
-}
 
 // AwsWebAclNotStatement1 - Logical NOT at Level 1
 type AwsWebAclNotStatement1 struct {
