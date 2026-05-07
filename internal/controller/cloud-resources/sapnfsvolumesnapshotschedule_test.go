@@ -7,6 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skrsapnfsvolume "github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolume"
+	skrsapnfsvolumesnapshot "github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshot"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -93,6 +94,7 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 			expected, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
 			Expect(err).NotTo(HaveOccurred())
 			snapshotName = fmt.Sprintf("%s-%d-%s", scheduleName, 1, expected.Format("20060102-150405"))
+			skrsapnfsvolumesnapshot.Ignore.AddName(snapshotName)
 			testFakeClock.Step(2 * time.Minute)
 		})
 
@@ -217,6 +219,7 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 		})
 
 		snapshotName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, startTime.Format("20060102-150405"))
+		skrsapnfsvolumesnapshot.Ignore.AddName(snapshotName)
 		snapshot := &cloudresourcesv1beta1.SapNfsVolumeSnapshot{}
 
 		By("Then a single SapNfsVolumeSnapshot is created", func() {
@@ -321,6 +324,7 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 			expected, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
 			Expect(err).NotTo(HaveOccurred())
 			firstSnapshotName = fmt.Sprintf("%s-%d-%s", scheduleName, 1, expected.Format("20060102-150405"))
+			skrsapnfsvolumesnapshot.Ignore.AddName(firstSnapshotName)
 			testFakeClock.Step(2 * time.Minute)
 		})
 
@@ -381,6 +385,7 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 				for i := range list.Items {
 					if list.Items[i].Name != firstSnapshotName {
 						secondSnapshot = &list.Items[i]
+						skrsapnfsvolumesnapshot.Ignore.AddName(secondSnapshot.Name)
 						return nil
 					}
 				}
