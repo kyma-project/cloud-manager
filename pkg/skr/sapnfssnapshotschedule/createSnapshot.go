@@ -3,6 +3,7 @@ package sapnfssnapshotschedule
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -50,15 +51,11 @@ func createSnapshot(ctx context.Context, st composed.State) (error, context.Cont
 		cloudresourcesv1beta1.LabelScheduleName:      schedule.GetName(),
 		cloudresourcesv1beta1.LabelScheduleNamespace: schedule.GetNamespace(),
 	}
-	for k, v := range sapSchedule.Spec.Template.Labels {
-		labels[k] = v
-	}
+	maps.Copy(labels, sapSchedule.Spec.Template.Labels)
 
 	// Build annotations from template
 	annotations := make(map[string]string)
-	for k, v := range sapSchedule.Spec.Template.Annotations {
-		annotations[k] = v
-	}
+	maps.Copy(annotations, sapSchedule.Spec.Template.Annotations)
 
 	// Determine deleteAfterDays: override with MaxRetentionDays if set
 	deleteAfterDays := sapSchedule.Spec.Template.Spec.DeleteAfterDays
