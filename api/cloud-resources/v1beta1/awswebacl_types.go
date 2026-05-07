@@ -427,8 +427,10 @@ type AwsWebAclRateBasedStatement struct {
 	ForwardedIPConfig *AwsWebAclForwardedIPConfig `json:"forwardedIPConfig,omitempty"`
 
 	// ScopeDownStatement - Narrows the scope of requests that are evaluated
+	// For example, only apply the rate limit to requests with specific paths or headers
+	// Limited to leaf statements only - use label-based filtering for complex logic
 	// +optional
-	ScopeDownStatement *AwsWebAclStatement1 `json:"scopeDownStatement,omitempty"`
+	ScopeDownStatement *AwsWebAclStatement2 `json:"scopeDownStatement,omitempty"`
 
 	// CustomKeys - Custom aggregation keys (required when AggregateKeyType=CUSTOM_KEYS)
 	// +optional
@@ -573,6 +575,12 @@ type AwsWebAclManagedRuleGroupStatement struct {
 	// RuleActionOverrides to override actions for specific rules
 	// +optional
 	RuleActionOverrides []AwsWebAclRuleActionOverride `json:"ruleActionOverrides,omitempty"`
+
+	// ScopeDownStatement - Narrows the scope of requests that are evaluated
+	// For example, only apply the rate limit to requests with specific paths or headers
+	// Limited to leaf statements only - use label-based filtering for complex logic
+	// +optional
+	ScopeDownStatement *AwsWebAclStatement2 `json:"scopeDownStatement,omitempty"`
 }
 
 type AwsWebAclRuleActionOverride struct {
