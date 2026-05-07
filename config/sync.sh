@@ -89,7 +89,7 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml       $SC
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumes.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshots.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotrestores.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
-# cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotschedules.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotschedules.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 
 # OpenStack UI
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack

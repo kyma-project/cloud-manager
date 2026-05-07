@@ -177,14 +177,14 @@
   - Modify `pkg/kcp/provider/sap/nfsinstance/shareCreate.go` to read `SnapshotId` from `NfsInstance.Spec.Instance.OpenStack` and pass it to `CreateShareOp()` instead of hardcoded `""`
   - _Requirements: 3.6 (new-volume restore depends on this plumbing)_
 
-- [ ] 12. SapNfsVolumeSnapshotSchedule reconciler
+- [x] 12. SapNfsVolumeSnapshotSchedule reconciler
   - **Convention**: Every time the resource is set to error/failed state, MUST log `logger.Error(...)` before/alongside the state assignment. Use `idGenerate` as a separate dedicated action (not embedded in create actions). Actions MUST always return `ctx` (never `nil`) as the second return value — use `return nil, ctx` to continue, `return composed.StopX, ctx` to stop.
-- [ ] 12.1 Create state and reconciler skeleton
+- [x] 12.1 Create state and reconciler skeleton
   - Create `pkg/skr/sapnfssnapshotschedule/state.go` with `State` struct implementing `backupschedule.ScheduleState` interface (all methods: `ObjAsBackupSchedule`, `GetScheduleCalculator`, `GetCronExpression`, `SetCronExpression`, `GetNextRunTime`, `SetNextRunTime`, `IsCreateRunCompleted`, `SetCreateRunCompleted`, `IsDeleteRunCompleted`, `SetDeleteRunCompleted`), plus provider-specific fields
   - Create `pkg/skr/sapnfssnapshotschedule/reconcile.go` with `Reconciler`, `Run()`, `NewReconciler()`, and `newAction()` composing shared `backupschedule.*` actions and SAP-specific actions (loadSnapshots, loadScope, loadSource, createSnapshot, deleteSnapshots, setStatusToActive, deleteCascade)
   - _Requirements: 4.1, 4.2, 4.10_
 
-- [ ] 12.2 Implement schedule-specific actions
+- [x] 12.2 Implement schedule-specific actions
   - Create `pkg/skr/sapnfssnapshotschedule/loadSnapshots.go` — list `SapNfsVolumeSnapshot` CRs by schedule labels
   - Create `pkg/skr/sapnfssnapshotschedule/loadScope.go` — load Scope from KCP cluster
   - Create `pkg/skr/sapnfssnapshotschedule/loadSource.go` — load source `SapNfsVolume`, validate Ready
@@ -194,11 +194,11 @@
   - Create `pkg/skr/sapnfssnapshotschedule/setStatusToActive.go` — set schedule state to Active
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9_
 
-- [ ] 12.3 Wire controller: create `SapNfsVolumeSnapshotSchedule` controller setup
+- [x] 12.3 Wire controller: create `SapNfsVolumeSnapshotSchedule` controller setup
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotschedule_controller.go` with reconciler struct, factory, RBAC markers, and `SetupSapNfsVolumeSnapshotScheduleReconciler()`
   - _Requirements: 4.10_
 
-- [ ] 12.4 Wire `SapNfsVolumeSnapshotSchedule` reconciler in `cmd/main.go`
+- [x] 12.4 Wire `SapNfsVolumeSnapshotSchedule` reconciler in `cmd/main.go`
   - Add `SetupSapNfsVolumeSnapshotScheduleReconciler(skrRegistry)` call in `cmd/main.go` alongside other SKR reconciler registrations
   - _Requirements: 4.10_
 

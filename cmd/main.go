@@ -337,6 +337,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupSapNfsVolumeSnapshotScheduleReconciler(skrRegistry, env, clock.RealClock{}); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SapNfsVolumeSnapshotSchedule")
+		os.Exit(1)
+	}
+
 	if err = cloudresourcescontroller.SetupAwsNfsVolumeBackupReconciler(skrRegistry, awsnfsvolumebackupclient.NewClientProvider(), env); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolumeBackup")
 		os.Exit(1)
