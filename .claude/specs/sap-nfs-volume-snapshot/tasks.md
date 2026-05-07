@@ -202,7 +202,7 @@
   - Add `SetupSapNfsVolumeSnapshotScheduleReconciler(skrRegistry)` call in `cmd/main.go` alongside other SKR reconciler registrations
   - _Requirements: 4.10_
 
-- [ ] 13. SapNfsVolumeSnapshotSchedule controller tests
+- [x] 13. SapNfsVolumeSnapshotSchedule controller tests
   - Register `SetupSapNfsVolumeSnapshotScheduleReconciler` in `internal/controller/cloud-resources/suite_test.go`
   - Create `internal/controller/cloud-resources/sapnfsvolumesnapshotschedule_test.go`:
     - Recurring schedule with cascade delete: create schedule with cron → verify snapshots created → delete schedule with `deleteCascade: true` → verify all snapshots deleted
