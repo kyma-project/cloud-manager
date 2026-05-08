@@ -349,12 +349,17 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 
 		// Wait for schedule to pick up the second run time and advance
 		By("And When fake clock advances to create the second snapshot", func() {
-			Eventually(func() (int, error) {
+			// Wait for first full cycle to complete and NextRunTimes recalculated
+			Eventually(func() (bool, error) {
 				if err := LoadAndCheck(infra.Ctx(), infra.SKR().Client(), schedule, NewObjActions()); err != nil {
-					return 0, err
+					return false, err
 				}
-				return schedule.Status.SnapshotIndex, nil
-			}).Should(Equal(1))
+				return schedule.Status.SnapshotIndex == 1 &&
+					schedule.Status.LastCreateRun != nil &&
+					schedule.Status.LastDeleteRun != nil &&
+					schedule.Status.LastCreateRun.Time.Equal(schedule.Status.LastDeleteRun.Time) &&
+					len(schedule.Status.NextRunTimes) > 0, nil
+			}).Should(BeTrue())
 			testFakeClock.Step(2 * time.Minute)
 		})
 
@@ -405,12 +410,17 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 
 		// Create third snapshot (should trigger eviction of oldest)
 		By("And When fake clock advances to create the third snapshot", func() {
-			// Wait for second cycle to complete and NextRunTimes to be recalculated
+			// Wait for second full cycle to complete (both create and delete passes done)
+			// and NextRunTimes recalculated for the next cycle
 			Eventually(func() (bool, error) {
 				if err := LoadAndCheck(infra.Ctx(), infra.SKR().Client(), schedule, NewObjActions()); err != nil {
 					return false, err
 				}
-				return schedule.Status.SnapshotIndex == 2 && len(schedule.Status.NextRunTimes) > 0, nil
+				return schedule.Status.SnapshotIndex == 2 &&
+					schedule.Status.LastCreateRun != nil &&
+					schedule.Status.LastDeleteRun != nil &&
+					schedule.Status.LastCreateRun.Time.Equal(schedule.Status.LastDeleteRun.Time) &&
+					len(schedule.Status.NextRunTimes) > 0, nil
 			}).Should(BeTrue())
 			testFakeClock.Step(2 * time.Minute)
 		})
