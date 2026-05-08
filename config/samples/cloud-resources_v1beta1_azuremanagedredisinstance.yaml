@@ -1,0 +1,16 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AzureManagedRedisInstance
+metadata:
+  labels:
+    app.kubernetes.io/name: azuremanagedredisinstance
+    app.kubernetes.io/instance: azuremanagedredisinstance-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: azuremanagedredisinstance-sample
+spec:
+  sku: Balanced_B5
+  highAvailability: true
+  tlsVersion: "1.2"
+  clientProtocol: Encrypted
+  redisVersion: "8.0"
