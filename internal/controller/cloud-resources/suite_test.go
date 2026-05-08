@@ -162,6 +162,10 @@ var _ = BeforeSuite(func() {
 	Expect(SetupSapNfsVolumeSnapshotRestoreReconciler(infra.Registry(), infra.SapMock().SnapshotClientProvider(), infra.SapMock().ShareClientProvider())).
 		NotTo(HaveOccurred())
 
+	// SapNfsVolumeSnapshotSchedule
+	Expect(SetupSapNfsVolumeSnapshotScheduleReconciler(infra.Registry(), env, testFakeClock)).
+		NotTo(HaveOccurred())
+
 	// GcpSubnet
 	Expect(SetupGcpSubnetReconciler(infra.Registry())).
 		NotTo(HaveOccurred())

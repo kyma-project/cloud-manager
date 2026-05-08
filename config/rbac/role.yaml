@@ -108,6 +108,7 @@ rules:
   - sapnfsvolumes
   - sapnfsvolumesnapshotrestores
   - sapnfsvolumesnapshots
+  - sapnfsvolumesnapshotschedules
   verbs:
   - create
   - delete
@@ -147,6 +148,7 @@ rules:
   - sapnfsvolumes/finalizers
   - sapnfsvolumesnapshotrestores/finalizers
   - sapnfsvolumesnapshots/finalizers
+  - sapnfsvolumesnapshotschedules/finalizers
   verbs:
   - update
 - apiGroups:
@@ -180,6 +182,7 @@ rules:
   - sapnfsvolumes/status
   - sapnfsvolumesnapshotrestores/status
   - sapnfsvolumesnapshots/status
+  - sapnfsvolumesnapshotschedules/status
   verbs:
   - get
   - patch
