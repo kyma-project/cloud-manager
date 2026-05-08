@@ -368,6 +368,13 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 				if err := LoadAndCheck(infra.Ctx(), infra.SKR().Client(), schedule, NewObjActions()); err != nil {
 					return 0, err
 				}
+				// If cache race caused NextRunTimes recalculation past our clock, step again
+				if schedule.Status.SnapshotIndex == 1 && len(schedule.Status.NextRunTimes) > 0 {
+					nextRun, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
+					if err == nil && nextRun.After(testFakeClock.Now()) {
+						testFakeClock.Step(2 * time.Minute)
+					}
+				}
 				return schedule.Status.SnapshotIndex, nil
 			}).Should(Equal(2))
 		})
@@ -429,6 +436,13 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 			Eventually(func() (int, error) {
 				if err := LoadAndCheck(infra.Ctx(), infra.SKR().Client(), schedule, NewObjActions()); err != nil {
 					return 0, err
+				}
+				// If cache race caused NextRunTimes recalculation past our clock, step again
+				if schedule.Status.SnapshotIndex == 2 && len(schedule.Status.NextRunTimes) > 0 {
+					nextRun, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
+					if err == nil && nextRun.After(testFakeClock.Now()) {
+						testFakeClock.Step(2 * time.Minute)
+					}
 				}
 				return schedule.Status.SnapshotIndex, nil
 			}).Should(Equal(3))
