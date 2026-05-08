@@ -17,8 +17,7 @@ func deletePrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, c
 
 	err := state.client.DeletePrivateDnsZoneGroup(ctx, state.resourceGroupName, obj.Name+"-pe", obj.Name+"-dzg")
 	if err != nil && !azuremeta.IsNotFound(err) {
-		composed.LoggerFromCtx(ctx).Error(err, "Error deleting Private DNS Zone Group for Azure Managed Redis")
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		return composed.LogErrorAndReturn(err, "Error deleting Private DNS Zone Group for Azure Managed Redis", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 
 	return nil, ctx

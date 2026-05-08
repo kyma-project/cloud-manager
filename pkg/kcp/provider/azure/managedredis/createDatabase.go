@@ -20,10 +20,6 @@ func createDatabase(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, ctx
 	}
 
-	if state.managedRedis == nil {
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
-	}
-
 	composed.LoggerFromCtx(ctx).Info("Creating Azure Managed Redis database", "name", obj.Name)
 
 	clientProtocol := armredisenterprise.ProtocolEncrypted
@@ -39,7 +35,6 @@ func createDatabase(ctx context.Context, st composed.State) (error, context.Cont
 
 	err := state.client.CreateOrUpdateDatabase(ctx, state.resourceGroupName, obj.Name, DefaultDatabaseName, db)
 	if err != nil {
-		composed.LoggerFromCtx(ctx).Error(err, "Error creating Azure Managed Redis database")
 		obj.Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.UpdateStatus(obj).
 			SetExclusiveConditions(metav1.Condition{

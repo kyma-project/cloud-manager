@@ -2,7 +2,6 @@ package managedredis
 
 import (
 	"context"
-
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -10,20 +9,17 @@ func updateStatusId(ctx context.Context, st composed.State) (error, context.Cont
 	state := st.(*State)
 	obj := state.ObjAsAzureManagedRedis()
 
-	if obj.Status.Id != "" {
+	if state.managedRedis == nil || state.managedRedis.ID == nil {
 		return nil, ctx
 	}
 
-	if state.managedRedis == nil || state.managedRedis.Name == nil {
+	if obj.Status.Id == *state.managedRedis.ID {
 		return nil, ctx
 	}
 
-	obj.Status.Id = *state.managedRedis.Name
-
-	err := state.UpdateObjStatus(ctx)
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating AzureManagedRedis status.id", composed.StopWithRequeue, ctx)
-	}
-
-	return composed.StopWithRequeue, nil
+	obj.Status.Id = *state.managedRedis.ID
+	return composed.UpdateStatus(obj).
+		ErrorLogMessage("Error updating AzureManagedRedis status id").
+		SuccessError(composed.StopWithRequeue).
+		Run(ctx, st)
 }

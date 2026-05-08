@@ -40,7 +40,6 @@ func createPrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, c
 
 	err := state.client.CreatePrivateDnsZoneGroup(ctx, state.resourceGroupName, obj.Name+"-pe", obj.Name+"-dzg", dzgParams)
 	if err != nil {
-		composed.LoggerFromCtx(ctx).Error(err, "Error creating Private DNS Zone Group for Azure Managed Redis")
 		obj.Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.UpdateStatus(obj).
 			SetExclusiveConditions(metav1.Condition{

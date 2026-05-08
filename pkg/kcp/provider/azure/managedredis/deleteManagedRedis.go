@@ -19,8 +19,7 @@ func deleteManagedRedis(ctx context.Context, st composed.State) (error, context.
 
 	err := state.client.DeleteCluster(ctx, state.resourceGroupName, obj.Name)
 	if err != nil && !azuremeta.IsNotFound(err) {
-		composed.LoggerFromCtx(ctx).Error(err, "Error deleting Azure Managed Redis cluster")
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		return composed.LogErrorAndReturn(err, "Error deleting Azure Managed Redis cluster", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 
 	return nil, ctx

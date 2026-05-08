@@ -29,14 +29,16 @@ func createManagedRedis(ctx context.Context, st composed.State) (error, context.
 	if !obj.Spec.HighAvailability {
 		highAvailability = armredisenterprise.HighAvailabilityDisabled
 	}
+	publicNetworkAccess := armredisenterprise.PublicNetworkAccessDisabled
 	cluster := armredisenterprise.Cluster{
 		Location: &region,
 		SKU: &armredisenterprise.SKU{
 			Name: &skuName,
 		},
 		Properties: &armredisenterprise.ClusterCreateProperties{
-			MinimumTLSVersion: &tlsVersion,
-			HighAvailability:  &highAvailability,
+			MinimumTLSVersion:   &tlsVersion,
+			HighAvailability:    &highAvailability,
+			PublicNetworkAccess: &publicNetworkAccess,
 		},
 	}
 
