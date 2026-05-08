@@ -8,7 +8,7 @@ import (
 )
 
 // StatementConverter defines the interface for converting Kyma statements to AWS WAF statements
-// This allows polymorphic handling of all statement types (Statement, Statement1, Statement2)
+// This allows polymorphic handling of statement types (Statement and LeafStatement)
 type StatementConverter interface {
 	ToWafStatement() (*wafv2types.Statement, error)
 }
@@ -16,8 +16,7 @@ type StatementConverter interface {
 // Ensure all statement types implement StatementConverter
 var (
 	_ StatementConverter = (*statementWrapper)(nil)
-	_ StatementConverter = (*statement1Wrapper)(nil)
-	_ StatementConverter = (*statement2Wrapper)(nil)
+	_ StatementConverter = (*leafStatementWrapper)(nil)
 )
 
 // ===== Level 0: Root Statement (has RateBased + ManagedRuleGroup) =====
@@ -106,8 +105,8 @@ func (w *statementWrapper) ToWafStatement() (*wafv2types.Statement, error) {
 
 	// Logical operators
 	if w.stmt.AndStatement != nil {
-		andStmt, err := convertLogicalAnd(w.stmt.AndStatement.Statements, func(s cloudresourcesv1beta1.AwsWebAclStatement1) StatementConverter {
-			return WrapStatement1(s)
+		andStmt, err := convertLogicalAnd(w.stmt.AndStatement.Statements, func(s cloudresourcesv1beta1.AwsWebAclLeafStatement) StatementConverter {
+			return WrapLeafStatement(s)
 		})
 		if err != nil {
 			return nil, err
@@ -117,8 +116,8 @@ func (w *statementWrapper) ToWafStatement() (*wafv2types.Statement, error) {
 	}
 
 	if w.stmt.OrStatement != nil {
-		orStmt, err := convertLogicalOr(w.stmt.OrStatement.Statements, func(s cloudresourcesv1beta1.AwsWebAclStatement1) StatementConverter {
-			return WrapStatement1(s)
+		orStmt, err := convertLogicalOr(w.stmt.OrStatement.Statements, func(s cloudresourcesv1beta1.AwsWebAclLeafStatement) StatementConverter {
+			return WrapLeafStatement(s)
 		})
 		if err != nil {
 			return nil, err
@@ -128,7 +127,7 @@ func (w *statementWrapper) ToWafStatement() (*wafv2types.Statement, error) {
 	}
 
 	if w.stmt.NotStatement != nil {
-		notStmt, err := convertLogicalNot(w.stmt.NotStatement.Statement, WrapStatement1)
+		notStmt, err := convertLogicalNot(w.stmt.NotStatement.Statement, WrapLeafStatement)
 		if err != nil {
 			return nil, err
 		}
@@ -154,64 +153,16 @@ func WrapStatement(stmt cloudresourcesv1beta1.AwsWebAclStatement) StatementConve
 	return &statementWrapper{stmt: stmt}
 }
 
-// ===== Level 1: Statement1 (no RateBased, no ManagedRuleGroup) =====
+// ===== Leaf Statement Wrapper =====
 
-type statement1Wrapper struct {
-	stmt cloudresourcesv1beta1.AwsWebAclStatement1
+type leafStatementWrapper struct {
+	stmt cloudresourcesv1beta1.AwsWebAclLeafStatement
 }
 
-func (w *statement1Wrapper) ToWafStatement() (*wafv2types.Statement, error) {
+func (w *leafStatementWrapper) ToWafStatement() (*wafv2types.Statement, error) {
 	result := &wafv2types.Statement{}
 
-	// Count how many statement types are set
-	count := 0
-	if w.stmt.NotStatement != nil {
-		count++
-	}
-	if w.stmt.GeoMatch != nil {
-		count++
-	}
-	if w.stmt.ByteMatch != nil {
-		count++
-	}
-	if w.stmt.LabelMatch != nil {
-		count++
-	}
-	if w.stmt.SizeConstraint != nil {
-		count++
-	}
-	if w.stmt.SqliMatch != nil {
-		count++
-	}
-	if w.stmt.XssMatch != nil {
-		count++
-	}
-	if w.stmt.RegexMatch != nil {
-		count++
-	}
-	if w.stmt.AsnMatch != nil {
-		count++
-	}
-
-	// Validate exactly one is set
-	if count == 0 {
-		return nil, fmt.Errorf("level 1 statement must have exactly one condition set")
-	}
-	if count > 1 {
-		return nil, fmt.Errorf("level 1 statement must have exactly one condition set, found %d", count)
-	}
-
-	// Logical operator (only NotStatement at Level 1)
-	if w.stmt.NotStatement != nil {
-		notStmt, err := convertLogicalNot(w.stmt.NotStatement.Statement, WrapStatement2)
-		if err != nil {
-			return nil, err
-		}
-		result.NotStatement = notStmt
-		return result, nil
-	}
-
-	// Leaf statements
+	// Leaf statements only - no logical operators
 	return convertLeafStatements(result, leafStatements{
 		GeoMatch:       w.stmt.GeoMatch,
 		ByteMatch:      w.stmt.ByteMatch,
@@ -224,36 +175,9 @@ func (w *statement1Wrapper) ToWafStatement() (*wafv2types.Statement, error) {
 	})
 }
 
-// WrapStatement1 wraps a Level 1 statement
-func WrapStatement1(stmt cloudresourcesv1beta1.AwsWebAclStatement1) StatementConverter {
-	return &statement1Wrapper{stmt: stmt}
-}
-
-// ===== Level 2: Statement2 (leaf only, no logical operators) =====
-
-type statement2Wrapper struct {
-	stmt cloudresourcesv1beta1.AwsWebAclStatement2
-}
-
-func (w *statement2Wrapper) ToWafStatement() (*wafv2types.Statement, error) {
-	result := &wafv2types.Statement{}
-
-	// NO logical operators at Level 2 - leaf statements only
-	return convertLeafStatements(result, leafStatements{
-		GeoMatch:       w.stmt.GeoMatch,
-		ByteMatch:      w.stmt.ByteMatch,
-		LabelMatch:     w.stmt.LabelMatch,
-		SizeConstraint: w.stmt.SizeConstraint,
-		SqliMatch:      w.stmt.SqliMatch,
-		XssMatch:       w.stmt.XssMatch,
-		RegexMatch:     w.stmt.RegexMatch,
-		AsnMatch:       w.stmt.AsnMatch,
-	})
-}
-
-// WrapStatement2 wraps a Level 2 statement
-func WrapStatement2(stmt cloudresourcesv1beta1.AwsWebAclStatement2) StatementConverter {
-	return &statement2Wrapper{stmt: stmt}
+// WrapLeafStatement wraps a leaf statement
+func WrapLeafStatement(stmt cloudresourcesv1beta1.AwsWebAclLeafStatement) StatementConverter {
+	return &leafStatementWrapper{stmt: stmt}
 }
 
 // ===== Generic Logical Operator Converters (using generics) =====

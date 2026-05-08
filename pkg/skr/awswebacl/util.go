@@ -217,15 +217,6 @@ func convertRateBasedStatement(rate *cloudresourcesv1beta1.AwsWebAclRateBasedSta
 		stmt.ForwardedIPConfig = convertForwardedIPConfig(rate.ForwardedIPConfig)
 	}
 
-	// ScopeDownStatement (leaf statements only)
-	if rate.ScopeDownStatement != nil {
-		scopeDownStmt, err := WrapStatement2(*rate.ScopeDownStatement).ToWafStatement()
-		if err != nil {
-			return nil, fmt.Errorf("error converting scopeDownStatement: %w", err)
-		}
-		stmt.ScopeDownStatement = scopeDownStmt
-	}
-
 	// CustomKeys (required when AggregateKeyType=CUSTOM_KEYS)
 	if len(rate.CustomKeys) > 0 {
 		stmt.CustomKeys = make([]wafv2types.RateBasedStatementCustomKey, len(rate.CustomKeys))
@@ -359,15 +350,6 @@ func convertManagedRuleGroupStatement(managed *cloudresourcesv1beta1.AwsWebAclMa
 				ActionToUse: action,
 			})
 		}
-	}
-
-	// Convert ScopeDownStatement if present
-	if managed.ScopeDownStatement != nil {
-		scopeDownStmt, err := WrapStatement2(*managed.ScopeDownStatement).ToWafStatement()
-		if err != nil {
-			return nil, fmt.Errorf("error converting scopeDownStatement: %w", err)
-		}
-		stmt.ScopeDownStatement = scopeDownStmt
 	}
 
 	return stmt, nil

@@ -426,12 +426,6 @@ type AwsWebAclRateBasedStatement struct {
 	// +optional
 	ForwardedIPConfig *AwsWebAclForwardedIPConfig `json:"forwardedIPConfig,omitempty"`
 
-	// ScopeDownStatement - Narrows the scope of requests that are evaluated
-	// For example, only apply the rate limit to requests with specific paths or headers
-	// Limited to leaf statements only - use label-based filtering for complex logic
-	// +optional
-	ScopeDownStatement *AwsWebAclStatement2 `json:"scopeDownStatement,omitempty"`
-
 	// CustomKeys - Custom aggregation keys (required when AggregateKeyType=CUSTOM_KEYS)
 	// +optional
 	// +kubebuilder:validation:MinItems=1
@@ -575,12 +569,6 @@ type AwsWebAclManagedRuleGroupStatement struct {
 	// RuleActionOverrides to override actions for specific rules
 	// +optional
 	RuleActionOverrides []AwsWebAclRuleActionOverride `json:"ruleActionOverrides,omitempty"`
-
-	// ScopeDownStatement - Narrows the scope of requests that are evaluated
-	// For example, only apply the rate limit to requests with specific paths or headers
-	// Limited to leaf statements only - use label-based filtering for complex logic
-	// +optional
-	ScopeDownStatement *AwsWebAclStatement2 `json:"scopeDownStatement,omitempty"`
 }
 
 type AwsWebAclRuleActionOverride struct {
@@ -905,7 +893,7 @@ type AwsWebAclAndStatement struct {
 	// Statements to combine with AND logic (min 2)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclStatement1 `json:"statements"`
+	Statements []AwsWebAclLeafStatement `json:"statements"`
 }
 
 // AwsWebAclOrStatement - Logical OR at Level 0 (root)
@@ -913,73 +901,23 @@ type AwsWebAclOrStatement struct {
 	// Statements to combine with OR logic (min 2)
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclStatement1 `json:"statements"`
+	Statements []AwsWebAclLeafStatement `json:"statements"`
 }
 
 // AwsWebAclNotStatement - Logical NOT at Level 0 (root)
 type AwsWebAclNotStatement struct {
 	// Statement to negate
 	// +kubebuilder:validation:Required
-	Statement AwsWebAclStatement1 `json:"statement"`
+	Statement AwsWebAclLeafStatement `json:"statement"`
 }
 
-// ===== Level 1 Statement Type =====
+// ===== Leaf Statement Type =====
 
-// AwsWebAclStatement1 - Statement at nesting Level 1
+// AwsWebAclLeafStatement - Leaf-level statement (no logical operators)
+// Contains only actual match conditions, no And/Or/Not operators
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
-type AwsWebAclStatement1 struct {
-	// NotStatement - Logical NOT (negates nested statement)
-	// +optional
-	NotStatement *AwsWebAclNotStatement1 `json:"notStatement,omitempty"`
-
-	// GeoMatch - Match requests from specific countries
-	// +optional
-	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
-
-	// ByteMatch - Match specific patterns in requests
-	// +optional
-	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
-
-	// LabelMatch - Match based on labels added by previous rules
-	// +optional
-	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
-
-	// SizeConstraint - Match based on request component size
-	// +optional
-	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
-
-	// SqliMatch - Detect SQL injection attacks
-	// +optional
-	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
-
-	// XssMatch - Detect cross-site scripting attacks
-	// +optional
-	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
-
-	// RegexMatch - Match using regular expression patterns
-	// +optional
-	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
-
-	// AsnMatch - Match requests from specific Autonomous System Numbers
-	// +optional
-	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
-}
-
-// ===== Level 1 Logical Operators =====
-
-// AwsWebAclNotStatement1 - Logical NOT at Level 1
-type AwsWebAclNotStatement1 struct {
-	// +kubebuilder:validation:Required
-	Statement AwsWebAclStatement2 `json:"statement"`
-}
-
-// ===== Level 2 Statement Type =====
-
-// AwsWebAclStatement2 - Statement at nesting Level 2
-// +kubebuilder:validation:MinProperties=1
-// +kubebuilder:validation:MaxProperties=1
-type AwsWebAclStatement2 struct {
+type AwsWebAclLeafStatement struct {
 	// GeoMatch - Match requests from specific countries
 	// +optional
 	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
