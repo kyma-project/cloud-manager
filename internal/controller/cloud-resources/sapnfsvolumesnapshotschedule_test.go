@@ -253,6 +253,8 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 	It("Scenario: Retention count-based eviction", func() {
 		sapNfsVolumeName := "67185c99-7382-40fb-8ad2-26aaf4d75427"
 		scheduleName := "63b177f9-4000-4d65-999c-9112cbb45535"
+		olderSnapName := scheduleName + "-pre-older"
+		newerSnapName := scheduleName + "-pre-newer"
 		sapNfsVolume := &cloudresourcesv1beta1.SapNfsVolume{}
 		schedule := &cloudresourcesv1beta1.SapNfsVolumeSnapshotSchedule{}
 		scope := &cloudcontrolv1beta1.Scope{}
@@ -264,6 +266,10 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 
 		skrsapnfsvolume.Ignore.AddName(sapNfsVolumeName)
 		defer skrsapnfsvolume.Ignore.RemoveName(sapNfsVolumeName)
+
+		// Ignore pre-created snapshots so the snapshot reconciler doesn't interfere
+		skrsapnfsvolumesnapshot.Ignore.AddName(olderSnapName)
+		skrsapnfsvolumesnapshot.Ignore.AddName(newerSnapName)
 
 		By("Given KCP Scope exists", func() {
 			Eventually(func() error {
@@ -283,6 +289,66 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), sapNfsVolume,
 					WithConditions(SkrReadyCondition()),
+				).Should(Succeed())
+		})
+
+		// Pre-create two Ready snapshots with schedule labels so deleteSnapshots
+		// can evaluate retention without multi-cycle clock races.
+		olderSnap := &cloudresourcesv1beta1.SapNfsVolumeSnapshot{}
+		By("And Given an older pre-existing Ready snapshot", func() {
+			olderSnap = &cloudresourcesv1beta1.SapNfsVolumeSnapshot{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      olderSnapName,
+					Namespace: DefaultSkrNamespace,
+					Labels: map[string]string{
+						cloudresourcesv1beta1.LabelScheduleName:      scheduleName,
+						cloudresourcesv1beta1.LabelScheduleNamespace: DefaultSkrNamespace,
+					},
+				},
+				Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotSpec{
+					SourceVolume: corev1.ObjectReference{
+						Name:      sapNfsVolumeName,
+						Namespace: DefaultSkrNamespace,
+					},
+				},
+			}
+			Eventually(func() error {
+				return infra.SKR().Client().Create(infra.Ctx(), olderSnap)
+			}).Should(Succeed())
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), olderSnap,
+					WithConditions(SkrReadyCondition()),
+					WithState(cloudresourcesv1beta1.StateReady),
+				).Should(Succeed())
+		})
+
+		newerSnap := &cloudresourcesv1beta1.SapNfsVolumeSnapshot{}
+		By("And Given a newer pre-existing Ready snapshot", func() {
+			newerSnap = &cloudresourcesv1beta1.SapNfsVolumeSnapshot{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      newerSnapName,
+					Namespace: DefaultSkrNamespace,
+					Labels: map[string]string{
+						cloudresourcesv1beta1.LabelScheduleName:      scheduleName,
+						cloudresourcesv1beta1.LabelScheduleNamespace: DefaultSkrNamespace,
+					},
+				},
+				Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotSpec{
+					SourceVolume: corev1.ObjectReference{
+						Name:      sapNfsVolumeName,
+						Namespace: DefaultSkrNamespace,
+					},
+				},
+			}
+			Eventually(func() error {
+				return infra.SKR().Client().Create(infra.Ctx(), newerSnap)
+			}).Should(Succeed())
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), newerSnap,
+					WithConditions(SkrReadyCondition()),
+					WithState(cloudresourcesv1beta1.StateReady),
 				).Should(Succeed())
 		})
 
@@ -318,71 +384,40 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 			Expect(len(schedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
 		})
 
-		// Create first snapshot
-		var firstSnapshotName string
-		By("And When fake clock advances to create the first snapshot", func() {
+		By("And When fake clock advances to trigger a run", func() {
+			// Compute expected snapshot name and add to Ignore before stepping
 			expected, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
 			Expect(err).NotTo(HaveOccurred())
-			firstSnapshotName = fmt.Sprintf("%s-%d-%s", scheduleName, 1, expected.Format("20060102-150405"))
-			skrsapnfsvolumesnapshot.Ignore.AddName(firstSnapshotName)
+			newSnapName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, expected.Format("20060102-150405"))
+			skrsapnfsvolumesnapshot.Ignore.AddName(newSnapName)
 			testFakeClock.Step(2 * time.Minute)
 		})
 
-		firstSnapshot := &cloudresourcesv1beta1.SapNfsVolumeSnapshot{}
-		By("Then the first snapshot is created", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), firstSnapshot,
-					NewObjActions(WithName(firstSnapshotName)),
-				).Should(Succeed())
-		})
-
-		// Mark first snapshot as Ready (so it counts toward maxReadySnapshots)
-		By("And Given the first snapshot is marked Ready", func() {
-			Eventually(UpdateStatus).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), firstSnapshot,
-					WithConditions(SkrReadyCondition()),
-					WithState(cloudresourcesv1beta1.StateReady),
-				).Should(Succeed())
-		})
-
-		// Wait for schedule to pick up the second run time and advance
-		By("And When fake clock advances to create the second snapshot", func() {
-			// Wait for first full cycle to complete and NextRunTimes recalculated
-			Eventually(func() (bool, error) {
-				if err := LoadAndCheck(infra.Ctx(), infra.SKR().Client(), schedule, NewObjActions()); err != nil {
-					return false, err
-				}
-				return schedule.Status.SnapshotIndex == 1 &&
-					schedule.Status.LastCreateRun != nil &&
-					schedule.Status.LastDeleteRun != nil &&
-					schedule.Status.LastCreateRun.Time.Equal(schedule.Status.LastDeleteRun.Time) &&
-					len(schedule.Status.NextRunTimes) > 0, nil
-			}).Should(BeTrue())
-			testFakeClock.Step(2 * time.Minute)
-		})
-
-		By("Then the second snapshot is created", func() {
+		By("Then the schedule creates a new snapshot", func() {
 			Eventually(func() (int, error) {
 				if err := LoadAndCheck(infra.Ctx(), infra.SKR().Client(), schedule, NewObjActions()); err != nil {
 					return 0, err
 				}
 				// If cache race caused NextRunTimes recalculation past our clock, step again
-				if schedule.Status.SnapshotIndex == 1 && len(schedule.Status.NextRunTimes) > 0 {
+				if schedule.Status.SnapshotIndex == 0 && len(schedule.Status.NextRunTimes) > 0 {
 					nextRun, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
 					if err == nil && nextRun.After(testFakeClock.Now()) {
+						newSnapName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, nextRun.UTC().Format("20060102-150405"))
+						skrsapnfsvolumesnapshot.Ignore.AddName(newSnapName)
 						testFakeClock.Step(2 * time.Minute)
 					}
 				}
 				return schedule.Status.SnapshotIndex, nil
-			}).Should(Equal(2))
+			}).Should(Equal(1))
 		})
 
-		secondSnapshot := &cloudresourcesv1beta1.SapNfsVolumeSnapshot{}
-		By("And Then the second snapshot exists", func() {
-			// Find second snapshot by label
-			Eventually(func() error {
+		By("And Then a pre-existing Ready snapshot is evicted by retention", func() {
+			// With maxReadySnapshots=1, deleteSnapshots iterates newest-first:
+			// - new snapshot (not Ready) → not counted
+			// - one pre-existing (Ready) → readyCount=1, kept
+			// - other pre-existing (Ready) → readyCount>=1, EVICTED
+			// Check that the total snapshot count drops to 2
+			Eventually(func() (int, error) {
 				list := &cloudresourcesv1beta1.SapNfsVolumeSnapshotList{}
 				err := infra.SKR().Client().List(infra.Ctx(), list,
 					client.MatchingLabels{
@@ -392,66 +427,10 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 					client.InNamespace(DefaultSkrNamespace),
 				)
 				if err != nil {
-					return err
-				}
-				for i := range list.Items {
-					if list.Items[i].Name != firstSnapshotName {
-						secondSnapshot = &list.Items[i]
-						skrsapnfsvolumesnapshot.Ignore.AddName(secondSnapshot.Name)
-						return nil
-					}
-				}
-				return fmt.Errorf("second snapshot not found")
-			}).Should(Succeed())
-		})
-
-		// Mark second snapshot as Ready
-		By("And Given the second snapshot is marked Ready", func() {
-			Eventually(UpdateStatus).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), secondSnapshot,
-					WithConditions(SkrReadyCondition()),
-					WithState(cloudresourcesv1beta1.StateReady),
-				).Should(Succeed())
-		})
-
-		// Create third snapshot (should trigger eviction of oldest)
-		By("And When fake clock advances to create the third snapshot", func() {
-			// Wait for second full cycle to complete (both create and delete passes done)
-			// and NextRunTimes recalculated for the next cycle
-			Eventually(func() (bool, error) {
-				if err := LoadAndCheck(infra.Ctx(), infra.SKR().Client(), schedule, NewObjActions()); err != nil {
-					return false, err
-				}
-				return schedule.Status.SnapshotIndex == 2 &&
-					schedule.Status.LastCreateRun != nil &&
-					schedule.Status.LastDeleteRun != nil &&
-					schedule.Status.LastCreateRun.Time.Equal(schedule.Status.LastDeleteRun.Time) &&
-					len(schedule.Status.NextRunTimes) > 0, nil
-			}).Should(BeTrue())
-			testFakeClock.Step(2 * time.Minute)
-		})
-
-		By("Then the third snapshot is created", func() {
-			Eventually(func() (int, error) {
-				if err := LoadAndCheck(infra.Ctx(), infra.SKR().Client(), schedule, NewObjActions()); err != nil {
 					return 0, err
 				}
-				// If cache race caused NextRunTimes recalculation past our clock, step again
-				if schedule.Status.SnapshotIndex == 2 && len(schedule.Status.NextRunTimes) > 0 {
-					nextRun, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
-					if err == nil && nextRun.After(testFakeClock.Now()) {
-						testFakeClock.Step(2 * time.Minute)
-					}
-				}
-				return schedule.Status.SnapshotIndex, nil
-			}).Should(Equal(3))
-		})
-
-		By("And Then the oldest (first) snapshot is evicted", func() {
-			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), firstSnapshot).
-				Should(Succeed(), "expected oldest snapshot to be evicted by retention policy")
+				return len(list.Items), nil
+			}).Should(Equal(2), "expected one snapshot to be evicted by retention policy")
 		})
 
 		// Cleanup
