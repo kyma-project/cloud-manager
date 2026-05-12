@@ -19,18 +19,6 @@ type AzureManagedRedisClusterSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="highAvailability is immutable."
 	HighAvailability bool `json:"highAvailability"`
 
-	// TLSVersion specifies the minimum TLS version for client connections.
-	// +optional
-	// +kubebuilder:validation:Enum="1.2";"1.3"
-	// +kubebuilder:default="1.2"
-	TLSVersion string `json:"tlsVersion,omitempty"`
-
-	// ClientProtocol specifies the Redis wire protocol.
-	// +optional
-	// +kubebuilder:validation:Enum=Plaintext;Encrypted
-	// +kubebuilder:default=Encrypted
-	ClientProtocol string `json:"clientProtocol,omitempty"`
-
 	// AuthSecret customises the name and labels of the generated connection secret.
 	// +optional
 	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`

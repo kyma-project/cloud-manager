@@ -71,13 +71,6 @@ spec:
                         - message: name is immutable
                           rule: self == '' || oldSelf == '' || self == oldSelf
                   type: object
-                clientProtocol:
-                  default: Encrypted
-                  description: ClientProtocol specifies the Redis wire protocol.
-                  enum:
-                    - Plaintext
-                    - Encrypted
-                  type: string
                 highAvailability:
                   default: true
                   description: HighAvailability enables zone-redundant replica deployment.
@@ -131,13 +124,6 @@ spec:
                   x-kubernetes-validations:
                     - message: sku is immutable.
                       rule: (self == oldSelf)
-                tlsVersion:
-                  default: "1.2"
-                  description: TLSVersion specifies the minimum TLS version for client connections.
-                  enum:
-                    - "1.2"
-                    - "1.3"
-                  type: string
               required:
                 - sku
               type: object

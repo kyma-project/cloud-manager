@@ -48,13 +48,6 @@ spec:
           spec:
             description: AzureManagedRedisSpec defines the desired state of AzureManagedRedis.
             properties:
-              clientProtocol:
-                default: Encrypted
-                description: ClientProtocol specifies the Redis wire protocol.
-                enum:
-                - Plaintext
-                - Encrypted
-                type: string
               clusteringPolicy:
                 description: ClusteringPolicy defines the Redis clustering mode.
                 enum:
@@ -142,14 +135,6 @@ spec:
                 x-kubernetes-validations:
                 - message: SKU is immutable.
                   rule: (self == oldSelf)
-              tlsVersion:
-                default: "1.2"
-                description: TLSVersion specifies the minimum TLS version for client
-                  connections.
-                enum:
-                - "1.2"
-                - "1.3"
-                type: string
             required:
             - clusteringPolicy
             - remoteRef
