@@ -162,9 +162,10 @@ type AwsWebAclRule struct {
 	OverrideAction *AwsWebAclOverrideAction `json:"overrideAction,omitempty"`
 
 	// LogicalOperator determines how statements are combined (NONE=single statement, AND/OR=multiple, NOT=negate single)
-	// +kubebuilder:validation:Required
+	// +optional
 	// +kubebuilder:default=NONE
-	LogicalOperator AwsWebAclLogicalOperator `json:"logicalOperator"`
+	// +kubebuilder:validation:Enum=NONE;AND;OR;NOT
+	LogicalOperator AwsWebAclLogicalOperator `json:"logicalOperator,omitempty"`
 
 	// Statements - Array of match conditions combined by LogicalOperator
 	// +kubebuilder:validation:Required

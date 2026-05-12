@@ -90,7 +90,6 @@ spec:
             insertHeaders:
               - name: X-API-Access
                 value: "true"
-      logicalOperator: NONE
       statements:
         - byteMatch:
             searchString: "/api"
@@ -120,7 +119,6 @@ spec:
             responseHeaders:
               - name: X-Block-Reason
                 value: geo-restricted
-      logicalOperator: NONE
       statements:
         - geoMatch:
             countryCodes:
@@ -139,7 +137,6 @@ spec:
           customResponse:
             responseCode: 429
             customResponseBodyKey: "json-error"
-      logicalOperator: NONE
       statements:
         - rateBased:
             limit: 2000
@@ -155,7 +152,6 @@ spec:
       priority: 10
       overrideAction:
         none: {}
-      logicalOperator: NONE
       statements:
         - managedRuleGroup:
             vendorName: AWS
@@ -249,7 +245,6 @@ spec:
           customResponse:
             responseCode: 413
             customResponseBodyKey: json-error
-      logicalOperator: NONE
       statements:
         - sizeConstraint:
             comparisonOperator: "GT"
@@ -272,7 +267,6 @@ spec:
           customResponse:
             responseCode: 403
             customResponseBodyKey: json-error
-      logicalOperator: NONE
       statements:
         - sqliMatch:
             fieldToMatch:
@@ -296,7 +290,6 @@ spec:
           customResponse:
             responseCode: 403
             customResponseBodyKey: json-error
-      logicalOperator: NONE
       statements:
         - xssMatch:
             fieldToMatch:
@@ -319,7 +312,6 @@ spec:
           customResponse:
             responseCode: 403
             customResponseBodyKey: json-error
-      logicalOperator: NONE
       statements:
         - regexMatch:
             regexString: "^/(admin|root|config)/.*$"
@@ -341,7 +333,6 @@ spec:
           customResponse:
             responseCode: 403
             customResponseBodyKey: json-error
-      logicalOperator: NONE
       statements:
         - asnMatch:
             autonomousSystemNumbers:
@@ -360,7 +351,6 @@ spec:
           customResponse:
             responseCode: 403
             customResponseBodyKey: json-error
-      logicalOperator: NONE
       statements:
         - labelMatch:
             key: "block:high-risk"
@@ -379,7 +369,6 @@ spec:
             insertHeaders:
               - name: X-Captcha-Passed
                 value: "true"
-      logicalOperator: NONE
       statements:
         - geoMatch:
             countryCodes:
@@ -400,7 +389,6 @@ spec:
             insertHeaders:
               - name: X-Challenge-Passed
                 value: "true"
-      logicalOperator: NONE
       statements:
         - rateBased:
             limit: 500
@@ -422,7 +410,6 @@ spec:
             insertHeaders:
               - name: X-Admin-Access-Logged
                 value: "true"
-      logicalOperator: NONE
       statements:
         - byteMatch:
             searchString: "/admin"

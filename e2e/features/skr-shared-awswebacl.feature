@@ -41,7 +41,6 @@ Feature: AwsWebAcl feature
                 customResponse:
                   responseCode: 403
                   customResponseBodyKey: block-page
-            logicalOperator: NONE
             statements:
               - geoMatch:
                   countryCodes:
@@ -58,7 +57,6 @@ Feature: AwsWebAcl feature
             priority: 1
             action:
               block: {}
-            logicalOperator: NONE
             statements:
               - rateBased:
                   limit: 2000
@@ -73,7 +71,6 @@ Feature: AwsWebAcl feature
             priority: 2
             action:
               block: {}
-            logicalOperator: NONE
             statements:
               - byteMatch:
                   searchString: "../"
@@ -93,7 +90,6 @@ Feature: AwsWebAcl feature
             priority: 3
             action:
               block: {}
-            logicalOperator: NONE
             statements:
               - byteMatch:
                   searchString: "sqlmap"
@@ -114,7 +110,6 @@ Feature: AwsWebAcl feature
             priority: 4
             action:
               block: {}
-            logicalOperator: NONE
             statements:
               - byteMatch:
                   searchString: "/admin"
@@ -134,7 +129,6 @@ Feature: AwsWebAcl feature
             priority: 5
             action:
               block: {}
-            logicalOperator: NONE
             statements:
               - sizeConstraint:
                   comparisonOperator: GT
@@ -154,7 +148,6 @@ Feature: AwsWebAcl feature
             priority: 6
             action:
               block: {}
-            logicalOperator: NONE
             statements:
               - sqliMatch:
                   fieldToMatch:
@@ -175,7 +168,6 @@ Feature: AwsWebAcl feature
             priority: 7
             action:
               block: {}
-            logicalOperator: NONE
             statements:
               - xssMatch:
                   fieldToMatch:
@@ -195,7 +187,6 @@ Feature: AwsWebAcl feature
             priority: 8
             action:
               block: {}
-            logicalOperator: NONE
             statements:
               - regexMatch:
                   regexString: "^/(admin|root|config|backup)/.*$"
@@ -214,7 +205,6 @@ Feature: AwsWebAcl feature
             priority: 9
             action:
               block: {}
-            logicalOperator: NONE
             statements:
               - asnMatch:
                   autonomousSystemNumbers:
@@ -230,7 +220,6 @@ Feature: AwsWebAcl feature
             priority: 10
             overrideAction:
               count: {}
-            logicalOperator: NONE
             statements:
               - managedRuleGroup:
                   vendorName: AWS
@@ -245,7 +234,6 @@ Feature: AwsWebAcl feature
             priority: 11
             overrideAction:
               none: {}
-            logicalOperator: NONE
             statements:
               - managedRuleGroup:
                   vendorName: AWS
@@ -262,7 +250,6 @@ Feature: AwsWebAcl feature
             priority: 12
             overrideAction:
               none: {}
-            logicalOperator: NONE
             statements:
               - managedRuleGroup:
                   vendorName: AWS
@@ -282,7 +269,6 @@ Feature: AwsWebAcl feature
                   insertHeaders:
                     - name: X-Captcha-Required
                       value: "true"
-            logicalOperator: NONE
             statements:
               - geoMatch:
                   countryCodes:
@@ -299,7 +285,6 @@ Feature: AwsWebAcl feature
             priority: 14
             action:
               challenge: {}
-            logicalOperator: NONE
             statements:
               - rateBased:
                   limit: 500
@@ -316,7 +301,6 @@ Feature: AwsWebAcl feature
             priority: 15
             action:
               count: {}
-            logicalOperator: NONE
             statements:
               - byteMatch:
                   searchString: "/api"
@@ -338,7 +322,6 @@ Feature: AwsWebAcl feature
             priority: 16
             action:
               block: {}
-            logicalOperator: NONE
             statements:
               - labelMatch:
                   key: "api-access"

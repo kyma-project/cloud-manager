@@ -342,13 +342,19 @@ spec:
                           - immunityTime
                         type: object
                       logicalOperator:
+                        allOf:
+                          - enum:
+                              - NONE
+                              - AND
+                              - OR
+                              - NOT
+                          - enum:
+                              - NONE
+                              - AND
+                              - OR
+                              - NOT
                         default: NONE
                         description: LogicalOperator determines how statements are combined (NONE=single statement, AND/OR=multiple, NOT=negate single)
-                        enum:
-                          - NONE
-                          - AND
-                          - OR
-                          - NOT
                         type: string
                       name:
                         description: Name must be unique within the WebACL
@@ -2285,7 +2291,6 @@ spec:
                           - sampledRequestsEnabled
                         type: object
                     required:
-                      - logicalOperator
                       - name
                       - priority
                       - statements
