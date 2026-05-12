@@ -15,7 +15,6 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
-  - azuremanagedredis
   - azurevnetlinks
   - gcpredisclusters
   - gcpsubnets
@@ -41,7 +40,6 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
-  - azuremanagedredis/finalizers
   - azurevnetlinks/finalizers
   - gcpredisclusters/finalizers
   - gcpsubnets/finalizers
@@ -61,7 +59,6 @@ rules:
 - apiGroups:
   - cloud-control.kyma-project.io
   resources:
-  - azuremanagedredis/status
   - azurevnetlinks/status
   - gcpredisclusters/status
   - gcpsubnets/status
@@ -90,8 +87,6 @@ rules:
   - awsredisclusters
   - awsredisinstances
   - awsvpcpeerings
-  - azuremanagedredisclusters
-  - azuremanagedredisinstances
   - azureredisClusters
   - azureredisinstances
   - azurerwxbackupschedules
@@ -132,8 +127,6 @@ rules:
   - awsredisclusters/finalizers
   - awsredisinstances/finalizers
   - awsvpcpeerings/finalizers
-  - azuremanagedredisclusters/finalizers
-  - azuremanagedredisinstances/finalizers
   - azureredisClusters/finalizers
   - azureredisinstances/finalizers
   - azurerwxbackupschedules/finalizers
@@ -168,8 +161,6 @@ rules:
   - awsredisclusters/status
   - awsredisinstances/status
   - awsvpcpeerings/status
-  - azuremanagedredisclusters/status
-  - azuremanagedredisinstances/status
   - azureredisClusters/status
   - azureredisinstances/status
   - azurerwxbackupschedules/status
