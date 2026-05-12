@@ -52,6 +52,7 @@ spec:
                 description: ClusteringPolicy defines the Redis clustering mode.
                 enum:
                 - EnterpriseCluster
+                - NoCluster
                 - OSSCluster
                 type: string
                 x-kubernetes-validations:

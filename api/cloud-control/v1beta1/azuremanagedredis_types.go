@@ -30,7 +30,7 @@ type AzureManagedRedisSpec struct {
 	HighAvailability bool `json:"highAvailability"`
 
 	// ClusteringPolicy defines the Redis clustering mode.
-	// +kubebuilder:validation:Enum=EnterpriseCluster;OSSCluster
+	// +kubebuilder:validation:Enum=EnterpriseCluster;NoCluster;OSSCluster
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ClusteringPolicy is immutable."
 	ClusteringPolicy string `json:"clusteringPolicy"`
