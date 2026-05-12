@@ -45,6 +45,9 @@ type AzureManagedRedisInstanceStatus struct {
 	// +optional
 	Id string `json:"id,omitempty"`
 
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
 	// PrimaryEndpoint is the connection hostname reported after provisioning.
 	// +optional
 	PrimaryEndpoint string `json:"primaryEndpoint,omitempty"`

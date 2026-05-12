@@ -205,6 +205,9 @@ spec:
                   x-kubernetes-list-type: map
                 id:
                   type: string
+                observedGeneration:
+                  format: int64
+                  type: integer
                 port:
                   description: Port is the Redis client port.
                   format: int32
