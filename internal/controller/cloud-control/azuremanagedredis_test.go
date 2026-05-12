@@ -2,6 +2,7 @@ package cloudcontrol
 
 import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -73,7 +74,7 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 		})
 
 		azureMock := infra.AzureMock().MockConfigs(scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId)
-		resourceGroupName := scope.Spec.Scope.Azure.VpcNetwork
+		resourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
 
 		By("And Then Private End Point is created", func() {
 			pep, err := azureMock.GetPrivateEndPoint(infra.Ctx(), resourceGroupName, name+"-pe")
