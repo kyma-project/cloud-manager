@@ -95,7 +95,7 @@ spec:
             searchString: "/api"
             positionalConstraint: STARTS_WITH
             fieldToMatch:
-              uriPath: true
+              uriPath: {}
             textTransformations:
               - priority: 0
                 type: LOWERCASE
@@ -177,7 +177,7 @@ spec:
             searchString: "/admin"
             positionalConstraint: STARTS_WITH
             fieldToMatch:
-              uriPath: true
+              uriPath: {}
             textTransformations:
               - priority: 0
                 type: LOWERCASE
@@ -200,7 +200,8 @@ spec:
             searchString: "sqlmap"
             positionalConstraint: CONTAINS
             fieldToMatch:
-              singleHeader: "user-agent"
+              singleHeader:
+                name: "user-agent"
             textTransformations:
               - priority: 0
                 type: LOWERCASE
@@ -208,13 +209,13 @@ spec:
             searchString: "../"
             positionalConstraint: CONTAINS
             fieldToMatch:
-              queryString: true
+              queryString: {}
             textTransformations:
               - priority: 0
                 type: URL_DECODE
         - xssMatch:
             fieldToMatch:
-              queryString: true
+              queryString: {}
             textTransformations:
               - priority: 0
                 type: URL_DECODE
@@ -250,7 +251,7 @@ spec:
             comparisonOperator: "GT"
             size: 8192
             fieldToMatch:
-              queryString: true
+              queryString: {}
             textTransformations:
               - priority: 0
                 type: "URL_DECODE"
@@ -270,7 +271,7 @@ spec:
       statements:
         - sqliMatch:
             fieldToMatch:
-              queryString: true
+              queryString: {}
             textTransformations:
               - priority: 0
                 type: "URL_DECODE"
@@ -293,7 +294,7 @@ spec:
       statements:
         - xssMatch:
             fieldToMatch:
-              queryString: true
+              queryString: {}
             textTransformations:
               - priority: 0
                 type: "URL_DECODE"
@@ -316,7 +317,7 @@ spec:
         - regexMatch:
             regexString: "^/(admin|root|config)/.*$"
             fieldToMatch:
-              uriPath: true
+              uriPath: {}
             textTransformations:
               - priority: 0
                 type: "LOWERCASE"
@@ -415,7 +416,7 @@ spec:
             searchString: "/admin"
             positionalConstraint: STARTS_WITH
             fieldToMatch:
-              uriPath: true
+              uriPath: {}
             textTransformations:
               - priority: 0
                 type: LOWERCASE
