@@ -49,7 +49,7 @@ func convertRules(rules []cloudresourcesv1beta1.AwsWebAclRule) ([]wafv2types.Rul
 }
 
 func convertRule(rule cloudresourcesv1beta1.AwsWebAclRule) (*wafv2types.Rule, error) {
-	statement, err := convertStatement(rule.Statement)
+	statement, err := convertRuleStatement(&rule)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func convertRule(rule cloudresourcesv1beta1.AwsWebAclRule) (*wafv2types.Rule, er
 	visibilityConfig := convertVisibilityConfig(rule.VisibilityConfig, rule.Name)
 
 	wafRule := &wafv2types.Rule{
-		Name:             new(rule.Name),
+		Name:             &rule.Name,
 		Priority:         rule.Priority,
 		Statement:        statement,
 		VisibilityConfig: visibilityConfig,
@@ -175,11 +175,6 @@ func convertOverrideAction(overrideAction *cloudresourcesv1beta1.AwsWebAclOverri
 	}
 
 	return nil, fmt.Errorf("overrideAction must have either none or count set")
-}
-
-func convertStatement(stmt cloudresourcesv1beta1.AwsWebAclStatement) (*wafv2types.Statement, error) {
-	// Phase 1: Use new StatementConverter interface (see statement_converter.go)
-	return WrapStatement(stmt).ToWafStatement()
 }
 
 func convertGeoMatchStatement(geo *cloudresourcesv1beta1.AwsWebAclGeoMatchStatement) (*wafv2types.GeoMatchStatement, error) {
@@ -320,19 +315,19 @@ func convertCustomKey(ck cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustom
 
 func convertManagedRuleGroupStatement(managed *cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement) (*wafv2types.ManagedRuleGroupStatement, error) {
 	stmt := &wafv2types.ManagedRuleGroupStatement{
-		VendorName: new(managed.VendorName),
-		Name:       new(managed.Name),
+		VendorName: &managed.VendorName,
+		Name:       &managed.Name,
 	}
 
 	if managed.Version != "" {
-		stmt.Version = new(managed.Version)
+		stmt.Version = &managed.Version
 	}
 
 	if len(managed.ExcludedRules) > 0 {
 		stmt.ExcludedRules = make([]wafv2types.ExcludedRule, 0, len(managed.ExcludedRules))
 		for _, excluded := range managed.ExcludedRules {
 			stmt.ExcludedRules = append(stmt.ExcludedRules, wafv2types.ExcludedRule{
-				Name: new(excluded.Name),
+				Name: &excluded.Name,
 			})
 		}
 	}
@@ -346,7 +341,7 @@ func convertManagedRuleGroupStatement(managed *cloudresourcesv1beta1.AwsWebAclMa
 			}
 
 			stmt.RuleActionOverrides = append(stmt.RuleActionOverrides, wafv2types.RuleActionOverride{
-				Name:        new(override.Name),
+				Name:        &override.Name,
 				ActionToUse: action,
 			})
 		}
@@ -360,7 +355,7 @@ func convertVisibilityConfig(config *cloudresourcesv1beta1.AwsWebAclVisibilityCo
 	if config == nil {
 		return &wafv2types.VisibilityConfig{
 			CloudWatchMetricsEnabled: false,
-			MetricName:               new(defaultName),
+			MetricName:               &defaultName,
 			SampledRequestsEnabled:   false,
 		}
 	}
@@ -373,7 +368,7 @@ func convertVisibilityConfig(config *cloudresourcesv1beta1.AwsWebAclVisibilityCo
 
 	return &wafv2types.VisibilityConfig{
 		CloudWatchMetricsEnabled: config.CloudWatchMetricsEnabled,
-		MetricName:               new(metricName),
+		MetricName:               &metricName,
 		SampledRequestsEnabled:   config.SampledRequestsEnabled,
 	}
 }
@@ -386,20 +381,22 @@ func ScopeRegional() wafv2types.Scope {
 func convertTags(webAcl *cloudresourcesv1beta1.AwsWebAcl) []wafv2types.Tag {
 	tags := []wafv2types.Tag{
 		{
-			Key:   new("Name"),
-			Value: new(webAcl.Name),
+			Key:   aws.String("Name"),
+			Value: &webAcl.Name,
 		},
 		{
-			Key:   new("ManagedBy"),
-			Value: new("cloud-manager"),
+			Key:   aws.String("ManagedBy"),
+			Value: aws.String("cloud-manager"),
 		},
 	}
 
 	// Add labels as tags
 	for key, value := range webAcl.Labels {
+		k := key
+		v := value
 		tags = append(tags, wafv2types.Tag{
-			Key:   new(key),
-			Value: new(value),
+			Key:   &k,
+			Value: &v,
 		})
 	}
 
@@ -572,7 +569,7 @@ func convertTextTransformations(transformations []cloudresourcesv1beta1.AwsWebAc
 
 func convertForwardedIPConfig(config *cloudresourcesv1beta1.AwsWebAclForwardedIPConfig) *wafv2types.ForwardedIPConfig {
 	return &wafv2types.ForwardedIPConfig{
-		HeaderName:       new(config.HeaderName),
+		HeaderName:       &config.HeaderName,
 		FallbackBehavior: wafv2types.FallbackBehavior(config.FallbackBehavior),
 	}
 }
@@ -585,8 +582,8 @@ func convertCustomRequestHandling(handling *cloudresourcesv1beta1.AwsWebAclCusto
 	headers := make([]wafv2types.CustomHTTPHeader, 0, len(handling.InsertHeaders))
 	for _, h := range handling.InsertHeaders {
 		headers = append(headers, wafv2types.CustomHTTPHeader{
-			Name:  new(h.Name),
-			Value: new(h.Value),
+			Name:  &h.Name,
+			Value: &h.Value,
 		})
 	}
 
@@ -601,19 +598,19 @@ func convertCustomResponse(response *cloudresourcesv1beta1.AwsWebAclCustomRespon
 	}
 
 	result := &wafv2types.CustomResponse{
-		ResponseCode: new(response.ResponseCode),
+		ResponseCode: &response.ResponseCode,
 	}
 
 	if response.CustomResponseBodyKey != "" {
-		result.CustomResponseBodyKey = new(response.CustomResponseBodyKey)
+		result.CustomResponseBodyKey = &response.CustomResponseBodyKey
 	}
 
 	if len(response.ResponseHeaders) > 0 {
 		headers := make([]wafv2types.CustomHTTPHeader, 0, len(response.ResponseHeaders))
 		for _, h := range response.ResponseHeaders {
 			headers = append(headers, wafv2types.CustomHTTPHeader{
-				Name:  new(h.Name),
-				Value: new(h.Value),
+				Name:  &h.Name,
+				Value: &h.Value,
 			})
 		}
 		result.ResponseHeaders = headers
@@ -631,7 +628,7 @@ func convertCustomResponseBodies(bodies map[string]cloudresourcesv1beta1.AwsWebA
 	for key, body := range bodies {
 		result[key] = wafv2types.CustomResponseBody{
 			ContentType: wafv2types.ResponseContentType(body.ContentType),
-			Content:     new(body.Content),
+			Content:     &body.Content,
 		}
 	}
 	return result
@@ -644,7 +641,7 @@ func convertCaptchaConfig(config *cloudresourcesv1beta1.AwsWebAclCaptchaConfig) 
 
 	return &wafv2types.CaptchaConfig{
 		ImmunityTimeProperty: &wafv2types.ImmunityTimeProperty{
-			ImmunityTime: new(config.ImmunityTime),
+			ImmunityTime: &config.ImmunityTime,
 		},
 	}
 }
@@ -656,7 +653,7 @@ func convertChallengeConfig(config *cloudresourcesv1beta1.AwsWebAclChallengeConf
 
 	return &wafv2types.ChallengeConfig{
 		ImmunityTimeProperty: &wafv2types.ImmunityTimeProperty{
-			ImmunityTime: new(config.ImmunityTime),
+			ImmunityTime: &config.ImmunityTime,
 		},
 	}
 }
@@ -669,14 +666,14 @@ func convertRuleLabels(labels []cloudresourcesv1beta1.AwsWebAclLabel) []wafv2typ
 	result := make([]wafv2types.Label, 0, len(labels))
 	for _, label := range labels {
 		result = append(result, wafv2types.Label{
-			Name: new(label.Name),
+			Name: &label.Name,
 		})
 	}
 	return result
 }
 func convertLabelMatchStatement(labelMatch *cloudresourcesv1beta1.AwsWebAclLabelMatchStatement) *wafv2types.LabelMatchStatement {
 	return &wafv2types.LabelMatchStatement{
-		Key:   new(labelMatch.Key),
+		Key:   &labelMatch.Key,
 		Scope: wafv2types.LabelMatchScope(labelMatch.Scope),
 	}
 }
@@ -755,7 +752,7 @@ func convertRegexMatchStatement(regexMatch *cloudresourcesv1beta1.AwsWebAclRegex
 	}
 
 	return &wafv2types.RegexMatchStatement{
-		RegexString:         new(regexMatch.RegexString),
+		RegexString:         &regexMatch.RegexString,
 		FieldToMatch:        fieldToMatch,
 		TextTransformations: transformations,
 	}, nil

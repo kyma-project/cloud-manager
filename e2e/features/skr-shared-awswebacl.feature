@@ -41,12 +41,13 @@ Feature: AwsWebAcl feature
                 customResponse:
                   responseCode: 403
                   customResponseBodyKey: block-page
-            statement:
-              geoMatch:
-                countryCodes:
-                  - "CN"
-                  - "RU"
-                  - "KP"
+            logicalOperator: NONE
+            statements:
+              - geoMatch:
+                  countryCodes:
+                    - "CN"
+                    - "RU"
+                    - "KP"
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: block-high-risk-countries
@@ -57,10 +58,11 @@ Feature: AwsWebAcl feature
             priority: 1
             action:
               block: {}
-            statement:
-              rateBased:
-                limit: 2000
-                aggregateKeyType: IP
+            logicalOperator: NONE
+            statements:
+              - rateBased:
+                  limit: 2000
+                  aggregateKeyType: IP
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: rate-limit-per-ip
@@ -71,15 +73,16 @@ Feature: AwsWebAcl feature
             priority: 2
             action:
               block: {}
-            statement:
-              byteMatch:
-                searchString: "../"
-                positionalConstraint: CONTAINS
-                fieldToMatch:
-                  queryString: {}
-                textTransformations:
-                  - priority: 0
-                    type: URL_DECODE
+            logicalOperator: NONE
+            statements:
+              - byteMatch:
+                  searchString: "../"
+                  positionalConstraint: CONTAINS
+                  fieldToMatch:
+                    queryString: {}
+                  textTransformations:
+                    - priority: 0
+                      type: URL_DECODE
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: block-path-traversal
@@ -90,16 +93,17 @@ Feature: AwsWebAcl feature
             priority: 3
             action:
               block: {}
-            statement:
-              byteMatch:
-                searchString: "sqlmap"
-                positionalConstraint: CONTAINS
-                fieldToMatch:
-                  singleHeader:
-                    name: "user-agent"
-                textTransformations:
-                  - priority: 0
-                    type: LOWERCASE
+            logicalOperator: NONE
+            statements:
+              - byteMatch:
+                  searchString: "sqlmap"
+                  positionalConstraint: CONTAINS
+                  fieldToMatch:
+                    singleHeader:
+                      name: "user-agent"
+                  textTransformations:
+                    - priority: 0
+                      type: LOWERCASE
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: block-malicious-user-agents
@@ -110,15 +114,16 @@ Feature: AwsWebAcl feature
             priority: 4
             action:
               block: {}
-            statement:
-              byteMatch:
-                searchString: "/admin"
-                positionalConstraint: STARTS_WITH
-                fieldToMatch:
-                  uriPath: {}
-                textTransformations:
-                  - priority: 0
-                    type: LOWERCASE
+            logicalOperator: NONE
+            statements:
+              - byteMatch:
+                  searchString: "/admin"
+                  positionalConstraint: STARTS_WITH
+                  fieldToMatch:
+                    uriPath: {}
+                  textTransformations:
+                    - priority: 0
+                      type: LOWERCASE
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: block-admin-path-access
@@ -129,15 +134,16 @@ Feature: AwsWebAcl feature
             priority: 5
             action:
               block: {}
-            statement:
-              sizeConstraint:
-                comparisonOperator: GT
-                size: 8192
-                fieldToMatch:
-                  queryString: {}
-                textTransformations:
-                  - priority: 0
-                    type: URL_DECODE
+            logicalOperator: NONE
+            statements:
+              - sizeConstraint:
+                  comparisonOperator: GT
+                  size: 8192
+                  fieldToMatch:
+                    queryString: {}
+                  textTransformations:
+                    - priority: 0
+                      type: URL_DECODE
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: block-oversized-query
@@ -148,16 +154,17 @@ Feature: AwsWebAcl feature
             priority: 6
             action:
               block: {}
-            statement:
-              sqliMatch:
-                fieldToMatch:
-                  queryString: {}
-                textTransformations:
-                  - priority: 0
-                    type: URL_DECODE
-                  - priority: 1
-                    type: HTML_ENTITY_DECODE
-                sensitivityLevel: HIGH
+            logicalOperator: NONE
+            statements:
+              - sqliMatch:
+                  fieldToMatch:
+                    queryString: {}
+                  textTransformations:
+                    - priority: 0
+                      type: URL_DECODE
+                    - priority: 1
+                      type: HTML_ENTITY_DECODE
+                  sensitivityLevel: HIGH
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: block-sql-injection
@@ -168,15 +175,16 @@ Feature: AwsWebAcl feature
             priority: 7
             action:
               block: {}
-            statement:
-              xssMatch:
-                fieldToMatch:
-                  queryString: {}
-                textTransformations:
-                  - priority: 0
-                    type: URL_DECODE
-                  - priority: 1
-                    type: HTML_ENTITY_DECODE
+            logicalOperator: NONE
+            statements:
+              - xssMatch:
+                  fieldToMatch:
+                    queryString: {}
+                  textTransformations:
+                    - priority: 0
+                      type: URL_DECODE
+                    - priority: 1
+                      type: HTML_ENTITY_DECODE
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: block-xss-attacks
@@ -187,14 +195,15 @@ Feature: AwsWebAcl feature
             priority: 8
             action:
               block: {}
-            statement:
-              regexMatch:
-                regexString: "^/(admin|root|config|backup)/.*$"
-                fieldToMatch:
-                  uriPath: {}
-                textTransformations:
-                  - priority: 0
-                    type: LOWERCASE
+            logicalOperator: NONE
+            statements:
+              - regexMatch:
+                  regexString: "^/(admin|root|config|backup)/.*$"
+                  fieldToMatch:
+                    uriPath: {}
+                  textTransformations:
+                    - priority: 0
+                      type: LOWERCASE
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: block-suspicious-patterns
@@ -205,11 +214,12 @@ Feature: AwsWebAcl feature
             priority: 9
             action:
               block: {}
-            statement:
-              asnMatch:
-                autonomousSystemNumbers:
-                  - 64496
-                  - 64497
+            logicalOperator: NONE
+            statements:
+              - asnMatch:
+                  autonomousSystemNumbers:
+                    - 64496
+                    - 64497
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: block-suspicious-asns
@@ -220,10 +230,11 @@ Feature: AwsWebAcl feature
             priority: 10
             overrideAction:
               count: {}
-            statement:
-              managedRuleGroup:
-                vendorName: AWS
-                name: AWSManagedRulesCommonRuleSet
+            logicalOperator: NONE
+            statements:
+              - managedRuleGroup:
+                  vendorName: AWS
+                  name: AWSManagedRulesCommonRuleSet
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: AWS-CommonRuleSet
@@ -234,12 +245,13 @@ Feature: AwsWebAcl feature
             priority: 11
             overrideAction:
               none: {}
-            statement:
-              managedRuleGroup:
-                vendorName: AWS
-                name: AWSManagedRulesSQLiRuleSet
-                excludedRules:
-                  - name: SQLi_QUERYARGUMENTS
+            logicalOperator: NONE
+            statements:
+              - managedRuleGroup:
+                  vendorName: AWS
+                  name: AWSManagedRulesSQLiRuleSet
+                  excludedRules:
+                    - name: SQLi_QUERYARGUMENTS
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: AWS-SQLi
@@ -250,11 +262,12 @@ Feature: AwsWebAcl feature
             priority: 12
             overrideAction:
               none: {}
-            statement:
-              managedRuleGroup:
-                vendorName: AWS
-                name: AWSManagedRulesLinuxRuleSet
-                version: "Version_2.0"
+            logicalOperator: NONE
+            statements:
+              - managedRuleGroup:
+                  vendorName: AWS
+                  name: AWSManagedRulesLinuxRuleSet
+                  version: "Version_2.0"
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: AWS-LinuxRuleSet
@@ -269,10 +282,11 @@ Feature: AwsWebAcl feature
                   insertHeaders:
                     - name: X-Captcha-Required
                       value: "true"
-            statement:
-              geoMatch:
-                countryCodes:
-                  - "SY"
+            logicalOperator: NONE
+            statements:
+              - geoMatch:
+                  countryCodes:
+                    - "SY"
             captchaConfig:
               immunityTime: 300
             visibilityConfig:
@@ -285,10 +299,11 @@ Feature: AwsWebAcl feature
             priority: 14
             action:
               challenge: {}
-            statement:
-              rateBased:
-                limit: 500
-                aggregateKeyType: IP
+            logicalOperator: NONE
+            statements:
+              - rateBased:
+                  limit: 500
+                  aggregateKeyType: IP
             challengeConfig:
               immunityTime: 600
             visibilityConfig:
@@ -301,15 +316,16 @@ Feature: AwsWebAcl feature
             priority: 15
             action:
               count: {}
-            statement:
-              byteMatch:
-                searchString: "/api"
-                positionalConstraint: STARTS_WITH
-                fieldToMatch:
-                  uriPath: {}
-                textTransformations:
-                  - priority: 0
-                    type: LOWERCASE
+            logicalOperator: NONE
+            statements:
+              - byteMatch:
+                  searchString: "/api"
+                  positionalConstraint: STARTS_WITH
+                  fieldToMatch:
+                    uriPath: {}
+                  textTransformations:
+                    - priority: 0
+                      type: LOWERCASE
             ruleLabels:
               - name: "api-access"
             visibilityConfig:
@@ -322,13 +338,77 @@ Feature: AwsWebAcl feature
             priority: 16
             action:
               block: {}
-            statement:
-              labelMatch:
-                key: "api-access"
-                scope: LABEL
+            logicalOperator: NONE
+            statements:
+              - labelMatch:
+                  key: "api-access"
+                  scope: LABEL
             visibilityConfig:
               cloudWatchMetricsEnabled: true
               metricName: block-labeled-threats
+              sampledRequestsEnabled: true
+
+          # AND operator - combining GeoMatch and ByteMatch
+          - name: block-admin-from-high-risk
+            priority: 17
+            action:
+              block: {}
+            logicalOperator: AND
+            statements:
+              - geoMatch:
+                  countryCodes:
+                    - "CN"
+                    - "RU"
+              - byteMatch:
+                  searchString: "/admin"
+                  positionalConstraint: STARTS_WITH
+                  fieldToMatch:
+                    uriPath: {}
+                  textTransformations:
+                    - priority: 0
+                      type: LOWERCASE
+            visibilityConfig:
+              cloudWatchMetricsEnabled: true
+              metricName: block-admin-from-high-risk
+              sampledRequestsEnabled: true
+
+          # OR operator - combining multiple conditions
+          - name: block-threats-or-suspicious-asn
+            priority: 18
+            action:
+              block: {}
+            logicalOperator: OR
+            statements:
+              - byteMatch:
+                  searchString: "sqlmap"
+                  positionalConstraint: CONTAINS
+                  fieldToMatch:
+                    singleHeader:
+                      name: "user-agent"
+                  textTransformations:
+                    - priority: 0
+                      type: LOWERCASE
+              - asnMatch:
+                  autonomousSystemNumbers:
+                    - 64496
+            visibilityConfig:
+              cloudWatchMetricsEnabled: true
+              metricName: block-threats-or-suspicious-asn
+              sampledRequestsEnabled: true
+
+          # NOT operator - allow all except blocked countries
+          - name: allow-except-blocked-countries
+            priority: 19
+            action:
+              allow: {}
+            logicalOperator: NOT
+            statements:
+              - geoMatch:
+                  countryCodes:
+                    - "KP"
+            visibilityConfig:
+              cloudWatchMetricsEnabled: true
+              metricName: allow-except-blocked-countries
               sampledRequestsEnabled: true
       """
 

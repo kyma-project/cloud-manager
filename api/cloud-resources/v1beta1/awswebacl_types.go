@@ -120,6 +120,26 @@ type AwsWebAclSpec struct {
 	ChallengeConfig *AwsWebAclChallengeConfig `json:"challengeConfig,omitempty"`
 }
 
+// AwsWebAclLogicalOperator defines how multiple statements are combined in a rule
+// +kubebuilder:validation:Enum=NONE;AND;OR;NOT
+type AwsWebAclLogicalOperator string
+
+const (
+	// LogicalOperatorNone - Single statement, no logical operation
+	LogicalOperatorNone AwsWebAclLogicalOperator = "NONE"
+	// LogicalOperatorAnd - All statements must match (requires 2+ statements)
+	LogicalOperatorAnd AwsWebAclLogicalOperator = "AND"
+	// LogicalOperatorOr - At least one statement must match (requires 2+ statements)
+	LogicalOperatorOr AwsWebAclLogicalOperator = "OR"
+	// LogicalOperatorNot - Negates the single statement (requires exactly 1 statement)
+	LogicalOperatorNot AwsWebAclLogicalOperator = "NOT"
+)
+
+// AwsWebAclRule defines a single rule in the WebACL
+// +kubebuilder:validation:XValidation:rule="self.logicalOperator == 'NONE' ? size(self.statements) == 1 : true",message="NONE operator requires exactly 1 statement"
+// +kubebuilder:validation:XValidation:rule="self.logicalOperator == 'NOT' ? size(self.statements) == 1 : true",message="NOT operator requires exactly 1 statement"
+// +kubebuilder:validation:XValidation:rule="self.logicalOperator == 'AND' || self.logicalOperator == 'OR' ? size(self.statements) >= 2 : true",message="AND/OR operators require at least 2 statements"
+// +kubebuilder:validation:XValidation:rule="self.logicalOperator != 'NONE' ? !self.statements.exists(s, has(s.managedRuleGroup) || has(s.rateBased)) : true",message="ManagedRuleGroup and RateBased can only be used with NONE operator"
 type AwsWebAclRule struct {
 	// Name must be unique within the WebACL
 	// +kubebuilder:validation:Required
@@ -141,9 +161,16 @@ type AwsWebAclRule struct {
 	// +optional
 	OverrideAction *AwsWebAclOverrideAction `json:"overrideAction,omitempty"`
 
-	// Statement defines the match condition (exactly one must be set)
+	// LogicalOperator determines how statements are combined (NONE=single statement, AND/OR=multiple, NOT=negate single)
 	// +kubebuilder:validation:Required
-	Statement AwsWebAclStatement `json:"statement"`
+	// +kubebuilder:default=NONE
+	LogicalOperator AwsWebAclLogicalOperator `json:"logicalOperator"`
+
+	// Statements - Array of match conditions combined by LogicalOperator
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=10
+	Statements []AwsWebAclStatement `json:"statements"`
 
 	// RuleLabels - Labels to apply to matching requests (max 100)
 	// Can be used with LabelMatchStatement in subsequent rules
@@ -226,21 +253,11 @@ type AwsWebAclNoneAction struct {
 	// No fields - empty struct
 }
 
+// AwsWebAclStatement - Individual match condition
+// Exactly one statement type must be set
 // +kubebuilder:validation:MinProperties=1
 // +kubebuilder:validation:MaxProperties=1
 type AwsWebAclStatement struct {
-	// AndStatement - Logical AND (all nested statements must match)
-	// +optional
-	AndStatement *AwsWebAclAndStatement `json:"andStatement,omitempty"`
-
-	// OrStatement - Logical OR (at least one nested statement must match)
-	// +optional
-	OrStatement *AwsWebAclOrStatement `json:"orStatement,omitempty"`
-
-	// NotStatement - Logical NOT (negates nested statement)
-	// +optional
-	NotStatement *AwsWebAclNotStatement `json:"notStatement,omitempty"`
-
 	// RateBased - Rate limiting per IP
 	// +optional
 	RateBased *AwsWebAclRateBasedStatement `json:"rateBased,omitempty"`
@@ -882,73 +899,6 @@ type AwsWebAclVisibilityConfig struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=true
 	SampledRequestsEnabled bool `json:"sampledRequestsEnabled"`
-}
-
-// ===== Level 0 Logical Operators (root level) =====
-
-// ===== Level 0 Operator Types =====
-
-// AwsWebAclAndStatement - Logical AND at Level 0 (root)
-type AwsWebAclAndStatement struct {
-	// Statements to combine with AND logic (min 2)
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclLeafStatement `json:"statements"`
-}
-
-// AwsWebAclOrStatement - Logical OR at Level 0 (root)
-type AwsWebAclOrStatement struct {
-	// Statements to combine with OR logic (min 2)
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=2
-	Statements []AwsWebAclLeafStatement `json:"statements"`
-}
-
-// AwsWebAclNotStatement - Logical NOT at Level 0 (root)
-type AwsWebAclNotStatement struct {
-	// Statement to negate
-	// +kubebuilder:validation:Required
-	Statement AwsWebAclLeafStatement `json:"statement"`
-}
-
-// ===== Leaf Statement Type =====
-
-// AwsWebAclLeafStatement - Leaf-level statement (no logical operators)
-// Contains only actual match conditions, no And/Or/Not operators
-// +kubebuilder:validation:MinProperties=1
-// +kubebuilder:validation:MaxProperties=1
-type AwsWebAclLeafStatement struct {
-	// GeoMatch - Match requests from specific countries
-	// +optional
-	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
-
-	// ByteMatch - Match specific patterns in requests
-	// +optional
-	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
-
-	// LabelMatch - Match based on labels added by previous rules
-	// +optional
-	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
-
-	// SizeConstraint - Match based on request component size
-	// +optional
-	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
-
-	// SqliMatch - Detect SQL injection attacks
-	// +optional
-	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
-
-	// XssMatch - Detect cross-site scripting attacks
-	// +optional
-	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
-
-	// RegexMatch - Match using regular expression patterns
-	// +optional
-	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
-
-	// AsnMatch - Match requests from specific Autonomous System Numbers
-	// +optional
-	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
 }
 
 // AwsWebAclStatus defines the observed state of AwsWebAcl.

@@ -82,10 +82,11 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canNotCreateSkr(
 			"AwsWebAcl cannot be created with empty rule statement",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:      "empty-statement",
-				Priority:  0,
-				Action:    cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{}, // Empty - no statement type
+				Name:            "empty-statement",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements:      []cloudresourcesv1beta1.AwsWebAclStatement{{}}, // Empty - no statement type
 			}),
 			"statement",
 		)
@@ -93,16 +94,19 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canNotCreateSkr(
 			"AwsWebAcl cannot be created with multiple statement types",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "multiple-statements",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"US"},
-					},
-					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit:            2000,
-						AggregateKeyType: "IP",
+				Name:            "multiple-statements",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"US"},
+						},
+						RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+							Limit:            2000,
+							AggregateKeyType: "IP",
+						},
 					},
 				},
 			}),
@@ -112,12 +116,15 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with single IPSet statement",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "ipset-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionAllow(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"US"},
+				Name:            "ipset-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionAllow(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"US"},
+						},
 					},
 				},
 			}),
@@ -126,12 +133,15 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with single GeoMatch statement",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "geo-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"CN", "RU"},
+				Name:            "geo-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"CN", "RU"},
+						},
 					},
 				},
 			}),
@@ -140,13 +150,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with single RateBased statement",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "rate-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit:            2000,
-						AggregateKeyType: "IP",
+				Name:            "rate-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
+							Limit:            2000,
+							AggregateKeyType: "IP",
+						},
 					},
 				},
 			}),
@@ -155,13 +168,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with single ManagedRuleGroup statement",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:           "managed-rule",
-				Priority:       0,
-				OverrideAction: cloudresourcesv1beta1.OverrideActionNone(), // Use OverrideAction for managed rules
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-						VendorName: "AWS",
-						Name:       "AWSManagedRulesCommonRuleSet",
+				Name:            "managed-rule",
+				Priority:        0,
+				OverrideAction:  cloudresourcesv1beta1.OverrideActionNone(), // Use OverrideAction for managed rules
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+							VendorName: "AWS",
+							Name:       "AWSManagedRulesCommonRuleSet",
+						},
 					},
 				},
 			}),
@@ -170,18 +186,21 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with single ByteMatch statement",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "byte-match-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
-						SearchString:         "../",
-						PositionalConstraint: "CONTAINS",
-						FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-							QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
-						},
-						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-							{Priority: 0, Type: "NONE"},
+				Name:            "byte-match-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
+							SearchString:         "../",
+							PositionalConstraint: "CONTAINS",
+							FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+								QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
+							},
+							TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+								{Priority: 0, Type: "NONE"},
+							},
 						},
 					},
 				},
@@ -194,10 +213,11 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canNotCreateSkr(
 			"AwsWebAcl cannot be created with empty fieldToMatch",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "empty-field",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "empty-field",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "test",
 						PositionalConstraint: "CONTAINS",
@@ -206,7 +226,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 							{Priority: 0, Type: "NONE"},
 						},
 					},
-				},
+				}},
 			}),
 			"fieldToMatch",
 		)
@@ -214,10 +234,11 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canNotCreateSkr(
 			"AwsWebAcl cannot be created with multiple fieldToMatch options (bool fields)",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "multiple-fields",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "multiple-fields",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "test",
 						PositionalConstraint: "CONTAINS",
@@ -229,7 +250,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 							{Priority: 0, Type: "NONE"},
 						},
 					},
-				},
+				}},
 			}),
 			"fieldToMatch",
 		)
@@ -237,10 +258,11 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canNotCreateSkr(
 			"AwsWebAcl cannot be created with bool field and singleHeader set",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "mixed-fields",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "mixed-fields",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "test",
 						PositionalConstraint: "CONTAINS",
@@ -252,7 +274,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 							{Priority: 0, Type: "NONE"},
 						},
 					},
-				},
+				}},
 			}),
 			"fieldToMatch",
 		)
@@ -260,10 +282,11 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with uriPath field",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "uri-path-match",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "uri-path-match",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "/admin",
 						PositionalConstraint: "STARTS_WITH",
@@ -274,17 +297,18 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 							{Priority: 0, Type: "LOWERCASE"},
 						},
 					},
-				},
+				}},
 			}),
 		)
 
 		canCreateSkr(
 			"AwsWebAcl can be created with queryString field",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "query-match",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "query-match",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "../",
 						PositionalConstraint: "CONTAINS",
@@ -295,17 +319,18 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 							{Priority: 0, Type: "URL_DECODE"},
 						},
 					},
-				},
+				}},
 			}),
 		)
 
 		canCreateSkr(
 			"AwsWebAcl can be created with method field",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "method-match",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "method-match",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "DELETE",
 						PositionalConstraint: "EXACTLY",
@@ -316,17 +341,18 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 							{Priority: 0, Type: "NONE"},
 						},
 					},
-				},
+				}},
 			}),
 		)
 
 		canCreateSkr(
 			"AwsWebAcl can be created with singleHeader field",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "header-match",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "header-match",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "bot",
 						PositionalConstraint: "CONTAINS",
@@ -337,17 +363,18 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 							{Priority: 0, Type: "LOWERCASE"},
 						},
 					},
-				},
+				}},
 			}),
 		)
 
 		canCreateSkr(
 			"AwsWebAcl can be created with body field",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "body-match",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "body-match",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
 						SearchString:         "<script>",
 						PositionalConstraint: "CONTAINS",
@@ -358,7 +385,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 							{Priority: 0, Type: "HTML_ENTITY_DECODE"},
 						},
 					},
-				},
+				}},
 			}),
 		)
 	})
@@ -368,57 +395,61 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with Allow action",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "allow-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionAllow(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "allow-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionAllow(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
-				},
+				}},
 			}),
 		)
 
 		canCreateSkr(
 			"AwsWebAcl can be created with Block action",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "block-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "block-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
-				},
+				}},
 			}),
 		)
 
 		canCreateSkr(
 			"AwsWebAcl can be created with Count action",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "count-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionCount(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "count-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionCount(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit:            1000,
 						AggregateKeyType: "IP",
 					},
-				},
+				}},
 			}),
 		)
 
 		canCreateSkr(
 			"AwsWebAcl can be created with Captcha action",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "captcha-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionCaptcha(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "captcha-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionCaptcha(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"CN"},
 					},
-				},
+				}},
 			}),
 		)
 	})
@@ -428,14 +459,15 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canNotCreateSkr(
 			"AwsWebAcl cannot be created with empty countryCodes",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "empty-countries",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "empty-countries",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{}, // Empty
 					},
-				},
+				}},
 			}),
 			"countryCodes",
 		)
@@ -443,26 +475,28 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with single country code",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "single-country-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "single-country-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{
 							"US",
 						},
 					},
-				},
+				}},
 			}),
 		)
 
 		canCreateSkr(
 			"AwsWebAcl can be created with multiple country codes",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "multi-country-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "multi-country-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{
 							"US",
@@ -470,17 +504,18 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 							"DE",
 						},
 					},
-				},
+				}},
 			}),
 		)
 
 		canCreateSkr(
 			"AwsWebAcl can be created with GeoMatch and ForwardedIPConfig",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "geo-forwarded-ip-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionAllow(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "geo-forwarded-ip-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionAllow(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{
 							"US",
@@ -490,7 +525,7 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 							FallbackBehavior: "MATCH",
 						},
 					},
-				},
+				}},
 			}),
 		)
 	})
@@ -500,15 +535,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canNotCreateSkr(
 			"AwsWebAcl cannot be created with rate limit below minimum (10)",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "low-rate",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "low-rate",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit:            9,
 						AggregateKeyType: "IP",
 					},
-				},
+				}},
 			}),
 			"limit",
 		)
@@ -516,30 +552,32 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with minimum rate limit (100)",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "min-rate",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "min-rate",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit:            100,
 						AggregateKeyType: "IP",
 					},
-				},
+				}},
 			}),
 		)
 
 		canCreateSkr(
 			"AwsWebAcl can be created with typical rate limit",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "normal-rate",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "normal-rate",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 						Limit:            2000,
 						AggregateKeyType: "IP",
 					},
-				},
+				}},
 			}),
 		)
 	})
@@ -550,35 +588,38 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			"AwsWebAcl can be created with multiple rules of different types",
 			newTestAwsWebAclBuilder().WithRules([]cloudresourcesv1beta1.AwsWebAclRule{
 				{
-					Name:     "rule-1-ipset",
-					Priority: 0,
-					Action:   cloudresourcesv1beta1.RuleActionAllow(),
-					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+					Name:            "rule-1-ipset",
+					Priority:        0,
+					Action:          cloudresourcesv1beta1.RuleActionAllow(),
+					LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+					Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 							CountryCodes: []string{"US"},
 						},
-					},
+					}},
 				},
 				{
-					Name:     "rule-2-geo",
-					Priority: 1,
-					Action:   cloudresourcesv1beta1.RuleActionBlock(),
-					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+					Name:            "rule-2-geo",
+					Priority:        1,
+					Action:          cloudresourcesv1beta1.RuleActionBlock(),
+					LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+					Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 							CountryCodes: []string{"CN"},
 						},
-					},
+					}},
 				},
 				{
-					Name:     "rule-3-rate",
-					Priority: 2,
-					Action:   cloudresourcesv1beta1.RuleActionBlock(),
-					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+					Name:            "rule-3-rate",
+					Priority:        2,
+					Action:          cloudresourcesv1beta1.RuleActionBlock(),
+					LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+					Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 						RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
 							Limit:            1000,
 							AggregateKeyType: "IP",
 						},
-					},
+					}},
 				},
 			}),
 		)
@@ -610,14 +651,15 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			newTestAwsWebAclBuilder(),
 			func(b Builder[*cloudresourcesv1beta1.AwsWebAcl]) {
 				b.(*testAwsWebAclBuilder).WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-					Name:     "new-rule",
-					Priority: 0,
-					Action:   cloudresourcesv1beta1.RuleActionBlock(),
-					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+					Name:            "new-rule",
+					Priority:        0,
+					Action:          cloudresourcesv1beta1.RuleActionBlock(),
+					LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+					Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 							CountryCodes: []string{"US"},
 						},
-					},
+					}},
 				})
 			},
 		)
@@ -625,18 +667,19 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canChangeSkr(
 			"AwsWebAcl rule IPSet addresses can be modified",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "ipset-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "ipset-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
-				},
+				}},
 			}),
 			func(b Builder[*cloudresourcesv1beta1.AwsWebAcl]) {
 				webacl := b.Build()
-				webacl.Spec.Rules[0].Statement.GeoMatch.CountryCodes = []string{
+				webacl.Spec.Rules[0].Statements[0].GeoMatch.CountryCodes = []string{
 					"US",
 					"US",
 					"US",
@@ -647,14 +690,15 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canChangeSkr(
 			"AwsWebAcl rule action can be changed",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "action-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionCount(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
+				Name:            "action-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionCount(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{{
 					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
 						CountryCodes: []string{"US"},
 					},
-				},
+				}},
 			}),
 			func(b Builder[*cloudresourcesv1beta1.AwsWebAcl]) {
 				webacl := b.Build()
@@ -668,28 +712,25 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with AndStatement combining two conditions",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "and-statement-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclLeafStatement{
-							{
-								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-									CountryCodes: []string{"CN", "RU"},
-								},
+				Name:            "and-statement-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorAnd,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"CN", "RU"},
+						},
+					},
+					{
+						ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
+							SearchString:         "/admin",
+							PositionalConstraint: "STARTS_WITH",
+							FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+								UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 							},
-							{
-								ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
-									SearchString:         "/admin",
-									PositionalConstraint: "STARTS_WITH",
-									FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-										UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
-									},
-									TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-										{Priority: 0, Type: "LOWERCASE"},
-									},
-								},
+							TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+								{Priority: 0, Type: "LOWERCASE"},
 							},
 						},
 					},
@@ -698,32 +739,29 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		)
 
 		canCreateSkr(
-			"AwsWebAcl can be created with nested logical statements (2 levels deep)",
+			"AwsWebAcl can be created with AND logical operator combining two conditions",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "nested-logical-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclLeafStatement{
-							{
-								// First condition: GeoMatch trusted country
-								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-									CountryCodes: []string{"US", "GB", "DE"},
-								},
+				Name:            "and-logical-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorAnd,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						// First condition: GeoMatch trusted country
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"US", "GB", "DE"},
+						},
+					},
+					{
+						// Second condition: ByteMatch for suspicious path
+						ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
+							SearchString:         "/wp-admin",
+							PositionalConstraint: "STARTS_WITH",
+							FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+								UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 							},
-							{
-								// Second condition: ByteMatch for suspicious path
-								ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
-									SearchString:         "/wp-admin",
-									PositionalConstraint: "STARTS_WITH",
-									FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-										UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
-									},
-									TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-										{Priority: 0, Type: "LOWERCASE"},
-									},
-								},
+							TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+								{Priority: 0, Type: "LOWERCASE"},
 							},
 						},
 					},
@@ -732,34 +770,30 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		)
 
 		canCreateSkr(
-			"AwsWebAcl can be created with OrStatement containing NotStatement (mimics AWS example)",
+			"AwsWebAcl can be created with OR logical operator combining two conditions (mimics AWS example)",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "or-with-not-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					// Mimics the OrTest example from yelb.json
-					OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclLeafStatement{
-							{
-								// Level 1: LabelMatch leaf statement
-								LabelMatch: &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
-									Scope: "LABEL",
-									Key:   "awswaf:managed:aws:bot-control:bot:name:aasa_bot",
-								},
+				Name:            "or-two-conditions-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorOr,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						// Level 1: LabelMatch leaf statement
+						LabelMatch: &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
+							Scope: "LABEL",
+							Key:   "awswaf:managed:aws:bot-control:bot:name:aasa_bot",
+						},
+					},
+					{
+						// Level 1: SizeConstraint leaf statement
+						SizeConstraint: &cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement{
+							ComparisonOperator: "EQ",
+							Size:               7777,
+							FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+								Method: &cloudresourcesv1beta1.AwsWebAclMethod{},
 							},
-							{
-								// Level 1: SizeConstraint leaf statement
-								SizeConstraint: &cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement{
-									ComparisonOperator: "EQ",
-									Size:               7777,
-									FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-										Method: &cloudresourcesv1beta1.AwsWebAclMethod{},
-									},
-									TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-										{Priority: 0, Type: "NONE"},
-									},
-								},
+							TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+								{Priority: 0, Type: "NONE"},
 							},
 						},
 					},
@@ -768,19 +802,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		)
 
 		canNotCreateSkr(
-			"AwsWebAcl cannot be created with AndStatement with only one statement",
+			"AwsWebAcl cannot be created with AND operator with only one statement",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "and-single-statement",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclLeafStatement{
-							{
-								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-									CountryCodes: []string{"US"},
-								},
-							},
+				Name:            "and-single-statement",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorAnd,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"US"},
 						},
 					},
 				},
@@ -789,31 +820,28 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		)
 
 		canCreateSkr(
-			"AwsWebAcl can be created with OrStatement combining multiple conditions",
+			"AwsWebAcl can be created with OR operator combining multiple conditions",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "or-statement-rule",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclLeafStatement{
-							{
-								ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
-									SearchString:         "sqlmap",
-									PositionalConstraint: "CONTAINS",
-									FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-										SingleHeader: &cloudresourcesv1beta1.AwsWebAclSingleHeader{Name: "user-agent"},
-									},
-									TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-										{Priority: 0, Type: "LOWERCASE"},
-									},
-								},
+				Name:            "or-statement-rule",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorOr,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
+							SearchString:         "sqlmap",
+							PositionalConstraint: "CONTAINS",
+							FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+								SingleHeader: &cloudresourcesv1beta1.AwsWebAclSingleHeader{Name: "user-agent"},
 							},
-							{
-								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-									CountryCodes: []string{"KP"},
-								},
+							TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+								{Priority: 0, Type: "LOWERCASE"},
 							},
+						},
+					},
+					{
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"KP"},
 						},
 					},
 				},
@@ -821,19 +849,16 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		)
 
 		canNotCreateSkr(
-			"AwsWebAcl cannot be created with OrStatement with only one statement",
+			"AwsWebAcl cannot be created with OR operator with only one statement",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "or-single-statement",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionBlock(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-						Statements: []cloudresourcesv1beta1.AwsWebAclLeafStatement{
-							{
-								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-									CountryCodes: []string{"US"},
-								},
-							},
+				Name:            "or-single-statement",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionBlock(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorOr,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"US"},
 						},
 					},
 				},
@@ -844,15 +869,14 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 		canCreateSkr(
 			"AwsWebAcl can be created with NotStatement negating GeoMatch",
 			newTestAwsWebAclBuilder().WithRule(cloudresourcesv1beta1.AwsWebAclRule{
-				Name:     "not-geo-statement",
-				Priority: 0,
-				Action:   cloudresourcesv1beta1.RuleActionAllow(),
-				Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-					NotStatement: &cloudresourcesv1beta1.AwsWebAclNotStatement{
-						Statement: cloudresourcesv1beta1.AwsWebAclLeafStatement{
-							GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-								CountryCodes: []string{"CN", "RU", "KP"},
-							},
+				Name:            "not-geo-statement",
+				Priority:        0,
+				Action:          cloudresourcesv1beta1.RuleActionAllow(),
+				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNot,
+				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+					{
+						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+							CountryCodes: []string{"CN", "RU", "KP"},
 						},
 					},
 				},
@@ -863,71 +887,64 @@ var _ = Describe("Feature: SKR AwsWebAcl", Ordered, func() {
 			"AwsWebAcl can be created with multiple rules using logical operators",
 			newTestAwsWebAclBuilder().WithRules([]cloudresourcesv1beta1.AwsWebAclRule{
 				{
-					Name:     "rule-and",
-					Priority: 0,
-					Action:   cloudresourcesv1beta1.RuleActionBlock(),
-					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-						AndStatement: &cloudresourcesv1beta1.AwsWebAclAndStatement{
-							Statements: []cloudresourcesv1beta1.AwsWebAclLeafStatement{
-								{
-									GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-										CountryCodes: []string{"CN"},
-									},
+					Name:            "rule-and",
+					Priority:        0,
+					Action:          cloudresourcesv1beta1.RuleActionBlock(),
+					LogicalOperator: cloudresourcesv1beta1.LogicalOperatorAnd,
+					Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+						{
+							GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+								CountryCodes: []string{"CN"},
+							},
+						},
+						{
+							ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
+								SearchString:         "/admin",
+								PositionalConstraint: "STARTS_WITH",
+								FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+									UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
 								},
-								{
-									ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
-										SearchString:         "/admin",
-										PositionalConstraint: "STARTS_WITH",
-										FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-											UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
-										},
-										TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-											{Priority: 0, Type: "LOWERCASE"},
-										},
-									},
+								TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+									{Priority: 0, Type: "LOWERCASE"},
 								},
 							},
 						},
 					},
 				},
 				{
-					Name:     "rule-or",
-					Priority: 1,
-					Action:   cloudresourcesv1beta1.RuleActionBlock(),
-					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-						OrStatement: &cloudresourcesv1beta1.AwsWebAclOrStatement{
-							Statements: []cloudresourcesv1beta1.AwsWebAclLeafStatement{
-								{
-									ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
-										SearchString:         "bot",
-										PositionalConstraint: "CONTAINS",
-										FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-											SingleHeader: &cloudresourcesv1beta1.AwsWebAclSingleHeader{Name: "user-agent"},
-										},
-										TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-											{Priority: 0, Type: "LOWERCASE"},
-										},
-									},
+					Name:            "rule-or",
+					Priority:        1,
+					Action:          cloudresourcesv1beta1.RuleActionBlock(),
+					LogicalOperator: cloudresourcesv1beta1.LogicalOperatorOr,
+					Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+						{
+							ByteMatch: &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
+								SearchString:         "bot",
+								PositionalConstraint: "CONTAINS",
+								FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
+									SingleHeader: &cloudresourcesv1beta1.AwsWebAclSingleHeader{Name: "user-agent"},
 								},
-								{
-									GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-										CountryCodes: []string{"RU"},
-									},
+								TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
+									{Priority: 0, Type: "LOWERCASE"},
 								},
+							},
+						},
+						{
+							GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+								CountryCodes: []string{"RU"},
 							},
 						},
 					},
 				},
 				{
-					Name:     "rule-not",
-					Priority: 2,
-					Action:   cloudresourcesv1beta1.RuleActionAllow(),
-					Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-						NotStatement: &cloudresourcesv1beta1.AwsWebAclNotStatement{
-							Statement: cloudresourcesv1beta1.AwsWebAclLeafStatement{
-								GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-									CountryCodes: []string{"KP"},
-								},
+					Name:            "rule-not",
+					Priority:        2,
+					Action:          cloudresourcesv1beta1.RuleActionAllow(),
+					LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNot,
+					Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+						{
+							GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
+								CountryCodes: []string{"KP"},
 							},
 						},
 					},

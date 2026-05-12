@@ -109,10 +109,12 @@ var _ = Describe("AwsWebAcl Controller", func() {
 						Name:           "AWS-AWSManagedRulesKnownBadInputsRuleSet",
 						Priority:       0,
 						OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
-						Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-							ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-								VendorName: "AWS",
-								Name:       "AWSManagedRulesKnownBadInputsRuleSet",
+						Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+							{
+								ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+									VendorName: "AWS",
+									Name:       "AWSManagedRulesKnownBadInputsRuleSet",
+								},
 							},
 						},
 						VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
@@ -125,10 +127,12 @@ var _ = Describe("AwsWebAcl Controller", func() {
 						Name:           "AWS-AWSManagedRulesCommonRuleSet",
 						Priority:       1,
 						OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
-						Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-							ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-								VendorName: "AWS",
-								Name:       "AWSManagedRulesCommonRuleSet",
+						Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+							{
+								ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+									VendorName: "AWS",
+									Name:       "AWSManagedRulesCommonRuleSet",
+								},
 							},
 						},
 						VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
@@ -231,10 +235,12 @@ var _ = Describe("AwsWebAcl Controller", func() {
 						Name:           "AWS-AWSManagedRulesKnownBadInputsRuleSet",
 						Priority:       2,
 						OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
-						Statement: cloudresourcesv1beta1.AwsWebAclStatement{
-							ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-								VendorName: "AWS",
-								Name:       "AWSManagedRulesKnownBadInputsRuleSet",
+						Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+							{
+								ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+									VendorName: "AWS",
+									Name:       "AWSManagedRulesKnownBadInputsRuleSet",
+								},
 							},
 						},
 						VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
