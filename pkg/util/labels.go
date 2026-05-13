@@ -1,6 +1,7 @@
 package util
 
 import (
+	"maps"
 	"regexp"
 )
 
@@ -119,9 +120,7 @@ func (labelBuilder *labelBuilder) WithGcpLabels(scopeName, shootName string) Lab
 func (labelBuilder *labelBuilder) Build() map[string]string {
 	resultMap := make(map[string]string)
 
-	for key, value := range labelBuilder.labels {
-		resultMap[key] = value
-	}
+	maps.Copy(resultMap, labelBuilder.labels)
 
 	return resultMap
 }

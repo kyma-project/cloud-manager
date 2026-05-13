@@ -58,7 +58,7 @@ func (b GcpBackup) GetId() string {
 	return b.Name
 }
 
-func (b GcpBackup) GetObject() interface{} {
+func (b GcpBackup) GetObject() any {
 	return b.Backup
 }
 

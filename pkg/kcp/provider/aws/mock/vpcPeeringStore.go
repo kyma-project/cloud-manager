@@ -46,7 +46,7 @@ func (s *vpcPeeringStore) CreateVpcPeeringConnection(ctx context.Context, vpcId,
 
 	if err != nil {
 		peering = &ec2types.VpcPeeringConnection{
-			VpcPeeringConnectionId: ptr.To("pcx-" + uuid.NewString()[:8]),
+			VpcPeeringConnectionId: new("pcx-" + uuid.NewString()[:8]),
 			RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
 				VpcId: vpcId,
 			},
@@ -117,7 +117,7 @@ func (s *vpcPeeringStore) DescribeVpcPeeringConnection(ctx context.Context, vpcP
 
 func (s *vpcPeeringStore) getVpcPeeringConnection(vpcPeeringConnectionId string) (*ec2types.VpcPeeringConnection, error) {
 	for _, x := range s.items {
-		if ptr.Equal(x.peering.VpcPeeringConnectionId, ptr.To(vpcPeeringConnectionId)) {
+		if ptr.Equal(x.peering.VpcPeeringConnectionId, new(vpcPeeringConnectionId)) {
 			return &x.peering, nil
 		}
 	}
@@ -193,7 +193,7 @@ func (s *vpcPeeringStore) SetVpcPeeringConnectionStatusCode(requesterVpcId, acce
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	item, err := s.findVpcPeeringConnection(ptr.To(requesterVpcId), ptr.To(accepterVpcId))
+	item, err := s.findVpcPeeringConnection(new(requesterVpcId), new(accepterVpcId))
 
 	if err != nil {
 		return err
@@ -210,12 +210,12 @@ func (s *vpcPeeringStore) InitiateVpcPeeringConnection(connectionId, requesterVp
 
 	item := &vpcPeeringEntry{
 		peering: ec2types.VpcPeeringConnection{
-			VpcPeeringConnectionId: ptr.To(connectionId),
+			VpcPeeringConnectionId: new(connectionId),
 			RequesterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
-				VpcId: ptr.To(requesterVpcId),
+				VpcId: new(requesterVpcId),
 			},
 			AccepterVpcInfo: &ec2types.VpcPeeringConnectionVpcInfo{
-				VpcId: ptr.To(accepterVpcId),
+				VpcId: new(accepterVpcId),
 			},
 			Status: &ec2types.VpcPeeringConnectionStateReason{
 				Code:    ec2types.VpcPeeringConnectionStateReasonCodeInitiatingRequest,

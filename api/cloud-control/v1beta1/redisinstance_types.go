@@ -73,7 +73,7 @@ type RedisInstanceAzureConfigs struct {
 func (redisConfigs *RedisInstanceAzureConfigs) GetRedisConfig() *armredis.CommonPropertiesRedisConfiguration {
 	redisConfiguration := armredis.CommonPropertiesRedisConfiguration{}
 
-	additionalProperties := map[string]interface{}{}
+	additionalProperties := map[string]any{}
 
 	if redisConfigs.MaxFragmentationMemoryReserved != "" {
 		redisConfiguration.MaxfragmentationmemoryReserved = &redisConfigs.MaxFragmentationMemoryReserved

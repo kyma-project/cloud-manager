@@ -3,6 +3,7 @@ package allocate
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -65,12 +66,7 @@ func (as *addressSpace) Overlaps(otherAddressSpace AddressSpace) bool {
 		return false
 	}
 	other := otherAddressSpace.(*addressSpace)
-	for _, rr := range other.occupied.items {
-		if as.occupied.overlaps(rr) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(other.occupied.items, as.occupied.overlaps)
 }
 
 func (as *addressSpace) Reserve(arr ...string) error {

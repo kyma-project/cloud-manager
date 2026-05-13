@@ -11,10 +11,10 @@ import (
 
 func TestLog(t *testing.T) {
 
-	var savedLogs []map[string]interface{}
+	var savedLogs []map[string]any
 
 	logger := funcr.NewJSON(func(obj string) {
-		data := map[string]interface{}{}
+		data := map[string]any{}
 		_ = json.Unmarshal([]byte(obj), &data)
 		savedLogs = append(savedLogs, data)
 	}, funcr.Options{})

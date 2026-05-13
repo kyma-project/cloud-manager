@@ -127,8 +127,7 @@ func TestStartAzureRestore(t *testing.T) {
 			backupRecoveryPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
 			backupStorageAccountPath := "test-storage-account-path"
 			setupTest(true, backupRecoveryPointId, backupStorageAccountPath)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
 			assert.Nil(t, err, "should get azureRwxVolumeRestore")
 			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should not have opIdentifier set")
@@ -148,8 +147,7 @@ func TestStartAzureRestore(t *testing.T) {
 
 		t.Run("Should: fail if recoveryPointId is invalid in backup status ", func(t *testing.T) {
 			setupTest(true, "invalid-recoveryPointId", "test-storage-account-path")
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
 			assert.Nil(t, err, "should get azureRwxVolumeRestore")
 			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should not have opIdentifier set")
@@ -169,8 +167,7 @@ func TestStartAzureRestore(t *testing.T) {
 		t.Run("Should: fail if storageAccountPath is missing in backup status ", func(t *testing.T) {
 			backupRecoverPointId := "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
 			setupTest(true, backupRecoverPointId, "")
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
 			assert.Nil(t, err, "should get azureRwxVolumeRestore")
 			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should not have opIdentifier set")

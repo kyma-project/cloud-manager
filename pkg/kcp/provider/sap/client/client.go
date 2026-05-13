@@ -101,3 +101,10 @@ func (b *ClientFactory) ShareClient(ctx context.Context) (ShareClient, error) {
 	}
 	return &shareClient{shareSvc: b.shareSvc}, nil
 }
+
+func (b *ClientFactory) SnapshotClient(ctx context.Context) (SnapshotClient, error) {
+	if err := b.ensureShareSvc(ctx); err != nil {
+		return nil, err
+	}
+	return &snapshotClient{shareSvc: b.shareSvc}, nil
+}

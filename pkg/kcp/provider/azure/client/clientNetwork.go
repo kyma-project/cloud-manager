@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
-	"k8s.io/utils/ptr"
 )
 
 type NetworkClient interface {
@@ -26,15 +25,15 @@ func NewVirtualNetwork(location, addressSpace string, tags map[string]string) ar
 	if tags != nil {
 		netTags = make(map[string]*string, len(tags))
 		for k, v := range tags {
-			netTags[k] = ptr.To(v)
+			netTags[k] = new(v)
 		}
 	}
 
 	return armnetwork.VirtualNetwork{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
-				AddressPrefixes: []*string{ptr.To(addressSpace)},
+				AddressPrefixes: []*string{new(addressSpace)},
 			},
 		},
 		Tags: netTags,

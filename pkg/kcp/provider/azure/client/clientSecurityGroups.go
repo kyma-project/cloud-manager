@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
-	"k8s.io/utils/ptr"
 )
 
 type SecurityGroupsClient interface {
@@ -33,11 +32,11 @@ func (c *securityGroupsClient) CreateSecurityGroup(ctx context.Context, resource
 	if tags != nil {
 		azureTags = make(map[string]*string, len(tags))
 		for k, v := range tags {
-			azureTags[k] = ptr.To(v)
+			azureTags[k] = new(v)
 		}
 	}
 	sg := armnetwork.SecurityGroup{
-		Location: ptr.To(location),
+		Location: new(location),
 		Tags:     azureTags,
 	}
 	if securityRules != nil {

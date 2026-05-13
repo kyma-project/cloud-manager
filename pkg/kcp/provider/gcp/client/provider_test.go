@@ -29,7 +29,7 @@ func (s *providerSuite) TestGetCachedGcpClient() {
 	assert.Nil(s.T(), err)
 	prevClient := &http.Client{}
 	renewed := 0
-	for i := 0; i < 33; i++ {
+	for range 33 {
 		client, err := GetCachedGcpClient(ctx, credentialsFile)
 		assert.Nil(s.T(), err)
 		if prevClient != client {

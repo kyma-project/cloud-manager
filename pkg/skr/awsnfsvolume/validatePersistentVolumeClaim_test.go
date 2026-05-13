@@ -1,7 +1,6 @@
 package awsnfsvolume
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -65,8 +64,7 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if AwsNfsVolume is marked for deletion", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			awsNfsVolume.DeletionTimestamp = &metav1.Time{
 				Time: time.Now(),
 			}
@@ -79,8 +77,7 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if APIServer cant find requested PersistentVolumeClaim", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			fakeClient := fake.NewClientBuilder().
 				WithScheme(commonscheme.SkrScheme).
 				Build()
@@ -94,8 +91,7 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: do nothing if found PersistentVolumeClaim has expected labels", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := validatePersistentVolumeClaim(ctx, state)
 
@@ -105,8 +101,7 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 
 		t.Run("Should: set Status to Error and returns error when PersistentVolumeClaim belongs to another AwsNfsVolume", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			pvc.Labels[cloudresourcesv1beta1.LabelNfsVolName] = "another-owner-name"
 			fakeClient := fake.NewClientBuilder().
 				WithScheme(commonscheme.SkrScheme).

@@ -20,7 +20,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -108,7 +107,7 @@ func (c *defaultClusterInSession) PodLogs(ctx context.Context, namespace, podNam
 	}
 	podLogOptions := &corev1.PodLogOptions{
 		Container: containerName,
-		TailLines: ptr.To(int64(100)),
+		TailLines: new(int64(100)),
 	}
 	req := cs.CoreV1().Pods(namespace).GetLogs(podName, podLogOptions)
 	podLogs, err := req.Stream(ctx)
@@ -256,15 +255,15 @@ func (s *scenarioSession) DebugLog(v bool) {
 }
 
 func (s *scenarioSession) DebugDumpDeclaredResources(ctx context.Context) (string, error) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	for _, c := range s.clusters {
 		for _, ri := range c.AllResources() {
 			obj, err := c.Get(ctx, ri.Alias)
 			if err != nil {
 				data[ri.Alias] = fmt.Sprintf("error: %v", err.Error())
 			} else {
-				if obj != nil && obj["metadata"] != nil && obj["metadata"].(map[string]interface{})["managedFields"] != nil {
-					delete(obj["metadata"].(map[string]interface{}), "managedFields")
+				if obj != nil && obj["metadata"] != nil && obj["metadata"].(map[string]any)["managedFields"] != nil {
+					delete(obj["metadata"].(map[string]any), "managedFields")
 				}
 				data[ri.Alias] = obj
 			}
@@ -320,8 +319,8 @@ func (s *scenarioSession) EventuallyValueIsOK(ctx context.Context, expression st
 
 	var arrUnless []string
 	for _, exp := range arrUnlessParam {
-		if strings.HasPrefix(exp, "#") {
-			val := strings.TrimSpace(strings.TrimPrefix(exp, "#"))
+		if after, ok := strings.CutPrefix(exp, "#"); ok {
+			val := strings.TrimSpace(after)
 			parts := strings.SplitN(val, "=", 2)
 			switch parts[0] {
 			case "timeout":

@@ -29,7 +29,7 @@ func TestObjSupportsProvider(t *testing.T) {
 
 	kCrd := "CustomResourceDefinition"
 
-	baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]interface{}{}}
+	baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]any{}}
 	baseCrdUnstructured.SetAPIVersion(apiextensionsv1.SchemeGroupVersion.WithKind(kCrd).GroupVersion().String())
 	baseCrdUnstructured.SetKind(kCrd)
 

@@ -52,18 +52,18 @@ func (s *publicIpAddressStore) CreatePublicIpAddress(ctx context.Context, resour
 	}
 
 	ipAddress := &armnetwork.PublicIPAddress{
-		ID:       ptr.To(azureutil.NewPublicIpAddressResourceId(s.subscription, resourceGroupName, publicIpAddressName).String()),
-		Name:     ptr.To(publicIpAddressName),
-		Location: ptr.To(location),
+		ID:       new(azureutil.NewPublicIpAddressResourceId(s.subscription, resourceGroupName, publicIpAddressName).String()),
+		Name:     new(publicIpAddressName),
+		Location: new(location),
 		SKU: &armnetwork.PublicIPAddressSKU{
 			Name: ptr.To(armnetwork.PublicIPAddressSKUNameStandard),
 			Tier: ptr.To(armnetwork.PublicIPAddressSKUTierRegional),
 		},
-		Zones: []*string{ptr.To(zone)},
-		Type:  ptr.To("Microsoft.Network/publicIPAddresses"),
+		Zones: []*string{new(zone)},
+		Type:  new("Microsoft.Network/publicIPAddresses"),
 		Properties: &armnetwork.PublicIPAddressPropertiesFormat{
 			ProvisioningState:      ptr.To(armnetwork.ProvisioningStateSucceeded),
-			IPAddress:              ptr.To(fmt.Sprintf("33.%d.%d.%d", rand.Intn(250)+1, rand.Intn(250)+1, rand.Intn(250)+1)),
+			IPAddress:              new(fmt.Sprintf("33.%d.%d.%d", rand.Intn(250)+1, rand.Intn(250)+1, rand.Intn(250)+1)),
 			PublicIPAddressVersion: ptr.To(armnetwork.IPVersionIPv4),
 		},
 	}

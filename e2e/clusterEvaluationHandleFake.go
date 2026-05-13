@@ -11,23 +11,23 @@ import (
 type clusterEvaluationHandleFake struct {
 	clusterAlias string
 	resources    map[string]*ResourceInfo
-	items        map[string]map[string]interface{}
+	items        map[string]map[string]any
 }
 
 func newClusterEvaluationHandleFake(clusterAlias string) *clusterEvaluationHandleFake {
 	return &clusterEvaluationHandleFake{
 		clusterAlias: clusterAlias,
 		resources:    make(map[string]*ResourceInfo),
-		items:        make(map[string]map[string]interface{}),
+		items:        make(map[string]map[string]any),
 	}
 }
 
-func (h *clusterEvaluationHandleFake) setObj(alias string, obj interface{}) {
+func (h *clusterEvaluationHandleFake) setObj(alias string, obj any) {
 	if obj == nil {
 		h.items[alias] = nil
 		return
 	}
-	mm, ok := obj.(map[string]interface{})
+	mm, ok := obj.(map[string]any)
 	if ok {
 		h.items[alias] = mm
 		return
@@ -60,7 +60,7 @@ func (h *clusterEvaluationHandleFake) GetResource(alias string) *ResourceInfo {
 	return h.resources[alias]
 }
 
-func (h *clusterEvaluationHandleFake) Get(_ context.Context, alias string) (map[string]interface{}, error) {
+func (h *clusterEvaluationHandleFake) Get(_ context.Context, alias string) (map[string]any, error) {
 	return h.items[alias], nil
 }
 

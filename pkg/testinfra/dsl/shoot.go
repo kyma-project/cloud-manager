@@ -20,7 +20,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -72,7 +71,7 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerapicore.ShootSpec{
-			CredentialsBindingName: ptr.To(shoot.Name),
+			CredentialsBindingName: new(shoot.Name),
 			CloudProfile: &gardenerapicore.CloudProfileReference{
 				Kind: "CloudProfile",
 				Name: "aws",
@@ -80,9 +79,9 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 			Region: "eu-west-1",
 			Networking: &gardenerapicore.Networking{
 				IPFamilies: []gardenerapicore.IPFamily{gardenerapicore.IPFamilyIPv4},
-				Nodes:      ptr.To("10.180.0.0/16"),
-				Pods:       ptr.To("100.64.0.0/12"),
-				Services:   ptr.To("100.104.0.0/13"),
+				Nodes:      new("10.180.0.0/16"),
+				Pods:       new("100.64.0.0/12"),
+				Services:   new("100.104.0.0/13"),
 			},
 			Provider: gardenerapicore.Provider{
 				Type: string(cloudcontrolv1beta1.ProviderAws),
@@ -94,7 +93,7 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 						},
 						Networks: gardenerawsapi.Networks{
 							VPC: gardenerawsapi.VPC{
-								CIDR: ptr.To("10.180.0.0/16"),
+								CIDR: new("10.180.0.0/16"),
 							},
 							Zones: []gardenerawsapi.Zone{
 								{
@@ -237,7 +236,7 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerapicore.ShootSpec{
-			CredentialsBindingName: ptr.To(shoot.Name),
+			CredentialsBindingName: new(shoot.Name),
 			CloudProfile: &gardenerapicore.CloudProfileReference{
 				Kind: "CloudProfile",
 				Name: "gcp",
@@ -339,7 +338,7 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerapicore.ShootSpec{
-			CredentialsBindingName: ptr.To(shoot.Name),
+			CredentialsBindingName: new(shoot.Name),
 			CloudProfile: &gardenerapicore.CloudProfileReference{
 				Kind: "CloudProfile",
 				Name: "azure",
@@ -347,9 +346,9 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 			Region: region,
 			Networking: &gardenerapicore.Networking{
 				IPFamilies: []gardenerapicore.IPFamily{gardenerapicore.IPFamilyIPv4},
-				Nodes:      ptr.To("10.250.0.0/22"),
-				Pods:       ptr.To("10.96.0.0/13"),
-				Services:   ptr.To("10.104.0.0/13"),
+				Nodes:      new("10.250.0.0/22"),
+				Pods:       new("10.96.0.0/13"),
+				Services:   new("10.104.0.0/13"),
 			},
 			Provider: gardenerapicore.Provider{
 				Type: string(cloudcontrolv1beta1.ProviderAzure),
@@ -361,7 +360,7 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 						},
 						Networks: gardenerazureapi.NetworkConfig{
 							VNet: gardenerazureapi.VNet{
-								CIDR: ptr.To("10.250.0.0/22"),
+								CIDR: new("10.250.0.0/22"),
 							},
 							Zones: []gardenerazureapi.Zone{
 								{
@@ -369,7 +368,7 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 									CIDR: "10.250.0.0/25",
 									NatGateway: &gardenerazureapi.ZonedNatGatewayConfig{
 										Enabled:                      true,
-										IdleConnectionTimeoutMinutes: ptr.To(int32(4)),
+										IdleConnectionTimeoutMinutes: new(int32(4)),
 									},
 								},
 								{
@@ -377,7 +376,7 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 									CIDR: "10.250.0.128/25",
 									NatGateway: &gardenerazureapi.ZonedNatGatewayConfig{
 										Enabled:                      true,
-										IdleConnectionTimeoutMinutes: ptr.To(int32(4)),
+										IdleConnectionTimeoutMinutes: new(int32(4)),
 									},
 								},
 								{
@@ -385,7 +384,7 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 									CIDR: "10.250.1.0/25",
 									NatGateway: &gardenerazureapi.ZonedNatGatewayConfig{
 										Enabled:                      true,
-										IdleConnectionTimeoutMinutes: ptr.To(int32(4)),
+										IdleConnectionTimeoutMinutes: new(int32(4)),
 									},
 								},
 							},
@@ -458,7 +457,7 @@ func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 	{
 		actions.ApplyOnObject(shoot)
 		shoot.Spec = gardenerapicore.ShootSpec{
-			CredentialsBindingName: ptr.To(shoot.Name),
+			CredentialsBindingName: new(shoot.Name),
 			CloudProfile: &gardenerapicore.CloudProfileReference{
 				Kind: "CloudProfile",
 				Name: "converged-cloud-kyma",
@@ -466,9 +465,9 @@ func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 			Region: pp.RegionName,
 			Networking: &gardenerapicore.Networking{
 				IPFamilies: []gardenerapicore.IPFamily{gardenerapicore.IPFamilyIPv4},
-				Nodes:      ptr.To("10.250.0.0/16"),
-				Pods:       ptr.To("10.96.0.0/13"),
-				Services:   ptr.To("10.104.0.0/13"),
+				Nodes:      new("10.250.0.0/16"),
+				Pods:       new("10.96.0.0/13"),
+				Services:   new("10.104.0.0/13"),
 			},
 			Provider: gardenerapicore.Provider{
 				Type: string(cloudcontrolv1beta1.ProviderOpenStack),

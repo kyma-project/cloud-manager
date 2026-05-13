@@ -42,7 +42,7 @@ func modifyRedisCapacity(ctx context.Context, st composed.State) (error, context
 		armredis.UpdateParameters{
 			Properties: &armredis.UpdateProperties{
 				SKU: &armredis.SKU{
-					Capacity: to.Ptr[int32](int32(requestedAzureRedisCluster.Spec.Instance.Azure.SKU.Capacity)),
+					Capacity: new(int32(requestedAzureRedisCluster.Spec.Instance.Azure.SKU.Capacity)),
 					Name:     to.Ptr(armredis.SKUNamePremium),
 					Family:   to.Ptr(armredis.SKUFamilyP),
 				},

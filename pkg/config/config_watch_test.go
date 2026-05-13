@@ -48,7 +48,7 @@ func TestWatchBindWhenFileContentChanges(t *testing.T) {
 	assert.NoError(t, err)
 
 	// give it time to consume fsnotify event and reload
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		time.Sleep(100 * time.Millisecond)
 		if reloaded {
 			break
@@ -108,7 +108,7 @@ func TestWatchRawWhenSymlinkReplaced(t *testing.T) {
 	assert.NoError(t, err)
 
 	// give it time to consume fsnotify event and reload
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		time.Sleep(100 * time.Millisecond)
 		if reloaded {
 			break

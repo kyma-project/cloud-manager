@@ -20,7 +20,7 @@ func UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(
 		ctx context.Context,
 		method string,
-		req, reply interface{},
+		req, reply any,
 		cc *grpc.ClientConn,
 		invoker grpc.UnaryInvoker,
 		opts ...grpc.CallOption,
@@ -89,7 +89,7 @@ func (m *metricsRoundTripper) convertToAPIError(resp *http.Response, err error) 
 }
 
 func parseGoogRequestParams(params string) (region, project string) {
-	for _, pair := range strings.Split(params, "&") {
+	for pair := range strings.SplitSeq(params, "&") {
 		kv := strings.SplitN(pair, "=", 2)
 		if len(kv) != 2 {
 			continue
@@ -111,7 +111,7 @@ func parseGoogRequestParams(params string) (region, project string) {
 func extractRegionAndProjectFromPath(path string) (region, project string) {
 	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
 
-	for i := 0; i < len(parts); i++ {
+	for i := range parts {
 		switch parts[i] {
 		case "projects":
 			if i+1 < len(parts) && !strings.HasPrefix(parts[i+1], "{") {

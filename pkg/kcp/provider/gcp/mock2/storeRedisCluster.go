@@ -158,7 +158,7 @@ func (s *store) CreateRedisCluster(ctx context.Context, req *clusterpb.CreateClu
 
 		scpFound := false
 		for _, subnetItem := range subnetList.items {
-			scpList, err := s.serviceConnectionPolicies.FilterByExpression(ptr.To(fmt.Sprintf(
+			scpList, err := s.serviceConnectionPolicies.FilterByExpression(new(fmt.Sprintf(
 				`(psc_config.subnetworks:("%s"))(service_class="gcp-memorystore-redis")`,
 				subnetItem.Name.String(),
 			)))
@@ -186,7 +186,7 @@ func (s *store) CreateRedisCluster(ctx context.Context, req *clusterpb.CreateClu
 	rc.Name = rcName.String()
 	rc.CreateTime = timestamppb.Now()
 	rc.State = clusterpb.Cluster_CREATING
-	rc.SizeGb = ptr.To(int32(100))
+	rc.SizeGb = new(int32(100))
 	for netNameTxt, ip := range endpoints {
 		rc.DiscoveryEndpoints = append(rc.DiscoveryEndpoints, &clusterpb.DiscoveryEndpoint{
 			Address: ip,

@@ -2,6 +2,7 @@ package rediscluster
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 
 	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -75,13 +76,9 @@ func MapParameters(parameters []elasticachetypes.Parameter) map[string]string {
 func GetDesiredParameters(defaultParameters, userDefinedParameters map[string]string) map[string]string {
 	result := map[string]string{}
 
-	for key, value := range defaultParameters {
-		result[key] = value
-	}
+	maps.Copy(result, defaultParameters)
 
-	for key, value := range userDefinedParameters {
-		result[key] = value
-	}
+	maps.Copy(result, userDefinedParameters)
 
 	result["cluster-enabled"] = "yes" // needed for cluster mode
 
@@ -107,8 +104,8 @@ func ToParametersSlice(parametersMap map[string]string) []elasticachetypes.Param
 
 	for key, value := range parametersMap {
 		result = append(result, elasticachetypes.ParameterNameValue{
-			ParameterName:  ptr.To(key),
-			ParameterValue: ptr.To(value),
+			ParameterName:  new(key),
+			ParameterValue: new(value),
 		})
 	}
 

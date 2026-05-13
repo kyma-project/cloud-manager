@@ -232,8 +232,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: load IpRange (new name)", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			address = &compute.Address{
 				Network: fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork),
 			}
@@ -250,8 +249,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: fallback and load IpRange with old name", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			address = &compute.Address{
 				Network: fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork),
 			}
@@ -270,8 +268,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: skip loaded fallback IpRange if it belongs to other VPC", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			address = &compute.Address{
 				Network: "some-other-network",
 			}
@@ -290,8 +287,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: do nothing if IpRange doesnt exist (new or old name)", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			computeClient.(computeClientStubUtils).ReturnOnFirstCall(nil, notFoundError)
 			computeClient.(computeClientStubUtils).ReturnOnSecondCall(nil, notFoundError)
 
@@ -307,8 +303,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: set error if obtained IpRange (new name) belongs to another VPC", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			address = &compute.Address{
 				Network: fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/another-%s", scope.Spec.Scope.Gcp.Project, scope.Spec.Scope.Gcp.VpcNetwork), // note: VPC name is different, but has same suffix
 			}
@@ -325,8 +320,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: set error if its unable to get IpRange (new name)", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			computeClient.(computeClientStubUtils).ReturnOnFirstCall(nil, errors.New("Random error"))
 
 			err, res := loadAddress(ctx, state)
@@ -340,8 +334,7 @@ func TestLoadAddress(t *testing.T) {
 
 		t.Run("Should: set error if its unable to get IpRange (fallback name)", func(t *testing.T) {
 			setupTest()
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			computeClient.(computeClientStubUtils).ReturnOnFirstCall(nil, notFoundError)
 			computeClient.(computeClientStubUtils).ReturnOnSecondCall(nil, errors.New("Random error"))
 

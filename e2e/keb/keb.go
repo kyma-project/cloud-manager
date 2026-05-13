@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/utils/clock"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -287,7 +286,7 @@ func (k *defaultKeb) GetInstance(ctx context.Context, runtimeID string) (*Instan
 	if err != nil {
 		return nil, nil
 	}
-	return ptr.To(RuntimeToInstanceDetails(rt)), nil
+	return new(RuntimeToInstanceDetails(rt)), nil
 }
 
 func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (InstanceDetails, error) {

@@ -78,7 +78,7 @@ func (c *fileShareClient) DeleteFileShare(ctx context.Context, id string) error 
 	_, err = c.azureFsClient.Delete(ctx, resourceGroupName, storageAccountName, fileShareName,
 		&armstorage.FileSharesClientDeleteOptions{
 			XMSSnapshot: nil,
-			Include:     ptr.To("leased-snapshots"),
+			Include:     new("leased-snapshots"),
 		})
 	return err
 }

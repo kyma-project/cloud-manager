@@ -51,7 +51,7 @@ func updatePsaConnection(ctx context.Context, st composed.State) (error, context
 	// Set state to indicate PSA connection sync in progress
 	ipRange.Status.State = gcpclient.SyncPsaConnection
 
-	var operation interface{}
+	var operation any
 	var err error
 
 	// If no IP ranges left, delete the connection

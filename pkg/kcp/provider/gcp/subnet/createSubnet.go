@@ -11,7 +11,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 )
 
 func createSubnet(ctx context.Context, st composed.State) (error, context.Context) {
@@ -31,13 +30,13 @@ func createSubnet(ctx context.Context, st composed.State) (error, context.Contex
 		Project: gcpScope.Project,
 		Region:  region,
 		SubnetworkResource: &computepb.Subnetwork{
-			IpCidrRange:           ptr.To(subnet.Spec.Cidr),
-			Name:                  ptr.To(GetSubnetShortName(state.Obj().GetName())),
-			Network:               ptr.To(networkNameFull),
-			PrivateIpGoogleAccess: ptr.To(true),
-			Purpose:               ptr.To("PRIVATE"),
+			IpCidrRange:           new(subnet.Spec.Cidr),
+			Name:                  new(GetSubnetShortName(state.Obj().GetName())),
+			Network:               new(networkNameFull),
+			PrivateIpGoogleAccess: new(true),
+			Purpose:               new("PRIVATE"),
 		},
-		RequestId: ptr.To(uuid.NewString()),
+		RequestId: new(uuid.NewString()),
 	})
 
 	if err != nil {

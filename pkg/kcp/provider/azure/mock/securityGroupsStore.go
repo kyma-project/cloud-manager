@@ -68,9 +68,9 @@ func (s *securityGroupsStore) CreateSecurityGroup(ctx context.Context, resourceG
 	id := azureutil.NewNetworkSecurityGroupResourceId(s.subscription, resourceGroupName, networkSecurityGroupName)
 
 	sg := &armnetwork.SecurityGroup{
-		ID:       ptr.To(id.String()),
-		Name:     ptr.To(networkSecurityGroupName),
-		Location: ptr.To(location),
+		ID:       new(id.String()),
+		Name:     new(networkSecurityGroupName),
+		Location: new(location),
 		Tags:     azureutil.AzureTags(tags),
 		Properties: &armnetwork.SecurityGroupPropertiesFormat{
 			SecurityRules:     securityRules,

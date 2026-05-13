@@ -48,7 +48,7 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 					"storage": *gcpNfsVolumeCapacityToResourceQuantity(nfsVolume),
 				},
 			},
-			StorageClassName: ptr.To(state.PV.Spec.StorageClassName),
+			StorageClassName: new(state.PV.Spec.StorageClassName),
 			VolumeMode:       ptr.To(corev1.PersistentVolumeFilesystem),
 		},
 	}

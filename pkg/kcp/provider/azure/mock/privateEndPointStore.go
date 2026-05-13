@@ -3,7 +3,6 @@ package mock
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -82,7 +81,7 @@ func (s *privateEndPointsStore) CreatePrivateEndPoint(ctx context.Context, resou
 
 	item := &armnetwork.PrivateEndpoint{
 		Properties: props,
-		Name:       to.Ptr(privateEndPointName),
+		Name:       new(privateEndPointName),
 	}
 
 	s.items[resourceGroupName][privateEndPointName] = item

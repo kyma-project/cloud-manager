@@ -51,14 +51,14 @@ func (s *exposedDataStore) InsertVpcRouter(project string, region string, router
 		return nil, fmt.Errorf("router network empty: %w", common.ErrLogical)
 	}
 	if !strings.Contains(ptr.Deref(router.Network, ""), "/compute/v1/projects/") {
-		router.Network = ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", project, ptr.Deref(router.Network, "")))
+		router.Network = new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s", project, ptr.Deref(router.Network, "")))
 	}
 
 	if router.CreationTimestamp == nil {
-		router.CreationTimestamp = ptr.To(time.Now().Format(time.RFC3339))
+		router.CreationTimestamp = new(time.Now().Format(time.RFC3339))
 	}
-	router.Region = ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s", project, region))
-	router.SelfLink = ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s/routers/%s", project, region, ptr.Deref(router.Name, "")))
+	router.Region = new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s", project, region))
+	router.SelfLink = new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s/routers/%s", project, region, ptr.Deref(router.Name, "")))
 
 	// -----------
 
@@ -89,18 +89,18 @@ func (s *exposedDataStore) InsertAddress(project string, region string, address 
 	}
 
 	if address.CreationTimestamp == nil {
-		address.CreationTimestamp = ptr.To(time.Now().Format(time.RFC3339))
+		address.CreationTimestamp = new(time.Now().Format(time.RFC3339))
 	}
 	if address.Address == nil {
 		ip, err := s.ipPool.Allocate(32)
 		if err != nil {
 			return nil, fmt.Errorf("ip allocation failed: %w", err)
 		}
-		address.Address = ptr.To(cidr.ParseNoError(ip).CIDR().IP.String())
+		address.Address = new(cidr.ParseNoError(ip).CIDR().IP.String())
 	}
-	address.Status = ptr.To("IN_USE")
-	address.Region = ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s", project, region))
-	address.SelfLink = ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s/addresses/%s", project, region, ptr.Deref(address.Name, "")))
+	address.Status = new("IN_USE")
+	address.Region = new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s", project, region))
+	address.SelfLink = new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s/addresses/%s", project, region, ptr.Deref(address.Name, "")))
 
 	// -----------
 

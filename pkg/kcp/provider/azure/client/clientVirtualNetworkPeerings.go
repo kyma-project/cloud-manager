@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
-	"k8s.io/utils/ptr"
 )
 
 type VirtualNetworkPeeringClient interface {
@@ -49,12 +48,12 @@ func (c *virtualNetworkPeeringClient) CreateOrUpdatePeering(
 		virtualNetworkPeeringName,
 		armnetwork.VirtualNetworkPeering{
 			Properties: &armnetwork.VirtualNetworkPeeringPropertiesFormat{
-				AllowForwardedTraffic:     ptr.To(true),
-				AllowGatewayTransit:       ptr.To(allowGatewayTransit),
-				AllowVirtualNetworkAccess: ptr.To(allowVnetAccess),
-				UseRemoteGateways:         ptr.To(useRemoteGateway),
+				AllowForwardedTraffic:     new(true),
+				AllowGatewayTransit:       new(allowGatewayTransit),
+				AllowVirtualNetworkAccess: new(allowVnetAccess),
+				UseRemoteGateways:         new(useRemoteGateway),
 				RemoteVirtualNetwork: &armnetwork.SubResource{
-					ID: ptr.To(remoteVnetId),
+					ID: new(remoteVnetId),
 				},
 			},
 		},

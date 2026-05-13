@@ -33,7 +33,7 @@ func IsKymaModuleListedInSpec(k *unstructured.Unstructured, moduleName string) b
 		return false
 	}
 	for _, m := range modules {
-		mm, ok := m.(map[string]interface{})
+		mm, ok := m.(map[string]any)
 		if !ok {
 			return false
 		}
@@ -57,7 +57,7 @@ func SetKymaModuleInSpec(k *unstructured.Unstructured, moduleName string) error 
 		return err
 	}
 	if !exists {
-		modules = []interface{}{}
+		modules = []any{}
 		err = unstructured.SetNestedSlice(k.Object, modules, "spec", "modules")
 		if err != nil {
 			return nil
@@ -65,7 +65,7 @@ func SetKymaModuleInSpec(k *unstructured.Unstructured, moduleName string) error 
 	}
 
 	for idx, m := range modules {
-		mm, ok := m.(map[string]interface{})
+		mm, ok := m.(map[string]any)
 		if !ok {
 			return fmt.Errorf("kyma CR spec module #%d is not a map", idx)
 		}
@@ -79,7 +79,7 @@ func SetKymaModuleInSpec(k *unstructured.Unstructured, moduleName string) error 
 		}
 	}
 
-	modules = append(modules, map[string]interface{}{
+	modules = append(modules, map[string]any{
 		"name": moduleName,
 	})
 
@@ -92,7 +92,7 @@ func RemoveKymaModuleFromSpec(k *unstructured.Unstructured, moduleName string) e
 		return err
 	}
 	if !exists {
-		modules = []interface{}{}
+		modules = []any{}
 		err = unstructured.SetNestedSlice(k.Object, modules, "spec", "modules")
 		if err != nil {
 			return nil
@@ -101,7 +101,7 @@ func RemoveKymaModuleFromSpec(k *unstructured.Unstructured, moduleName string) e
 
 	idxToRemove := -1
 	for idx, m := range modules {
-		mm, ok := m.(map[string]interface{})
+		mm, ok := m.(map[string]any)
 		if !ok {
 			return fmt.Errorf("kyma CR module spec #%d is not a map", idx)
 		}
@@ -130,7 +130,7 @@ func GetKymaModuleStateFromStatus(k *unstructured.Unstructured, moduleName strin
 		return KymaModuleStateNotPresent
 	}
 	for _, m := range modules {
-		mm, ok := m.(map[string]interface{})
+		mm, ok := m.(map[string]any)
 		if !ok {
 			return KymaModuleStateNotPresent
 		}
@@ -156,7 +156,7 @@ func RemoveKymaModuleStateFromStatus(k *unstructured.Unstructured, moduleName st
 		return err
 	}
 	if !exists {
-		modules = []interface{}{}
+		modules = []any{}
 		err = unstructured.SetNestedSlice(k.Object, modules, "status", "modules")
 		if err != nil {
 			return nil
@@ -165,7 +165,7 @@ func RemoveKymaModuleStateFromStatus(k *unstructured.Unstructured, moduleName st
 
 	idxToRemove := -1
 	for idx, m := range modules {
-		mm, ok := m.(map[string]interface{})
+		mm, ok := m.(map[string]any)
 		if !ok {
 			return fmt.Errorf("kyma CR module status #%d is not a map", idx)
 		}
@@ -197,7 +197,7 @@ func SetKymaModuleStateToStatus(k *unstructured.Unstructured, moduleName string,
 		return err
 	}
 	if !exists {
-		modules = []interface{}{}
+		modules = []any{}
 		err = unstructured.SetNestedSlice(k.Object, modules, "status", "modules")
 		if err != nil {
 			return nil
@@ -205,7 +205,7 @@ func SetKymaModuleStateToStatus(k *unstructured.Unstructured, moduleName string,
 	}
 
 	for idx, m := range modules {
-		mm, ok := m.(map[string]interface{})
+		mm, ok := m.(map[string]any)
 		if !ok {
 			return fmt.Errorf("kyma CR module status #%d is not a map", idx)
 		}
@@ -224,7 +224,7 @@ func SetKymaModuleStateToStatus(k *unstructured.Unstructured, moduleName string,
 		}
 	}
 
-	modules = append(modules, map[string]interface{}{
+	modules = append(modules, map[string]any{
 		"name":  moduleName,
 		"state": string(state),
 	})

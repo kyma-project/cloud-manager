@@ -59,14 +59,14 @@ func (c *efsClient) CreateFileSystem(ctx context.Context, performanceMode efstyp
 }
 
 func (c *efsClient) DeleteFileSystem(ctx context.Context, fsId string) error {
-	in := &efs.DeleteFileSystemInput{FileSystemId: ptr.To(fsId)}
+	in := &efs.DeleteFileSystemInput{FileSystemId: new(fsId)}
 	_, err := c.svc.DeleteFileSystem(ctx, in)
 	return err
 }
 
 func (c *efsClient) DescribeMountTargets(ctx context.Context, fsId string) ([]efstypes.MountTargetDescription, error) {
 	out, err := c.svc.DescribeMountTargets(ctx, &efs.DescribeMountTargetsInput{
-		FileSystemId: ptr.To(fsId),
+		FileSystemId: new(fsId),
 	})
 	if err != nil {
 		return nil, err
@@ -76,8 +76,8 @@ func (c *efsClient) DescribeMountTargets(ctx context.Context, fsId string) ([]ef
 
 func (c *efsClient) CreateMountTarget(ctx context.Context, fsId, subnetId string, securityGroups []string) (string, error) {
 	out, err := c.svc.CreateMountTarget(ctx, &efs.CreateMountTargetInput{
-		FileSystemId:   ptr.To(fsId),
-		SubnetId:       ptr.To(subnetId),
+		FileSystemId:   new(fsId),
+		SubnetId:       new(subnetId),
 		SecurityGroups: securityGroups,
 	})
 	if err != nil {
@@ -88,7 +88,7 @@ func (c *efsClient) CreateMountTarget(ctx context.Context, fsId, subnetId string
 
 func (c *efsClient) DeleteMountTarget(ctx context.Context, mountTargetId string) error {
 	in := &efs.DeleteMountTargetInput{
-		MountTargetId: ptr.To(mountTargetId),
+		MountTargetId: new(mountTargetId),
 	}
 	_, err := c.svc.DeleteMountTarget(ctx, in)
 	return err
@@ -96,7 +96,7 @@ func (c *efsClient) DeleteMountTarget(ctx context.Context, mountTargetId string)
 
 func (c *efsClient) DescribeMountTargetSecurityGroups(ctx context.Context, mountTargetId string) ([]string, error) {
 	out, err := c.svc.DescribeMountTargetSecurityGroups(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
-		MountTargetId: ptr.To(mountTargetId),
+		MountTargetId: new(mountTargetId),
 	})
 	if err != nil {
 		return nil, err

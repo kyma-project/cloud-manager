@@ -24,12 +24,12 @@ func subnetsCreate(ctx context.Context, st composed.State) (error, context.Conte
 
 	count := len(state.ObjAsIpRange().Status.Ranges)
 
-	rangeMap := make(map[string]interface{}, count)
+	rangeMap := make(map[string]any, count)
 	for _, r := range state.ObjAsIpRange().Status.Ranges {
 		rangeMap[r] = nil
 	}
 
-	zoneMap := make(map[string]interface{}, count)
+	zoneMap := make(map[string]any, count)
 	for _, z := range state.Scope().Spec.Scope.Aws.Network.Zones {
 		zoneMap[z.Name] = nil
 	}

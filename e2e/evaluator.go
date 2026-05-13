@@ -15,7 +15,7 @@ import (
 type EvaluatorBuilder struct {
 	evaluator *defaultEvaluatorImpl
 	evalData  evalData
-	fixedData map[string]interface{}
+	fixedData map[string]any
 }
 
 func NewEvaluatorBuilder() *EvaluatorBuilder {
@@ -74,7 +74,7 @@ function findCondition(obj, tp) {
 			loaded:    map[string]struct{}{},
 			evaluated: map[string]struct{}{},
 		},
-		fixedData: map[string]interface{}{},
+		fixedData: map[string]any{},
 	}
 }
 
@@ -84,8 +84,8 @@ type evalObj struct {
 	ri        *ResourceInfo
 	loaded    bool
 	evaluated bool
-	data      map[string]interface{}
-	getter    func(ctx context.Context, alias string) (map[string]interface{}, error)
+	data      map[string]any
+	getter    func(ctx context.Context, alias string) (map[string]any, error)
 	mapper    func(alias string) (*meta.RESTMapping, error)
 }
 
@@ -107,7 +107,7 @@ type evalObjMetadata struct {
 	Evaluated  bool   `json:"evaluated"`
 }
 
-func (b *EvaluatorBuilder) Set(name string, value interface{}) {
+func (b *EvaluatorBuilder) Set(name string, value any) {
 	b.fixedData[name] = value
 }
 
@@ -220,7 +220,7 @@ func (b *EvaluatorBuilder) Build(ctx context.Context) (Evaluator, error) {
 // ======================================================
 
 type Evaluator interface {
-	Eval(txt string) (interface{}, error)
+	Eval(txt string) (any, error)
 	EvalTruthy(txt string) (bool, error)
 	EvalTemplate(txt string) (string, error)
 
@@ -245,7 +245,7 @@ func (e *defaultEvaluatorImpl) IsLoaded(alias string) bool {
 	return ok
 }
 
-func (e *defaultEvaluatorImpl) Eval(txt string) (interface{}, error) {
+func (e *defaultEvaluatorImpl) Eval(txt string) (any, error) {
 	v, err := e.vm.RunString(txt)
 	if err != nil {
 		return nil, err

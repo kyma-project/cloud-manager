@@ -41,12 +41,12 @@ func TestProviderConfig(t *testing.T) {
 	})
 	t.Run("arr", func(t *testing.T) {
 		arr := p.JSONArrayVariation(ctx, "arr", nil)
-		expected := []interface{}{1, "b"}
+		expected := []any{1, "b"}
 		assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", arr))
 	})
 	t.Run("map", func(t *testing.T) {
 		obj := p.JSONVariation(ctx, "obj", nil)
-		expected := map[string]interface{}{
+		expected := map[string]any{
 			"a": 1,
 			"b": "bbb",
 		}

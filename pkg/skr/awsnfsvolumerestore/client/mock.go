@@ -29,10 +29,10 @@ func (m *mockClient) StartRestoreJob(ctx context.Context, params *StartRestoreJo
 	logger := composed.LoggerFromCtx(ctx)
 	jobId := uuid.NewString()
 	restoreJobOutput := backup.DescribeRestoreJobOutput{
-		AccountId:        ptr.To(MockAwsAccount),
-		RestoreJobId:     ptr.To(jobId),
-		CreationDate:     ptr.To(time.Now()),
-		IamRoleArn:       ptr.To(params.IamRoleArn),
+		AccountId:        new(MockAwsAccount),
+		RestoreJobId:     new(jobId),
+		CreationDate:     new(time.Now()),
+		IamRoleArn:       new(params.IamRoleArn),
 		RecoveryPointArn: params.RecoveryPointArn,
 		ResourceType:     nil,
 		Status:           backuptypes.RestoreJobStatusCompleted,
@@ -42,7 +42,7 @@ func (m *mockClient) StartRestoreJob(ctx context.Context, params *StartRestoreJo
 	logger.WithName("StartRestoreJob - mock").Info(
 		fmt.Sprintf("Restore Job ID :: %s, RecoveryPointArn :: %s", jobId, *params.RecoveryPointArn))
 	return &backup.StartRestoreJobOutput{
-		RestoreJobId: ptr.To(jobId),
+		RestoreJobId: new(jobId),
 	}, nil
 }
 
@@ -53,16 +53,16 @@ func (m *mockClient) DescribeRestoreJob(_ context.Context, restoreJobId string) 
 		}
 	}
 	return nil, &backuptypes.ResourceNotFoundException{
-		Message: ptr.To("BackupJob not found"),
+		Message: new("BackupJob not found"),
 	}
 }
 
 func (m *mockClient) GetRecoveryPointRestoreMetadata(_ context.Context, _, backupVaultName, recoveryPointArn string) (*backup.GetRecoveryPointRestoreMetadataOutput, error) {
 	return &backup.GetRecoveryPointRestoreMetadataOutput{
-		BackupVaultArn:   ptr.To(backupVaultName),
-		RecoveryPointArn: ptr.To(recoveryPointArn),
+		BackupVaultArn:   new(backupVaultName),
+		RecoveryPointArn: new(recoveryPointArn),
 		RestoreMetadata:  map[string]string{},
-		ResourceType:     ptr.To("EFS"),
+		ResourceType:     new("EFS"),
 	}, nil
 }
 

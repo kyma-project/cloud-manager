@@ -78,7 +78,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 	t.Run("ObjectToFeature from CRD Unstructured", func(t *testing.T) {
 		g := cloudresourcesv1beta1.GroupVersion.Group
 
-		baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]interface{}{}}
+		baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]any{}}
 		baseCrdUnstructured.SetAPIVersion("apiextensions.k8s.io/v1")
 		baseCrdUnstructured.SetKind("CustomResourceDefinition")
 
@@ -110,7 +110,7 @@ func TestManifestResourceToFeature(t *testing.T) {
 	})
 
 	t.Run("ObjectToFeature from Busola CM Unstructured", func(t *testing.T) {
-		baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]interface{}{}}
+		baseCrdUnstructured := &unstructured.Unstructured{Object: map[string]any{}}
 		baseCrdUnstructured.SetAPIVersion("apiextensions.k8s.io/v1")
 		baseCrdUnstructured.SetKind("CustomResourceDefinition")
 

@@ -7,7 +7,6 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	"google.golang.org/protobuf/proto"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -45,7 +44,7 @@ func identifyPeeringIpRanges(ctx context.Context, st composed.State) (error, con
 	filter := gcpclient.GetNetworkFilter(project, vpc)
 	it := state.computeClient.ListGlobalAddresses(ctx, &computepb.ListGlobalAddressesRequest{
 		Project: project,
-		Filter:  proto.String(filter),
+		Filter:  new(filter),
 	})
 
 	// Load the address names into a map (only PSA purpose addresses)

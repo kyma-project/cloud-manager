@@ -113,8 +113,7 @@ func TestFindAzureRestoreJob(t *testing.T) {
 
 		t.Run("Should: find azure restore job", func(t *testing.T) {
 			setupTest(true, true)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
 			assert.Nil(t, err, "should get azureRwxVolumeRestore")
 			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should not have opIdentifier set")
@@ -157,8 +156,7 @@ func TestFindAzureRestoreJob(t *testing.T) {
 
 		t.Run("Should: fail if recoveryPointId is missing", func(t *testing.T) {
 			setupTest(true, false)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
 			assert.Nil(t, err, "should get azureRwxVolumeRestore")
 			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should not have opIdentifier set")
@@ -192,8 +190,7 @@ func TestFindAzureRestoreJob(t *testing.T) {
 
 		t.Run("Should: continue if job is not found", func(t *testing.T) {
 			setupTest(true, true)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
 			assert.Nil(t, err, "should get azureRwxVolumeRestore")
 			assert.Empty(t, azureRwxVolumeRestore.Status.OpIdentifier, "should not have opIdentifier set")

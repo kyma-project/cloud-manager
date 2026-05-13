@@ -67,12 +67,12 @@ func (p *providerConfig) StringVariation(ctx context.Context, flagKey string, de
 	return res.String()
 }
 
-func (p *providerConfig) JSONArrayVariation(ctx context.Context, flagKey string, defaultValue []interface{}) []interface{} {
+func (p *providerConfig) JSONArrayVariation(ctx context.Context, flagKey string, defaultValue []any) []any {
 	res := gjson.Get(p.json, flagKey)
 	if res.Type == gjson.Null {
 		return defaultValue
 	}
-	arr := []interface{}{}
+	arr := []any{}
 	err := json.Unmarshal([]byte(res.String()), &arr)
 	if err != nil {
 		return defaultValue
@@ -80,12 +80,12 @@ func (p *providerConfig) JSONArrayVariation(ctx context.Context, flagKey string,
 	return arr
 }
 
-func (p *providerConfig) JSONVariation(ctx context.Context, flagKey string, defaultValue map[string]interface{}) map[string]interface{} {
+func (p *providerConfig) JSONVariation(ctx context.Context, flagKey string, defaultValue map[string]any) map[string]any {
 	res := gjson.Get(p.json, flagKey)
 	if res.Type == gjson.Null {
 		return defaultValue
 	}
-	obj := map[string]interface{}{}
+	obj := map[string]any{}
 	err := json.Unmarshal([]byte(res.String()), &obj)
 	if err != nil {
 		return defaultValue

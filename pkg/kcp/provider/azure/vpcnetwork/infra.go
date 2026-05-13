@@ -160,11 +160,11 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 	}
 	if azuremeta.IsNotFound(err) {
 		vnetIn := armnetwork.VirtualNetwork{
-			Location: ptr.To(o.location),
+			Location: new(o.location),
 			Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 				AddressSpace: &armnetwork.AddressSpace{
 					AddressPrefixes: pie.Map(o.cidrBlocks, func(x string) *string {
-						return ptr.To(x)
+						return new(x)
 					}),
 				},
 			},

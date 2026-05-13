@@ -8,7 +8,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/yaml"
@@ -222,7 +221,7 @@ set -e
 			},
 		}
 		bb.AddExtraResource(ExtraResource{Key: "script", Obj: cm})
-		bb.WithPodDetails(PodWithMountFromConfigMap(name, "", "/script/"+name, ptr.To(int32(0755))))
+		bb.WithPodDetails(PodWithMountFromConfigMap(name, "", "/script/"+name, new(int32(0755))))
 		bb.Pod().Spec.Containers[0].Args = []string{
 			fmt.Sprintf("/script/%s/%s.sh", name, name),
 		}
@@ -290,7 +289,7 @@ func PodWithMountFromConfigMap(configMapName string, volumeName string, mountPat
 	}
 	mountPath = strings.TrimSuffix(mountPath, "/")
 	if defaultMode == nil {
-		defaultMode = ptr.To(int32(0644))
+		defaultMode = new(int32(0644))
 	}
 	return func(bb PodBuilder) {
 		bb.Pod().Spec.Volumes = append(bb.Pod().Spec.Volumes, corev1.Volume{

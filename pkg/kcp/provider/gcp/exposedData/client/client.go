@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
-	"k8s.io/utils/ptr"
 
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 )
@@ -34,7 +33,7 @@ type client struct {
 
 func (c *client) GetVpcRouters(ctx context.Context, project string, region string, vpcName string) ([]*computepb.Router, error) {
 	it := c.routersClient.ListRouters(ctx, &computepb.ListRoutersRequest{
-		Filter:  ptr.To(fmt.Sprintf(`network eq .*%s`, vpcName)),
+		Filter:  new(fmt.Sprintf(`network eq .*%s`, vpcName)),
 		Project: project,
 		Region:  region,
 	}).All()
@@ -52,7 +51,7 @@ func (c *client) GetRouterIpAddresses(ctx context.Context, project string, regio
 	it := c.addressClient.ListAddresses(ctx, &computepb.ListAddressesRequest{
 		Project: project,
 		Region:  region,
-		Filter:  ptr.To(`purpose="NAT_AUTO"`), // the API does not work with users filter, so have to do this
+		Filter:  new(`purpose="NAT_AUTO"`), // the API does not work with users filter, so have to do this
 	}).All()
 	var results []*computepb.Address
 	for x, err := range it {

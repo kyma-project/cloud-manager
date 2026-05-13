@@ -58,25 +58,25 @@ func getCreateParams(state *State) armredis.CreateParameters {
 	createProperties := &armredis.CreateProperties{
 		SKU: &armredis.SKU{
 			Name:     to.Ptr(armredis.SKUNamePremium),
-			Capacity: to.Ptr[int32](int32(state.ObjAsRedisCluster().Spec.Instance.Azure.SKU.Capacity)),
+			Capacity: new(int32(state.ObjAsRedisCluster().Spec.Instance.Azure.SKU.Capacity)),
 			Family:   to.Ptr(armredis.SKUFamilyP),
 		},
 		RedisConfiguration: state.ObjAsRedisCluster().Spec.Instance.Azure.RedisConfiguration.GetRedisConfig(),
-		EnableNonSSLPort:   to.Ptr(false),
+		EnableNonSSLPort:   new(false),
 	}
 
 	if state.ObjAsRedisCluster().Spec.Instance.Azure.ShardCount != 0 {
-		createProperties.ShardCount = to.Ptr[int32](int32(state.ObjAsRedisCluster().Spec.Instance.Azure.ShardCount))
+		createProperties.ShardCount = new(int32(state.ObjAsRedisCluster().Spec.Instance.Azure.ShardCount))
 	}
 	if state.ObjAsRedisCluster().Spec.Instance.Azure.ReplicasPerPrimary != 0 {
-		createProperties.ReplicasPerPrimary = to.Ptr[int32](int32(state.ObjAsRedisCluster().Spec.Instance.Azure.ReplicasPerPrimary))
+		createProperties.ReplicasPerPrimary = new(int32(state.ObjAsRedisCluster().Spec.Instance.Azure.ReplicasPerPrimary))
 	}
 	if state.ObjAsRedisCluster().Spec.Instance.Azure.RedisVersion != "" {
-		createProperties.RedisVersion = to.Ptr(state.ObjAsRedisCluster().Spec.Instance.Azure.RedisVersion)
+		createProperties.RedisVersion = new(state.ObjAsRedisCluster().Spec.Instance.Azure.RedisVersion)
 	}
 
 	createParameters := armredis.CreateParameters{
-		Location:   to.Ptr(state.Scope().Spec.Region),
+		Location:   new(state.Scope().Spec.Region),
 		Properties: createProperties,
 	}
 	return createParameters

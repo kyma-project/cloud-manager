@@ -105,7 +105,7 @@ func ObjectKinds(obj client.Object, scheme *runtime.Scheme) (result ObjectKindsI
 		}
 
 		if len(general) > 0 {
-			obj := map[string]interface{}{}
+			obj := map[string]any{}
 			if err := yaml.Unmarshal([]byte(general), &obj); err == nil {
 				cmGroup, groupFound, groupErr := unstructured.NestedString(obj, "resource", "group")
 				cmKind, kindFound, kindErr := unstructured.NestedString(obj, "resource", "kind")

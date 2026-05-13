@@ -11,8 +11,8 @@ type Provider interface {
 	IntVariation(ctx context.Context, flagKey string, defaultValue int) int
 	Float64Variation(ctx context.Context, flagKey string, defaultValue float64) float64
 	StringVariation(ctx context.Context, flagKey string, defaultValue string) string
-	JSONArrayVariation(ctx context.Context, flagKey string, defaultValue []interface{}) []interface{}
-	JSONVariation(ctx context.Context, flagKey string, defaultValue map[string]interface{}) map[string]interface{}
+	JSONArrayVariation(ctx context.Context, flagKey string, defaultValue []any) []any
+	JSONVariation(ctx context.Context, flagKey string, defaultValue map[string]any) map[string]any
 }
 
 type LandscapeName = string

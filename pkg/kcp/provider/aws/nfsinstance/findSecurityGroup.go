@@ -20,15 +20,15 @@ func findSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 
 	list, err := state.awsClient.DescribeSecurityGroups(ctx, []ec2types.Filter{
 		{
-			Name:   ptr.To("vpc-id"),
+			Name:   new("vpc-id"),
 			Values: []string{state.IpRange().Status.VpcId},
 		},
 		{
-			Name:   ptr.To("tag:Name"),
+			Name:   new("tag:Name"),
 			Values: []string{state.Obj().GetName()},
 		},
 		{
-			Name:   ptr.To(fmt.Sprintf("tag:%s", common.TagCloudManagerName)),
+			Name:   new(fmt.Sprintf("tag:%s", common.TagCloudManagerName)),
 			Values: []string{state.Name().String()},
 		},
 	}, nil)

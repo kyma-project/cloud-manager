@@ -45,7 +45,7 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 					"storage": state.ObjAsAwsNfsVolume().Spec.Capacity,
 				},
 			},
-			StorageClassName: ptr.To(""),
+			StorageClassName: new(""),
 			VolumeMode:       ptr.To(corev1.PersistentVolumeFilesystem),
 		},
 	}

@@ -1,0 +1,98 @@
+package sapnfssnapshotschedule
+
+import (
+	"context"
+	"time"
+
+	"github.com/gorhill/cronexpr"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
+	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
+	"k8s.io/klog/v2"
+	"k8s.io/utils/clock"
+)
+
+type State struct {
+	composed.State
+	KymaRef    klog.ObjectRef
+	KcpCluster composed.StateCluster
+	SkrCluster composed.StateCluster
+
+	// Common scheduling
+	Scheduler      *backupschedule.ScheduleCalculator
+	cronExpression *cronexpr.Expression
+	nextRunTime    time.Time
+	createRunDone  bool
+	deleteRunDone  bool
+
+	// SAP-specific
+	Scope     *cloudcontrolv1beta1.Scope
+	Source    *cloudresourcesv1beta1.SapNfsVolume
+	Snapshots []*cloudresourcesv1beta1.SapNfsVolumeSnapshot
+
+	env abstractions.Environment
+}
+
+// Implement backupschedule.ScheduleState interface
+
+func (s *State) ObjAsBackupSchedule() backupschedule.BackupSchedule {
+	return s.Obj().(backupschedule.BackupSchedule)
+}
+
+func (s *State) GetScheduleCalculator() *backupschedule.ScheduleCalculator {
+	return s.Scheduler
+}
+
+func (s *State) GetCronExpression() *cronexpr.Expression  { return s.cronExpression }
+func (s *State) SetCronExpression(e *cronexpr.Expression) { s.cronExpression = e }
+func (s *State) GetNextRunTime() time.Time                { return s.nextRunTime }
+func (s *State) SetNextRunTime(t time.Time)               { s.nextRunTime = t }
+func (s *State) IsCreateRunCompleted() bool               { return s.createRunDone }
+func (s *State) SetCreateRunCompleted(v bool)             { s.createRunDone = v }
+func (s *State) IsDeleteRunCompleted() bool               { return s.deleteRunDone }
+func (s *State) SetDeleteRunCompleted(v bool)             { s.deleteRunDone = v }
+
+func (s *State) ObjAsSapNfsVolumeSnapshotSchedule() *cloudresourcesv1beta1.SapNfsVolumeSnapshotSchedule {
+	return s.Obj().(*cloudresourcesv1beta1.SapNfsVolumeSnapshotSchedule)
+}
+
+type StateFactory interface {
+	NewState(ctx context.Context, baseState composed.State) (*State, error)
+}
+
+func NewStateFactory(scopeProvider scopeprovider.ScopeProvider, kcpCluster composed.StateCluster,
+	skrCluster composed.StateCluster, env abstractions.Environment, clk clock.Clock) StateFactory {
+	return &stateFactory{
+		scopeProvider: scopeProvider,
+		kcpCluster:    kcpCluster,
+		skrCluster:    skrCluster,
+		env:           env,
+		clk:           clk,
+	}
+}
+
+type stateFactory struct {
+	scopeProvider scopeprovider.ScopeProvider
+	kcpCluster    composed.StateCluster
+	skrCluster    composed.StateCluster
+	env           abstractions.Environment
+	clk           clock.Clock
+}
+
+func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
+	kymaRef, err := f.scopeProvider.GetScope(ctx, baseState.Name())
+	if err != nil {
+		return nil, err
+	}
+	return &State{
+		State:      baseState,
+		KymaRef:    kymaRef,
+		KcpCluster: f.kcpCluster,
+		SkrCluster: f.skrCluster,
+		env:        f.env,
+		Scheduler:  backupschedule.NewScheduleCalculator(f.clk, 1*time.Second),
+	}, nil
+}

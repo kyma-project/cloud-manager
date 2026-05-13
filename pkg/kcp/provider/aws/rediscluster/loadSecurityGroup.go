@@ -29,7 +29,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		ctx,
 		[]ec2types.Filter{
 			{
-				Name:   ptr.To("vpc-id"),
+				Name:   new("vpc-id"),
 				Values: []string{state.IpRange().Status.VpcId},
 			},
 		},

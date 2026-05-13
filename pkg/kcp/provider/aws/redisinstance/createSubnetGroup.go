@@ -29,19 +29,19 @@ func createSubnetGroup(ctx context.Context, st composed.State) (error, context.C
 	out, err := state.awsClient.CreateElastiCacheSubnetGroup(ctx, GetAwsElastiCacheSubnetGroupName(state.Obj().GetName()), subnetIds, []elasticachetypes.Tag{
 		{
 			Key:   ptr.To(common.TagCloudManagerRemoteName),
-			Value: ptr.To(redisInstance.Spec.RemoteRef.String()),
+			Value: new(redisInstance.Spec.RemoteRef.String()),
 		},
 		{
 			Key:   ptr.To(common.TagCloudManagerName),
-			Value: ptr.To(state.Name().String()),
+			Value: new(state.Name().String()),
 		},
 		{
 			Key:   ptr.To(common.TagScope),
-			Value: ptr.To(redisInstance.Spec.Scope.Name),
+			Value: new(redisInstance.Spec.Scope.Name),
 		},
 		{
 			Key:   ptr.To(common.TagShoot),
-			Value: ptr.To(state.Scope().Spec.ShootName),
+			Value: new(state.Scope().Spec.ShootName),
 		},
 	})
 	if err != nil {

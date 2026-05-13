@@ -59,22 +59,22 @@ func getCreateParams(state *State) armredis.CreateParameters {
 	createProperties := &armredis.CreateProperties{
 		SKU: &armredis.SKU{
 			Name:     skuName,
-			Capacity: to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
+			Capacity: new(int32(state.ObjAsRedisInstance().Spec.Instance.Azure.SKU.Capacity)),
 			Family:   skuFamily,
 		},
 		RedisConfiguration: state.ObjAsRedisInstance().Spec.Instance.Azure.RedisConfiguration.GetRedisConfig(),
-		EnableNonSSLPort:   to.Ptr(false),
+		EnableNonSSLPort:   new(false),
 	}
 
 	if state.ObjAsRedisInstance().Spec.Instance.Azure.ShardCount != 0 {
-		createProperties.ShardCount = to.Ptr[int32](int32(state.ObjAsRedisInstance().Spec.Instance.Azure.ShardCount))
+		createProperties.ShardCount = new(int32(state.ObjAsRedisInstance().Spec.Instance.Azure.ShardCount))
 	}
 	if state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion != "" {
-		createProperties.RedisVersion = to.Ptr(state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion)
+		createProperties.RedisVersion = new(state.ObjAsRedisInstance().Spec.Instance.Azure.RedisVersion)
 	}
 
 	createParameters := armredis.CreateParameters{
-		Location:   to.Ptr(state.Scope().Spec.Region),
+		Location:   new(state.Scope().Spec.Region),
 		Properties: createProperties,
 	}
 	return createParameters

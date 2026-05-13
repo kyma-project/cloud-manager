@@ -11,7 +11,6 @@ import (
 	"github.com/rodaine/table"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -101,7 +100,7 @@ var cmdInstanceModulesList = &cobra.Command{
 					Alias:     id.Alias,
 					RuntimeID: id.RuntimeID,
 					Name:      m.Name,
-					Status:    ptr.To(true),
+					Status:    new(true),
 					State:     string(m.State),
 					Message:   m.Message,
 				}
@@ -117,10 +116,10 @@ var cmdInstanceModulesList = &cobra.Command{
 						Alias:     id.Alias,
 						RuntimeID: id.RuntimeID,
 						Name:      m.Name,
-						Spec:      ptr.To(true),
+						Spec:      new(true),
 					}
 				} else {
-					mi.Spec = ptr.To(true)
+					mi.Spec = new(true)
 				}
 			}
 

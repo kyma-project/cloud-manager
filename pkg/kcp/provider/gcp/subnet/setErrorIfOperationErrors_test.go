@@ -11,7 +11,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -79,8 +78,8 @@ func TestSetErrorIfOperationErrors(t *testing.T) {
 			Error: &computepb.Error{
 				Errors: []*computepb.Errors{
 					{
-						Code:    proto.String("QUOTA_EXCEEDED"),
-						Message: proto.String("Subnet quota exceeded"),
+						Code:    new("QUOTA_EXCEEDED"),
+						Message: new("Subnet quota exceeded"),
 					},
 				},
 			},
@@ -110,8 +109,8 @@ func TestSetErrorIfOperationErrors(t *testing.T) {
 			Error: &computepb.Error{
 				Errors: []*computepb.Errors{
 					{
-						Code:    proto.String("QUOTA_EXCEEDED"),
-						Message: proto.String("Subnet quota exceeded"),
+						Code:    new("QUOTA_EXCEEDED"),
+						Message: new("Subnet quota exceeded"),
 					},
 				},
 			},

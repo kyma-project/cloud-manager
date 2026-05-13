@@ -15,10 +15,10 @@ func Ec2Tags(args ...string) (result []ec2types.Tag) {
 	resultIndex := 0
 	for i := 0; i < ll; i = i + 2 {
 		result = append(result, ec2types.Tag{
-			Key: ptr.To(args[i]),
+			Key: new(args[i]),
 		})
 		if i < ll-1 {
-			result[resultIndex].Value = ptr.To(args[i+1])
+			result[resultIndex].Value = new(args[i+1])
 		}
 		resultIndex++
 	}

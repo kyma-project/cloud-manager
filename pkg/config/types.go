@@ -9,8 +9,8 @@ type Config interface {
 	GetBaseDir() string
 	GetEnv(key string) string
 	Path(path string, actions ...PathAction) Config
-	DefaultScalar(path string, scalar interface{})
-	DefaultObj(path string, obj interface{})
+	DefaultScalar(path string, scalar any)
+	DefaultObj(path string, obj any)
 	DefaultJson(path string, js string)
 	SourceFile(fieldPath string, file string)
 	SourceEnv(fieldPath string, envVarPrefix string)

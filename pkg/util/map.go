@@ -2,6 +2,7 @@ package util
 
 import (
 	"bytes"
+	"maps"
 	"text/template"
 )
 
@@ -17,9 +18,7 @@ func MergeMaps[K comparable, V any](first, second map[K]V, onCollisionOverwrite 
 	}
 	result := make(map[K]V)
 
-	for k, v := range first {
-		result[k] = v
-	}
+	maps.Copy(result, first)
 
 	for k, v := range second {
 		if _, exists := result[k]; !exists || onCollisionOverwrite {

@@ -124,9 +124,9 @@ func (s *vpcStore) AddNatGateway(vpcId string, subnetId string) (*ec2types.NatGa
 	gw := &ec2types.NatGateway{
 		NatGatewayAddresses: []ec2types.NatGatewayAddress{
 			{
-				AllocationId: ptr.To(uuid.NewString()),
-				IsPrimary:    ptr.To(true),
-				PublicIp:     ptr.To(cdr.IP().String()),
+				AllocationId: new(uuid.NewString()),
+				IsPrimary:    new(true),
+				PublicIp:     new(cdr.IP().String()),
 			},
 		},
 	}
@@ -148,29 +148,29 @@ func (s *vpcStore) AddVpc(id, cidrVal string, tags []ec2types.Tag, subnets []Vpc
 
 	item := &vpcEntry{
 		vpc: ec2types.Vpc{
-			VpcId:     ptr.To(id),
-			CidrBlock: ptr.To(cidrVal),
+			VpcId:     new(id),
+			CidrBlock: new(cidrVal),
 			Tags:      tags,
 			CidrBlockAssociationSet: []ec2types.VpcCidrBlockAssociation{
 				{
-					AssociationId: ptr.To(uuid.NewString()),
-					CidrBlock:     ptr.To(cidrVal),
+					AssociationId: new(uuid.NewString()),
+					CidrBlock:     new(cidrVal),
 					CidrBlockState: &ec2types.VpcCidrBlockState{
 						State:         ec2types.VpcCidrBlockStateCodeAssociated,
-						StatusMessage: ptr.To("Associated"),
+						StatusMessage: new("Associated"),
 					},
 				},
 			},
 		},
 		subnets: pie.Map(subnets, func(x VpcSubnet) ec2types.Subnet {
 			return ec2types.Subnet{
-				AvailabilityZone:   ptr.To(x.AZ),
-				AvailabilityZoneId: ptr.To(x.AZ),
-				CidrBlock:          ptr.To(x.Cidr),
+				AvailabilityZone:   new(x.AZ),
+				AvailabilityZoneId: new(x.AZ),
+				CidrBlock:          new(x.Cidr),
 				State:              ec2types.SubnetStateAvailable,
-				SubnetId:           ptr.To(uuid.NewString()),
+				SubnetId:           new(uuid.NewString()),
 				Tags:               append(make([]ec2types.Tag, 0, len(tags)), x.Tags...),
-				VpcId:              ptr.To(id),
+				VpcId:              new(id),
 			}
 		}),
 	}
@@ -221,22 +221,22 @@ func (s *vpcStore) CreateDhcpOptions(ctx context.Context, name string, domainNam
 	}
 
 	tags = append(tags, ec2types.Tag{
-		Key:   ptr.To("Name"),
-		Value: ptr.To(name),
+		Key:   new("Name"),
+		Value: new(name),
 	})
 
 	o := &ec2types.DhcpOptions{
 		DhcpConfigurations: []ec2types.DhcpConfiguration{
 			{
-				Key:    ptr.To("domain-name"),
-				Values: []ec2types.AttributeValue{{Value: ptr.To(domainName)}},
+				Key:    new("domain-name"),
+				Values: []ec2types.AttributeValue{{Value: new(domainName)}},
 			},
 			{
-				Key:    ptr.To("domain-name-servers"),
-				Values: []ec2types.AttributeValue{{Value: ptr.To("AmazonProvidedDNS")}},
+				Key:    new("domain-name-servers"),
+				Values: []ec2types.AttributeValue{{Value: new("AmazonProvidedDNS")}},
 			},
 		},
-		DhcpOptionsId: ptr.To(uuid.NewString()),
+		DhcpOptionsId: new(uuid.NewString()),
 		Tags:          tags,
 	}
 	s.dhcpOptions = append(s.dhcpOptions, o)
@@ -256,7 +256,7 @@ func (s *vpcStore) AssociateDhcpOptions(ctx context.Context, vpcId string, dhcpO
 		return err
 	}
 
-	item.vpc.DhcpOptionsId = ptr.To(dhcpOptionsId)
+	item.vpc.DhcpOptionsId = new(dhcpOptionsId)
 
 	return nil
 }
@@ -297,11 +297,11 @@ func (s *vpcStore) CreateInternetGateway(ctx context.Context, name string) (*ec2
 	defer s.m.Unlock()
 
 	iwg := &ec2types.InternetGateway{
-		InternetGatewayId: ptr.To(uuid.New().String()),
+		InternetGatewayId: new(uuid.New().String()),
 		Tags: []ec2types.Tag{
 			{
-				Key:   ptr.To("Name"),
-				Value: ptr.To(name),
+				Key:   new("Name"),
+				Value: new(name),
 			},
 		},
 	}
@@ -347,7 +347,7 @@ func (s *vpcStore) AttachInternetGateway(ctx context.Context, vpcId, internetGat
 	}
 	igw.Attachments = append(igw.Attachments, ec2types.InternetGatewayAttachment{
 		State: ec2types.AttachmentStatusAttached,
-		VpcId: ptr.To(vpcId),
+		VpcId: new(vpcId),
 	})
 
 	return nil
@@ -436,23 +436,23 @@ func (s *vpcStore) CreateVpc(ctx context.Context, name, cidrTxt string, tags []e
 	defer s.m.Unlock()
 
 	tags = append(tags, ec2types.Tag{
-		Key:   ptr.To("Name"),
-		Value: ptr.To(name),
+		Key:   new("Name"),
+		Value: new(name),
 	})
 
 	item := &vpcEntry{
 		vpc: ec2types.Vpc{
-			VpcId:     ptr.To(uuid.NewString()),
-			CidrBlock: ptr.To(cidrTxt),
+			VpcId:     new(uuid.NewString()),
+			CidrBlock: new(cidrTxt),
 			Tags:      tags,
 			State:     ec2types.VpcStateAvailable,
 			CidrBlockAssociationSet: []ec2types.VpcCidrBlockAssociation{
 				{
-					AssociationId: ptr.To(uuid.NewString()),
-					CidrBlock:     ptr.To(cidrTxt),
+					AssociationId: new(uuid.NewString()),
+					CidrBlock:     new(cidrTxt),
 					CidrBlockState: &ec2types.VpcCidrBlockState{
 						State:         ec2types.VpcCidrBlockStateCodeAssociated,
-						StatusMessage: ptr.To("Associated"),
+						StatusMessage: new("Associated"),
 					},
 				},
 			},
@@ -534,11 +534,11 @@ func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidrVal str
 		return nil, err
 	}
 	a := ec2types.VpcCidrBlockAssociation{
-		AssociationId: ptr.To(uuid.NewString()),
-		CidrBlock:     ptr.To(cidrVal),
+		AssociationId: new(uuid.NewString()),
+		CidrBlock:     new(cidrVal),
 		CidrBlockState: &ec2types.VpcCidrBlockState{
 			State:         ec2types.VpcCidrBlockStateCodeAssociated,
-			StatusMessage: ptr.To("Associated"),
+			StatusMessage: new("Associated"),
 		},
 	}
 	item.vpc.CidrBlockAssociationSet = append(item.vpc.CidrBlockAssociationSet, a)
@@ -614,13 +614,13 @@ func (s *vpcStore) CreateSubnet(ctx context.Context, vpcId, az, cidrVal string, 
 		return nil, err
 	}
 	subnet := ec2types.Subnet{
-		AvailabilityZone:   ptr.To(az),
-		AvailabilityZoneId: ptr.To(az),
-		CidrBlock:          ptr.To(cidrVal),
+		AvailabilityZone:   new(az),
+		AvailabilityZoneId: new(az),
+		CidrBlock:          new(cidrVal),
 		State:              ec2types.SubnetStateAvailable,
-		SubnetId:           ptr.To(uuid.NewString()),
+		SubnetId:           new(uuid.NewString()),
 		Tags:               append(make([]ec2types.Tag, 0, len(tags)), tags...),
-		VpcId:              ptr.To(vpcId),
+		VpcId:              new(vpcId),
 	}
 	item.subnets = append(item.subnets, subnet)
 	return &subnet, nil

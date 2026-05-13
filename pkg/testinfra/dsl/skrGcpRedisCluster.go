@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -114,9 +115,7 @@ func WithSkrGcpRedisClusterAuthSecretLabels(labels map[string]string) ObjAction 
 				if gcpRedisCluster.Spec.AuthSecret.Labels == nil {
 					gcpRedisCluster.Spec.AuthSecret.Labels = map[string]string{}
 				}
-				for k, v := range labels {
-					gcpRedisCluster.Spec.AuthSecret.Labels[k] = v
-				}
+				maps.Copy(gcpRedisCluster.Spec.AuthSecret.Labels, labels)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithSkrGcpRedisClusterAuthSecretLabels", obj))
@@ -134,9 +133,7 @@ func WithSkrGcpRedisClusterAuthSecretAnnotations(annotations map[string]string) 
 				if gcpRedisCluster.Spec.AuthSecret.Annotations == nil {
 					gcpRedisCluster.Spec.AuthSecret.Annotations = map[string]string{}
 				}
-				for k, v := range annotations {
-					gcpRedisCluster.Spec.AuthSecret.Annotations[k] = v
-				}
+				maps.Copy(gcpRedisCluster.Spec.AuthSecret.Annotations, annotations)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithSkrGcpRedisClusterAuthSecretAnnotations", obj))
@@ -154,9 +151,7 @@ func WithSkrGcpRedisClusterAuthSecretExtraData(extraData map[string]string) ObjA
 				if gcpRedisCluster.Spec.AuthSecret.ExtraData == nil {
 					gcpRedisCluster.Spec.AuthSecret.ExtraData = map[string]string{}
 				}
-				for k, v := range extraData {
-					gcpRedisCluster.Spec.AuthSecret.ExtraData[k] = v
-				}
+				maps.Copy(gcpRedisCluster.Spec.AuthSecret.ExtraData, extraData)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithSkrGcpRedisClusterAuthSecretExtraData", obj))

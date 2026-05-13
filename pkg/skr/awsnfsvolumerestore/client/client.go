@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	"k8s.io/utils/ptr"
 )
 
 type LocalClient interface {
@@ -67,10 +66,10 @@ func (c *localClient) IsNotFound(err error) bool {
 
 func (c *client) StartRestoreJob(ctx context.Context, params *StartRestoreJobInput) (*backup.StartRestoreJobOutput, error) {
 	in := &backup.StartRestoreJobInput{
-		IamRoleArn:       ptr.To(params.IamRoleArn),
+		IamRoleArn:       new(params.IamRoleArn),
 		IdempotencyToken: params.IdempotencyToken,
 		RecoveryPointArn: params.RecoveryPointArn,
-		ResourceType:     ptr.To("EFS"),
+		ResourceType:     new("EFS"),
 		Metadata:         params.RestoreMetadata,
 	}
 
@@ -83,7 +82,7 @@ func (c *client) StartRestoreJob(ctx context.Context, params *StartRestoreJobInp
 
 func (c *client) DescribeRestoreJob(ctx context.Context, restoreJobId string) (*backup.DescribeRestoreJobOutput, error) {
 	in := &backup.DescribeRestoreJobInput{
-		RestoreJobId: ptr.To(restoreJobId),
+		RestoreJobId: new(restoreJobId),
 	}
 	out, err := c.svc.DescribeRestoreJob(ctx, in)
 	if err != nil {
@@ -94,9 +93,9 @@ func (c *client) DescribeRestoreJob(ctx context.Context, restoreJobId string) (*
 
 func (c *client) GetRecoveryPointRestoreMetadata(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.GetRecoveryPointRestoreMetadataOutput, error) {
 	in := &backup.GetRecoveryPointRestoreMetadataInput{
-		BackupVaultName:      ptr.To(backupVaultName),
-		RecoveryPointArn:     ptr.To(recoveryPointArn),
-		BackupVaultAccountId: ptr.To(accountId),
+		BackupVaultName:      new(backupVaultName),
+		RecoveryPointArn:     new(recoveryPointArn),
+		BackupVaultAccountId: new(accountId),
 	}
 	out, err := c.svc.GetRecoveryPointRestoreMetadata(ctx, in)
 	if err != nil {

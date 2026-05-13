@@ -146,7 +146,7 @@ func ReadOperationMetadata[T protoadapt.MessageV1](b *OperationLongRunningBuilde
 	var meta T
 	t := reflect.TypeOf(meta)
 
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		// T is a pointer type (e.g., *Instance), create new instance of the element type
 		meta = reflect.New(t.Elem()).Interface().(T)
 	} else {

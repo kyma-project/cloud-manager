@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 )
@@ -25,7 +24,7 @@ type privateDnsZoneClient struct {
 
 func (c *privateDnsZoneClient) CreatePrivateDnsZone(ctx context.Context, resourceGroupName, privateDnsZoneName string, tags map[string]string) error {
 	parameters := armprivatedns.PrivateZone{
-		Location: to.Ptr("global"),
+		Location: new("global"),
 		Tags:     util.AzureTags(tags),
 	}
 

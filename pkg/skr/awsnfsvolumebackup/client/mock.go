@@ -90,16 +90,16 @@ func (s *mockClient) DescribeBackupVault(ctx context.Context, backupVaultName st
 	}
 	logger.Info(fmt.Sprintf("Vault not found [%s]", backupVaultName))
 	return nil, &backuptypes.ResourceNotFoundException{
-		Message: ptr.To("Vault not found"),
+		Message: new("Vault not found"),
 	}
 }
 func (s *mockClient) CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error) {
 	logger := composed.LoggerFromCtx(ctx)
 	arnTxt := awsutil.BackupVaultArn(s.location, s.account, name)
 	vault := backup.DescribeBackupVaultOutput{
-		BackupVaultArn:         ptr.To(arnTxt),
-		BackupVaultName:        ptr.To(name),
-		CreationDate:           ptr.To(time.Now()),
+		BackupVaultArn:         new(arnTxt),
+		BackupVaultName:        new(name),
+		CreationDate:           new(time.Now()),
 		NumberOfRecoveryPoints: 0,
 	}
 	s.vaults = append(s.vaults, vault)
@@ -132,19 +132,19 @@ func (s *mockClient) StartBackupJob(ctx context.Context, params *StartBackupJobI
 	rPoint := backup.DescribeRecoveryPointOutput{
 		BackupVaultArn:    vault.BackupVaultArn,
 		BackupVaultName:   vault.BackupVaultName,
-		CreationDate:      ptr.To(time.Now()),
-		IamRoleArn:        ptr.To(params.IamRoleArn),
+		CreationDate:      new(time.Now()),
+		IamRoleArn:        new(params.IamRoleArn),
 		IsEncrypted:       false,
-		RecoveryPointArn:  ptr.To(arnTxt),
-		ResourceArn:       ptr.To(params.ResourceArn),
+		RecoveryPointArn:  new(arnTxt),
+		ResourceArn:       new(params.ResourceArn),
 		ResourceType:      nil,
 		Status:            backuptypes.RecoveryPointStatusCompleted,
-		BackupSizeInBytes: ptr.To(rand.Int64N(10240)),
+		BackupSizeInBytes: new(rand.Int64N(10240)),
 	}
 
 	job := backup.DescribeBackupJobOutput{
-		AccountId:        ptr.To(s.account),
-		BackupJobId:      ptr.To(jobId),
+		AccountId:        new(s.account),
+		BackupJobId:      new(jobId),
 		BackupVaultArn:   rPoint.BackupVaultArn,
 		BackupVaultName:  rPoint.BackupVaultName,
 		CreationDate:     rPoint.CreationDate,
@@ -172,7 +172,7 @@ func (s *mockClient) DescribeBackupJob(ctx context.Context, backupJobId string) 
 		}
 	}
 	return nil, &backuptypes.ResourceNotFoundException{
-		Message: ptr.To("BackupJob not found"),
+		Message: new("BackupJob not found"),
 	}
 }
 
@@ -207,7 +207,7 @@ func (s *mockClient) DescribeRecoveryPoint(ctx context.Context, accountId, backu
 		}
 	}
 	return nil, &backuptypes.ResourceNotFoundException{
-		Message: ptr.To("RecoveryPoint not found"),
+		Message: new("RecoveryPoint not found"),
 	}
 }
 func (s *mockClient) DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error) {
@@ -258,13 +258,13 @@ func (s *mockClient) StartCopyJob(ctx context.Context, params *StartCopyJobInput
 	rPoint := backup.DescribeRecoveryPointOutput{
 		BackupVaultArn:         dstVault.BackupVaultArn,
 		BackupVaultName:        dstVault.BackupVaultName,
-		CreationDate:           ptr.To(time.Now()),
-		IamRoleArn:             ptr.To(params.IamRoleArn),
+		CreationDate:           new(time.Now()),
+		IamRoleArn:             new(params.IamRoleArn),
 		IsEncrypted:            false,
-		RecoveryPointArn:       ptr.To(dstArn),
+		RecoveryPointArn:       new(dstArn),
 		ResourceType:           nil,
 		Status:                 backuptypes.RecoveryPointStatusCompleted,
-		BackupSizeInBytes:      ptr.To(rand.Int64N(10240)),
+		BackupSizeInBytes:      new(rand.Int64N(10240)),
 		ParentRecoveryPointArn: srcRecoveryPoint.RecoveryPointArn,
 		ResourceArn:            srcRecoveryPoint.ResourceArn,
 		ResourceName:           srcRecoveryPoint.ResourceName,
@@ -274,14 +274,14 @@ func (s *mockClient) StartCopyJob(ctx context.Context, params *StartCopyJobInput
 
 	job := backup.DescribeCopyJobOutput{
 		CopyJob: &backuptypes.CopyJob{
-			AccountId:                   ptr.To(s.account),
+			AccountId:                   new(s.account),
 			CreationDate:                rPoint.CreationDate,
 			IamRoleArn:                  rPoint.IamRoleArn,
 			ResourceArn:                 rPoint.ResourceArn,
 			State:                       backuptypes.CopyJobStateCompleted,
-			BackupSizeInBytes:           ptr.To(rand.Int64N(10240)),
+			BackupSizeInBytes:           new(rand.Int64N(10240)),
 			CompletionDate:              rPoint.CreationDate,
-			CopyJobId:                   ptr.To(jobId),
+			CopyJobId:                   new(jobId),
 			CreatedBy:                   &backuptypes.RecoveryPointCreator{},
 			DestinationBackupVaultArn:   srcVault.BackupVaultArn,
 			DestinationRecoveryPointArn: rPoint.RecoveryPointArn,
@@ -307,6 +307,6 @@ func (s *mockClient) DescribeCopyJob(ctx context.Context, copyJobId string) (*ba
 		}
 	}
 	return nil, &backuptypes.ResourceNotFoundException{
-		Message: ptr.To("CopyJob not found"),
+		Message: new("CopyJob not found"),
 	}
 }

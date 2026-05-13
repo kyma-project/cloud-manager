@@ -117,7 +117,7 @@ func (s *nfsStore) PatchFilestoreInstance(ctx context.Context, projectId, locati
 	completeId := fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, location, instanceId)
 	for i, item := range s.instances {
 		if item != nil && item.Name == completeId {
-			for _, field := range strings.Split(updateMask, ",") {
+			for field := range strings.SplitSeq(updateMask, ",") {
 				switch strings.ToLower(field) {
 				case "fileshares":
 					s.instances[i].FileShares = instance.FileShares

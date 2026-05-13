@@ -90,8 +90,7 @@ func TestSetStartTime(t *testing.T) {
 
 		t.Run("Should: set start time", func(t *testing.T) {
 			setupTest(true)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-azure-restore", Namespace: "test-ns-2"}, azureRwxVolumeRestore)
 			assert.Nil(t, err, "should get azureRwxVolumeRestore")
 			assert.Nil(t, azureRwxVolumeRestore.Status.StartTime, "should not have start time set")
@@ -109,8 +108,7 @@ func TestSetStartTime(t *testing.T) {
 
 		t.Run("Should: retry if setting start time fails", func(t *testing.T) {
 			setupTest(false)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			err, res := prepareRestore(ctx, state)
 
@@ -120,8 +118,7 @@ func TestSetStartTime(t *testing.T) {
 
 		t.Run("Should: skip if restoredDir is already set", func(t *testing.T) {
 			setupTest(true)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			state.ObjAsAzureRwxVolumeRestore().Status.RestoredDir = uuid.NewString()
 
 			err, res := prepareRestore(ctx, state)

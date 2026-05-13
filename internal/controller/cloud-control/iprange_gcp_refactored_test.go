@@ -15,7 +15,6 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", func() {
@@ -48,7 +47,7 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				NetworkResource: &computepb.Network{
-					Name: ptr.To(scope.Spec.Scope.Gcp.VpcNetwork),
+					Name: new(scope.Spec.Scope.Gcp.VpcNetwork),
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())
@@ -203,7 +202,7 @@ var _ = Describe("Feature: KCP IpRange for GCP - Refactored Implementation", fun
 			op, err := gcpMock.InsertNetwork(infra.Ctx(), &computepb.InsertNetworkRequest{
 				Project: gcpMock.ProjectId(),
 				NetworkResource: &computepb.Network{
-					Name: ptr.To(scope.Spec.Scope.Gcp.VpcNetwork),
+					Name: new(scope.Spec.Scope.Gcp.VpcNetwork),
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())

@@ -6,7 +6,6 @@ import (
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
-	"k8s.io/utils/ptr"
 
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 
@@ -81,12 +80,12 @@ func (s *State) UpdateNodeType(nodeType string) {
 
 func (s *State) UpdateReplicaCount(replicaCount int32) {
 	s.updateMask = append(s.updateMask, "replica_count")
-	s.gcpRedisCluster.ReplicaCount = ptr.To(replicaCount)
+	s.gcpRedisCluster.ReplicaCount = new(replicaCount)
 }
 
 func (s *State) UpdateShardCount(shardCount int32) {
 	s.updateMask = append(s.updateMask, "shard_count")
-	s.gcpRedisCluster.ShardCount = ptr.To(shardCount)
+	s.gcpRedisCluster.ShardCount = new(shardCount)
 }
 
 func (s *State) ObjAsGcpRedisCluster() *cloudcontrolv1beta1.GcpRedisCluster {

@@ -1,0 +1,110 @@
+name: PR Check CRD Version Bump
+run-name: Check CRD version bump ${{ github.event.pull_request.number || github.ref_name }}
+on:
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - 'api/cloud-resources/v1beta1/**'
+      - 'config/crd/bases/cloud-resources.kyma-project.io_*.yaml'
+      - 'config/patchAfterMakeManifests.sh'
+      - '.github/workflows/pr-check-crd-version-bump.yaml'
+
+jobs:
+  check-crd-version-bump:
+    runs-on: ubuntu-latest
+    name: Check CRD version bump
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check CRD version annotations are bumped
+        run: |
+          set -euo pipefail
+
+          BASE_REF="${{ github.event.pull_request.base.sha }}"
+          HEAD_REF="${{ github.event.pull_request.head.sha }}"
+
+          PATCH_SCRIPT="config/patchAfterMakeManifests.sh"
+          CRD_DIR="config/crd/bases"
+
+          # Get list of changed CRD files (cloud-resources only)
+          CHANGED_CRDS=$(git diff --name-only "$BASE_REF" "$HEAD_REF" -- \
+            "${CRD_DIR}/cloud-resources.kyma-project.io_*.yaml" || true)
+
+          if [ -z "$CHANGED_CRDS" ]; then
+            echo "No cloud-resources CRD files changed, checking if API types changed..."
+
+            # If API types changed but CRDs didn't, that might mean make manifests wasn't run
+            # But that's caught by pr-check-modified-files.yml, so we just exit here
+            API_CHANGES=$(git diff --name-only "$BASE_REF" "$HEAD_REF" -- \
+              "api/cloud-resources/v1beta1/" || true)
+
+            if [ -n "$API_CHANGES" ]; then
+              echo "::warning::API types changed but no CRD files changed. Ensure 'make manifests' was run."
+            fi
+            echo "No CRD version check needed."
+            exit 0
+          fi
+
+          echo "Changed CRD files:"
+          echo "$CHANGED_CRDS"
+          echo ""
+
+          ERRORS=""
+
+          for CRD_FILE in $CHANGED_CRDS; do
+            CRD_BASENAME=$(basename "$CRD_FILE")
+            echo "---"
+            echo "Checking: $CRD_BASENAME"
+
+            # Get the file content at base and head, stripping the version annotation
+            # to determine if there's a real (substantive) change
+            BASE_CONTENT=$(git show "${BASE_REF}:${CRD_FILE}" 2>/dev/null | \
+              grep -v 'cloud-resources.kyma-project.io/version' || echo "")
+            HEAD_CONTENT=$(git show "${HEAD_REF}:${CRD_FILE}" 2>/dev/null | \
+              grep -v 'cloud-resources.kyma-project.io/version' || echo "")
+
+            if [ "$BASE_CONTENT" = "$HEAD_CONTENT" ]; then
+              echo "  Only version annotation changed (or whitespace) - no substantive CRD change. OK."
+              continue
+            fi
+
+            # There is a real CRD change - check if version was bumped in patchAfterMakeManifests.sh
+            echo "  Substantive CRD change detected."
+
+            # Check if patchAfterMakeManifests.sh was modified for this CRD
+            PATCH_DIFF=$(git diff "$BASE_REF" "$HEAD_REF" -- "$PATCH_SCRIPT" || true)
+
+            if [ -z "$PATCH_DIFF" ]; then
+              ERRORS="${ERRORS}\n  ERROR: ${CRD_BASENAME} has substantive changes but ${PATCH_SCRIPT} was not modified."
+              continue
+            fi
+
+            # Check specifically that the version line for this CRD was changed
+            # The patch script uses the CRD filename in yq commands
+            VERSION_BUMPED=$(echo "$PATCH_DIFF" | grep -E "^\+" | grep "$CRD_BASENAME" || true)
+
+            if [ -z "$VERSION_BUMPED" ]; then
+              ERRORS="${ERRORS}\n  ERROR: ${CRD_BASENAME} has substantive changes but its version in ${PATCH_SCRIPT} was not bumped."
+            else
+              echo "  Version bump detected. OK."
+            fi
+          done
+
+          echo ""
+          echo "=== Summary ==="
+
+          if [ -n "$ERRORS" ]; then
+            echo ""
+            echo "FAILURES:"
+            echo -e "$ERRORS"
+            echo ""
+            echo "When a CRD schema changes, you must bump the version annotation in ${PATCH_SCRIPT}."
+            echo "Then re-run: make manifests && config/sync.sh"
+            exit 1
+          fi
+
+          echo "All changed CRDs have proper version bumps. OK."

@@ -14,7 +14,7 @@ func TestCastInterfaceToString(t *testing.T) {
 
 	testCases := []struct {
 		t string
-		x interface{}
+		x any
 		s string
 	}{
 		{
@@ -24,7 +24,7 @@ func TestCastInterfaceToString(t *testing.T) {
 		},
 		{
 			t: "*string",
-			x: ptr.To("value"),
+			x: new("value"),
 			s: "value",
 		},
 		{

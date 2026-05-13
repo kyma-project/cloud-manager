@@ -11,6 +11,7 @@ import (
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/ptr"
+	"slices"
 	"sync"
 )
 
@@ -40,10 +41,8 @@ func filterMatchesTags(tags []ec2types.Tag, filter ec2types.Filter) bool {
 			continue
 		}
 		tagValue := ptr.Deref(t.Value, "")
-		for _, fv := range filter.Values {
-			if tagValue == fv {
-				return true
-			}
+		if slices.Contains(filter.Values, tagValue) {
+			return true
 		}
 	}
 	return false
@@ -126,15 +125,15 @@ func (s *nfsStore) CreateSecurityGroup(ctx context.Context, vpcId, name string, 
 	s.m.Lock()
 	defer s.m.Unlock()
 	tags = append(tags, ec2types.Tag{
-		Key:   ptr.To("vpc-id"),
-		Value: ptr.To(vpcId),
+		Key:   new("vpc-id"),
+		Value: new(vpcId),
 	})
 	sg := &ec2types.SecurityGroup{
-		Description: ptr.To(name),
-		GroupId:     ptr.To(uuid.NewString()),
-		GroupName:   ptr.To(name),
+		Description: new(name),
+		GroupId:     new(uuid.NewString()),
+		GroupName:   new(name),
 		Tags:        tags,
-		VpcId:       ptr.To(vpcId),
+		VpcId:       new(vpcId),
 	}
 	s.sg = append(s.sg, sg)
 	return ptr.Deref(sg.GroupId, ""), nil
@@ -197,12 +196,12 @@ func (s *nfsStore) CreateFileSystem(ctx context.Context, performanceMode efstype
 		name = id
 	}
 	fs := &efstypes.FileSystemDescription{
-		FileSystemId:         ptr.To(id),
+		FileSystemId:         new(id),
 		LifeCycleState:       efstypes.LifeCycleStateAvailable,
 		NumberOfMountTargets: 0,
 		PerformanceMode:      performanceMode,
 		Tags:                 tags,
-		Name:                 ptr.To(name),
+		Name:                 new(name),
 		ThroughputMode:       throughputMode,
 	}
 	s.fs = append(s.fs, fs)
@@ -272,11 +271,11 @@ func (s *nfsStore) CreateMountTarget(ctx context.Context, fsId, subnetId string,
 	id := uuid.NewString()
 	item := mountTargetItem{
 		desc: efstypes.MountTargetDescription{
-			FileSystemId:   ptr.To(fsId),
+			FileSystemId:   new(fsId),
 			LifeCycleState: efstypes.LifeCycleStateAvailable,
-			MountTargetId:  ptr.To(id),
-			SubnetId:       ptr.To(subnetId),
-			IpAddress:      ptr.To("1.2.3.4"),
+			MountTargetId:  new(id),
+			SubnetId:       new(subnetId),
+			IpAddress:      new("1.2.3.4"),
 		},
 		sg: securityGroups,
 	}

@@ -9,9 +9,9 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
 
-func CastInterfaceToString(x interface{}) string {
+func CastInterfaceToString(x any) string {
 	v := reflect.ValueOf(x)
-	if x == nil || (v.Kind() == reflect.Ptr && v.IsNil()) || (v.Interface() == nil) {
+	if x == nil || (v.Kind() == reflect.Pointer && v.IsNil()) || (v.Interface() == nil) {
 		return ""
 	}
 	switch xx := x.(type) {
@@ -24,7 +24,7 @@ func CastInterfaceToString(x interface{}) string {
 	case *cloudcontrolv1beta1.ProviderType:
 		return string(*xx)
 	default:
-		if v.Kind() == reflect.Ptr {
+		if v.Kind() == reflect.Pointer {
 			v = v.Elem()
 		}
 		return fmt.Sprintf("%v", v.Interface())

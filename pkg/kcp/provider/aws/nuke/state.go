@@ -57,7 +57,7 @@ func (b AwsBackup) GetId() string {
 	return ptr.Deref(b.RecoveryPointArn, "")
 }
 
-func (b AwsBackup) GetObject() interface{} {
+func (b AwsBackup) GetObject() any {
 	return b
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
-	"k8s.io/utils/ptr"
 )
 
 type ResourceGroupClient interface {
@@ -36,11 +35,11 @@ func (c *resourceGroupClient) CreateResourceGroup(ctx context.Context, name stri
 	if tags != nil {
 		azureTags = make(map[string]*string, len(tags))
 		for k, v := range tags {
-			azureTags[k] = ptr.To(v)
+			azureTags[k] = new(v)
 		}
 	}
 	resp, err := c.svc.CreateOrUpdate(ctx, name, armresources.ResourceGroup{
-		Location: ptr.To(location),
+		Location: new(location),
 		Tags:     azureTags,
 	}, nil)
 	if err != nil {

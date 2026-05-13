@@ -7,7 +7,6 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2"
-	"k8s.io/utils/ptr"
 )
 
 type RoutersClient interface {
@@ -47,7 +46,7 @@ func (c *routersClient) DeleteRouter(ctx context.Context, req *computepb.DeleteR
 
 func (c *routersClient) GetVpcRouters(ctx context.Context, project string, region string, vpcName string) ([]*computepb.Router, error) {
 	it := c.ListRouters(ctx, &computepb.ListRoutersRequest{
-		Filter:  ptr.To(fmt.Sprintf(`network eq .*%s`, vpcName)),
+		Filter:  new(fmt.Sprintf(`network eq .*%s`, vpcName)),
 		Project: project,
 		Region:  region,
 	}).All()

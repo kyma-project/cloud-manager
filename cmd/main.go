@@ -50,6 +50,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
+	"k8s.io/utils/clock"
+
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -90,8 +92,9 @@ import (
 	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	"github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshot"
+	"github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshotrestore"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/clock"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -322,6 +325,21 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupSapNfsVolumeReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SapNfsVolume")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupSapNfsVolumeSnapshotReconciler(skrRegistry, sapnfsvolumesnapshot.NewSnapshotClientProvider(), clock.RealClock{}); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SapNfsVolumeSnapshot")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupSapNfsVolumeSnapshotRestoreReconciler(skrRegistry, sapnfsvolumesnapshotrestore.NewSnapshotClientProvider(), sapnfsvolumesnapshotrestore.NewShareClientProvider()); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SapNfsVolumeSnapshotRestore")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupSapNfsVolumeSnapshotScheduleReconciler(skrRegistry, env, clock.RealClock{}); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "SapNfsVolumeSnapshotSchedule")
 		os.Exit(1)
 	}
 

@@ -37,7 +37,7 @@ func createAwsDestBackup(ctx context.Context, st composed.State) (error, context
 		DestinationBackupVaultArn: state.GetDestinationBackupVaultArn(),
 		RecoveryPointArn:          state.GetRecoveryPointArn(),
 		IamRoleArn:                awsutil.RoleArnBackup(state.Scope().Spec.Scope.Aws.AccountId),
-		IdempotencyToken:          ptr.To(backup.Status.IdempotencyToken),
+		IdempotencyToken:          new(backup.Status.IdempotencyToken),
 	})
 	if err != nil {
 		return composed.PatchStatus(backup).

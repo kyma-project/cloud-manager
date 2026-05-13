@@ -62,7 +62,7 @@ func (b azureFileshare) GetId() string {
 	return b.id
 }
 
-func (b azureFileshare) GetObject() interface{} {
+func (b azureFileshare) GetObject() any {
 	return b
 }
 
@@ -74,7 +74,7 @@ func (v azureVault) GetId() string {
 	return ptr.Deref(v.ID, "")
 }
 
-func (v azureVault) GetObject() interface{} {
+func (v azureVault) GetObject() any {
 	return v
 }
 
@@ -87,7 +87,7 @@ func (v azureContainer) GetId() string {
 	return v.id
 }
 
-func (v azureContainer) GetObject() interface{} {
+func (v azureContainer) GetObject() any {
 	return v
 }
 

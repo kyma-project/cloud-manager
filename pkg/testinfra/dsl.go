@@ -16,7 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -141,7 +140,7 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 				},
 				// SA1019 keep using SecretBinding until migrated to CredentialsBinding
 				// nolint:staticcheck
-				SecretBindingName: ptr.To(name),
+				SecretBindingName: new(name),
 			},
 		}
 		err := dsl.i.Garden().Client().Create(dsl.i.Ctx(), shoot)
@@ -242,8 +241,8 @@ func (dsl *infraDSL) givenScopeGcpExistsWithProject(name, project string) error 
 	if apierrors.IsNotFound(err) {
 		return dsl.i.KCP().Client().Create(dsl.i.Ctx(), desired)
 	}
-	// Update spec if project has changed (e.g., between test scenarios using mock2)
-	if existing.Spec.Scope.Gcp.Project != project {
+	// Update spec if provider or project has changed (e.g., between test scenarios)
+	if existing.Spec.Scope.Gcp == nil || existing.Spec.Scope.Gcp.Project != project {
 		existing.Spec = desired.Spec
 		return dsl.i.KCP().Client().Update(dsl.i.Ctx(), existing)
 	}

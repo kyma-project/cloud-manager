@@ -14,7 +14,7 @@ func IpCompare(a, b net.IP) int {
 	if len(a) > len(b) {
 		return 1
 	}
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		if a[i] < b[i] {
 			return -1
 		}

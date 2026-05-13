@@ -51,15 +51,15 @@ func ExtractGardenerClusterSummary(gc *unstructured.Unstructured) (*GardenerClus
 }
 
 func SetGardenerClusterSummary(gc *unstructured.Unstructured, summary GardenerClusterSummary) error {
-	spec := map[string]interface{}{
-		"kubeconfig": map[string]interface{}{
-			"secret": map[string]interface{}{
+	spec := map[string]any{
+		"kubeconfig": map[string]any{
+			"secret": map[string]any{
 				"name":      summary.Name,
 				"key":       summary.Key,
 				"namespace": summary.Namespace,
 			},
 		},
-		"shoot": map[string]interface{}{
+		"shoot": map[string]any{
 			"name": summary.Shoot,
 		},
 	}

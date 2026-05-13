@@ -110,12 +110,12 @@ func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetwor
 
 	id := rand.Uint64()
 	name := gcputil.NewSubnetworkName(req.Project, req.Region, subnet.GetName())
-	subnet.Id = ptr.To(id)
-	subnet.Kind = ptr.To("compute#subnetwork")
-	subnet.SelfLink = ptr.To(name.PrefixWithGoogleApisComputeV1())
-	subnet.Region = ptr.To(req.Region)
-	subnet.State = ptr.To(computepb.Subnetwork_READY.String())
-	subnet.Network = ptr.To(networkName.PrefixWithGoogleApisComputeV1())
+	subnet.Id = new(id)
+	subnet.Kind = new("compute#subnetwork")
+	subnet.SelfLink = new(name.PrefixWithGoogleApisComputeV1())
+	subnet.Region = new(req.Region)
+	subnet.State = new(computepb.Subnetwork_READY.String())
+	subnet.Network = new(networkName.PrefixWithGoogleApisComputeV1())
 
 	net.Subnetworks = append(net.Subnetworks, subnet.GetSelfLink())
 
@@ -126,8 +126,8 @@ func (s *store) InsertSubnet(ctx context.Context, req *computepb.InsertSubnetwor
 
 	op := s.createComputeOperationNoLock(req.Project, req.Region, "insert", subnet.GetSelfLink(), id)
 	op.Status = ptr.To(computepb.Operation_DONE)
-	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	op.Progress = ptr.To(int32(100))
+	op.EndTime = new(time.Now().Format(time.RFC3339))
+	op.Progress = new(int32(100))
 
 	return newComputeOperation(op), nil
 }
@@ -242,8 +242,8 @@ func (s *store) DeleteSubnet(ctx context.Context, req *computepb.DeleteSubnetwor
 
 	compOp := s.createComputeOperationNoLock(req.Project, req.Region, "delete", subNd.PrefixWithGoogleApisComputeV1(), sub.GetId())
 	compOp.Status = ptr.To(computepb.Operation_DONE)
-	compOp.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	compOp.Progress = ptr.To(int32(100))
+	compOp.EndTime = new(time.Now().Format(time.RFC3339))
+	compOp.Progress = new(int32(100))
 
 	return newComputeOperation(compOp), nil
 }

@@ -80,17 +80,17 @@ func NewRuntimeBuilder(cpr CloudProfileRegistry, config *e2econfig.ConfigType) *
 				},
 				Shoot: infrastructuremanagerv1.RuntimeShoot{
 					Kubernetes: infrastructuremanagerv1.Kubernetes{
-						Version: ptr.To("1.33"),
+						Version: new("1.33"),
 						KubeAPIServer: infrastructuremanagerv1.APIServer{
 							AdditionalOidcConfig: &[]infrastructuremanagerv1.OIDCConfig{
 								{
 									OIDCConfig: gardenertypes.OIDCConfig{
-										ClientID:       ptr.To(config.OidcClientId),
-										IssuerURL:      ptr.To(config.OidcIssuerUrl),
-										GroupsClaim:    ptr.To("groups"),
-										GroupsPrefix:   ptr.To("-"),
-										UsernameClaim:  ptr.To("sub"),
-										UsernamePrefix: ptr.To("-"),
+										ClientID:       new(config.OidcClientId),
+										IssuerURL:      new(config.OidcIssuerUrl),
+										GroupsClaim:    new("groups"),
+										GroupsPrefix:   new("-"),
+										UsernameClaim:  new("sub"),
+										UsernamePrefix: new("-"),
 										SigningAlgs:    []string{"RS256"},
 									},
 								},
@@ -192,7 +192,7 @@ func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType,
 		return b
 	}
 
-	b.Obj.Spec.Shoot.Kubernetes.Version = ptr.To(kv)
+	b.Obj.Spec.Shoot.Kubernetes.Version = new(kv)
 
 	zones, ok := providerRegions[provider][region]
 	if !ok {
@@ -212,7 +212,7 @@ func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType,
 	if ok {
 		vol = &gardenertypes.Volume{
 			VolumeSize: "80Gi",
-			Type:       ptr.To(volType),
+			Type:       new(volType),
 		}
 	}
 
@@ -224,12 +224,12 @@ func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType,
 			Machine: gardenertypes.Machine{
 				Image: &gardenertypes.ShootMachineImage{
 					Name:    "gardenlinux",
-					Version: ptr.To(glv),
+					Version: new(glv),
 				},
 				Type: machineTypes[provider][0],
 			},
-			MaxSurge:       ptr.To(intstr.FromInt32(3)),
-			MaxUnavailable: ptr.To(intstr.FromInt32(0)),
+			MaxSurge:       new(intstr.FromInt32(3)),
+			MaxUnavailable: new(intstr.FromInt32(0)),
 			Minimum:        3,
 			Maximum:        20,
 			Volume:         vol,
@@ -253,12 +253,12 @@ func (b *RuntimeBuilder) WithOidc(clientId, issuerUrl string) *RuntimeBuilder {
 		data,
 		infrastructuremanagerv1.OIDCConfig{
 			OIDCConfig: gardenertypes.OIDCConfig{
-				ClientID:       ptr.To(clientId),
-				IssuerURL:      ptr.To(issuerUrl),
-				GroupsClaim:    ptr.To("groups"),
-				GroupsPrefix:   ptr.To("-"),
-				UsernameClaim:  ptr.To("sub"),
-				UsernamePrefix: ptr.To("-"),
+				ClientID:       new(clientId),
+				IssuerURL:      new(issuerUrl),
+				GroupsClaim:    new("groups"),
+				GroupsPrefix:   new("-"),
+				UsernameClaim:  new("sub"),
+				UsernamePrefix: new("-"),
 				SigningAlgs:    []string{"RS256"},
 			},
 		},

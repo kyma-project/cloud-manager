@@ -1,6 +1,8 @@
 package awsnfsvolume
 
 import (
+	"maps"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -37,9 +39,7 @@ func getVolumeAnnotations(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[string
 		return nil
 	}
 	result := map[string]string{}
-	for k, v := range awsVol.Spec.PersistentVolume.Annotations {
-		result[k] = v
-	}
+	maps.Copy(result, awsVol.Spec.PersistentVolume.Annotations)
 	return result
 }
 
@@ -76,8 +76,6 @@ func getVolumeClaimAnnotations(awsVol *cloudresourcesv1beta1.AwsNfsVolume) map[s
 		return nil
 	}
 	result := map[string]string{}
-	for k, v := range awsVol.Spec.PersistentVolumeClaim.Annotations {
-		result[k] = v
-	}
+	maps.Copy(result, awsVol.Spec.PersistentVolumeClaim.Annotations)
 	return result
 }

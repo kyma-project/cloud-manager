@@ -45,7 +45,7 @@ func (p *providerGoFF) StringVariation(ctx context.Context, flagKey string, defa
 	return res
 }
 
-func (p *providerGoFF) JSONArrayVariation(ctx context.Context, flagKey string, defaultValue []interface{}) []interface{} {
+func (p *providerGoFF) JSONArrayVariation(ctx context.Context, flagKey string, defaultValue []any) []any {
 	ffCtx := MustContextFromCtx(ctx)
 	res, err := p.ff.JSONArrayVariation(flagKey, ffCtx, defaultValue)
 	if err != nil {
@@ -54,7 +54,7 @@ func (p *providerGoFF) JSONArrayVariation(ctx context.Context, flagKey string, d
 	return res
 }
 
-func (p *providerGoFF) JSONVariation(ctx context.Context, flagKey string, defaultValue map[string]interface{}) map[string]interface{} {
+func (p *providerGoFF) JSONVariation(ctx context.Context, flagKey string, defaultValue map[string]any) map[string]any {
 	ffCtx := MustContextFromCtx(ctx)
 	res, err := p.ff.JSONVariation(flagKey, ffCtx, defaultValue)
 	if err != nil {

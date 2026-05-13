@@ -153,7 +153,7 @@ func (s *store) InsertRouter(ctx context.Context, req *computepb.InsertRouterReq
 			if err != nil {
 				return nil, gcpmeta.NewBadRequestError("nats subnet %s does not exist", subNd.String())
 			}
-			natSub.Name = ptr.To(subNd.PrefixWithGoogleApisComputeV1())
+			natSub.Name = new(subNd.PrefixWithGoogleApisComputeV1())
 		}
 	}
 
@@ -165,17 +165,17 @@ func (s *store) InsertRouter(ctx context.Context, req *computepb.InsertRouterReq
 	if err != nil {
 		return nil, fmt.Errorf("%w failed to copy router: %w", common.ErrLogical, err)
 	}
-	router.Id = ptr.To(id)
-	router.SelfLink = ptr.To(name.PrefixWithGoogleApisComputeV1())
-	router.Network = ptr.To(networkNd.ResourceId())
-	router.Region = ptr.To(gcputil.NewRegionName(req.Project, req.Region).String())
+	router.Id = new(id)
+	router.SelfLink = new(name.PrefixWithGoogleApisComputeV1())
+	router.Network = new(networkNd.ResourceId())
+	router.Region = new(gcputil.NewRegionName(req.Project, req.Region).String())
 
 	s.routers.Add(router, name)
 
 	op := s.createComputeOperationNoLock(req.Project, req.Region, "insert", ptr.Deref(router.SelfLink, ""), id)
 	op.Status = ptr.To(computepb.Operation_DONE)
-	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	op.Progress = ptr.To(int32(100))
+	op.EndTime = new(time.Now().Format(time.RFC3339))
+	op.Progress = new(int32(100))
 
 	return newComputeOperation(op), nil
 }
@@ -201,8 +201,8 @@ func (s *store) DeleteRouter(ctx context.Context, req *computepb.DeleteRouterReq
 
 	op := s.createComputeOperationNoLock(req.Project, req.Region, "delete", name.PrefixWithGoogleApisComputeV1(), ptr.Deref(router.Id, 0))
 	op.Status = ptr.To(computepb.Operation_DONE)
-	op.EndTime = ptr.To(time.Now().Format(time.RFC3339))
-	op.Progress = ptr.To(int32(100))
+	op.EndTime = new(time.Now().Format(time.RFC3339))
+	op.Progress = new(int32(100))
 
 	return newComputeOperation(op), nil
 }
@@ -211,7 +211,7 @@ func (s *store) DeleteRouter(ctx context.Context, req *computepb.DeleteRouterReq
 
 func (s *store) GetVpcRouters(ctx context.Context, project string, region string, vpcName string) ([]*computepb.Router, error) {
 	it := s.ListRouters(ctx, &computepb.ListRoutersRequest{
-		Filter:  ptr.To(fmt.Sprintf(`network eq .*%s`, vpcName)),
+		Filter:  new(fmt.Sprintf(`network eq .*%s`, vpcName)),
 		Project: project,
 		Region:  region,
 	}).All()

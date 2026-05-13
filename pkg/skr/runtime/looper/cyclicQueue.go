@@ -8,18 +8,18 @@ import (
 type empty struct{}
 
 // type t interface{}
-type set map[interface{}]empty
+type set map[any]empty
 
-func (s set) has(item interface{}) bool {
+func (s set) has(item any) bool {
 	_, exists := s[item]
 	return exists
 }
 
-func (s set) insert(item interface{}) {
+func (s set) insert(item any) {
 	s[item] = empty{}
 }
 
-func (s set) delete(item interface{}) {
+func (s set) delete(item any) {
 	delete(s, item)
 }
 
@@ -38,25 +38,25 @@ func NewCyclicQueue() *CyclicQueue {
 type CyclicQueue struct {
 	cond         *sync.Cond
 	shuttingDown bool
-	queue        []interface{}
+	queue        []any
 	all          set
 	processing   set
 }
 
-func (q *CyclicQueue) Items() []interface{} {
-	arr := make([]interface{}, q.Len())
+func (q *CyclicQueue) Items() []any {
+	arr := make([]any, q.Len())
 	copy(arr, q.queue)
 	return arr
 }
 
-func (q *CyclicQueue) Contains(item interface{}) bool {
+func (q *CyclicQueue) Contains(item any) bool {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 	_, ok := q.all[item]
 	return ok
 }
 
-func (q *CyclicQueue) Add(items ...interface{}) {
+func (q *CyclicQueue) Add(items ...any) {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 
@@ -76,7 +76,7 @@ func (q *CyclicQueue) Add(items ...interface{}) {
 	q.cond.Signal()
 }
 
-func (q *CyclicQueue) Remove(items ...interface{}) {
+func (q *CyclicQueue) Remove(items ...any) {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 
@@ -87,7 +87,7 @@ func (q *CyclicQueue) Remove(items ...interface{}) {
 	for _, item := range items {
 		if q.all.has(item) {
 			q.all.delete(item)
-			q.queue = pie.Filter(q.queue, func(x interface{}) bool {
+			q.queue = pie.Filter(q.queue, func(x any) bool {
 				return x != item
 			})
 		}
@@ -100,7 +100,7 @@ func (q *CyclicQueue) Len() int {
 	return len(q.queue)
 }
 
-func (q *CyclicQueue) Get() (item interface{}, shutdown bool) {
+func (q *CyclicQueue) Get() (item any, shutdown bool) {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 
@@ -125,7 +125,7 @@ func (q *CyclicQueue) Get() (item interface{}, shutdown bool) {
 	return item, false
 }
 
-func (q *CyclicQueue) Done(item interface{}) {
+func (q *CyclicQueue) Done(item any) {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 

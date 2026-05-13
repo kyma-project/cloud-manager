@@ -2,6 +2,7 @@ package sim
 
 import (
 	"fmt"
+	"maps"
 	"time"
 
 	"github.com/3th1nk/cidr"
@@ -57,8 +58,8 @@ func NewShootBuilder(cpr e2elib.CloudProfileRegistry, config *e2econfig.ConfigTy
 		b.obj.Spec.Hibernation = &gardenertypes.Hibernation{
 			Schedules: []gardenertypes.HibernationSchedule{
 				{
-					Start:    ptr.To(fmt.Sprintf("00 %d * * 1,2,3,4,5,6,0", hCron)),
-					Location: ptr.To("Europe/Belgrade"),
+					Start:    new(fmt.Sprintf("00 %d * * 1,2,3,4,5,6,0", hCron)),
+					Location: new("Europe/Belgrade"),
 				},
 			},
 		}
@@ -109,24 +110,24 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 	b.obj.Spec.Kubernetes.Version = ptr.Deref(rt.Spec.Shoot.Kubernetes.Version, kv)
 	b.obj.Spec.Kubernetes.KubeAPIServer = &gardenertypes.KubeAPIServerConfig{
 		Requests: &gardenertypes.APIServerRequests{
-			MaxNonMutatingInflight: ptr.To(int32(800)),
-			MaxMutatingInflight:    ptr.To(int32(400)),
+			MaxNonMutatingInflight: new(int32(800)),
+			MaxMutatingInflight:    new(int32(400)),
 		},
 		EventTTL: &metav1.Duration{Duration: time.Hour},
 	}
 
 	b.obj.Spec.Networking = &gardenertypes.Networking{
-		Type:       ptr.To(ptr.Deref(rt.Spec.Shoot.Networking.Type, "calico")),
-		Nodes:      ptr.To(rt.Spec.Shoot.Networking.Nodes),
-		Pods:       ptr.To(rt.Spec.Shoot.Networking.Pods),
-		Services:   ptr.To(rt.Spec.Shoot.Networking.Services),
+		Type:       new(ptr.Deref(rt.Spec.Shoot.Networking.Type, "calico")),
+		Nodes:      new(rt.Spec.Shoot.Networking.Nodes),
+		Pods:       new(rt.Spec.Shoot.Networking.Pods),
+		Services:   new(rt.Spec.Shoot.Networking.Services),
 		IPFamilies: []gardenertypes.IPFamily{gardenertypes.IPFamilyIPv4},
 	}
 
 	b.obj.Spec.Maintenance = &gardenertypes.Maintenance{
 		AutoUpdate: &gardenertypes.MaintenanceAutoUpdate{
 			KubernetesVersion:   true,
-			MachineImageVersion: ptr.To(false),
+			MachineImageVersion: new(false),
 		},
 		TimeWindow: &gardenertypes.MaintenanceTimeWindow{
 			Begin: "070000+0000",
@@ -190,7 +191,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		}
 
 		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
-			ic.Networks.VPC.CIDR = ptr.To(rt.Spec.Shoot.Networking.Nodes)
+			ic.Networks.VPC.CIDR = new(rt.Spec.Shoot.Networking.Nodes)
 		} else {
 			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for AWS", b.config.NetworkOwner))
 			return b
@@ -204,10 +205,10 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 				Kind:       "ControlPlaneConfig",
 			},
 			CloudControllerManager: &gardeneraws.CloudControllerManagerConfig{
-				UseCustomRouteController: ptr.To(true),
+				UseCustomRouteController: new(true),
 			},
 			Storage: &gardeneraws.Storage{
-				ManagedDefaultClass: ptr.To(true),
+				ManagedDefaultClass: new(true),
 			},
 			LoadBalancerController: &gardeneraws.LoadBalancerControllerConfig{
 				Enabled: true,
@@ -227,7 +228,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 				CIDR: zoneRanges[i].CIDR().String(),
 				NatGateway: &gardenerazure.ZonedNatGatewayConfig{
 					Enabled:                      true,
-					IdleConnectionTimeoutMinutes: ptr.To(int32(4)),
+					IdleConnectionTimeoutMinutes: new(int32(4)),
 				},
 			})
 		}
@@ -244,7 +245,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		}
 
 		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
-			ic.Networks.VNet.CIDR = ptr.To(rt.Spec.Shoot.Networking.Nodes)
+			ic.Networks.VNet.CIDR = new(rt.Spec.Shoot.Networking.Nodes)
 		} else {
 			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for Azure", b.config.NetworkOwner))
 			return b
@@ -265,7 +266,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 				Kind:       "InfrastructureConfig",
 			},
 			FloatingPoolName:       sapconfig.SapConfig.FloatingPoolNetwork, // "FloatingIP-external-kyma-01",
-			FloatingPoolSubnetName: ptr.To(sapconfig.SapConfig.FloatingPoolSubnet),
+			FloatingPoolSubnetName: new(sapconfig.SapConfig.FloatingPoolSubnet),
 		}
 		if len(sapconfig.SapConfig.FloatingPoolSubnet) < 1 {
 			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("no FloatingPoolSubnet specified in config"))
@@ -294,7 +295,7 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 	b.obj.Spec.Provider.Workers = rt.Spec.Shoot.Provider.Workers
 
 	b.obj.Spec.Region = rt.Spec.Shoot.Region
-	b.obj.Spec.CredentialsBindingName = ptr.To(rt.Spec.Shoot.SecretBindingName)
+	b.obj.Spec.CredentialsBindingName = new(rt.Spec.Shoot.SecretBindingName)
 
 	return b
 }
@@ -304,9 +305,7 @@ func (b *ShootBuilder) WithAnnotations(annotations map[string]string) *ShootBuil
 		if b.obj.Annotations == nil {
 			b.obj.Annotations = make(map[string]string)
 		}
-		for k, v := range annotations {
-			b.obj.Annotations[k] = v
-		}
+		maps.Copy(b.obj.Annotations, annotations)
 	}
 	return b
 }

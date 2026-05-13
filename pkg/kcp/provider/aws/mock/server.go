@@ -44,7 +44,7 @@ func (s *server) NewAccount() Account {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		accountId := fmt.Sprintf("%d", rand.Int31())
 		taken := false
 		for _, acc := range s.accounts {

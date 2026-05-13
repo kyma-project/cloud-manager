@@ -32,8 +32,8 @@ func CreateGcpGardenerResources(
 	vpcName := common.GardenerVpcName(shootNamespace, shootName)
 
 	router, err := gcpMock.InsertVpcRouter(gcpProject, region, &computepb.Router{
-		Name:    ptr.To(vpcName + "-cloud-router"),
-		Network: ptr.To(vpcName),
+		Name:    new(vpcName + "-cloud-router"),
+		Network: new(vpcName),
 	})
 	if err != nil {
 		return nil, err
@@ -41,9 +41,9 @@ func CreateGcpGardenerResources(
 	result.Router = append(result.Router, router)
 
 	address, err := gcpMock.InsertAddress(gcpProject, region, &computepb.Address{
-		Name:        ptr.To(fmt.Sprintf("nat-auto-ip-%d", rand.Intn(10000000))),
-		Purpose:     ptr.To("NAT_AUTO"),
-		NetworkTier: ptr.To("PREMIUM"),
+		Name:        new(fmt.Sprintf("nat-auto-ip-%d", rand.Intn(10000000))),
+		Purpose:     new("NAT_AUTO"),
+		NetworkTier: new("PREMIUM"),
 		Users:       []string{ptr.Deref(router.SelfLink, "")},
 	})
 	if err != nil {

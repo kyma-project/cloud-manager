@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 )
 
@@ -33,11 +32,11 @@ func (c protectedItemsClient) CreateOrUpdateProtectedItem(ctx context.Context, s
 
 	parameters := armrecoveryservicesbackup.ProtectedItemResource{
 		ETag:     nil,
-		Location: to.Ptr(location),
-		Properties: to.Ptr(armrecoveryservicesbackup.AzureFileshareProtectedItem{
-			ProtectedItemType: to.Ptr("AzureFileShareProtectedItem"),
-			PolicyID:          to.Ptr(policyId),
-			SourceResourceID:  to.Ptr(sourceResourceId), // StorageAccountID
+		Location: new(location),
+		Properties: new(armrecoveryservicesbackup.AzureFileshareProtectedItem{
+			ProtectedItemType: new("AzureFileShareProtectedItem"),
+			PolicyID:          new(policyId),
+			SourceResourceID:  new(sourceResourceId), // StorageAccountID
 		}),
 	}
 
@@ -45,7 +44,7 @@ func (c protectedItemsClient) CreateOrUpdateProtectedItem(ctx context.Context, s
 		XMSAuthorizationAuxiliary: nil,
 	}
 
-	_, err := c.azureClient.CreateOrUpdate(ctx, vaultName, resourceGroupName, fabricName, containerName, protectedItemName, parameters, to.Ptr(options))
+	_, err := c.azureClient.CreateOrUpdate(ctx, vaultName, resourceGroupName, fabricName, containerName, protectedItemName, parameters, new(options))
 	if err != nil {
 		return err
 	}
@@ -94,7 +93,7 @@ func (c protectedItemsClient) UpdateProtectedItem(ctx context.Context, protected
 		XMSAuthorizationAuxiliary: nil,
 	}
 
-	_, err = c.azureClient.CreateOrUpdate(ctx, vaultName, rgName, fabricName, containerName, protectedName, *protectedItem, to.Ptr(options))
+	_, err = c.azureClient.CreateOrUpdate(ctx, vaultName, rgName, fabricName, containerName, protectedName, *protectedItem, new(options))
 	if err != nil {
 		return err
 	}

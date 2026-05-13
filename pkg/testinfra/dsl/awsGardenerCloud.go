@@ -61,7 +61,7 @@ func CreateAwsGardenerResources(
 		return nil, err
 	}
 	result.Subnets = pie.Map(subnetList, func(x ec2types.Subnet) *ec2types.Subnet {
-		return ptr.To(x)
+		return new(x)
 	})
 
 	for _, subnet := range result.Subnets {

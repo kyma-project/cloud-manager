@@ -3,7 +3,6 @@ package rediscluster
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -41,7 +40,7 @@ func modifyShardCount(ctx context.Context, st composed.State) (error, context.Co
 		requestedAzureRedisCluster.Name,
 		armredis.UpdateParameters{
 			Properties: &armredis.UpdateProperties{
-				ShardCount: to.Ptr[int32](int32(requestedAzureRedisCluster.Spec.Instance.Azure.ShardCount)),
+				ShardCount: new(int32(requestedAzureRedisCluster.Spec.Instance.Azure.ShardCount)),
 			},
 		},
 	)

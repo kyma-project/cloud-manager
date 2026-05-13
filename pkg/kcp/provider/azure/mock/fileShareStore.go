@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
@@ -36,8 +35,8 @@ func (s *fileShareStore) CreateFileShare(ctx context.Context, id string) error {
 
 	//Add to the map.
 	s.fileshares[id] = &armstorage.FileShareItem{
-		Name: to.Ptr(fileShareName),
-		ID:   to.Ptr(id),
+		Name: new(fileShareName),
+		ID:   new(id),
 	}
 
 	composed.LoggerFromCtx(ctx).Info("mock: Create/Update FileShare", "share-id", id, "count", len(s.fileshares))

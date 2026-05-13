@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -88,9 +89,7 @@ func WithAzureRedisInstanceAuthSecretLabels(labels map[string]string) ObjAction 
 				if azureRedisInstance.Spec.AuthSecret.Labels == nil {
 					azureRedisInstance.Spec.AuthSecret.Labels = map[string]string{}
 				}
-				for k, v := range labels {
-					azureRedisInstance.Spec.AuthSecret.Labels[k] = v
-				}
+				maps.Copy(azureRedisInstance.Spec.AuthSecret.Labels, labels)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceAuthSecretLabels", obj))
@@ -108,9 +107,7 @@ func WithAzureRedisInstanceAuthSecretAnnotations(annotations map[string]string) 
 				if azureRedisInstance.Spec.AuthSecret.Annotations == nil {
 					azureRedisInstance.Spec.AuthSecret.Annotations = map[string]string{}
 				}
-				for k, v := range annotations {
-					azureRedisInstance.Spec.AuthSecret.Annotations[k] = v
-				}
+				maps.Copy(azureRedisInstance.Spec.AuthSecret.Annotations, annotations)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceAuthSecretAnnotations", obj))
@@ -128,9 +125,7 @@ func WithAzureRedisInstanceAuthSecretExtraData(extraData map[string]string) ObjA
 				if azureRedisInstance.Spec.AuthSecret.ExtraData == nil {
 					azureRedisInstance.Spec.AuthSecret.ExtraData = map[string]string{}
 				}
-				for k, v := range extraData {
-					azureRedisInstance.Spec.AuthSecret.ExtraData[k] = v
-				}
+				maps.Copy(azureRedisInstance.Spec.AuthSecret.ExtraData, extraData)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAzureRedisInstanceAuthSecretExtraData", obj))
