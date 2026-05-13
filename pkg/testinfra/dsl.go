@@ -241,8 +241,8 @@ func (dsl *infraDSL) givenScopeGcpExistsWithProject(name, project string) error 
 	if apierrors.IsNotFound(err) {
 		return dsl.i.KCP().Client().Create(dsl.i.Ctx(), desired)
 	}
-	// Update spec if project has changed (e.g., between test scenarios using mock2)
-	if existing.Spec.Scope.Gcp.Project != project {
+	// Update spec if provider or project has changed (e.g., between test scenarios)
+	if existing.Spec.Scope.Gcp == nil || existing.Spec.Scope.Gcp.Project != project {
 		existing.Spec = desired.Spec
 		return dsl.i.KCP().Client().Update(dsl.i.Ctx(), existing)
 	}

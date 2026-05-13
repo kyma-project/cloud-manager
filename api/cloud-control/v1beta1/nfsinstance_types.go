@@ -86,6 +86,9 @@ type NfsInstanceAzure struct {
 type NfsInstanceOpenStack struct {
 	// +kubebuilder:validation:Required
 	SizeGb int `json:"sizeGb"`
+
+	// +optional
+	SnapshotId string `json:"snapshotId,omitempty"`
 }
 
 type NfsInstanceAws struct {

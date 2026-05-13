@@ -163,6 +163,8 @@ spec:
                     properties:
                       sizeGb:
                         type: integer
+                      snapshotId:
+                        type: string
                     required:
                     - sizeGb
                     type: object
