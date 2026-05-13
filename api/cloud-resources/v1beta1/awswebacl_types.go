@@ -993,17 +993,6 @@ func (in *AwsWebAcl) SetStatusProcessing() {
 	})
 }
 
-func (in *AwsWebAcl) SetProviderError(msg string) {
-	in.Status.State = ReasonProviderError
-	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeReady,
-		Status:             metav1.ConditionFalse,
-		ObservedGeneration: in.Generation,
-		Reason:             ReasonProviderError,
-		Message:            msg,
-	})
-}
-
 func (in *AwsWebAcl) Conditions() *[]metav1.Condition { return &in.Status.Conditions }
 
 func (in *AwsWebAcl) GetObjectMeta() *metav1.ObjectMeta { return &in.ObjectMeta }
