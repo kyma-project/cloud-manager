@@ -28,5 +28,6 @@ func logAnalyticsWorkspaceDelete(ctx context.Context, st composed.State) (error,
 	}
 
 	state.logAnalyticsWorkspace = nil
+
 	return nil, ctx
 }

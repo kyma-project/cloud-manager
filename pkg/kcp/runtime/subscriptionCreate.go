@@ -20,6 +20,10 @@ func subscriptionCreate(ctx context.Context, st composed.State) (error, context.
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: state.Obj().GetNamespace(),
 			Name:      state.ObjAsRuntime().Spec.Shoot.SecretBindingName,
+			Labels: map[string]string{
+				cloudcontrolv1beta1.SubscriptionLabelBindingName: state.ObjAsRuntime().Spec.Shoot.SecretBindingName,
+				cloudcontrolv1beta1.LabelScopeProvider:           state.ObjAsRuntime().Spec.Shoot.Provider.Type,
+			},
 		},
 		Spec: cloudcontrolv1beta1.SubscriptionSpec{
 			Details: cloudcontrolv1beta1.SubscriptionDetails{
@@ -30,14 +34,17 @@ func subscriptionCreate(ctx context.Context, st composed.State) (error, context.
 		},
 	}
 
+	if subscription.Labels == nil {
+		subscription.Labels = map[string]string{}
+	}
 	for _, labelName := range cloudcontrolv1beta1.ScopeLabels {
 		val, ok := state.ObjAsRuntime().Labels[labelName]
 		if ok {
-			if subscription.Labels == nil {
-				subscription.Labels = map[string]string{}
-			}
 			subscription.Labels[labelName] = val
 		}
+	}
+	for k, v := range util.NewLabelBuilder().WithCloudManagerDefaults().Build() {
+		subscription.Labels[k] = v
 	}
 
 	err := state.Cluster().K8sClient().Create(ctx, subscription)

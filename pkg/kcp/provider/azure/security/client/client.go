@@ -46,6 +46,9 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 		}
 
 		operationalInsightsFactory, err := armoperationalinsights.NewClientFactory(subscriptionId, cred, clientOptions)
+		if err != nil {
+			return nil, err
+		}
 
 		storageFactory, err := armstorage.NewClientFactory(subscriptionId, cred, clientOptions)
 		if err != nil {

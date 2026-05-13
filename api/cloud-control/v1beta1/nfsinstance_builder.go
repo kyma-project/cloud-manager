@@ -1,43 +1,48 @@
 package v1beta1
 
-func NewNfsInstanceBuilder() *NfsInstanceBuilder {
-	return &NfsInstanceBuilder{
-		NfsInstance: NfsInstance{},
+func NewNfsInstanceBuilder(in ...*NfsInstance) *NfsInstanceBuilder {
+	var obj *NfsInstance
+	if len(in) > 0 {
+		obj = in[0]
+	} else {
+		obj = &NfsInstance{}
 	}
+	b := &NfsInstanceBuilder{
+		CommonObjBuilder[*NfsInstanceBuilder, *NfsInstance]{
+			Obj: obj,
+		},
+	}
+	b.builder = b
+	return b
 }
 
 // +kubebuilder:object:generate=false
 
 type NfsInstanceBuilder struct {
-	NfsInstance NfsInstance
-}
-
-func (b *NfsInstanceBuilder) Reset() *NfsInstanceBuilder {
-	b.NfsInstance = NfsInstance{}
-	return b
+	CommonObjBuilder[*NfsInstanceBuilder, *NfsInstance]
 }
 
 func (b *NfsInstanceBuilder) WithRemoteRef(namespace, name string) *NfsInstanceBuilder {
-	b.NfsInstance.Spec.RemoteRef.Namespace = namespace
-	b.NfsInstance.Spec.RemoteRef.Name = name
+	b.Obj.Spec.RemoteRef.Namespace = namespace
+	b.Obj.Spec.RemoteRef.Name = name
 	return b
 }
 
 func (b *NfsInstanceBuilder) WithIpRange(ipRangeName string) *NfsInstanceBuilder {
-	b.NfsInstance.Spec.IpRange.Name = ipRangeName
+	b.Obj.Spec.IpRange.Name = ipRangeName
 	return b
 }
 
 func (b *NfsInstanceBuilder) WithScope(s string) *NfsInstanceBuilder {
-	b.NfsInstance.Spec.Scope.Name = s
+	b.Obj.Spec.Scope.Name = s
 	return b
 }
 
 func (b *NfsInstanceBuilder) WithGcp(capacityGb int, location string, tier GcpFileTier) *NfsInstanceBuilder {
-	b.NfsInstance.Spec.Instance.OpenStack = nil
-	b.NfsInstance.Spec.Instance.Aws = nil
-	b.NfsInstance.Spec.Instance.Azure = nil
-	b.NfsInstance.Spec.Instance.Gcp = &NfsInstanceGcp{
+	b.Obj.Spec.Instance.OpenStack = nil
+	b.Obj.Spec.Instance.Aws = nil
+	b.Obj.Spec.Instance.Azure = nil
+	b.Obj.Spec.Instance.Gcp = &NfsInstanceGcp{
 		Location:      location,
 		Tier:          tier,
 		CapacityGb:    capacityGb,
@@ -52,10 +57,10 @@ func (b *NfsInstanceBuilder) WithGcpDummyDefaults() *NfsInstanceBuilder {
 }
 
 func (b *NfsInstanceBuilder) WithAws(performanceMode AwsPerformanceMode, throughput AwsThroughputMode) *NfsInstanceBuilder {
-	b.NfsInstance.Spec.Instance.OpenStack = nil
-	b.NfsInstance.Spec.Instance.Azure = nil
-	b.NfsInstance.Spec.Instance.Gcp = nil
-	b.NfsInstance.Spec.Instance.Aws = &NfsInstanceAws{
+	b.Obj.Spec.Instance.OpenStack = nil
+	b.Obj.Spec.Instance.Azure = nil
+	b.Obj.Spec.Instance.Gcp = nil
+	b.Obj.Spec.Instance.Aws = &NfsInstanceAws{
 		PerformanceMode: performanceMode,
 		Throughput:      throughput,
 	}
@@ -67,10 +72,10 @@ func (b *NfsInstanceBuilder) WithAwsDummyDefaults() *NfsInstanceBuilder {
 }
 
 func (b *NfsInstanceBuilder) WithOpenStack(sizeGb int) *NfsInstanceBuilder {
-	b.NfsInstance.Spec.Instance.Azure = nil
-	b.NfsInstance.Spec.Instance.Gcp = nil
-	b.NfsInstance.Spec.Instance.Aws = nil
-	b.NfsInstance.Spec.Instance.OpenStack = &NfsInstanceOpenStack{
+	b.Obj.Spec.Instance.Azure = nil
+	b.Obj.Spec.Instance.Gcp = nil
+	b.Obj.Spec.Instance.Aws = nil
+	b.Obj.Spec.Instance.OpenStack = &NfsInstanceOpenStack{
 		SizeGb: sizeGb,
 	}
 	return b
@@ -78,8 +83,4 @@ func (b *NfsInstanceBuilder) WithOpenStack(sizeGb int) *NfsInstanceBuilder {
 
 func (b *NfsInstanceBuilder) WithOpenStackDummyDefaults() *NfsInstanceBuilder {
 	return b.WithOpenStack(1)
-}
-
-func (b *NfsInstanceBuilder) Build() *NfsInstance {
-	return &b.NfsInstance
 }

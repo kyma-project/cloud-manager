@@ -23,6 +23,8 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
@@ -61,6 +63,10 @@ var _ = BeforeSuite(func() {
 	})))
 
 	By("bootstrapping KCP test environment")
+
+	commongardener.SetGardenerNamespaceProviderMock("kyma-test")
+	rate.SetValuesForTests()
+
 	var err error
 	infra, err = testinfra.Start()
 	Expect(err).
@@ -195,6 +201,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupRuntimeReconciler(
 		infra.Ctx(),
 		infra.KcpManager(),
+		infra.AzureMock().SecurityProvider(),
 	)).To(Succeed())
 
 	// Start controllers

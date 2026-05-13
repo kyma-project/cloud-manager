@@ -32,6 +32,7 @@ type Server interface {
 
 	NewProject() Project
 	GetProject(domainName, project, region string) Project
+	DeleteProject(p Project)
 }
 
 type Project interface {
@@ -39,6 +40,9 @@ type Project interface {
 	ProjectName() string
 	RegionName() string
 	ProviderParams() sapclient.ProviderParams
+
+	Equals(other Project) bool
+	Delete()
 
 	Clients
 	Config

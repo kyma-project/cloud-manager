@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"k8s.io/utils/ptr"
 )
@@ -9,7 +10,7 @@ import (
 type ResourceGroupClient interface {
 	GetResourceGroup(ctx context.Context, name string) (*armresources.ResourceGroup, error)
 	CreateResourceGroup(ctx context.Context, name string, location string, tags map[string]string) (*armresources.ResourceGroup, error)
-	DeleteResourceGroup(ctx context.Context, name string) error
+	DeleteResourceGroup(ctx context.Context, name string) (Poller[armresources.ResourceGroupsClientDeleteResponse], error)
 }
 
 func NewResourceGroupClient(svc *armresources.ResourceGroupsClient) ResourceGroupClient {
@@ -48,7 +49,6 @@ func (c *resourceGroupClient) CreateResourceGroup(ctx context.Context, name stri
 	return &resp.ResourceGroup, nil
 }
 
-func (c *resourceGroupClient) DeleteResourceGroup(ctx context.Context, name string) error {
-	_, err := c.svc.BeginDelete(ctx, name, nil)
-	return err
+func (c *resourceGroupClient) DeleteResourceGroup(ctx context.Context, name string) (Poller[armresources.ResourceGroupsClientDeleteResponse], error) {
+	return c.svc.BeginDelete(ctx, name, nil)
 }

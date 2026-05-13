@@ -94,7 +94,7 @@ type State struct {
 	// logAnalyticsWorkspace from RG resourceGroupData, one per runtime, with name pattern "kyma-security-{shootName}"
 	logAnalyticsWorkspace *armoperationalinsights.Workspace
 
-	// flowLog from RG resourceGroupData, one per runtime, with name pattern "kyma-security-{shootName}"
+	// flowLog under NetworkWatcherRG/NetworkWatcher_{location}, name = vpcNetwork.Status.Identifiers.Name
 	flowLog *armnetwork.FlowLog
 
 	// loadedSecurityPricing Defender for Cloud plans used to determine service on/off action
@@ -104,10 +104,11 @@ type State struct {
 const (
 	storageAccountPrefix        = "kymasec" // 7 chars
 	maxStorageAccountNameLength = 24        // Azure constraint
-	maxShootNamePart            = 12        // this leaves 5 chars for random suffix
 
 	tagKymaRuntimeId = "kyma.runtime-id"
 	tagKymaShootName = "kyma.shoot-name"
+
+	flowLogRetentionDays = 30
 )
 
 func (s *State) shootName() string {
@@ -137,20 +138,28 @@ func (s *State) logAnalyticsWorkspaceName() string {
 func (s *State) storageAccountBaseName() string {
 	name := strings.ToLower(s.shootName())
 	name = regexp.MustCompile(`[^a-z0-9]`).ReplaceAllString(name, "")
-	maxShootPart := maxStorageAccountNameLength - len(storageAccountPrefix)
+	maxShootPart := maxStorageAccountNameLength - len(storageAccountPrefix) - 5 // 5 chars for random suffix to ensure uniqueness
 	if len(name) > maxShootPart {
 		name = name[:maxShootPart]
 	}
 	return fmt.Sprintf("%s%s", storageAccountPrefix, name)
 }
 
-func (s *State) storageAccountNameAttempt() string {
-	baseName := s.storageAccountBaseName()
-	suffixLen := maxStorageAccountNameLength - len(storageAccountPrefix)
-	suffix := strings.ToLower(util.RandomString(suffixLen))
-	return fmt.Sprintf("%s%s", baseName, suffix)
+func (s *State) storageAccountNameAttempt(i int) string {
+	result := s.storageAccountBaseName()
+	if i > 0 {
+		// not first attempt, add random suffix
+		suffixLen := maxStorageAccountNameLength - len(result)
+		suffix := strings.ToLower(util.RandomString(suffixLen))
+		result = fmt.Sprintf("%s%s", result, suffix)
+	}
+	return result
 }
 
 func (s *State) ObjAsRuntime() *infrastructuremanagerv1.Runtime {
 	return s.Obj().(*infrastructuremanagerv1.Runtime)
+}
+
+func (s *State) flowLogName() string {
+	return s.VpcNetwork().Status.Identifiers.Name
 }

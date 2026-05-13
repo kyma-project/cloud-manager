@@ -12,6 +12,7 @@ type State interface {
 	composed.State
 	ObjAsRuntime() *infrastructuremanagerv1.Runtime
 	Subscription() *cloudcontrolv1beta1.Subscription
+	VpcNetwork() *cloudcontrolv1beta1.VpcNetwork
 
 	SecurityServiceEnabledOnSubscription() bool
 	SecurityDataSourceEnabledOnRuntime() bool

@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	awsruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/security"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security"
 	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
 	gcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/security"
@@ -19,12 +20,13 @@ import (
 func SetupRuntimeReconciler(
 	ctx context.Context,
 	mgr ctrl.Manager,
+	azureClientProvider azureclient.ClientProvider[azuresecurityclient.Client],
 ) error {
 	return NewRuntimeController(
 		kcpruntime.NewRuntimeReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr)),
 			awsruntime.NewStateFactory(),
-			azureruntime.NewStateFactory(azuresecurityclient.NewClientProvider()),
+			azureruntime.NewStateFactory(azureClientProvider),
 			gcpruntime.NewStateFactory(),
 		),
 	).SetupWithManager(ctx, mgr)

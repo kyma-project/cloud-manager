@@ -3,14 +3,13 @@ package vpcnetwork
 import (
 	"context"
 
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
 	vpcnetworktypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork/types"
 )
 
 type StateFactory interface {
-	NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, composed.State, error)
+	NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, *State, error)
 }
 
 func NewStateFactory(
@@ -21,7 +20,7 @@ func NewStateFactory(
 	}
 }
 
-func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, composed.State, error) {
+func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, *State, error) {
 	// panic is intended if gcp is nil, controller runtime will recover and log error
 	clnt := f.gcpClientProvider(baseState.Subscription().Status.SubscriptionInfo.Gcp.Project)
 	return ctx, newState(baseState, clnt), nil

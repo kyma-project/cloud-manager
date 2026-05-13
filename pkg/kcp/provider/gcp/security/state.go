@@ -15,13 +15,17 @@ type StateFactory interface {
 }
 
 func NewStateFactory() StateFactory {
-	return nil
+	return &stateFactory{}
 }
 
 type stateFactory struct{}
 
 func (f *stateFactory) NewState(ctx context.Context, runtimeState runtimetypes.State) (*State, error) {
+	return newState(runtimeState), nil
+}
+
+func newState(baseState runtimetypes.State) *State {
 	return &State{
-		State: runtimeState,
-	}, nil
+		State: baseState,
+	}
 }

@@ -27,7 +27,7 @@ func subscriptionLoad(ctx context.Context, st composed.State) (error, context.Co
 
 		list := &cloudcontrolv1beta1.SubscriptionList{}
 		err = state.Cluster().K8sClient().List(ctx, list, client.MatchingLabels{
-			cloudcontrolv1beta1.LabelSubscriptionBindingName: state.ObjAsRuntime().Spec.Shoot.SecretBindingName,
+			cloudcontrolv1beta1.SubscriptionLabelBindingName: state.ObjAsRuntime().Spec.Shoot.SecretBindingName,
 		})
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Failed to list subscriptions by label binding name", composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx)

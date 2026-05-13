@@ -16,8 +16,9 @@ type State struct {
 	composed.State
 
 	subscription *cloudcontrolv1beta1.Subscription
+	vpcNetwork   *cloudcontrolv1beta1.VpcNetwork
 
-	allRuntimesInSubscription map[string]bool
+	securityForAllRuntimesInSubscription map[string]bool
 
 	// securityServiceEnabledOnSubscription true if any runtime in the subscription has security enabled
 	// indicates that security scanning services producing findings has to
@@ -40,6 +41,10 @@ func (s *State) ObjAsRuntime() *infrastructuremanagerv1.Runtime {
 
 func (s *State) Subscription() *cloudcontrolv1beta1.Subscription {
 	return s.subscription
+}
+
+func (s *State) VpcNetwork() *cloudcontrolv1beta1.VpcNetwork {
+	return s.vpcNetwork
 }
 
 func (s *State) SecurityServiceEnabledOnSubscription() bool {

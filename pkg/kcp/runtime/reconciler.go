@@ -66,20 +66,24 @@ func (r *runtimeReconciler) newAction() composed.Action {
 		feature.LoadFeatureContextFromObj(&infrastructuremanagerv1.Runtime{}),
 		composed.LoadObj,
 		subscriptionLoad,
+		vpcNetworkLoad,
 		runtimesLoadAllInSubscription,
 		composed.If(
 			// delete =======================================
 			composed.MarkedForDeletionPredicate,
+			vpcNetworkDelete,
 			composed.StopAndForgetAction,
 		),
 		composed.If(
 			// create/update =======================================
 			composed.NotMarkedForDeletionPredicate,
 			subscriptionCreate,
+			vpcNetworkCreate,
 			securityEnabledDetermine,
 			composed.If(
 				predicateSecurityIsCool,
 				subscriptionWaitReady,
+				vpcNetworkWaitReady,
 				composed.Switch(
 					nil,
 					composed.NewCase(awsProviderPredicate, awssecurity.New(r.awsStateFactory)),
@@ -88,6 +92,7 @@ func (r *runtimeReconciler) newAction() composed.Action {
 				),
 				securityMarkHasRun,
 			),
+			runtimeAddHandledAnnotation,
 			composed.StopAndForgetAction,
 		),
 	)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/elliotchance/pie/v2"
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
@@ -84,6 +85,7 @@ func (s *server) NewProject() Project {
 	defer s.m.Unlock()
 
 	p := &project{
+		server:      s,
 		mainStore:   newMainStore(),
 		domainName:  fmt.Sprintf("domain-%s", util.RandomString(8)),
 		projectName: fmt.Sprintf("project-%s", util.RandomString(8)),
@@ -91,4 +93,13 @@ func (s *server) NewProject() Project {
 	}
 	s.projects = append(s.projects, p)
 	return p
+}
+
+func (s *server) DeleteProject(p Project) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	s.projects = pie.FilterNot(s.projects, func(proj *project) bool {
+		return proj.Equals(p)
+	})
 }

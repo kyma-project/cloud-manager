@@ -36,21 +36,37 @@ func storageAccountCreate(ctx context.Context, st composed.State) (error, contex
 			tagKymaShootName: new(state.shootName()),
 		},
 		Properties: &armstorage.AccountPropertiesCreateParameters{
-			AllowBlobPublicAccess: new(false),
-			AllowSharedKeyAccess:  new(false),
-			PublicNetworkAccess:   new(armstorage.PublicNetworkAccessDisabled),
+			AllowBlobPublicAccess:  new(false),
+			AllowSharedKeyAccess:   new(false),
+			PublicNetworkAccess:    new(armstorage.PublicNetworkAccessDisabled),
+			EnableHTTPSTrafficOnly: new(true),
+			MinimumTLSVersion:      new(armstorage.MinimumTLSVersionTLS12),
+			Encryption: &armstorage.Encryption{
+				Services: &armstorage.EncryptionServices{
+					File: &armstorage.EncryptionService{
+						Enabled: new(true),
+						KeyType: new(armstorage.KeyTypeAccount),
+					},
+					Blob: &armstorage.EncryptionService{
+						Enabled: new(true),
+						KeyType: new(armstorage.KeyTypeAccount),
+					},
+				},
+				KeySource: new(armstorage.KeySourceMicrosoftStorage),
+			},
 		},
 	}
 
 	for i := 0; i < maxStorageAccountCreateAttempts; i++ {
-		accountName := state.storageAccountNameAttempt()
+		accountName := state.storageAccountNameAttempt(i)
 
-		_, err := azureclient.PollUntilDone(state.azureClient.CreateStorageAccount(ctx,
+		resp, err := azureclient.PollUntilDone(state.azureClient.CreateStorageAccount(ctx,
 			state.resourceGroupDataName(),
 			accountName,
 			params,
 			nil))(ctx, nil)
 		if err == nil {
+			state.storageAccount = &resp.Account
 			break
 		}
 

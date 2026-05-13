@@ -28,5 +28,6 @@ func storageAccountDelete(ctx context.Context, st composed.State) (error, contex
 	}
 
 	state.storageAccount = nil
+
 	return nil, ctx
 }

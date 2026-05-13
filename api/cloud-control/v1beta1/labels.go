@@ -12,5 +12,5 @@ const (
 )
 
 const (
-	LabelSubscriptionBindingName = "cloud-manager.kyma-project.io/subscriptionBindingName"
+	AnnotationRuntimeHandled = "cloud-manager.kyma-project.io/runtime-handled"
 )

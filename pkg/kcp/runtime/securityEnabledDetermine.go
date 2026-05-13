@@ -11,7 +11,7 @@ func securityEnabledDetermine(ctx context.Context, st composed.State) (error, co
 	state := st.(*State)
 
 	state.securityServiceEnabledOnSubscription = false
-	for _, v := range state.allRuntimesInSubscription {
+	for _, v := range state.securityForAllRuntimesInSubscription {
 		if v {
 			state.securityServiceEnabledOnSubscription = true
 			break

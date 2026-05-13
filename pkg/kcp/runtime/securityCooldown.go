@@ -7,8 +7,7 @@ import (
 )
 
 type securityCooldown struct {
-	cache    *cache.Cache
-	cooldown time.Duration
+	cache *cache.Cache
 }
 
 func newSecurityCooldown(cooldown time.Duration) *securityCooldown {

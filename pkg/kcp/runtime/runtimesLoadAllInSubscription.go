@@ -26,7 +26,7 @@ func runtimesLoadAllInSubscription(ctx context.Context, st composed.State) (erro
 	for _, runtime := range list.Items {
 		allRuntimesInSubscription[runtime.Name] = common.IsSecurityScanEnabledOnRuntime(&runtime)
 	}
-	state.allRuntimesInSubscription = allRuntimesInSubscription
+	state.securityForAllRuntimesInSubscription = allRuntimesInSubscription
 
 	return nil, ctx
 }

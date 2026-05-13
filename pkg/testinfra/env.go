@@ -117,6 +117,7 @@ func (ie *infraEnv) StartKcpControllers(ctx context.Context) {
 		gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to run kcp manager")
 	}()
 	time.Sleep(time.Second)
+	ie.kcpManager.GetCache().WaitForCacheSync(ie.ctx)
 }
 
 func (ie *infraEnv) StartSkrControllers(ctx context.Context) {

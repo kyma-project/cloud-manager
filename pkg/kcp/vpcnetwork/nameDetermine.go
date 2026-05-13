@@ -2,11 +2,10 @@ package vpcnetwork
 
 import (
 	"context"
-	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	vpcnetworkconfig "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork/config"
 	"k8s.io/utils/ptr"
 )
 
@@ -22,14 +21,7 @@ func nameDetermine(ctx context.Context, st composed.State) (error, context.Conte
 	name := ptr.Deref(state.ObjAsVpcNetwork().Spec.VpcNetworkName, "")
 	if name == "" {
 		// name is not specified
-		if vpcnetworkconfig.VpcNetworkConfig.Prefix != "" {
-			name = fmt.Sprintf("kyma-%s-%s", vpcnetworkconfig.VpcNetworkConfig.Prefix, state.ObjAsVpcNetwork().Name)
-		} else {
-			name = fmt.Sprintf("kyma-%s", state.ObjAsVpcNetwork().Name)
-		}
-		if len(name) > 60 {
-			name = name[:60]
-		}
+		name = common.KymaVpcName(state.ObjAsVpcNetwork().Name)
 	}
 
 	return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).

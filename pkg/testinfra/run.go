@@ -237,9 +237,9 @@ func StartEx(opts StartOptions) (Infra, error) {
 		gomega.Default.SetDefaultConsistentlyPollingInterval(1 * time.Second)
 	} else {
 		gomega.Default.SetDefaultEventuallyTimeout(4 * time.Second)
-		gomega.Default.SetDefaultEventuallyPollingInterval(200 * time.Millisecond)
-		gomega.Default.SetDefaultConsistentlyDuration(2 * time.Second)
-		gomega.Default.SetDefaultConsistentlyPollingInterval(200 * time.Millisecond)
+		gomega.Default.SetDefaultEventuallyPollingInterval(100 * time.Millisecond)
+		gomega.Default.SetDefaultConsistentlyDuration(1 * time.Second)
+		gomega.Default.SetDefaultConsistentlyPollingInterval(100 * time.Millisecond)
 	}
 
 	//Setup GCP env variables

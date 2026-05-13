@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 )
 
@@ -16,11 +17,13 @@ func resourceGroupDataDelete(ctx context.Context, st composed.State) (error, con
 	}
 
 	logger.Info("Deleting security resource group")
-	err := state.azureClient.DeleteResourceGroup(ctx, state.resourceGroupDataName())
+	_, err := azureclient.PollUntilDone(state.azureClient.DeleteResourceGroup(ctx,
+		state.resourceGroupDataName()))(ctx, nil)
 	if azuremeta.IgnoreNotFoundError(err) != nil {
 		return azuremeta.LogErrorAndReturn(err, "Error deleting security resource group", ctx)
 	}
 
 	state.resourceGroupData = nil
+
 	return nil, ctx
 }

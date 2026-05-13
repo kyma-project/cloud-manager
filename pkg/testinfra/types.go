@@ -33,6 +33,8 @@ type Infra interface {
 
 	Stop() error
 
+	GardenerNamespace() string
+
 	FinalizerReport()
 }
 

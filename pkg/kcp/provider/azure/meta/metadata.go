@@ -57,11 +57,13 @@ func NewAzureNotFoundError() error {
 		StatusCode: http.StatusNotFound,
 	}
 }
+
 func NewAzureTooManyRequestsError() error {
 	return &azcore.ResponseError{
 		StatusCode: http.StatusTooManyRequests,
 	}
 }
+
 func NewAzureAuthorizationFailedError() error {
 	return &azcore.ResponseError{
 		ErrorCode:  AuthorizationFailed,

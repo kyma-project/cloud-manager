@@ -3,7 +3,8 @@ package v1beta1
 // +kubebuilder:object:generate=false
 
 type SubscriptionBuilder struct {
-	Obj *Subscription
+	CommonObjBuilder[*SubscriptionBuilder, *Subscription]
+	//Obj *Subscription
 }
 
 func NewSubscriptionBuilder(in ...*Subscription) *SubscriptionBuilder {
@@ -13,23 +14,51 @@ func NewSubscriptionBuilder(in ...*Subscription) *SubscriptionBuilder {
 	} else {
 		obj = in[0]
 	}
-	return &SubscriptionBuilder{Obj: obj}
-}
-
-func (b *SubscriptionBuilder) WithName(v string) *SubscriptionBuilder {
-	b.Obj.Name = v
+	b := &SubscriptionBuilder{
+		CommonObjBuilder[*SubscriptionBuilder, *Subscription]{
+			Obj: obj,
+		},
+	}
+	b.builder = b
 	return b
 }
 
-func (b *SubscriptionBuilder) WithNamespace(v string) *SubscriptionBuilder {
-	b.Obj.Namespace = v
-	return b
-}
-
-func (b *SubscriptionBuilder) Reset() *SubscriptionBuilder {
-	b.Obj.Spec = SubscriptionSpec{}
-	return b
-}
+//
+//func (b *SubscriptionBuilder) WithName(v string) *SubscriptionBuilder {
+//	b.Obj.Name = v
+//	return b
+//}
+//
+//func (b *SubscriptionBuilder) WithNamespace(v string) *SubscriptionBuilder {
+//	b.Obj.Namespace = v
+//	return b
+//}
+//
+//func (b *SubscriptionBuilder) WithLabel(k, v string) *SubscriptionBuilder {
+//	if b.Obj.Labels == nil {
+//		b.Obj.Labels = map[string]string{}
+//	}
+//	b.Obj.Labels[k] = v
+//	return b
+//}
+//
+//func (b *SubscriptionBuilder) WithAnnotation(k, v string) *SubscriptionBuilder {
+//	if b.Obj.Annotations == nil {
+//		b.Obj.Annotations = map[string]string{}
+//	}
+//	b.Obj.Annotations[k] = v
+//	return b
+//}
+//
+//func (b *SubscriptionBuilder) WithFinalizer(v string) *SubscriptionBuilder {
+//	b.Obj.Finalizers = append(b.Obj.Finalizers, v)
+//	return b
+//}
+//
+//func (b *SubscriptionBuilder) Reset() *SubscriptionBuilder {
+//	b.Obj.Spec = SubscriptionSpec{}
+//	return b
+//}
 
 func (b *SubscriptionBuilder) WithBindingName(v string) *SubscriptionBuilder {
 	b.Obj.Spec.Details.Garden = &SubscriptionGarden{
@@ -86,8 +115,4 @@ func (b *SubscriptionBuilder) WithOpenstack(domainName, projectName string) *Sub
 func (b *SubscriptionBuilder) WithoutOpenstack() *SubscriptionBuilder {
 	b.Obj.Spec.Details.Openstack = nil
 	return b
-}
-
-func (b *SubscriptionBuilder) Build() *Subscription {
-	return b.Obj
 }
