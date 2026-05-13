@@ -50,6 +50,8 @@ func (r *runtimeReconciler) Reconcile(ctx context.Context, request reconcile.Req
 	state := r.newState(request.NamespacedName)
 	action := r.newAction()
 
+	composed.LoggerFromCtx(ctx).Info("Reconciling runtime start")
+
 	return composed.Handling().
 		WithMetrics("runtime", util.RequestObjToString(request)).
 		Handle(action(ctx, state))
@@ -82,6 +84,10 @@ func (r *runtimeReconciler) newAction() composed.Action {
 			securityEnabledDetermine,
 			composed.If(
 				predicateSecurityIsCool,
+				func(ctx context.Context, _ composed.State) (error, context.Context) {
+					composed.LoggerFromCtx(ctx).Info("Security is cool, reconciling security resources")
+					return nil, ctx
+				},
 				subscriptionWaitReady,
 				vpcNetworkWaitReady,
 				composed.Switch(
