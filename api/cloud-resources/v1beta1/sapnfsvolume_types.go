@@ -20,11 +20,19 @@ import (
 	"maps"
 
 	featuretypes "github.com/kyma-project/cloud-manager/pkg/feature/types"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:validation:MaxProperties=1
+type SapNfsVolumeDataSource struct {
+	// +optional
+	Snapshot *corev1.ObjectReference `json:"snapshot,omitempty"`
+}
 
 // SapNfsVolumeSpec defines the desired state of SapNfsVolume
 type SapNfsVolumeSpec struct {
@@ -41,6 +49,10 @@ type SapNfsVolumeSpec struct {
 
 	// +optional
 	PersistentVolumeClaim *NameLabelsAnnotationsSpec `json:"volumeClaim,omitempty"`
+
+	// +optional
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="DataSource is immutable."
+	DataSource *SapNfsVolumeDataSource `json:"dataSource,omitempty"`
 }
 
 type NameLabelsAnnotationsSpec struct {
