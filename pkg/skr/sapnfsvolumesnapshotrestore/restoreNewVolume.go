@@ -3,10 +3,10 @@ package sapnfsvolumesnapshotrestore
 import (
 	"context"
 	"fmt"
-	"maps"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -33,24 +33,26 @@ func restoreNewVolume(ctx context.Context, st composed.State) (error, context.Co
 		return nil, ctx
 	}
 
-	// Create the new SapNfsVolume with the snapshot-id annotation
+	spec := newVolTemplate.Spec
+	spec.DataSource = &cloudresourcesv1beta1.SapNfsVolumeDataSource{
+		Snapshot: &corev1.ObjectReference{
+			Name:      state.SourceSnapshot.Name,
+			Namespace: state.SourceSnapshot.Namespace,
+		},
+	}
+
 	newVolume := &cloudresourcesv1beta1.SapNfsVolume{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SapNfsVolume",
 			APIVersion: cloudresourcesv1beta1.GroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      newVolTemplate.Metadata.Name,
-			Namespace: ns,
-			Labels:    newVolTemplate.Metadata.Labels,
-			Annotations: mergeAnnotations(
-				newVolTemplate.Metadata.Annotations,
-				map[string]string{
-					cloudresourcesv1beta1.AnnotationSnapshotId: state.SourceSnapshot.Status.OpenstackId,
-				},
-			),
+			Name:        newVolTemplate.Metadata.Name,
+			Namespace:   ns,
+			Labels:      newVolTemplate.Metadata.Labels,
+			Annotations: newVolTemplate.Metadata.Annotations,
 		},
-		Spec: newVolTemplate.Spec,
+		Spec: spec,
 	}
 
 	err = state.SkrCluster.K8sClient().Create(ctx, newVolume)
@@ -72,11 +74,4 @@ func restoreNewVolume(ctx context.Context, st composed.State) (error, context.Co
 	state.CreatedVolume = newVolume
 
 	return nil, ctx
-}
-
-func mergeAnnotations(base map[string]string, extra map[string]string) map[string]string {
-	result := make(map[string]string, len(base)+len(extra))
-	maps.Copy(result, base)
-	maps.Copy(result, extra)
-	return result
 }

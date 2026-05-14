@@ -348,7 +348,7 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotRestore", func() {
 			}).Should(Succeed())
 		})
 
-		By("Then the new SapNfsVolume is created with snapshot-id annotation", func() {
+		By("Then the new SapNfsVolume is created with dataSource.snapshot reference", func() {
 			newVol := &cloudresourcesv1beta1.SapNfsVolume{}
 			Eventually(func() error {
 				return infra.SKR().Client().Get(infra.Ctx(), types.NamespacedName{
@@ -357,10 +357,9 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotRestore", func() {
 				}, newVol)
 			}).Should(Succeed(), "expected new SapNfsVolume to be created")
 
-			Expect(newVol.Annotations).To(HaveKeyWithValue(
-				cloudresourcesv1beta1.AnnotationSnapshotId,
-				openstackSnapshotId,
-			))
+			Expect(newVol.Spec.DataSource).NotTo(BeNil())
+			Expect(newVol.Spec.DataSource.Snapshot).NotTo(BeNil())
+			Expect(newVol.Spec.DataSource.Snapshot.Name).To(Equal(snapshotName))
 		})
 
 		By("When the new SapNfsVolume reaches Ready state", func() {

@@ -18,10 +18,11 @@ type State struct {
 	KymaRef    klog.ObjectRef
 	KcpCluster composed.StateCluster
 
-	SkrIpRange     *cloudresourcesv1beta1.IpRange
-	KcpNfsInstance *cloudcontrolv1beta1.NfsInstance
-	PV             *corev1.PersistentVolume
-	PVC            *corev1.PersistentVolumeClaim
+	SkrIpRange         *cloudresourcesv1beta1.IpRange
+	DataSourceSnapshot *cloudresourcesv1beta1.SapNfsVolumeSnapshot
+	KcpNfsInstance     *cloudcontrolv1beta1.NfsInstance
+	PV                 *corev1.PersistentVolume
+	PVC                *corev1.PersistentVolumeClaim
 }
 
 func newStateFactory(
@@ -64,6 +65,13 @@ func (s *State) GetSkrIpRange() *cloudresourcesv1beta1.IpRange {
 
 func (s *State) SetSkrIpRange(skrIpRange *cloudresourcesv1beta1.IpRange) {
 	s.SkrIpRange = skrIpRange
+}
+
+func (s *State) GetDataSourceSnapshotId() string {
+	if s.DataSourceSnapshot != nil {
+		return s.DataSourceSnapshot.Status.OpenstackId
+	}
+	return ""
 }
 
 func (s *State) ObjAsObjWithIpRangeRef() defaultiprange.ObjWithIpRangeRef {
