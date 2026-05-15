@@ -11,12 +11,16 @@ permissions:
   id-token: write # This is required for requesting the JWT token
   contents: read # This is required for actions/checkout
 
-  # bump comment
-
 jobs:
-  build-image:
+  approve-image-build:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
     environment: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Build approved"
+
+  build-image:
+    needs: approve-image-build
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
       name: cloud-manager
