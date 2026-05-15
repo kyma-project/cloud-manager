@@ -11,6 +11,8 @@ permissions:
   id-token: write # This is required for requesting the JWT token
   contents: read # This is required for actions/checkout
 
+  # bump comment
+
 jobs:
   build-image:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
