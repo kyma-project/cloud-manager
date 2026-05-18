@@ -73,8 +73,33 @@ spec:
                 x-kubernetes-validations:
                 - message: IpRange is immutable.
                   rule: (self == oldSelf)
-              redisTier:
-                description: RedisTier defines the pricing tier.
+              remoteRef:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+                x-kubernetes-validations:
+                - message: RemoteRef is immutable.
+                  rule: (self == oldSelf)
+              scope:
+                properties:
+                  name:
+                    type: string
+                    x-kubernetes-validations:
+                    - message: Scope is immutable.
+                      rule: (self == oldSelf)
+                    - message: Scope is required.
+                      rule: (self != "")
+                required:
+                - name
+                type: object
+              sku:
+                description: SKU defines the pricing tier.
                 enum:
                 - Balanced_B0
                 - Balanced_B1
@@ -133,38 +158,13 @@ spec:
                 - EnterpriseFlash_F1500
                 type: string
                 x-kubernetes-validations:
-                - message: redisTier is immutable.
+                - message: sku is immutable.
                   rule: (self == oldSelf)
-              remoteRef:
-                properties:
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - name
-                - namespace
-                type: object
-                x-kubernetes-validations:
-                - message: RemoteRef is immutable.
-                  rule: (self == oldSelf)
-              scope:
-                properties:
-                  name:
-                    type: string
-                    x-kubernetes-validations:
-                    - message: Scope is immutable.
-                      rule: (self == oldSelf)
-                    - message: Scope is required.
-                      rule: (self != "")
-                required:
-                - name
-                type: object
             required:
             - clusteringPolicy
-            - redisTier
             - remoteRef
             - scope
+            - sku
             type: object
           status:
             description: AzureManagedRedisStatus defines the observed state of AzureManagedRedis.

@@ -11,7 +11,7 @@ type AzureManagedRedisClusterSpec struct {
 	// RedisTier defines the pricing tier for Azure Managed Redis.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="redisTier is immutable."
-	RedisTier AzureManagedRedisTier `json:"redisTier"`
+	RedisTier AzureManagedRedisSKU `json:"redisTier"`
 
 	// HighAvailability enables zone-redundant replica deployment.
 	// +optional
