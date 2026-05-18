@@ -86,9 +86,10 @@ spec:
                   required:
                     - name
                   type: object
-                sku:
-                  description: SKU defines the pricing tier for Azure Managed Redis.
+                redisTier:
+                  description: RedisTier defines the pricing tier for Azure Managed Redis.
                   enum:
+                    - Balanced_B0
                     - Balanced_B1
                     - Balanced_B3
                     - Balanced_B5
@@ -102,6 +103,7 @@ spec:
                     - Balanced_B500
                     - Balanced_B700
                     - Balanced_B1000
+                    - ComputeOptimized_X3
                     - ComputeOptimized_X5
                     - ComputeOptimized_X10
                     - ComputeOptimized_X20
@@ -110,22 +112,44 @@ spec:
                     - ComputeOptimized_X150
                     - ComputeOptimized_X250
                     - ComputeOptimized_X350
-                    - MemoryOptimized_E5
-                    - MemoryOptimized_E10
-                    - MemoryOptimized_E20
-                    - MemoryOptimized_E50
-                    - MemoryOptimized_E100
-                    - MemoryOptimized_E150
-                    - MemoryOptimized_E200
-                    - Flash_F300
-                    - Flash_F700
-                    - Flash_F1500
+                    - ComputeOptimized_X500
+                    - ComputeOptimized_X700
+                    - MemoryOptimized_M10
+                    - MemoryOptimized_M20
+                    - MemoryOptimized_M50
+                    - MemoryOptimized_M100
+                    - MemoryOptimized_M150
+                    - MemoryOptimized_M250
+                    - MemoryOptimized_M350
+                    - MemoryOptimized_M500
+                    - MemoryOptimized_M700
+                    - MemoryOptimized_M1000
+                    - MemoryOptimized_M1500
+                    - MemoryOptimized_M2000
+                    - FlashOptimized_A250
+                    - FlashOptimized_A500
+                    - FlashOptimized_A700
+                    - FlashOptimized_A1000
+                    - FlashOptimized_A1500
+                    - FlashOptimized_A2000
+                    - FlashOptimized_A4500
+                    - Enterprise_E1
+                    - Enterprise_E5
+                    - Enterprise_E10
+                    - Enterprise_E20
+                    - Enterprise_E50
+                    - Enterprise_E100
+                    - Enterprise_E200
+                    - Enterprise_E400
+                    - EnterpriseFlash_F300
+                    - EnterpriseFlash_F700
+                    - EnterpriseFlash_F1500
                   type: string
                   x-kubernetes-validations:
-                    - message: sku is immutable.
+                    - message: redisTier is immutable.
                       rule: (self == oldSelf)
               required:
-                - sku
+                - redisTier
               type: object
             status:
               description: AzureManagedRedisInstanceStatus defines the observed state of AzureManagedRedisInstance.

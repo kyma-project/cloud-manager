@@ -8,10 +8,10 @@ import (
 
 // AzureManagedRedisClusterSpec defines the desired state of AzureManagedRedisCluster.
 type AzureManagedRedisClusterSpec struct {
-	// SKU defines the pricing tier for Azure Managed Redis.
+	// RedisTier defines the pricing tier for Azure Managed Redis.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="sku is immutable."
-	SKU AzureManagedRedisSKU `json:"sku"`
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="redisTier is immutable."
+	RedisTier AzureManagedRedisTier `json:"redisTier"`
 
 	// HighAvailability enables zone-redundant replica deployment.
 	// +optional
