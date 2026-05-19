@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"maps"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -54,9 +55,7 @@ func vpcNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 			vpcNetwork.Labels[labelName] = val
 		}
 	}
-	for k, v := range util.NewLabelBuilder().WithCloudManagerDefaults().Build() {
-		vpcNetwork.Labels[k] = v
-	}
+	maps.Copy(vpcNetwork.Labels, util.NewLabelBuilder().WithCloudManagerDefaults().Build())
 
 	err = state.Cluster().K8sClient().Create(ctx, vpcNetwork)
 	if err != nil {

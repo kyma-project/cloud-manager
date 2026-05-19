@@ -1,6 +1,7 @@
 package v1beta1
 
 import (
+	"maps"
 	"reflect"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,9 +41,7 @@ func (b *CommonObjBuilder[B, T]) WithLabels(labels map[string]string) B {
 	if b.Obj.GetLabels() == nil {
 		b.Obj.SetLabels(make(map[string]string))
 	}
-	for k, v := range labels {
-		b.Obj.GetLabels()[k] = v
-	}
+	maps.Copy(b.Obj.GetLabels(), labels)
 	return b.builder
 }
 
@@ -58,9 +57,7 @@ func (b *CommonObjBuilder[B, T]) WithAnnotations(annotations map[string]string) 
 	if b.Obj.GetAnnotations() == nil {
 		b.Obj.SetAnnotations(make(map[string]string))
 	}
-	for k, v := range annotations {
-		b.Obj.GetAnnotations()[k] = v
-	}
+	maps.Copy(b.Obj.GetAnnotations(), annotations)
 	return b.builder
 }
 

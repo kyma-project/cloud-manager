@@ -59,7 +59,7 @@ func storageAccountCreate(ctx context.Context, st composed.State) (error, contex
 
 	composed.LoggerFromCtx(ctx).Info("Creating storage account")
 
-	for i := 0; i < maxStorageAccountCreateAttempts; i++ {
+	for i := range maxStorageAccountCreateAttempts {
 		accountName := state.storageAccountNameAttempt(i)
 
 		resp, err := azureclient.PollUntilDone(state.azureClient.CreateStorageAccount(ctx,

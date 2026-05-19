@@ -7,7 +7,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
-	"k8s.io/utils/ptr"
 )
 
 func networkWatcherCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -27,7 +26,7 @@ func networkWatcherCreate(ctx context.Context, st composed.State) (error, contex
 		state.resourceGroupWatcherName(),
 		state.networkWatcherName(),
 		armnetwork.Watcher{
-			Location: ptr.To(state.location()),
+			Location: new(state.location()),
 		})
 	if err != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error creating network watcher: %s", err.Error()), state.ObjAsRuntime().Generation)

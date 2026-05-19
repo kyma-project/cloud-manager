@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"maps"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -43,9 +44,7 @@ func subscriptionCreate(ctx context.Context, st composed.State) (error, context.
 			subscription.Labels[labelName] = val
 		}
 	}
-	for k, v := range util.NewLabelBuilder().WithCloudManagerDefaults().Build() {
-		subscription.Labels[k] = v
-	}
+	maps.Copy(subscription.Labels, util.NewLabelBuilder().WithCloudManagerDefaults().Build())
 
 	err := state.Cluster().K8sClient().Create(ctx, subscription)
 	if err != nil {
