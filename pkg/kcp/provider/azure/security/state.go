@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
@@ -91,9 +90,6 @@ type State struct {
 	// listed and one matching the tag tagKymaRuntimeId = runtime.name picked and set to state
 	storageAccount *armstorage.Account
 
-	// logAnalyticsWorkspace from RG resourceGroupData, one per runtime, with name pattern "kyma-security-{shootName}"
-	logAnalyticsWorkspace *armoperationalinsights.Workspace
-
 	// flowLog under NetworkWatcherRG/NetworkWatcher_{location}, name = vpcNetwork.Status.Identifiers.Name
 	flowLog *armnetwork.FlowLog
 
@@ -129,10 +125,6 @@ func (s *State) resourceGroupWatcherName() string {
 
 func (s *State) networkWatcherName() string {
 	return fmt.Sprintf("NetworkWatcher_%s", s.location())
-}
-
-func (s *State) logAnalyticsWorkspaceName() string {
-	return fmt.Sprintf("kyma-security-%s", s.shootName())
 }
 
 func (s *State) storageAccountBaseName() string {
