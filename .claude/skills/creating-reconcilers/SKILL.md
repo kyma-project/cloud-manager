@@ -142,5 +142,7 @@ See `references/action-pitfalls.md`. Most frequent:
 **Read alongside your flow reference:**
 - `references/action-pitfalls.md` — Full GOOD/BAD examples for pitfalls listed above
 - `references/feature-flags.md` — Required for all SKR flows; see pitfall #9
-- `references/primitives-core.md` — Deep-dive on Action, State, composition functions, flow control; read when the Quick Reference above is insufficient
-- `references/primitives-advanced.md` — Status update builder and logger utilities; read when managing conditions or structured logging
+- `references/primitives.md` — Deep-dive on Action, State, composition functions, flow control, util.Timing; read when the Quick Reference above is insufficient
+- `references/status-mutation.md` — StatusPatcherComposed (new code) and UpdateStatusBuilder (legacy); read when managing conditions or structured logging
+- `references/conventions.md` — File naming, type-safe accessors, import organization, interface compliance checks; read when setting up a new reconciler package
+- `references/provider-clients.md` — ClientProvider signatures, facade clients, and boilerplate for AWS/Azure/GCP/SAP; read when creating a new cloud provider client

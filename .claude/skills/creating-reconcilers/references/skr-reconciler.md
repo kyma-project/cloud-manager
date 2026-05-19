@@ -205,6 +205,7 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *reconciler) newAction() composed.Action {
     return composed.ComposeActionsNoName(
         feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.{Resource}{}),
+        composed.If(feature.ApiDisabledPredicate, composed.StopAndForgetAction),
         composed.LoadObj,
         loadKcp{Resource},
 
