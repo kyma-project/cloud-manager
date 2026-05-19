@@ -9,6 +9,7 @@ import (
 )
 
 type NetworkFlowLogsClient interface {
+	GetNetworkWatcher(ctx context.Context, resourceGroupName string, networkWatcherName string) (armnetwork.WatchersClientGetResponse, error)
 	ListNetworkWatchers(ctx context.Context) ([]*armnetwork.Watcher, error)
 	CreateNetworkWatcher(ctx context.Context, resourceGroupName, watcherName string, watcher armnetwork.Watcher) (*armnetwork.Watcher, error)
 
@@ -33,6 +34,10 @@ func NewNetworkFlowLogsClient(
 }
 
 // Watchers ===================================================
+
+func (c *networkFlowLogsClient) GetNetworkWatcher(ctx context.Context, resourceGroupName string, networkWatcherName string) (armnetwork.WatchersClientGetResponse, error) {
+	return c.svcWatchers.Get(ctx, resourceGroupName, networkWatcherName, &armnetwork.WatchersClientGetOptions{})
+}
 
 func (c *networkFlowLogsClient) ListNetworkWatchers(ctx context.Context) ([]*armnetwork.Watcher, error) {
 	pager := c.svcWatchers.NewListAllPager(&armnetwork.WatchersClientListAllOptions{})

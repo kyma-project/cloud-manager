@@ -7,6 +7,12 @@ import (
 )
 
 func statusReady(ctx context.Context, st composed.State) (error, context.Context) {
+	if !awsProviderPredicate(ctx, st) &&
+		!azureProviderPredicate(ctx, st) &&
+		!gcpProviderPredicate(ctx, st) {
+		// security feature is disabled
+		return nil, ctx
+	}
 	state := st.(*State)
 
 	ds := state.SecurityDesiredState()

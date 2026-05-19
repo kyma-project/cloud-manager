@@ -77,6 +77,18 @@ type PublicIpAddressesClient interface {
 	azureclient.PublicIPAddressesClient
 }
 
+type SecurityClient interface {
+	azureclient.SecurityClient
+}
+
+type NetworkFlowLogsClient interface {
+	azureclient.NetworkFlowLogsClient
+}
+
+type StorageAccountClient interface {
+	azureclient.StorageAccountClient
+}
+
 type Clients interface {
 	ResourceGroupsClient
 	NetworkClient
@@ -92,6 +104,9 @@ type Clients interface {
 	PublicIpAddressesClient
 	DnsResolverVNetLinkClient
 	DnsForwardingRulesetClient
+	SecurityClient
+	NetworkFlowLogsClient
+	StorageAccountClient
 }
 
 type Providers interface {

@@ -30,6 +30,25 @@ type networkFlowLogsStore struct {
 
 var _ azureclient.NetworkFlowLogsClient = (*networkFlowLogsStore)(nil)
 
+func (s *networkFlowLogsStore) GetNetworkWatcher(ctx context.Context, resourceGroupName string, networkWatcherName string) (armnetwork.WatchersClientGetResponse, error) {
+	var response armnetwork.WatchersClientGetResponse
+	if isContextCanceled(ctx) {
+		return response, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	id := azureutil.NewNetworkWatcherResourceId(s.subscription, resourceGroupName, networkWatcherName).String()
+	for _, w := range s.watchers {
+		if ptr.Deref(w.ID, "") == id {
+			response.Watcher = *util.Must(util.Clone(w))
+			return response, nil
+		}
+	}
+
+	return response, azuremeta.NewAzureNotFoundError()
+}
+
 func (s *networkFlowLogsStore) ListNetworkWatchers(ctx context.Context) ([]*armnetwork.Watcher, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled

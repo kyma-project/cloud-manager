@@ -1,12 +1,25 @@
 package cloudcontrol
 
 import (
+	"context"
+	"fmt"
+	"regexp"
+	"strings"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
+	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	kcpsubscription "github.com/kyma-project/cloud-manager/pkg/kcp/subscription"
 	kcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -17,6 +30,25 @@ import (
 )
 
 var _ = Describe("Feature: Runtime", func() {
+
+	azureSecurityPricingHasTier := func(ctx context.Context, mock azuremock.TenantSubscription, planName string, tier armsecurity.PricingTier) error {
+		scopeId := azureutil.NewSubscriptionResourceId(mock.SubscriptionId()).String()
+		resp, err := mock.ListSecurityPricings(ctx, scopeId, &armsecurity.PricingsClientListOptions{})
+		if err != nil {
+			return err
+		}
+		for _, pricing := range resp.Value {
+			if *pricing.Name == planName {
+				if *pricing.Properties.PricingTier != tier {
+					return fmt.Errorf("pricing %q has tier %q, expected %q", planName, *pricing.Properties.PricingTier, tier)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("pricing %q not found", planName)
+	}
+
+	// Gardener network type ==========================================================================================
 
 	It("Scenario: Azure Runtime with Gardener network is created and deleted", func() {
 
@@ -130,17 +162,187 @@ var _ = Describe("Feature: Runtime", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		By("Then Runtime is annotated as security handled", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation, "Ready")).
-				Should(Succeed())
-		})
+		var azureWatcherResourceGroup *armresources.ResourceGroup
+		var azureDataResourceGroup *armresources.ResourceGroup
+		var azureWatcher *armnetwork.Watcher
+		var azureStorageAccount *armstorage.Account
+		var azureFlowLog *armnetwork.FlowLog
+		var azureSecurityPricings []*armsecurity.Pricing
+
+		_ = azureWatcherResourceGroup
+		_ = azureDataResourceGroup
+		_ = azureWatcher
+		_ = azureStorageAccount
+		_ = azureFlowLog
+		_ = azureSecurityPricings
+
+		azureNetworkWatcherResourceGroupName := "NetworkWatcherRG"
+		azureDataResourceGroupName := fmt.Sprintf("kyma-security-%s", shootName)
+		azureNetworkWatcherName := fmt.Sprintf("NetworkWatcher_%s", runtime.Spec.Shoot.Region)
+		azureStorageAccountName := "kymasec" + regexp.MustCompile(`[^a-z0-9]`).ReplaceAllString(strings.ToLower(shootName), "")
+
+		if feature.RuntimeSecurityAzure.Value(infra.Ctx()) {
+
+			By("Then Runtime is annotated as security handled", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation, "Ready")).
+					Should(Succeed())
+			})
+
+			By("When Runtime security is enabled", func() {
+				Expect(LoadAndCheck(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions())).
+					To(Succeed())
+				_, err := composed.PatchObjMergeLabel(infra.Ctx(), runtime, infra.KCP().Client(), common.TmpRuntimeSecurityEnabledLabel, "true")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			By("Then Azure security watcher resource group is created", func() {
+				Eventually(func() error {
+					rg, err := azureMock.GetResourceGroup(infra.Ctx(), azureNetworkWatcherResourceGroupName)
+					if err != nil {
+						return err
+					}
+					if rg == nil {
+						return fmt.Errorf("resource group %q does not exist", azureNetworkWatcherResourceGroupName)
+					}
+					azureWatcherResourceGroup = rg
+					return nil
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure security data resource group is created", func() {
+				Eventually(func() error {
+					rg, err := azureMock.GetResourceGroup(infra.Ctx(), azureDataResourceGroupName)
+					if err != nil {
+						return err
+					}
+					if rg == nil {
+						return fmt.Errorf("resource group %q does not exist", azureDataResourceGroupName)
+					}
+					azureDataResourceGroup = rg
+					return nil
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure network watcher is created", func() {
+				Eventually(func() error {
+					resp, err := azureMock.GetNetworkWatcher(infra.Ctx(), azureNetworkWatcherResourceGroupName, azureNetworkWatcherName)
+					if err != nil {
+						return err
+					}
+					azureWatcher = &resp.Watcher
+					return nil
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure storage account is created", func() {
+				Eventually(func() error {
+					resp, err := azureMock.GetStorageAccount(infra.Ctx(), azureDataResourceGroupName, azureStorageAccountName, nil)
+					if err != nil {
+						return err
+					}
+					azureStorageAccount = &resp.Account
+					return nil
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure flow log is created", func() {
+				Eventually(func() error {
+					resp, err := azureMock.GetFlowLog(infra.Ctx(), azureDataResourceGroupName, azureNetworkWatcherName, gardenerVpcName, nil)
+					if err != nil {
+						return err
+					}
+					azureFlowLog = &resp.FlowLog
+					return nil
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender CSPM is on", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "CloudPosture", armsecurity.PricingTierStandard).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Servers is on", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "VirtualMachines", armsecurity.PricingTierStandard).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Storage is on", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "StorageAccounts", armsecurity.PricingTierStandard).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Arm is on", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "Arm", armsecurity.PricingTierStandard).
+					Should(Succeed())
+			})
+
+		} // if security feature enabled for Azure
 
 		// DELETE ===============================================================
 
 		By("When Runtime is deleted", func() {
 			Expect(Delete(infra.Ctx(), infra.KCP().Client(), runtime)).To(Succeed())
 		})
+
+		if feature.RuntimeSecurityAzure.Value(infra.Ctx()) {
+
+			By("Then Azure Defender CSPM is off", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "CloudPosture", armsecurity.PricingTierFree).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Servers is off", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "VirtualMachines", armsecurity.PricingTierFree).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Storage is off", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "StorageAccounts", armsecurity.PricingTierFree).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Arm is off", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "Arm", armsecurity.PricingTierFree).
+					Should(Succeed())
+			})
+
+			By("Then Azure flow log does not exist", func() {
+				Eventually(func() error {
+					_, err := azureMock.GetFlowLog(infra.Ctx(), azureDataResourceGroupName, azureNetworkWatcherName, gardenerVpcName, nil)
+					if azuremeta.IsNotFound(err) {
+						return nil
+					}
+					return fmt.Errorf("flow log still exists")
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure storage account does not exist", func() {
+				Eventually(func() error {
+					_, err := azureMock.GetStorageAccount(infra.Ctx(), azureDataResourceGroupName, azureStorageAccountName, nil)
+					if azuremeta.IsNotFound(err) {
+						return nil
+					}
+					return fmt.Errorf("storage account still exists")
+				}).
+					Should(Succeed())
+			})
+
+		} // if security feature enabled for Azure
 
 		By("Then VpcNetwork is deleted", func() {
 			Eventually(IsDeleted).
@@ -168,6 +370,8 @@ var _ = Describe("Feature: Runtime", func() {
 				To(Succeed())
 		})
 	})
+
+	// Kyma network type ==========================================================================================
 
 	It("Scenario: Azure Runtime with Kyma network is created and deleted", func() {
 		name := "91b4634b-d8fb-48c2-a5c5-90719296e8d0"
@@ -258,11 +462,15 @@ var _ = Describe("Feature: Runtime", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		By("Then Runtime is annotated as security handled", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation, "Ready")).
-				Should(Succeed())
-		})
+		if feature.RuntimeSecurityAzure.Value(infra.Ctx()) {
+
+			By("Then Runtime is annotated as security handled", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation, "Ready")).
+					Should(Succeed())
+			})
+
+		} // if security feature is enabled for Azure
 
 	})
 })

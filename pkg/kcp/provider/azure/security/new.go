@@ -22,7 +22,6 @@ func New(sf StateFactory) composed.Action {
 			resourceGroupWatcherLoad,
 			resourceGroupDataLoad,
 			networkWatcherLoad,
-			//logAnalyticsWorkspaceLoad,
 			storageAccountLoad,
 			flowLogsLoad,
 			composed.IfElse(
@@ -32,7 +31,6 @@ func New(sf StateFactory) composed.Action {
 					resourceGroupWatcherCreate,
 					resourceGroupDataCreate,
 					networkWatcherCreate,
-					//logAnalyticsWorkspaceCreate,
 					storageAccountCreate,
 					flowLogsCreate,
 				),
@@ -40,8 +38,7 @@ func New(sf StateFactory) composed.Action {
 				composed.ComposeActionsNoName(
 					flowLogsDelete,
 					storageAccountDelete,
-					//logAnalyticsWorkspaceDelete,
-					resourceGroupDataDelete,
+					// not deleting data resource group due to multiple runtimes in the same network
 				),
 			),
 			// toggle security defender service on/off
