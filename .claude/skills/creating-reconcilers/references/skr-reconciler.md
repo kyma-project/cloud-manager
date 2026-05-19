@@ -1,5 +1,14 @@
 # SKR Reconciler Patterns Reference
 
+Use this reference when:
+- The SKR resource creates and manages a corresponding KCP resource (1-1 binding)
+- The reconciler projects SKR spec → KCP spec and syncs KCP status → SKR status
+- The resource may also create local K8s objects (PV, PVC, Secrets)
+
+Do NOT use when the SKR resource has NO backing KCP resource — see `skr-only-pattern.md`
+
+---
+
 This document provides detailed patterns for SKR (cloud-resources) reconcilers.
 
 ## Overview

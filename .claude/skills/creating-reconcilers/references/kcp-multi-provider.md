@@ -1,6 +1,11 @@
-# KCP Reconciler Patterns Reference
+# KCP Multi-Provider Reconciler Pattern
 
-This document provides detailed patterns for KCP (cloud-control) reconcilers.
+Use this reference when:
+- The KCP resource must be reconciled across multiple providers (AWS, GCP, Azure, OpenStack)
+- The reconciler lives at `pkg/kcp/{resource}/` with `pkg/kcp/provider/{provider}/{resource}/` per provider
+- You need the `types/` subpackage to break circular imports
+
+Do NOT use for single-provider KCP resources — see `kcp-single-provider.md`
 
 ## Overview
 
@@ -9,11 +14,7 @@ KCP reconcilers run in the Kyma Control Plane and manage cloud provider resource
 - Multi-layer state hierarchy with embedding
 - Cloud client initialization via StateFactory
 
-## State Hierarchy Patterns
-
-### Pattern A: kcpcommonaction.State (RECOMMENDED)
-
-**Status**: New pattern, all reconcilers should migrate to this.
+## State Hierarchy
 
 ```
 composed.State
@@ -28,24 +29,7 @@ composed.State
 - VpcNetwork
 - GcpSubnet
 
-**Example**: `pkg/kcp/vpcnetwork/`
-
-### Pattern B: focal.State (LEGACY)
-
-**Status**: Legacy pattern, used by NfsInstance, RedisInstance, IpRange. Migration in progress.
-
-```
-composed.State
-    └── focal.State
-            └── {resource}.State
-                    └── provider/{provider}/{resource}.State
-```
-
-**What focal.New() loads**:
-- Scope (from ScopeRef on the object)
-- Feature context
-
-**Example**: `pkg/kcp/nfsinstance/`
+**Canonical example**: `pkg/kcp/vpcnetwork/` — uses all four providers (AWS/GCP/Azure/OpenStack), making it the best reference for a new multi-provider resource.
 
 ## Directory Structure
 
@@ -240,17 +224,10 @@ func (r *reconciler) newAction() composed.Action {
 
 ## Provider Predicates
 
-**kcpcommonaction predicates** (for new pattern):
 - `kcpcommonaction.AwsProviderPredicate`
 - `kcpcommonaction.GcpProviderPredicate`
 - `kcpcommonaction.AzureProviderPredicate`
 - `kcpcommonaction.OpenStackProviderPredicate`
-
-**statewithscope predicates** (for legacy focal pattern):
-- `statewithscope.AwsProviderPredicate`
-- `statewithscope.GcpProviderPredicate`
-- `statewithscope.AzureProviderPredicate`
-- `statewithscope.OpenStackProviderPredicate`
 
 ## Provider State Pattern
 
@@ -331,36 +308,6 @@ func New(sf StateFactory) composed.Action {
 }
 ```
 
-## Individual Action Pattern
-
-```go
-// pkg/kcp/provider/aws/vpcnetwork/infraCreateUpdate.go
-package awsvpcnetwork
-
-func infraCreateUpdate(ctx context.Context, st composed.State) (error, context.Context) {
-    state := st.(*State)
-    logger := composed.LoggerFromCtx(ctx)
-
-    // Use state.client to interact with AWS
-    vpc, err := state.client.DescribeVpc(ctx, vpcId)
-    if err != nil {
-        return composed.LogErrorAndReturn(err, "Error describing VPC", composed.StopWithRequeue, ctx)
-    }
-
-    // Update state fields
-    state.vpc = vpc
-
-    // Update status
-    obj := state.ObjAsVpcNetwork()
-    obj.Status.VpcId = *vpc.VpcId
-
-    return composed.PatchStatus(obj).
-        SetCondition(metav1.Condition{...}).
-        SuccessError(nil).
-        Run(ctx, state)
-}
-```
-
 ## Cloud Provider Interaction Styles
 
 ### Blocking Style
@@ -378,7 +325,6 @@ func infraCreateUpdate(ctx context.Context, st composed.State) (error, context.C
     if err != nil {
         return err, ctx
     }
-    // ... more operations
     return nil, ctx
 }
 ```
@@ -390,25 +336,21 @@ Uses requeues to poll cloud provider status. Better for long-running operations.
 ```go
 func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, context.Context) {
     state := st.(*State)
-    
+
     cluster, err := state.client.DescribeReplicationGroup(ctx, state.clusterId)
     if err != nil {
         return composed.LogErrorAndReturn(err, "Error describing cluster", composed.StopWithRequeue, ctx)
     }
-    
+
     if cluster.Status != "available" {
-        // Not ready yet, requeue
         return composed.StopWithRequeueDelay(30 * time.Second), nil
     }
-    
-    // Ready, continue to next action
+
     return nil, ctx
 }
 ```
 
 ## kcpcommonaction.State Reference
-
-**File**: `pkg/kcp/commonAction/state.go`
 
 ```go
 type State interface {
@@ -421,44 +363,23 @@ type State interface {
 }
 ```
 
-**File**: `pkg/kcp/commonAction/new.go`
-
-`kcpcommonaction.New()` loads these resources in order:
-1. `composed.LoadObj` - Load the main object
-2. `statusStaleProcessing` - Check generation vs observedGeneration
-3. `ipRangeLoad` - Load IpRange dependency
-4. `gcpSubnetLoad` - Load GcpSubnet dependency
-5. `vpcNetworkLoad` - Load VpcNetwork dependency
-6. `subscriptionLoad` - Load Subscription
-7. `labelObj` - Apply standard labels
-
-## focal.State Reference (LEGACY)
-
-**File**: `pkg/common/actions/focal/state.go`
-
-```go
-type State interface {
-    composed.State
-    Scope() *cloudcontrolv1beta1.Scope
-    SetScope(*cloudcontrolv1beta1.Scope)
-    ObjAsCommonObj() CommonObject
-}
-```
-
-**File**: `pkg/common/actions/focal/new.go`
-
-`focal.New()` loads:
-1. `composed.LoadObj` - Load the main object
-2. `loadScopeFromRef` - Load Scope from ScopeRef field
-3. `loadFeatureContext` - Load feature flags
+`kcpcommonaction.New()` loads in order:
+1. `composed.LoadObj` — Load the main object
+2. `statusStaleProcessing` — Check generation vs observedGeneration
+3. `ipRangeLoad` — Load IpRange dependency
+4. `gcpSubnetLoad` — Load GcpSubnet dependency
+5. `vpcNetworkLoad` — Load VpcNetwork dependency
+6. `subscriptionLoad` — Load Subscription
+7. `labelObj` — Apply standard labels
 
 ## Example Files in Codebase
 
 | Pattern | Files |
 |---------|-------|
+| KCP multi-provider controller | `internal/controller/cloud-control/vpcnetwork_controller.go` |
 | kcpcommonaction reconciler | `pkg/kcp/vpcnetwork/reconciler.go` |
-| focal reconciler (legacy) | `pkg/kcp/nfsinstance/reconciler.go` |
 | Provider state (AWS) | `pkg/kcp/provider/aws/vpcnetwork/state.go` |
 | Provider new (AWS) | `pkg/kcp/provider/aws/vpcnetwork/new.go` |
 | Provider state (GCP) | `pkg/kcp/provider/gcp/vpcnetwork/state.go` |
 | Multiple clients (GCP) | `pkg/kcp/provider/gcp/iprange/v3/state.go` |
+| KCP single-provider contrast | `pkg/kcp/provider/gcp/subnet/` |
