@@ -68,6 +68,7 @@ func (r *reconciler) newAction() composed.Action {
 		idGenerate,
 
 		kcpNfsInstanceLoad,
+		dataSourceSnapshotLoad,
 		kcpNfsInstanceCreate,
 		waitKcpNfsInstanceStatus,
 

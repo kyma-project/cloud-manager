@@ -24,6 +24,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
+	skrsapnfsvolumesnapshot "github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshot"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -31,6 +32,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -314,17 +317,21 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 
 	})
 
-	It("Scenario: SKR SapNfsVolume with snapshot-id annotation propagates SnapshotId to KCP NfsInstance", func() {
+	It("Scenario: SKR SapNfsVolume with dataSource.snapshot propagates SnapshotId to KCP NfsInstance", func() {
 		sapNfsVolumeName := "22dddcba-3884-4720-acf9-15b22eabd70d"
 		sapNfsVolume := &cloudresourcesv1beta1.SapNfsVolume{}
 		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 		capacityGb := 100
-		snapshotId := "manila-snapshot-id-12345"
+		snapshotName := uuid.NewString()
+		openstackSnapshotId := "manila-snapshot-id-12345"
+		snapshot := &cloudresourcesv1beta1.SapNfsVolumeSnapshot{}
 
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 		skrIpRangeId := "e5f68641-3d05-45a8-a4d2-9169f482cf42"
 
 		skriprange.Ignore.AddName("default")
+		skrsapnfsvolumesnapshot.Ignore.AddName(snapshotName)
+		defer skrsapnfsvolumesnapshot.Ignore.RemoveName(snapshotName)
 
 		By("Given default SKR IpRange exists and is Ready", func() {
 			Eventually(CreateObj).
@@ -341,13 +348,43 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 				Should(Succeed())
 		})
 
-		By("When SapNfsVolume is created with snapshot-id annotation", func() {
+		By("And Given SapNfsVolumeSnapshot exists and is Ready", func() {
+			snapshot.Name = snapshotName
+			snapshot.Namespace = DefaultSkrNamespace
+			snapshot.Spec.SourceVolume = corev1.ObjectReference{Name: sapNfsVolumeName}
+			Eventually(func() error {
+				return infra.SKR().Client().Create(infra.Ctx(), snapshot)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				if err := infra.SKR().Client().Get(infra.Ctx(), types.NamespacedName{
+					Name:      snapshotName,
+					Namespace: DefaultSkrNamespace,
+				}, snapshot); err != nil {
+					return err
+				}
+				snapshot.Status.State = cloudresourcesv1beta1.StateReady
+				snapshot.Status.OpenstackId = openstackSnapshotId
+				snapshot.Status.Conditions = []metav1.Condition{
+					{
+						Type:               cloudresourcesv1beta1.ConditionTypeReady,
+						Status:             metav1.ConditionTrue,
+						Reason:             cloudresourcesv1beta1.ConditionReasonReady,
+						Message:            "Ready",
+						LastTransitionTime: metav1.Now(),
+					},
+				}
+				return infra.SKR().Client().Status().Update(infra.Ctx(), snapshot)
+			}).Should(Succeed())
+		})
+
+		By("When SapNfsVolume is created with dataSource.snapshot", func() {
 			sapNfsVolume.Name = sapNfsVolumeName
 			sapNfsVolume.Namespace = DefaultSkrNamespace
-			sapNfsVolume.Annotations = map[string]string{
-				cloudresourcesv1beta1.AnnotationSnapshotId: snapshotId,
-			}
 			sapNfsVolume.Spec.CapacityGb = capacityGb
+			sapNfsVolume.Spec.DataSource = &cloudresourcesv1beta1.SapNfsVolumeDataSource{
+				Snapshot: &corev1.ObjectReference{Name: snapshotName},
+			}
 			Eventually(func() error {
 				return infra.SKR().Client().Create(infra.Ctx(), sapNfsVolume)
 			}).Should(Succeed())
@@ -377,13 +414,16 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 				Should(Succeed(), "expected KCP NfsInstance to be created")
 
 			Expect(kcpNfsInstance.Spec.Instance.OpenStack).NotTo(BeNil())
-			Expect(kcpNfsInstance.Spec.Instance.OpenStack.SnapshotId).To(Equal(snapshotId))
+			Expect(kcpNfsInstance.Spec.Instance.OpenStack.SnapshotId).To(Equal(openstackSnapshotId))
 		})
 
 		By("// cleanup", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume).
 				Should(Succeed())
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), snapshot).
+				Should(SucceedIgnoreNotFound())
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())

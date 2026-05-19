@@ -44,7 +44,7 @@ func kcpNfsInstanceCreate(ctx context.Context, st composed.State) (error, contex
 			Instance: cloudcontrolv1beta1.NfsInstanceInfo{
 				OpenStack: &cloudcontrolv1beta1.NfsInstanceOpenStack{
 					SizeGb:     state.ObjAsSapNfsVolume().Spec.CapacityGb,
-					SnapshotId: state.ObjAsSapNfsVolume().GetAnnotations()[cloudresourcesv1beta1.AnnotationSnapshotId],
+					SnapshotId: state.GetDataSourceSnapshotId(),
 				},
 			},
 		},

@@ -1,10 +1,8 @@
 # Provider Client Patterns Reference
 
-This document covers how to create cloud provider clients for KCP reconcilers.
+Use this reference when creating a cloud provider client for a KCP reconciler.
 
-## Overview
-
-When a KCP reconciler needs to interact with cloud provider APIs, create a client in:
+## Client Location
 
 ```
 pkg/kcp/provider/{provider}/{resource}/client/client.go
@@ -12,12 +10,12 @@ pkg/kcp/provider/{provider}/{resource}/client/client.go
 
 ## Client Pattern Components
 
-Each client.go contains four parts:
+Each `client.go` contains four parts:
 
-1. **Client interface** - Methods for cloud operations
-2. **NewClientProvider()** - Factory function returning the provider-specific `ClientProvider` type
-3. **client struct** - Embeds facade clients from the base provider package
-4. **newClient()** - Internal constructor
+1. **`Client` interface** — methods for cloud operations
+2. **`NewClientProvider()`** — factory returning the provider-specific `ClientProvider` type
+3. **`client` struct** — embeds facade clients from the base provider package
+4. **`newClient()`** — internal constructor
 
 ## ClientProvider Type Reference
 
@@ -26,9 +24,9 @@ Each client.go contains four parts:
 | AWS | `awsclient.SkrClientProvider[T]` | `func(ctx, account, region, key, secret, role string) (T, error)` |
 | Azure | `azureclient.ClientProvider[T]` | `func(ctx, clientId, clientSecret, subscriptionId, tenantId string, auxiliaryTenants ...string) (T, error)` |
 | GCP | `gcpclient.GcpClientProvider[T]` | `func(string) T` |
-| SAP | `sapclient.SapClientProvider[T]` | `func(ctx, pp ProviderParams) (T, error)` |
+| SAP/OpenStack | `sapclient.SapClientProvider[T]` | `func(ctx, pp ProviderParams) (T, error)` |
 
-**Note**: GCP is different - `NewClientProvider` takes `*gcpclient.GcpClients` as parameter because GCP uses a shared client pool.
+**GCP is different**: `NewClientProvider` takes `*gcpclient.GcpClients` as parameter because GCP uses a shared client pool. The `string` parameter in the provider function is the GCP project ID and is **ignored in production** (the pool is already initialized). Pass `_` in the implementation.
 
 ---
 
@@ -60,9 +58,7 @@ func NewClientProvider() awsclient.SkrClientProvider[Client] {
 }
 
 func newClient(ec2Client awsclient.Ec2Client) Client {
-    return &client{
-        Ec2Client: ec2Client,
-    }
+    return &client{Ec2Client: ec2Client}
 }
 
 var _ Client = (*client)(nil)
@@ -72,15 +68,15 @@ type client struct {
 }
 ```
 
-### AWS Facade Clients
+### AWS Facade Clients (`pkg/kcp/provider/aws/client/`)
 
-Available facade clients in `pkg/kcp/provider/aws/client/`:
-
-- `Ec2Client` - EC2 operations (VPCs, subnets, security groups)
-- `ElastiCacheClient` - ElastiCache operations
-- `EfsClient` - EFS file system operations
-- `Route53Client` - DNS operations
-- `StsClient` - Security Token Service
+| Facade | Operations |
+|--------|-----------|
+| `Ec2Client` | VPCs, subnets, security groups |
+| `ElastiCacheClient` | ElastiCache |
+| `EfsClient` | EFS file systems |
+| `Route53Client` | DNS |
+| `StsClient` | Security Token Service |
 
 ---
 
@@ -108,12 +104,10 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
         if err != nil {
             return nil, err
         }
-
         networkClientFactory, err := armnetwork.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
         if err != nil {
             return nil, err
         }
-
         return newClient(
             azureclient.NewNetworkClient(networkClientFactory.NewVirtualNetworksClient()),
         ), nil
@@ -121,9 +115,7 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 }
 
 func newClient(networkClient azureclient.NetworkClient) *client {
-    return &client{
-        NetworkClient: networkClient,
-    }
+    return &client{NetworkClient: networkClient}
 }
 
 type client struct {
@@ -131,14 +123,14 @@ type client struct {
 }
 ```
 
-### Azure Facade Clients
+### Azure Facade Clients (`pkg/kcp/provider/azure/client/`)
 
-Available facade clients in `pkg/kcp/provider/azure/client/`:
-
-- `NetworkClient` - Virtual network operations
-- `SubnetClient` - Subnet operations
-- `PrivateEndpointClient` - Private endpoint operations
-- `RedisCacheClient` - Redis cache operations
+| Facade | Operations |
+|--------|-----------|
+| `NetworkClient` | Virtual networks |
+| `SubnetClient` | Subnets |
+| `PrivateEndpointClient` | Private endpoints |
+| `RedisCacheClient` | Redis cache |
 
 ---
 
@@ -151,12 +143,12 @@ package client
 import gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 
 type Client interface {
-    // Embed wrapped client interfaces or define custom methods
     gcpclient.VpcNetworkClient
+    // Add additional wrapped interfaces or custom methods
 }
 
 func NewClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProvider[Client] {
-    return func(_ string) Client {
+    return func(_ string) Client {   // project string is ignored — pool is pre-initialized
         return &client{
             VpcNetworkClient: gcpClients.NetworkWrapped(),
         }
@@ -168,21 +160,15 @@ type client struct {
 }
 ```
 
-### GCP Notes
+### GCP Facade Clients (`pkg/kcp/provider/gcp/client/`)
 
-- GCP uses a shared client pool (`*gcpclient.GcpClients`)
-- `NewClientProvider` receives the client pool as parameter
-- The `string` parameter in `GcpClientProvider[T] func(string) T` is ignored in production
-- Access wrapped clients via methods like `NetworkWrapped()`, `RoutersWrapped()`
-
-### GCP Facade Clients
-
-Available in `pkg/kcp/provider/gcp/client/`:
-
-- `VpcNetworkClient` - VPC network operations
-- `ServiceUsageClient` - Service usage API
-- `FilestoreClient` - Filestore operations
-- `ComputeClient` - Compute operations
+| Facade | Access method | Operations |
+|--------|--------------|-----------|
+| `VpcNetworkClient` | `NetworkWrapped()` | VPC networks |
+| `ServiceUsageClient` | — | Service usage API |
+| `FilestoreClient` | — | Filestore |
+| `ComputeClient` | — | Compute operations |
+| `RoutersClient` | `RoutersWrapped()` | Cloud Routers |
 
 ---
 
@@ -199,7 +185,6 @@ import (
 )
 
 type Client interface {
-    // Embed client interfaces from sapclient package
     sapclient.NetworkClient
 }
 
@@ -210,9 +195,7 @@ func NewClientProvider() sapclient.SapClientProvider[Client] {
         if err != nil {
             return nil, err
         }
-        return &client{
-            NetworkClient: nc,
-        }, nil
+        return &client{NetworkClient: nc}, nil
     }
 }
 
@@ -223,45 +206,31 @@ type client struct {
 }
 ```
 
-### SAP Facade Clients
+### SAP Facade Clients (via `sapclient.ClientFactory`)
 
-Available via `sapclient.ClientFactory`:
-
-- `NetworkClient` - OpenStack network operations
-- `ShareClient` - Manila share operations
-- `SubnetClient` - OpenStack subnet operations
+| Facade | Operations |
+|--------|-----------|
+| `NetworkClient` | OpenStack network operations |
+| `ShareClient` | Manila share operations |
+| `SubnetClient` | OpenStack subnets |
 
 ---
 
-## Using Clients in Provider State
-
-### StateFactory Pattern
+## Using Clients in Provider StateFactory
 
 ```go
 // pkg/kcp/provider/{provider}/{resource}/state.go
 type State struct {
-    types.State
+    types.State        // or focal.State for single-provider
     client Client
-}
-
-type StateFactory interface {
-    NewState(ctx context.Context, baseState types.State) (context.Context, *State, error)
 }
 
 type stateFactory struct {
     clientProvider {provider}client.{Provider}ClientProvider[Client]
 }
 
-func NewStateFactory(clientProvider {provider}client.{Provider}ClientProvider[Client]) StateFactory {
-    return &stateFactory{clientProvider: clientProvider}
-}
-
 func (f *stateFactory) NewState(ctx context.Context, baseState types.State) (context.Context, *State, error) {
-    // Extract credentials from subscription
-    client, err := f.clientProvider(
-        ctx,
-        // ... credentials from baseState.Subscription().Status.SubscriptionInfo...
-    )
+    client, err := f.clientProvider(ctx, /* credentials from baseState below */)
     if err != nil {
         return ctx, nil, err
     }
@@ -269,9 +238,7 @@ func (f *stateFactory) NewState(ctx context.Context, baseState types.State) (con
 }
 ```
 
-### Accessing Credentials
-
-Credentials come from `Subscription.Status.SubscriptionInfo`:
+### Credential Access Paths
 
 ```go
 // AWS
@@ -299,8 +266,9 @@ baseState.Subscription().Status.SubscriptionInfo.Sap.OpenStackProjectId
 | Azure | `pkg/kcp/provider/azure/vpcnetwork/client/client.go` |
 | GCP | `pkg/kcp/provider/gcp/vpcnetwork/client/client.go` |
 | SAP | `pkg/kcp/provider/sap/vpcnetwork/client/client.go` |
+| Multiple GCP clients | `pkg/kcp/provider/gcp/iprange/v3/state.go` |
 
 ## See Also
 
-- `references/kcp-reconciler.md` - KCP reconciler patterns
-- `references/conventions.md` - Coding conventions
+- `references/kcp-multi-provider.md` — Multi-provider reconciler using these clients
+- `references/kcp-single-provider.md` — Single-provider reconciler using these clients
