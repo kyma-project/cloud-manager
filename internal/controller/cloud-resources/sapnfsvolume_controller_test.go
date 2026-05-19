@@ -18,6 +18,7 @@ package cloudresources
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/api"
@@ -432,4 +433,118 @@ var _ = Describe("Feature: SKR SapNfsVolume", func() {
 				Should(Succeed())
 		})
 	})
+
+	It("Scenario: SKR SapNfsVolume can not be deleted if used by SapNfsVolumeSnapshot", func() {
+		const (
+			sapNfsVolumeName = "052e6c43-b351-4654-afe4-a21d1e0fe0c0"
+			skrIpRangeId     = "9dcd3ee6-b328-45d4-8915-9a2125d919db"
+		)
+		snapshotName := "79e05b9e-119b-465a-994d-0490cbe931e6"
+
+		skrIpRange := &cloudresourcesv1beta1.IpRange{}
+		sapNfsVolume := &cloudresourcesv1beta1.SapNfsVolume{}
+		kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		snapshot := &cloudresourcesv1beta1.SapNfsVolumeSnapshot{}
+
+		skriprange.Ignore.AddName("default")
+		skrsapnfsvolumesnapshot.Ignore.AddName(snapshotName)
+		defer skrsapnfsvolumesnapshot.Ignore.RemoveName(snapshotName)
+
+		By("Given default SKR IpRange exists and is Ready", func() {
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithName("default"), WithNamespace("kyma-system")).
+				Should(Succeed())
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
+					WithSkrIpRangeStatusId(skrIpRangeId),
+					WithConditions(SkrReadyCondition()),
+				).Should(Succeed())
+		})
+
+		By("And Given SKR SapNfsVolume is created and Ready", func() {
+			Eventually(CreateSapNfsVolume).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume,
+					WithName(sapNfsVolumeName),
+					WithSapNfsVolumeCapacity(100),
+				).Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume,
+					NewObjActions(), HavingFieldSet("status", "id")).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
+					NewObjActions(WithName(sapNfsVolume.Status.Id))).
+				Should(Succeed())
+
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNfsInstance,
+					WithNfsInstanceStatusHost(""),
+					WithNfsInstanceStatusPath(""),
+					WithNfsInstanceCapacity(resource.MustParse("100Gi")),
+					WithConditions(KcpReadyCondition()),
+				).Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume,
+					NewObjActions(), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		By("And Given SapNfsVolumeSnapshot exists referencing the volume", func() {
+			snapshot.Name = snapshotName
+			snapshot.Namespace = DefaultSkrNamespace
+			snapshot.Spec.SourceVolume = corev1.ObjectReference{Name: sapNfsVolumeName}
+			Eventually(func() error {
+				return infra.SKR().Client().Create(infra.Ctx(), snapshot)
+			}).Should(Succeed())
+			time.Sleep(50 * time.Millisecond)
+		})
+
+		By("When SKR SapNfsVolume is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume).
+				Should(Succeed())
+		})
+
+		By("Then SKR SapNfsVolume has Warning condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume,
+					NewObjActions(), HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeWarning)).
+				Should(Succeed(), "expected SapNfsVolume to have Warning condition")
+		})
+
+		By("And Then SKR SapNfsVolume has DeleteWhileUsed reason", func() {
+			cond := meta.FindStatusCondition(sapNfsVolume.Status.Conditions, cloudresourcesv1beta1.ConditionTypeWarning)
+			Expect(cond.Reason).To(Equal(cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed))
+			Expect(cond.Message).To(Equal(fmt.Sprintf("Can not be deleted while used by: [%s/%s]", snapshot.Namespace, snapshot.Name)))
+		})
+
+		By("// cleanup: delete snapshot", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), snapshot).
+				Should(SucceedIgnoreNotFound())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), snapshot).
+				Should(Succeed())
+		})
+
+		By("// cleanup: SapNfsVolume is deleted once snapshot is gone", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), sapNfsVolume).
+				Should(Succeed(), "expected SapNfsVolume to be deleted after snapshot was removed")
+		})
+
+		By("// cleanup: delete default SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(SucceedIgnoreNotFound())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
+	})
+
 })

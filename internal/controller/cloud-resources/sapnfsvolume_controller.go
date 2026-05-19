@@ -24,6 +24,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolume"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -60,6 +61,17 @@ func (r *SapNfsVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Request
 }
 
 func SetupSapNfsVolumeReconciler(reg skrruntime.SkrRegistry) error {
+	reg.IndexField(&cloudresourcesv1beta1.SapNfsVolumeSnapshot{}, cloudresourcesv1beta1.SapNfsVolumeField, func(object client.Object) []string {
+		snapshot, ok := object.(*cloudresourcesv1beta1.SapNfsVolumeSnapshot)
+		if !ok {
+			return []string{}
+		}
+		if snapshot.Spec.SourceVolume.Name == "" {
+			return []string{}
+		}
+		return []string{snapshot.Spec.SourceVolume.Name}
+	})
+
 	return reg.Register().
 		WithFactory(&SapNfsVolumeReconcilerFactory{}).
 		For(&cloudresourcesv1beta1.SapNfsVolume{}).
