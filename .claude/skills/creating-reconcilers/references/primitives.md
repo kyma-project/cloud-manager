@@ -286,11 +286,43 @@ func IsTerminal(err error) bool  // Any stop error
 func myAction(ctx context.Context, st composed.State) (error, context.Context) {
     // Check precondition
     if !ready {
-        return composed.StopWithRequeueDelay(30 * time.Second), nil
+        return composed.StopWithRequeueDelay(30 * time.Second), ctx
     }
 
     // Success, continue to next action
     return nil, ctx
+}
+```
+
+### When to Use Each Flow Control Error
+
+| Situation | Use |
+|-----------|-----|
+| API call failed (transient) | `StopWithRequeue` |
+| Required resource not yet available | `StopWithRequeue` |
+| Waiting for cloud provider operation | `StopWithRequeueDelay(util.Timing.T10000ms())` |
+| Long-running op (backup, share creation) | `StopWithRequeueDelay(util.Timing.T60000ms())` |
+| Major infra change (network deletion) | `StopWithRequeueDelay(util.Timing.T300000ms())` |
+| Terminal success state reached | `StopAndForget` |
+| Permanent error, do not retry | `StopAndForget` |
+| Exit inner composition, continue outer | `Break` |
+
+### util.Timing Constants
+
+Use the `util.Timing` package for consistent delays — never hard-code durations:
+
+| Constant | Duration | Default for |
+|----------|----------|------------|
+| `util.Timing.T100ms()` | 100ms | Immediate re-check after just created/updated resource |
+| `util.Timing.T1000ms()` | 1s | Short waits, quick checks |
+| `util.Timing.T10000ms()` | 10s | **Standard async cloud polling (use this by default)** |
+| `util.Timing.T60000ms()` | 60s | Long operations (SAP shares, backups) |
+| `util.Timing.T300000ms()` | 5min | Very long operations (network deletion) |
+
+```go
+// Standard cloud provider wait
+if resource.Status != "available" {
+    return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }
 ```
 
@@ -369,4 +401,52 @@ ctx = composed.LoggerIntoCtx(ctx, logger.WithValues("key", "value"))
 
 // Log error and return
 return composed.LogErrorAndReturn(err, "Error message", composed.StopWithRequeue, ctx)
+```
+
+### LogErrorAndReturn Parameters
+
+```go
+composed.LogErrorAndReturn(err, msg, flowControlError, ctx)
+//  1. err             — the actual error to log
+//  2. msg             — human-readable description of the failure point
+//  3. flowControlError — StopWithRequeue, StopWithRequeueDelay(d), or StopAndForget
+//  4. ctx             — context to return
+
+// Example
+vpc, err := state.client.DescribeVpc(ctx, vpcId)
+if err != nil {
+    return composed.LogErrorAndReturn(err, "Error describing VPC", composed.StopWithRequeue, ctx)
+}
+```
+
+## Complete Example: Async Wait Action
+
+```go
+func waitForResourceReady(ctx context.Context, st composed.State) (error, context.Context) {
+    state := st.(*State)
+    logger := composed.LoggerFromCtx(ctx)
+
+    resource, err := state.client.GetResource(ctx, state.resourceId)
+    if err != nil {
+        return composed.LogErrorAndReturn(err, "Error getting resource", composed.StopWithRequeue, ctx)
+    }
+
+    switch resource.Status {
+    case "creating":
+        logger.Info("Resource still creating, waiting...")
+        return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx   // standard 10s poll
+
+    case "available":
+        logger.Info("Resource is ready")
+        return nil, ctx   // continue to next action
+
+    case "failed":
+        logger.Info("Resource creation failed permanently")
+        return composed.StopAndForget, ctx   // no retry
+
+    default:
+        logger.Info("Unknown status, retrying", "status", resource.Status)
+        return composed.StopWithRequeue, ctx
+    }
+}
 ```
