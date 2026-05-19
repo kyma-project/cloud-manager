@@ -30,7 +30,9 @@ flowchart TD
 | SKR resource that creates and manages a corresponding KCP resource | SKR | `references/skr-reconciler.md` |
 | SKR resource with no backing KCP resource (schedules, backups) | SKR-Only | `references/skr-only-pattern.md` |
 
-> **Modifying existing legacy code** — If the resource already uses `focal.State` (`NfsInstance`, `RedisInstance`, `IpRange`), read the existing implementation and continue it. Do not introduce kcpcommonaction.State patterns unless explicitly asked to migrate.
+> **Modifying existing legacy code** — If the shared `pkg/kcp/{resource}/reconciler.go` holds a `focalStateFactory focal.StateFactory` (not `kcpCommonStateFactory kcpcommonaction.StateFactory`), you are editing a legacy resource (`NfsInstance`, `RedisInstance`, `IpRange`). **Go with the flow**: read the existing implementation and continue its pattern exactly. Do not introduce `kcpcommonaction.State` structures unless explicitly asked to migrate. There is no separate legacy reference — the codebase is the reference.
+>
+> Note: `focal.State` also appears in the current single-provider pattern (`kcp-single-provider.md`), but only inside `pkg/kcp/provider/{provider}/{resource}/` — not in a shared `pkg/kcp/{resource}/` layer. That is NOT legacy.
 
 > **Do NOT use this skill for:**
 > - Writing tests for reconcilers → use `/testing-cloud-manager-code`
@@ -139,10 +141,22 @@ See `references/action-pitfalls.md`. Most frequent:
 - `references/skr-reconciler.md` — SKR pattern (with backing KCP resource)
 - `references/skr-only-pattern.md` — SKR-Only pattern (no KCP resource)
 
-**Read alongside your flow reference:**
-- `references/action-pitfalls.md` — Full GOOD/BAD examples for pitfalls listed above
-- `references/feature-flags.md` — Required for all SKR flows; see pitfall #9
-- `references/primitives.md` — Deep-dive on Action, State, composition functions, flow control, util.Timing; read when the Quick Reference above is insufficient
-- `references/status-mutation.md` — StatusPatcherComposed (new code) and UpdateStatusBuilder (legacy); read when managing conditions or structured logging
-- `references/conventions.md` — File naming, type-safe accessors, import organization, interface compliance checks; read when setting up a new reconciler package
-- `references/provider-clients.md` — ClientProvider signatures, facade clients, and boilerplate for AWS/Azure/GCP/SAP; read when creating a new cloud provider client
+**Load these alongside your flow reference when the trigger applies:**
+
+| Reference | Load when |
+|-----------|-----------|
+| `references/action-pitfalls.md` | Always — read this alongside every flow reference |
+| `references/feature-flags.md` | Adding a new feature flag, or your primary type is SKR/SKR-Only |
+| `references/status-mutation.md` | Writing any action that sets conditions or mutates `.Status` fields |
+| `references/conventions.md` | Creating a new reconciler package (first file in a new directory) |
+| `references/primitives.md` | Any question about composition, flow control, or util.Timing not answered by the Quick Reference above |
+| `references/provider-clients.md` | Creating a new cloud provider client interface |
+
+## Before Completing
+
+Verify all of these before reporting done:
+
+1. **SKR/SKR-Only**: `ApiDisabledPredicate` gate present immediately after `feature.LoadFeatureContextFromObj`?
+2. **Every create path**: finalizer added (`AddCommonFinalizer` / `PatchAddCommonFinalizer`) before any cloud API call?
+3. **Every success path**: ends with `StopAndForget` or `StopAndForgetAction`?
+4. **Every action return**: second return value is `ctx`, not `nil`?

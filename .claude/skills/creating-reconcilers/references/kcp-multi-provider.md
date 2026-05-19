@@ -343,7 +343,7 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
     }
 
     if cluster.Status != "available" {
-        return composed.StopWithRequeueDelay(30 * time.Second), nil
+        return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
     }
 
     return nil, ctx

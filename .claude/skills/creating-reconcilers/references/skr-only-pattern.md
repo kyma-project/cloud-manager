@@ -59,6 +59,7 @@ func (s *State) SetCronExpression(e *cronexpr.Expression) { ... }
 func (r *Reconciler) newAction() composed.Action {
     return composed.ComposeActionsNoName(
         feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpNfsBackupSchedule{}),
+        composed.If(feature.ApiDisabledPredicate, composed.StopAndForgetAction),
         composed.LoadObj,
         actions.AddCommonFinalizer(),
         composed.If(

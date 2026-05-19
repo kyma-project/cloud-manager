@@ -412,7 +412,7 @@ func deleteKcp{Resource}(ctx context.Context, st composed.State) (error, context
     logger.Info("KCP {Resource} deleted")
 
     // Requeue to verify deletion
-    return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
+    return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 }
 ```
 
