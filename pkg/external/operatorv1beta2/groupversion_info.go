@@ -2,8 +2,8 @@ package operatorv1beta2
 
 import (
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorshared"
+	utilscheme "github.com/kyma-project/cloud-manager/pkg/util/scheme"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
 var (
@@ -14,7 +14,7 @@ var (
 	}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme.
-	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}
+	SchemeBuilder = &utilscheme.GroupVersionSchemeBuilder{GroupVersion: GroupVersion}
 
 	// AddToScheme adds the types in this group-version to the given scheme.
 	AddToScheme = SchemeBuilder.AddToScheme
