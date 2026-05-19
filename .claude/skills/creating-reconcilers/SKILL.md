@@ -1,6 +1,6 @@
 ---
 name: creating-reconcilers
-description: Use when creating or modifying reconcilers in Cloud Manager — adding a new KCP resource (cloud-control API), a new SKR resource (cloud-resources API), or adding a new provider (AWS, GCP, Azure, OpenStack) to an existing resource.
+description: Use when creating or modifying reconcilers in Cloud Manager — adding a new KCP resource (cloud-control API), a new SKR resource (cloud-resources API), or adding a new provider (AWS, GCP, Azure, OpenStack) to an existing resource. Also use when implementing action pipelines, StateFactory, or ComposeActionsNoName patterns.
 ---
 
 # Creating Reconcilers
@@ -10,6 +10,19 @@ Announce which type you are implementing in your first response.
 
 ## Reconciler Type Decision
 
+Use this flowchart when the type is not obvious, then confirm against the table:
+
+```mermaid
+flowchart TD
+    A{"KCP or SKR API?"}
+    A -->|"cloud-control (KCP)"| B{"Multiple cloud providers?"}
+    A -->|"cloud-resources (SKR)"| C{"Creates a backing KCP resource?"}
+    B -->|"yes — AWS+GCP+Azure+OpenStack"| D["KCP Multi-Provider"]
+    B -->|"no — one provider only"| E["KCP Single-Provider"]
+    C -->|"yes"| F["SKR"]
+    C -->|"no — schedules, backups"| G["SKR-Only"]
+```
+
 | Scenario | Type | Reference |
 |---|---|---|
 | KCP resource reconciled across multiple providers (AWS/GCP/Azure/OpenStack) | KCP Multi-Provider | `references/kcp-multi-provider.md` |
@@ -18,6 +31,13 @@ Announce which type you are implementing in your first response.
 | SKR resource with no backing KCP resource (schedules, backups) | SKR-Only | `references/skr-only-pattern.md` |
 
 > **Modifying existing legacy code** — If the resource already uses `focal.State` (`NfsInstance`, `RedisInstance`, `IpRange`), read the existing implementation and continue it. Do not introduce kcpcommonaction.State patterns unless explicitly asked to migrate.
+
+> **Do NOT use this skill for:**
+> - Writing tests for reconcilers → use `/testing-cloud-manager-code`
+> - Migrating legacy `focal.State` resources to `kcpcommonaction.State` (requires explicit user approval)
+> - Changing the type of an existing CRD field, or removing an existing CRD field (breaking changes — requires explicit user approval)
+>
+> **Adding new CRD fields** to support new reconciler functionality is in scope for this skill. After adding fields, run: `make manifests && ./config/patchAfterMakeManifests.sh && ./config/sync.sh`
 
 ## Architecture Overview
 
@@ -91,6 +111,18 @@ ALWAYS follow these rules:
 9. **Feature flag gate** — every SKR reconciler MUST include `composed.If(feature.ApiDisabledPredicate, composed.StopAndForgetAction)` early in the pipeline, after loading feature context (see pitfall #9).
 10. **Injectable clock** — if a reconciler performs any time-based logic (scheduling, expiry, rate limiting), the StateFactory MUST accept `clock.Clock`. Use `clock.RealClock{}` in production and `clock.NewFakeClock()` in tests (see pitfall #12).
 
+### Common Rationalizations — STOP
+
+If you find yourself thinking any of the following, stop and re-read the rule:
+
+| Rationalization | Reality |
+|----------------|---------|
+| "This is an internal reconciler, the feature flag gate doesn't apply" | Every SKR reconciler MUST include `ApiDisabledPredicate`. No exceptions, no matter how internal. |
+| "I'll add the finalizer after the create path works" | A finalizer added later creates an unprotected deletion window. Add it on the create path from the start (rule #8). |
+| "It's a simple state assertion, a panic can't happen here" | Skipping a level in the state hierarchy always causes a runtime panic. Always assert through the full hierarchy (pitfall #1). |
+| "Let me use `IfElse` — it's one line instead of two" | `IfElse` is explicitly forbidden (rule #4). Two separate `If` blocks are required. |
+| "I'll parallelize these two independent actions for performance" | Sequential only. Actions NEVER run in parallel (rule #7). |
+
 ## Critical Pitfalls (Summary)
 
 See `references/action-pitfalls.md`. Most frequent:
@@ -110,4 +142,5 @@ See `references/action-pitfalls.md`. Most frequent:
 **Read alongside your flow reference:**
 - `references/action-pitfalls.md` — Full GOOD/BAD examples for pitfalls listed above
 - `references/feature-flags.md` — Required for all SKR flows; see pitfall #9
-- `references/primitives.md` — Deep-dive on pkg/composed API; read only if you need detail beyond the Quick Reference above
+- `references/primitives-core.md` — Deep-dive on Action, State, composition functions, flow control; read when the Quick Reference above is insufficient
+- `references/primitives-advanced.md` — Status update builder and logger utilities; read when managing conditions or structured logging
