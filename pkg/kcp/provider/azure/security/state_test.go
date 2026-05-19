@@ -2,12 +2,14 @@ package security
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	runtimetypes "github.com/kyma-project/cloud-manager/pkg/kcp/runtime/types"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -15,6 +17,8 @@ import (
 type testRuntimeState struct {
 	composed.State
 }
+
+var _ runtimetypes.State = (*testRuntimeState)(nil)
 
 func (s *testRuntimeState) ObjAsRuntime() *infrastructuremanagerv1.Runtime {
 	return s.Obj().(*infrastructuremanagerv1.Runtime)
@@ -42,6 +46,14 @@ func (s *testRuntimeState) SecurityServiceEnabledOnSubscriptionPredicate(_ conte
 
 func (s *testRuntimeState) SecurityDataSourceEnabledOnRuntimePredicate(_ context.Context, st composed.State) bool {
 	return s.SecurityDataSourceEnabledOnRuntime()
+}
+
+func (s *testRuntimeState) PatchStatusAnnotations(ctx context.Context, newStatus, newMessage string, observedGeneration int64) (error, context.Context) {
+	return fmt.Errorf("not implemented"), ctx
+}
+
+func (s *testRuntimeState) SecurityDesiredState() runtimetypes.SecurityDesiredState {
+	return nil
 }
 
 func TestState(t *testing.T) {

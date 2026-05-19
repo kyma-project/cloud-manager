@@ -22,7 +22,7 @@ func New(sf StateFactory) composed.Action {
 			resourceGroupWatcherLoad,
 			resourceGroupDataLoad,
 			networkWatcherLoad,
-			logAnalyticsWorkspaceLoad,
+			//logAnalyticsWorkspaceLoad,
 			storageAccountLoad,
 			flowLogsLoad,
 			composed.IfElse(
@@ -32,7 +32,7 @@ func New(sf StateFactory) composed.Action {
 					resourceGroupWatcherCreate,
 					resourceGroupDataCreate,
 					networkWatcherCreate,
-					logAnalyticsWorkspaceCreate,
+					//logAnalyticsWorkspaceCreate,
 					storageAccountCreate,
 					flowLogsCreate,
 				),
@@ -40,7 +40,7 @@ func New(sf StateFactory) composed.Action {
 				composed.ComposeActionsNoName(
 					flowLogsDelete,
 					storageAccountDelete,
-					logAnalyticsWorkspaceDelete,
+					//logAnalyticsWorkspaceDelete,
 					resourceGroupDataDelete,
 				),
 			),

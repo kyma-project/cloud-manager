@@ -2,6 +2,7 @@ package security
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -25,9 +26,11 @@ func resourceGroupDataCreate(ctx context.Context, st composed.State) (error, con
 		state.location(),
 		tags)
 	if err != nil {
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error creating data resource group: %s", err.Error()), state.ObjAsRuntime().Generation)
 		return azuremeta.LogErrorAndReturn(err, "Error creating security resource group", ctx)
 	}
 
 	state.resourceGroupData = rg
+
 	return nil, ctx
 }

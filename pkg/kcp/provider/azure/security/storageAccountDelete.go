@@ -2,6 +2,7 @@ package security
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -24,6 +25,7 @@ func storageAccountDelete(ctx context.Context, st composed.State) (error, contex
 		accountName,
 		nil)
 	if azuremeta.IgnoreNotFoundError(err) != nil {
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error deleting storage account: %s", err.Error()), state.ObjAsRuntime().Generation)
 		return azuremeta.LogErrorAndReturn(err, "Error deleting storage account", ctx)
 	}
 

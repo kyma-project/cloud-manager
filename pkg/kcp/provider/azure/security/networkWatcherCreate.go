@@ -30,9 +30,11 @@ func networkWatcherCreate(ctx context.Context, st composed.State) (error, contex
 			Location: ptr.To(state.location()),
 		})
 	if err != nil {
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error creating network watcher: %s", err.Error()), state.ObjAsRuntime().Generation)
 		return azuremeta.LogErrorAndReturn(err, "Error creating network watcher", ctx)
 	}
 
 	state.watcher = watcher
+
 	return nil, ctx
 }

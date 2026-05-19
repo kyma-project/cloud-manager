@@ -2,6 +2,7 @@ package security
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -13,6 +14,7 @@ func storageAccountLoad(ctx context.Context, st composed.State) (error, context.
 
 	list, err := state.azureClient.ListStorageAccounts(ctx)
 	if err != nil {
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error loading network watcher: %s", err.Error()), state.ObjAsRuntime().Generation)
 		return azuremeta.LogErrorAndReturn(err, "Error listing storage accounts", ctx)
 	}
 

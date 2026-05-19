@@ -57,6 +57,8 @@ func storageAccountCreate(ctx context.Context, st composed.State) (error, contex
 		},
 	}
 
+	composed.LoggerFromCtx(ctx).Info("Creating storage account")
+
 	for i := 0; i < maxStorageAccountCreateAttempts; i++ {
 		accountName := state.storageAccountNameAttempt(i)
 
@@ -74,6 +76,7 @@ func storageAccountCreate(ctx context.Context, st composed.State) (error, contex
 			continue
 		}
 
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error creating storage account: %s", err.Error()), state.ObjAsRuntime().Generation)
 		return azuremeta.LogErrorAndReturn(err, "Error creating storage account", ctx)
 	}
 

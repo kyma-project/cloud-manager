@@ -2,6 +2,7 @@ package security
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -20,6 +21,7 @@ func flowLogsLoad(ctx context.Context, st composed.State) (error, context.Contex
 		state.flowLogName(),
 		nil)
 	if azuremeta.IgnoreNotFoundError(err) != nil {
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error loading network flow logs: %s", err.Error()), state.ObjAsRuntime().Generation)
 		return azuremeta.LogErrorAndReturn(err, "Error loading flow log", ctx)
 	}
 	if err == nil {

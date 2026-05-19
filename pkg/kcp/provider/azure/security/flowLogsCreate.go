@@ -34,12 +34,12 @@ func flowLogsCreate(ctx context.Context, st composed.State) (error, context.Cont
 			"Cannot create flow log",
 			composed.StopWithRequeue, ctx)
 	}
-	if state.logAnalyticsWorkspace == nil {
-		return composed.LogErrorAndReturn(
-			fmt.Errorf("log analytics workspace must exist before creating flow log"),
-			"Cannot create flow log",
-			composed.StopWithRequeue, ctx)
-	}
+	//if state.logAnalyticsWorkspace == nil {
+	//	return composed.LogErrorAndReturn(
+	//		fmt.Errorf("log analytics workspace must exist before creating flow log"),
+	//		"Cannot create flow log",
+	//		composed.StopWithRequeue, ctx)
+	//}
 
 	flowLogName := state.flowLogName()
 	logger.Info("Creating flow log", "name", flowLogName)
@@ -54,15 +54,15 @@ func flowLogsCreate(ctx context.Context, st composed.State) (error, context.Cont
 				Days:    new(int32(flowLogRetentionDays)),
 				Enabled: new(true),
 			},
-			FlowAnalyticsConfiguration: &armnetwork.TrafficAnalyticsProperties{
-				NetworkWatcherFlowAnalyticsConfiguration: &armnetwork.TrafficAnalyticsConfigurationProperties{
-					Enabled:                  new(true),
-					WorkspaceID:              state.logAnalyticsWorkspace.Properties.CustomerID,
-					WorkspaceRegion:          state.logAnalyticsWorkspace.Location,
-					WorkspaceResourceID:      state.logAnalyticsWorkspace.ID,
-					TrafficAnalyticsInterval: new(int32(60)),
-				},
-			},
+			//FlowAnalyticsConfiguration: &armnetwork.TrafficAnalyticsProperties{
+			//	NetworkWatcherFlowAnalyticsConfiguration: &armnetwork.TrafficAnalyticsConfigurationProperties{
+			//		Enabled:                  new(true),
+			//		WorkspaceID:              state.logAnalyticsWorkspace.Properties.CustomerID,
+			//		WorkspaceRegion:          state.logAnalyticsWorkspace.Location,
+			//		WorkspaceResourceID:      state.logAnalyticsWorkspace.ID,
+			//		TrafficAnalyticsInterval: new(int32(60)),
+			//	},
+			//},
 		},
 	}
 
@@ -73,6 +73,7 @@ func flowLogsCreate(ctx context.Context, st composed.State) (error, context.Cont
 		params,
 		nil))(ctx, nil)
 	if err != nil {
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error creating network flow logs: %s", err.Error()), state.ObjAsRuntime().Generation)
 		return azuremeta.LogErrorAndReturn(err, "Error creating flow log", ctx)
 	}
 

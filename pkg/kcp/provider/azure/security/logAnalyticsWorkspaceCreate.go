@@ -33,16 +33,24 @@ func logAnalyticsWorkspaceCreate(ctx context.Context, st composed.State) (error,
 			tagKymaRuntimeId: new(state.ObjAsRuntime().Name),
 			tagKymaShootName: new(state.shootName()),
 		},
+		Properties: &armoperationalinsights.WorkspaceProperties{
+			SKU: &armoperationalinsights.WorkspaceSKU{
+				Name: new(armoperationalinsights.WorkspaceSKUNameEnumPerGB2018),
+			},
+		},
 	}
 
-	_, err := azureclient.PollUntilDone(state.azureClient.CreateOrUpdateLogAnalyticsWorkspace(ctx,
+	resp, err := azureclient.PollUntilDone(state.azureClient.CreateOrUpdateLogAnalyticsWorkspace(ctx,
 		state.resourceGroupDataName(),
 		workspaceName,
 		params,
 		nil))(ctx, nil)
 	if err != nil {
+		logger.Error(err, "Failed to create log analytics workspace", "workspaceParams", params)
 		return azuremeta.LogErrorAndReturn(err, "Error creating log analytics workspace", ctx)
 	}
 
-	return composed.StopWithRequeue, ctx
+	state.logAnalyticsWorkspace = &resp.Workspace
+
+	return nil, ctx
 }

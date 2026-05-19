@@ -2,6 +2,7 @@ package security
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -22,6 +23,7 @@ func securityPricingLoad(ctx context.Context, st composed.State) (error, context
 		&armsecurity.PricingsClientListOptions{},
 	)
 	if err != nil {
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error loading defender security pricings: %s", err.Error()), state.ObjAsRuntime().Generation)
 		return composed.LogErrorAndReturn(err, "Err loading Azure security pricings", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 

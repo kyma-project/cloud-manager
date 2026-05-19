@@ -12,5 +12,8 @@ const (
 )
 
 const (
-	AnnotationRuntimeHandled = "cloud-manager.kyma-project.io/runtime-handled"
+	RuntimeSecurityStatusAnnotation             = "cloud-manager.kyma-project.io/security-status"
+	RuntimeSecurityMessageAnnotation            = "cloud-manager.kyma-project.io/security-message"
+	RuntimeSecurityObservedGenerationAnnotation = "cloud-manager.kyma-project.io/security-observed-generation"
+	RuntimeSecurityLastReconcileTime            = "cloud-manager.kyma-project.io/security-last-reconcile-time"
 )

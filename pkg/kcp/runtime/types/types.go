@@ -15,8 +15,19 @@ type State interface {
 	VpcNetwork() *cloudcontrolv1beta1.VpcNetwork
 
 	SecurityServiceEnabledOnSubscription() bool
-	SecurityDataSourceEnabledOnRuntime() bool
-
 	SecurityServiceEnabledOnSubscriptionPredicate(ctx context.Context, st composed.State) bool
+
+	SecurityDataSourceEnabledOnRuntime() bool
 	SecurityDataSourceEnabledOnRuntimePredicate(ctx context.Context, st composed.State) bool
+
+	PatchStatusAnnotations(ctx context.Context, newStatus, newMessage string, observedGeneration int64) (error, context.Context)
+
+	SecurityDesiredState() SecurityDesiredState
+}
+
+type SecurityDesiredState interface {
+	RuntimeId() string
+	SubscriptionId() string
+	EnabledOnRuntime() bool
+	EnabledOnSubscription() bool
 }

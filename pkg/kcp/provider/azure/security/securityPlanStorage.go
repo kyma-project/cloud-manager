@@ -2,25 +2,23 @@ package security
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/utils/ptr"
 )
 
-var storageRequiredExtensions = []armsecurity.Extension{
-	{
-		Name:      new("OnUploadMalwareScanning"),
-		IsEnabled: new(armsecurity.IsEnabledTrue),
-		AdditionalExtensionProperties: map[string]any{
-			"CapGBPerMonthPerStorageAccount": "10000",
+var storagePlan = PlanSpec{
+	PlanName: "StorageAccounts",
+	SubPlan:  "DefenderForStorageV2",
+	RequiredExtensions: []ExtensionSpec{
+		{
+			Name:                          "OnUploadMalwareScanning",
+			AdditionalExtensionProperties: map[string]any{"CapGBPerMonthPerStorageAccount": "10000"},
 		},
-	},
-	{
-		Name:      new("SensitiveDataDiscovery"),
-		IsEnabled: new(armsecurity.IsEnabledTrue),
+		{Name: "SensitiveDataDiscovery"},
 	},
 }
 
@@ -28,8 +26,6 @@ func securityPlanStorage(ctx context.Context, st composed.State) (error, context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	planName := "StorageAccounts"
-	subPlan := "DefenderForStorageV2"
 	targetTier := armsecurity.PricingTierFree
 	if state.SecurityServiceEnabledOnSubscription() {
 		targetTier = armsecurity.PricingTierStandard
@@ -37,45 +33,33 @@ func securityPlanStorage(ctx context.Context, st composed.State) (error, context
 
 	var currentPricing *armsecurity.Pricing
 	for _, p := range state.loadedSecurityPricing {
-		if p.Name != nil && *p.Name == planName {
+		if p.Name != nil && *p.Name == storagePlan.PlanName {
 			currentPricing = p
 			break
 		}
 	}
 
-	if currentPricing != nil &&
-		currentPricing.Properties != nil &&
-		currentPricing.Properties.PricingTier != nil &&
-		*currentPricing.Properties.PricingTier == targetTier {
-		if targetTier == armsecurity.PricingTierFree {
-			return nil, ctx
-		}
-		if currentPricing.Properties.SubPlan != nil &&
-			*currentPricing.Properties.SubPlan == subPlan &&
-			hasAllExtensionsEnabled(currentPricing.Properties.Extensions, storageRequiredExtensions) {
-			return nil, ctx
-		}
+	if !storagePlan.NeedsUpdate(currentPricing, targetTier) {
+		return nil, ctx
 	}
 
 	scopeId := azureutil.NewSubscriptionResourceId(
 		state.Subscription().Status.SubscriptionInfo.Azure.SubscriptionId,
 	).String()
 
-	pricing := armsecurity.Pricing{
-		Properties: &armsecurity.PricingProperties{
-			PricingTier: &targetTier,
-		},
-	}
-	if targetTier == armsecurity.PricingTierStandard {
-		pricing.Properties.SubPlan = ptr.To(subPlan)
-		pricing.Properties.Extensions = toExtensionPointers(storageRequiredExtensions)
-	}
+	pricing := storagePlan.BuildPricing(targetTier)
 
-	_, err := state.azureClient.UpdateSecurityPricing(ctx, scopeId, planName, pricing, nil)
+	logger.Info("Updating StorageAccounts security pricing", "currentPricing", currentPricing, "updatePricing", pricing)
+
+	resp, err := state.azureClient.UpdateSecurityPricing(ctx, scopeId, storagePlan.PlanName, pricing, nil)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating StorageAccounts security pricing", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error updating defender security pricing Storage: %s", err.Error()), state.ObjAsRuntime().Generation)
+		return composed.LogErrorAndReturn(err, "Error updating StorageAccounts security pricing", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
+	}
+	if extErr := storagePlan.extensionErrors(resp); extErr != nil {
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error enabling defender security pricing Storage extensions: %s", extErr.Error()), state.ObjAsRuntime().Generation)
+		return composed.LogErrorAndReturn(extErr, "Error enabling StorageAccounts security pricing extensions", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
 	}
 
-	logger.Info("Updated StorageAccounts security pricing", "tier", targetTier, "subPlan", subPlan)
 	return nil, ctx
 }

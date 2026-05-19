@@ -2,41 +2,30 @@ package security
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-var defenderCSPMRequiredExtensions = []armsecurity.Extension{
-	{
-		Name:      new("SensitiveDataDiscovery"),
-		IsEnabled: new(armsecurity.IsEnabledTrue),
+var defenderCSPMPlan = PlanSpec{
+	PlanName: "CloudPosture",
+	RequiredExtensions: []ExtensionSpec{
+		{Name: "SensitiveDataDiscovery"},
+		{
+			Name:                          "AgentlessVmScanning",
+			AdditionalExtensionProperties: map[string]any{"ExclusionTags": "[]"},
+		},
+		{Name: "EntraPermissionsManagement"},
+		{Name: "ApiPosture"},
 	},
-	{
-		Name:      new("ContainerRegistriesVulnerabilityAssessments"),
-		IsEnabled: new(armsecurity.IsEnabledTrue),
-	},
-	{
-		Name:      new("AgentlessDiscoveryForKubernetes"),
-		IsEnabled: new(armsecurity.IsEnabledTrue),
-	},
-	{
-		Name:      new("AgentlessVmScanning"),
-		IsEnabled: new(armsecurity.IsEnabledTrue),
-	},
-	{
-		Name:      new("EntraPermissionsManagement"),
-		IsEnabled: new(armsecurity.IsEnabledTrue),
-	},
-	{
-		Name:      new("ApiPosture"),
-		IsEnabled: new(armsecurity.IsEnabledTrue),
-	},
-	{
-		Name:      new("AgentlessServerlessPosture"),
-		IsEnabled: new(armsecurity.IsEnabledTrue),
+	DisabledExtensions: []string{
+		"ContainerRegistriesVulnerabilityAssessments",
+		"AgentlessDiscoveryForKubernetes",
+		"AgentlessServerlessPosture",
+		"DatabricksSecurityPosture",
 	},
 }
 
@@ -44,7 +33,6 @@ func securityPlanDefenderCSPM(ctx context.Context, st composed.State) (error, co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	planName := "CloudPosture"
 	targetTier := armsecurity.PricingTierFree
 	if state.SecurityServiceEnabledOnSubscription() {
 		targetTier = armsecurity.PricingTierStandard
@@ -52,42 +40,33 @@ func securityPlanDefenderCSPM(ctx context.Context, st composed.State) (error, co
 
 	var currentPricing *armsecurity.Pricing
 	for _, p := range state.loadedSecurityPricing {
-		if p.Name != nil && *p.Name == planName {
+		if p.Name != nil && *p.Name == defenderCSPMPlan.PlanName {
 			currentPricing = p
 			break
 		}
 	}
 
-	if currentPricing != nil &&
-		currentPricing.Properties != nil &&
-		currentPricing.Properties.PricingTier != nil &&
-		*currentPricing.Properties.PricingTier == targetTier {
-		if targetTier == armsecurity.PricingTierFree {
-			return nil, ctx
-		}
-		if hasAllExtensionsEnabled(currentPricing.Properties.Extensions, defenderCSPMRequiredExtensions) {
-			return nil, ctx
-		}
+	if !defenderCSPMPlan.NeedsUpdate(currentPricing, targetTier) {
+		return nil, ctx
 	}
 
 	scopeId := azureutil.NewSubscriptionResourceId(
 		state.Subscription().Status.SubscriptionInfo.Azure.SubscriptionId,
 	).String()
 
-	pricing := armsecurity.Pricing{
-		Properties: &armsecurity.PricingProperties{
-			PricingTier: &targetTier,
-		},
-	}
-	if targetTier == armsecurity.PricingTierStandard {
-		pricing.Properties.Extensions = toExtensionPointers(defenderCSPMRequiredExtensions)
-	}
+	pricing := defenderCSPMPlan.BuildPricing(targetTier)
 
-	_, err := state.azureClient.UpdateSecurityPricing(ctx, scopeId, planName, pricing, nil)
+	logger.Info("Updating CloudPosture security pricing", "currentPricing", currentPricing, "updatePricing", pricing)
+
+	resp, err := state.azureClient.UpdateSecurityPricing(ctx, scopeId, defenderCSPMPlan.PlanName, pricing, nil)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating CloudPosture security pricing", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error updating defender security pricing CSPM: %s", err.Error()), state.ObjAsRuntime().Generation)
+		return composed.LogErrorAndReturn(err, "Error updating CloudPosture security pricing", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
+	}
+	if extErr := defenderCSPMPlan.extensionErrors(resp); extErr != nil {
+		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error enabling defender security pricing CSPM extensions: %s", extErr.Error()), state.ObjAsRuntime().Generation)
+		return composed.LogErrorAndReturn(extErr, "Error enabling CloudPosture security pricing extensions", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
 	}
 
-	logger.Info("Updated CloudPosture security pricing", "tier", targetTier)
 	return nil, ctx
 }

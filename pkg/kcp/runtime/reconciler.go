@@ -64,15 +64,40 @@ func (r *runtimeReconciler) newState(ns types.NamespacedName) *State {
 }
 
 func (r *runtimeReconciler) newAction() composed.Action {
+	// provider flow:
+	// - guarded by a gate that keeps track of the last desired state and prevents repeated runs for the same
+	// - branches into specific providers that turn security on/off for runtime and subscription
+	// - on success
+	//   - record successful cloud reconciliation for current desired state with the gate
+	//   - sets runtime status annotations
+	providerFlow := composed.If(
+		defaultSecurityGate.ShouldRunPredicate,
+		composed.ComposeActionsNoName(
+			func(ctx context.Context, _ composed.State) (error, context.Context) {
+				composed.LoggerFromCtx(ctx).Info("Provider flow...")
+				return nil, ctx
+			},
+			composed.Switch(
+				nil,
+				composed.NewCase(awsProviderPredicate, awssecurity.New(r.awsStateFactory)),
+				composed.NewCase(azureProviderPredicate, azuresecurity.New(r.azureStateFactory)),
+				composed.NewCase(gcpProviderPredicate, gcpsecurity.New(r.gcpStateFactory)),
+			),
+			statusReady,
+		),
+	)
+
 	return composed.ComposeActionsNoName(
 		feature.LoadFeatureContextFromObj(&infrastructuremanagerv1.Runtime{}),
 		composed.LoadObj,
+		//statusProcessing,
 		subscriptionLoad,
 		vpcNetworkLoad,
-		runtimesLoadAllInSubscription,
+		securityEnabledDetermine,
 		composed.If(
 			// delete =======================================
 			composed.MarkedForDeletionPredicate,
+			providerFlow,
 			vpcNetworkDelete,
 			composed.StopAndForgetAction,
 		),
@@ -81,24 +106,9 @@ func (r *runtimeReconciler) newAction() composed.Action {
 			composed.NotMarkedForDeletionPredicate,
 			subscriptionCreate,
 			vpcNetworkCreate,
-			securityEnabledDetermine,
-			composed.If(
-				predicateSecurityIsCool,
-				func(ctx context.Context, _ composed.State) (error, context.Context) {
-					composed.LoggerFromCtx(ctx).Info("Security is cool, reconciling security resources")
-					return nil, ctx
-				},
-				subscriptionWaitReady,
-				vpcNetworkWaitReady,
-				composed.Switch(
-					nil,
-					composed.NewCase(awsProviderPredicate, awssecurity.New(r.awsStateFactory)),
-					composed.NewCase(azureProviderPredicate, azuresecurity.New(r.azureStateFactory)),
-					composed.NewCase(gcpProviderPredicate, gcpsecurity.New(r.gcpStateFactory)),
-				),
-				securityMarkHasRun,
-			),
-			runtimeAddHandledAnnotation,
+			subscriptionWaitReady,
+			vpcNetworkWaitReady,
+			providerFlow,
 			composed.StopAndForgetAction,
 		),
 	)

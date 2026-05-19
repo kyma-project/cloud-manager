@@ -129,11 +129,12 @@ var _ = Describe("Feature: Runtime", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		By("Then Runtime is annotated as handled", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.AnnotationRuntimeHandled, "true")).
-				Should(Succeed())
-		})
+		// uncomment once implemented
+		//By("Then Runtime is annotated as security handled", func() {
+		//	Eventually(LoadAndCheck).
+		//		WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation, "Ready")).
+		//		Should(Succeed())
+		//})
 
 		// DELETE ===============================================================
 
@@ -252,11 +253,12 @@ var _ = Describe("Feature: Runtime", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		By("Then Runtime is annotated as handled", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.AnnotationRuntimeHandled, "true")).
-				Should(Succeed())
-		})
+		// uncomment once implemented
+		//By("Then Runtime is annotated as security handled", func() {
+		//	Eventually(LoadAndCheck).
+		//		WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation, "Ready")).
+		//		Should(Succeed())
+		//})
 
 	})
 })

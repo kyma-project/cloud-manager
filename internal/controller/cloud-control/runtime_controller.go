@@ -15,6 +15,7 @@ import (
 	kcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
 func SetupRuntimeReconciler(
@@ -68,5 +69,8 @@ func (r *RuntimeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manag
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrastructuremanagerv1.Runtime{}).
+		WithOptions(controller.Options{
+			MaxConcurrentReconciles: 10,
+		}).
 		Complete(r)
 }
