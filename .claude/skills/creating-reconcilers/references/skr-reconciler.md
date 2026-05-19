@@ -1,5 +1,14 @@
 # SKR Reconciler Patterns Reference
 
+Use this reference when:
+- The SKR resource creates and manages a corresponding KCP resource (1-1 binding)
+- The reconciler projects SKR spec → KCP spec and syncs KCP status → SKR status
+- The resource may also create local K8s objects (PV, PVC, Secrets)
+
+Do NOT use when the SKR resource has NO backing KCP resource — see `skr-only-pattern.md`
+
+---
+
 This document provides detailed patterns for SKR (cloud-resources) reconcilers.
 
 ## Overview
@@ -196,6 +205,7 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *reconciler) newAction() composed.Action {
     return composed.ComposeActionsNoName(
         feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.{Resource}{}),
+        composed.If(feature.ApiDisabledPredicate, composed.StopAndForgetAction),
         composed.LoadObj,
         loadKcp{Resource},
 
@@ -402,7 +412,7 @@ func deleteKcp{Resource}(ctx context.Context, st composed.State) (error, context
     logger.Info("KCP {Resource} deleted")
 
     // Requeue to verify deletion
-    return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
+    return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 }
 ```
 

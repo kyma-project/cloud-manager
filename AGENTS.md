@@ -13,30 +13,15 @@ Execution flow: User creates SKR resource → SKR reconciler creates KCP resourc
 
 ## Before You Start Any Implementation
 
-**Creating or modifying a reconciler?** Invoke `/composed-action` before writing code.  
+**Creating or modifying a reconciler?** Invoke `/creating-reconcilers` before writing code.
 **Writing tests?** Invoke `/testing-cloud-manager-code` before writing code.
 
 ## Skills
 
 | Skill | Use When |
 |-------|---------|
-| `/composed-action` | Creating KCP/SKR reconcilers, adding providers, action pipelines, state factories |
+| `/creating-reconcilers` | Creating KCP/SKR reconcilers, adding providers, action pipelines, state factories |
 | `/testing-cloud-manager-code` | Writing controller, API validation, unit, or e2e tests; creating provider mocks |
-
-## Rules
-
-**Sequential actions**: Actions execute one at a time. Never in parallel.
-
-**Finalizer Law**: Every resource requiring deletion cleanup MUST have a finalizer. Remove the finalizer ONLY after deletion is fully confirmed. No exceptions: "simple resource", "no cloud API called" — if any cleanup is needed, a finalizer is required.
-
-**Feature flag check**: Every SKR reconciler MUST check `composed.If(feature.ApiDisabledPredicate, composed.StopAndForgetAction)` early in the action pipeline.
-
-**Injectable clock**: If a reconciler performs any time-based logic (scheduling, expiry, rate limiting), the state factory MUST accept `clock.Clock`. Use `clock.RealClock{}` in production, `clock.NewFakeClock()` in tests.
-
-**New CRDs**: Provider-specific names only (`GcpRedisCluster`, `AzureVNetLink`). Never multi-provider CRDs with provider subsections.
-
-**Legacy resources**: `RedisInstance`, `NfsInstance`, `IpRange` use the old multi-provider pattern. Maintain them as-is; do not replicate this pattern.
-
 ## Project Layout
 
 ```
