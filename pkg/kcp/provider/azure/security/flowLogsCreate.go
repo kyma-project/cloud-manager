@@ -41,11 +41,11 @@ func flowLogsCreate(ctx context.Context, st composed.State) (error, context.Cont
 	//		composed.StopWithRequeue, ctx)
 	//}
 
-	flowLogName := state.flowLogName()
+	flowLogName := FlowLogName(state.VpcNetwork())
 	logger.Info("Creating flow log", "name", flowLogName)
 
 	params := armnetwork.FlowLog{
-		Location: new(state.location()),
+		Location: new(state.ObjAsRuntime().Spec.Shoot.Region),
 		Properties: &armnetwork.FlowLogPropertiesFormat{
 			StorageID:        state.storageAccount.ID,
 			TargetResourceID: new(state.VpcNetwork().Status.Identifiers.Vpc),
@@ -67,8 +67,8 @@ func flowLogsCreate(ctx context.Context, st composed.State) (error, context.Cont
 	}
 
 	resp, err := azureclient.PollUntilDone(state.azureClient.CreateOrUpdateFlowLog(ctx,
-		state.resourceGroupWatcherName(),
-		state.networkWatcherName(),
+		ResourceGroupDataName(state.ObjAsRuntime().Spec.Shoot.Name),
+		NetworkWatcherName(state.ObjAsRuntime().Spec.Shoot.Region),
 		flowLogName,
 		params,
 		nil))(ctx, nil)

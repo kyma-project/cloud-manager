@@ -21,7 +21,7 @@ func storageAccountDelete(ctx context.Context, st composed.State) (error, contex
 	logger.Info("Deleting storage account", "name", accountName)
 
 	_, err := state.azureClient.DeleteStorageAccount(ctx,
-		state.resourceGroupDataName(),
+		ResourceGroupDataName(state.ObjAsRuntime().Spec.Shoot.Name),
 		accountName,
 		nil)
 	if azuremeta.IgnoreNotFoundError(err) != nil {

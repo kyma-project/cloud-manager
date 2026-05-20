@@ -19,7 +19,7 @@ func networkWatcherLoad(ctx context.Context, st composed.State) (error, context.
 	}
 
 	for _, w := range list {
-		if ptr.Deref(w.Location, "") == state.location() {
+		if ptr.Deref(w.Location, "") == state.ObjAsRuntime().Spec.Shoot.Region {
 			state.watcher = w
 			break
 		}

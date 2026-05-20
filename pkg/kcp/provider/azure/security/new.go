@@ -38,7 +38,7 @@ func New(sf StateFactory) composed.Action {
 				composed.ComposeActionsNoName(
 					flowLogsDelete,
 					storageAccountDelete,
-					// not deleting data resource group due to multiple runtimes in the same network
+					resourceGroupDataDelete,
 				),
 			),
 			// toggle security defender service on/off

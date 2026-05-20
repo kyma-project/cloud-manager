@@ -239,6 +239,7 @@ var _ = Describe("Feature: Runtime", func() {
 		By("When Runtime is created", func() {
 			runtime = infrastructuremanagerv1.NewSimpleRuntimeBuilder().
 				WithName(name).
+				WithProvider(cloudcontrolv1beta1.ProviderGCP).
 				WithShootName(shootName).
 				WithBindingName(secretBindingName).
 				WithVpcNetworkName(new(vpcNetworkName)).

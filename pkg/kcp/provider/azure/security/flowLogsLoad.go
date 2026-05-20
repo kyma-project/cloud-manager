@@ -16,9 +16,9 @@ func flowLogsLoad(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	resp, err := state.azureClient.GetFlowLog(ctx,
-		state.resourceGroupWatcherName(),
-		state.networkWatcherName(),
-		state.flowLogName(),
+		ResourceGroupDataName(state.ObjAsRuntime().Spec.Shoot.Name),
+		NetworkWatcherName(state.ObjAsRuntime().Spec.Shoot.Region),
+		FlowLogName(state.VpcNetwork()),
 		nil)
 	if azuremeta.IgnoreNotFoundError(err) != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error loading network flow logs: %s", err.Error()), state.ObjAsRuntime().Generation)

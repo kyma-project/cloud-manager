@@ -17,12 +17,12 @@ func flowLogsDelete(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, ctx
 	}
 
-	flowLogName := state.flowLogName()
+	flowLogName := FlowLogName(state.VpcNetwork())
 	logger.Info("Deleting flow log", "name", flowLogName)
 
 	_, err := azureclient.PollUntilDone(state.azureClient.DeleteFlowLog(ctx,
-		state.resourceGroupWatcherName(),
-		state.networkWatcherName(),
+		ResourceGroupDataName(state.ObjAsRuntime().Spec.Shoot.Name),
+		NetworkWatcherName(state.ObjAsRuntime().Spec.Shoot.Region),
 		flowLogName,
 		nil))(ctx, nil)
 	if azuremeta.IgnoreNotFoundError(err) != nil {

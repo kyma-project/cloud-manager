@@ -54,6 +54,7 @@ func (r *runtimeReconciler) Reconcile(ctx context.Context, request reconcile.Req
 
 	return composed.Handling().
 		WithMetrics("runtime", util.RequestObjToString(request)).
+		WithTracker(Tracker).
 		Handle(action(ctx, state))
 }
 
@@ -90,7 +91,6 @@ func (r *runtimeReconciler) newAction() composed.Action {
 	return composed.ComposeActionsNoName(
 		feature.LoadFeatureContextFromObj(&infrastructuremanagerv1.Runtime{}),
 		composed.LoadObj,
-		//statusProcessing,
 		subscriptionLoad,
 		vpcNetworkLoad,
 		securityEnabledDetermine,

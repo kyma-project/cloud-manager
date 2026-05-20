@@ -19,11 +19,11 @@ func resourceGroupDataCreate(ctx context.Context, st composed.State) (error, con
 	logger.Info("Creating security resource group")
 	tags := map[string]string{
 		tagKymaRuntimeId: state.ObjAsRuntime().Name,
-		tagKymaShootName: state.shootName(),
+		tagKymaShootName: state.ObjAsRuntime().Spec.Shoot.Name,
 	}
 	rg, err := state.azureClient.CreateResourceGroup(ctx,
-		state.resourceGroupDataName(),
-		state.location(),
+		ResourceGroupDataName(state.ObjAsRuntime().Spec.Shoot.Name),
+		state.ObjAsRuntime().Spec.Shoot.Region,
 		tags)
 	if err != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error creating data resource group: %s", err.Error()), state.ObjAsRuntime().Generation)

@@ -11,7 +11,7 @@ import (
 func resourceGroupWatcherLoad(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	rg, err := state.azureClient.GetResourceGroup(ctx, state.resourceGroupWatcherName())
+	rg, err := state.azureClient.GetResourceGroup(ctx, ResourceGroupWatcherName())
 	if azuremeta.IgnoreNotFoundError(err) != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error loading watcher resource group: %s", err.Error()), state.ObjAsRuntime().Generation)
 		return azuremeta.LogErrorAndReturn(err, "Error loading NetworkWatcherRG", ctx)

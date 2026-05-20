@@ -53,6 +53,7 @@ func (s *securityStore) UpdateSecurityPricing(ctx context.Context, scopeID strin
 	})
 
 	cpy := util.Must(util.Clone(&pricing))
+	cpy.Name = new(pricingName)
 	s.pricings = append(s.pricings, cpy)
 
 	result.Pricing = *cpy

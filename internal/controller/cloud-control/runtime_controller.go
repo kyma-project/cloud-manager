@@ -7,11 +7,11 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
-	awsruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/security"
+	awssecurity "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/security"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
-	azureruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security"
+	azuresecurity "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security"
 	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
-	gcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/security"
+	gcpsecurity "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/security"
 	kcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -26,9 +26,9 @@ func SetupRuntimeReconciler(
 	return NewRuntimeController(
 		kcpruntime.NewRuntimeReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr)),
-			awsruntime.NewStateFactory(),
-			azureruntime.NewStateFactory(azureClientProvider),
-			gcpruntime.NewStateFactory(),
+			awssecurity.NewStateFactory(),
+			azuresecurity.NewStateFactory(azureClientProvider),
+			gcpsecurity.NewStateFactory(),
 		),
 	).SetupWithManager(ctx, mgr)
 }

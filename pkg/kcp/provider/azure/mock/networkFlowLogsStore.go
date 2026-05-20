@@ -56,7 +56,7 @@ func (s *networkFlowLogsStore) ListNetworkWatchers(ctx context.Context) ([]*armn
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	result := make([]*armnetwork.Watcher, len(s.watchers))
+	result := make([]*armnetwork.Watcher, 0, len(s.watchers))
 	for _, watcher := range s.watchers {
 		result = append(result, util.Must(util.Clone(watcher)))
 	}

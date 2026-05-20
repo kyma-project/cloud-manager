@@ -22,8 +22,8 @@ func NewSimpleRuntimeBuilder() *SimpleRuntimeBuilder {
 					cloudcontrolv1beta1.LabelScopeSubaccountId:    "f6d42db7-1195-4ff5-9787-0edb471c75cb",
 					cloudcontrolv1beta1.LabelScopeShootName:       shootName,
 					cloudcontrolv1beta1.LabelKymaName:             name,
-					cloudcontrolv1beta1.LabelScopeBrokerPlanName:  "aws",
-					cloudcontrolv1beta1.LabelScopeRegion:          "eu-west-1",
+					//cloudcontrolv1beta1.LabelScopeBrokerPlanName:  "aws", // required!!!
+					cloudcontrolv1beta1.LabelScopeRegion: "eu-west-1",
 				},
 			},
 			Spec: RuntimeSpec{
@@ -37,7 +37,7 @@ func NewSimpleRuntimeBuilder() *SimpleRuntimeBuilder {
 						Nodes: "10.250.0.0/16",
 					},
 					Provider: Provider{
-						Type: "aws", // required!!!
+						//Type: "aws", // required!!!
 						Workers: []gardenertypes.Worker{
 							{
 								Name: "worker1",
@@ -62,6 +62,9 @@ type SimpleRuntimeBuilder struct {
 }
 
 func (b *SimpleRuntimeBuilder) Build() *Runtime {
+	if b.Obj.Spec.Shoot.Provider.Type == "" {
+		panic("SimpleRuntimeBuilder - Provider must be set")
+	}
 	return b.Obj
 }
 

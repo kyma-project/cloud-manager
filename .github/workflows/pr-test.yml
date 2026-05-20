@@ -25,6 +25,9 @@ jobs:
             gcpBackupV2: "false"
             gcpNfsRestoreV2: "false"
             backupScheduleV2: "false"
+            runtimeSecurityAws: "false"
+            runtimeSecurityAzure: "false"
+            runtimeSecurityGcp: "false"
           - name: Build & Test (Nuke Backups, NFSv4.1, Peering Sync, Gcp IP Range v3)
             nukeBackupsGcp: "true"
             nukeBackupsAws: "true"
@@ -36,6 +39,9 @@ jobs:
             gcpBackupV2: "true"
             gcpNfsRestoreV2: "true"
             backupScheduleV2: "true"
+            runtimeSecurityAws: "true"
+            runtimeSecurityAzure: "true"
+            runtimeSecurityGcp: "true"
     runs-on: ubuntu-latest
     name: ${{ matrix.name }}
     steps:
@@ -59,8 +65,12 @@ jobs:
           FF_GCP_BACKUP_V2: ${{ matrix.gcpBackupV2 }}
           FF_GCP_NFS_RESTORE_V2: ${{ matrix.gcpNfsRestoreV2 }}
           FF_BACKUP_SCHEDULE_V2: ${{ matrix.backupScheduleV2 }}
+          FF_RUNTIME_SECURITY_AWS: ${{ matrix.runtimeSecurityAws }}
+          FF_RUNTIME_SECURITY_AZURE: ${{ matrix.runtimeSecurityAzure }}
+          FF_RUNTIME_SECURITY_GCP: ${{ matrix.runtimeSecurityGcp }}
         run: |
           ./config/sync.sh
+          ./docs/contributor/permissions/sort.sh
           go mod tidy
           go mod download
           make build

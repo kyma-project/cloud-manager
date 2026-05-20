@@ -11,7 +11,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	runtimetypes "github.com/kyma-project/cloud-manager/pkg/kcp/runtime/types"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type testRuntimeState struct {
@@ -58,22 +57,6 @@ func (s *testRuntimeState) SecurityDesiredState() runtimetypes.SecurityDesiredSt
 
 func TestState(t *testing.T) {
 
-	newStateWithRuntime := func(shootName string) *State {
-		rt := &infrastructuremanagerv1.Runtime{
-			Spec: infrastructuremanagerv1.RuntimeSpec{
-				Shoot: infrastructuremanagerv1.RuntimeShoot{
-					Name: shootName,
-				},
-			},
-		}
-		st := &State{
-			State: &testRuntimeState{
-				State: composed.NewStateFactory(nil).NewState(client.ObjectKeyFromObject(rt), rt),
-			},
-		}
-		return st
-	}
-
 	t.Run("storageAccountBaseName", func(t *testing.T) {
 		testCases := []struct {
 			shoot    string
@@ -96,8 +79,7 @@ func TestState(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.shoot, func(t *testing.T) {
-				st := newStateWithRuntime(tc.shoot)
-				actual := st.storageAccountBaseName()
+				actual := storageAccountBaseName(tc.shoot)
 				assert.Equal(t, tc.expected, actual)
 			})
 
@@ -126,16 +108,14 @@ func TestState(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.shoot, func(t *testing.T) {
-				st := newStateWithRuntime(tc.shoot)
-
 				// first attempt doesn't have random suffix and equals to base name
-				actual := st.storageAccountNameAttempt(0)
+				actual := StorageAccountNameAttempt(0, tc.shoot)
 				assert.True(t, strings.HasPrefix(actual, tc.prefix))
 				assert.LessOrEqual(t, len(actual), maxStorageAccountNameLength-5)
-				assert.Equal(t, st.storageAccountBaseName(), actual)
+				assert.Equal(t, storageAccountBaseName(tc.shoot), actual)
 
 				// second attempt has random suffix, and base name is the prefix
-				actual = st.storageAccountNameAttempt(1)
+				actual = StorageAccountNameAttempt(1, tc.shoot)
 				assert.True(t, strings.HasPrefix(actual, tc.prefix))
 				assert.LessOrEqual(t, len(actual), maxStorageAccountNameLength)
 			})

@@ -3,8 +3,6 @@ package cloudcontrol
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
@@ -13,13 +11,15 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
-	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
+	azuresecurity "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	kcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/runtime"
 	kcpsubscription "github.com/kyma-project/cloud-manager/pkg/kcp/subscription"
 	kcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -162,6 +162,14 @@ var _ = Describe("Feature: Runtime", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
+		By("Then Runtime is successfully reconciled", func() {
+			// Runtime is not owned by CloudManager, and it does not write its conditions
+			// so there's no way to observe the reconciliation progress other than with Tracker
+			Eventually(kcpruntime.Tracker.IsReconciledWith).
+				WithArguments(runtime.Name, composed.ReconciliationLabelSuccess).
+				Should(Succeed())
+		})
+
 		var azureWatcherResourceGroup *armresources.ResourceGroup
 		var azureDataResourceGroup *armresources.ResourceGroup
 		var azureWatcher *armnetwork.Watcher
@@ -176,10 +184,10 @@ var _ = Describe("Feature: Runtime", func() {
 		_ = azureFlowLog
 		_ = azureSecurityPricings
 
-		azureNetworkWatcherResourceGroupName := "NetworkWatcherRG"
-		azureDataResourceGroupName := fmt.Sprintf("kyma-security-%s", shootName)
-		azureNetworkWatcherName := fmt.Sprintf("NetworkWatcher_%s", runtime.Spec.Shoot.Region)
-		azureStorageAccountName := "kymasec" + regexp.MustCompile(`[^a-z0-9]`).ReplaceAllString(strings.ToLower(shootName), "")
+		azureNetworkWatcherResourceGroupName := azuresecurity.ResourceGroupWatcherName()
+		azureDataResourceGroupName := azuresecurity.ResourceGroupDataName(shootName)
+		azureNetworkWatcherName := azuresecurity.NetworkWatcherName(runtime.Spec.Shoot.Region)
+		azureStorageAccountName := azuresecurity.StorageAccountNameAttempt(0, shootName)
 
 		if feature.RuntimeSecurityAzure.Value(infra.Ctx()) {
 
@@ -192,8 +200,20 @@ var _ = Describe("Feature: Runtime", func() {
 			By("When Runtime security is enabled", func() {
 				Expect(LoadAndCheck(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions())).
 					To(Succeed())
+
+				// reset the tracker so next reconciliation can be tracked
+				kcpruntime.Tracker.Clear(runtime.Name)
+
 				_, err := composed.PatchObjMergeLabel(infra.Ctx(), runtime, infra.KCP().Client(), common.TmpRuntimeSecurityEnabledLabel, "true")
 				Expect(err).NotTo(HaveOccurred())
+			})
+
+			By("Then Runtime is successfully reconciled", func() {
+				// Runtime is not owned by CloudManager, and it does not write its conditions
+				// so there's no way to observe the reconciliation progress other than with Tracker
+				Eventually(kcpruntime.Tracker.IsReconciledWith).
+					WithArguments(runtime.Name, composed.ReconciliationLabelSuccess).
+					Should(Succeed())
 			})
 
 			By("Then Azure security watcher resource group is created", func() {
@@ -326,7 +346,7 @@ var _ = Describe("Feature: Runtime", func() {
 					if azuremeta.IsNotFound(err) {
 						return nil
 					}
-					return fmt.Errorf("flow log still exists")
+					return fmt.Errorf("flow log %s/%s/%s still exists", azureDataResourceGroupName, azureNetworkWatcherName, gardenerVpcName)
 				}).
 					Should(Succeed())
 			})
@@ -337,12 +357,38 @@ var _ = Describe("Feature: Runtime", func() {
 					if azuremeta.IsNotFound(err) {
 						return nil
 					}
-					return fmt.Errorf("storage account still exists")
+					return fmt.Errorf("storage account %s/%s still exists", azureDataResourceGroupName, azureStorageAccountName)
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure data resource group does not exist", func() {
+				Eventually(func() error {
+					_, err := azureMock.GetResourceGroup(infra.Ctx(), azureDataResourceGroupName)
+					if azuremeta.IsNotFound(err) {
+						return nil
+					}
+					return fmt.Errorf("data resource group %s still exists", azureDataResourceGroupName)
 				}).
 					Should(Succeed())
 			})
 
 		} // if security feature enabled for Azure
+
+		By("When Runtime finalizer is removed", func() {
+			// Runtime is not owned by CloudManager so it doesn't remove the finalizer,
+			// so we're manually removing the finalizer
+			_, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, runtime, infra.KCP().Client())
+			Expect(err).NotTo(HaveOccurred())
+			Expect(IsDeleted(infra.Ctx(), infra.KCP().Client(), runtime)).
+				To(Succeed())
+		})
+
+		By("Then Runtime does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), runtime).
+				Should(Succeed())
+		})
 
 		By("Then VpcNetwork is deleted", func() {
 			Eventually(IsDeleted).
@@ -350,7 +396,7 @@ var _ = Describe("Feature: Runtime", func() {
 				Should(Succeed())
 		})
 
-		By("And Then Subscription is not deleted", func() {
+		By("Then Subscription is not deleted", func() {
 			Expect(LoadAndCheck(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions())).
 				To(Succeed())
 			Expect(subscription.DeletionTimestamp).To(BeNil(), "subscription should not be marked for deletion")
@@ -363,12 +409,6 @@ var _ = Describe("Feature: Runtime", func() {
 				To(Succeed())
 		})
 
-		By("// cleanup: delete Runtime", func() {
-			_, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, runtime, infra.KCP().Client())
-			Expect(err).NotTo(HaveOccurred())
-			Expect(IsDeleted(infra.Ctx(), infra.KCP().Client(), runtime)).
-				To(Succeed())
-		})
 	})
 
 	// Kyma network type ==========================================================================================
@@ -379,21 +419,16 @@ var _ = Describe("Feature: Runtime", func() {
 		secretBindingName := "secret-binding-90719296e8d0"
 		vpcNetworkName := "1b5c64ba-8593-4bad-a242-ae78594227dd"
 
+		kymaVpcNetworkName := common.KymaVpcName(vpcNetworkName)
+
 		var runtime *infrastructuremanagerv1.Runtime
 		subscription := &cloudcontrolv1beta1.Subscription{}
 		vpcNetwork := &cloudcontrolv1beta1.VpcNetwork{}
 
-		gardenerVpcName := (func() string {
-			ns, err := commongardener.DefaultGardenerNamespaceProvider().GetGardenerNamespace(infra.Ctx(), infra.KCP().Client())
-			Expect(err).NotTo(HaveOccurred())
-			return common.GardenerVpcName(ns, shootName)
-		})()
-
-		azureResourceGroup := gardenerVpcName
-		azureVpcNetworkId := "vpc-4b1ef0df0d4d"
-
 		kcpsubscription.Ignore.AddName(secretBindingName)
 		kcpvpcnetwork.Ignore.AddName(vpcNetworkName)
+
+		region := "westeurope"
 
 		azureMock := infra.AzureMock().NewSubscription()
 
@@ -430,18 +465,31 @@ var _ = Describe("Feature: Runtime", func() {
 				WithType(cloudcontrolv1beta1.VpcNetworkTypeKyma).
 				WithCidrBlocks("10.250.0.0/16").
 				WithSubscription(subscription.Name).
-				WithRegion("westeurope").
+				WithRegion(region).
 				Build()
 
 			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), vpcNetwork)).
 				To(Succeed())
 
-			err := composed.NewStatusPatcher(vpcNetwork).
+			rg, err := azureMock.CreateResourceGroup(infra.Ctx(), kymaVpcNetworkName, region, map[string]string{})
+			Expect(err).NotTo(HaveOccurred())
+
+			net, err := azureclient.PollUntilDone(azureMock.CreateOrUpdateNetwork(infra.Ctx(), kymaVpcNetworkName, kymaVpcNetworkName, armnetwork.VirtualNetwork{
+				Location: new(region),
+				Properties: &armnetwork.VirtualNetworkPropertiesFormat{
+					AddressSpace: &armnetwork.AddressSpace{
+						AddressPrefixes: []*string{new("10.250.0.0/16")},
+					},
+				},
+			}, nil))(infra.Ctx(), nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = composed.NewStatusPatcher(vpcNetwork).
 				MutateStatus(func(n *cloudcontrolv1beta1.VpcNetwork) {
 					n.SetStatusProvisioned()
-					n.Status.Identifiers.Name = common.KymaVpcName(vpcNetwork.Name)
-					n.Status.Identifiers.Vpc = azureVpcNetworkId
-					n.Status.Identifiers.ResourceGroup = azureResourceGroup
+					n.Status.Identifiers.Name = kymaVpcNetworkName
+					n.Status.Identifiers.Vpc = ptr.Deref(net.ID, "")
+					n.Status.Identifiers.ResourceGroup = ptr.Deref(rg.ID, "")
 				}).
 				Patch(infra.Ctx(), infra.KCP().Client())
 			Expect(err).NotTo(HaveOccurred())
@@ -450,6 +498,7 @@ var _ = Describe("Feature: Runtime", func() {
 		By("When Runtime is created", func() {
 			runtime = infrastructuremanagerv1.NewSimpleRuntimeBuilder().
 				WithName(name).
+				WithProvider(cloudcontrolv1beta1.ProviderAzure).
 				WithShootName(shootName).
 				WithBindingName(secretBindingName).
 				WithVpcNetworkName(new(vpcNetworkName)).
@@ -462,6 +511,33 @@ var _ = Describe("Feature: Runtime", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
+		By("Then Runtime is successfully reconciled", func() {
+			// Runtime is not owned by CloudManager, and it does not write its conditions
+			// so there's no way to observe the reconciliation progress other than with Tracker
+			Eventually(kcpruntime.Tracker.IsReconciledWith).
+				WithArguments(runtime.Name, composed.ReconciliationLabelSuccess).
+				Should(Succeed())
+		})
+
+		var azureWatcherResourceGroup *armresources.ResourceGroup
+		var azureDataResourceGroup *armresources.ResourceGroup
+		var azureWatcher *armnetwork.Watcher
+		var azureStorageAccount *armstorage.Account
+		var azureFlowLog *armnetwork.FlowLog
+		var azureSecurityPricings []*armsecurity.Pricing
+
+		_ = azureWatcherResourceGroup
+		_ = azureDataResourceGroup
+		_ = azureWatcher
+		_ = azureStorageAccount
+		_ = azureFlowLog
+		_ = azureSecurityPricings
+
+		azureNetworkWatcherResourceGroupName := azuresecurity.ResourceGroupWatcherName()
+		azureDataResourceGroupName := azuresecurity.ResourceGroupDataName(shootName)
+		azureNetworkWatcherName := azuresecurity.NetworkWatcherName(runtime.Spec.Shoot.Region)
+		azureStorageAccountName := azuresecurity.StorageAccountNameAttempt(0, shootName)
+
 		if feature.RuntimeSecurityAzure.Value(infra.Ctx()) {
 
 			By("Then Runtime is annotated as security handled", func() {
@@ -470,7 +546,209 @@ var _ = Describe("Feature: Runtime", func() {
 					Should(Succeed())
 			})
 
-		} // if security feature is enabled for Azure
+			By("When Runtime security is enabled", func() {
+				Expect(LoadAndCheck(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions())).
+					To(Succeed())
+
+				// reset the tracker so next reconciliation can be tracked
+				kcpruntime.Tracker.Clear(runtime.Name)
+
+				_, err := composed.PatchObjMergeLabel(infra.Ctx(), runtime, infra.KCP().Client(), common.TmpRuntimeSecurityEnabledLabel, "true")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			By("Then Runtime is successfully reconciled", func() {
+				// Runtime is not owned by CloudManager, and it does not write its conditions
+				// so there's no way to observe the reconciliation progress other than with Tracker
+				Eventually(kcpruntime.Tracker.IsReconciledWith).
+					WithArguments(runtime.Name, composed.ReconciliationLabelSuccess).
+					Should(Succeed())
+			})
+
+			By("Then Azure security watcher resource group is created", func() {
+				Eventually(func() error {
+					rg, err := azureMock.GetResourceGroup(infra.Ctx(), azureNetworkWatcherResourceGroupName)
+					if err != nil {
+						return err
+					}
+					if rg == nil {
+						return fmt.Errorf("resource group %q does not exist", azureNetworkWatcherResourceGroupName)
+					}
+					azureWatcherResourceGroup = rg
+					return nil
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure security data resource group is created", func() {
+				Eventually(func() error {
+					rg, err := azureMock.GetResourceGroup(infra.Ctx(), azureDataResourceGroupName)
+					if err != nil {
+						return err
+					}
+					if rg == nil {
+						return fmt.Errorf("resource group %q does not exist", azureDataResourceGroupName)
+					}
+					azureDataResourceGroup = rg
+					return nil
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure network watcher is created", func() {
+				Eventually(func() error {
+					resp, err := azureMock.GetNetworkWatcher(infra.Ctx(), azureNetworkWatcherResourceGroupName, azureNetworkWatcherName)
+					if err != nil {
+						return err
+					}
+					azureWatcher = &resp.Watcher
+					return nil
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure storage account is created", func() {
+				Eventually(func() error {
+					resp, err := azureMock.GetStorageAccount(infra.Ctx(), azureDataResourceGroupName, azureStorageAccountName, nil)
+					if err != nil {
+						return err
+					}
+					azureStorageAccount = &resp.Account
+					return nil
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure flow log is created", func() {
+				Eventually(func() error {
+					resp, err := azureMock.GetFlowLog(infra.Ctx(), azureDataResourceGroupName, azureNetworkWatcherName, kymaVpcNetworkName, nil)
+					if err != nil {
+						return err
+					}
+					azureFlowLog = &resp.FlowLog
+					return nil
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender CSPM is on", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "CloudPosture", armsecurity.PricingTierStandard).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Servers is on", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "VirtualMachines", armsecurity.PricingTierStandard).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Storage is on", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "StorageAccounts", armsecurity.PricingTierStandard).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Arm is on", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "Arm", armsecurity.PricingTierStandard).
+					Should(Succeed())
+			})
+		}
+
+		// DELETE ===============================================================
+
+		By("When Runtime is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), runtime)).To(Succeed())
+		})
+
+		if feature.RuntimeSecurityAzure.Value(infra.Ctx()) {
+
+			By("Then Azure Defender CSPM is off", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "CloudPosture", armsecurity.PricingTierFree).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Servers is off", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "VirtualMachines", armsecurity.PricingTierFree).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Storage is off", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "StorageAccounts", armsecurity.PricingTierFree).
+					Should(Succeed())
+			})
+
+			By("Then Azure Defender Arm is off", func() {
+				Eventually(azureSecurityPricingHasTier).
+					WithArguments(infra.Ctx(), azureMock, "Arm", armsecurity.PricingTierFree).
+					Should(Succeed())
+			})
+
+			By("Then Azure flow log does not exist", func() {
+				Eventually(func() error {
+					_, err := azureMock.GetFlowLog(infra.Ctx(), azureDataResourceGroupName, azureNetworkWatcherName, kymaVpcNetworkName, nil)
+					if azuremeta.IsNotFound(err) {
+						return nil
+					}
+					return fmt.Errorf("flow log %s/%s/%s still exists", azureDataResourceGroupName, azureNetworkWatcherName, kymaVpcNetworkName)
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure storage account does not exist", func() {
+				Eventually(func() error {
+					_, err := azureMock.GetStorageAccount(infra.Ctx(), azureDataResourceGroupName, azureStorageAccountName, nil)
+					if azuremeta.IsNotFound(err) {
+						return nil
+					}
+					return fmt.Errorf("storage account %s/%s still exists", azureDataResourceGroupName, azureStorageAccountName)
+				}).
+					Should(Succeed())
+			})
+
+			By("Then Azure data resource group does not exist", func() {
+				Eventually(func() error {
+					_, err := azureMock.GetResourceGroup(infra.Ctx(), azureDataResourceGroupName)
+					if azuremeta.IsNotFound(err) {
+						return nil
+					}
+					return fmt.Errorf("data resource group %s still exists", azureDataResourceGroupName)
+				}).
+					Should(Succeed())
+			})
+
+		} // if security feature enabled for Azure
+
+		By("When Runtime finalizer is removed", func() {
+			// Runtime is not owned by CloudManager so it doesn't remove the finalizer,
+			// so we're manually removing the finalizer
+			_, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, runtime, infra.KCP().Client())
+			Expect(err).NotTo(HaveOccurred())
+			Expect(IsDeleted(infra.Ctx(), infra.KCP().Client(), runtime)).
+				To(Succeed())
+		})
+
+		By("Then Runtime does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), runtime).
+				Should(Succeed())
+		})
+
+		By("Then VpcNetwork is not deleted", func() {
+			Expect(LoadAndCheck(infra.Ctx(), infra.KCP().Client(), vpcNetwork, NewObjActions())).
+				To(Succeed())
+			Expect(vpcNetwork.DeletionTimestamp).To(BeNil(), "vpcNetwork should not be marked for deletion")
+		})
+
+		By("Then Subscription is not deleted", func() {
+			Expect(LoadAndCheck(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions())).
+				To(Succeed())
+			Expect(subscription.DeletionTimestamp).To(BeNil(), "subscription should not be marked for deletion")
+		})
 
 	})
 })

@@ -23,10 +23,10 @@ func networkWatcherCreate(ctx context.Context, st composed.State) (error, contex
 	}
 
 	watcher, err := state.azureClient.CreateNetworkWatcher(ctx,
-		state.resourceGroupWatcherName(),
-		state.networkWatcherName(),
+		ResourceGroupWatcherName(),
+		NetworkWatcherName(state.ObjAsRuntime().Spec.Shoot.Region),
 		armnetwork.Watcher{
-			Location: new(state.location()),
+			Location: new(state.ObjAsRuntime().Spec.Shoot.Region),
 		})
 	if err != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error creating network watcher: %s", err.Error()), state.ObjAsRuntime().Generation)

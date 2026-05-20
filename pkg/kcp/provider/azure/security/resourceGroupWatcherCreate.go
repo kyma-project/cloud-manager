@@ -18,8 +18,8 @@ func resourceGroupWatcherCreate(ctx context.Context, st composed.State) (error, 
 
 	logger.Info("Creating NetworkWatcherRG")
 	rg, err := state.azureClient.CreateResourceGroup(ctx,
-		state.resourceGroupWatcherName(),
-		state.location(),
+		ResourceGroupWatcherName(),
+		state.ObjAsRuntime().Spec.Shoot.Region,
 		nil)
 	if err != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error creating watcher resource group: %s", err.Error()), state.ObjAsRuntime().Generation)

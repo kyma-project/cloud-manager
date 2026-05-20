@@ -26,14 +26,14 @@ func storageAccountCreate(ctx context.Context, st composed.State) (error, contex
 	}
 
 	params := armstorage.AccountCreateParameters{
-		Location: new(state.location()),
+		Location: new(state.ObjAsRuntime().Spec.Shoot.Region),
 		Kind:     new(armstorage.KindStorageV2),
 		SKU: &armstorage.SKU{
 			Name: new(armstorage.SKUNameStandardLRS),
 		},
 		Tags: map[string]*string{
 			tagKymaRuntimeId: new(state.ObjAsRuntime().Name),
-			tagKymaShootName: new(state.shootName()),
+			tagKymaShootName: new(state.ObjAsRuntime().Spec.Shoot.Name),
 		},
 		Properties: &armstorage.AccountPropertiesCreateParameters{
 			AllowBlobPublicAccess:  new(false),
@@ -60,10 +60,10 @@ func storageAccountCreate(ctx context.Context, st composed.State) (error, contex
 	composed.LoggerFromCtx(ctx).Info("Creating storage account")
 
 	for i := range maxStorageAccountCreateAttempts {
-		accountName := state.storageAccountNameAttempt(i)
+		accountName := StorageAccountNameAttempt(i, state.ObjAsRuntime().Spec.Shoot.Name)
 
 		resp, err := azureclient.PollUntilDone(state.azureClient.CreateStorageAccount(ctx,
-			state.resourceGroupDataName(),
+			ResourceGroupDataName(state.ObjAsRuntime().Spec.Shoot.Name),
 			accountName,
 			params,
 			nil))(ctx, nil)

@@ -11,7 +11,7 @@ import (
 func resourceGroupDataLoad(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	rg, err := state.azureClient.GetResourceGroup(ctx, state.resourceGroupDataName())
+	rg, err := state.azureClient.GetResourceGroup(ctx, ResourceGroupDataName(state.ObjAsRuntime().Spec.Shoot.Name))
 	if azuremeta.IgnoreNotFoundError(err) != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error loading data resource group: %s", err.Error()), state.ObjAsRuntime().Generation)
 		return azuremeta.LogErrorAndReturn(err, "Error loading security data resource group", ctx)

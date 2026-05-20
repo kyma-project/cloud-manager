@@ -3,8 +3,6 @@ package security
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
@@ -17,7 +15,6 @@ import (
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
 	runtimetypes "github.com/kyma-project/cloud-manager/pkg/kcp/runtime/types"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func NewStateFactory(azureClientProvider azureclient.ClientProvider[azuresecurityclient.Client]) StateFactory {
@@ -98,60 +95,12 @@ type State struct {
 }
 
 const (
-	storageAccountPrefix        = "kymasec" // 7 chars
-	maxStorageAccountNameLength = 24        // Azure constraint
-
 	tagKymaRuntimeId = "kyma.runtime-id"
 	tagKymaShootName = "kyma.shoot-name"
 
 	flowLogRetentionDays = 30
 )
 
-func (s *State) shootName() string {
-	return s.ObjAsRuntime().Spec.Shoot.Name
-}
-
-func (s *State) location() string {
-	return s.ObjAsRuntime().Spec.Shoot.Region
-}
-
-func (s *State) resourceGroupDataName() string {
-	return fmt.Sprintf("kyma-security-%s", s.shootName())
-}
-
-func (s *State) resourceGroupWatcherName() string {
-	return "NetworkWatcherRG"
-}
-
-func (s *State) networkWatcherName() string {
-	return fmt.Sprintf("NetworkWatcher_%s", s.location())
-}
-
-func (s *State) storageAccountBaseName() string {
-	name := strings.ToLower(s.shootName())
-	name = regexp.MustCompile(`[^a-z0-9]`).ReplaceAllString(name, "")
-	maxShootPart := maxStorageAccountNameLength - len(storageAccountPrefix) - 5 // 5 chars for random suffix to ensure uniqueness
-	if len(name) > maxShootPart {
-		name = name[:maxShootPart]
-	}
-	return fmt.Sprintf("%s%s", storageAccountPrefix, name)
-}
-
-func (s *State) storageAccountNameAttempt(i int) string {
-	result := s.storageAccountBaseName()
-	if i > 0 {
-		// not first attempt, add random suffix
-		suffixLen := maxStorageAccountNameLength - len(result)
-		suffix := strings.ToLower(util.RandomString(suffixLen))
-		result = fmt.Sprintf("%s%s", result, suffix)
-	}
-	return result
-}
-
 func (s *State) ObjAsRuntime() *infrastructuremanagerv1.Runtime {
 	return s.Obj().(*infrastructuremanagerv1.Runtime)
-}
-
-func (s *State) flowLogName() string {
-	return s.VpcNetwork().Status.Identifiers.Name
 }
