@@ -7,11 +7,11 @@ import (
 	"slices"
 	"sync"
 
+	gardenerhelper "github.com/gardener/gardener/pkg/api/core/v1beta1/helper"
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -210,7 +210,7 @@ func (p *defaultCloudProfileInfo) GetGardenLinuxVersion() string {
 			continue
 		}
 		for _, x := range mi.Versions {
-			if ptr.Deref(x.Classification, gardenerapicore.ClassificationExpired) != gardenerapicore.ClassificationSupported {
+			if !gardenerhelper.VersionIsSupported(x.ExpirableVersion) {
 				continue
 			}
 			v, err := version.ParseSemantic(x.Version)
@@ -233,7 +233,7 @@ func (p *defaultCloudProfileInfo) GetKubernetesVersion() string {
 
 	var supportedVersions []*version.Version
 	for _, x := range p.cp.Spec.Kubernetes.Versions {
-		if ptr.Deref(x.Classification, gardenerapicore.ClassificationExpired) != gardenerapicore.ClassificationSupported {
+		if !gardenerhelper.VersionIsSupported(x) {
 			continue
 		}
 		v, err := version.ParseSemantic(x.Version)
