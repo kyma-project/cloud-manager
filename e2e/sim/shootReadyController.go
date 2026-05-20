@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	gardenerhelper "github.com/gardener/gardener/pkg/api/core/v1beta1/helper"
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	gardenerhelper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

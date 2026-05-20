@@ -3,8 +3,8 @@ package sim
 import (
 	"fmt"
 
+	gardenerhelper "github.com/gardener/gardener/pkg/api/core/v1beta1/helper"
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	gardenerhelper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
