@@ -83,6 +83,8 @@ func (r *reconciler) newAction() composed.Action {
 
 		// below executes only when marked for deletion
 
+		preventDeleteWhenUsedBySnapshot,
+
 		pvcRemoveFinalizer,
 		pvcDelete,
 		pvcWaitDeleted,
