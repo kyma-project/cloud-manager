@@ -138,7 +138,7 @@ pkg/kcp/provider/gcp/
 
 ## Implementation Steps
 
-### Phase 0 — Dependency (requires user approval)
+### Phase 0 — Dependency ✅ DONE
 
 ```bash
 go get cloud.google.com/go/securitycentermanagement@latest
