@@ -43,10 +43,7 @@ Context is auto-populated from the resource type, Scope, and labels via `feature
 // 1. Load context — MUST be first in action pipeline
 feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpRedisCluster{}),
 
-// 2. Check apiDisabled — MUST be early in every SKR reconciler
-composed.If(feature.ApiDisabledPredicate, composed.StopAndForgetAction),
-
-// 3. Check other flags
+// 2. Check other flags
 func myAction(ctx context.Context, st composed.State) (error, context.Context) {
     if feature.MyFeature.Value(ctx) {
         // feature-specific path
