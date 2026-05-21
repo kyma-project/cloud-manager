@@ -4,8 +4,11 @@ import (
 	"testing"
 
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestConvertDefaultAction(t *testing.T) {
@@ -1371,5 +1374,102 @@ func TestConvertRateBasedStatement(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, result.CustomKeys, 1)
 		assert.NotNil(t, result.CustomKeys[0].UriPath)
+	})
+}
+
+func TestConvertTags(t *testing.T) {
+	t.Run("Tags include Scope and Shoot", func(t *testing.T) {
+		webAcl := &cloudresourcesv1beta1.AwsWebAcl{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-webacl",
+				Labels: map[string]string{
+					"custom-label": "custom-value",
+				},
+			},
+		}
+
+		scope := &cloudcontrolv1beta1.Scope{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-scope",
+			},
+			Spec: cloudcontrolv1beta1.ScopeSpec{
+				ShootName: "test-shoot",
+			},
+		}
+
+		tags := convertTags(webAcl, scope)
+
+		// Verify required tags exist
+		tagMap := make(map[string]string)
+		for _, tag := range tags {
+			if tag.Key != nil && tag.Value != nil {
+				tagMap[*tag.Key] = *tag.Value
+			}
+		}
+
+		assert.Equal(t, "test-webacl", tagMap["Name"])
+		assert.Equal(t, "cloud-manager", tagMap["ManagedBy"])
+		assert.Equal(t, "test-scope", tagMap[common.TagScope])
+		assert.Equal(t, "test-shoot", tagMap[common.TagShoot])
+		assert.Equal(t, "custom-value", tagMap["custom-label"])
+	})
+
+	t.Run("Tags work without labels", func(t *testing.T) {
+		webAcl := &cloudresourcesv1beta1.AwsWebAcl{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-webacl-no-labels",
+			},
+		}
+
+		scope := &cloudcontrolv1beta1.Scope{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "scope-name",
+			},
+			Spec: cloudcontrolv1beta1.ScopeSpec{
+				ShootName: "shoot-name",
+			},
+		}
+
+		tags := convertTags(webAcl, scope)
+
+		// Should have exactly 4 tags (Name, ManagedBy, Scope, Shoot)
+		assert.Len(t, tags, 4)
+
+		tagMap := make(map[string]string)
+		for _, tag := range tags {
+			if tag.Key != nil && tag.Value != nil {
+				tagMap[*tag.Key] = *tag.Value
+			}
+		}
+
+		assert.Equal(t, "test-webacl-no-labels", tagMap["Name"])
+		assert.Equal(t, "cloud-manager", tagMap["ManagedBy"])
+		assert.Equal(t, "scope-name", tagMap[common.TagScope])
+		assert.Equal(t, "shoot-name", tagMap[common.TagShoot])
+	})
+
+	t.Run("Tag pointers are properly set", func(t *testing.T) {
+		webAcl := &cloudresourcesv1beta1.AwsWebAcl{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-webacl",
+			},
+		}
+
+		scope := &cloudcontrolv1beta1.Scope{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-scope",
+			},
+			Spec: cloudcontrolv1beta1.ScopeSpec{
+				ShootName: "test-shoot",
+			},
+		}
+
+		tags := convertTags(webAcl, scope)
+
+		// All tags should have non-nil Key and Value pointers
+		for i, tag := range tags {
+			assert.NotNil(t, tag.Key, "Tag %d Key should not be nil", i)
+			assert.NotNil(t, tag.Value, "Tag %d Value should not be nil", i)
+		}
 	})
 }

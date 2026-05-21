@@ -3,6 +3,7 @@ package awswebacl
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -45,13 +46,13 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Build CreateWebACLInput
 	input := &wafv2.CreateWebACLInput{
-		Name:             new(webAcl.Name),
-		Description:      new(webAcl.Spec.Description),
+		Name:             aws.String(webAcl.Name),
+		Description:      aws.String(webAcl.Spec.Description),
 		Scope:            ScopeRegional(),
 		DefaultAction:    defaultAction,
 		Rules:            rules,
 		VisibilityConfig: visibilityConfig,
-		Tags:             convertTags(webAcl),
+		Tags:             convertTags(webAcl, state.Scope()),
 	}
 
 	// Add optional fields from state

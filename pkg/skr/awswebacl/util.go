@@ -5,7 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 )
 
 func convertDefaultAction(action cloudresourcesv1beta1.AwsWebAclDefaultAction) (*wafv2types.DefaultAction, error) {
@@ -378,7 +380,7 @@ func ScopeRegional() wafv2types.Scope {
 	return wafv2types.ScopeRegional
 }
 
-func convertTags(webAcl *cloudresourcesv1beta1.AwsWebAcl) []wafv2types.Tag {
+func convertTags(webAcl *cloudresourcesv1beta1.AwsWebAcl, scope *cloudcontrolv1beta1.Scope) []wafv2types.Tag {
 	tags := []wafv2types.Tag{
 		{
 			Key:   aws.String("Name"),
@@ -387,6 +389,14 @@ func convertTags(webAcl *cloudresourcesv1beta1.AwsWebAcl) []wafv2types.Tag {
 		{
 			Key:   aws.String("ManagedBy"),
 			Value: aws.String("cloud-manager"),
+		},
+		{
+			Key:   aws.String(common.TagScope),
+			Value: &scope.Name,
+		},
+		{
+			Key:   aws.String(common.TagShoot),
+			Value: &scope.Spec.ShootName,
 		},
 	}
 
