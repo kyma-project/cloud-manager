@@ -189,6 +189,31 @@ var _ = Describe("AwsWebAcl Controller", func() {
 			Expect(awsWebACL.Capacity).To(Equal(int64(100)), "expected capacity to be 100")
 		})
 
+		By("And Then WebACL has correct tags", func() {
+			tags := awsMockLocal.GetWebAclTags(awsWebAcl.Status.Arn)
+			Expect(tags).NotTo(BeNil(), "expected WebACL to have tags")
+
+			// Convert tags to map for easier verification
+			tagMap := make(map[string]string)
+			for _, tag := range tags {
+				if tag.Key != nil && tag.Value != nil {
+					tagMap[*tag.Key] = *tag.Value
+				}
+			}
+
+			// Verify Name tag
+			Expect(tagMap).To(HaveKeyWithValue("Name", objName))
+
+			// Verify ManagedBy tag
+			Expect(tagMap).To(HaveKeyWithValue("ManagedBy", "cloud-manager"))
+
+			// Verify Scope tag
+			Expect(tagMap).To(HaveKeyWithValue("cloud-manager.kyma-project.io/scope", scopeName))
+
+			// Verify Shoot tag
+			Expect(tagMap).To(HaveKeyWithValue("cloud-manager.kyma-project.io/shoot", scope.Spec.ShootName))
+		})
+
 		id := awsutil.ParseArnResourceId(awsWebAcl.Status.Arn)
 
 		By("When AwsWebAcl spec is updated to change DefaultAction", func() {

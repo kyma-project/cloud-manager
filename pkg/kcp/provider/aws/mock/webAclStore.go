@@ -19,11 +19,13 @@ import (
 type WebAclConfig interface {
 	SetWebAclError(id string, err error)
 	InitiateWebAcl(id, name string, scope types.Scope)
+	GetWebAclTags(arn string) []types.Tag
 }
 
 type webAclEntry struct {
 	webAcl    types.WebACL
 	lockToken string
+	tags      []types.Tag // Tags associated with the WebACL
 }
 
 type webAclStore struct {
@@ -93,9 +95,20 @@ func (s *webAclStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebAC
 		Capacity:             100,
 	}
 
+	// Store tags if provided
+	var tags []types.Tag
+	if input.Tags != nil {
+		tagsCopy, err := util.JsonClone(input.Tags)
+		if err != nil {
+			return nil, "", err
+		}
+		tags = tagsCopy
+	}
+
 	item := &webAclEntry{
 		webAcl:    webAcl,
 		lockToken: lockToken,
+		tags:      tags,
 	}
 
 	s.items = append(s.items, item)
@@ -276,6 +289,22 @@ func (s *webAclStore) InitiateWebAcl(id, name string, scope types.Scope) {
 	}
 
 	s.items = append(s.items, item)
+}
+
+func (s *webAclStore) GetWebAclTags(arn string) []types.Tag {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	// Find entry by ARN
+	for _, entry := range s.items {
+		if entry.webAcl.ARN != nil && *entry.webAcl.ARN == arn {
+			// Return a copy of tags to avoid external modifications
+			tagsCopy, _ := util.JsonClone(entry.tags)
+			return tagsCopy
+		}
+	}
+
+	return nil
 }
 
 func (s *webAclStore) WafClient() awsclient.Wafv2Client {
