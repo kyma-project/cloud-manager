@@ -106,4 +106,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^tf module "([^"]*)" is destroyed$`, tfModuleIsDestroyed)
 	ctx.Step(`^current cluster is "([^"]*)"$`, currentClusterIs)
 	ctx.Step(`^Subscription "([^"]+)" exists for "(AWS|Azure|GCP|OpenStack)" provider$`, subscriptionExistsForProvider)
+	ctx.Step(`^existing runtime "([^"]+)"$`, existingRuntime)
+	ctx.Step(`^strategic merge patch of resource "([^"]*)" is applied:$`, strategicMergePatchOfResourceIsApplied)
 }

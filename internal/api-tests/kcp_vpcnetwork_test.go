@@ -16,7 +16,7 @@ var _ = ginkgo.Describe("Feature: KCP VpcNetwork", func() {
 
 	_ = bb
 
-	var _ Builder[*cloudcontrolv1beta1.VpcNetwork] = &cloudcontrolv1beta1.VpcNetworkBuilder{}
+	var _ Builder[*cloudcontrolv1beta1.VpcNetwork] = (*cloudcontrolv1beta1.VpcNetworkBuilder)(nil)
 
 	// canCreateKcp -------------------------------------------------------
 

@@ -24,6 +24,7 @@ import (
 
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	awsvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork/client"
+	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
 	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
 	azurevpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
@@ -528,6 +529,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupRuntimeReconciler(
 		ctx,
 		mgr,
+		azuresecurityclient.NewClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Runtime")
 		os.Exit(1)

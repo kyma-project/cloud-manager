@@ -2,10 +2,11 @@ package meta
 
 import (
 	"errors"
+	"testing"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestIsNotFound(t *testing.T) {
@@ -82,6 +83,7 @@ func TestConflict(t *testing.T) {
 	assert.Equal(t, builder.conflictError, builder.successError)
 	assert.Equal(t, cloudcontrolv1beta1.StateWarning, builder.statusState)
 }
+
 func TestConflictMessageOverride(t *testing.T) {
 	builder := &ErrorHandlerBuilder{
 		err: NewAzureConflictError(),

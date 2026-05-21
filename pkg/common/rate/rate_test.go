@@ -34,56 +34,96 @@ func TestRateLimiter(t *testing.T) {
 		}
 	}
 
-	t.Run("Quick", func(t *testing.T) {
-		testWhen(Quick, []time.Duration{
-			100 * time.Millisecond,
-			400 * time.Millisecond,
-			1600 * time.Millisecond,
-			6400 * time.Millisecond,
-			25600 * time.Millisecond,
-			102400 * time.Millisecond,
-			409600 * time.Millisecond,
-			10 * time.Minute,
-			10 * time.Minute,
+	t.Run("DefaultValues", func(t *testing.T) {
+		SetDefaultValues()
+
+		t.Run("Quick", func(t *testing.T) {
+			testWhen(Quick, []time.Duration{
+				100 * time.Millisecond,
+				400 * time.Millisecond,
+				1600 * time.Millisecond,
+				6400 * time.Millisecond,
+				25600 * time.Millisecond,
+				102400 * time.Millisecond,
+				409600 * time.Millisecond,
+				10 * time.Minute,
+				10 * time.Minute,
+			})
+		})
+
+		t.Run("Slow1s", func(t *testing.T) {
+			testWhen(Slow1s, []time.Duration{
+				1 * time.Second,
+				4 * time.Second,
+				16 * time.Second,
+				64 * time.Second,
+				256 * time.Second,
+				10 * time.Minute,
+				10 * time.Minute,
+				10 * time.Minute,
+			})
+		})
+
+		t.Run("Slow10s", func(t *testing.T) {
+			testWhen(Slow10s, []time.Duration{
+				10 * time.Second,
+				40 * time.Second,
+				160 * time.Second,
+				10 * time.Minute,
+				10 * time.Minute,
+				10 * time.Minute,
+			})
+		})
+
+		t.Run("UltraSlow1m", func(t *testing.T) {
+			testWhen(UltraSlow1m, []time.Duration{
+				1 * time.Minute,
+				2 * time.Minute,
+				4 * time.Minute,
+				8 * time.Minute,
+				16 * time.Minute,
+				32 * time.Minute,
+				60 * time.Minute,
+				60 * time.Minute,
+				60 * time.Minute,
+			})
 		})
 	})
 
-	t.Run("Slow1s", func(t *testing.T) {
-		testWhen(Slow1s, []time.Duration{
-			1 * time.Second,
-			4 * time.Second,
-			16 * time.Second,
-			64 * time.Second,
-			256 * time.Second,
-			10 * time.Minute,
-			10 * time.Minute,
-			10 * time.Minute,
-		})
-	})
+	t.Run("TestValues", func(t *testing.T) {
+		SetValuesForTests()
 
-	t.Run("Slow10s", func(t *testing.T) {
-		testWhen(Slow10s, []time.Duration{
-			10 * time.Second,
-			40 * time.Second,
-			160 * time.Second,
-			10 * time.Minute,
-			10 * time.Minute,
-			10 * time.Minute,
-		})
-	})
+		testingDurationValues := []time.Duration{
+			10 * time.Millisecond,
+			20 * time.Millisecond,
+			40 * time.Millisecond,
+			80 * time.Millisecond,
+			160 * time.Millisecond,
+			320 * time.Millisecond,
+			640 * time.Millisecond,
+			1280 * time.Millisecond,
+			2560 * time.Millisecond,
+			5 * time.Second,
+			5 * time.Second,
+			5 * time.Second,
+		}
 
-	t.Run("UltraSlow1m", func(t *testing.T) {
-		testWhen(UltraSlow1m, []time.Duration{
-			1 * time.Minute,
-			2 * time.Minute,
-			4 * time.Minute,
-			8 * time.Minute,
-			16 * time.Minute,
-			32 * time.Minute,
-			60 * time.Minute,
-			60 * time.Minute,
-			60 * time.Minute,
+		t.Run("Quick", func(t *testing.T) {
+			testWhen(Quick, testingDurationValues)
 		})
+
+		t.Run("Slow1s", func(t *testing.T) {
+			testWhen(Slow1s, testingDurationValues)
+		})
+
+		t.Run("Slow10s", func(t *testing.T) {
+			testWhen(Slow10s, testingDurationValues)
+		})
+
+		t.Run("UltraSlow1m", func(t *testing.T) {
+			testWhen(UltraSlow1m, testingDurationValues)
+		})
+
 	})
 
 }

@@ -59,6 +59,10 @@ var (
 )
 
 func init() {
+	SetDefaultValues()
+}
+
+func SetDefaultValues() {
 	Quick = NewObjectRateLimiter(
 		NewItemExponentialFailureRateLimiter(100*time.Millisecond, 10*time.Minute, 2),
 	)
@@ -74,7 +78,25 @@ func init() {
 	UltraSlow1m = NewObjectRateLimiter(
 		NewItemExponentialFailureRateLimiter(1*time.Minute, 1*time.Hour, 1),
 	)
+}
 
+// SetValuesForTests Use this in controller tests only to speed up requeues to fit default controller tests timeouts
+func SetValuesForTests() {
+	Quick = NewObjectRateLimiter(
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+	)
+
+	Slow1s = NewObjectRateLimiter(
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+	)
+
+	Slow10s = NewObjectRateLimiter(
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+	)
+
+	UltraSlow1m = NewObjectRateLimiter(
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+	)
 }
 
 // ObjectRateLimiter

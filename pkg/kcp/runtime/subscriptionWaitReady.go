@@ -13,7 +13,7 @@ import (
 func subscriptionWaitReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	readyCond := meta.FindStatusCondition(state.Subscription.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
+	readyCond := meta.FindStatusCondition(state.subscription.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
 	if readyCond != nil && readyCond.Status == metav1.ConditionTrue {
 		return nil, ctx
 	}

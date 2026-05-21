@@ -87,3 +87,24 @@ backupScheduleV2:
     disabled: false
   defaultRule:
     variation: disabled
+
+runtimeSecurityAws:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
+runtimeSecurityAzure:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
+runtimeSecurityGcp:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled

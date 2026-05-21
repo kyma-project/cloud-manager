@@ -106,7 +106,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("When local KCP Network is created", func() {
 			kcpnetwork.Ignore.AddName(localKcpNetworkName)
-			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			localKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
 				Build()
@@ -152,7 +152,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("When remote KCP Network is created", func() {
 			kcpnetwork.Ignore.AddName(remoteKcpNetworkName)
-			remoteKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			remoteKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, remoteSubscription, remoteResourceGroup, remoteVnetName).
 				Build()
@@ -369,7 +369,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var localKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given local KCP Network is created", func() {
-			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			localKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
 				Build()
@@ -381,7 +381,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var remoteKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given remote KCP Network is created", func() {
-			remoteKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			remoteKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, remoteSubscription, remoteResourceGroup, remoteVnetName).
 				Build()
@@ -520,7 +520,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var localKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given local KCP Network is created", func() {
-			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			localKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
 				Build()
@@ -532,7 +532,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var remoteKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given remote KCP Network is created", func() {
-			remoteKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			remoteKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(remoteTenant, remoteSubscription, remoteResourceGroup, remoteVnetName).
 				Build()
@@ -708,7 +708,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var localKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given local KCP Network is created", func() {
-			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			localKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
 				Build()
@@ -720,7 +720,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var remoteKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given remote KCP Network is created", func() {
-			remoteKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			remoteKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, remoteSubscription, remoteResourceGroup, remoteVnetName).
 				Build()
@@ -982,7 +982,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var localKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given local KCP Network is created", func() {
-			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			localKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
 				Build()
@@ -994,7 +994,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		var remoteKcpNet *cloudcontrolv1beta1.Network
 
 		By("And Given remote KCP Network is created", func() {
-			remoteKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			remoteKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, remoteSubscription, remoteResourceGroup, remoteVnetName).
 				Build()
@@ -1365,7 +1365,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Given local KCP Network is created", func() {
 			kcpnetwork.Ignore.AddName(localKcpNetworkName)
-			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			localKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
 				Build()
@@ -1506,7 +1506,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 		By("And Given local KCP Network is created", func() {
 			kcpnetwork.Ignore.AddName(localKcpNetworkName)
-			localKcpNet = (&cloudcontrolv1beta1.NetworkBuilder{}).
+			localKcpNet = cloudcontrolv1beta1.NewNetworkBuilder().
 				WithScope(scope.Name).
 				WithAzureRef(scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.VpcNetwork, scope.Spec.Scope.Azure.VpcNetwork).
 				Build()

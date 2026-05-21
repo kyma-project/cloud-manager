@@ -7,9 +7,17 @@ var _ Project = (*project)(nil)
 type project struct {
 	*mainStore
 
+	server Server
+
 	domainName  string
 	projectName string
 	regionName  string
+}
+
+func (p *project) Equals(other Project) bool {
+	return p.DomainName() == other.DomainName() &&
+		p.ProjectName() == other.ProjectName() &&
+		p.RegionName() == other.RegionName()
 }
 
 func (p *project) ProviderParams() sapclient.ProviderParams {
@@ -30,4 +38,8 @@ func (p *project) ProjectName() string {
 
 func (p *project) RegionName() string {
 	return p.regionName
+}
+
+func (p *project) Delete() {
+	p.server.DeleteProject(p)
 }

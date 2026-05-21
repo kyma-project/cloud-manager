@@ -11,14 +11,19 @@ import (
 	messages "github.com/cucumber/messages/go/v21"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
+	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	"github.com/kyma-project/cloud-manager/pkg/external/operatorv1beta2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 )
 
 func debugLog(ctx context.Context, onOff string) (context.Context, error) {
@@ -1075,5 +1080,72 @@ func tfModuleIsDestroyed(ctx context.Context, alias string) (context.Context, er
 		return ctx, fmt.Errorf("failed to destroy tf workspace: %w", err)
 	}
 
+	return ctx, nil
+}
+
+/*
+Given existing runtime "shared-azure"
+*/
+func existingRuntime(ctx context.Context, runtimeAlias string) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	_, err := session.AddExistingCluster(ctx, world.Kcp().ClusterAlias())
+	if err != nil {
+		return ctx, fmt.Errorf("error adding kcp cluster to session: %w", err)
+	}
+	arr, err := world.Keb().List(ctx, e2ekeb.WithAlias(runtimeAlias))
+	if err != nil {
+		return ctx, fmt.Errorf("error listing keb runtimes: %w", err)
+	}
+	if len(arr) == 0 {
+		return ctx, fmt.Errorf("no runtime found for alias %q", runtimeAlias)
+	}
+	if len(arr) > 1 {
+		return ctx, fmt.Errorf("multiple runtimes found for alias %q: %v", runtimeAlias, pie.Map(arr, func(id e2ekeb.InstanceDetails) string { return id.RuntimeID }))
+	}
+	id := arr[0]
+	err = session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
+		Alias:      runtimeAlias,
+		Kind:       "Runtime",
+		ApiVersion: infrastructuremanagerv1.GroupVersion.String(),
+		Name:       id.RuntimeID,
+		Namespace:  world.Config().KcpNamespace,
+	})
+	if err != nil {
+		return ctx, fmt.Errorf("error declaring runtime %q resource: %w", runtimeAlias, err)
+	}
+	return ctx, nil
+}
+
+/*
+When strategic merge patch of resource "foo" is applied:
+	"""
+	spec:
+		replicas: 3
+	"""
+*/
+// strategicMergePatchOfResourceIsApplied
+func strategicMergePatchOfResourceIsApplied(ctx context.Context, alias string, doc *godog.DocString) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	ri := session.CurrentCluster().GetResource(alias)
+	if ri == nil {
+		return ctx, fmt.Errorf("no resource found for alias %q", alias)
+	}
+
+	jsonPatch, err := yaml.YAMLToJSON([]byte(doc.Content))
+	if err != nil {
+		return ctx, fmt.Errorf("error converting YAML to JSON: %w", err)
+	}
+	patch := client.RawPatch(types.StrategicMergePatchType, jsonPatch)
+	data, err := session.CurrentCluster().Get(ctx, alias)
+	if err != nil {
+		return ctx, fmt.Errorf("error getting current resource: %w", err)
+	}
+	u := &unstructured.Unstructured{
+		Object: data,
+	}
+	err = session.CurrentCluster().GetClient().Patch(ctx, u, patch)
+	if err != nil {
+		return ctx, fmt.Errorf("error applying patch to resource: %w", err)
+	}
 	return ctx, nil
 }

@@ -1,28 +1,36 @@
 package v1beta1
 
-func NewScopeBuilder() *ScopeBuilder {
-	return &ScopeBuilder{}
+func NewScopeBuilder(in ...*Scope) *ScopeBuilder {
+	var obj *Scope
+	if len(in) > 0 {
+		obj = in[0]
+	} else {
+		obj = &Scope{}
+	}
+	b := &ScopeBuilder{
+		CommonObjBuilder[*ScopeBuilder, *Scope]{
+			Obj: obj,
+		},
+	}
+	b.builder = b
+	return b
 }
 
 // +kubebuilder:object:generate=false
 
 type ScopeBuilder struct {
-	Scope Scope
+	CommonObjBuilder[*ScopeBuilder, *Scope]
 }
 
 func (b *ScopeBuilder) WithProvider(provider ProviderType) *ScopeBuilder {
-	b.Scope.Spec.Provider = provider
+	b.Obj.Spec.Provider = provider
 	return b
 }
 
 func (b *ScopeBuilder) WithBrokerPlan(brokerPlan string) *ScopeBuilder {
-	if b.Scope.Labels == nil {
-		b.Scope.Labels = map[string]string{}
+	if b.Obj.Labels == nil {
+		b.Obj.Labels = map[string]string{}
 	}
-	b.Scope.Labels[LabelScopeBrokerPlanName] = brokerPlan
+	b.Obj.Labels[LabelScopeBrokerPlanName] = brokerPlan
 	return b
-}
-
-func (b *ScopeBuilder) Build() *Scope {
-	return &b.Scope
 }

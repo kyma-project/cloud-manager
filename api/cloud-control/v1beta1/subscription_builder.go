@@ -3,7 +3,8 @@ package v1beta1
 // +kubebuilder:object:generate=false
 
 type SubscriptionBuilder struct {
-	Obj *Subscription
+	CommonObjBuilder[*SubscriptionBuilder, *Subscription]
+	//Obj *Subscription
 }
 
 func NewSubscriptionBuilder(in ...*Subscription) *SubscriptionBuilder {
@@ -13,21 +14,12 @@ func NewSubscriptionBuilder(in ...*Subscription) *SubscriptionBuilder {
 	} else {
 		obj = in[0]
 	}
-	return &SubscriptionBuilder{Obj: obj}
-}
-
-func (b *SubscriptionBuilder) WithName(v string) *SubscriptionBuilder {
-	b.Obj.Name = v
-	return b
-}
-
-func (b *SubscriptionBuilder) WithNamespace(v string) *SubscriptionBuilder {
-	b.Obj.Namespace = v
-	return b
-}
-
-func (b *SubscriptionBuilder) Reset() *SubscriptionBuilder {
-	b.Obj.Spec = SubscriptionSpec{}
+	b := &SubscriptionBuilder{
+		CommonObjBuilder[*SubscriptionBuilder, *Subscription]{
+			Obj: obj,
+		},
+	}
+	b.builder = b
 	return b
 }
 
@@ -86,8 +78,4 @@ func (b *SubscriptionBuilder) WithOpenstack(domainName, projectName string) *Sub
 func (b *SubscriptionBuilder) WithoutOpenstack() *SubscriptionBuilder {
 	b.Obj.Spec.Details.Openstack = nil
 	return b
-}
-
-func (b *SubscriptionBuilder) Build() *Subscription {
-	return b.Obj
 }

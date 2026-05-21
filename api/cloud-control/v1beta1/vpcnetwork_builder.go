@@ -5,77 +5,89 @@ import "k8s.io/utils/ptr"
 // +kubebuilder:object:generate=false
 
 type VpcNetworkBuilder struct {
-	obj *VpcNetwork
+	CommonObjBuilder[*VpcNetworkBuilder, *VpcNetwork]
 }
 
-func NewVpcNetworkBuilder() *VpcNetworkBuilder {
-	return &VpcNetworkBuilder{obj: &VpcNetwork{}}
+func NewVpcNetworkBuilder(in ...*VpcNetwork) *VpcNetworkBuilder {
+	var obj *VpcNetwork
+	if len(in) > 0 {
+		obj = in[0]
+	} else {
+		obj = &VpcNetwork{}
+	}
+	b := &VpcNetworkBuilder{
+		CommonObjBuilder[*VpcNetworkBuilder, *VpcNetwork]{
+			Obj: obj,
+		},
+	}
+	b.builder = b
+	return b
 }
 
 func (b *VpcNetworkBuilder) Build() *VpcNetwork {
-	return b.obj
+	return b.Obj
 }
 
 func (b *VpcNetworkBuilder) WithObj(obj *VpcNetwork) *VpcNetworkBuilder {
-	b.obj = obj
+	b.Obj = obj
 	return b
 }
 
 func (b *VpcNetworkBuilder) WithName(v string) *VpcNetworkBuilder {
-	b.obj.Name = v
+	b.Obj.Name = v
 	return b
 }
 
 func (b *VpcNetworkBuilder) WithNamespace(v string) *VpcNetworkBuilder {
-	b.obj.Namespace = v
+	b.Obj.Namespace = v
 	return b
 }
 
 func (b *VpcNetworkBuilder) WithAnnotation(k, v string) *VpcNetworkBuilder {
-	if b.obj.Annotations == nil {
-		b.obj.Annotations = map[string]string{}
+	if b.Obj.Annotations == nil {
+		b.Obj.Annotations = map[string]string{}
 	}
-	b.obj.Annotations[k] = v
+	b.Obj.Annotations[k] = v
 	return b
 }
 
 func (b *VpcNetworkBuilder) WithLabel(k, v string) *VpcNetworkBuilder {
-	if b.obj.Labels == nil {
-		b.obj.Labels = map[string]string{}
+	if b.Obj.Labels == nil {
+		b.Obj.Labels = map[string]string{}
 	}
-	b.obj.Labels[k] = v
+	b.Obj.Labels[k] = v
 	return b
 }
 
 func (b *VpcNetworkBuilder) WithType(t VpcNetworkType) *VpcNetworkBuilder {
-	b.obj.Spec.Type = t
+	b.Obj.Spec.Type = t
 	return b
 }
 
 func (b *VpcNetworkBuilder) WithSubscription(v string) *VpcNetworkBuilder {
-	b.obj.Spec.Subscription = v
+	b.Obj.Spec.Subscription = v
 	return b
 }
 
 func (b *VpcNetworkBuilder) WithRegion(v string) *VpcNetworkBuilder {
-	b.obj.Spec.Region = v
+	b.Obj.Spec.Region = v
 	return b
 }
 
 func (b *VpcNetworkBuilder) WithCidrBlocks(cidrs ...string) *VpcNetworkBuilder {
-	b.obj.Spec.CidrBlocks = append(b.obj.Spec.CidrBlocks, cidrs...)
+	b.Obj.Spec.CidrBlocks = append(b.Obj.Spec.CidrBlocks, cidrs...)
 	return b
 }
 
 func (b *VpcNetworkBuilder) WithVpcNetworkName(v *string) *VpcNetworkBuilder {
 	if v == nil {
-		b.obj.Spec.VpcNetworkName = nil
+		b.Obj.Spec.VpcNetworkName = nil
 	} else {
 		vv := ptr.Deref(v, "")
 		if vv == "" {
-			b.obj.Spec.VpcNetworkName = nil
+			b.Obj.Spec.VpcNetworkName = nil
 		} else {
-			b.obj.Spec.VpcNetworkName = &vv
+			b.Obj.Spec.VpcNetworkName = &vv
 		}
 	}
 	return b

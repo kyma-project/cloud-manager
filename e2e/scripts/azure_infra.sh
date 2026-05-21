@@ -48,8 +48,50 @@ createRole() {
 createRoleAssignment() {
   SA_NAME=$1
   ROLE_NAME=$2
+  CONDITION_FILE=${3:-}
 
-  az role assignment create --assignee $SA_NAME --role $ROLE_NAME --scope "/subscriptions/$AZURE_SUBSCRIPTION_ID" --only-show-errors > /dev/null
+  log "Creating/Updating role assignment for SA $SA_NAME with role $ROLE_NAME ..."
+
+  EXISTING=$(az role assignment list \
+    --assignee "$SA_NAME" \
+    --role "$ROLE_NAME" \
+    --scope "/subscriptions/$AZURE_SUBSCRIPTION_ID" \
+    --subscription "$AZURE_SUBSCRIPTION_ID" \
+    --query "[0]" \
+    --only-show-errors \
+    -o json 2>/dev/null || echo "null")
+
+  if [[ "$EXISTING" == "null" || "$EXISTING" == "" ]]; then
+    log "Role assignment does not exist, creating it ..."
+    if [[ -n "$CONDITION_FILE" ]]; then
+      az role assignment create \
+        --assignee "$SA_NAME" \
+        --role "$ROLE_NAME" \
+        --scope "/subscriptions/$AZURE_SUBSCRIPTION_ID" \
+        --condition "$(cat "$CONDITION_FILE")" \
+        --condition-version "2.0" \
+        --only-show-errors > /dev/null
+    else
+      az role assignment create \
+        --assignee "$SA_NAME" \
+        --role "$ROLE_NAME" \
+        --scope "/subscriptions/$AZURE_SUBSCRIPTION_ID" \
+        --only-show-errors > /dev/null
+    fi
+  else
+    log "Role assignment exists, updating it ..."
+    if [[ -n "$CONDITION_FILE" ]]; then
+      UPDATED=$(echo "$EXISTING" | jq \
+        --arg cond "$(cat "$CONDITION_FILE")" \
+        --arg condver "2.0" \
+        '.condition = $cond | .conditionVersion = $condver')
+      az role assignment update \
+        --role-assignment "$UPDATED" \
+        --only-show-errors > /dev/null
+    else
+      log "Role assignment already exists with no condition, skipping update."
+    fi
+  fi
 }
 
 # Main
@@ -57,5 +99,11 @@ createRoleAssignment() {
 createRole "$ROLE_NAME_DEFAULT" "$ROLE_FILE_DEFAULT"
 createRole "$ROLE_NAME_PEERING" "$ROLE_FILE_PEERING"
 
-createRoleAssignment "$AZURE_DEFAULT_APP_ID" "$ROLE_NAME_DEFAULT"
 createRoleAssignment "$AZURE_DEFAULT_APP_ID" "$ROLE_NAME_PEERING"
+# Condition restricts roleAssignments/write and roleAssignments/delete to assigning only the VM Scanner
+# Operator role (d24ecba3-c1f4-40fa-a7bb-4588a071e8fd) to the "Microsoft Defender for Cloud Servers
+# Scanner Resource Provider" first-party app. The principal Object ID (24e532db-...) is tenant-specific;
+# resolve it with: az ad sp show --id 0c7668b5-3260-4ad0-9f53-34ed54fa19b2 --query id -o tsv
+createRoleAssignment "$AZURE_DEFAULT_APP_ID" "$ROLE_NAME_DEFAULT" "$ROLE_CONDITION_DEFAULT"
+
+echo "Note: Some Azure permissions can take up to ~10+ minutes to propagate!!!"

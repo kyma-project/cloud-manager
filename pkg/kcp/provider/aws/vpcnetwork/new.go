@@ -19,15 +19,25 @@ func New(sf StateFactory) composed.Action {
 		}
 
 		return composed.ComposeActionsNoName(
-			composed.IfElse(
-				composed.MarkedForDeletionPredicate,
-				composed.ComposeActionsNoName(
-					// Delete
-					infraDelete,
+			composed.If(
+				state.IsKymaTypePredicate,
+				composed.IfElse(
+					composed.MarkedForDeletionPredicate,
+					composed.ComposeActionsNoName(
+						// Delete
+						infraDelete,
+					),
+					composed.ComposeActionsNoName(
+						// Create/Update
+						infraCreateUpdate,
+					),
 				),
-				composed.ComposeActionsNoName(
-					// Create/Update
-					infraCreateUpdate,
+			),
+			composed.If(
+				state.IsGardenerTypePredicate,
+				composed.If(
+					composed.NotMarkedForDeletionPredicate,
+					infraObserve,
 				),
 			),
 		)(ctx, state)

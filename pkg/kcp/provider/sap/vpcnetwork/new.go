@@ -9,8 +9,11 @@ import (
 
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
-		baseVpcNetworkState := st.(vpcnetworktypes.State)
-		ctx, state, err := stateFactory.NewState(ctx, baseVpcNetworkState)
+		vpcState := st.(vpcnetworktypes.State)
+		cctx, state, err := stateFactory.NewState(ctx, vpcState)
+		if cctx != nil {
+			ctx = cctx
+		}
 		if err != nil {
 			logger := composed.LoggerFromCtx(ctx)
 			logger.Error(err, "error creating new sap vpcnetwork state")
@@ -18,15 +21,25 @@ func New(stateFactory StateFactory) composed.Action {
 		}
 
 		return composed.ComposeActionsNoName(
-			composed.IfElse(
-				composed.MarkedForDeletionPredicate,
-				composed.ComposeActionsNoName(
-					// Delete
-					infraDelete,
+			composed.If(
+				state.IsKymaTypePredicate,
+				composed.IfElse(
+					composed.MarkedForDeletionPredicate,
+					composed.ComposeActionsNoName(
+						// Delete
+						infraDelete,
+					),
+					composed.ComposeActionsNoName(
+						// Create/Update
+						infraCreateUpdate,
+					),
 				),
-				composed.ComposeActionsNoName(
-					// Create/Update
-					infraCreateUpdate,
+			),
+			composed.If(
+				state.IsGardenerTypePredicate,
+				composed.If(
+					composed.NotMarkedForDeletionPredicate,
+					infraObserve,
 				),
 			),
 		)(ctx, state)

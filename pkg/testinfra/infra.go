@@ -10,8 +10,10 @@ import (
 	"regexp"
 	"strings"
 
+	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra/infraTypes"
 	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
@@ -67,6 +69,12 @@ func (i *infra) Stop() error {
 	}
 
 	return lastErr
+}
+
+func (i *infra) GardenerNamespace() string {
+	ns, err := commongardener.DefaultGardenerNamespaceProvider().GetGardenerNamespace(i.Ctx(), i.KCP().Client())
+	gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	return ns
 }
 
 // =======================

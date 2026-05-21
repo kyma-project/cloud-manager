@@ -1,5 +1,8 @@
 {
   "actions": [
+    "Microsoft.Authorization/roleAssignments/delete",
+    "Microsoft.Authorization/roleAssignments/read",
+    "Microsoft.Authorization/roleAssignments/write",
     "Microsoft.Cache/redis/delete",
     "Microsoft.Cache/redis/listKeys/action",
     "Microsoft.Cache/redis/privateEndpointConnectionsApproval/action",
@@ -8,11 +11,23 @@
     "Microsoft.Cache/redis/write",
     "Microsoft.DataProtection/backupVaults/backupInstances/backup/action",
     "Microsoft.DataProtection/backupVaults/backupInstances/restore/action",
+    "Microsoft.Insights/dataCollectionEndpoints/delete",
+    "Microsoft.Insights/dataCollectionEndpoints/read",
+    "Microsoft.Insights/dataCollectionEndpoints/write",
+    "Microsoft.Insights/dataCollectionRules/delete",
+    "Microsoft.Insights/dataCollectionRules/read",
+    "Microsoft.Insights/dataCollectionRules/write",
     "Microsoft.Network/natGateways/read",
     "Microsoft.Network/networkSecurityGroups/delete",
     "Microsoft.Network/networkSecurityGroups/join/action",
     "Microsoft.Network/networkSecurityGroups/read",
     "Microsoft.Network/networkSecurityGroups/write",
+    "Microsoft.Network/networkWatchers/flowLogs/delete",
+    "Microsoft.Network/networkWatchers/flowLogs/read",
+    "Microsoft.Network/networkWatchers/flowLogs/write",
+    "Microsoft.Network/networkWatchers/queryFlowLogStatus/action",
+    "Microsoft.Network/networkWatchers/read",
+    "Microsoft.Network/networkWatchers/write",
     "Microsoft.Network/privateDnsZones/delete",
     "Microsoft.Network/privateDnsZones/join/action",
     "Microsoft.Network/privateDnsZones/read",
@@ -61,6 +76,10 @@
     "Microsoft.Resources/subscriptions/resourceGroups/delete",
     "Microsoft.Resources/subscriptions/resourceGroups/read",
     "Microsoft.Resources/subscriptions/resourceGroups/write",
+    "Microsoft.Security/pricings/SecurityOperators/read",
+    "Microsoft.Security/pricings/SecurityOperators/write",
+    "Microsoft.Security/pricings/read",
+    "Microsoft.Security/pricings/write",
     "Microsoft.Storage/storageAccounts/fileServices/shares/delete",
     "Microsoft.Storage/storageAccounts/fileServices/shares/read",
     "Microsoft.Storage/storageAccounts/fileServices/shares/write",
@@ -71,8 +90,8 @@
   "notActions": [],
   "dataActions": [
     "Microsoft.Storage/storageAccounts/fileServices/fileshares/files/delete",
-    "Microsoft.Storage/storageAccounts/fileServices/fileshares/files/write",
-    "Microsoft.Storage/storageAccounts/fileServices/fileshares/files/read"
+    "Microsoft.Storage/storageAccounts/fileServices/fileshares/files/read",
+    "Microsoft.Storage/storageAccounts/fileServices/fileshares/files/write"
   ],
   "notDataActions": []
 }

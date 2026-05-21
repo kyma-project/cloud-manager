@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
 	dnsresolverclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
 	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
 	azurevpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork/client"
@@ -76,6 +77,18 @@ type PublicIpAddressesClient interface {
 	azureclient.PublicIPAddressesClient
 }
 
+type SecurityClient interface {
+	azureclient.SecurityClient
+}
+
+type NetworkFlowLogsClient interface {
+	azureclient.NetworkFlowLogsClient
+}
+
+type StorageAccountClient interface {
+	azureclient.StorageAccountClient
+}
+
 type Clients interface {
 	ResourceGroupsClient
 	NetworkClient
@@ -91,6 +104,9 @@ type Clients interface {
 	PublicIpAddressesClient
 	DnsResolverVNetLinkClient
 	DnsForwardingRulesetClient
+	SecurityClient
+	NetworkFlowLogsClient
+	StorageAccountClient
 }
 
 type Providers interface {
@@ -105,6 +121,7 @@ type Providers interface {
 	RwxPvProvider() azureclient.ClientProvider[azurerwxpvclient.Client]
 	DnsZoneVNetLinkProvider() azureclient.ClientProvider[azurevnetlinkclient.Client]
 	DnsResolverVNetLinkProvider() azureclient.ClientProvider[dnsresolverclient.Client]
+	SecurityProvider() azureclient.ClientProvider[azuresecurityclient.Client]
 }
 
 type NetworkConfig interface {
@@ -140,10 +157,14 @@ type TenantSubscription interface {
 	Configs
 	TenantId() string
 	SubscriptionId() string
+	Equals(other TenantSubscription) bool
+	Delete()
 }
 
 type Server interface {
 	Providers
 
 	MockConfigs(subscription, tenant string) TenantSubscription
+	NewSubscription() TenantSubscription
+	DeleteSubscription(sub TenantSubscription)
 }

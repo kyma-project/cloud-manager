@@ -20,7 +20,7 @@ func NewStateFactory(awsClientProvider awsclient.SkrClientProvider[awsvpcnetwork
 }
 
 type StateFactory interface {
-	NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, composed.State, error)
+	NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, *State, error)
 }
 
 var _ StateFactory = (*stateFactory)(nil)
@@ -29,9 +29,12 @@ type stateFactory struct {
 	awsClientProvider awsclient.SkrClientProvider[awsvpcnetworkclient.Client]
 }
 
-func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, composed.State, error) {
+func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, *State, error) {
 	if baseState.Subscription().Status.Provider != cloudcontrolv1beta1.ProviderAws {
 		return ctx, nil, fmt.Errorf("subscription for VpcNetwork must be of provider AWS, but subscription %q is of provider %q", baseState.Subscription().Name, baseState.Subscription().Status.Provider)
+	}
+	if baseState.Subscription().Status.SubscriptionInfo.Aws == nil {
+		return ctx, nil, fmt.Errorf("subscription for VpcNetwork is of AWS provider but its subscription info is nil")
 	}
 
 	roleName := awsutil.RoleArnDefault(baseState.Subscription().Status.SubscriptionInfo.Aws.Account)

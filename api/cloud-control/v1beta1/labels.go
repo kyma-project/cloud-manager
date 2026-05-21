@@ -10,3 +10,10 @@ const (
 const (
 	LabelIgnore = "cloud-manager.kyma-project.io/ignore"
 )
+
+const (
+	RuntimeSecurityStatusAnnotation             = "cloud-manager.kyma-project.io/security-status"
+	RuntimeSecurityMessageAnnotation            = "cloud-manager.kyma-project.io/security-message"
+	RuntimeSecurityObservedGenerationAnnotation = "cloud-manager.kyma-project.io/security-observed-generation"
+	RuntimeSecurityLastReconcileTime            = "cloud-manager.kyma-project.io/security-last-reconcile-time"
+)

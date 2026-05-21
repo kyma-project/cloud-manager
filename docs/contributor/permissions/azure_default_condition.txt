@@ -1,0 +1,17 @@
+(
+  !(ActionMatches{'Microsoft.Authorization/roleAssignments/write'}
+    OR ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})
+  OR
+  (
+    @Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId]
+      ForAnyOfAnyValues:GuidEquals {d24ecba3-c1f4-40fa-a7bb-4588a071e8fd}
+    AND
+    @Request[Microsoft.Authorization/roleAssignments:PrincipalId]
+      ForAnyOfAnyValues:GuidEquals {24e532db-5746-4840-820d-4b1ae37ba67b}
+  )
+  OR
+  (
+    @Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId]
+      ForAnyOfAnyValues:GuidEquals {92aaf0da-9dab-42b6-94a3-d43ce8d16293}
+  )
+)
