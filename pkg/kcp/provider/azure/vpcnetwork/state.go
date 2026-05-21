@@ -19,14 +19,14 @@ func NewStateFactory(azureClientProvider azureclient.ClientProvider[azurevpcnetw
 }
 
 type StateFactory interface {
-	NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, composed.State, error)
+	NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, *State, error)
 }
 
 type stateFactory struct {
 	azureClientProvider azureclient.ClientProvider[azurevpcnetworkclient.Client]
 }
 
-func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, composed.State, error) {
+func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.State) (context.Context, *State, error) {
 	clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
 	clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret
 	if baseState.Subscription().Status.Provider != cloudcontrolv1beta1.ProviderAzure {

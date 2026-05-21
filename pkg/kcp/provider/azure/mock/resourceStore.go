@@ -3,11 +3,13 @@ package mock
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"sync"
 )
 
 var _ ResourceGroupsClient = &resourceStore{}
@@ -76,19 +78,19 @@ func (s *resourceStore) CreateResourceGroup(ctx context.Context, name string, lo
 	return rg, nil
 }
 
-func (s *resourceStore) DeleteResourceGroup(ctx context.Context, name string) error {
+func (s *resourceStore) DeleteResourceGroup(ctx context.Context, name string) (azureclient.Poller[armresources.ResourceGroupsClientDeleteResponse], error) {
 	if isContextCanceled(ctx) {
-		return context.Canceled
+		return nil, context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	_, err := s.getResourceGroupNoLock(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	delete(s.items, name)
 
-	return nil
+	return NewPollerMock(armresources.ResourceGroupsClientDeleteResponse{}, nil, fmt.Sprintf("resumeToken/%s", name)), nil
 }

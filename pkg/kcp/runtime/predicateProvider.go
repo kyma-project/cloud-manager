@@ -3,20 +3,31 @@ package runtime
 import (
 	"context"
 
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 )
 
-func awsProviderPredicate(_ context.Context, st composed.State) bool {
+func awsProviderPredicate(ctx context.Context, st composed.State) bool {
+	if !feature.RuntimeSecurityAws.Value(ctx) {
+		return false
+	}
 	state := st.(*State)
-	return state.ObjAsRuntime().Spec.Shoot.Provider.Type == "aws"
+	return state.ObjAsRuntime().Spec.Shoot.Provider.Type == string(cloudcontrolv1beta1.ProviderAws)
 }
 
-func azureProviderPredicate(_ context.Context, st composed.State) bool {
+func azureProviderPredicate(ctx context.Context, st composed.State) bool {
+	if !feature.RuntimeSecurityAzure.Value(ctx) {
+		return false
+	}
 	state := st.(*State)
-	return state.ObjAsRuntime().Spec.Shoot.Provider.Type == "azure"
+	return state.ObjAsRuntime().Spec.Shoot.Provider.Type == string(cloudcontrolv1beta1.ProviderAzure)
 }
 
-func gcpProviderPredicate(_ context.Context, st composed.State) bool {
+func gcpProviderPredicate(ctx context.Context, st composed.State) bool {
+	if !feature.RuntimeSecurityGcp.Value(ctx) {
+		return false
+	}
 	state := st.(*State)
-	return state.ObjAsRuntime().Spec.Shoot.Provider.Type == "gcp"
+	return state.ObjAsRuntime().Spec.Shoot.Provider.Type == string(cloudcontrolv1beta1.ProviderGCP)
 }

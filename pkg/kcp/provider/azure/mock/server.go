@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/google/uuid"
+	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
 	dnsresplverclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
 	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
 	azurevpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork/client"
@@ -101,6 +103,12 @@ func (s *server) DnsResolverVNetLinkProvider() azureclient.ClientProvider[dnsres
 	}
 }
 
+func (s *server) SecurityProvider() azureclient.ClientProvider[azuresecurityclient.Client] {
+	return func(_ context.Context, _, _, subscriptionId, tenantId string, auxiliaryTenants ...string) (azuresecurityclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(subscriptionId, tenantId), nil
+	}
+}
+
 func (s *server) RwxPvProvider() azureclient.ClientProvider[azurerwxpvclient.Client] {
 	rwxBackupProvider := azurerwxvolumebackupclient.RwxBackupClientProvider(s.StorageProvider())
 	fileShareProvider := s.FileShareProvider()
@@ -117,6 +125,20 @@ func (s *server) MockConfigs(subscription, tenant string) TenantSubscription {
 	return s.getTenantStoreSubscriptionContext(subscription, tenant)
 }
 
+func (s *server) NewSubscription() TenantSubscription {
+	subscription := uuid.NewString()
+	tenant := uuid.NewString()
+	return s.getTenantStoreSubscriptionContext(subscription, tenant)
+}
+
+func (s *server) DeleteSubscription(sub TenantSubscription) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	key := fmt.Sprintf("%s:%s", sub.TenantId(), sub.SubscriptionId())
+	delete(s.subscriptions, key)
+}
+
 func (s *server) getTenantStoreSubscriptionContext(subscription, tenant string) *tenantSubscriptionStore {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -124,7 +146,7 @@ func (s *server) getTenantStoreSubscriptionContext(subscription, tenant string) 
 	key := fmt.Sprintf("%s:%s", tenant, subscription)
 	sub, ok := s.subscriptions[key]
 	if !ok {
-		sub = newTenantSubscriptionStore(tenant, subscription)
+		sub = newTenantSubscriptionStore(tenant, subscription, s)
 		s.subscriptions[key] = sub
 	}
 

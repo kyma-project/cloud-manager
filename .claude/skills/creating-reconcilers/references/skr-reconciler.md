@@ -47,6 +47,7 @@ pkg/skr/{resource}/
 ├── state.go                          # State with KcpCluster + SkrCluster
 ├── loadKcp{Resource}.go              # Load corresponding KCP object
 ├── createKcp{Resource}.go            # Create/modify KCP object
+├── waitKcp{Resource}StatusUpdate.go  # Poll until KCP reports any condition
 ├── deleteKcp{Resource}.go            # Delete KCP object
 ├── updateStatus.go                   # Sync KCP status to SKR
 ├── wait{Something}.go                # Wait for conditions
@@ -205,7 +206,6 @@ func (r *reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *reconciler) newAction() composed.Action {
     return composed.ComposeActionsNoName(
         feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.{Resource}{}),
-        composed.If(feature.ApiDisabledPredicate, composed.StopAndForgetAction),
         composed.LoadObj,
         loadKcp{Resource},
 
@@ -224,7 +224,7 @@ func (r *reconciler) newAction() composed.Action {
             composed.ComposeActionsNoName(
                 actions.AddCommonFinalizer(),
                 createKcp{Resource},
-                waitKcpReady,
+                waitKcp{Resource}StatusUpdate,
                 updateStatus,
                 // local actions placeholder - add only when specified
             ),
@@ -389,7 +389,26 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 }
 ```
 
+### Wait for KCP Status Update
+
+Waits for the KCP object to report any condition (Ready or Error) before proceeding to `updateStatus`. Without this, `updateStatus` would fall through with `nil, ctx` on every reconciliation until KCP has finished its work.
+
+```go
+// pkg/skr/{resource}/waitKcp{Resource}StatusUpdate.go
+func waitKcp{Resource}StatusUpdate(ctx context.Context, st composed.State) (error, context.Context) {
+    state := st.(*State)
+
+    if len(state.Kcp{Resource}.Status.Conditions) == 0 {
+        return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+    }
+
+    return nil, ctx
+}
+```
+
 ### Delete KCP Object
+
+> **Note:** The wait for KCP deletion is embedded in this action. `StopWithRequeueDelay` prevents `RemoveCommonFinalizer` from running until the next reconciliation. On that reconciliation, `loadKcp{Resource}` finds the object gone and sets `state.Kcp{Resource} = nil`, so the nil-check at the top of this action passes through to `RemoveCommonFinalizer`. No separate `waitKcp{Resource}Deleted` action is needed in this pattern (though some resources in the codebase split it out explicitly).
 
 ```go
 // pkg/skr/{resource}/deleteKcp{Resource}.go

@@ -260,9 +260,18 @@ func DeleteInfra(ctx context.Context, opts ...CreateInfraOption) error {
 		}
 	}
 
-	err = o.client.DeleteResourceGroup(ctx, o.name)
+	rgPoller, err := o.client.DeleteResourceGroup(ctx, o.name)
 	if azuremeta.IgnoreNotFoundError(err) != nil {
 		return fmt.Errorf("failed to delete resource group: %w", err)
+	}
+	err = func() error {
+		toCtx, cancel := context.WithTimeout(ctx, o.timeout)
+		defer cancel()
+		_, err := rgPoller.PollUntilDone(toCtx, &azruntime.PollUntilDoneOptions{Frequency: o.interval})
+		return err
+	}()
+	if err != nil {
+		return fmt.Errorf("error polling resource group deletion: %w", err)
 	}
 
 	return nil

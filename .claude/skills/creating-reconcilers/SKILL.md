@@ -110,8 +110,7 @@ ALWAYS follow these rules:
 6. **Don't generate speculative actions** — use comment placeholders unless explicitly specified
 7. **Sequential only** — actions execute one at a time. NEVER compose actions to run in parallel.
 8. **Finalizer law** — every resource requiring deletion cleanup MUST have a finalizer. Add it on the create path. Remove it ONLY after deletion is fully confirmed (see pitfall #8).
-9. **Feature flag gate** — every SKR reconciler MUST include `composed.If(feature.ApiDisabledPredicate, composed.StopAndForgetAction)` early in the pipeline, after loading feature context (see pitfall #9).
-10. **Injectable clock** — if a reconciler performs any time-based logic (scheduling, expiry, rate limiting), the StateFactory MUST accept `clock.Clock`. Use `clock.RealClock{}` in production and `clock.NewFakeClock()` in tests (see pitfall #12).
+9. **Injectable clock** — if a reconciler performs any time-based logic (scheduling, expiry, rate limiting), the StateFactory MUST accept `clock.Clock`. Use `clock.RealClock{}` in production and `clock.NewFakeClock()` in tests (see pitfall #12).
 
 ### Common Rationalizations — STOP
 
@@ -119,7 +118,6 @@ If you find yourself thinking any of the following, stop and re-read the rule:
 
 | Rationalization | Reality |
 |----------------|---------|
-| "This is an internal reconciler, the feature flag gate doesn't apply" | Every SKR reconciler MUST include `ApiDisabledPredicate`. No exceptions, no matter how internal. |
 | "I'll add the finalizer after the create path works" | A finalizer added later creates an unprotected deletion window. Add it on the create path from the start (rule #8). |
 | "It's a simple state assertion, a panic can't happen here" | Skipping a level in the state hierarchy always causes a runtime panic. Always assert through the full hierarchy (pitfall #1). |
 | "Let me use `IfElse` — it's one line instead of two" | `IfElse` is explicitly forbidden (rule #4). Two separate `If` blocks are required. |
@@ -156,7 +154,6 @@ See `references/action-pitfalls.md`. Most frequent:
 
 Verify all of these before reporting done:
 
-1. **SKR/SKR-Only**: `ApiDisabledPredicate` gate present immediately after `feature.LoadFeatureContextFromObj`?
-2. **Every create path**: finalizer added (`AddCommonFinalizer` / `PatchAddCommonFinalizer`) before any cloud API call?
+1. **Every create path**: finalizer added (`AddCommonFinalizer` / `PatchAddCommonFinalizer`) before any cloud API call?
 3. **Every success path**: ends with `StopAndForget` or `StopAndForgetAction`?
 4. **Every action return**: second return value is `ctx`, not `nil`?

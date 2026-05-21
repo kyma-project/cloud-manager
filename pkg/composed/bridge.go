@@ -10,12 +10,12 @@ import (
 )
 
 const (
-	labelError        = "error"
-	labelRequeueAfter = "requeue_after"
-	labelRequeue      = "requeue"
-	labelSuccess      = "success"
-	labelCanceled     = "canceled"
-	labelDeadline     = "deadline"
+	ReconciliationLabelError        = "error"
+	ReconciliationLabelRequeueAfter = "requeue_after"
+	ReconciliationLabelRequeue      = "requeue"
+	ReconciliationLabelSuccess      = "success"
+	ReconciliationLabelCanceled     = "canceled"
+	ReconciliationLabelDeadline     = "deadline"
 )
 
 func Handling() *Handler {
@@ -26,6 +26,7 @@ type Handler struct {
 	controller string
 	name       string
 	noLog      bool
+	tracker    Tracker
 }
 
 func (h *Handler) WithNoLog() *Handler {
@@ -39,6 +40,16 @@ func (h *Handler) WithMetrics(controller string, name string) *Handler {
 	return h
 }
 
+func (h *Handler) WithName(name string) *Handler {
+	h.name = name
+	return h
+}
+
+func (h *Handler) WithTracker(t Tracker) *Handler {
+	h.tracker = t
+	return h
+}
+
 func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 	var logger logr.Logger
 	if h.noLog {
@@ -48,36 +59,41 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 	}
 
 	// used in defer func() to report the cloud_manager_reconcile metric
-	result := labelSuccess
+	result := ReconciliationLabelSuccess
 	if h.controller != "" && h.name != "" {
 		defer func() {
 			Reconcile.WithLabelValues(h.controller, h.name, result).Inc()
 		}()
 	}
+	if h.tracker != nil && h.name != "" {
+		defer func() {
+			h.tracker.Record(h.name, result)
+		}()
+	}
 
 	if errors.Is(err, context.DeadlineExceeded) {
 		//logger.Info("Reconciliation finished with context deadline exceeded")
-		result = labelDeadline
+		result = ReconciliationLabelDeadline
 		return ctrl.Result{}, nil
 	}
 	if errors.Is(err, context.Canceled) {
 		//logger.Info("Reconciliation finished with context canceled")
-		result = labelCanceled
+		result = ReconciliationLabelCanceled
 		return ctrl.Result{}, nil
 	}
 	if IsTerminal(err) {
 		//logger.WithValues("err", err.Error()).Info("Reconciliation finished with terminal error")
-		result = labelError
+		result = ReconciliationLabelError
 		return ctrl.Result{}, err
 	}
 	if IsStopAndForget(err) {
 		//logger.Info("Reconciliation finished with stop and forget")
-		result = labelSuccess
+		result = ReconciliationLabelSuccess
 		return ctrl.Result{}, nil
 	}
 	if IsStopWithRequeue(err) {
 		//logger.Info("Reconciliation finished with requeue")
-		result = labelRequeue
+		result = ReconciliationLabelRequeue
 		return ctrl.Result{Requeue: true}, nil
 	}
 	if IsStopWithRequeueDelay(err) {
@@ -88,11 +104,11 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 			ed = &stopWithRequeueDelay{delay: time.Hour}
 			logger.Info("Reconciliation requeue delayed set to 1h since it was zero")
 		}
-		result = labelRequeueAfter
+		result = ReconciliationLabelRequeueAfter
 		return ctrl.Result{RequeueAfter: ed.Delay()}, nil
 	}
 	//logger.Info("Reconciliation finished without control error - doing stop and forget")
-	result = labelSuccess
+	result = ReconciliationLabelSuccess
 	return ctrl.Result{}, err
 }
 

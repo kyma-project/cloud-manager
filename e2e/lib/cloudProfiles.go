@@ -29,6 +29,20 @@ type CloudProfileInfo interface {
 	GetKubernetesVersion() string
 }
 
+// fixedCloudProfileRegistry
+
+func NewFixedCloudProfileRegistry(info CloudProfileInfo) CloudProfileRegistry {
+	return &fixedCloudProfileRegistry{info: info}
+}
+
+type fixedCloudProfileRegistry struct {
+	info CloudProfileInfo
+}
+
+func (f *fixedCloudProfileRegistry) Get(name string) CloudProfileInfo {
+	return f.info
+}
+
 // cachingCloudProfileLoader
 
 func NewCachingCloudProfileLoader(inner CloudProfileLoader) CloudProfileLoader {

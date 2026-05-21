@@ -8,14 +8,14 @@ import (
 var _ = ginkgo.Describe("Feature: KCP Network", func() {
 
 	nb := func() *cloudcontrolv1beta1.NetworkBuilder {
-		return &cloudcontrolv1beta1.NetworkBuilder{}
+		return cloudcontrolv1beta1.NewNetworkBuilder()
 
 	}
 	bb := func(b Builder[*cloudcontrolv1beta1.Network]) *cloudcontrolv1beta1.NetworkBuilder {
 		return b.(*cloudcontrolv1beta1.NetworkBuilder)
 	}
 
-	var _ Builder[*cloudcontrolv1beta1.Network] = &cloudcontrolv1beta1.NetworkBuilder{}
+	var _ Builder[*cloudcontrolv1beta1.Network] = (*cloudcontrolv1beta1.NetworkBuilder)(nil)
 
 	canNotCreateKcp(
 		"Managed network w/out scope can not be created",

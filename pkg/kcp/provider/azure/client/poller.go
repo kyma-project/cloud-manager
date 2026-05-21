@@ -40,7 +40,7 @@ type Poller[T any] interface {
 }
 
 func PollUntilDone[T any](poller Poller[T], err error) func(ctx context.Context, options *azruntime.PollUntilDoneOptions) (res T, err error) {
-	return func(ctx context.Context, options *azruntime.PollUntilDoneOptions) (res T, err error) {
+	return func(ctx context.Context, options *azruntime.PollUntilDoneOptions) (T, error) {
 		if err != nil {
 			var zero T
 			return zero, err

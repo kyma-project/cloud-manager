@@ -136,3 +136,13 @@ func Switch(defaultAction Action, cases ...Case) Action {
 func BuildSwitchAction(_ string, defaultAction Action, cases ...Case) Action {
 	return Switch(defaultAction, cases...)
 }
+
+func TryCatch(tryAction Action, catchAction Action) Action {
+	return func(ctx context.Context, state State) (error, context.Context) {
+		err, ctx := tryAction(ctx, state)
+		if err != nil {
+			_, ctx = catchAction(ctx, state)
+		}
+		return err, ctx
+	}
+}

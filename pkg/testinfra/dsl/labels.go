@@ -98,19 +98,21 @@ func HavingAnnotations(expectedAnnotations map[string]string) ObjAssertion {
 			actualValue, exists := actualAnnotations[key]
 			if !exists {
 				return fmt.Errorf(
-					"expected object %T %s/%s to have annotation %s, but it doesn't exist",
+					"expected object %T %s/%s to have annotation %s, but it doesn't exist, all annotations present: %v",
 					obj,
 					obj.GetNamespace(), obj.GetName(),
 					key,
+					actualAnnotations,
 				)
 			}
 			if actualValue != expectedValue {
 				return fmt.Errorf(
-					"expected object %T %s/%s to have annotation %s=%s, but got %s=%s",
+					"expected object %T %s/%s to have annotation %s=%s, but got %s=%s, all annotations present: %v",
 					obj,
 					obj.GetNamespace(), obj.GetName(),
 					key, expectedValue,
 					key, actualValue,
+					actualAnnotations,
 				)
 			}
 		}

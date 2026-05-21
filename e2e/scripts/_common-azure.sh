@@ -29,6 +29,16 @@ initRoleNamePeering() {
   ROLE_NAME_PEERING="${ROLE_NAME_PEERING:-$DEFAULT_VALUE}"
 }
 
+initRoleConditionDefault() {
+  local DEFAULT_VALUE=$1
+  ROLE_CONDITION_DEFAULT="${ROLE_CONDITION_DEFAULT:-$DEFAULT_VALUE}"
+  case $ROLE_CONDITION_DEFAULT in (/*) : ;; (*) ROLE_CONDITION_DEFAULT="${SCRIPT_DIR}/${ROLE_CONDITION_DEFAULT}" ;; esac
+  if [ ! -f "$ROLE_CONDITION_DEFAULT" ]; then
+    echo "ROLE_CONDITION_DEFAULT $ROLE_CONDITION_DEFAULT not found"
+    exit 1
+  fi
+}
+
 # Azure specific
 azureValidateSubscription(){
     if [ -z "${AZURE_SUBSCRIPTION_ID+x}" ]; then
@@ -53,6 +63,7 @@ azureInit() {
 
   initRoleFileDefault '../../docs/contributor/permissions/azure_default.json'
   initRoleFilePeering '../../docs/contributor/permissions/azure_peering.json'
+  initRoleConditionDefault '../../docs/contributor/permissions/azure_default_condition.txt'
 
   initRoleNameDefault 'cloud_manager_e2e'
   initRoleNamePeering 'cloud_manager_peering_e2e'
@@ -60,6 +71,7 @@ azureInit() {
 
   echo "ROLE_NAME_DEFAULT=$ROLE_NAME_DEFAULT"
   echo "ROLE_FILE_DEFAULT=$ROLE_FILE_DEFAULT"
+  echo "ROLE_CONDITION_DEFAULT=$ROLE_CONDITION_DEFAULT"
   echo "ROLE_NAME_PEERING=$ROLE_NAME_PEERING"
   echo "ROLE_FILE_PEERING=$ROLE_FILE_PEERING"
   echo ""
@@ -70,4 +82,3 @@ azureInit() {
   echo ""
 
 }
-

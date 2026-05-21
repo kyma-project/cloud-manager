@@ -101,6 +101,7 @@ type VpcNetworkStatusIdentifiers struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Type",type="string",JSONPath=".spec.type"
 // +kubebuilder:printcolumn:name="Subscription",type="string",JSONPath=".spec.subscription"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.conditions[?(@.type=="Ready")].reason`
 // +kubebuilder:validation:XValidation:rule="size(self.metadata.name)<60",message="The name must be shorter than 60 chars"

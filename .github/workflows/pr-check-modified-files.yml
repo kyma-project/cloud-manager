@@ -27,6 +27,7 @@ jobs:
       - name: Runs sync, tidy & fmt
         run: |
           ./config/sync.sh
+          ./docs/contributor/permissions/sort.sh
           go mod tidy
           go fmt ./...
       - name: Check modified files

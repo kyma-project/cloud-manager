@@ -2,10 +2,11 @@ package util
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
-	"strings"
 )
 
 type ResourceDetails struct {
@@ -69,10 +70,15 @@ func (rd *ResourceDetails) IsValid() bool {
 func (rd *ResourceDetails) String() string {
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf(
-		"/subscriptions/%s/resourceGroups/%s",
+		"/subscriptions/%s",
 		rd.Subscription,
-		rd.ResourceGroup,
 	))
+	if rd.ResourceGroup != "" {
+		builder.WriteString(fmt.Sprintf(
+			"/resourceGroups/%s",
+			rd.ResourceGroup,
+		))
+	}
 	if rd.Provider != "" {
 		builder.WriteString(fmt.Sprintf(
 			"/providers/%s/%s/%s",
@@ -106,6 +112,19 @@ func ParseResourceID(resourceID string) (ResourceDetails, error) {
 	rd.valid = true
 
 	return rd, nil
+}
+
+type SubscriptionResourceId struct {
+	*ResourceDetails
+}
+
+func NewSubscriptionResourceId(subscription string) *SubscriptionResourceId {
+	return &SubscriptionResourceId{
+		ResourceDetails: &ResourceDetails{
+			Subscription: subscription,
+			valid:        len(subscription) > 0,
+		},
+	}
 }
 
 func NewResourceGroupResourceId(subscription, resourceGroup string) *ResourceDetails {
@@ -303,5 +322,55 @@ func NewDnsForwardingRulesetResourceId(subscription, resourceGroup, dnsForwardin
 		ResourceType:  "dnsForwardingRulesets",
 		ResourceName:  dnsForwardingRulesetName,
 		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(dnsForwardingRulesetName) > 0,
+	}
+}
+
+// NewNetworkWatcherResourceId /subscriptions/xxxxxx-117a-4742-xxxx-6edbcdee6a04/resourceGroups/NetworkWatcherRG/providers/Microsoft.Network/networkWatchers/NetworkWatcher_eastus2
+func NewNetworkWatcherResourceId(subscription, resourceGroup, networkWatcherName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:  subscription,
+		ResourceGroup: resourceGroup,
+		Provider:      "Microsoft.Network",
+		ResourceType:  "networkWatchers",
+		ResourceName:  networkWatcherName,
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(networkWatcherName) > 0,
+	}
+}
+
+// NewNetworkFlowLogResourceId /subscriptions/xxxxx-117a-4742-xxxx-6edbcdee6a04/resourceGroups/NetworkWatcherRG/providers/Microsoft.Network/networkWatchers/NetworkWatcher_westeurope/flowLogs/{vnet-resource-group}-{vnet-name}-flowlog
+func NewNetworkFlowLogResourceId(subscription, resourceGroup, networkWatcherName, networkFlowLogName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:    subscription,
+		ResourceGroup:   resourceGroup,
+		Provider:        "Microsoft.Network",
+		ResourceType:    "networkWatchers",
+		ResourceName:    networkWatcherName,
+		SubResourceType: "flowLogs",
+		SubResourceName: networkFlowLogName,
+		valid:           len(subscription) > 0 && len(resourceGroup) > 0 && len(networkWatcherName) > 0 && len(networkFlowLogName) > 0,
+	}
+}
+
+// NewLogAnalyticsWorkspaceResourceId /subscriptions/xxxxx-117a-4742-xxxx-6edbcdee6a04/resourcegroups/my-rg/providers/Microsoft.OperationalInsights/workspaces/phenix-azure-test
+func NewLogAnalyticsWorkspaceResourceId(subscription, resourceGroup, workspaceName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:  subscription,
+		ResourceGroup: resourceGroup,
+		Provider:      "Microsoft.OperationalInsights",
+		ResourceType:  "workspaces",
+		ResourceName:  workspaceName,
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(workspaceName) > 0,
+	}
+}
+
+// NewStorageAccountResourceId /subscriptions/xxxxx-117a-4742-xxxx-6edbcdee6a04/resourceGroups/my-rg/providers/Microsoft.Storage/storageAccounts/mystorageaccount
+func NewStorageAccountResourceId(subscription, resourceGroup, storageAccountName string) *ResourceDetails {
+	return &ResourceDetails{
+		Subscription:  subscription,
+		ResourceGroup: resourceGroup,
+		Provider:      "Microsoft.Storage",
+		ResourceType:  "storageAccounts",
+		ResourceName:  storageAccountName,
+		valid:         len(subscription) > 0 && len(resourceGroup) > 0 && len(storageAccountName) > 0,
 	}
 }
