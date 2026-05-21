@@ -127,21 +127,6 @@ composed.ComposeActionsNoName(
 )
 ```
 
-## 9. Not checking feature flag early
-
-```go
-// BAD: feature flags not loaded
-composed.ComposeActionsNoName(composed.LoadObj, createResource)
-
-// GOOD: load context and check apiDisabled first
-composed.ComposeActionsNoName(
-    feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.GcpRedisCluster{}),
-    composed.If(feature.ApiDisabledPredicate, composed.StopAndForgetAction),
-    composed.LoadObj,
-    createResource,
-)
-```
-
 ## 10. Mutating state in actions (state changes are local)
 
 Actions receive a pointer to state but mutations to local-scope values are not shared between separate action pipelines.
