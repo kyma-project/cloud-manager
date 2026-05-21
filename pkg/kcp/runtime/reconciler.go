@@ -50,8 +50,6 @@ func (r *runtimeReconciler) Reconcile(ctx context.Context, request reconcile.Req
 	state := r.newState(request.NamespacedName)
 	action := r.newAction()
 
-	composed.LoggerFromCtx(ctx).Info("Reconciling runtime start")
-
 	return composed.Handling().
 		WithMetrics("runtime", util.RequestObjToString(request)).
 		WithTracker(Tracker).
@@ -74,10 +72,6 @@ func (r *runtimeReconciler) newAction() composed.Action {
 	providerFlow := composed.If(
 		defaultSecurityGate.ShouldRunPredicate,
 		composed.ComposeActionsNoName(
-			func(ctx context.Context, _ composed.State) (error, context.Context) {
-				composed.LoggerFromCtx(ctx).Info("Provider flow...")
-				return nil, ctx
-			},
 			composed.Switch(
 				nil,
 				composed.NewCase(awsProviderPredicate, awssecurity.New(r.awsStateFactory)),

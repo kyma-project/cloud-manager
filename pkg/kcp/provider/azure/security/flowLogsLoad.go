@@ -16,7 +16,7 @@ func flowLogsLoad(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	resp, err := state.azureClient.GetFlowLog(ctx,
-		ResourceGroupDataName(state.ObjAsRuntime().Spec.Shoot.Name),
+		ResourceGroupWatcherName(),
 		NetworkWatcherName(state.ObjAsRuntime().Spec.Shoot.Region),
 		FlowLogName(state.VpcNetwork()),
 		nil)

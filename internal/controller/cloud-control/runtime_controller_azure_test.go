@@ -272,7 +272,7 @@ var _ = Describe("Feature: Runtime", func() {
 
 			By("Then Azure flow log is created", func() {
 				Eventually(func() error {
-					resp, err := azureMock.GetFlowLog(infra.Ctx(), azureDataResourceGroupName, azureNetworkWatcherName, gardenerVpcName, nil)
+					resp, err := azureMock.GetFlowLog(infra.Ctx(), azureNetworkWatcherResourceGroupName, azureNetworkWatcherName, gardenerVpcName, nil)
 					if err != nil {
 						return err
 					}
@@ -342,7 +342,7 @@ var _ = Describe("Feature: Runtime", func() {
 
 			By("Then Azure flow log does not exist", func() {
 				Eventually(func() error {
-					_, err := azureMock.GetFlowLog(infra.Ctx(), azureDataResourceGroupName, azureNetworkWatcherName, gardenerVpcName, nil)
+					_, err := azureMock.GetFlowLog(infra.Ctx(), azureNetworkWatcherResourceGroupName, azureNetworkWatcherName, gardenerVpcName, nil)
 					if azuremeta.IsNotFound(err) {
 						return nil
 					}
@@ -621,7 +621,7 @@ var _ = Describe("Feature: Runtime", func() {
 
 			By("Then Azure flow log is created", func() {
 				Eventually(func() error {
-					resp, err := azureMock.GetFlowLog(infra.Ctx(), azureDataResourceGroupName, azureNetworkWatcherName, kymaVpcNetworkName, nil)
+					resp, err := azureMock.GetFlowLog(infra.Ctx(), azureNetworkWatcherResourceGroupName, azureNetworkWatcherName, kymaVpcNetworkName, nil)
 					if err != nil {
 						return err
 					}
@@ -690,7 +690,7 @@ var _ = Describe("Feature: Runtime", func() {
 
 			By("Then Azure flow log does not exist", func() {
 				Eventually(func() error {
-					_, err := azureMock.GetFlowLog(infra.Ctx(), azureDataResourceGroupName, azureNetworkWatcherName, kymaVpcNetworkName, nil)
+					_, err := azureMock.GetFlowLog(infra.Ctx(), azureNetworkWatcherResourceGroupName, azureNetworkWatcherName, kymaVpcNetworkName, nil)
 					if azuremeta.IsNotFound(err) {
 						return nil
 					}

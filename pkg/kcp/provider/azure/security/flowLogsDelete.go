@@ -21,7 +21,7 @@ func flowLogsDelete(ctx context.Context, st composed.State) (error, context.Cont
 	logger.Info("Deleting flow log", "name", flowLogName)
 
 	_, err := azureclient.PollUntilDone(state.azureClient.DeleteFlowLog(ctx,
-		ResourceGroupDataName(state.ObjAsRuntime().Spec.Shoot.Name),
+		ResourceGroupWatcherName(),
 		NetworkWatcherName(state.ObjAsRuntime().Spec.Shoot.Region),
 		flowLogName,
 		nil))(ctx, nil)

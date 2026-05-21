@@ -67,7 +67,7 @@ func flowLogsCreate(ctx context.Context, st composed.State) (error, context.Cont
 	}
 
 	resp, err := azureclient.PollUntilDone(state.azureClient.CreateOrUpdateFlowLog(ctx,
-		ResourceGroupDataName(state.ObjAsRuntime().Spec.Shoot.Name),
+		ResourceGroupWatcherName(),
 		NetworkWatcherName(state.ObjAsRuntime().Spec.Shoot.Region),
 		flowLogName,
 		params,

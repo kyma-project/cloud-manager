@@ -217,13 +217,11 @@ func PatchObjMergeAnnotations(ctx context.Context, obj client.Object, clnt clien
 			"annotations": annotations,
 		},
 	}
-	logger := LoggerFromCtx(ctx)
 	allEqual := true
 	for k, v := range annotations {
 		if obj.GetAnnotations()[k] != v {
 			obj.GetAnnotations()[k] = v
 			allEqual = false
-			logger.Info("PatchObjMergeAnnotations - annotation changed", "key", k, "value", v)
 			break
 		}
 	}

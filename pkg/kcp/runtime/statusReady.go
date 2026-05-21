@@ -20,7 +20,7 @@ func statusReady(ctx context.Context, st composed.State) (error, context.Context
 		defaultSecurityGate.markSuccess(ds)
 	}
 
-	composed.LoggerFromCtx(ctx).Info("Runtime provider success - Ready")
+	composed.LoggerFromCtx(ctx).Info("Runtime security provider success - Ready")
 
 	return state.PatchStatusAnnotations(ctx, "Ready", "Ready", state.ObjAsRuntime().Generation)
 }
