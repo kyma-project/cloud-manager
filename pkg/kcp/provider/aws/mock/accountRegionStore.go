@@ -89,3 +89,15 @@ func (s *accountRegionStore) SearchCertificates(ctx context.Context, input *acm.
 func (s *accountRegionStore) ListTagsForCertificate(ctx context.Context, arn string) ([]acmtypes.Tag, error) {
 	return s.certificateStore.ListTagsForCertificate(ctx, arn)
 }
+
+func (s *accountRegionStore) ListCertificates(ctx context.Context) ([]acmtypes.CertificateSummary, error) {
+	return s.certificateStore.ListCertificates(ctx)
+}
+
+func (s *accountRegionStore) ListCertificateTags(ctx context.Context, arn string) ([]acmtypes.Tag, error) {
+	return s.certificateStore.ListCertificateTags(ctx, arn)
+}
+
+func (s *accountRegionStore) ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error) {
+	return s.webAclStore.ListTagsForWebACL(ctx, resourceArn)
+}
