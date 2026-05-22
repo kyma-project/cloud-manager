@@ -28,6 +28,7 @@ type FeatureName = string
 const (
 	FeatureUnknown FeatureName = "unknown"
 
+	FeatureCertificate       FeatureName = "certificate"
 	FeatureNfs               FeatureName = "nfs"
 	FeatureNfsBackup         FeatureName = "nfsBackup"
 	FeaturePeering           FeatureName = "peering"

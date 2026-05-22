@@ -3,6 +3,8 @@ package mock
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/service/acm"
+	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 )
@@ -16,6 +18,7 @@ type accountRegionStore struct {
 	*elastiCacheClientFake
 	*routeTablesStore
 	*webAclStore
+	*certificateStore
 
 	region  string
 	account string
@@ -31,6 +34,7 @@ func newAccountRegionStore(account, region string) *accountRegionStore {
 		nfsStore:              &nfsStore{},
 		routeTablesStore:      &routeTablesStore{},
 		webAclStore:           newWebAclStore(account, region),
+		certificateStore:      newCertificateStore(account, region),
 	}
 }
 
@@ -58,4 +62,22 @@ func (s *accountRegionStore) GetWebACL(ctx context.Context, name, id string, sco
 
 func (s *accountRegionStore) ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error) {
 	return s.webAclStore.ListWebACLs(ctx, scope)
+}
+
+// AcmClient adapter methods - wrap certificateStore methods to match Client interface
+
+func (s *accountRegionStore) ImportCertificate(ctx context.Context, input *acm.ImportCertificateInput) (string, error) {
+	return s.certificateStore.ImportCertificate(ctx, input)
+}
+
+func (s *accountRegionStore) DescribeCertificate(ctx context.Context, arn string) (*acmtypes.CertificateDetail, error) {
+	return s.certificateStore.DescribeCertificate(ctx, arn)
+}
+
+func (s *accountRegionStore) DeleteCertificate(ctx context.Context, arn string) error {
+	return s.certificateStore.DeleteCertificate(ctx, arn)
+}
+
+func (s *accountRegionStore) GetCertificate(ctx context.Context, arn string) (string, string, error) {
+	return s.certificateStore.GetCertificate(ctx, arn)
 }

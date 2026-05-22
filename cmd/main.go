@@ -92,6 +92,7 @@ import (
 	sapnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/nfsinstance/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
+	awscertificateclient "github.com/kyma-project/cloud-manager/pkg/skr/awscertificate/client"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	awswebaclclient "github.com/kyma-project/cloud-manager/pkg/skr/awswebacl/client"
@@ -331,6 +332,11 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupAwsWebAclReconciler(skrRegistry, awswebaclclient.NewClientProvider(), abstractions.NewOSEnvironment()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsWebAcl")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupAwsCertificateReconciler(skrRegistry, awscertificateclient.NewClientProvider(), abstractions.NewOSEnvironment()); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AwsCertificate")
 		os.Exit(1)
 	}
 
