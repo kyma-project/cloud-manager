@@ -25,9 +25,16 @@ listKeys() {
 
 create() {
   log "Creating new key for APP_ID $APP_ID"
-  $SECRET=$(az ad app credential reset --id "$APP_ID" --append --query password --only-show-errors -o tsv)
-  putCredentialKeyVal "clientId" "$APP_ID"
+  local SECRET
+  local TENANT
+  local SUBSCRIPTION
+  SECRET=$(az ad app credential reset --id "$APP_ID" --append --query password --only-show-errors -o tsv)
+  TENANT=$(az account show --query tenantId --output tsv)
+  SUBSCRIPTION=$(az account show --query id --output tsv)
+  putCredentialKeyVal "clientID" "$APP_ID"
   putCredentialKeyVal "clientSecret" "$SECRET"
+  putCredentialKeyVal "subscriptionID" "$SUBSCRIPTION"
+  putCredentialKeyVal "tenantID" "$TENANT"
   saveCredentialsToGarden "$AZURE_GARDEN_SECRET"
 }
 

@@ -66,6 +66,7 @@ saveCredentialsToGarden() {
     echo "Error: saveCredentialsToGarden called w/out secret name parameter"
     exit 1
   fi
+  log "Saving credentials to garden secret: $SECRET_NAME"
 
   local FN
   FN=$(mktemp)
