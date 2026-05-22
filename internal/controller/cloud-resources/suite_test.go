@@ -178,6 +178,10 @@ var _ = BeforeSuite(func() {
 	Expect(SetupAwsWebAclReconciler(infra.Registry(), infra.AwsMock().WebAclProvider(), env)).
 		NotTo(HaveOccurred())
 
+	// AwsCertificate
+	Expect(SetupAwsCertificateReconciler(infra.Registry(), infra.AwsMock().CertificateProvider(), env)).
+		NotTo(HaveOccurred())
+
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
 })
