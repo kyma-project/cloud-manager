@@ -4,6 +4,13 @@
     {
       "Effect": "Allow",
       "Action": [
+        "acm:AddTagsToCertificate",
+        "acm:DeleteCertificate",
+        "acm:DescribeCertificate",
+        "acm:GetCertificate",
+        "acm:ImportCertificate",
+        "acm:ListCertificates",
+        "acm:ListTagsForCertificate",
         "backup-storage:MountCapsule",
         "backup:CreateBackupVault",
         "backup:DeleteBackupVault",
