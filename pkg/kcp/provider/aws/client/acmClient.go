@@ -16,6 +16,8 @@ type AcmClient interface {
 	DeleteCertificate(ctx context.Context, arn string) error
 	SearchCertificates(ctx context.Context, input *acm.SearchCertificatesInput) ([]acmtypes.CertificateSearchResult, error)
 	ListTagsForCertificate(ctx context.Context, arn string) ([]acmtypes.Tag, error)
+	ListCertificates(ctx context.Context) ([]acmtypes.CertificateSummary, error)
+	ListCertificateTags(ctx context.Context, arn string) ([]acmtypes.Tag, error)
 }
 
 func NewAcmClient(svc *acm.Client) AcmClient {
@@ -95,5 +97,23 @@ func (c *acmClient) ListTagsForCertificate(ctx context.Context, arn string) ([]a
 		return nil, err
 	}
 
+	return out.Tags, nil
+}
+
+func (c *acmClient) ListCertificates(ctx context.Context) ([]acmtypes.CertificateSummary, error) {
+	out, err := c.svc.ListCertificates(ctx, &acm.ListCertificatesInput{})
+	if err != nil {
+		return nil, err
+	}
+	return out.CertificateSummaryList, nil
+}
+
+func (c *acmClient) ListCertificateTags(ctx context.Context, arn string) ([]acmtypes.Tag, error) {
+	out, err := c.svc.ListTagsForCertificate(ctx, &acm.ListTagsForCertificateInput{
+		CertificateArn: &arn,
+	})
+	if err != nil {
+		return nil, err
+	}
 	return out.Tags, nil
 }
