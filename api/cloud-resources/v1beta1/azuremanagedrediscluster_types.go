@@ -8,16 +8,10 @@ import (
 
 // AzureManagedRedisClusterSpec defines the desired state of AzureManagedRedisCluster.
 type AzureManagedRedisClusterSpec struct {
-	// RedisTier defines the pricing tier for Azure Managed Redis.
+	// RedisTier defines the Kyma service tier. C tiers are HA clustered (OSSCluster mode).
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="redisTier is immutable."
-	RedisTier AzureManagedRedisSKU `json:"redisTier"`
-
-	// HighAvailability enables zone-redundant replica deployment.
-	// +optional
-	// +kubebuilder:default=true
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="highAvailability is immutable."
-	HighAvailability bool `json:"highAvailability"`
+	RedisTier AzureManagedRedisClusterTier `json:"redisTier"`
 
 	// AuthSecret customises the name and labels of the generated connection secret.
 	// +optional
