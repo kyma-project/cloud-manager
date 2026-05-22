@@ -1,6 +1,8 @@
 name: E2E All Providers
 
 on:
+  schedule:
+    - cron: '0 6 * * 1-5'
   workflow_dispatch:
     inputs:
       aws:
@@ -37,29 +39,90 @@ on:
 
 jobs:
   aws:
-    if: ${{ inputs.aws }}
+    if: ${{ github.event_name == 'schedule' || inputs.aws }}
     uses: ./.github/workflows/e2e-tests.yaml
     secrets: inherit
     with:
       provider: aws
       tags: ${{ inputs.tags }}
-      feature_flags: ${{ inputs.feature_flags }}
-      debug: ${{ inputs.debug }}
+      feature_flags: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
+      debug: ${{ inputs.debug || true }}
   azure:
-    if: ${{ inputs.azure }}
+    if: ${{ github.event_name == 'schedule' || inputs.azure }}
     uses: ./.github/workflows/e2e-tests.yaml
     secrets: inherit
     with:
       provider: azure
       tags: ${{ inputs.tags }}
-      feature_flags: ${{ inputs.feature_flags }}
-      debug: ${{ inputs.debug }}
+      feature_flags: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
+      debug: ${{ inputs.debug || true }}
   gcp:
-    if: ${{ inputs.gcp }}
+    if: ${{ github.event_name == 'schedule' || inputs.gcp }}
     uses: ./.github/workflows/e2e-tests.yaml
     secrets: inherit
     with:
       provider: gcp
       tags: ${{ inputs.tags }}
-      feature_flags: ${{ inputs.feature_flags }}
-      debug: ${{ inputs.debug }}
+      feature_flags: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
+      debug: ${{ inputs.debug || true }}
+
+  notify:
+    name: Notify Slack
+    needs: [aws, azure, gcp]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - name: Get job durations
+        id: durations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          JOBS_JSON=$(gh api \
+            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs" \
+            --paginate \
+            --jq '.jobs')
+
+          compute_duration() {
+            local name_fragment="$1"
+            local result="$2"
+            if [ "$result" = "skipped" ]; then
+              echo "skipped"; return
+            fi
+            local started completed
+            started=$(echo "$JOBS_JSON" | jq -r \
+              --arg n "$name_fragment" \
+              '[.[] | select(.name | ascii_downcase | contains($n))] | first | .started_at // empty')
+            completed=$(echo "$JOBS_JSON" | jq -r \
+              --arg n "$name_fragment" \
+              '[.[] | select(.name | ascii_downcase | contains($n))] | first | .completed_at // empty')
+            if [ -z "$started" ] || [ -z "$completed" ]; then
+              echo "N/A"; return
+            fi
+            local s e diff mins
+            s=$(date -d "$started" +%s 2>/dev/null || date -jf "%Y-%m-%dT%H:%M:%SZ" "$started" +%s)
+            e=$(date -d "$completed" +%s 2>/dev/null || date -jf "%Y-%m-%dT%H:%M:%SZ" "$completed" +%s)
+            diff=$(( e - s ))
+            mins=$(( (diff + 59) / 60 ))
+            echo "${mins}m"
+          }
+
+          echo "aws_dur=$(compute_duration 'test aws' '${{ needs.aws.result }}')" >> "$GITHUB_OUTPUT"
+          echo "azure_dur=$(compute_duration 'test azure' '${{ needs.azure.result }}')" >> "$GITHUB_OUTPUT"
+          echo "gcp_dur=$(compute_duration 'test gcp' '${{ needs.gcp.result }}')" >> "$GITHUB_OUTPUT"
+
+      - name: Format start time
+        id: start_time
+        run: |
+          T=$(date -d "${{ github.run_started_at }}" +"%H:%M:%S" 2>/dev/null || \
+              date -jf "%Y-%m-%dT%H:%M:%SZ" "${{ github.run_started_at }}" +"%H:%M:%S")
+          echo "value=$T" >> "$GITHUB_OUTPUT"
+
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v3
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "CloudManager E2E test run https://github.com/kyma-project/cloud-manager/actions/runs/${{ github.run_id }} started at ${{ steps.start_time.outputs.value }}\n* AWS ${{ steps.durations.outputs.aws_dur }} ${{ needs.aws.result == 'success' && ':white_check_mark:' || needs.aws.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* Azure ${{ steps.durations.outputs.azure_dur }} ${{ needs.azure.result == 'success' && ':white_check_mark:' || needs.azure.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* GCP ${{ steps.durations.outputs.gcp_dur }} ${{ needs.gcp.result == 'success' && ':white_check_mark:' || needs.gcp.result == 'skipped' && ':white_check_mark:' || ':x:' }}"
