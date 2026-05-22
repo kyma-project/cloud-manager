@@ -86,6 +86,7 @@ rules:
   - alicloudnfsvolumes
   - alicloudredisclusters
   - alicloudredisinstances
+  - awscertificates
   - awsnfsVolumeRestores
   - awsnfsbackupschedules
   - awsnfsvolumebackups
@@ -131,6 +132,7 @@ rules:
   - alicloudnfsvolumes/finalizers
   - alicloudredisclusters/finalizers
   - alicloudredisinstances/finalizers
+  - awscertificates/finalizers
   - awsnfsVolumeRestores/finalizers
   - awsnfsbackupschedules/finalizers
   - awsnfsvolumebackups/finalizers
@@ -170,6 +172,7 @@ rules:
   - alicloudnfsvolumes/status
   - alicloudredisclusters/status
   - alicloudredisinstances/status
+  - awscertificates/status
   - awsnfsVolumeRestores/status
   - awsnfsbackupschedules/status
   - awsnfsvolumebackups/status
