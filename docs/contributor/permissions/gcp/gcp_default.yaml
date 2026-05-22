@@ -61,12 +61,12 @@ includedPermissions:
   - redis.operations.get
   - redis.operations.list
   - resourcemanager.projects.get
+  - securitycentermanagement.securityCenterServices.get
+  - securitycentermanagement.securityCenterServices.update
   - servicenetworking.operations.get
   - servicenetworking.services.addPeering
   - servicenetworking.services.deleteConnection
   - servicenetworking.services.get
-  - securitycentermanagement.securityCenterServices.get
-  - securitycentermanagement.securityCenterServices.update
   - serviceusage.operations.get
   - serviceusage.services.enable
   - serviceusage.services.get
