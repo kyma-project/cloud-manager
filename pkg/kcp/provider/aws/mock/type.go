@@ -5,6 +5,7 @@ import (
 	awsexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/exposedData/client"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
+	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
@@ -75,6 +76,7 @@ type Providers interface {
 	VpcNetworkProvider() awsclient.SkrClientProvider[awsvpcnetworkclient.Client]
 	WebAclProvider() awsclient.SkrClientProvider[awswebaclclient.Client]
 	CertificateProvider() awsclient.SkrClientProvider[awscertificateclient.Client]
+	NukeProvider() awsclient.SkrClientProvider[awsnukeclient.NukeClient]
 }
 
 type Configs interface {

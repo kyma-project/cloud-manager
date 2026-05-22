@@ -354,6 +354,48 @@ func (s *certificateStore) SearchCertificates(ctx context.Context, input *acm.Se
 	return results, nil
 }
 
+func (s *certificateStore) ListCertificates(ctx context.Context) ([]acmtypes.CertificateSummary, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	summaries := make([]acmtypes.CertificateSummary, 0, len(s.items))
+	for _, entry := range s.items {
+		if entry.detail != nil {
+			summaries = append(summaries, acmtypes.CertificateSummary{
+				CertificateArn: entry.detail.CertificateArn,
+				DomainName:     entry.detail.DomainName,
+				Status:         entry.detail.Status,
+			})
+		}
+	}
+
+	summariesCopy, err := util.JsonClone(summaries)
+	if err != nil {
+		return nil, err
+	}
+	return summariesCopy, nil
+}
+
+func (s *certificateStore) ListCertificateTags(ctx context.Context, arn string) ([]acmtypes.Tag, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	entry, ok := s.items[arn]
+	if !ok {
+		return nil, &smithy.GenericAPIError{
+			Code:    "ResourceNotFoundException",
+			Message: fmt.Sprintf("Certificate with ARN %s does not exist", arn),
+		}
+	}
+
+	// Return a copy of tags to avoid external modifications
+	tagsCopy, err := util.JsonClone(entry.tags)
+	if err != nil {
+		return nil, err
+	}
+	return tagsCopy, nil
+}
+
 func (s *certificateStore) AcmClient() awsclient.AcmClient {
 	return s
 }
