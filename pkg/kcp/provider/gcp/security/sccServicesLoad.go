@@ -13,6 +13,7 @@ var sccServiceIDs = []string{
 	"web-security-scanner",
 	"event-threat-detection",
 	"vm-threat-detection",
+	"GCE_VULNERABILITY_ASSESSMENT",
 }
 
 func sccServicesLoad(ctx context.Context, st composed.State) (error, context.Context) {

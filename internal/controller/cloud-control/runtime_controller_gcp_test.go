@@ -204,6 +204,12 @@ var _ = Describe("Feature: Runtime", func() {
 					Should(Succeed())
 			})
 
+			By("Then GCP SCC service GCE_VULNERABILITY_ASSESSMENT is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "GCE_VULNERABILITY_ASSESSMENT", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
 		} // if security feature enabled for GCP
 
 		// DELETE ===============================================================
@@ -235,6 +241,12 @@ var _ = Describe("Feature: Runtime", func() {
 			By("Then GCP SCC service vm-threat-detection is DISABLED", func() {
 				Eventually(gcpSccServiceHasState).
 					WithArguments(infra.Ctx(), gcpMock, "vm-threat-detection", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service GCE_VULNERABILITY_ASSESSMENT is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "GCE_VULNERABILITY_ASSESSMENT", securitycentermanagementpb.SecurityCenterService_DISABLED).
 					Should(Succeed())
 			})
 
@@ -406,6 +418,12 @@ var _ = Describe("Feature: Runtime", func() {
 					Should(Succeed())
 			})
 
+			By("Then GCP SCC service GCE_VULNERABILITY_ASSESSMENT is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "GCE_VULNERABILITY_ASSESSMENT", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
 		} // if security feature enabled for GCP
 
 		// DELETE ===============================================================
@@ -437,6 +455,12 @@ var _ = Describe("Feature: Runtime", func() {
 			By("Then GCP SCC service vm-threat-detection is DISABLED", func() {
 				Eventually(gcpSccServiceHasState).
 					WithArguments(infra.Ctx(), gcpMock, "vm-threat-detection", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service GCE_VULNERABILITY_ASSESSMENT is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "GCE_VULNERABILITY_ASSESSMENT", securitycentermanagementpb.SecurityCenterService_DISABLED).
 					Should(Succeed())
 			})
 
