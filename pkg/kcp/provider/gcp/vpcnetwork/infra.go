@@ -150,7 +150,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 	router, err := o.client.GetRouter(ctx, &computepb.GetRouterRequest{
 		Project: o.gcpProjectId,
 		Region:  o.region,
-		Router:  o.name,
+		Router:  RouterName(o.name),
 	})
 	if err != nil && !gcpmeta.IsNotFound(err) {
 		return nil, fmt.Errorf("error getting gcp router for create: %w", err)
@@ -160,7 +160,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 			Project: o.gcpProjectId,
 			Region:  o.region,
 			RouterResource: &computepb.Router{
-				Name:    new(o.name),
+				Name:    new(RouterName(o.name)),
 				Network: new(net.GetSelfLink()),
 			},
 		})
@@ -176,7 +176,7 @@ func CreateInfra(ctx context.Context, opts ...CreateInfraOption) (*CreateInfraOu
 		router, err = o.client.GetRouter(ctx, &computepb.GetRouterRequest{
 			Project: o.gcpProjectId,
 			Region:  o.region,
-			Router:  o.name,
+			Router:  RouterName(o.name),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("error getting inserted gcp router: %w", err)
@@ -207,7 +207,7 @@ func DeleteInfra(ctx context.Context, opts ...CreateInfraOption) error {
 	router, err := o.client.GetRouter(ctx, &computepb.GetRouterRequest{
 		Project: o.gcpProjectId,
 		Region:  o.region,
-		Router:  o.name,
+		Router:  RouterName(o.name),
 	})
 	if err != nil && !gcpmeta.IsNotFound(err) {
 		return fmt.Errorf("error getting gcp router for delete: %w", err)

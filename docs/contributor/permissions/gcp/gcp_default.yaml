@@ -65,6 +65,8 @@ includedPermissions:
   - servicenetworking.services.addPeering
   - servicenetworking.services.deleteConnection
   - servicenetworking.services.get
+  - securitycentermanagement.securityCenterServices.get
+  - securitycentermanagement.securityCenterServices.update
   - serviceusage.operations.get
   - serviceusage.services.enable
   - serviceusage.services.get

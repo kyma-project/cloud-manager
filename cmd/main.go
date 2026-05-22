@@ -28,6 +28,7 @@ import (
 	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
 	azurevpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork/client"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
+	gcpsecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/security/client"
 	gcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork"
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
 	sapvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/vpcnetwork"
@@ -530,6 +531,7 @@ func main() {
 		ctx,
 		mgr,
 		azuresecurityclient.NewClientProvider(),
+		gcpsecurityclient.NewClientProvider(gcpClients),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Runtime")
 		os.Exit(1)

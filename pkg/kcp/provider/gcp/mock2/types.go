@@ -9,6 +9,7 @@ import (
 	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	gcpsecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/security/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
 )
@@ -27,6 +28,7 @@ type Clients interface {
 	gcpclient.ServiceNetworkingClient
 	gcpclient.SubnetClient
 	gcpclient.ResourceManagerClient
+	gcpclient.SecurityCenterManagementClient
 }
 
 type Providers interface {
@@ -42,6 +44,7 @@ type Providers interface {
 	NfsRestoreV2Provider() gcpclient.GcpClientProvider[gcpnfsrestoreclientv2.FileRestoreClient]
 	IpRangeComputeProvider() gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient]
 	IpRangeServiceNetworkingProvider() gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient]
+	SecurityProvider() gcpclient.GcpClientProvider[gcpsecurityclient.Client]
 	// all others feature's providers as they are refactored to switch using these new GCP clients
 }
 

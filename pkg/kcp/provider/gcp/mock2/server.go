@@ -13,6 +13,7 @@ import (
 	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
 	gcpredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance/client"
+	gcpsecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/security/client"
 	gcpsubnetclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/subnet/client"
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -134,6 +135,12 @@ func (s *server) IpRangeServiceNetworkingProvider() gcpclient.GcpClientProvider[
 			return nil
 		}
 		return gcpiprangeclient.NewServiceNetworkingClientFromWrapped(sub)
+	}
+}
+
+func (s *server) SecurityProvider() gcpclient.GcpClientProvider[gcpsecurityclient.Client] {
+	return func(projectId string) gcpsecurityclient.Client {
+		return s.GetSubscription(projectId)
 	}
 }
 

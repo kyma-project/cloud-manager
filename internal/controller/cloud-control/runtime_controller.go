@@ -11,7 +11,9 @@ import (
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuresecurity "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security"
 	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpsecurity "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/security"
+	gcpsecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/security/client"
 	kcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -22,13 +24,14 @@ func SetupRuntimeReconciler(
 	ctx context.Context,
 	mgr ctrl.Manager,
 	azureClientProvider azureclient.ClientProvider[azuresecurityclient.Client],
+	gcpSecurityClientProvider gcpclient.GcpClientProvider[gcpsecurityclient.Client],
 ) error {
 	return NewRuntimeController(
 		kcpruntime.NewRuntimeReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr)),
 			awssecurity.NewStateFactory(),
 			azuresecurity.NewStateFactory(azureClientProvider),
-			gcpsecurity.NewStateFactory(),
+			gcpsecurity.NewStateFactory(gcpSecurityClientProvider),
 		),
 	).SetupWithManager(ctx, mgr)
 }

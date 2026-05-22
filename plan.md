@@ -89,7 +89,8 @@ From the Go proto file and GCP documentation:
 | Web Security Scanner | `web-security-scanner` |
 | Event Threat Detection | `event-threat-detection` |
 | VM Threat Detection | `vm-threat-detection` |
-| Vulnerability Assessment | `rapid-vulnerability-detection` [INFERRED — GCP's internal name for the "Vulnerability Assessment" offering; confirm with `gcloud scc manage services list`] |
+
+Note: "Vulnerability Assessment" (Rapid Vulnerability Detection) is **not exposed** via the `securityCenterServices` endpoint. It is managed through a separate GCP API (VM Manager / OS Config) and is out of scope for this reconciler.
 
 ---
 
@@ -145,7 +146,7 @@ go get cloud.google.com/go/securitycentermanagement@latest
 go mod tidy
 ```
 
-### Phase 1 — New SecurityCenterManagementClient
+### Phase 1 — New SecurityCenterManagementClient ✅ DONE
 
 **`pkg/kcp/provider/gcp/client/clientSecurityCenterMgmt.go`** (new file)
 
@@ -192,7 +193,7 @@ type sccMgmtClient struct {
    ```
 3. Add `SecurityCenterManagementWrapped()` method returning `SecurityCenterManagementClient`.
 
-### Phase 2 — Security Package Client
+### Phase 2 — Security Package Client ✅ DONE
 
 **`pkg/kcp/provider/gcp/security/client/client.go`**
 
@@ -214,7 +215,7 @@ func NewClientProvider(gcpClients *gcpclient.GcpClients) gcpclient.GcpClientProv
 }
 ```
 
-### Phase 3 — State
+### Phase 3 — State ✅ DONE
 
 **`pkg/kcp/provider/gcp/security/state.go`**
 
@@ -245,7 +246,7 @@ type stateFactory struct {
 
 Return type matches Azure pattern: `(context.Context, composed.State, error)`.
 
-### Phase 4 — Action Files
+### Phase 4 — Action Files ✅ DONE
 
 #### `sccServicesLoad.go`
 
@@ -286,7 +287,7 @@ Iterates `state.sccServices`. For each service where `IntendedEnablementState !=
 
 Same pattern as enable, setting `IntendedEnablementState = DISABLED`.
 
-### Phase 5 — Action Pipeline
+### Phase 5 — Action Pipeline ✅ DONE
 
 **`pkg/kcp/provider/gcp/security/new.go`**
 
@@ -325,8 +326,8 @@ func New(sf StateFactory) composed.Action {
 ### 2. Idempotency via load-then-check
 `sccServicesEnable/Disable` load current state first and only call the GCP API when an actual change is needed. Returns `StopWithRequeue` if a change was made so the next reconcile verifies success.
 
-### 3. Service name for Vulnerability Assessment
-[INFERRED] GCP calls this `rapid-vulnerability-detection` in the security center management API. **Verify with:** `gcloud scc manage services list --project={project} --location=global`
+### 3. Vulnerability Assessment is out of scope
+GCP does not expose Vulnerability Assessment / Rapid Vulnerability Detection via the `securityCenterServices` management API. It is managed through VM Manager / OS Config — a separate API surface not covered by this reconciler.
 
 ### 4. SCC services at `locations/global`
 The location for project-level SCC service management is always `global`, regardless of the GCP region of the runtime. Resource path: `projects/{project}/locations/global/securityCenterServices/{service}`.

@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	gcpmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/meta"
+	gcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork"
 	kcpsubscription "github.com/kyma-project/cloud-manager/pkg/kcp/subscription"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -228,7 +229,7 @@ var _ = Describe("Feature: VpcNetwork", func() {
 				Project: gcpMock.ProjectId(),
 				Region:  region,
 				RouterResource: &computepb.Router{
-					Name:    new(gardenerNetworkName),
+					Name:    new(gcpvpcnetwork.RouterName(gardenerNetworkName)),
 					Network: new(gcpNetwork.GetSelfLink()),
 				},
 			})
@@ -239,7 +240,7 @@ var _ = Describe("Feature: VpcNetwork", func() {
 			r, err := gcpMock.GetRouter(infra.Ctx(), &computepb.GetRouterRequest{
 				Project: gcpMock.ProjectId(),
 				Region:  region,
-				Router:  gardenerNetworkName,
+				Router:  gcpvpcnetwork.RouterName(gardenerNetworkName),
 			})
 			Expect(err).ToNot(HaveOccurred())
 			gcpRouter = r
