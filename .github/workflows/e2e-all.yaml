@@ -55,7 +55,7 @@ jobs:
       provider: azure
       tags: ${{ inputs.tags }}
       feature_flags: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
-      debug: ${{ inputs.debug || false }}
+      debug: ${{ inputs.debug || true }}
   gcp:
     if: ${{ github.event_name == 'schedule' || inputs.gcp }}
     uses: ./.github/workflows/e2e-tests.yaml
@@ -64,7 +64,7 @@ jobs:
       provider: gcp
       tags: ${{ inputs.tags }}
       feature_flags: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
-      debug: ${{ inputs.debug || false }}
+      debug: ${{ inputs.debug || true }}
 
   notify:
     name: Notify Slack
