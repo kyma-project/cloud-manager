@@ -18,6 +18,11 @@ type AzureManagedRedisSpec struct {
 	Scope ScopeRef `json:"scope"`
 
 	// SKU defines the pricing tier.
+	//
+	// MAINTENANCE NOTE: this enum mirrors the Azure SDK's
+	// armredisenterprise.SKUName values. When upgrading the SDK or when Azure
+	// adds new SKUs, update this enum to match. The Azure list is documented at
+	// https://learn.microsoft.com/en-us/azure/azure-managed-redis/managed-redis-overview#service-tiers
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="sku is immutable."
 	// +kubebuilder:validation:Enum=Balanced_B0;Balanced_B1;Balanced_B3;Balanced_B5;Balanced_B10;Balanced_B20;Balanced_B50;Balanced_B100;Balanced_B150;Balanced_B250;Balanced_B350;Balanced_B500;Balanced_B700;Balanced_B1000;ComputeOptimized_X3;ComputeOptimized_X5;ComputeOptimized_X10;ComputeOptimized_X20;ComputeOptimized_X50;ComputeOptimized_X100;ComputeOptimized_X150;ComputeOptimized_X250;ComputeOptimized_X350;ComputeOptimized_X500;ComputeOptimized_X700;MemoryOptimized_M10;MemoryOptimized_M20;MemoryOptimized_M50;MemoryOptimized_M100;MemoryOptimized_M150;MemoryOptimized_M250;MemoryOptimized_M350;MemoryOptimized_M500;MemoryOptimized_M700;MemoryOptimized_M1000;MemoryOptimized_M1500;MemoryOptimized_M2000;FlashOptimized_A250;FlashOptimized_A500;FlashOptimized_A700;FlashOptimized_A1000;FlashOptimized_A1500;FlashOptimized_A2000;FlashOptimized_A4500;Enterprise_E1;Enterprise_E5;Enterprise_E10;Enterprise_E20;Enterprise_E50;Enterprise_E100;Enterprise_E200;Enterprise_E400;EnterpriseFlash_F300;EnterpriseFlash_F700;EnterpriseFlash_F1500

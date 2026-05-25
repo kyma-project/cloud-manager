@@ -9,8 +9,4 @@ metadata:
     app.kubernetes.io/created-by: cloud-manager
   name: azuremanagedredisinstance-sample
 spec:
-  sku: Balanced_B5
-  highAvailability: true
-  tlsVersion: "1.2"
-  clientProtocol: Encrypted
-  redisVersion: "8.0"
+  redisTier: P3
