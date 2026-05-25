@@ -110,7 +110,7 @@ func (s *privateDnsZoneGroupStore) DeletePrivateDnsZoneGroup(ctx context.Context
 		return err
 	}
 
-	delete(s.items[resourceGroupName][privateEndPointName], privateDnsZoneGroupName)
+	s.items[resourceGroupName][privateEndPointName][privateDnsZoneGroupName] = nil
 
 	return nil
 }
