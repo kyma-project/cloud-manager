@@ -39,7 +39,7 @@ require (
 	github.com/dop251/goja v0.0.0-20251008123653-cf18d89f3cf6
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.19.0
-	github.com/fsnotify/fsnotify v1.9.0
+	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gardener/gardener v1.141.0
 	github.com/gardener/gardener-extension-provider-aws v1.69.1
 	github.com/gardener/gardener-extension-provider-azure v1.60.1
