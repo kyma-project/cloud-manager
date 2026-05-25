@@ -38,7 +38,7 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 			Error(err, "Referred IpRange does not exist")
 		meta.SetStatusCondition(redisCluster.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
-			Status:  "True",
+			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonInvalidIpRangeReference,
 			Message: fmt.Sprintf("Referred IpRange %s/%s does not exist", state.Obj().GetNamespace(), ipRangeName),
 		})
