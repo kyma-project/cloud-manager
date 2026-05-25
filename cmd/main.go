@@ -64,6 +64,7 @@ import (
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
+	azuremanagedredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/managedredis/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
@@ -479,6 +480,13 @@ func main() {
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")
+		os.Exit(1)
+	}
+	if err = cloudcontrolcontroller.SetupAzureManagedRedisReconciler(
+		mgr,
+		azuremanagedredisclient.NewClientProvider(),
+	); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AzureManagedRedis")
 		os.Exit(1)
 	}
 	if err = cloudcontrolcontroller.SetupGcpRedisClusterReconciler(

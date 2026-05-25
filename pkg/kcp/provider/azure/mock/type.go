@@ -13,6 +13,7 @@ import (
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
+	azuremanagedredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/managedredis/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
@@ -115,6 +116,7 @@ type Providers interface {
 	IpRangeProvider() azureclient.ClientProvider[azureiprangeclient.Client]
 	RedisClientProvider() azureclient.ClientProvider[azureredisinstanceclient.Client]
 	RedisClusterClientProvider() azureclient.ClientProvider[azureredisclusterclient.Client]
+	ManagedRedisClientProvider() azureclient.ClientProvider[azuremanagedredisclient.Client]
 	NetworkProvider() azureclient.ClientProvider[azurenetworkclient.Client]
 	StorageProvider() azureclient.ClientProvider[azurerwxvolumebackupclient.Client]
 	ExposeDataProvider() azureclient.ClientProvider[azureexposeddataclient.Client]
