@@ -7,7 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-func deletePrivateEndpoint(ctx context.Context, st composed.State) (error, context.Context) {
+func deletePrivateEndPoint(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	obj := state.ObjAsAzureManagedRedis()
 

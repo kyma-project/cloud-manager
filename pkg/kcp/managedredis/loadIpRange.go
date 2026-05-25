@@ -15,21 +15,16 @@ import (
 	managedredistypes "github.com/kyma-project/cloud-manager/pkg/kcp/managedredis/types"
 )
 
-// loadIpRange validates that the referenced IpRange exists and is accessible.
-// The IpRange field is optional; if unset the action is a no-op.
-// Note: the Azure provider derives subnet IDs directly from the Scope VPC network
-// and does not consume IpRange.Spec.Network — this action exists solely for
-// existence/accessibility validation so users get a clear error on misconfiguration.
+// loadIpRange loads the IpRange referenced by Spec.IpRange.Name into state.
+// Mirrors pkg/kcp/rediscluster/loadIpRange.go: the IpRange is required and
+// must exist; missing IpRange surfaces as a Ready=False / Error condition
+// and stops the reconcile.
 func loadIpRange(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(managedredistypes.State)
 	logger := composed.LoggerFromCtx(ctx)
 
 	obj := state.ObjAsAzureManagedRedis()
 	ipRangeName := obj.Spec.IpRange.Name
-
-	if ipRangeName == "" {
-		return nil, ctx
-	}
 
 	ipRange := &cloudcontrolv1beta1.IpRange{}
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{
@@ -47,7 +42,7 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 			Error(err, "Referred IpRange does not exist")
 		meta.SetStatusCondition(obj.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
-			Status:  "True",
+			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonInvalidIpRangeReference,
 			Message: fmt.Sprintf("Referred IpRange %s/%s does not exist", state.Obj().GetNamespace(), ipRangeName),
 		})
@@ -59,6 +54,8 @@ func loadIpRange(ctx context.Context, st composed.State) (error, context.Context
 
 		return composed.StopAndForget, nil
 	}
+
+	state.SetIpRange(ipRange)
 
 	return nil, ctx
 }

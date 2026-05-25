@@ -71,6 +71,8 @@ spec:
                     type: string
                 type: object
                 x-kubernetes-validations:
+                - message: IpRange name must not be empty.
+                  rule: (size(self.name) > 0)
                 - message: IpRange is immutable.
                   rule: (self == oldSelf)
               remoteRef:
@@ -168,6 +170,7 @@ spec:
                   rule: (self == oldSelf)
             required:
             - clusteringPolicy
+            - ipRange
             - remoteRef
             - scope
             - sku

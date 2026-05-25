@@ -10,9 +10,10 @@ type AzureManagedRedisSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="RemoteRef is immutable."
 	RemoteRef RemoteRef `json:"remoteRef"`
 
-	// +optional
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(size(self.name) > 0), message="IpRange name must not be empty."
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
-	IpRange IpRangeRef `json:"ipRange,omitempty"`
+	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
 	Scope ScopeRef `json:"scope"`

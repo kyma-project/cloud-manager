@@ -8,4 +8,7 @@ import (
 type State interface {
 	focal.State
 	ObjAsAzureManagedRedis() *cloudcontrolv1beta1.AzureManagedRedis
+
+	IpRange() *cloudcontrolv1beta1.IpRange
+	SetIpRange(r *cloudcontrolv1beta1.IpRange)
 }

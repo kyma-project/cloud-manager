@@ -15,7 +15,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-func createPrivateEndpoint(ctx context.Context, st composed.State) (error, context.Context) {
+func createPrivateEndPoint(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	obj := state.ObjAsAzureManagedRedis()
 

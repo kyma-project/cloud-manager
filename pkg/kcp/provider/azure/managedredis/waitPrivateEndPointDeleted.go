@@ -2,12 +2,13 @@ package managedredis
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-func waitPrivateEndpointDeleted(ctx context.Context, st composed.State) (error, context.Context) {
+func waitPrivateEndPointDeleted(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	obj := state.ObjAsAzureManagedRedis()
 
@@ -16,8 +17,8 @@ func waitPrivateEndpointDeleted(ctx context.Context, st composed.State) (error, 
 		if azuremeta.IsNotFound(err) {
 			return nil, ctx
 		}
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		return composed.LogErrorAndReturn(err, "Error polling Azure Managed Redis Private Endpoint deletion", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 
-	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }

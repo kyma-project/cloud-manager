@@ -2,11 +2,13 @@ package managedredis
 
 import (
 	"context"
+	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
@@ -33,10 +35,15 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error retrieving Azure Managed Redis access keys", composed.StopWithRequeue, ctx)
 	}
-	authString := ""
-	if keys != nil && keys.PrimaryKey != nil {
-		authString = *keys.PrimaryKey
+	if keys == nil || keys.PrimaryKey == nil {
+		return composed.LogErrorAndReturn(
+			fmt.Errorf("azure returned no primary access key for %s/%s", state.resourceGroupName, obj.Name),
+			"Azure Managed Redis missing primary access key",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()),
+			ctx,
+		)
 	}
+	authString := *keys.PrimaryKey
 
 	obj.Status.State = string(cloudcontrolv1beta1.StateReady)
 	obj.Status.ObservedGeneration = obj.Generation

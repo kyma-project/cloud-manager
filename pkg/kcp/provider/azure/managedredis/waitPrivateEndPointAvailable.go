@@ -10,7 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-func waitPrivateEndpointAvailable(ctx context.Context, st composed.State) (error, context.Context) {
+func waitPrivateEndPointAvailable(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	if state.privateEndpoint == nil {

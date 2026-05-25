@@ -18,6 +18,9 @@ func newTestKcpAzureManagedRedisBuilder() *testKcpAzureManagedRedisBuilder {
 					Name:      uuid.NewString(),
 					Namespace: "default",
 				},
+				IpRange: cloudcontrolv1beta1.IpRangeRef{
+					Name: uuid.NewString(),
+				},
 				Scope: cloudcontrolv1beta1.ScopeRef{
 					Name: uuid.NewString(),
 				},
@@ -178,16 +181,17 @@ var _ = Describe("Feature: KCP AzureManagedRedis", Ordered, func() {
 		)
 	})
 
-	Context("Scenario: IpRange optional + immutable", func() {
-
-		canCreateKcp(
-			"AzureManagedRedis can be created without ipRange",
-			newTestKcpAzureManagedRedisBuilder(),
-		)
+	Context("Scenario: IpRange required + immutable", func() {
 
 		canCreateKcp(
 			"AzureManagedRedis can be created with ipRange",
 			newTestKcpAzureManagedRedisBuilder().WithIpRangeName("my-iprange"),
+		)
+
+		canNotCreateKcp(
+			"AzureManagedRedis cannot be created with empty ipRange.name",
+			newTestKcpAzureManagedRedisBuilder().WithIpRangeName(""),
+			"IpRange name must not be empty",
 		)
 
 		canNotChangeKcp(
@@ -195,15 +199,6 @@ var _ = Describe("Feature: KCP AzureManagedRedis", Ordered, func() {
 			newTestKcpAzureManagedRedisBuilder().WithIpRangeName("orig-iprange"),
 			func(b Builder[*cloudcontrolv1beta1.AzureManagedRedis]) {
 				b.(*testKcpAzureManagedRedisBuilder).WithIpRangeName("new-iprange")
-			},
-			"IpRange is immutable",
-		)
-
-		canNotChangeKcp(
-			"AzureManagedRedis ipRange cannot be added after creation",
-			newTestKcpAzureManagedRedisBuilder(),
-			func(b Builder[*cloudcontrolv1beta1.AzureManagedRedis]) {
-				b.(*testKcpAzureManagedRedisBuilder).WithIpRangeName("late-iprange")
 			},
 			"IpRange is immutable",
 		)
