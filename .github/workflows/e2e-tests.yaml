@@ -125,11 +125,23 @@ jobs:
           oidc_issuer_url: ${{ vars.OIDC_ISSUER_URL }}
           feature_flag_file: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
 
+      - name: Generate test certificate for AwsCertificate e2e tests
+        run: ./e2e/scripts/create-test-certificate.sh
+
       - name: Create shared instance
         env:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
           go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -t 30m -w -v
+
+      - name: Download instance kubeconfig
+        run: |
+          go run ./e2e/cmd instance cre dump -a shared-$PROVIDER >  ${{ github.workspace }}/tmp/kubeconfig.yaml
+
+      - name: Create certificate Secret for AwsCertificate e2e tests
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig.yaml
+        run: ./e2e/scripts/create-certificate-secret.sh
 
       - name: Print Instance Details
         env:
