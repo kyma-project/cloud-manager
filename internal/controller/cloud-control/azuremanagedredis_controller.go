@@ -25,9 +25,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/managedredis"
+	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremanagedredis "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/managedredis"
 	azuremanagedredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/managedredis/client"
@@ -38,16 +37,16 @@ func SetupAzureManagedRedisReconciler(
 	azureManagedRedisClientProvider azureclient.ClientProvider[azuremanagedredisclient.Client],
 ) error {
 	return NewAzureManagedRedisReconciler(
-		managedredis.NewManagedRedisReconciler(
+		azuremanagedredis.NewManagedRedisReconciler(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(kcpManager)),
-			focal.NewStateFactory(),
-			azuremanagedredis.NewStateFactory(azureManagedRedisClientProvider),
+			kcpcommonaction.NewStateFactory(),
+			azureManagedRedisClientProvider,
 		),
 	).SetupWithManager(kcpManager)
 }
 
 func NewAzureManagedRedisReconciler(
-	reconciler managedredis.ManagedRedisReconciler,
+	reconciler azuremanagedredis.ManagedRedisReconciler,
 ) *AzureManagedRedisReconciler {
 	return &AzureManagedRedisReconciler{
 		Reconciler: reconciler,
@@ -55,7 +54,7 @@ func NewAzureManagedRedisReconciler(
 }
 
 type AzureManagedRedisReconciler struct {
-	Reconciler managedredis.ManagedRedisReconciler
+	Reconciler azuremanagedredis.ManagedRedisReconciler
 }
 
 // +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=azuremanagedredis,verbs=get;list;watch;create;update;patch;delete

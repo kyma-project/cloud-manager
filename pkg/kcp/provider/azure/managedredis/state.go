@@ -5,9 +5,10 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
-	"github.com/go-logr/logr"
 
-	managedredistypes "github.com/kyma-project/cloud-manager/pkg/kcp/managedredis/types"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
@@ -23,7 +24,9 @@ const (
 )
 
 type State struct {
-	managedredistypes.State
+	kcpcommonaction.State
+
+	scope *cloudcontrolv1beta1.Scope
 
 	client            azuremanagedredisclient.Client
 	resourceGroupName string
@@ -34,6 +37,18 @@ type State struct {
 	privateDnsZoneGroup  *armnetwork.PrivateDNSZoneGroup
 }
 
+func (s *State) ObjAsAzureManagedRedis() *cloudcontrolv1beta1.AzureManagedRedis {
+	return s.Obj().(*cloudcontrolv1beta1.AzureManagedRedis)
+}
+
+func (s *State) Scope() *cloudcontrolv1beta1.Scope {
+	return s.scope
+}
+
+func (s *State) SetScope(scope *cloudcontrolv1beta1.Scope) {
+	s.scope = scope
+}
+
 func (s *State) PrivateDNSZoneName() string {
 	if azureconfig.AzureConfig.ClientOptions.Cloud == "AzureChina" {
 		return PrivateDNSZoneChina
@@ -41,34 +56,27 @@ func (s *State) PrivateDNSZoneName() string {
 	return PrivateDNSZone
 }
 
-type StateFactory interface {
-	NewState(ctx context.Context, managedRedisState managedredistypes.State, logger logr.Logger) (*State, error)
-}
+// initAzureClient finalizes State by creating the Azure client and setting the
+// resource group name once Scope is loaded. It runs after loadScope.
+func initAzureClient(clientProvider azureclient.ClientProvider[azuremanagedredisclient.Client]) composed.Action {
+	return func(ctx context.Context, st composed.State) (error, context.Context) {
+		state := st.(*State)
+		if state.client != nil {
+			return nil, ctx
+		}
 
-type stateFactory struct {
-	clientProvider azureclient.ClientProvider[azuremanagedredisclient.Client]
-}
+		clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
+		clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret
+		subscriptionId := state.Scope().Spec.Scope.Azure.SubscriptionId
+		tenantId := state.Scope().Spec.Scope.Azure.TenantId
 
-func NewStateFactory(clientProvider azureclient.ClientProvider[azuremanagedredisclient.Client]) StateFactory {
-	return &stateFactory{
-		clientProvider: clientProvider,
+		c, err := clientProvider(ctx, clientId, clientSecret, subscriptionId, tenantId)
+		if err != nil {
+			return composed.LogErrorAndReturn(err, "Error creating Azure ManagedRedis client", composed.StopWithRequeue, ctx)
+		}
+
+		state.client = c
+		state.resourceGroupName = azurecommon.AzureCloudManagerResourceGroupName(state.Scope().Spec.Scope.Azure.VpcNetwork)
+		return nil, ctx
 	}
-}
-
-func (f *stateFactory) NewState(ctx context.Context, managedRedisState managedredistypes.State, _ logr.Logger) (*State, error) {
-	clientId := azureconfig.AzureConfig.DefaultCreds.ClientId
-	clientSecret := azureconfig.AzureConfig.DefaultCreds.ClientSecret
-	subscriptionId := managedRedisState.Scope().Spec.Scope.Azure.SubscriptionId
-	tenantId := managedRedisState.Scope().Spec.Scope.Azure.TenantId
-
-	c, err := f.clientProvider(ctx, clientId, clientSecret, subscriptionId, tenantId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &State{
-		State:             managedRedisState,
-		client:            c,
-		resourceGroupName: azurecommon.AzureCloudManagerResourceGroupName(managedRedisState.Scope().Spec.Scope.Azure.VpcNetwork),
-	}, nil
 }

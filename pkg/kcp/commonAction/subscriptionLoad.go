@@ -15,6 +15,12 @@ func subscriptionLoad(ctx context.Context, st composed.State) (error, context.Co
 		return nil, ctx
 	}
 
+	// Skip when no VpcNetwork was loaded for this kind (e.g. resources that
+	// reference Scope directly and have no Subscription/VpcNetwork ref).
+	if state.vpcNetwork == nil {
+		return nil, ctx
+	}
+
 	dependencyName := state.vpcNetwork.Spec.Subscription
 
 	subscription := &cloudcontrolv1beta1.Subscription{}

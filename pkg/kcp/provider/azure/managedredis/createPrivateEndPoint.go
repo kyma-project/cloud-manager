@@ -18,8 +18,8 @@ import (
 // createPrivateEndPoint creates the Private Endpoint that connects the Azure Managed Redis
 // cluster to the Kyma-managed VNet.
 //
-// Note on IpRange: AzureManagedRedis.Spec.IpRange is required and validated by the
-// loadIpRange action, but the subnet ID is derived directly from the Scope's Azure VPC
+// Note on IpRange: AzureManagedRedis.Spec.IpRange is required and validated by
+// kcpcommonaction.ipRangeLoad, but the subnet ID is derived directly from the Scope's Azure VPC
 // network (the Kyma-managed resource group). This matches the pattern used by the existing
 // pkg/kcp/provider/azure/redisinstance and rediscluster providers, where IpRange.Spec.Network
 // is not consumed at the Azure API level. The IpRange field exists for cross-resource

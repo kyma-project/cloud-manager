@@ -101,13 +101,7 @@ spec:
                 - name
                 type: object
               sku:
-                description: |-
-                  SKU defines the pricing tier.
-
-                  MAINTENANCE NOTE: this enum mirrors the Azure SDK's
-                  armredisenterprise.SKUName values. When upgrading the SDK or when Azure
-                  adds new SKUs, update this enum to match. The Azure list is documented at
-                  https://learn.microsoft.com/en-us/azure/azure-managed-redis/managed-redis-overview#service-tiers
+                description: SKU defines the pricing tier.
                 enum:
                 - Balanced_B0
                 - Balanced_B1
