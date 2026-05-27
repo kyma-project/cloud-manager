@@ -73,7 +73,7 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	// Create WebACL
-	createdWebACL, lockToken, err := state.awsClient.CreateWebACL(ctx, input)
+	err = state.awsClient.CreateWebACL(ctx, input)
 	if err != nil {
 		logger.Error(err, "Error creating WebACL")
 
@@ -86,11 +86,8 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	// Store WebACL and lock token in state (transient, not persisted)
-	state.awsWebAcl = createdWebACL
-	state.lockToken = lockToken
+	// WebACL created successfully - requeue to reload full details in next loop
+	logger.Info("AWS WebACL created successfully, requeuing to reload")
 
-	logger.Info("AWS WebACL created successfully")
-
-	return nil, ctx
+	return composed.StopWithRequeue, ctx
 }
