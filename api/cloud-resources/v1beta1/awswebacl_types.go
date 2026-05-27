@@ -971,6 +971,17 @@ func (in *AwsWebAcl) SetStatusProviderError(msg string) {
 	})
 }
 
+func (in *AwsWebAcl) SetStatusStatementTypeRestricted(msg string) {
+	in.Status.State = ReasonStatementTypeRestricted
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonStatementTypeRestricted,
+		Message:            msg,
+	})
+}
+
 func (in *AwsWebAcl) SetStatusReady() {
 	in.Status.State = StateReady
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
