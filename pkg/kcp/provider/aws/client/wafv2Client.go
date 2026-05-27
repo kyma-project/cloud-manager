@@ -9,7 +9,7 @@ import (
 )
 
 type Wafv2Client interface {
-	CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error)
+	CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) error
 	GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error)
 	UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error
 	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
@@ -28,19 +28,9 @@ type wafv2Client struct {
 	svc *wafv2.Client
 }
 
-func (c *wafv2Client) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error) {
-	out, err := c.svc.CreateWebACL(ctx, input)
-	if err != nil {
-		return nil, "", err
-	}
-
-	// Get the full WebACL details
-	webACL, lockToken, err := c.GetWebACL(ctx, ptr.Deref(input.Name, ""), ptr.Deref(out.Summary.Id, ""), input.Scope)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return webACL, lockToken, nil
+func (c *wafv2Client) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) error {
+	_, err := c.svc.CreateWebACL(ctx, input)
+	return err
 }
 
 func (c *wafv2Client) GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error) {

@@ -44,7 +44,7 @@ func newWebAclStore(account, region string) *webAclStore {
 	}
 }
 
-func (s *webAclStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*types.WebACL, string, error) {
+func (s *webAclStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -54,7 +54,7 @@ func (s *webAclStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebAC
 	// Check if WebACL with this name already exists
 	for _, x := range s.items {
 		if ptr.Equal(x.webAcl.Name, input.Name) {
-			return nil, "", &smithy.GenericAPIError{
+			return &smithy.GenericAPIError{
 				Code:    "WAFDuplicateItemException",
 				Message: fmt.Sprintf("WebACL with name %s already exists", name),
 			}
@@ -68,19 +68,19 @@ func (s *webAclStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebAC
 	// Deep copy inputs to avoid shared references
 	defaultActionCopy, err := util.JsonClone(input.DefaultAction)
 	if err != nil {
-		return nil, "", err
+		return err
 	}
 	rulesCopy, err := util.JsonClone(input.Rules)
 	if err != nil {
-		return nil, "", err
+		return err
 	}
 	visibilityConfigCopy, err := util.JsonClone(input.VisibilityConfig)
 	if err != nil {
-		return nil, "", err
+		return err
 	}
 	customResponseBodiesCopy, err := util.JsonClone(input.CustomResponseBodies)
 	if err != nil {
-		return nil, "", err
+		return err
 	}
 
 	webAcl := types.WebACL{
@@ -100,7 +100,7 @@ func (s *webAclStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebAC
 	if input.Tags != nil {
 		tagsCopy, err := util.JsonClone(input.Tags)
 		if err != nil {
-			return nil, "", err
+			return err
 		}
 		tags = tagsCopy
 	}
@@ -113,12 +113,7 @@ func (s *webAclStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebAC
 
 	s.items = append(s.items, item)
 
-	webAclCopy, err := util.JsonClone(&webAcl)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return webAclCopy, lockToken, nil
+	return err
 }
 
 func (s *webAclStore) GetWebACL(ctx context.Context, name, id string, scope types.Scope) (*types.WebACL, string, error) {
