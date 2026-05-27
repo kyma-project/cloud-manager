@@ -59,7 +59,6 @@ func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context)
 	// Store in state
 	state.awsWebAcl = awsWebACL
 	state.lockToken = lockToken
-	webAcl.Status.Capacity = awsWebACL.Capacity
 
 	return nil, ctx
 }

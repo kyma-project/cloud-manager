@@ -40,7 +40,7 @@ func (s *accountRegionStore) Region() string {
 
 // WebAclClient adapter methods - wrap webAclStore methods to match Client interface
 
-func (s *accountRegionStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error) {
+func (s *accountRegionStore) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) error {
 	return s.webAclStore.CreateWebACL(ctx, input)
 }
 
