@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
+	corev1 "k8s.io/api/core/v1"
 )
 
 type testKcpAzureManagedRedisBuilder struct {
@@ -21,7 +22,7 @@ func newTestKcpAzureManagedRedisBuilder() *testKcpAzureManagedRedisBuilder {
 				IpRange: cloudcontrolv1beta1.IpRangeRef{
 					Name: uuid.NewString(),
 				},
-				Scope: cloudcontrolv1beta1.ScopeRef{
+				VpcNetwork: corev1.LocalObjectReference{
 					Name: uuid.NewString(),
 				},
 				SKU:              "Balanced_B5",
@@ -52,6 +53,11 @@ func (b *testKcpAzureManagedRedisBuilder) WithHighAvailability(ha bool) *testKcp
 
 func (b *testKcpAzureManagedRedisBuilder) WithIpRangeName(name string) *testKcpAzureManagedRedisBuilder {
 	b.instance.Spec.IpRange.Name = name
+	return b
+}
+
+func (b *testKcpAzureManagedRedisBuilder) WithVpcNetworkName(name string) *testKcpAzureManagedRedisBuilder {
+	b.instance.Spec.VpcNetwork.Name = name
 	return b
 }
 
@@ -201,6 +207,29 @@ var _ = Describe("Feature: KCP AzureManagedRedis", Ordered, func() {
 				b.(*testKcpAzureManagedRedisBuilder).WithIpRangeName("new-iprange")
 			},
 			"IpRange is immutable",
+		)
+	})
+
+	Context("Scenario: VpcNetwork required + immutable", func() {
+
+		canCreateKcp(
+			"AzureManagedRedis can be created with vpcNetwork",
+			newTestKcpAzureManagedRedisBuilder().WithVpcNetworkName("my-vpc"),
+		)
+
+		canNotCreateKcp(
+			"AzureManagedRedis cannot be created with empty vpcNetwork.name",
+			newTestKcpAzureManagedRedisBuilder().WithVpcNetworkName(""),
+			"VpcNetwork name must not be empty",
+		)
+
+		canNotChangeKcp(
+			"AzureManagedRedis vpcNetwork cannot be changed once set",
+			newTestKcpAzureManagedRedisBuilder().WithVpcNetworkName("orig-vpc"),
+			func(b Builder[*cloudcontrolv1beta1.AzureManagedRedis]) {
+				b.(*testKcpAzureManagedRedisBuilder).WithVpcNetworkName("new-vpc")
+			},
+			"VpcNetwork is immutable",
 		)
 	})
 })

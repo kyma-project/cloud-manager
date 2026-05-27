@@ -19,12 +19,12 @@ import (
 // cluster to the Kyma-managed VNet.
 //
 // Note on IpRange: AzureManagedRedis.Spec.IpRange is required and validated by
-// kcpcommonaction.ipRangeLoad, but the subnet ID is derived directly from the Scope's Azure VPC
-// network (the Kyma-managed resource group). This matches the pattern used by the existing
-// pkg/kcp/provider/azure/redisinstance and rediscluster providers, where IpRange.Spec.Network
-// is not consumed at the Azure API level. The IpRange field exists for cross-resource
-// consistency (so users can model the network topology declaratively) and to surface
-// missing-IpRange errors at admission time.
+// kcpcommonaction.ipRangeLoad, but the subnet ID is derived directly from the VpcNetwork's
+// gardener network name (the Kyma-managed resource group). This matches the pattern used by
+// the existing pkg/kcp/provider/azure/redisinstance and rediscluster providers, where
+// IpRange.Spec.Network is not consumed at the Azure API level. The IpRange field exists for
+// cross-resource consistency (so users can model the network topology declaratively) and to
+// surface missing-IpRange errors at admission time.
 //
 // Note on the recreate predicate: an existing Private Endpoint is left alone unless its
 // provisioning state is Failed. Other in-flight states (Updating, Deleting) deliberately
@@ -46,15 +46,15 @@ func createPrivateEndPoint(ctx context.Context, st composed.State) (error, conte
 
 	composed.LoggerFromCtx(ctx).Info("Creating Private Endpoint for Azure Managed Redis", "name", obj.Name)
 
-	subnetName := azurecommon.AzureCloudManagerResourceGroupName(state.Scope().Spec.Scope.Azure.VpcNetwork)
+	subnetName := azurecommon.AzureCloudManagerResourceGroupName(ptr.Deref(state.VpcNetwork().Spec.VpcNetworkName, ""))
 	subnetId := azureutil.NewSubnetResourceId(
-		state.Scope().Spec.Scope.Azure.SubscriptionId,
+		state.Subscription().Status.SubscriptionInfo.Azure.SubscriptionId,
 		state.resourceGroupName,
 		subnetName,
 		subnetName,
 	).String()
 
-	region := state.Scope().Spec.Region
+	region := state.VpcNetwork().Spec.Region
 	peConnName := obj.Name + "-pe-conn"
 	groupID := PrivateEndpointGroupID
 	peParams := armnetwork.PrivateEndpoint{

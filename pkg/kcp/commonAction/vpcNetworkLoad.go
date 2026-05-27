@@ -22,6 +22,8 @@ func vpcNetworkLoad(ctx context.Context, st composed.State) (error, context.Cont
 		dependencyName = x.Spec.VpcNetwork.Name
 	case *cloudcontrolv1beta1.GcpSubnet:
 		dependencyName = x.Spec.VpcNetwork.Name
+	case *cloudcontrolv1beta1.AzureManagedRedis:
+		dependencyName = x.Spec.VpcNetwork.Name
 	default:
 		return nil, ctx
 	}

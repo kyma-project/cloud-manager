@@ -1,6 +1,7 @@
 package v1beta1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -16,7 +17,9 @@ type AzureManagedRedisSpec struct {
 	IpRange IpRangeRef `json:"ipRange"`
 
 	// +kubebuilder:validation:Required
-	Scope ScopeRef `json:"scope"`
+	// +kubebuilder:validation:XValidation:rule=(size(self.name) > 0), message="VpcNetwork name must not be empty."
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="VpcNetwork is immutable."
+	VpcNetwork corev1.LocalObjectReference `json:"vpcNetwork"`
 
 	// SKU defines the pricing tier.
 	// +kubebuilder:validation:Required
@@ -70,7 +73,7 @@ type AzureManagedRedisStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:categories={kyma-cloud-manager}
-// +kubebuilder:printcolumn:name="Scope",type="string",JSONPath=".spec.scope.name"
+// +kubebuilder:printcolumn:name="VpcNetwork",type="string",JSONPath=".spec.vpcNetwork.name"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // AzureManagedRedis is the Schema for the AzureManagedRedis API.
@@ -100,14 +103,6 @@ func (in *AzureManagedRedis) SetObservedGeneration(v int64) {
 
 func (in *AzureManagedRedis) GetStatus() any {
 	return in.Status
-}
-
-func (in *AzureManagedRedis) ScopeRef() ScopeRef {
-	return in.Spec.Scope
-}
-
-func (in *AzureManagedRedis) SetScopeRef(scopeRef ScopeRef) {
-	in.Spec.Scope = scopeRef
 }
 
 func (in *AzureManagedRedis) State() string {

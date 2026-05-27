@@ -24,7 +24,7 @@ func createManagedRedis(ctx context.Context, st composed.State) (error, context.
 
 	skuName := armredisenterprise.SKUName(obj.Spec.SKU)
 	tlsVersion := armredisenterprise.TLSVersionOne2
-	region := state.Scope().Spec.Region
+	region := state.VpcNetwork().Spec.Region
 	highAvailability := armredisenterprise.HighAvailabilityEnabled
 	if !obj.Spec.HighAvailability {
 		highAvailability = armredisenterprise.HighAvailabilityDisabled

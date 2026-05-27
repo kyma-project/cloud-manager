@@ -63,16 +63,14 @@ func (r *managedRedisReconciler) newAction() composed.Action {
 	return composed.ComposeActionsNoName(
 		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.AzureManagedRedis{}),
 		kcpcommonaction.New(),
-		loadScope,
-		initAzureClient(r.clientProvider),
 		actions.AddCommonFinalizer(),
+		initAzureClient(r.clientProvider),
 		loadManagedRedis,
 		loadDatabase,
 		loadPrivateEndPoint,
 		loadPrivateDnsZoneGroup,
-		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
-			composed.ComposeActions(
-				"azure-managedRedis-create",
+		composed.If(composed.NotMarkedForDeletionPredicate,
+			composed.ComposeActionsNoName(
 				createManagedRedis,
 				waitManagedRedisAvailable,
 				updateStatusId,
@@ -82,9 +80,11 @@ func (r *managedRedisReconciler) newAction() composed.Action {
 				waitPrivateEndPointAvailable,
 				createPrivateDnsZoneGroup,
 				updateStatus,
+				composed.StopAndForgetAction,
 			),
-			composed.ComposeActions(
-				"azure-managedRedis-delete",
+		),
+		composed.If(composed.MarkedForDeletionPredicate,
+			composed.ComposeActionsNoName(
 				deletePrivateDnsZoneGroup,
 				waitPrivateDnsZoneGroupDeleted,
 				deletePrivateEndPoint,

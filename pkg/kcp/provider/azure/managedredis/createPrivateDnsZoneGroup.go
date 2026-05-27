@@ -23,7 +23,7 @@ func createPrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, c
 	composed.LoggerFromCtx(ctx).Info("Creating Private DNS Zone Group", "name", obj.Name)
 
 	dnsZoneId := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/privateDnsZones/%s",
-		state.Scope().Spec.Scope.Azure.SubscriptionId, state.resourceGroupName, state.PrivateDNSZoneName())
+		state.Subscription().Status.SubscriptionInfo.Azure.SubscriptionId, state.resourceGroupName, state.PrivateDNSZoneName())
 	configName := "default"
 	dzgParams := armnetwork.PrivateDNSZoneGroup{
 		Properties: &armnetwork.PrivateDNSZoneGroupPropertiesFormat{
