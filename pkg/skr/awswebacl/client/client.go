@@ -9,7 +9,7 @@ import (
 )
 
 type Client interface {
-	CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error)
+	CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) error
 	GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error)
 	UpdateWebACL(ctx context.Context, input *wafv2.UpdateWebACLInput) error
 	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
@@ -38,7 +38,7 @@ type client struct {
 	wafv2Client awsclient.Wafv2Client
 }
 
-func (c *client) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) (*wafv2types.WebACL, string, error) {
+func (c *client) CreateWebACL(ctx context.Context, input *wafv2.CreateWebACLInput) error {
 	return c.wafv2Client.CreateWebACL(ctx, input)
 }
 
