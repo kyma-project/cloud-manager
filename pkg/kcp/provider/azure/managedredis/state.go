@@ -41,6 +41,10 @@ type State struct {
 	privateDnsZoneGroup  *armnetwork.PrivateDNSZoneGroup
 }
 
+func newState(kcpCommonState kcpcommonaction.State) *State {
+	return &State{State: kcpCommonState}
+}
+
 func (s *State) ObjAsAzureManagedRedis() *cloudcontrolv1beta1.AzureManagedRedis {
 	return s.Obj().(*cloudcontrolv1beta1.AzureManagedRedis)
 }

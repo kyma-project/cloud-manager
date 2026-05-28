@@ -3,8 +3,10 @@ package cloudcontrol
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
+	kcpsubscription "github.com/kyma-project/cloud-manager/pkg/kcp/subscription"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -29,6 +31,69 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 		azureMock := infra.AzureMock().MockConfigs(scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId)
 		resourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
 
+		subscription := &cloudcontrolv1beta1.Subscription{}
+
+		By("And Given Azure Subscription exists", func() {
+			kcpsubscription.Ignore.AddName(name)
+			Expect(
+				CreateSubscription(infra.Ctx(), infra, subscription,
+					WithName(name),
+					WithSubscriptionSpecGarden("binding-name")),
+			).To(Succeed())
+
+			Expect(
+				SubscriptionPatchStatusReadyAzure(infra.Ctx(), infra, subscription,
+					scope.Spec.Scope.Azure.TenantId, scope.Spec.Scope.Azure.SubscriptionId),
+			).To(Succeed())
+		})
+
+		vpcNetwork := &cloudcontrolv1beta1.VpcNetwork{}
+
+		By("And Given KCP VpcNetwork exists in Ready state", func() {
+			vpcNetworkName := scope.Spec.Scope.Azure.VpcNetwork
+			vpcNetwork = cloudcontrolv1beta1.NewVpcNetworkBuilder().
+				WithName(name).
+				WithVpcNetworkName(&vpcNetworkName).
+				WithRegion(scope.Spec.Region).
+				WithSubscription(name).
+				WithCidrBlocks("10.250.0.0/22").
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcNetwork).
+				Should(Succeed())
+
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcNetwork,
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed(), "Expected KCP VpcNetwork to become ready")
+		})
+
+		kcpIpRangeName := "5b9d8b8a-2b8a-4f0e-9c2a-9b1c1d1e1f1a"
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+		By("And Given KCP IpRange exists in Ready state", func() {
+			kcpiprange.Ignore.AddName(kcpIpRangeName)
+			Eventually(CreateKcpIpRange).
+				WithArguments(
+					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithName(kcpIpRangeName),
+					WithKcpIpRangeRemoteRef("amr-iprange"),
+					WithKcpIpRangeNetwork(name),
+					WithScope(name),
+				).
+				Should(Succeed())
+
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed(), "Expected KCP IpRange to become ready")
+		})
+
 		azureManagedRedis := &cloudcontrolv1beta1.AzureManagedRedis{}
 
 		By("When KCP AzureManagedRedis is created", func() {
@@ -36,7 +101,8 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), azureManagedRedis,
 					WithName(name),
 					WithRemoteRef("skr-amr-example"),
-					WithScope(name),
+					WithKcpAzureManagedRedisVpcNetwork(name),
+					WithIpRange(kcpIpRangeName),
 					WithKcpAzureManagedRedisSKU(armredisenterprise.SKUNameBalancedB5),
 					WithKcpAzureManagedRedisClusteringPolicy(armredisenterprise.ClusteringPolicyEnterpriseCluster),
 					WithKcpAzureManagedRedisHighAvailability(true),

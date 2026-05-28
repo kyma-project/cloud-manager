@@ -42,6 +42,8 @@ func WithRemoteRef(name string) ObjAction {
 				x.Spec.RemoteRef = remoteRef
 			case *cloudcontrolv1beta1.GcpSubnet:
 				x.Spec.RemoteRef = remoteRef
+			case *cloudcontrolv1beta1.AzureManagedRedis:
+				x.Spec.RemoteRef = remoteRef
 			default:
 				panic(fmt.Sprintf("unhandled type in WithRemoteRef: %T", obj))
 			}

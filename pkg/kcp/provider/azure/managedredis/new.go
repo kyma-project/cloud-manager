@@ -44,59 +44,62 @@ func (r *managedRedisReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, nil
 	}
 
-	state := r.newState(req.NamespacedName)
+	kcpCommonState := r.newKcpCommonState(req.NamespacedName)
 	action := r.newAction()
 
 	return composed.Handling().
 		WithMetrics("azuremanagedredis", util.RequestObjToString(req)).
-		Handle(action(ctx, state))
+		Handle(action(ctx, kcpCommonState))
 }
 
-func (r *managedRedisReconciler) newState(name types.NamespacedName) *State {
-	baseState := r.kcpCommonStateFactory.NewState(
+func (r *managedRedisReconciler) newKcpCommonState(name types.NamespacedName) kcpcommonaction.State {
+	return r.kcpCommonStateFactory.NewState(
 		r.composedStateFactory.NewState(name, &cloudcontrolv1beta1.AzureManagedRedis{}),
 	)
-	return &State{State: baseState}
 }
 
 func (r *managedRedisReconciler) newAction() composed.Action {
 	return composed.ComposeActionsNoName(
 		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.AzureManagedRedis{}),
 		kcpcommonaction.New(),
-		actions.AddCommonFinalizer(),
-		initAzureClient(r.clientProvider),
-		loadManagedRedis,
-		loadDatabase,
-		loadPrivateEndPoint,
-		loadPrivateDnsZoneGroup,
-		composed.If(composed.NotMarkedForDeletionPredicate,
-			composed.ComposeActionsNoName(
-				createManagedRedis,
-				waitManagedRedisAvailable,
-				updateStatusId,
-				createDatabase,
-				waitDatabaseAvailable,
-				createPrivateEndPoint,
-				waitPrivateEndPointAvailable,
-				createPrivateDnsZoneGroup,
-				updateStatus,
+		func(ctx context.Context, st composed.State) (error, context.Context) {
+			return composed.ComposeActionsNoName(
+				actions.AddCommonFinalizer(),
+				initAzureClient(r.clientProvider),
+				loadManagedRedis,
+				loadDatabase,
+				loadPrivateEndPoint,
+				loadPrivateDnsZoneGroup,
+				composed.If(composed.NotMarkedForDeletionPredicate,
+					composed.ComposeActionsNoName(
+						createManagedRedis,
+						waitManagedRedisAvailable,
+						updateStatusId,
+						createDatabase,
+						waitDatabaseAvailable,
+						createPrivateEndPoint,
+						waitPrivateEndPointAvailable,
+						createPrivateDnsZoneGroup,
+						updateStatus,
+						composed.StopAndForgetAction,
+					),
+				),
+				composed.If(composed.MarkedForDeletionPredicate,
+					composed.ComposeActionsNoName(
+						deletePrivateDnsZoneGroup,
+						waitPrivateDnsZoneGroupDeleted,
+						deletePrivateEndPoint,
+						waitPrivateEndPointDeleted,
+						deleteDatabase,
+						waitDatabaseDeleted,
+						deleteManagedRedis,
+						waitManagedRedisDeleted,
+						actions.RemoveCommonFinalizer(),
+						composed.StopAndForgetAction,
+					),
+				),
 				composed.StopAndForgetAction,
-			),
-		),
-		composed.If(composed.MarkedForDeletionPredicate,
-			composed.ComposeActionsNoName(
-				deletePrivateDnsZoneGroup,
-				waitPrivateDnsZoneGroupDeleted,
-				deletePrivateEndPoint,
-				waitPrivateEndPointDeleted,
-				deleteDatabase,
-				waitDatabaseDeleted,
-				deleteManagedRedis,
-				waitManagedRedisDeleted,
-				actions.RemoveCommonFinalizer(),
-				composed.StopAndForgetAction,
-			),
-		),
-		composed.StopAndForgetAction,
+			)(ctx, newState(st.(kcpcommonaction.State)))
+		},
 	)
 }

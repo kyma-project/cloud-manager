@@ -74,6 +74,12 @@ func WithIpRange(ipRangeName string) ObjAction {
 				}
 				return
 			}
+			if x, ok := obj.(*cloudcontrolv1beta1.AzureManagedRedis); ok {
+				if x.Spec.IpRange.Name == "" {
+					x.Spec.IpRange.Name = ipRangeName
+				}
+				return
+			}
 
 			panic(fmt.Errorf("unhandled type %T in WithIpRange", obj))
 		},

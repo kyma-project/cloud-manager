@@ -7,6 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -60,6 +61,18 @@ func WithKcpAzureManagedRedisHighAvailability(ha bool) ObjAction {
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithKcpAzureManagedRedisHighAvailability", obj))
+		},
+	}
+}
+
+func WithKcpAzureManagedRedisVpcNetwork(vpcNetworkName string) ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if amr, ok := obj.(*cloudcontrolv1beta1.AzureManagedRedis); ok {
+				amr.Spec.VpcNetwork = corev1.LocalObjectReference{Name: vpcNetworkName}
+				return
+			}
+			panic(fmt.Errorf("unhandled type %T in WithKcpAzureManagedRedisVpcNetwork", obj))
 		},
 	}
 }
