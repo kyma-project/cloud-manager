@@ -35,6 +35,7 @@ func createDatabase(ctx context.Context, st composed.State) (error, context.Cont
 
 	err := state.client.CreateOrUpdateDatabase(ctx, state.resourceGroupName, obj.Name, DefaultDatabaseName, db)
 	if err != nil {
+		composed.LoggerFromCtx(ctx).Error(err, "Error creating Azure Managed Redis database")
 		obj.Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.UpdateStatus(obj).
 			SetExclusiveConditions(metav1.Condition{

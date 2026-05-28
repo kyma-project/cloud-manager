@@ -46,8 +46,14 @@ func createManagedRedis(ctx context.Context, st composed.State) (error, context.
 	// does NOT support specifying zones — zone redundancy is enabled by default in
 	// regions with availability zones. Do not set cluster.Zones for these SKUs.
 
+	// Note: PublicNetworkAccess is set on create only. There is no updateManagedRedis
+	// action, so clusters created before this field was introduced will not be patched.
+	// This is intentional: AMR is a new resource type with no existing instances in the
+	// field at the time this was added.
+
 	err := state.client.CreateOrUpdateCluster(ctx, state.resourceGroupName, obj.Name, cluster)
 	if err != nil {
+		composed.LoggerFromCtx(ctx).Error(err, "Error creating Azure Managed Redis cluster")
 		obj.Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.UpdateStatus(obj).
 			SetExclusiveConditions(metav1.Condition{

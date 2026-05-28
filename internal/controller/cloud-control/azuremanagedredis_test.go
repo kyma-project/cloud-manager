@@ -1,6 +1,7 @@
 package cloudcontrol
 
 import (
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -25,6 +26,9 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 				Should(Succeed())
 		})
 
+		azureMock := infra.AzureMock().MockConfigs(scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId)
+		resourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
+
 		azureManagedRedis := &cloudcontrolv1beta1.AzureManagedRedis{}
 
 		By("When KCP AzureManagedRedis is created", func() {
@@ -33,8 +37,8 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 					WithName(name),
 					WithRemoteRef("skr-amr-example"),
 					WithScope(name),
-					WithKcpAzureManagedRedisSKU("Balanced_B5"),
-					WithKcpAzureManagedRedisClusteringPolicy("EnterpriseCluster"),
+					WithKcpAzureManagedRedisSKU(armredisenterprise.SKUNameBalancedB5),
+					WithKcpAzureManagedRedisClusteringPolicy(armredisenterprise.ClusteringPolicyEnterpriseCluster),
 					WithKcpAzureManagedRedisHighAvailability(true),
 				).
 				Should(Succeed(), "failed creating AzureManagedRedis")
@@ -72,9 +76,6 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 		By("And Then KCP AzureManagedRedis has .status.authString set", func() {
 			Expect(azureManagedRedis.Status.AuthString).NotTo(BeEmpty())
 		})
-
-		azureMock := infra.AzureMock().MockConfigs(scope.Spec.Scope.Azure.SubscriptionId, scope.Spec.Scope.Azure.TenantId)
-		resourceGroupName := azurecommon.AzureCloudManagerResourceGroupName(scope.Spec.Scope.Azure.VpcNetwork)
 
 		By("And Then Private End Point is created", func() {
 			pep, err := azureMock.GetPrivateEndPoint(infra.Ctx(), resourceGroupName, name+"-pe")

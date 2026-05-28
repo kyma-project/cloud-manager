@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -27,11 +28,11 @@ func CreateKcpAzureManagedRedis(ctx context.Context, clnt client.Client, obj *cl
 	return err
 }
 
-func WithKcpAzureManagedRedisSKU(sku string) ObjAction {
+func WithKcpAzureManagedRedisSKU(sku armredisenterprise.SKUName) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if amr, ok := obj.(*cloudcontrolv1beta1.AzureManagedRedis); ok {
-				amr.Spec.SKU = sku
+				amr.Spec.SKU = string(sku)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithKcpAzureManagedRedisSKU", obj))
@@ -39,11 +40,11 @@ func WithKcpAzureManagedRedisSKU(sku string) ObjAction {
 	}
 }
 
-func WithKcpAzureManagedRedisClusteringPolicy(policy string) ObjAction {
+func WithKcpAzureManagedRedisClusteringPolicy(policy armredisenterprise.ClusteringPolicy) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {
 			if amr, ok := obj.(*cloudcontrolv1beta1.AzureManagedRedis); ok {
-				amr.Spec.ClusteringPolicy = policy
+				amr.Spec.ClusteringPolicy = string(policy)
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithKcpAzureManagedRedisClusteringPolicy", obj))
