@@ -24,6 +24,8 @@ func ipRangeLoad(ctx context.Context, st composed.State) (error, context.Context
 		dependencyName = x.Spec.IpRange.Name
 	case *cloudcontrolv1beta1.RedisCluster:
 		dependencyName = x.Spec.IpRange.Name
+	case *cloudcontrolv1beta1.AzureManagedRedis:
+		dependencyName = x.Spec.IpRange.Name
 	// add here any new KCP kind referring to IpRange
 	default:
 		return nil, ctx

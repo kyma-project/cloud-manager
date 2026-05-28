@@ -14,6 +14,7 @@ import (
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azureexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/exposedData/client"
 	azureiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange/client"
+	azuremanagedredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/managedredis/client"
 	azurenetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network/client"
 	azureredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster/client"
 	azureredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client"
@@ -69,6 +70,12 @@ func (s *server) RedisClientProvider() azureclient.ClientProvider[azureredisinst
 
 func (s *server) RedisClusterClientProvider() azureclient.ClientProvider[azureredisclusterclient.Client] {
 	return func(ctx context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azureredisclusterclient.Client, error) {
+		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
+	}
+}
+
+func (s *server) ManagedRedisClientProvider() azureclient.ClientProvider[azuremanagedredisclient.Client] {
+	return func(ctx context.Context, _, _, subscription, tenant string, auxiliaryTenants ...string) (azuremanagedredisclient.Client, error) {
 		return s.getTenantStoreSubscriptionContext(subscription, tenant), nil
 	}
 }

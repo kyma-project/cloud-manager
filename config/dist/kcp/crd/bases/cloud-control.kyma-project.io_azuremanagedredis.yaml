@@ -17,8 +17,8 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.scope.name
-      name: Scope
+    - jsonPath: .spec.vpcNetwork.name
+      name: VpcNetwork
       type: string
     - jsonPath: .status.state
       name: State
@@ -71,6 +71,8 @@ spec:
                     type: string
                 type: object
                 x-kubernetes-validations:
+                - message: IpRange name must not be empty.
+                  rule: (size(self.name) > 0)
                 - message: IpRange is immutable.
                   rule: (self == oldSelf)
               remoteRef:
@@ -86,18 +88,6 @@ spec:
                 x-kubernetes-validations:
                 - message: RemoteRef is immutable.
                   rule: (self == oldSelf)
-              scope:
-                properties:
-                  name:
-                    type: string
-                    x-kubernetes-validations:
-                    - message: Scope is immutable.
-                      rule: (self == oldSelf)
-                    - message: Scope is required.
-                      rule: (self != "")
-                required:
-                - name
-                type: object
               sku:
                 description: SKU defines the pricing tier.
                 enum:
@@ -160,11 +150,33 @@ spec:
                 x-kubernetes-validations:
                 - message: sku is immutable.
                   rule: (self == oldSelf)
+              vpcNetwork:
+                description: |-
+                  LocalObjectReference contains enough information to let you locate the
+                  referenced object inside the same namespace.
+                properties:
+                  name:
+                    default: ""
+                    description: |-
+                      Name of the referent.
+                      This field is effectively required, but due to backwards compatibility is
+                      allowed to be empty. Instances of this type with an empty value here are
+                      almost certainly wrong.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: VpcNetwork name must not be empty.
+                  rule: (size(self.name) > 0)
+                - message: VpcNetwork is immutable.
+                  rule: (self == oldSelf)
             required:
             - clusteringPolicy
+            - ipRange
             - remoteRef
-            - scope
             - sku
+            - vpcNetwork
             type: object
           status:
             description: AzureManagedRedisStatus defines the observed state of AzureManagedRedis.

@@ -23,6 +23,7 @@ type tenantSubscriptionStore struct {
 	*operationalInsightsStore
 	*securityStore
 	*storageAccountStore
+	*managedRedisStore
 
 	tenant       string
 	subscription string
@@ -51,6 +52,7 @@ func newTenantSubscriptionStore(tenant, subscription string, srv Server) *tenant
 		operationalInsightsStore:  newOperationalInsightsStore(subscription),
 		securityStore:             newSecurityStore(subscription),
 		storageAccountStore:       newStorageAccountStore(subscription),
+		managedRedisStore:         newManagedRedisStore(subscription),
 		tenant:                    tenant,
 		subscription:              subscription,
 	}

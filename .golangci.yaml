@@ -91,6 +91,8 @@ linters:
           alias: azureredisclusterclient
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance/client
           alias: azureredisinstanceclient
+        - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/managedredis/client
+          alias: azuremanagedredisclient
         - pkg: github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering/client
           alias: azurevpcpeeringclient
 
