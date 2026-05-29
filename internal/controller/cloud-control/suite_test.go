@@ -154,6 +154,11 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock2().RedisClusterProvider(),
 		env,
 	)).NotTo(HaveOccurred())
+	// AzureManagedRedis
+	Expect(SetupAzureManagedRedisReconciler(
+		infra.KcpManager(),
+		infra.AzureMock().ManagedRedisClientProvider(),
+	)).NotTo(HaveOccurred())
 	// Network
 	Expect(SetupNetworkReconciler(
 		infra.Ctx(),

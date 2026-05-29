@@ -21,10 +21,12 @@ import (
 
 const (
 	PrivateEndpointGroupID = "redisEnterprise"
-	PrivateDNSZone         = "privatelink.redis.azure.net"
-	PrivateDNSZoneChina    = "privatelink.redis.cache.chinacloudapi.cn"
-	RedisPort              = int32(10000)
-	DefaultDatabaseName    = "default"
+	// PrivateDNSZone is the private DNS zone for Azure Managed Redis (Microsoft.Cache/redisEnterprise)
+	// in commercial Azure regions. Azure Managed Redis is not yet available in Azure China or Azure US
+	// Government, so there is no sovereign-cloud equivalent at this time.
+	PrivateDNSZone      = "privatelink.redis.azure.net"
+	RedisPort           = int32(10000)
+	DefaultDatabaseName = "default"
 )
 
 type State struct {
@@ -39,14 +41,15 @@ type State struct {
 	privateDnsZoneGroup  *armnetwork.PrivateDNSZoneGroup
 }
 
+func newState(kcpCommonState kcpcommonaction.State) *State {
+	return &State{State: kcpCommonState}
+}
+
 func (s *State) ObjAsAzureManagedRedis() *cloudcontrolv1beta1.AzureManagedRedis {
 	return s.Obj().(*cloudcontrolv1beta1.AzureManagedRedis)
 }
 
 func (s *State) PrivateDNSZoneName() string {
-	if azureconfig.AzureConfig.ClientOptions.Cloud == "AzureChina" {
-		return PrivateDNSZoneChina
-	}
 	return PrivateDNSZone
 }
 

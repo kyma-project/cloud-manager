@@ -17,8 +17,7 @@ func deleteDatabase(ctx context.Context, st composed.State) (error, context.Cont
 
 	err := state.client.DeleteDatabase(ctx, state.resourceGroupName, obj.Name, DefaultDatabaseName)
 	if err != nil && !azuremeta.IsNotFound(err) {
-		composed.LoggerFromCtx(ctx).Error(err, "Error deleting Azure Managed Redis database")
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		return composed.LogErrorAndReturn(err, "Error deleting Azure Managed Redis database", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 
 	return nil, ctx

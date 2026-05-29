@@ -12,12 +12,15 @@ func waitPrivateDnsZoneGroupDeleted(ctx context.Context, st composed.State) (err
 	state := st.(*State)
 	obj := state.ObjAsAzureManagedRedis()
 
-	_, err := state.client.GetPrivateDnsZoneGroup(ctx, state.resourceGroupName, obj.Name+"-pe", obj.Name+"-dzg")
+	dzg, err := state.client.GetPrivateDnsZoneGroup(ctx, state.resourceGroupName, obj.Name+"-pe", obj.Name+"-dzg")
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
 			return nil, ctx
 		}
 		return composed.LogErrorAndReturn(err, "Error polling Azure Managed Redis Private DNS Zone Group deletion", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+	}
+	if dzg == nil {
+		return nil, ctx
 	}
 
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil

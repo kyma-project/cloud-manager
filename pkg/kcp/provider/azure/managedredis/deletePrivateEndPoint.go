@@ -17,8 +17,7 @@ func deletePrivateEndPoint(ctx context.Context, st composed.State) (error, conte
 
 	err := state.client.DeletePrivateEndPoint(ctx, state.resourceGroupName, obj.Name+"-pe")
 	if err != nil && !azuremeta.IsNotFound(err) {
-		composed.LoggerFromCtx(ctx).Error(err, "Error deleting Private Endpoint for Azure Managed Redis")
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		return composed.LogErrorAndReturn(err, "Error deleting Private Endpoint for Azure Managed Redis", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 
 	return nil, ctx
