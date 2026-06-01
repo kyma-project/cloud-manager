@@ -78,7 +78,6 @@ const (
 )
 
 const (
-	ReasonProviderError           = "ProviderError"
-	ReasonStatementTypeRestricted = "StatementTypeRestricted"
-	ReasonReady                   = "Ready"
+	ReasonProviderError = "ProviderError"
+	ReasonReady         = "Ready"
 )

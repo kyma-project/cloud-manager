@@ -24,14 +24,12 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -326,163 +324,4 @@ var _ = Describe("AwsWebAcl Controller", func() {
 		})
 	})
 
-	It("Scenario: Feature flag wafManagedRuleGroupOnly restricts statement types", func() {
-
-		if !feature.WafManagedRuleGroupOnly.Value(infra.Ctx()) {
-			Skip("wafManagedRuleGroupOnly feature flag is disabled")
-		}
-
-		awsAccountLocal := infra.AwsMock().NewAccount()
-		defer awsAccountLocal.Delete()
-
-		scope := &cloudcontrolv1beta1.Scope{}
-		scopeName := "ff-managed-rule-only-scope"
-
-		By("Given Scope exists", func() {
-			kcpscope.Ignore.AddName(scopeName)
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(scopeName))).To(Succeed())
-		})
-
-		objName := "ff-test-acl"
-		infra.ScopeProvider().Add(scopeprovider.MatchingObj(objName, scope))
-
-		By("And Given scope is ready", func() {
-			Eventually(UpdateStatus).
-				WithArguments(
-					infra.Ctx(), infra.KCP().Client(), scope,
-					WithConditions(KcpReadyCondition()),
-				).
-				Should(Succeed())
-		})
-
-		awsWebAclWithRateBased := &cloudresourcesv1beta1.AwsWebAcl{}
-
-		By("When AwsWebAcl with RateBased statement is created (flag enabled)", func() {
-			awsWebAclWithRateBased.Spec = cloudresourcesv1beta1.AwsWebAclSpec{
-				DefaultAction: cloudresourcesv1beta1.DefaultActionAllow(),
-				Description:   "Test WebACL with RateBased - should be blocked",
-				Rules: []cloudresourcesv1beta1.AwsWebAclRule{
-					{
-						Name:     "rate-limit-rule",
-						Priority: 1,
-						Action:   cloudresourcesv1beta1.RuleActionBlock(),
-						Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
-							{
-								RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-									Limit:               1000,
-									AggregateKeyType:    "IP",
-									EvaluationWindowSec: ptr.To(int32(300)),
-								},
-							},
-						},
-						VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
-							CloudWatchMetricsEnabled: true,
-							MetricName:               "rate-limit-metric",
-							SampledRequestsEnabled:   true,
-						},
-					},
-				},
-				VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
-					CloudWatchMetricsEnabled: true,
-					MetricName:               "ff-test-acl-metric",
-					SampledRequestsEnabled:   true,
-				},
-			}
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAclWithRateBased, WithName(objName)).
-				Should(Succeed())
-		})
-
-		By("Then AwsWebAcl has error status with validation message", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), awsWebAclWithRateBased,
-					NewObjActions(),
-					HavingState(cloudresourcesv1beta1.ReasonStatementTypeRestricted),
-				).
-				Should(Succeed())
-
-			// Verify Ready condition is not true
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), awsWebAclWithRateBased,
-					NewObjActions(),
-					NotHavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-				).
-				Should(Succeed())
-		})
-
-		By("When AwsWebAcl is deleted", func() {
-			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAclWithRateBased).
-				Should(Succeed())
-		})
-
-		By("Then AwsWebAcl does not exist", func() {
-			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAclWithRateBased).
-				Should(Succeed())
-		})
-
-		awsWebAclWithManaged := &cloudresourcesv1beta1.AwsWebAcl{}
-		objName2 := "ff-test-acl-managed"
-
-		By("When AwsWebAcl with ManagedRuleGroup is created (flag enabled - should work)", func() {
-			awsWebAclWithManaged.Spec = cloudresourcesv1beta1.AwsWebAclSpec{
-				DefaultAction: cloudresourcesv1beta1.DefaultActionAllow(),
-				Description:   "Test WebACL with ManagedRuleGroup - should succeed",
-				Rules: []cloudresourcesv1beta1.AwsWebAclRule{
-					{
-						Name:           "AWS-AWSManagedRulesCommonRuleSet",
-						Priority:       1,
-						OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
-						Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
-							{
-								ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-									VendorName: "AWS",
-									Name:       "AWSManagedRulesCommonRuleSet",
-								},
-							},
-						},
-						VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
-							CloudWatchMetricsEnabled: true,
-							MetricName:               "AWS-AWSManagedRulesCommonRuleSet",
-							SampledRequestsEnabled:   true,
-						},
-					},
-				},
-				VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
-					CloudWatchMetricsEnabled: true,
-					MetricName:               "ff-test-acl-managed-metric",
-					SampledRequestsEnabled:   true,
-				},
-			}
-			infra.ScopeProvider().Add(scopeprovider.MatchingObj(objName2, scope))
-			Eventually(CreateObj).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAclWithManaged, WithName(objName2)).
-				Should(Succeed())
-		})
-
-		By("Then AwsWebAcl becomes Ready (ManagedRuleGroup allowed)", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(
-					infra.Ctx(), infra.SKR().Client(), awsWebAclWithManaged,
-					NewObjActions(),
-					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
-				).
-				Should(Succeed())
-		})
-
-		By("When AwsWebAcl is deleted", func() {
-			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAclWithManaged).
-				Should(Succeed())
-		})
-
-		By("Then AwsWebAcl does not exist", func() {
-			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAclWithManaged).
-				Should(Succeed())
-		})
-	})
 })
