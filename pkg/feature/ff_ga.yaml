@@ -100,10 +100,3 @@ alicloud:
       variation: enabled
   defaultRule:
     variation: disabled
-
-wafManagedRuleGroupOnly:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: enabled
