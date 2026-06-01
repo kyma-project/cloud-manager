@@ -38,7 +38,7 @@ func createKcpAzureManagedRedis(ctx context.Context, st composed.State) (error, 
 				Message: errMsg,
 			}).
 			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
-			ErrorLogMessage("Error: updating AzureManagedRedis status with not ready condition due to KCP error").
+			ErrorLogMessage("Failed to persist Error condition for unknown tier on AzureManagedRedis").
 			SuccessLogMsg("Updated and forgot SKR AzureManagedRedis status with Error condition").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)

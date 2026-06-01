@@ -43,7 +43,7 @@ func loadAuthSecret(ctx context.Context, st composed.State) (error, context.Cont
 				Message: errMsg,
 			}).
 			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
-			ErrorLogMessage(errMsg).
+			ErrorLogMessage("Failed to persist Error condition for auth-secret ownership conflict on AzureManagedRedis").
 			SuccessLogMsg("Updated and forgot SKR AzureManagedRedis status with Error condition").
 			SuccessError(composed.StopAndForget).
 			Run(ctx, state)

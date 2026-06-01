@@ -3,7 +3,6 @@ package azuremanagedredis
 import (
 	"fmt"
 	"maps"
-	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -96,21 +95,14 @@ func getAuthSecretAnnotations(amr *cloudresourcesv1beta1.AzureManagedRedis) map[
 }
 
 // getAuthSecretBaseData mirrors the data layout used by AzureRedisInstance/AzureRedisCluster
-// auth secrets. AMR exposes a single primary endpoint (no read replica endpoint).
+// auth secrets. AMR exposes PrimaryEndpoint as a hostname and Port as a separate
+// int32 field, so host == PrimaryEndpoint by contract.
 func getAuthSecretBaseData(kcpAMR *cloudcontrolv1beta1.AzureManagedRedis) map[string][]byte {
 	result := map[string][]byte{}
 
 	if len(kcpAMR.Status.PrimaryEndpoint) > 0 {
 		result["primaryEndpoint"] = []byte(kcpAMR.Status.PrimaryEndpoint)
-
-		// PrimaryEndpoint is just a hostname for AMR; combine with Port for "host:port".
-		host := kcpAMR.Status.PrimaryEndpoint
-		// Accept both "host" and "host:port" defensively in case the KCP side
-		// changes the convention.
-		if idx := strings.LastIndex(kcpAMR.Status.PrimaryEndpoint, ":"); idx > 0 {
-			host = kcpAMR.Status.PrimaryEndpoint[:idx]
-		}
-		result["host"] = []byte(host)
+		result["host"] = []byte(kcpAMR.Status.PrimaryEndpoint)
 	}
 
 	if kcpAMR.Status.Port > 0 {

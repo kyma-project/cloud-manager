@@ -1,7 +1,6 @@
 package cloudresources
 
 import (
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -183,14 +182,5 @@ var _ = Describe("Feature: SKR AzureManagedRedis", func() {
 
 	It("Scenario: SKR AzureManagedRedis with C5 tier (HA, OSSCluster, ComputeOptimized)", func() {
 		runScenario(cloudresourcesv1beta1.AzureManagedRedisTierC5, "amr-c5-cluster")
-	})
-
-	It("Scenario: SKR AzureManagedRedis with unknown tier surfaces an Error condition", func() {
-		// We can't construct an unknown tier through the typed API helper
-		// because Spec.Tier is enum-validated by the CRD; this scenario is
-		// covered by the unit test in pkg/skr/azuremanagedredis/util_test.go
-		// (TestTierToSpec_UnknownTier). Keeping a placeholder spec here would
-		// only duplicate that coverage and add envtest cost.
-		_ = armredisenterprise.SKUNameComputeOptimizedX5
 	})
 })
