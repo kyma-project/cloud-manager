@@ -42,7 +42,7 @@ func infraObserve(ctx context.Context, st composed.State) (error, context.Contex
 	router, err := state.gcpClient.GetRouter(ctx, &computepb.GetRouterRequest{
 		Project: projectId,
 		Region:  state.ObjAsVpcNetwork().Spec.Region,
-		Router:  name,
+		Router:  RouterName(name),
 	})
 	if gcpmeta.IsNotFound(err) {
 		return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).

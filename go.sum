@@ -38,6 +38,8 @@ cloud.google.com/go/redis v1.23.0 h1:y/NCxLQR46TQufJNjgINfWsRjCxkgClU37mMf/D1EE4
 cloud.google.com/go/redis v1.23.0/go.mod h1:EUlUT24BAL6LsE1f/N9Bg3LhRCfH+LzwLGbst3KuZRw=
 cloud.google.com/go/resourcemanager v1.15.0 h1:OwcTLrKaly0SMPoYHssPG4FBzRF0tyimeySOFD/YPJ0=
 cloud.google.com/go/resourcemanager v1.15.0/go.mod h1:ve0VNxPoDU6XxDuEMCjkineb0YzXQXx3mOWwnNckGDE=
+cloud.google.com/go/securitycentermanagement v1.6.0 h1:1oH0hTRrwS0Er8QVhrUR2ScQNSmupUAMorFHt45QN24=
+cloud.google.com/go/securitycentermanagement v1.6.0/go.mod h1:2vT5sKJSeclefx8yku77inS/bAyEiLH9n1CHpshtDMQ=
 cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiyrjsg+URw=
 cloud.google.com/go/storage v1.62.1 h1:Os0G3XbUbjZumkpDUf2Y0rLoXJTCF1kU2kWUujKYXD8=
 cloud.google.com/go/storage v1.62.1/go.mod h1:cpYz/kRVZ+UQAF1uHeea10/9ewcRbxGoGNKsS9daSXA=

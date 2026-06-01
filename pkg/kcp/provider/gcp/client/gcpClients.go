@@ -13,6 +13,7 @@ import (
 	redisinstance "cloud.google.com/go/redis/apiv1"
 	rediscluster "cloud.google.com/go/redis/cluster/apiv1"
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	securitycentermanagement "cloud.google.com/go/securitycentermanagement/apiv1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/metrics"
 
 	"github.com/go-logr/logr"
@@ -39,6 +40,7 @@ type GcpClients struct {
 	ServiceNetworking                         *servicenetworking.APIService          // For IpRange PSA connections (OLD pattern API)
 	CloudResourceManager                      *cloudresourcemanager.Service          // For IpRange project number lookup (OLD pattern API)
 	VpcPeeringClients                         *VpcPeeringClients
+	SecurityCenterManagement                  *securitycentermanagement.Client
 }
 
 // The VpcPeeringClients uses a different service account than the other clients and has different permissions as well.
@@ -205,8 +207,23 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 		return nil, fmt.Errorf("create cloud resource manager client: %w", err)
 	}
 
+	// security center management ----------------
+
+	sccTokenProvider, err := b.WithScopes(securitycentermanagement.DefaultAuthScopes()).BuildTokenProvider()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create security center management token provider: %w", err)
+	}
+	sccTokenSource := oauth2adapt.TokenSourceFromTokenProvider(sccTokenProvider)
+	sccDialOpts := []option.ClientOption{
+		option.WithTokenSource(sccTokenSource),
+		option.WithGRPCDialOption(grpc.WithUnaryInterceptor(metrics.UnaryClientInterceptor())),
+	}
+	sccClient, err := securitycentermanagement.NewClient(ctx, sccDialOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("create security center management client: %w", err)
+	}
+
 	// vpc peering clients ----------------
-	// Compute networks client for VPC peering, uses a different service account
 	vpcPeeringComputeNetworksTokenProvider, err := vpcPeeringClientBuilder.WithScopes(compute.DefaultAuthScopes()).BuildTokenProvider()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build vpc peering compute token provider: %w", err)
@@ -259,6 +276,7 @@ func NewGcpClients(ctx context.Context, credentialsFile string, peeringCredentia
 			ComputeNetworks:            vpcPeeringComputeNetworks,
 			ResourceManagerTagBindings: vpcPeeringResourceManagerTagBindings,
 		},
+		SecurityCenterManagement: sccClient,
 	}, nil
 }
 
@@ -323,6 +341,10 @@ func (c *GcpClients) GlobalOperationsWrapped() ComputeGlobalOperationsClient {
 // ServiceNetworkingWrapped is supposed to replace usage of fields ServiceNetworking and CloudResourceManager after the refactoring
 func (c *GcpClients) ServiceNetworkingWrapped() ServiceNetworkingClient {
 	return &serviceNetworkingClient{inner: c.ServiceNetworking, crm: c.CloudResourceManager}
+}
+
+func (c *GcpClients) SecurityCenterManagementWrapped() SecurityCenterManagementClient {
+	return &sccMgmtClient{inner: c.SecurityCenterManagement}
 }
 
 func (c *VpcPeeringClients) Close() error {

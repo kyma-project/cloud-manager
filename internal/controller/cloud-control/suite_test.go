@@ -32,7 +32,6 @@ import (
 	gcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork"
 	sapvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/vpcnetwork"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -207,6 +206,7 @@ var _ = BeforeSuite(func() {
 		infra.Ctx(),
 		infra.KcpManager(),
 		infra.AzureMock().SecurityProvider(),
+		infra.GcpMock2().SecurityProvider(),
 	)).To(Succeed())
 
 	// Start controllers

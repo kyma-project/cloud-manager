@@ -9,6 +9,7 @@ import (
 	"cloud.google.com/go/redis/apiv1/redispb"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
 	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
+	"cloud.google.com/go/securitycentermanagement/apiv1/securitycentermanagementpb"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"google.golang.org/api/servicenetworking/v1"
 )
@@ -43,6 +44,8 @@ func newStore(projectId string, server Server) Store {
 		tagKeys:     MustNewFilterableList[*resourcemanagerpb.TagKey](),
 		tagValues:   MustNewFilterableList[*resourcemanagerpb.TagValue](),
 		tagBindings: MustNewFilterableList[*resourcemanagerpb.TagBinding](),
+
+		sccServices: make(map[string]securitycentermanagementpb.SecurityCenterService_EnablementState),
 	}
 
 	return result
@@ -81,6 +84,8 @@ type store struct {
 	tagKeys     *FilterableList[*resourcemanagerpb.TagKey]
 	tagValues   *FilterableList[*resourcemanagerpb.TagValue]
 	tagBindings *FilterableList[*resourcemanagerpb.TagBinding]
+
+	sccServices map[string]securitycentermanagementpb.SecurityCenterService_EnablementState
 }
 
 var _ gcpclient.ComputeRegionalOperationsClient = (*store)(nil)

@@ -1,11 +1,18 @@
 package cloudcontrol
 
 import (
+	"context"
+	"fmt"
+
+	"cloud.google.com/go/securitycentermanagement/apiv1/securitycentermanagementpb"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+	gcpmock2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock2"
+	kcpruntime "github.com/kyma-project/cloud-manager/pkg/kcp/runtime"
 	kcpsubscription "github.com/kyma-project/cloud-manager/pkg/kcp/subscription"
 	kcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -16,6 +23,18 @@ import (
 )
 
 var _ = Describe("Feature: Runtime", func() {
+
+	gcpSccServiceHasState := func(ctx context.Context, mock gcpmock2.Store, serviceId string, state securitycentermanagementpb.SecurityCenterService_EnablementState) error {
+		name := fmt.Sprintf("projects/%s/locations/global/securityCenterServices/%s", mock.ProjectId(), serviceId)
+		svc, err := mock.GetSecurityCenterService(ctx, name)
+		if err != nil {
+			return err
+		}
+		if svc.IntendedEnablementState != state {
+			return fmt.Errorf("SCC service %q: expected state %v, got %v", serviceId, state, svc.IntendedEnablementState)
+		}
+		return nil
+	}
 
 	It("Scenario: GCP Runtime with Gardener network is created and deleted", func() {
 
@@ -128,18 +147,110 @@ var _ = Describe("Feature: Runtime", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		// uncomment once implemented
-		//By("Then Runtime is annotated as security handled", func() {
-		//	Eventually(LoadAndCheck).
-		//		WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation, "Ready")).
-		//		Should(Succeed())
-		//})
+		By("Then Runtime is successfully reconciled", func() {
+			// Runtime is not owned by CloudManager, and it does not write its conditions
+			// so there's no way to observe the reconciliation progress other than with Tracker
+			Eventually(kcpruntime.Tracker.IsReconciledWith).
+				WithArguments(runtime.Name, composed.ReconciliationLabelSuccess).
+				Should(Succeed())
+		})
+
+		if feature.RuntimeSecurityGcp.Value(infra.Ctx()) {
+
+			By("Then Runtime is annotated as security handled", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation, "Ready")).
+					Should(Succeed())
+			})
+
+			By("When Runtime security is enabled", func() {
+				Expect(LoadAndCheck(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions())).
+					To(Succeed())
+
+				// reset the tracker so next reconciliation can be tracked
+				kcpruntime.Tracker.Clear(runtime.Name)
+
+				_, err := composed.PatchObjMergeLabel(infra.Ctx(), runtime, infra.KCP().Client(), common.TmpRuntimeSecurityEnabledLabel, "true")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			By("Then Runtime is successfully reconciled", func() {
+				Eventually(kcpruntime.Tracker.IsReconciledWith).
+					WithArguments(runtime.Name, composed.ReconciliationLabelSuccess).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service security-health-analytics is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "security-health-analytics", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service web-security-scanner is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "web-security-scanner", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service event-threat-detection is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "event-threat-detection", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service vm-threat-detection is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "vm-threat-detection", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service GCE_VULNERABILITY_ASSESSMENT is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "GCE_VULNERABILITY_ASSESSMENT", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
+		} // if security feature enabled for GCP
 
 		// DELETE ===============================================================
 
 		By("When Runtime is deleted", func() {
 			Expect(Delete(infra.Ctx(), infra.KCP().Client(), runtime)).To(Succeed())
 		})
+
+		if feature.RuntimeSecurityGcp.Value(infra.Ctx()) {
+
+			By("Then GCP SCC service security-health-analytics is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "security-health-analytics", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service web-security-scanner is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "web-security-scanner", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service event-threat-detection is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "event-threat-detection", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service vm-threat-detection is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "vm-threat-detection", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service GCE_VULNERABILITY_ASSESSMENT is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "GCE_VULNERABILITY_ASSESSMENT", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+		} // if security feature enabled for GCP
 
 		By("Then VpcNetwork is deleted", func() {
 			Eventually(IsDeleted).
@@ -252,12 +363,142 @@ var _ = Describe("Feature: Runtime", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		// uncomment once implemented
-		//By("Then Runtime is annotated as security handled", func() {
-		//	Eventually(LoadAndCheck).
-		//		WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation, "Ready")).
-		//		Should(Succeed())
-		//})
+		By("Then Runtime is successfully reconciled", func() {
+			Eventually(kcpruntime.Tracker.IsReconciledWith).
+				WithArguments(runtime.Name, composed.ReconciliationLabelSuccess).
+				Should(Succeed())
+		})
 
+		if feature.RuntimeSecurityGcp.Value(infra.Ctx()) {
+
+			By("Then Runtime is annotated as security handled", func() {
+				Eventually(LoadAndCheck).
+					WithArguments(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions(), HavingAnnotation(cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation, "Ready")).
+					Should(Succeed())
+			})
+
+			By("When Runtime security is enabled", func() {
+				Expect(LoadAndCheck(infra.Ctx(), infra.KCP().Client(), runtime, NewObjActions())).
+					To(Succeed())
+
+				// reset the tracker so next reconciliation can be tracked
+				kcpruntime.Tracker.Clear(runtime.Name)
+
+				_, err := composed.PatchObjMergeLabel(infra.Ctx(), runtime, infra.KCP().Client(), common.TmpRuntimeSecurityEnabledLabel, "true")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			By("Then Runtime is successfully reconciled", func() {
+				Eventually(kcpruntime.Tracker.IsReconciledWith).
+					WithArguments(runtime.Name, composed.ReconciliationLabelSuccess).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service security-health-analytics is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "security-health-analytics", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service web-security-scanner is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "web-security-scanner", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service event-threat-detection is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "event-threat-detection", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service vm-threat-detection is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "vm-threat-detection", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service GCE_VULNERABILITY_ASSESSMENT is ENABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "GCE_VULNERABILITY_ASSESSMENT", securitycentermanagementpb.SecurityCenterService_ENABLED).
+					Should(Succeed())
+			})
+
+		} // if security feature enabled for GCP
+
+		// DELETE ===============================================================
+
+		By("When Runtime is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), runtime)).To(Succeed())
+		})
+
+		if feature.RuntimeSecurityGcp.Value(infra.Ctx()) {
+
+			By("Then GCP SCC service security-health-analytics is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "security-health-analytics", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service web-security-scanner is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "web-security-scanner", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service event-threat-detection is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "event-threat-detection", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service vm-threat-detection is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "vm-threat-detection", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+			By("Then GCP SCC service GCE_VULNERABILITY_ASSESSMENT is DISABLED", func() {
+				Eventually(gcpSccServiceHasState).
+					WithArguments(infra.Ctx(), gcpMock, "GCE_VULNERABILITY_ASSESSMENT", securitycentermanagementpb.SecurityCenterService_DISABLED).
+					Should(Succeed())
+			})
+
+		} // if security feature enabled for GCP
+
+		By("Then VpcNetwork is not deleted", func() {
+			Expect(LoadAndCheck(infra.Ctx(), infra.KCP().Client(), vpcNetwork, NewObjActions())).
+				To(Succeed())
+			Expect(vpcNetwork.DeletionTimestamp).To(BeNil(), "vpcNetwork should not be marked for deletion")
+		})
+
+		By("And Then Subscription is not deleted", func() {
+			Expect(LoadAndCheck(infra.Ctx(), infra.KCP().Client(), subscription, NewObjActions())).
+				To(Succeed())
+			Expect(subscription.DeletionTimestamp).To(BeNil(), "subscription should not be marked for deletion")
+		})
+
+		By("// cleanup: delete Runtime", func() {
+			_, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, runtime, infra.KCP().Client())
+			Expect(err).NotTo(HaveOccurred())
+			Expect(IsDeleted(infra.Ctx(), infra.KCP().Client(), runtime)).
+				To(Succeed())
+		})
+
+		By("// cleanup: delete VpcNetwork", func() {
+			_, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, vpcNetwork, infra.KCP().Client())
+			Expect(err).NotTo(HaveOccurred())
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), vpcNetwork)).To(Succeed())
+			Expect(IsDeleted(infra.Ctx(), infra.KCP().Client(), vpcNetwork)).
+				To(Succeed())
+		})
+
+		By("// cleanup: delete Subscription", func() {
+			_, err := composed.PatchObjRemoveFinalizer(infra.Ctx(), api.CommonFinalizerDeletionHook, subscription, infra.KCP().Client())
+			Expect(err).NotTo(HaveOccurred())
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), subscription)).To(Succeed())
+			Expect(IsDeleted(infra.Ctx(), infra.KCP().Client(), subscription)).
+				To(Succeed())
+		})
 	})
 })
