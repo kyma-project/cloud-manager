@@ -116,10 +116,3 @@ runtimeSecurityGcp:
     disabled: false
   defaultRule:
     variation: disabled
-
-wafManagedRuleGroupOnly:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: enabled

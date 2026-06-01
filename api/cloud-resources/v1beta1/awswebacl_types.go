@@ -120,26 +120,8 @@ type AwsWebAclSpec struct {
 	ChallengeConfig *AwsWebAclChallengeConfig `json:"challengeConfig,omitempty"`
 }
 
-// AwsWebAclLogicalOperator defines how multiple statements are combined in a rule
-// +kubebuilder:validation:Enum=NONE;AND;OR;NOT
-type AwsWebAclLogicalOperator string
-
-const (
-	// LogicalOperatorNone - Single statement, no logical operation
-	LogicalOperatorNone AwsWebAclLogicalOperator = "NONE"
-	// LogicalOperatorAnd - All statements must match (requires 2+ statements)
-	LogicalOperatorAnd AwsWebAclLogicalOperator = "AND"
-	// LogicalOperatorOr - At least one statement must match (requires 2+ statements)
-	LogicalOperatorOr AwsWebAclLogicalOperator = "OR"
-	// LogicalOperatorNot - Negates the single statement (requires exactly 1 statement)
-	LogicalOperatorNot AwsWebAclLogicalOperator = "NOT"
-)
-
 // AwsWebAclRule defines a single rule in the WebACL
-// +kubebuilder:validation:XValidation:rule="self.logicalOperator == 'NONE' ? size(self.statements) == 1 : true",message="NONE operator requires exactly 1 statement"
-// +kubebuilder:validation:XValidation:rule="self.logicalOperator == 'NOT' ? size(self.statements) == 1 : true",message="NOT operator requires exactly 1 statement"
-// +kubebuilder:validation:XValidation:rule="self.logicalOperator == 'AND' || self.logicalOperator == 'OR' ? size(self.statements) >= 2 : true",message="AND/OR operators require at least 2 statements"
-// +kubebuilder:validation:XValidation:rule="self.logicalOperator != 'NONE' ? !self.statements.exists(s, has(s.managedRuleGroup) || has(s.rateBased)) : true",message="ManagedRuleGroup and RateBased can only be used with NONE operator"
+// +kubebuilder:validation:XValidation:rule="size(self.statements) == 1",message="Rule must have exactly 1 statement (ManagedRuleGroup only)"
 type AwsWebAclRule struct {
 	// Name must be unique within the WebACL
 	// +kubebuilder:validation:Required
@@ -153,39 +135,15 @@ type AwsWebAclRule struct {
 	// +kubebuilder:validation:Minimum=0
 	Priority int32 `json:"priority"`
 
-	// Action when rule matches (use for regular rules, mutually exclusive with OverrideAction)
-	// +optional
-	Action *AwsWebAclRuleAction `json:"action,omitempty"`
-
-	// OverrideAction for managed rule groups (mutually exclusive with Action)
+	// OverrideAction for managed rule groups (defaults to None if not specified)
 	// +optional
 	OverrideAction *AwsWebAclOverrideAction `json:"overrideAction,omitempty"`
 
-	// LogicalOperator determines how statements are combined (NONE=single statement, AND/OR=multiple, NOT=negate single)
-	// +optional
-	// +kubebuilder:default=NONE
-	// +kubebuilder:validation:Enum=NONE;AND;OR;NOT
-	LogicalOperator AwsWebAclLogicalOperator `json:"logicalOperator,omitempty"`
-
-	// Statements - Array of match conditions combined by LogicalOperator
+	// Statements - Single ManagedRuleGroup statement
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=10
+	// +kubebuilder:validation:MaxItems=1
 	Statements []AwsWebAclStatement `json:"statements"`
-
-	// RuleLabels - Labels to apply to matching requests (max 100)
-	// Can be used with LabelMatchStatement in subsequent rules
-	// +optional
-	// +kubebuilder:validation:MaxItems=100
-	RuleLabels []AwsWebAclLabel `json:"ruleLabels,omitempty"`
-
-	// CaptchaConfig - Per-rule CAPTCHA immunity time override (overrides global setting)
-	// +optional
-	CaptchaConfig *AwsWebAclCaptchaConfig `json:"captchaConfig,omitempty"`
-
-	// ChallengeConfig - Per-rule Challenge immunity time override (overrides global setting)
-	// +optional
-	ChallengeConfig *AwsWebAclChallengeConfig `json:"challengeConfig,omitempty"`
 
 	// VisibilityConfig for rule-specific metrics
 	// +optional
@@ -237,11 +195,11 @@ type AwsWebAclChallengeAction struct {
 }
 
 // AwsWebAclOverrideAction for managed rule groups
-// Exactly one action type must be set
-// +kubebuilder:validation:MinProperties=1
+// If not specified, defaults to None (use the rule group's default actions)
+// At most one action type can be set
 // +kubebuilder:validation:MaxProperties=1
 type AwsWebAclOverrideAction struct {
-	// None - Don't override, use the rule group's action
+	// None - Don't override, use the rule group's action (default if OverrideAction is omitted or empty)
 	// +optional
 	None *AwsWebAclNoneAction `json:"none,omitempty"`
 
@@ -254,310 +212,11 @@ type AwsWebAclNoneAction struct {
 	// No fields - empty struct
 }
 
-// AwsWebAclStatement - Individual match condition
-// Exactly one statement type must be set
-// +kubebuilder:validation:MinProperties=1
-// +kubebuilder:validation:MaxProperties=1
+// AwsWebAclStatement - Individual match condition (ManagedRuleGroup only)
 type AwsWebAclStatement struct {
-	// RateBased - Rate limiting per IP
-	// +optional
-	RateBased *AwsWebAclRateBasedStatement `json:"rateBased,omitempty"`
-
 	// ManagedRuleGroup - Use AWS-managed rule sets
-	// +optional
-	ManagedRuleGroup *AwsWebAclManagedRuleGroupStatement `json:"managedRuleGroup,omitempty"`
-
-	// GeoMatch - Match requests from specific countries
-	// +optional
-	GeoMatch *AwsWebAclGeoMatchStatement `json:"geoMatch,omitempty"`
-
-	// ByteMatch - Match specific patterns in requests
-	// +optional
-	ByteMatch *AwsWebAclByteMatchStatement `json:"byteMatch,omitempty"`
-
-	// LabelMatch - Match based on labels added by previous rules
-	// +optional
-	LabelMatch *AwsWebAclLabelMatchStatement `json:"labelMatch,omitempty"`
-
-	// SizeConstraint - Match based on request component size
-	// +optional
-	SizeConstraint *AwsWebAclSizeConstraintStatement `json:"sizeConstraint,omitempty"`
-
-	// SqliMatch - Detect SQL injection attacks
-	// +optional
-	SqliMatch *AwsWebAclSqliMatchStatement `json:"sqliMatch,omitempty"`
-
-	// XssMatch - Detect cross-site scripting attacks
-	// +optional
-	XssMatch *AwsWebAclXssMatchStatement `json:"xssMatch,omitempty"`
-
-	// RegexMatch - Match using regular expression patterns
-	// +optional
-	RegexMatch *AwsWebAclRegexMatchStatement `json:"regexMatch,omitempty"`
-
-	// AsnMatch - Match requests from specific Autonomous System Numbers
-	// +optional
-	AsnMatch *AwsWebAclAsnMatchStatement `json:"asnMatch,omitempty"`
-}
-
-type AwsWebAclSqliMatchStatement struct {
-	// FieldToMatch - Part of the request to inspect for SQL injection
 	// +kubebuilder:validation:Required
-	FieldToMatch AwsWebAclFieldToMatch `json:"fieldToMatch"`
-
-	// TextTransformations - Transformations to apply before inspection
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
-
-	// SensitivityLevel - Detection sensitivity: LOW (default, fewer false positives) or HIGH (more detections)
-	// +optional
-	// +kubebuilder:validation:Enum=LOW;HIGH
-	// +kubebuilder:default="LOW"
-	SensitivityLevel string `json:"sensitivityLevel,omitempty"`
-}
-
-type AwsWebAclXssMatchStatement struct {
-	// FieldToMatch - Part of the request to inspect for XSS attacks
-	// +kubebuilder:validation:Required
-	FieldToMatch AwsWebAclFieldToMatch `json:"fieldToMatch"`
-
-	// TextTransformations - Transformations to apply before inspection
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
-}
-
-type AwsWebAclRegexMatchStatement struct {
-	// RegexString - Regular expression pattern to match (max 200 chars per AWS quota)
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=200
-	RegexString string `json:"regexString"`
-
-	// FieldToMatch - Part of the request to inspect
-	// +kubebuilder:validation:Required
-	FieldToMatch AwsWebAclFieldToMatch `json:"fieldToMatch"`
-
-	// TextTransformations - Transformations to apply before matching
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
-}
-
-type AwsWebAclAsnMatchStatement struct {
-	// AutonomousSystemNumbers - List of ASNs to match (e.g., [64512, 64513])
-	// Valid range: 0 to 4294967295
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	AutonomousSystemNumbers []int64 `json:"autonomousSystemNumbers"`
-
-	// ForwardedIPConfig - Configuration for inspecting forwarded IP headers
-	// +optional
-	ForwardedIPConfig *AwsWebAclForwardedIPConfig `json:"forwardedIPConfig,omitempty"`
-}
-
-type AwsWebAclSizeConstraintStatement struct {
-	// ComparisonOperator - Comparison operator to use
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=EQ;NE;LE;LT;GE;GT
-	ComparisonOperator string `json:"comparisonOperator"`
-
-	// Size - Size in bytes to compare against (0 to 21,474,836,480)
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=21474836480
-	Size int64 `json:"size"`
-
-	// FieldToMatch - Part of the request to inspect
-	// +kubebuilder:validation:Required
-	FieldToMatch AwsWebAclFieldToMatch `json:"fieldToMatch"`
-
-	// TextTransformations - Transformations to apply before size check
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
-}
-
-type AwsWebAclLabelMatchStatement struct {
-	// Key - Label key to match against (e.g., "aws:acl:name" or namespace like "aws:acl")
-	// Can include namespace specifications separated by colons
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=1024
-	// +kubebuilder:validation:Pattern=`^[0-9A-Za-z_\-:]+$`
-	Key string `json:"key"`
-
-	// Scope - Match scope: "LABEL" (full label) or "NAMESPACE" (namespace prefix)
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=LABEL;NAMESPACE
-	Scope string `json:"scope"`
-}
-
-type AwsWebAclGeoMatchStatement struct {
-	// CountryCodes using ISO 3166-1 alpha-2 codes (e.g., "US", "GB", "DE")
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	CountryCodes []string `json:"countryCodes"`
-
-	// ForwardedIPConfig for inspecting geo location from forwarded IP headers
-	// +optional
-	ForwardedIPConfig *AwsWebAclForwardedIPConfig `json:"forwardedIPConfig,omitempty"`
-}
-
-type AwsWebAclForwardedIPConfig struct {
-	// HeaderName to extract client IP from (e.g., "X-Forwarded-For")
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9._$-]+$`
-	HeaderName string `json:"headerName"`
-
-	// FallbackBehavior when header is missing or invalid
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=MATCH;NO_MATCH
-	FallbackBehavior string `json:"fallbackBehavior"`
-}
-
-// +kubebuilder:validation:XValidation:rule="self.aggregateKeyType != 'CUSTOM_KEYS' || size(self.customKeys) > 0",message="customKeys is required when aggregateKeyType is CUSTOM_KEYS"
-type AwsWebAclRateBasedStatement struct {
-	// Limit - Max requests per evaluation window
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Minimum=10
-	// +kubebuilder:validation:Maximum=2000000000
-	Limit int64 `json:"limit"`
-
-	// AggregateKeyType - How to aggregate rate-based rule counts (REQUIRED by AWS)
-	// IP: Each IP address
-	// FORWARDED_IP: IP from X-Forwarded-For header
-	// CUSTOM_KEYS: Custom aggregation keys
-	// CONSTANT: Single count for all requests
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=IP;FORWARDED_IP;CUSTOM_KEYS;CONSTANT
-	AggregateKeyType string `json:"aggregateKeyType"`
-
-	// EvaluationWindowSec - Time window for rate limiting (60, 120, 300, or 600 seconds)
-	// +optional
-	// +kubebuilder:validation:Enum=60;120;300;600
-	// +kubebuilder:default=300
-	EvaluationWindowSec *int32 `json:"evaluationWindowSec,omitempty"`
-
-	// ForwardedIPConfig for rate limiting based on forwarded IP headers
-	// +optional
-	ForwardedIPConfig *AwsWebAclForwardedIPConfig `json:"forwardedIPConfig,omitempty"`
-
-	// CustomKeys - Custom aggregation keys (required when AggregateKeyType=CUSTOM_KEYS)
-	// +optional
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=5
-	CustomKeys []AwsWebAclRateBasedStatementCustomKey `json:"customKeys,omitempty"`
-}
-
-// AwsWebAclRateBasedStatementCustomKey specifies a custom aggregation key
-// +kubebuilder:validation:MinProperties=1
-// +kubebuilder:validation:MaxProperties=1
-type AwsWebAclRateBasedStatementCustomKey struct {
-	// Header aggregates by HTTP header value
-	// +optional
-	Header *AwsWebAclRateLimitHeader `json:"header,omitempty"`
-
-	// Cookie aggregates by cookie value
-	// +optional
-	Cookie *AwsWebAclRateLimitCookie `json:"cookie,omitempty"`
-
-	// QueryArgument aggregates by query parameter value
-	// +optional
-	QueryArgument *AwsWebAclRateLimitQueryArgument `json:"queryArgument,omitempty"`
-
-	// QueryString aggregates by entire query string
-	// +optional
-	QueryString *AwsWebAclRateLimitQueryString `json:"queryString,omitempty"`
-
-	// HTTPMethod aggregates by HTTP method
-	// +optional
-	HTTPMethod *AwsWebAclRateLimitHTTPMethod `json:"httpMethod,omitempty"`
-
-	// ForwardedIP aggregates by forwarded IP address
-	// +optional
-	ForwardedIP *AwsWebAclRateLimitForwardedIP `json:"forwardedIP,omitempty"`
-
-	// IP aggregates by source IP address
-	// +optional
-	IP *AwsWebAclRateLimitIP `json:"ip,omitempty"`
-
-	// LabelNamespace aggregates by label namespace
-	// +optional
-	LabelNamespace *AwsWebAclRateLimitLabelNamespace `json:"labelNamespace,omitempty"`
-
-	// UriPath aggregates by URI path
-	// +optional
-	UriPath *AwsWebAclRateLimitUriPath `json:"uriPath,omitempty"`
-}
-
-type AwsWebAclRateLimitHeader struct {
-	// Name - Header name
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=64
-	Name string `json:"name"`
-
-	// TextTransformations - Text transformations to apply
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
-}
-
-type AwsWebAclRateLimitCookie struct {
-	// Name - Cookie name
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=64
-	Name string `json:"name"`
-
-	// TextTransformations - Text transformations to apply
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
-}
-
-type AwsWebAclRateLimitQueryArgument struct {
-	// Name - Query parameter name
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=30
-	Name string `json:"name"`
-
-	// TextTransformations - Text transformations to apply
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
-}
-
-type AwsWebAclRateLimitQueryString struct {
-	// TextTransformations - Text transformations to apply
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
-}
-
-type AwsWebAclRateLimitHTTPMethod struct {
-}
-
-type AwsWebAclRateLimitForwardedIP struct {
-}
-
-type AwsWebAclRateLimitIP struct {
-}
-
-type AwsWebAclRateLimitLabelNamespace struct {
-	// Namespace - Label namespace
-	// +kubebuilder:validation:Required
-	Namespace string `json:"namespace"`
-}
-
-type AwsWebAclRateLimitUriPath struct {
-	// TextTransformations - Text transformations to apply
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
+	ManagedRuleGroup *AwsWebAclManagedRuleGroupStatement `json:"managedRuleGroup"`
 }
 
 // +kubebuilder:validation:XValidation:rule="self.vendorName == 'AWS' && (self.name == 'AWSManagedRulesCommonRuleSet' || self.name == 'AWSManagedRulesKnownBadInputsRuleSet' || self.name == 'AWSManagedRulesSQLiRuleSet' || self.name == 'AWSManagedRulesLinuxRuleSet' || self.name == 'AWSManagedRulesUnixRuleSet')", message="Only free AWS managed rules are supported: AWSManagedRulesCommonRuleSet, AWSManagedRulesKnownBadInputsRuleSet, AWSManagedRulesSQLiRuleSet, AWSManagedRulesLinuxRuleSet, AWSManagedRulesUnixRuleSet. Paid AWS rules and marketplace vendor rules require subscriptions in the service provider's AWS account."
@@ -631,29 +290,6 @@ type AwsWebAclExcludedRule struct {
 	// Name of the rule to exclude from the managed rule group
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
-}
-
-type AwsWebAclByteMatchStatement struct {
-	// SearchString to match
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=200
-	SearchString string `json:"searchString"`
-
-	// FieldToMatch specifies where to search
-	// +kubebuilder:validation:Required
-	FieldToMatch AwsWebAclFieldToMatch `json:"fieldToMatch"`
-
-	// PositionalConstraint defines match location
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=EXACTLY;STARTS_WITH;ENDS_WITH;CONTAINS;CONTAINS_WORD
-	PositionalConstraint string `json:"positionalConstraint"`
-
-	// TextTransformations to apply before inspecting (required by AWS)
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=10
-	TextTransformations []AwsWebAclTextTransformation `json:"textTransformations"`
 }
 
 type AwsWebAclTextTransformation struct {
@@ -967,17 +603,6 @@ func (in *AwsWebAcl) SetStatusProviderError(msg string) {
 		Status:             metav1.ConditionFalse,
 		ObservedGeneration: in.Generation,
 		Reason:             ReasonProviderError,
-		Message:            msg,
-	})
-}
-
-func (in *AwsWebAcl) SetStatusStatementTypeRestricted(msg string) {
-	in.Status.State = ReasonStatementTypeRestricted
-	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeReady,
-		Status:             metav1.ConditionFalse,
-		ObservedGeneration: in.Generation,
-		Reason:             ReasonStatementTypeRestricted,
 		Message:            msg,
 	})
 }
