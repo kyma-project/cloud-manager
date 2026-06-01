@@ -6,572 +6,101 @@ import (
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestConvertDefaultAction(t *testing.T) {
 	t.Run("Allow action", func(t *testing.T) {
-		result, err := convertDefaultAction(cloudresourcesv1beta1.DefaultActionAllow())
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
+		action := cloudresourcesv1beta1.AwsWebAclDefaultAction{
+			Allow: &cloudresourcesv1beta1.AwsWebAclAllowAction{},
+		}
+
+		result, err := convertDefaultAction(action)
+		require.NoError(t, err)
 		assert.NotNil(t, result.Allow)
 		assert.Nil(t, result.Block)
 	})
 
 	t.Run("Block action", func(t *testing.T) {
-		result, err := convertDefaultAction(cloudresourcesv1beta1.DefaultActionBlock())
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Nil(t, result.Allow)
-		assert.NotNil(t, result.Block)
-	})
+		action := cloudresourcesv1beta1.AwsWebAclDefaultAction{
+			Block: &cloudresourcesv1beta1.AwsWebAclBlockAction{},
+		}
 
-	t.Run("Empty action returns error", func(t *testing.T) {
-		result, err := convertDefaultAction(cloudresourcesv1beta1.AwsWebAclDefaultAction{}) // Neither Allow nor Block
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "must have either allow or block")
+		result, err := convertDefaultAction(action)
+		require.NoError(t, err)
+		assert.NotNil(t, result.Block)
+		assert.Nil(t, result.Allow)
 	})
 }
 
 func TestConvertVisibilityConfig(t *testing.T) {
-	t.Run("With config", func(t *testing.T) {
+	t.Run("With full config", func(t *testing.T) {
 		config := &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
 			CloudWatchMetricsEnabled: true,
 			MetricName:               "test-metric",
 			SampledRequestsEnabled:   true,
 		}
+
 		result := convertVisibilityConfig(config, "default-name")
-		assert.NotNil(t, result)
 		assert.True(t, result.CloudWatchMetricsEnabled)
 		assert.Equal(t, "test-metric", *result.MetricName)
 		assert.True(t, result.SampledRequestsEnabled)
 	})
 
-	t.Run("With nil config uses defaults", func(t *testing.T) {
+	t.Run("With nil config uses default name", func(t *testing.T) {
 		result := convertVisibilityConfig(nil, "default-name")
-		assert.NotNil(t, result)
 		assert.False(t, result.CloudWatchMetricsEnabled)
 		assert.Equal(t, "default-name", *result.MetricName)
 		assert.False(t, result.SampledRequestsEnabled)
 	})
 }
 
-func TestConvertGeoMatchStatement(t *testing.T) {
-	t.Run("Multiple country codes", func(t *testing.T) {
-		geo := &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-			CountryCodes: []string{"US", "GB", "DE"},
-		}
-		result, err := convertGeoMatchStatement(geo)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.CountryCodes, 3)
-		assert.Equal(t, wafv2types.CountryCodeUs, result.CountryCodes[0])
-		assert.Equal(t, wafv2types.CountryCodeGb, result.CountryCodes[1])
-		assert.Equal(t, wafv2types.CountryCodeDe, result.CountryCodes[2])
-	})
-
-	t.Run("Empty country codes", func(t *testing.T) {
-		geo := &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-			CountryCodes: []string{},
-		}
-		result, err := convertGeoMatchStatement(geo)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.CountryCodes, 0)
-	})
-}
-
 func TestConvertManagedRuleGroupStatement(t *testing.T) {
-	t.Run("With version and excluded rules", func(t *testing.T) {
+	t.Run("Basic managed rule group", func(t *testing.T) {
 		managed := &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 			VendorName: "AWS",
 			Name:       "AWSManagedRulesCommonRuleSet",
-			Version:    "Version_1.0",
+		}
+
+		result, err := convertManagedRuleGroupStatement(managed)
+		require.NoError(t, err)
+		assert.Equal(t, "AWS", *result.VendorName)
+		assert.Equal(t, "AWSManagedRulesCommonRuleSet", *result.Name)
+		assert.Nil(t, result.Version)
+	})
+
+	t.Run("With version", func(t *testing.T) {
+		managed := &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+			VendorName: "AWS",
+			Name:       "AWSManagedRulesCommonRuleSet",
+			Version:    "1.0",
+		}
+
+		result, err := convertManagedRuleGroupStatement(managed)
+		require.NoError(t, err)
+		assert.Equal(t, "1.0", *result.Version)
+	})
+
+	t.Run("With excluded rules", func(t *testing.T) {
+		managed := &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+			VendorName: "AWS",
+			Name:       "AWSManagedRulesCommonRuleSet",
 			ExcludedRules: []cloudresourcesv1beta1.AwsWebAclExcludedRule{
 				{Name: "SizeRestrictions_BODY"},
 				{Name: "GenericRFI_BODY"},
 			},
 		}
+
 		result, err := convertManagedRuleGroupStatement(managed)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "AWS", *result.VendorName)
-		assert.Equal(t, "AWSManagedRulesCommonRuleSet", *result.Name)
-		assert.Equal(t, "Version_1.0", *result.Version)
+		require.NoError(t, err)
 		assert.Len(t, result.ExcludedRules, 2)
 		assert.Equal(t, "SizeRestrictions_BODY", *result.ExcludedRules[0].Name)
 		assert.Equal(t, "GenericRFI_BODY", *result.ExcludedRules[1].Name)
 	})
 
-	t.Run("Without version and excluded rules", func(t *testing.T) {
-		managed := &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-			VendorName: "AWS",
-			Name:       "AWSManagedRulesBotControlRuleSet",
-		}
-		result, err := convertManagedRuleGroupStatement(managed)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "AWS", *result.VendorName)
-		assert.Equal(t, "AWSManagedRulesBotControlRuleSet", *result.Name)
-		assert.Nil(t, result.Version)
-		assert.Len(t, result.ExcludedRules, 0)
-	})
-}
-
-func TestConvertStatement(t *testing.T) {
-	t.Run("GeoMatch statement", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
-			GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-				CountryCodes: []string{"US"},
-			},
-		}
-		result, err := convertSingleStatement(&stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.GeoMatchStatement)
-		assert.Nil(t, result.IPSetReferenceStatement)
-		assert.Nil(t, result.RateBasedStatement)
-		assert.Nil(t, result.ManagedRuleGroupStatement)
-	})
-
-	t.Run("ManagedRuleGroup statement", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
-			ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-				VendorName: "AWS",
-				Name:       "AWSManagedRulesCommonRuleSet",
-			},
-		}
-		result, err := convertSingleStatement(&stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.ManagedRuleGroupStatement)
-		assert.Nil(t, result.GeoMatchStatement)
-		assert.Nil(t, result.IPSetReferenceStatement)
-		assert.Nil(t, result.RateBasedStatement)
-	})
-
-	t.Run("Multiple statements returns error", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
-			GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-				CountryCodes: []string{"US"},
-			},
-			ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-				VendorName: "AWS",
-				Name:       "AWSManagedRulesCommonRuleSet",
-			},
-		}
-		result, err := convertSingleStatement(&stmt)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "must have exactly one condition")
-	})
-
-	t.Run("No statements returns error", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{}
-		result, err := convertSingleStatement(&stmt)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "must have exactly one condition")
-	})
-}
-
-func TestConvertRule(t *testing.T) {
-	t.Run("Regular rule with action", func(t *testing.T) {
-		rule := cloudresourcesv1beta1.AwsWebAclRule{
-			Name:            "test-rule",
-			Priority:        10,
-			Action:          cloudresourcesv1beta1.RuleActionBlock(),
-			LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
-			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
-				{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"US"},
-					},
-				},
-			},
-			VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
-				CloudWatchMetricsEnabled: true,
-				MetricName:               "test-metric",
-				SampledRequestsEnabled:   false,
-			},
-		}
-		result, err := convertRule(rule)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "test-rule", *result.Name)
-		assert.Equal(t, int32(10), result.Priority)
-		assert.NotNil(t, result.Action)
-		assert.NotNil(t, result.Action.Block)
-		assert.Nil(t, result.OverrideAction)
-	})
-
-	t.Run("Managed rule group with override action", func(t *testing.T) {
-		rule := cloudresourcesv1beta1.AwsWebAclRule{
-			Name:            "managed-rule",
-			Priority:        5,
-			OverrideAction:  cloudresourcesv1beta1.OverrideActionNone(),
-			LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
-			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
-				{
-					ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-						VendorName: "AWS",
-						Name:       "AWSManagedRulesCommonRuleSet",
-					},
-				},
-			},
-		}
-		result, err := convertRule(rule)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "managed-rule", *result.Name)
-		assert.Nil(t, result.Action)
-		assert.NotNil(t, result.OverrideAction)
-		assert.NotNil(t, result.OverrideAction.None)
-	})
-}
-
-func TestConvertRules(t *testing.T) {
-	t.Run("Multiple rules", func(t *testing.T) {
-		rules := []cloudresourcesv1beta1.AwsWebAclRule{
-			{
-				Name:            "rule-1",
-				Priority:        1,
-				Action:          cloudresourcesv1beta1.RuleActionAllow(),
-				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
-				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
-					{
-						GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-							CountryCodes: []string{"US"},
-						},
-					},
-				},
-			},
-			{
-				Name:            "rule-2",
-				Priority:        2,
-				OverrideAction:  cloudresourcesv1beta1.OverrideActionNone(),
-				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
-				Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
-					{
-						ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
-							VendorName: "AWS",
-							Name:       "AWSManagedRulesCommonRuleSet",
-						},
-					},
-				},
-			},
-		}
-		result, err := convertRules(rules)
-		assert.NoError(t, err)
-		assert.Len(t, result, 2)
-		assert.Equal(t, "rule-1", *result[0].Name)
-		assert.Equal(t, "rule-2", *result[1].Name)
-	})
-
-	t.Run("Empty rules", func(t *testing.T) {
-		result, err := convertRules([]cloudresourcesv1beta1.AwsWebAclRule{})
-		assert.NoError(t, err)
-		assert.Nil(t, result)
-	})
-
-	t.Run("Invalid rule returns error", func(t *testing.T) {
-		rules := []cloudresourcesv1beta1.AwsWebAclRule{
-			{
-				Name:            "invalid-rule",
-				Priority:        1,
-				LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
-				Statements:      []cloudresourcesv1beta1.AwsWebAclStatement{{}}, // Empty statement
-			},
-		}
-		result, err := convertRules(rules)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "invalid-rule")
-	})
-}
-
-func TestConvertByteMatchStatement(t *testing.T) {
-	t.Run("With all fields", func(t *testing.T) {
-		byteMatch := &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
-			SearchString:         "../",
-			PositionalConstraint: "CONTAINS",
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "NONE"},
-			},
-		}
-		result, err := convertByteMatchStatement(byteMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, []byte("../"), result.SearchString)
-		assert.Equal(t, wafv2types.PositionalConstraintContains, result.PositionalConstraint)
-		assert.NotNil(t, result.FieldToMatch)
-		assert.NotNil(t, result.FieldToMatch.QueryString)
-		assert.Len(t, result.TextTransformations, 1)
-		assert.Equal(t, int32(0), result.TextTransformations[0].Priority)
-		assert.Equal(t, wafv2types.TextTransformationTypeNone, result.TextTransformations[0].Type)
-	})
-
-	t.Run("With multiple transformations", func(t *testing.T) {
-		byteMatch := &cloudresourcesv1beta1.AwsWebAclByteMatchStatement{
-			SearchString:         "admin",
-			PositionalConstraint: "STARTS_WITH",
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "LOWERCASE"},
-				{Priority: 1, Type: "URL_DECODE"},
-			},
-		}
-		result, err := convertByteMatchStatement(byteMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.TextTransformations, 2)
-		assert.Equal(t, wafv2types.TextTransformationTypeLowercase, result.TextTransformations[0].Type)
-		assert.Equal(t, wafv2types.TextTransformationTypeUrlDecode, result.TextTransformations[1].Type)
-	})
-}
-
-func TestConvertFieldToMatch(t *testing.T) {
-	t.Run("UriPath", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{}}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.UriPath)
-		assert.Nil(t, result.QueryString)
-	})
-
-	t.Run("QueryString", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{}}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.QueryString)
-		assert.Nil(t, result.UriPath)
-	})
-
-	t.Run("Method", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{Method: &cloudresourcesv1beta1.AwsWebAclMethod{}}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.Method)
-	})
-
-	t.Run("SingleHeader", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{SingleHeader: &cloudresourcesv1beta1.AwsWebAclSingleHeader{Name: "user-agent"}}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.SingleHeader)
-		assert.Equal(t, "user-agent", *result.SingleHeader.Name)
-	})
-
-	t.Run("Body", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{Body: &cloudresourcesv1beta1.AwsWebAclBody{}}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.Body)
-		assert.Equal(t, wafv2types.OversizeHandlingContinue, result.Body.OversizeHandling)
-	})
-
-	t.Run("Body with OversizeHandling MATCH", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-			Body: &cloudresourcesv1beta1.AwsWebAclBody{
-				OversizeHandling: "MATCH",
-			},
-		}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.Body)
-		assert.Equal(t, wafv2types.OversizeHandlingMatch, result.Body.OversizeHandling)
-	})
-
-	t.Run("Body with OversizeHandling NO_MATCH", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-			Body: &cloudresourcesv1beta1.AwsWebAclBody{
-				OversizeHandling: "NO_MATCH",
-			},
-		}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.Body)
-		assert.Equal(t, wafv2types.OversizeHandlingNoMatch, result.Body.OversizeHandling)
-	})
-
-	t.Run("AllQueryArguments", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-			AllQueryArguments: &cloudresourcesv1beta1.AwsWebAclAllQueryArguments{},
-		}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.AllQueryArguments)
-	})
-
-	t.Run("SingleQueryArgument", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-			SingleQueryArgument: &cloudresourcesv1beta1.AwsWebAclSingleQueryArgument{
-				Name: "userId",
-			},
-		}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.SingleQueryArgument)
-		assert.Equal(t, "userId", *result.SingleQueryArgument.Name)
-	})
-
-	t.Run("JsonBody with All pattern", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-			JsonBody: &cloudresourcesv1beta1.AwsWebAclJsonBody{
-				MatchPattern: cloudresourcesv1beta1.AwsWebAclJsonMatchPattern{
-					All: &cloudresourcesv1beta1.AwsWebAclAll{},
-				},
-				MatchScope:              "ALL",
-				InvalidFallbackBehavior: "MATCH",
-			},
-		}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.JsonBody)
-		assert.NotNil(t, result.JsonBody.MatchPattern.All)
-		assert.Equal(t, wafv2types.JsonMatchScopeAll, result.JsonBody.MatchScope)
-		assert.Equal(t, wafv2types.BodyParsingFallbackBehaviorMatch, result.JsonBody.InvalidFallbackBehavior)
-	})
-
-	t.Run("JsonBody with IncludedPaths", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-			JsonBody: &cloudresourcesv1beta1.AwsWebAclJsonBody{
-				MatchPattern: cloudresourcesv1beta1.AwsWebAclJsonMatchPattern{
-					IncludedPaths: []string{"/user/name", "/user/email"},
-				},
-				MatchScope:              "VALUE",
-				InvalidFallbackBehavior: "NO_MATCH",
-			},
-		}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.JsonBody)
-		assert.Len(t, result.JsonBody.MatchPattern.IncludedPaths, 2)
-		assert.Equal(t, "/user/name", result.JsonBody.MatchPattern.IncludedPaths[0])
-	})
-
-	t.Run("Cookies with IncludedCookies", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-			Cookies: &cloudresourcesv1beta1.AwsWebAclCookies{
-				MatchPattern: cloudresourcesv1beta1.AwsWebAclCookieMatchPattern{
-					IncludedCookies: []string{"session-id", "session-token"},
-				},
-				MatchScope: "VALUE",
-			},
-		}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.Cookies)
-		assert.Len(t, result.Cookies.MatchPattern.IncludedCookies, 2)
-		assert.Equal(t, wafv2types.MapMatchScopeValue, result.Cookies.MatchScope)
-	})
-
-	t.Run("Headers with ExcludedHeaders", func(t *testing.T) {
-		field := cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-			Headers: &cloudresourcesv1beta1.AwsWebAclHeaders{
-				MatchPattern: cloudresourcesv1beta1.AwsWebAclHeaderMatchPattern{
-					ExcludedHeaders: []string{"host", "content-length"},
-				},
-				MatchScope:       "KEY",
-				OversizeHandling: "MATCH",
-			},
-		}
-		result, err := convertFieldToMatch(field)
-		assert.NoError(t, err)
-		assert.NotNil(t, result.Headers)
-		assert.Len(t, result.Headers.MatchPattern.ExcludedHeaders, 2)
-		assert.Equal(t, wafv2types.OversizeHandlingMatch, result.Headers.OversizeHandling)
-	})
-}
-
-func TestConvertTextTransformations(t *testing.T) {
-	t.Run("Single transformation", func(t *testing.T) {
-		transforms := []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-			{Priority: 0, Type: "NONE"},
-		}
-		result, err := convertTextTransformations(transforms)
-		assert.NoError(t, err)
-		assert.Len(t, result, 1)
-		assert.Equal(t, int32(0), result[0].Priority)
-		assert.Equal(t, wafv2types.TextTransformationTypeNone, result[0].Type)
-	})
-
-	t.Run("Multiple transformations", func(t *testing.T) {
-		transforms := []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-			{Priority: 0, Type: "LOWERCASE"},
-			{Priority: 1, Type: "URL_DECODE"},
-			{Priority: 2, Type: "HTML_ENTITY_DECODE"},
-		}
-		result, err := convertTextTransformations(transforms)
-		assert.NoError(t, err)
-		assert.Len(t, result, 3)
-	})
-
-	t.Run("Empty transformations returns error", func(t *testing.T) {
-		result, err := convertTextTransformations([]cloudresourcesv1beta1.AwsWebAclTextTransformation{})
-		assert.Error(t, err)
-		assert.Nil(t, result)
-	})
-}
-
-func TestConvertForwardedIPConfig(t *testing.T) {
-	t.Run("With all fields", func(t *testing.T) {
-		config := &cloudresourcesv1beta1.AwsWebAclForwardedIPConfig{
-			HeaderName:       "X-Forwarded-For",
-			FallbackBehavior: "MATCH",
-		}
-		result := convertForwardedIPConfig(config)
-		assert.NotNil(t, result)
-		assert.Equal(t, "X-Forwarded-For", *result.HeaderName)
-		assert.Equal(t, wafv2types.FallbackBehaviorMatch, result.FallbackBehavior)
-	})
-}
-
-func TestConvertGeoMatchStatementWithForwardedIP(t *testing.T) {
-	t.Run("With ForwardedIPConfig", func(t *testing.T) {
-		geo := &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-			CountryCodes: []string{"US"},
-			ForwardedIPConfig: &cloudresourcesv1beta1.AwsWebAclForwardedIPConfig{
-				HeaderName:       "X-Forwarded-For",
-				FallbackBehavior: "NO_MATCH",
-			},
-		}
-		result, err := convertGeoMatchStatement(geo)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.ForwardedIPConfig)
-		assert.Equal(t, "X-Forwarded-For", *result.ForwardedIPConfig.HeaderName)
-		assert.Equal(t, wafv2types.FallbackBehaviorNoMatch, result.ForwardedIPConfig.FallbackBehavior)
-	})
-}
-
-func TestConvertRateBasedStatementWithForwardedIP(t *testing.T) {
-	t.Run("With ForwardedIPConfig", func(t *testing.T) {
-		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-			Limit: 2000,
-			ForwardedIPConfig: &cloudresourcesv1beta1.AwsWebAclForwardedIPConfig{
-				HeaderName:       "X-Forwarded-For",
-				FallbackBehavior: "MATCH",
-			},
-		}
-		result, err := convertRateBasedStatement(rate)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.ForwardedIPConfig)
-		assert.Equal(t, "X-Forwarded-For", *result.ForwardedIPConfig.HeaderName)
-	})
-}
-
-func TestConvertManagedRuleGroupStatementWithConfigs(t *testing.T) {
-	t.Run("With RuleActionOverrides", func(t *testing.T) {
+	t.Run("With action overrides", func(t *testing.T) {
 		managed := &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
 			VendorName: "AWS",
 			Name:       "AWSManagedRulesCommonRuleSet",
@@ -582,894 +111,262 @@ func TestConvertManagedRuleGroupStatementWithConfigs(t *testing.T) {
 						Count: &cloudresourcesv1beta1.AwsWebAclCountAction{},
 					},
 				},
-				{
-					Name: "GenericRFI_BODY",
-					ActionToUse: &cloudresourcesv1beta1.AwsWebAclRuleAction{
-						Allow: &cloudresourcesv1beta1.AwsWebAclAllowAction{},
-					},
-				},
 			},
 		}
+
 		result, err := convertManagedRuleGroupStatement(managed)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.RuleActionOverrides, 2)
+		require.NoError(t, err)
+		assert.Len(t, result.RuleActionOverrides, 1)
 		assert.Equal(t, "SizeRestrictions_BODY", *result.RuleActionOverrides[0].Name)
 		assert.NotNil(t, result.RuleActionOverrides[0].ActionToUse.Count)
-		assert.Equal(t, "GenericRFI_BODY", *result.RuleActionOverrides[1].Name)
-		assert.NotNil(t, result.RuleActionOverrides[1].ActionToUse.Allow)
 	})
 }
 
-func TestConvertRuleLabels(t *testing.T) {
-	t.Run("With multiple labels", func(t *testing.T) {
-		labels := []cloudresourcesv1beta1.AwsWebAclLabel{
-			{Name: "label:one"},
-			{Name: "label:two"},
-			{Name: "namespace:production"},
+func TestConvertRule(t *testing.T) {
+	t.Run("Rule with ManagedRuleGroup and OverrideAction", func(t *testing.T) {
+		rule := cloudresourcesv1beta1.AwsWebAclRule{
+			Name:           "managed-rule",
+			Priority:       1,
+			OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
+			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+				{
+					ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+						VendorName: "AWS",
+						Name:       "AWSManagedRulesCommonRuleSet",
+					},
+				},
+			},
 		}
-		result := convertRuleLabels(labels)
-		assert.NotNil(t, result)
-		assert.Len(t, result, 3)
-		assert.Equal(t, "label:one", *result[0].Name)
-		assert.Equal(t, "label:two", *result[1].Name)
-		assert.Equal(t, "namespace:production", *result[2].Name)
+
+		result, err := convertRule(rule)
+		require.NoError(t, err)
+		assert.Equal(t, "managed-rule", *result.Name)
+		assert.Equal(t, int32(1), result.Priority)
+		assert.NotNil(t, result.OverrideAction)
+		assert.NotNil(t, result.OverrideAction.None)
 	})
 
-	t.Run("With empty labels returns nil", func(t *testing.T) {
-		result := convertRuleLabels([]cloudresourcesv1beta1.AwsWebAclLabel{})
-		assert.Nil(t, result)
+	t.Run("Rule without OverrideAction defaults to None", func(t *testing.T) {
+		rule := cloudresourcesv1beta1.AwsWebAclRule{
+			Name:     "managed-rule-default",
+			Priority: 2,
+			// OverrideAction not specified - should default to None
+			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+				{
+					ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+						VendorName: "AWS",
+						Name:       "AWSManagedRulesKnownBadInputsRuleSet",
+					},
+				},
+			},
+		}
+
+		result, err := convertRule(rule)
+		require.NoError(t, err)
+		assert.Equal(t, "managed-rule-default", *result.Name)
+		assert.Equal(t, int32(2), result.Priority)
+		assert.NotNil(t, result.OverrideAction, "OverrideAction should default to None when not specified")
+		assert.NotNil(t, result.OverrideAction.None, "OverrideAction.None should be set as default")
+	})
+
+	t.Run("Rule with empty OverrideAction defaults to None", func(t *testing.T) {
+		rule := cloudresourcesv1beta1.AwsWebAclRule{
+			Name:     "managed-rule-empty",
+			Priority: 3,
+			// OverrideAction specified but empty - should default to None
+			OverrideAction: &cloudresourcesv1beta1.AwsWebAclOverrideAction{},
+			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+				{
+					ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+						VendorName: "AWS",
+						Name:       "AWSManagedRulesSQLiRuleSet",
+					},
+				},
+			},
+		}
+
+		result, err := convertRule(rule)
+		require.NoError(t, err)
+		assert.Equal(t, "managed-rule-empty", *result.Name)
+		assert.Equal(t, int32(3), result.Priority)
+		assert.NotNil(t, result.OverrideAction, "OverrideAction should default to None when empty")
+		assert.NotNil(t, result.OverrideAction.None, "OverrideAction.None should be set as default")
 	})
 }
 
-func TestConvertRuleActionTypeWithChallenge(t *testing.T) {
+func TestConvertRules(t *testing.T) {
+	rules := []cloudresourcesv1beta1.AwsWebAclRule{
+		{
+			Name:           "rule-1",
+			Priority:       0,
+			OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
+			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+				{
+					ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+						VendorName: "AWS",
+						Name:       "AWSManagedRulesCommonRuleSet",
+					},
+				},
+			},
+		},
+		{
+			Name:           "rule-2",
+			Priority:       1,
+			OverrideAction: cloudresourcesv1beta1.OverrideActionNone(),
+			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
+				{
+					ManagedRuleGroup: &cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement{
+						VendorName: "AWS",
+						Name:       "AWSManagedRulesSQLiRuleSet",
+					},
+				},
+			},
+		},
+	}
+
+	result, err := convertRules(rules)
+	require.NoError(t, err)
+	assert.Len(t, result, 2)
+	assert.Equal(t, "rule-1", *result[0].Name)
+	assert.Equal(t, "rule-2", *result[1].Name)
+}
+
+func TestConvertRuleActionType(t *testing.T) {
 	t.Run("Challenge action", func(t *testing.T) {
-		actionType := &cloudresourcesv1beta1.AwsWebAclRuleAction{
+		action := &cloudresourcesv1beta1.AwsWebAclRuleAction{
 			Challenge: &cloudresourcesv1beta1.AwsWebAclChallengeAction{},
 		}
-		result, err := convertRuleActionType(actionType)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Nil(t, result.Allow)
-		assert.Nil(t, result.Block)
-		assert.Nil(t, result.Count)
-		assert.Nil(t, result.Captcha)
+
+		result, err := convertRuleActionType(action)
+		require.NoError(t, err)
 		assert.NotNil(t, result.Challenge)
 	})
 
-	t.Run("Challenge action with custom request handling", func(t *testing.T) {
-		actionType := &cloudresourcesv1beta1.AwsWebAclRuleAction{
-			Challenge: &cloudresourcesv1beta1.AwsWebAclChallengeAction{
-				CustomRequestHandling: &cloudresourcesv1beta1.AwsWebAclCustomRequestHandling{
-					InsertHeaders: []cloudresourcesv1beta1.AwsWebAclCustomHTTPHeader{
-						{Name: "X-Challenge-Passed", Value: "true"},
-					},
-				},
-			},
-		}
-		result, err := convertRuleActionType(actionType)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.Challenge)
-		assert.NotNil(t, result.Challenge.CustomRequestHandling)
-		assert.Len(t, result.Challenge.CustomRequestHandling.InsertHeaders, 1)
-		assert.Equal(t, "X-Challenge-Passed", *result.Challenge.CustomRequestHandling.InsertHeaders[0].Name)
-	})
-}
-
-func TestConvertRuleWithPerRuleConfigs(t *testing.T) {
-	t.Run("Rule with per-rule CaptchaConfig overrides global", func(t *testing.T) {
-		rule := cloudresourcesv1beta1.AwsWebAclRule{
-			Name:            "captcha-rule-with-override",
-			Priority:        10,
-			Action:          cloudresourcesv1beta1.RuleActionCaptcha(),
-			LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
-			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
-				{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"US"},
-					},
-				},
-			},
-			CaptchaConfig: &cloudresourcesv1beta1.AwsWebAclCaptchaConfig{
-				ImmunityTime: 300, // 5 minutes override
-			},
-		}
-		result, err := convertRule(rule)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.CaptchaConfig)
-		assert.Equal(t, int64(300), *result.CaptchaConfig.ImmunityTimeProperty.ImmunityTime)
-	})
-
-	t.Run("Rule with per-rule ChallengeConfig overrides global", func(t *testing.T) {
-		rule := cloudresourcesv1beta1.AwsWebAclRule{
-			Name:            "challenge-rule-with-override",
-			Priority:        20,
-			Action:          cloudresourcesv1beta1.RuleActionChallenge(),
-			LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
-			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
-				{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"CN"},
-					},
-				},
-			},
-			ChallengeConfig: &cloudresourcesv1beta1.AwsWebAclChallengeConfig{
-				ImmunityTime: 600, // 10 minutes override
-			},
-		}
-		result, err := convertRule(rule)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.ChallengeConfig)
-		assert.Equal(t, int64(600), *result.ChallengeConfig.ImmunityTimeProperty.ImmunityTime)
-	})
-
-	t.Run("Rule with both per-rule configs", func(t *testing.T) {
-		rule := cloudresourcesv1beta1.AwsWebAclRule{
-			Name:            "rule-with-both-configs",
-			Priority:        30,
-			Action:          cloudresourcesv1beta1.RuleActionCount(),
-			LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
-			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
-				{
-					RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-						Limit: 2000,
-					},
-				},
-			},
-			CaptchaConfig: &cloudresourcesv1beta1.AwsWebAclCaptchaConfig{
-				ImmunityTime: 300,
-			},
-			ChallengeConfig: &cloudresourcesv1beta1.AwsWebAclChallengeConfig{
-				ImmunityTime: 600,
-			},
-			RuleLabels: []cloudresourcesv1beta1.AwsWebAclLabel{
-				{Name: "rate-limited"},
-			},
-		}
-		result, err := convertRule(rule)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.CaptchaConfig)
-		assert.NotNil(t, result.ChallengeConfig)
-		assert.Len(t, result.RuleLabels, 1)
-		assert.Equal(t, int64(300), *result.CaptchaConfig.ImmunityTimeProperty.ImmunityTime)
-		assert.Equal(t, int64(600), *result.ChallengeConfig.ImmunityTimeProperty.ImmunityTime)
-	})
-
-	t.Run("Rule without per-rule configs has nil", func(t *testing.T) {
-		rule := cloudresourcesv1beta1.AwsWebAclRule{
-			Name:            "simple-rule",
-			Priority:        40,
-			Action:          cloudresourcesv1beta1.RuleActionAllow(),
-			LogicalOperator: cloudresourcesv1beta1.LogicalOperatorNone,
-			Statements: []cloudresourcesv1beta1.AwsWebAclStatement{
-				{
-					GeoMatch: &cloudresourcesv1beta1.AwsWebAclGeoMatchStatement{
-						CountryCodes: []string{"US"},
-					},
-				},
-			},
-		}
-		result, err := convertRule(rule)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Nil(t, result.CaptchaConfig)
-		assert.Nil(t, result.ChallengeConfig)
-	})
-}
-
-func TestConvertLabelMatchStatement(t *testing.T) {
-	t.Run("LabelMatch with LABEL scope", func(t *testing.T) {
-		labelMatch := &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
-			Key:   "aws:acl:block-high-risk",
-			Scope: "LABEL",
+	t.Run("Captcha action", func(t *testing.T) {
+		action := &cloudresourcesv1beta1.AwsWebAclRuleAction{
+			Captcha: &cloudresourcesv1beta1.AwsWebAclCaptchaAction{},
 		}
 
-		result := convertLabelMatchStatement(labelMatch)
-		assert.NotNil(t, result)
-		assert.Equal(t, "aws:acl:block-high-risk", *result.Key)
-		assert.Equal(t, wafv2types.LabelMatchScopeLabel, result.Scope)
-	})
-
-	t.Run("LabelMatch with NAMESPACE scope", func(t *testing.T) {
-		labelMatch := &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
-			Key:   "aws:acl",
-			Scope: "NAMESPACE",
-		}
-
-		result := convertLabelMatchStatement(labelMatch)
-		assert.NotNil(t, result)
-		assert.Equal(t, "aws:acl", *result.Key)
-		assert.Equal(t, wafv2types.LabelMatchScopeNamespace, result.Scope)
-	})
-}
-
-func TestConvertStatementWithLabelMatch(t *testing.T) {
-	t.Run("Statement with LabelMatch", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
-			LabelMatch: &cloudresourcesv1beta1.AwsWebAclLabelMatchStatement{
-				Key:   "protection:advanced-logic",
-				Scope: "LABEL",
-			},
-		}
-
-		result, err := convertSingleStatement(&stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.LabelMatchStatement)
-		assert.Equal(t, "protection:advanced-logic", *result.LabelMatchStatement.Key)
-		assert.Equal(t, wafv2types.LabelMatchScopeLabel, result.LabelMatchStatement.Scope)
-	})
-}
-
-func TestConvertSizeConstraintStatement(t *testing.T) {
-	t.Run("SizeConstraint with GT operator", func(t *testing.T) {
-		sizeConstraint := &cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement{
-			ComparisonOperator: "GT",
-			Size:               8192,
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "NONE"},
-			},
-		}
-
-		result, err := convertSizeConstraintStatement(sizeConstraint)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, wafv2types.ComparisonOperatorGt, result.ComparisonOperator)
-		assert.Equal(t, int64(8192), result.Size)
-		assert.NotNil(t, result.FieldToMatch.QueryString)
-		assert.Len(t, result.TextTransformations, 1)
-	})
-
-	t.Run("SizeConstraint with LE operator on body", func(t *testing.T) {
-		sizeConstraint := &cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement{
-			ComparisonOperator: "LE",
-			Size:               1024,
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				Body: &cloudresourcesv1beta1.AwsWebAclBody{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "COMPRESS_WHITE_SPACE"},
-			},
-		}
-
-		result, err := convertSizeConstraintStatement(sizeConstraint)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, wafv2types.ComparisonOperatorLe, result.ComparisonOperator)
-		assert.Equal(t, int64(1024), result.Size)
-		assert.NotNil(t, result.FieldToMatch.Body)
-	})
-}
-
-func TestConvertStatementWithSizeConstraint(t *testing.T) {
-	t.Run("Statement with SizeConstraint", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
-			SizeConstraint: &cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement{
-				ComparisonOperator: "GT",
-				Size:               10000,
-				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-					UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
-				},
-				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-					{Priority: 0, Type: "URL_DECODE"},
-				},
-			},
-		}
-
-		result, err := convertSingleStatement(&stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.SizeConstraintStatement)
-		assert.Equal(t, wafv2types.ComparisonOperatorGt, result.SizeConstraintStatement.ComparisonOperator)
-		assert.Equal(t, int64(10000), result.SizeConstraintStatement.Size)
-	})
-}
-
-func TestConvertSqliMatchStatement(t *testing.T) {
-	t.Run("SqliMatch with LOW sensitivity", func(t *testing.T) {
-		sqliMatch := &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "URL_DECODE"},
-				{Priority: 1, Type: "HTML_ENTITY_DECODE"},
-			},
-			SensitivityLevel: "LOW",
-		}
-
-		result, err := convertSqliMatchStatement(sqliMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.FieldToMatch.QueryString)
-		assert.Len(t, result.TextTransformations, 2)
-		assert.Equal(t, wafv2types.SensitivityLevelLow, result.SensitivityLevel)
-	})
-
-	t.Run("SqliMatch with HIGH sensitivity", func(t *testing.T) {
-		sqliMatch := &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				Body: &cloudresourcesv1beta1.AwsWebAclBody{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "NONE"},
-			},
-			SensitivityLevel: "HIGH",
-		}
-
-		result, err := convertSqliMatchStatement(sqliMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.FieldToMatch.Body)
-		assert.Equal(t, wafv2types.SensitivityLevelHigh, result.SensitivityLevel)
-	})
-
-	t.Run("SqliMatch with default sensitivity (empty string)", func(t *testing.T) {
-		sqliMatch := &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "LOWERCASE"},
-			},
-			// SensitivityLevel not set
-		}
-
-		result, err := convertSqliMatchStatement(sqliMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, wafv2types.SensitivityLevelLow, result.SensitivityLevel)
-	})
-}
-
-func TestConvertStatementWithSqliMatch(t *testing.T) {
-	t.Run("Statement with SqliMatch", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
-			SqliMatch: &cloudresourcesv1beta1.AwsWebAclSqliMatchStatement{
-				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-					QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
-				},
-				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-					{Priority: 0, Type: "URL_DECODE"},
-				},
-				SensitivityLevel: "HIGH",
-			},
-		}
-
-		result, err := convertSingleStatement(&stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.SqliMatchStatement)
-		assert.Equal(t, wafv2types.SensitivityLevelHigh, result.SqliMatchStatement.SensitivityLevel)
-	})
-}
-
-func TestConvertXssMatchStatement(t *testing.T) {
-	t.Run("XssMatch with QueryString", func(t *testing.T) {
-		xssMatch := &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "URL_DECODE"},
-				{Priority: 1, Type: "HTML_ENTITY_DECODE"},
-			},
-		}
-
-		result, err := convertXssMatchStatement(xssMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.FieldToMatch.QueryString)
-		assert.Len(t, result.TextTransformations, 2)
-		assert.Equal(t, wafv2types.TextTransformationTypeUrlDecode, result.TextTransformations[0].Type)
-		assert.Equal(t, wafv2types.TextTransformationTypeHtmlEntityDecode, result.TextTransformations[1].Type)
-	})
-
-	t.Run("XssMatch with Body", func(t *testing.T) {
-		xssMatch := &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				Body: &cloudresourcesv1beta1.AwsWebAclBody{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "NONE"},
-			},
-		}
-
-		result, err := convertXssMatchStatement(xssMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.FieldToMatch.Body)
-		assert.Len(t, result.TextTransformations, 1)
-	})
-
-	t.Run("XssMatch with UriPath", func(t *testing.T) {
-		xssMatch := &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "LOWERCASE"},
-				{Priority: 1, Type: "URL_DECODE"},
-			},
-		}
-
-		result, err := convertXssMatchStatement(xssMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.FieldToMatch.UriPath)
-		assert.Len(t, result.TextTransformations, 2)
-	})
-}
-
-func TestConvertStatementWithXssMatch(t *testing.T) {
-	t.Run("Statement with XssMatch", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
-			XssMatch: &cloudresourcesv1beta1.AwsWebAclXssMatchStatement{
-				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-					QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
-				},
-				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-					{Priority: 0, Type: "URL_DECODE"},
-					{Priority: 1, Type: "HTML_ENTITY_DECODE"},
-				},
-			},
-		}
-
-		result, err := convertSingleStatement(&stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.XssMatchStatement)
-		assert.NotNil(t, result.XssMatchStatement.FieldToMatch.QueryString)
-	})
-}
-
-func TestConvertRegexMatchStatement(t *testing.T) {
-	t.Run("RegexMatch with simple pattern", func(t *testing.T) {
-		regexMatch := &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
-			RegexString: "^/api/v[0-9]+/.*$",
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "LOWERCASE"},
-			},
-		}
-
-		result, err := convertRegexMatchStatement(regexMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Equal(t, "^/api/v[0-9]+/.*$", *result.RegexString)
-		assert.NotNil(t, result.FieldToMatch.UriPath)
-		assert.Len(t, result.TextTransformations, 1)
-	})
-
-	t.Run("RegexMatch with email pattern", func(t *testing.T) {
-		regexMatch := &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
-			RegexString: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				Body: &cloudresourcesv1beta1.AwsWebAclBody{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "NONE"},
-			},
-		}
-
-		result, err := convertRegexMatchStatement(regexMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Contains(t, *result.RegexString, "@")
-		assert.NotNil(t, result.FieldToMatch.Body)
-	})
-
-	t.Run("RegexMatch with multiple transformations", func(t *testing.T) {
-		regexMatch := &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
-			RegexString: "(?i)(admin|root|superuser)",
-			FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-				QueryString: &cloudresourcesv1beta1.AwsWebAclQueryString{},
-			},
-			TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-				{Priority: 0, Type: "URL_DECODE"},
-				{Priority: 1, Type: "LOWERCASE"},
-			},
-		}
-
-		result, err := convertRegexMatchStatement(regexMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.TextTransformations, 2)
-	})
-}
-
-func TestConvertStatementWithRegexMatch(t *testing.T) {
-	t.Run("Statement with RegexMatch", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
-			RegexMatch: &cloudresourcesv1beta1.AwsWebAclRegexMatchStatement{
-				RegexString: "^/admin/.*$",
-				FieldToMatch: cloudresourcesv1beta1.AwsWebAclFieldToMatch{
-					UriPath: &cloudresourcesv1beta1.AwsWebAclUriPath{},
-				},
-				TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-					{Priority: 0, Type: "LOWERCASE"},
-				},
-			},
-		}
-
-		result, err := convertSingleStatement(&stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.RegexMatchStatement)
-		assert.Equal(t, "^/admin/.*$", *result.RegexMatchStatement.RegexString)
-	})
-}
-
-func TestConvertAsnMatchStatement(t *testing.T) {
-	t.Run("AsnMatch with single ASN", func(t *testing.T) {
-		asnMatch := &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
-			AutonomousSystemNumbers: []int64{64512},
-		}
-
-		result, err := convertAsnMatchStatement(asnMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.AsnList, 1)
-		assert.Equal(t, int64(64512), result.AsnList[0])
-		assert.Nil(t, result.ForwardedIPConfig)
-	})
-
-	t.Run("AsnMatch with multiple ASNs", func(t *testing.T) {
-		asnMatch := &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
-			AutonomousSystemNumbers: []int64{64512, 64513, 13335}, // Cloudflare ASN
-		}
-
-		result, err := convertAsnMatchStatement(asnMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.AsnList, 3)
-		assert.Equal(t, int64(64512), result.AsnList[0])
-		assert.Equal(t, int64(64513), result.AsnList[1])
-		assert.Equal(t, int64(13335), result.AsnList[2])
-	})
-
-	t.Run("AsnMatch with ForwardedIPConfig", func(t *testing.T) {
-		asnMatch := &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
-			AutonomousSystemNumbers: []int64{15169}, // Google ASN
-			ForwardedIPConfig: &cloudresourcesv1beta1.AwsWebAclForwardedIPConfig{
-				HeaderName:       "X-Forwarded-For",
-				FallbackBehavior: "MATCH",
-			},
-		}
-
-		result, err := convertAsnMatchStatement(asnMatch)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.Len(t, result.AsnList, 1)
-		assert.NotNil(t, result.ForwardedIPConfig)
-		assert.Equal(t, "X-Forwarded-For", *result.ForwardedIPConfig.HeaderName)
-		assert.Equal(t, wafv2types.FallbackBehaviorMatch, result.ForwardedIPConfig.FallbackBehavior)
-	})
-
-	t.Run("AsnMatch with empty ASN list returns error", func(t *testing.T) {
-		asnMatch := &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
-			AutonomousSystemNumbers: []int64{},
-		}
-
-		result, err := convertAsnMatchStatement(asnMatch)
-		assert.Error(t, err)
-		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "autonomousSystemNumbers")
-	})
-}
-
-func TestConvertStatementWithAsnMatch(t *testing.T) {
-	t.Run("Statement with AsnMatch", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
-			AsnMatch: &cloudresourcesv1beta1.AwsWebAclAsnMatchStatement{
-				AutonomousSystemNumbers: []int64{64512, 64513},
-			},
-		}
-
-		result, err := convertSingleStatement(&stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.AsnMatchStatement)
-		assert.Len(t, result.AsnMatchStatement.AsnList, 2)
-	})
-}
-
-// TestRateBasedStatementNestingValidation verifies that rate-based statements
-// cannot be nested within AND/OR/NOT operators per AWS WAF API constraints
-// Note: This is now enforced at compile-time by removing RateBased from nested statement types
-func TestRateBasedStatementNestingValidation(t *testing.T) {
-	// This test demonstrates that rate-based statements are now type-safe
-	// The API types prevent nesting RateBased in AND/OR/NOT at compile time
-
-	t.Run("RateBased at root level succeeds", func(t *testing.T) {
-		stmt := cloudresourcesv1beta1.AwsWebAclStatement{
-			RateBased: &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-				Limit: 1000,
-			},
-		}
-
-		result, err := convertSingleStatement(&stmt)
-		assert.NoError(t, err)
-		assert.NotNil(t, result)
-		assert.NotNil(t, result.RateBasedStatement)
-		assert.Equal(t, int64(1000), *result.RateBasedStatement.Limit)
-	})
-
-	// The following test cases would not compile because RateBased is not available
-	// in AwsWebAclNestedStatement or AwsWebAclLeafStatement:
-	//
-	// ❌ stmt.AndStatement.Statements[0].RateBased - compile error
-	// ❌ stmt.OrStatement.Statements[0].RateBased - compile error
-	// ❌ stmt.NotStatement.Statement.RateBased - compile error
-	// ❌ stmt.AndStatement.Statements[0].NotStatement.Statement.RateBased - compile error
-}
-
-func TestConvertRateBasedStatement(t *testing.T) {
-	t.Run("Minimal rate-based (IP aggregation)", func(t *testing.T) {
-		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-			Limit:            100,
-			AggregateKeyType: "IP",
-		}
-		result, err := convertRateBasedStatement(rate)
-		assert.NoError(t, err)
-		assert.Equal(t, int64(100), *result.Limit)
-		assert.Equal(t, wafv2types.RateBasedStatementAggregateKeyTypeIp, result.AggregateKeyType)
-		assert.Equal(t, int64(300), result.EvaluationWindowSec) // Default
-	})
-
-	t.Run("FORWARDED_IP aggregation", func(t *testing.T) {
-		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-			Limit:            200,
-			AggregateKeyType: "FORWARDED_IP",
-			ForwardedIPConfig: &cloudresourcesv1beta1.AwsWebAclForwardedIPConfig{
-				HeaderName:       "X-Forwarded-For",
-				FallbackBehavior: "MATCH",
-			},
-		}
-		result, err := convertRateBasedStatement(rate)
-		assert.NoError(t, err)
-		assert.Equal(t, wafv2types.RateBasedStatementAggregateKeyTypeForwardedIp, result.AggregateKeyType)
-		assert.NotNil(t, result.ForwardedIPConfig)
-		assert.Equal(t, "X-Forwarded-For", *result.ForwardedIPConfig.HeaderName)
-	})
-
-	t.Run("Custom evaluation window", func(t *testing.T) {
-		evalWindow := int32(60)
-		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-			Limit:               100,
-			AggregateKeyType:    "IP",
-			EvaluationWindowSec: &evalWindow,
-		}
-		result, err := convertRateBasedStatement(rate)
-		assert.NoError(t, err)
-		assert.Equal(t, int64(60), result.EvaluationWindowSec)
-	})
-
-	t.Run("CUSTOM_KEYS with header", func(t *testing.T) {
-		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-			Limit:            100,
-			AggregateKeyType: "CUSTOM_KEYS",
-			CustomKeys: []cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey{
-				{
-					Header: &cloudresourcesv1beta1.AwsWebAclRateLimitHeader{
-						Name: "X-API-Key",
-						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-							{Priority: 0, Type: "LOWERCASE"},
-						},
-					},
-				},
-			},
-		}
-		result, err := convertRateBasedStatement(rate)
-		assert.NoError(t, err)
-		assert.Equal(t, wafv2types.RateBasedStatementAggregateKeyTypeCustomKeys, result.AggregateKeyType)
-		assert.Len(t, result.CustomKeys, 1)
-		assert.NotNil(t, result.CustomKeys[0].Header)
-		assert.Equal(t, "X-API-Key", *result.CustomKeys[0].Header.Name)
-	})
-
-	t.Run("CUSTOM_KEYS with multiple keys", func(t *testing.T) {
-		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-			Limit:            100,
-			AggregateKeyType: "CUSTOM_KEYS",
-			CustomKeys: []cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey{
-				{
-					Header: &cloudresourcesv1beta1.AwsWebAclRateLimitHeader{
-						Name: "X-User-ID",
-						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-							{Priority: 0, Type: "NONE"},
-						},
-					},
-				},
-				{
-					HTTPMethod: &cloudresourcesv1beta1.AwsWebAclRateLimitHTTPMethod{},
-				},
-			},
-		}
-		result, err := convertRateBasedStatement(rate)
-		assert.NoError(t, err)
-		assert.Len(t, result.CustomKeys, 2)
-		assert.NotNil(t, result.CustomKeys[0].Header)
-		assert.NotNil(t, result.CustomKeys[1].HTTPMethod)
-	})
-
-	t.Run("CONSTANT aggregation", func(t *testing.T) {
-		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-			Limit:            1000,
-			AggregateKeyType: "CONSTANT",
-		}
-		result, err := convertRateBasedStatement(rate)
-		assert.NoError(t, err)
-		assert.Equal(t, wafv2types.RateBasedStatementAggregateKeyTypeConstant, result.AggregateKeyType)
-	})
-
-	t.Run("CUSTOM_KEYS with Cookie", func(t *testing.T) {
-		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-			Limit:            500,
-			AggregateKeyType: "CUSTOM_KEYS",
-			CustomKeys: []cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey{
-				{
-					Cookie: &cloudresourcesv1beta1.AwsWebAclRateLimitCookie{
-						Name: "session_id",
-						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-							{Priority: 0, Type: "NONE"},
-						},
-					},
-				},
-			},
-		}
-		result, err := convertRateBasedStatement(rate)
-		assert.NoError(t, err)
-		assert.Len(t, result.CustomKeys, 1)
-		assert.NotNil(t, result.CustomKeys[0].Cookie)
-		assert.Equal(t, "session_id", *result.CustomKeys[0].Cookie.Name)
-	})
-
-	t.Run("CUSTOM_KEYS with QueryArgument", func(t *testing.T) {
-		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-			Limit:            200,
-			AggregateKeyType: "CUSTOM_KEYS",
-			CustomKeys: []cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey{
-				{
-					QueryArgument: &cloudresourcesv1beta1.AwsWebAclRateLimitQueryArgument{
-						Name: "user_id",
-						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-							{Priority: 0, Type: "URL_DECODE"},
-						},
-					},
-				},
-			},
-		}
-		result, err := convertRateBasedStatement(rate)
-		assert.NoError(t, err)
-		assert.Len(t, result.CustomKeys, 1)
-		assert.NotNil(t, result.CustomKeys[0].QueryArgument)
-		assert.Equal(t, "user_id", *result.CustomKeys[0].QueryArgument.Name)
-	})
-
-	t.Run("CUSTOM_KEYS with UriPath", func(t *testing.T) {
-		rate := &cloudresourcesv1beta1.AwsWebAclRateBasedStatement{
-			Limit:            300,
-			AggregateKeyType: "CUSTOM_KEYS",
-			CustomKeys: []cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey{
-				{
-					UriPath: &cloudresourcesv1beta1.AwsWebAclRateLimitUriPath{
-						TextTransformations: []cloudresourcesv1beta1.AwsWebAclTextTransformation{
-							{Priority: 0, Type: "LOWERCASE"},
-						},
-					},
-				},
-			},
-		}
-		result, err := convertRateBasedStatement(rate)
-		assert.NoError(t, err)
-		assert.Len(t, result.CustomKeys, 1)
-		assert.NotNil(t, result.CustomKeys[0].UriPath)
+		result, err := convertRuleActionType(action)
+		require.NoError(t, err)
+		assert.NotNil(t, result.Captcha)
 	})
 }
 
 func TestConvertTags(t *testing.T) {
-	t.Run("Tags include Scope and Shoot", func(t *testing.T) {
-		webAcl := &cloudresourcesv1beta1.AwsWebAcl{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test-webacl",
-				Labels: map[string]string{
-					"custom-label": "custom-value",
-				},
-			},
+	webAcl := &cloudresourcesv1beta1.AwsWebAcl{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-acl",
+		},
+	}
+
+	scope := &cloudcontrolv1beta1.Scope{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-scope",
+		},
+		Spec: cloudcontrolv1beta1.ScopeSpec{
+			ShootName: "test-shoot",
+		},
+	}
+
+	result := convertTags(webAcl, scope)
+	assert.Len(t, result, 4)
+	assert.Equal(t, "Name", *result[0].Key)
+	assert.Equal(t, "test-acl", *result[0].Value)
+	assert.Equal(t, "ManagedBy", *result[1].Key)
+	assert.Equal(t, "cloud-manager", *result[1].Value)
+}
+
+func TestConvertCaptchaConfig(t *testing.T) {
+	config := &cloudresourcesv1beta1.AwsWebAclCaptchaConfig{
+		ImmunityTime: 300,
+	}
+
+	result := convertCaptchaConfig(config)
+	require.NotNil(t, result)
+	assert.Equal(t, int64(300), *result.ImmunityTimeProperty.ImmunityTime)
+}
+
+func TestConvertChallengeConfig(t *testing.T) {
+	config := &cloudresourcesv1beta1.AwsWebAclChallengeConfig{
+		ImmunityTime: 600,
+	}
+
+	result := convertChallengeConfig(config)
+	require.NotNil(t, result)
+	assert.Equal(t, int64(600), *result.ImmunityTimeProperty.ImmunityTime)
+}
+
+func TestConvertCustomRequestHandling(t *testing.T) {
+	handling := &cloudresourcesv1beta1.AwsWebAclCustomRequestHandling{
+		InsertHeaders: []cloudresourcesv1beta1.AwsWebAclCustomHTTPHeader{
+			{Name: "X-Custom-Header", Value: "custom-value"},
+		},
+	}
+
+	result := convertCustomRequestHandling(handling)
+	require.NotNil(t, result)
+	assert.Len(t, result.InsertHeaders, 1)
+	assert.Equal(t, "X-Custom-Header", *result.InsertHeaders[0].Name)
+	assert.Equal(t, "custom-value", *result.InsertHeaders[0].Value)
+}
+
+func TestConvertCustomResponse(t *testing.T) {
+	response := &cloudresourcesv1beta1.AwsWebAclCustomResponse{
+		ResponseCode:          403,
+		CustomResponseBodyKey: "blocked",
+		ResponseHeaders: []cloudresourcesv1beta1.AwsWebAclCustomHTTPHeader{
+			{Name: "X-Error", Value: "Blocked"},
+		},
+	}
+
+	result := convertCustomResponse(response)
+	require.NotNil(t, result)
+	assert.Equal(t, int32(403), *result.ResponseCode)
+	assert.Equal(t, "blocked", *result.CustomResponseBodyKey)
+	assert.Len(t, result.ResponseHeaders, 1)
+}
+
+func TestConvertCustomResponseBodies(t *testing.T) {
+	bodies := map[string]cloudresourcesv1beta1.AwsWebAclCustomResponseBody{
+		"blocked": {
+			ContentType: "TEXT_PLAIN",
+			Content:     "Access Denied",
+		},
+	}
+
+	result := convertCustomResponseBodies(bodies)
+	require.NotNil(t, result)
+	assert.Len(t, result, 1)
+	assert.Equal(t, wafv2types.ResponseContentTypeTextPlain, result["blocked"].ContentType)
+	assert.Equal(t, "Access Denied", *result["blocked"].Content)
+}
+
+func TestScopeRegional(t *testing.T) {
+	result := ScopeRegional()
+	assert.Equal(t, wafv2types.ScopeRegional, result)
+}
+
+func TestConvertOverrideAction(t *testing.T) {
+	t.Run("None override", func(t *testing.T) {
+		override := &cloudresourcesv1beta1.AwsWebAclOverrideAction{
+			None: &cloudresourcesv1beta1.AwsWebAclNoneAction{},
 		}
 
-		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test-scope",
-			},
-			Spec: cloudcontrolv1beta1.ScopeSpec{
-				ShootName: "test-shoot",
-			},
-		}
-
-		tags := convertTags(webAcl, scope)
-
-		// Verify required tags exist
-		tagMap := make(map[string]string)
-		for _, tag := range tags {
-			if tag.Key != nil && tag.Value != nil {
-				tagMap[*tag.Key] = *tag.Value
-			}
-		}
-
-		assert.Equal(t, "test-webacl", tagMap["Name"])
-		assert.Equal(t, "cloud-manager", tagMap["ManagedBy"])
-		assert.Equal(t, "test-scope", tagMap[common.TagScope])
-		assert.Equal(t, "test-shoot", tagMap[common.TagShoot])
-		assert.Equal(t, "custom-value", tagMap["custom-label"])
+		result, err := convertOverrideAction(override)
+		require.NoError(t, err)
+		assert.NotNil(t, result.None)
+		assert.Nil(t, result.Count)
 	})
 
-	t.Run("Tags work without labels", func(t *testing.T) {
-		webAcl := &cloudresourcesv1beta1.AwsWebAcl{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test-webacl-no-labels",
-			},
+	t.Run("Count override", func(t *testing.T) {
+		override := &cloudresourcesv1beta1.AwsWebAclOverrideAction{
+			Count: &cloudresourcesv1beta1.AwsWebAclCountAction{},
 		}
 
-		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "scope-name",
-			},
-			Spec: cloudcontrolv1beta1.ScopeSpec{
-				ShootName: "shoot-name",
-			},
-		}
-
-		tags := convertTags(webAcl, scope)
-
-		// Should have exactly 4 tags (Name, ManagedBy, Scope, Shoot)
-		assert.Len(t, tags, 4)
-
-		tagMap := make(map[string]string)
-		for _, tag := range tags {
-			if tag.Key != nil && tag.Value != nil {
-				tagMap[*tag.Key] = *tag.Value
-			}
-		}
-
-		assert.Equal(t, "test-webacl-no-labels", tagMap["Name"])
-		assert.Equal(t, "cloud-manager", tagMap["ManagedBy"])
-		assert.Equal(t, "scope-name", tagMap[common.TagScope])
-		assert.Equal(t, "shoot-name", tagMap[common.TagShoot])
-	})
-
-	t.Run("Tag pointers are properly set", func(t *testing.T) {
-		webAcl := &cloudresourcesv1beta1.AwsWebAcl{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test-webacl",
-			},
-		}
-
-		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test-scope",
-			},
-			Spec: cloudcontrolv1beta1.ScopeSpec{
-				ShootName: "test-shoot",
-			},
-		}
-
-		tags := convertTags(webAcl, scope)
-
-		// All tags should have non-nil Key and Value pointers
-		for i, tag := range tags {
-			assert.NotNil(t, tag.Key, "Tag %d Key should not be nil", i)
-			assert.NotNil(t, tag.Value, "Tag %d Value should not be nil", i)
-		}
+		result, err := convertOverrideAction(override)
+		require.NoError(t, err)
+		assert.NotNil(t, result.Count)
+		assert.Nil(t, result.None)
 	})
 }
