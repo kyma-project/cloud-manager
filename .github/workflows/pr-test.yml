@@ -79,3 +79,8 @@ jobs:
         run: git diff --exit-code
       - name: Check if test GUIDs are unique
         run: x=$(grep -rEho '[[:xdigit:]]{8}(-[[:xdigit:]]{4}){3}-[[:xdigit:]]{12}'  ./internal | sort | uniq -d); [ -z "${x}" ] || ( echo duplicated GUID detected $x; exit 1; )
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

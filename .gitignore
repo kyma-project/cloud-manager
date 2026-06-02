@@ -44,3 +44,4 @@ kubeconfig*.*
 
 .claude/**/*.local.*
 .env
+.scannerwork
