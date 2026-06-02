@@ -1,16 +1,17 @@
 package feature
 
 import (
+	"testing"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestEmbeddedConfig(t *testing.T) {
 	ctx := t.Context()
 
-	err := Initialize(ctx, logr.Discard(), WithStaticConfig())
+	err := Initialize(ctx, logr.Discard(), WithEmbeddedRetriever())
 	assert.Nil(t, err)
 
 	assert.False(t, VpcPeeringSync.Value(ctx), "vpcPeeringSync should be false")

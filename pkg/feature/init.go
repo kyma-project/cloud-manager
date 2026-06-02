@@ -23,8 +23,9 @@ func init() {
 }
 
 type ProviderOptions struct {
-	filename string
-	url      string
+	filename          string
+	url               string
+	useEmbeddedValues bool
 }
 
 type ProviderOption func(o *ProviderOptions)
@@ -41,8 +42,9 @@ func WithUrl(url string) ProviderOption {
 	}
 }
 
-func WithStaticConfig() ProviderOption {
+func WithEmbeddedRetriever() ProviderOption {
 	return func(o *ProviderOptions) {
+		o.useEmbeddedValues = true
 	}
 }
 
@@ -52,12 +54,13 @@ func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption)
 		x(o)
 	}
 
-	if len(o.filename) == 0 && len(o.url) == 0 {
+	if len(o.filename) == 0 && len(o.url) == 0 && !o.useEmbeddedValues {
 		o.url = os.Getenv("FEATURE_FLAG_CONFIG_URL")
 		if len(o.url) == 0 {
 			o.filename = os.Getenv("FEATURE_FLAG_CONFIG_FILE")
 		}
 	}
+
 	var rtvr retriever.Retriever
 	if o.url != "" {
 		logger.WithValues("ffRetrieverUrl", o.url).Info("Using http retriever")
