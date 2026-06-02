@@ -31,7 +31,7 @@ gcpIpRangeV3:
     enabled: true
     disabled: false
   defaultRule:
-    variation: disabled
+    variation: enabled
 
 nfs41Gcp:
   variations:
@@ -45,28 +45,28 @@ gcpNfsInstanceV2:
     enabled: true
     disabled: false
   defaultRule:
-    variation: disabled
+    variation: enabled
 
 gcpBackupV2:
   variations:
     enabled: true
     disabled: false
   defaultRule:
-    variation: disabled
+    variation: enabled
 
 gcpNfsRestoreV2:
   variations:
     enabled: true
     disabled: false
   defaultRule:
-    variation: disabled
+    variation: enabled
 
 backupScheduleV2:
   variations:
     enabled: true
     disabled: false
   defaultRule:
-    variation: disabled
+    variation: enabled
 
 runtimeSecurityAws:
   variations:

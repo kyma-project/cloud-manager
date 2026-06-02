@@ -31,9 +31,12 @@ jobs:
           go-version-file: 'go.mod'
       - name: Display Go version
         run: go version
+      - name: Prepare ff config
+        run: |
+          yq 'del(.apiDisabled)' ${{ github.workspace }}/${{ matrix.ffFile }} > ${{ github.workspace }}/tmp/ff.yaml
       - name: Build and test
         env:
-          FEATURE_FLAG_CONFIG_FILE: ${{ github.workspace }}/${{ matrix.ffFile }}
+          FEATURE_FLAG_CONFIG_FILE: ${{ github.workspace }}/tmp/ff.yaml
         run: |
           ./config/sync.sh
           ./docs/contributor/permissions/sort.sh

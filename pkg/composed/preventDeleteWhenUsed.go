@@ -3,13 +3,15 @@ package composed
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"regexp"
+	"strings"
+
 	"github.com/elliotchance/pie/v2"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 type UsedCallbackType func(
@@ -18,6 +20,8 @@ type UsedCallbackType func(
 	list client.ObjectList,
 	usedByNames []string,
 ) (error, context.Context)
+
+var rxIndexDoesNotExist = regexp.MustCompile(`(?i)index with name .+ does not exist`)
 
 // PreventDeleteWhenUsed returns [Action] that checks if reconciled object in state is used
 // by the kind specified in the list argument, by listing them on the condition indexFiled of
@@ -49,6 +53,9 @@ func PreventDeleteWhenUsed(list client.ObjectList, name, indexField string, used
 		err := st.Cluster().K8sClient().List(ctx, list, listOps)
 		if meta.IsNoMatchError(err) {
 			// kind is unknown to the api - aka crd not installed
+			return nil, nil
+		}
+		if err != nil && rxIndexDoesNotExist.MatchString(err.Error()) {
 			return nil, nil
 		}
 		if err != nil {
