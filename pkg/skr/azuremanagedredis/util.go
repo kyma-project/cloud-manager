@@ -106,7 +106,7 @@ func getAuthSecretBaseData(kcpAMR *cloudcontrolv1beta1.AzureManagedRedis) map[st
 	}
 
 	if kcpAMR.Status.Port > 0 {
-		result["port"] = []byte(fmt.Sprintf("%d", kcpAMR.Status.Port))
+		result["port"] = fmt.Appendf(nil, "%d", kcpAMR.Status.Port)
 	}
 
 	if len(kcpAMR.Status.AuthString) > 0 {

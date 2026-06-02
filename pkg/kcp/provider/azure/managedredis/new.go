@@ -104,7 +104,6 @@ func (r *managedRedisReconciler) newAction() composed.Action {
 						composed.StopAndForgetAction,
 					),
 				),
-				composed.StopAndForgetAction,
 			)(ctx, newState(st.(kcpcommonaction.State)))
 		},
 	)
