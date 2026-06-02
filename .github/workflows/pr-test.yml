@@ -14,34 +14,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Build & Test
-            nukeBackupsGcp: "false"
-            nukeBackupsAws: "false"
-            nukeBackupsAzure: "false"
-            nfs41Gcp: "false"
-            vpcPeeringSync: "false"
-            gcpNfsInstanceV2: "false"
-            gcpIpRangeV3: "false"
-            gcpBackupV2: "false"
-            gcpNfsRestoreV2: "false"
-            backupScheduleV2: "false"
-            runtimeSecurityAws: "false"
-            runtimeSecurityAzure: "false"
-            runtimeSecurityGcp: "false"
-          - name: Build & Test (Nuke Backups, NFSv4.1, Peering Sync, Gcp IP Range v3)
-            nukeBackupsGcp: "true"
-            nukeBackupsAws: "true"
-            nukeBackupsAzure: "true"
-            nfs41Gcp: "true"
-            vpcPeeringSync: "true"
-            gcpNfsInstanceV2: "true"
-            gcpIpRangeV3: "true"
-            gcpBackupV2: "true"
-            gcpNfsRestoreV2: "true"
-            backupScheduleV2: "true"
-            runtimeSecurityAws: "true"
-            runtimeSecurityAzure: "true"
-            runtimeSecurityGcp: "true"
+          - name: Build & Test GA
+            variant: GA
+            ffFile: pkg/feature/ff_ga.yaml
+          - name: Build & Test Edge
+            variant: Edge
+            ffFile: pkg/feature/ff_edge.yaml
     runs-on: ubuntu-latest
     name: ${{ matrix.name }}
     steps:
@@ -55,19 +33,7 @@ jobs:
         run: go version
       - name: Build and test
         env:
-          FF_NUKE_BACKUPS_GCP: ${{ matrix.nukeBackupsGcp }}
-          FF_NUKE_BACKUPS_AWS: ${{ matrix.nukeBackupsAws }}
-          FF_NUKE_BACKUPS_AZURE: ${{ matrix.nukeBackupsAzure }}
-          FF_NFS41_GCP: ${{ matrix.nfs41Gcp }}
-          FF_VPC_PEERING_SYNC: ${{ matrix.vpcPeeringSync }}
-          FF_GCP_NFS_INSTANCE_V2: ${{ matrix.gcpNfsInstanceV2 }}
-          FF_GCP_IP_RANGE_V3: ${{ matrix.gcpIpRangeV3 }}
-          FF_GCP_BACKUP_V2: ${{ matrix.gcpBackupV2 }}
-          FF_GCP_NFS_RESTORE_V2: ${{ matrix.gcpNfsRestoreV2 }}
-          FF_BACKUP_SCHEDULE_V2: ${{ matrix.backupScheduleV2 }}
-          FF_RUNTIME_SECURITY_AWS: ${{ matrix.runtimeSecurityAws }}
-          FF_RUNTIME_SECURITY_AZURE: ${{ matrix.runtimeSecurityAzure }}
-          FF_RUNTIME_SECURITY_GCP: ${{ matrix.runtimeSecurityGcp }}
+          FEATURE_FLAG_CONFIG_FILE: ${{ github.workspace }}/${{ matrix.ffFile }}
         run: |
           ./config/sync.sh
           ./docs/contributor/permissions/sort.sh
@@ -75,12 +41,12 @@ jobs:
           go mod download
           make build
           make test
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.variant }}.out
+          path: cover.out
       - name: Check modified files
         run: git diff --exit-code
       - name: Check if test GUIDs are unique
         run: x=$(grep -rEho '[[:xdigit:]]{8}(-[[:xdigit:]]{4}){3}-[[:xdigit:]]{12}'  ./internal | sort | uniq -d); [ -z "${x}" ] || ( echo duplicated GUID detected $x; exit 1; )
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

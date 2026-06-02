@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
@@ -256,7 +257,9 @@ func StartEx(opts StartOptions) (Infra, error) {
 
 	util.SetSpeedyTimingForTests()
 
-	feature.InitializeFromStaticConfig(abstractions.NewOSEnvironment())
+	if err := feature.Initialize(infra.Ctx(), composed.LoggerFromCtx(infra.Ctx()).WithName("ff")); err != nil {
+		return nil, fmt.Errorf("error initializing features: %w", err)
+	}
 
 	return infra, nil
 }
