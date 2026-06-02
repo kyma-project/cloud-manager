@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -32,13 +33,16 @@ const (
 type State struct {
 	kcpcommonaction.State
 
-	client            azuremanagedredisclient.Client
-	resourceGroupName string
+	client              azuremanagedredisclient.Client
+	resourceGroupName   string
+	gardenerNetworkName string
 
 	managedRedis         *armredisenterprise.Cluster
 	managedRedisDatabase *armredisenterprise.Database
 	privateEndpoint      *armnetwork.PrivateEndpoint
 	privateDnsZoneGroup  *armnetwork.PrivateDNSZoneGroup
+	privateDnsZone       *armprivatedns.PrivateZone
+	virtualNetworkLink   *armprivatedns.VirtualNetworkLink
 }
 
 func newState(kcpCommonState kcpcommonaction.State) *State {
@@ -89,6 +93,7 @@ func initAzureClient(clientProvider azureclient.ClientProvider[azuremanagedredis
 
 		state.client = c
 		state.resourceGroupName = azurecommon.AzureCloudManagerResourceGroupName(gardenerNetworkName)
+		state.gardenerNetworkName = gardenerNetworkName
 		return nil, ctx
 	}
 }
