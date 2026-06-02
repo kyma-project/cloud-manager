@@ -33,7 +33,8 @@ jobs:
         run: go version
       - name: Prepare ff config
         run: |
-          yq 'del(.apiDisabled)' ${{ github.workspace }}/${{ matrix.ffFile }} > ${{ github.workspace }}/tmp/ff.yaml
+          mkdir -p tmp
+          yq 'del(.apiDisabled)' ${{ matrix.ffFile }} > tmp/ff.yaml
       - name: Build and test
         env:
           FEATURE_FLAG_CONFIG_FILE: ${{ github.workspace }}/tmp/ff.yaml
