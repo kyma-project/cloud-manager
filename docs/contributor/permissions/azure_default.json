@@ -17,6 +17,7 @@
     "Microsoft.Cache/redisEnterprise/delete",
     "Microsoft.Cache/redisEnterprise/privateEndpointConnections/read",
     "Microsoft.Cache/redisEnterprise/privateEndpointConnections/write",
+    "Microsoft.Cache/redisEnterprise/privateEndpointConnectionsApproval/action",
     "Microsoft.Cache/redisEnterprise/privateLinkResources/read",
     "Microsoft.Cache/redisEnterprise/read",
     "Microsoft.Cache/redisEnterprise/write",
