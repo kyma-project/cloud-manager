@@ -31,13 +31,12 @@ func createKcpAzureManagedRedis(ctx context.Context, st composed.State) (error, 
 		logger.Error(err, errMsg, "redisTier", amr.Spec.RedisTier)
 		amr.Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(amr).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
 				Message: errMsg,
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Failed to persist Error condition for unknown tier on AzureManagedRedis").
 			SuccessLogMsg("Updated and forgot SKR AzureManagedRedis status with Error condition").
 			SuccessError(composed.StopAndForget).

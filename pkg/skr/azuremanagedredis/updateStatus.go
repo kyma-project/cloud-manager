@@ -27,13 +27,12 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if kcpCondErr != nil && skrCondErr == nil {
 		amr.Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(amr).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
 				Message: kcpCondErr.Message,
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
 			ErrorLogMessage("Error: updating AzureManagedRedis status with not ready condition due to KCP error").
 			SuccessLogMsg("Updated and forgot SKR AzureManagedRedis status with Error condition").
 			SuccessError(composed.StopAndForget).
@@ -46,13 +45,12 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		amr.Status.PrimaryEndpoint = state.KcpAzureManagedRedis.Status.PrimaryEndpoint
 		amr.Status.Port = state.KcpAzureManagedRedis.Status.Port
 		return composed.UpdateStatus(amr).
-			SetCondition(metav1.Condition{
+			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
 				Status:  metav1.ConditionTrue,
-				Reason:  cloudresourcesv1beta1.ConditionTypeReady,
+				Reason:  cloudresourcesv1beta1.ConditionReasonReady,
 				Message: kcpCondReady.Message,
 			}).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeError).
 			ErrorLogMessage("Error updating SKR AzureManagedRedis status with ready condition").
 			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)

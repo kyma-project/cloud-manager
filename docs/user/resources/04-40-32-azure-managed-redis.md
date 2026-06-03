@@ -48,7 +48,7 @@ P-tiers and C-tiers of equal numeric rank (e.g. `P3` and `C5`) provision the **s
 | Field | Type | Description |
 |-------|------|-------------|
 | **id** | string | Internal Cloud Manager identifier. |
-| **state** | string | Lifecycle state: `Creating`, `Updating`, `Ready`, `Deleting`, `Error`. |
+| **state** | string | Lifecycle state: `Processing`, `Creating`, `Ready`, `Deleting`, `Error`. |
 | **primaryEndpoint** | string | Hostname for client connections. |
 | **port** | int32 | Redis client port (always `10000` for AMR). |
 | **observedGeneration** | int64 | Most recent reconciled `metadata.generation`. |
