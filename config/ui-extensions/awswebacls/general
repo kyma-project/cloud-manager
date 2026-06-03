@@ -1,0 +1,11 @@
+resource:
+    kind: AwsWebAcl
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: awswebacls
+name: AWS WebACLs
+scope: cluster
+category: Security
+icon: locked
+description: >-
+    AWS Web Application Firewall (WAF) WebACL for protecting web applications
