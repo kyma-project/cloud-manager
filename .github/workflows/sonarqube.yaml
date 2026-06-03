@@ -39,6 +39,10 @@ jobs:
           pattern: coverage-*.out
           path: ./coverage
 
+      - name: List coverage files
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        run: tree ./coverage || find ./coverage -type f
+
       - name: SonarQube Scan
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
         uses: SonarSource/sonarqube-scan-action@v7
@@ -47,4 +51,4 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
-            -Dsonar.go.coverage.reportPaths=./coverage/*/cover.out
+            -Dsonar.go.coverage.reportPaths=./coverage/coverage-*.out
