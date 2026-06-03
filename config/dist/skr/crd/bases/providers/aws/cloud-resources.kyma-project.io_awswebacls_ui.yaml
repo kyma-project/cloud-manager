@@ -1,0 +1,62 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+        - name: configuration
+          widget: Panel
+          source: spec
+          children:
+            - widget: Labels
+              source: description
+              name: spec.description
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: state
+              name: status.state
+            - widget: Labels
+              source: capacity
+              name: status.capacity
+  form: |
+    - path: spec.description
+      name: spec.description
+      widget: Text
+      required: false
+  general: |
+    resource:
+        kind: AwsWebAcl
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: awswebacls
+    name: AWS WebACLs
+    scope: cluster
+    category: Security
+    icon: locked
+    description: >-
+        AWS Web Application Firewall (WAF) WebACL for protecting web applications
+  list: |
+    - source: status.state
+      name: status.state
+      sort: true
+    - source: status.capacity
+      name: status.capacity
+      sort: true
+  translations: |
+    en:
+      spec.description: Description
+      status.state: State
+      status.capacity: Capacity
+      configuration: Configuration
+      status: Status
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: awswebacls-ui.operator.kyma-project.io
+  namespace: kyma-system
