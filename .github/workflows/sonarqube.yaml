@@ -9,23 +9,38 @@ on:
 
 jobs:
   sonar:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Print details
+        env:
+          PR_DATA: ${{ toJSON(github.event.workflow_run.pull_requests) }}
+        run: |
+          echo "Workflow name:          ${{ github.event.workflow_run.name }}"
+          PR=$(echo "$PR_DATA" | python3 -c "import sys,json; prs=json.load(sys.stdin); print(prs[0]['number'] if prs else 'N/A')")
+          echo "Pull request:           ${PR}"
+          echo "Head SHA:               ${{ github.event.workflow_run.head_sha }}"
+          echo "Event name:             ${{ github.event.workflow_run.event }}"
+          echo "Parent workflow result: ${{ github.event.workflow_run.conclusion }}"
+
       - name: Checkout repository
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         uses: actions/checkout@v6
         with:
           # Disabling shallow clones is recommended for improving the relevancy of reporting
           fetch-depth: 0
           ref: ${{ github.event.workflow_run.head_sha }}
+
       - name: Download coverage artifacts
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         uses: actions/download-artifact@v4
         with:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pattern: coverage-*.out
           path: ./coverage
+
       - name: SonarQube Scan
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
