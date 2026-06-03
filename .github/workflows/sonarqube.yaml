@@ -43,6 +43,14 @@ jobs:
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
         run: tree ./coverage || find ./coverage -type f
 
+      - name: Collect coverage paths
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        id: coverage
+        run: |
+          paths=$(find ./coverage -name cover.out | tr '\n' ',' | sed 's/,$//')
+          echo "Coverage paths: ${paths}"
+          echo "paths=${paths}" >> "$GITHUB_OUTPUT"
+
       - name: SonarQube Scan
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
         uses: SonarSource/sonarqube-scan-action@v7
@@ -51,4 +59,4 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
           args: >
-            -Dsonar.go.coverage.reportPaths=./coverage/coverage-*.out
+            -Dsonar.go.coverage.reportPaths=${{ steps.coverage.outputs.paths }}
