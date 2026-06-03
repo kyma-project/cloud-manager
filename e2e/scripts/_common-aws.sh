@@ -1,14 +1,16 @@
 
 validateAwsAccount() {
-  if [ -z "${AWS_ACCOUNT+x}" ]; then
+  if [[ -z "${AWS_ACCOUNT+x}" ]]; then
     echo "AWS_ACCOUNT is not set"
     exit 1
   fi
-  local ACTUAL_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-  if [ "$AWS_ACCOUNT" != "$ACTUAL_ACCOUNT" ]; then
-    echo "AWS_ACCOUNT mismatch: env defines to work on $AWS_ACCOUNT, but cli is logged into $ACTUAL_ACCOUNT"
+  local actual_account
+  actual_account=$(aws sts get-caller-identity --query Account --output text)
+  if [[ "$AWS_ACCOUNT" != "$actual_account" ]]; then
+    echo "AWS_ACCOUNT mismatch: env defines to work on $AWS_ACCOUNT, but cli is logged into $actual_account"
     exit 1
   fi
+  return 0
 }
 
 
@@ -35,7 +37,7 @@ awsInit() {
 
   POLICY_NAME_CM_ASSUME_ROLE="${POLICY_NAME_CM_ASSUME_ROLE:-CloudManagerAssumeRole}"
 
-  if [ -z "$QUIET" ]; then
+  if [[ -z "$QUIET" ]]; then
     echo "AWS_ACCOUNT=$AWS_ACCOUNT"
     echo "SA_NAME_DEFAULT=$SA_NAME_DEFAULT"
     echo "SA_NAME_PEERING=$SA_NAME_PEERING"
@@ -51,4 +53,5 @@ awsInit() {
 
   log "Running on AWS account $AWS_ACCOUNT"
 
+  return 0
 }

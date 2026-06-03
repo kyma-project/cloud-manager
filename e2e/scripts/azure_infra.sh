@@ -43,6 +43,8 @@ createRole() {
     log "Role $ROLE_NAME exist, updating it now from $ROLE_FILE ..."
     az role definition update  --role-definition $TEMP_PERMISSION_FILE  --subscription $AZURE_SUBSCRIPTION_ID --only-show-errors > /dev/null
   fi
+
+  return 0
 }
 
 createRoleAssignment() {
@@ -92,6 +94,8 @@ createRoleAssignment() {
       log "Role assignment already exists with no condition, skipping update."
     fi
   fi
+
+  return 0
 }
 
 # Main

@@ -31,8 +31,10 @@ runs:
 
     - name: Write KUBECONFIG to file
       shell: bash
+      env:
+        GARDENER_KUBECONFIG: ${{ inputs.gardener_kubeconfig }}
       run: |
-        echo "${{ inputs.gardener_kubeconfig }}" > kubeconfig-garden.yaml
+        echo "$GARDENER_KUBECONFIG" > kubeconfig-garden.yaml
 
     - name: Create tmp directory
       shell: bash
@@ -40,6 +42,9 @@ runs:
 
     - name: Write e2e config file
       shell: bash
+      env:
+        OIDC_CLIENT_ID: ${{ inputs.oidc_client_id }}
+        OIDC_ISSUER_URL: ${{ inputs.oidc_issuer_url }}
       run: |
         cat <<EOF > ./tmp/e2e-config.yaml
         gardenKubeconfig: $PWD/kubeconfig-garden.yaml
@@ -58,8 +63,8 @@ runs:
             provider: gcp
             isDefault: true
         networkOwner: gardener
-        oidcClientId: ${{ inputs.oidc_client_id }}
-        oidcIssuerUrl: ${{ inputs.oidc_issuer_url }}
+        oidcClientId: $OIDC_CLIENT_ID
+        oidcIssuerUrl: $OIDC_ISSUER_URL
         administrators:
           - vladimir.andjelkoski@sap.com
           - milos.tomic@sap.com
@@ -166,8 +171,10 @@ runs:
 
     - name: Validate and prepare feature flags
       shell: bash
+      env:
+        FEATURE_FLAG_CONFIG_FILE: ${{ inputs.feature_flag_file }}
       run: |
-        FF_FILE="${{ inputs.feature_flag_file }}"
+        FF_FILE="$FEATURE_FLAG_CONFIG_FILE"
         if [ ! -f "$FF_FILE" ]; then
           echo "❌ Feature flag file not found: $FF_FILE"
           echo "Available: $(ls -1 pkg/feature/ff_*.yaml 2>/dev/null || echo 'none')"

@@ -21,6 +21,7 @@ createServiceAccount() {
   else
     log "SA $SA already exists"
   fi
+  return 0
 }
 
 setServiceAccountPermissions() {
@@ -31,13 +32,14 @@ setServiceAccountPermissions() {
     gcloud iam roles create $ROLE_NAME --project $GCP_PROJECT --file $ROLE_FILE > /dev/null
   else
     IS_DELETED=$(gcloud iam roles describe $ROLE_NAME --project $GCP_PROJECT --format json | jq '.deleted')
-    if [ $IS_DELETED = "true" ]; then
+    if [[ $IS_DELETED = "true" ]]; then
       log "Role $ROLE_NAME is deleted, undeleting..."
       gcloud iam roles undelete $ROLE_NAME --project $GCP_PROJECT > /dev/null
     fi
     log "Role $ROLE_NAME exist, updating it now from $ROLE_FILE..."
     gcloud iam roles update $ROLE_NAME --project $GCP_PROJECT --file $ROLE_FILE > /dev/null
   fi
+  return 0
 }
 
 
@@ -50,6 +52,8 @@ setProjectIAM() {
 
   gcloud projects add-iam-policy-binding $GCP_PROJECT --project="$GCP_PROJECT" \
     --member="serviceAccount:$SA" --role="projects/$GCP_PROJECT/roles/$ROLE_NAME" > /dev/null
+
+  return 0
 }
 
 # Main
