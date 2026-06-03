@@ -1,0 +1,18 @@
+body:
+    - name: configuration
+      widget: Panel
+      source: spec
+      children:
+        - widget: Labels
+          source: description
+          name: spec.description
+    - name: status
+      widget: Panel
+      source: status
+      children:
+        - widget: Labels
+          source: state
+          name: status.state
+        - widget: Labels
+          source: capacity
+          name: status.capacity
