@@ -15,7 +15,7 @@ Feature: AzureManagedRedis feature
       apiVersion: cloud-resources.kyma-project.io/v1beta1
       kind: AzureManagedRedis
       spec:
-        tier: S1
+        redisTier: S1
       """
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
@@ -56,7 +56,7 @@ Feature: AzureManagedRedis feature
       apiVersion: cloud-resources.kyma-project.io/v1beta1
       kind: AzureManagedRedis
       spec:
-        tier: P1
+        redisTier: P1
       """
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
@@ -97,7 +97,7 @@ Feature: AzureManagedRedis feature
       apiVersion: cloud-resources.kyma-project.io/v1beta1
       kind: AzureManagedRedis
       spec:
-        tier: C5
+        redisTier: C5
       """
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:

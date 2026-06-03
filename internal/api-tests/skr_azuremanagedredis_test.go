@@ -13,7 +13,7 @@ func newTestAzureManagedRedisBuilder() *testAzureManagedRedisBuilder {
 	return &testAzureManagedRedisBuilder{
 		instance: cloudresourcesv1beta1.AzureManagedRedis{
 			Spec: cloudresourcesv1beta1.AzureManagedRedisSpec{
-				Tier: cloudresourcesv1beta1.AzureManagedRedisTierP1,
+				RedisTier: cloudresourcesv1beta1.AzureManagedRedisTierP1,
 			},
 		},
 	}
@@ -24,12 +24,12 @@ func (b *testAzureManagedRedisBuilder) Build() *cloudresourcesv1beta1.AzureManag
 }
 
 func (b *testAzureManagedRedisBuilder) WithTier(tier cloudresourcesv1beta1.AzureManagedRedisTier) *testAzureManagedRedisBuilder {
-	b.instance.Spec.Tier = tier
+	b.instance.Spec.RedisTier = tier
 	return b
 }
 
 func (b *testAzureManagedRedisBuilder) WithRawTier(tier string) *testAzureManagedRedisBuilder {
-	b.instance.Spec.Tier = cloudresourcesv1beta1.AzureManagedRedisTier(tier)
+	b.instance.Spec.RedisTier = cloudresourcesv1beta1.AzureManagedRedisTier(tier)
 	return b
 }
 
@@ -92,13 +92,13 @@ var _ = Describe("Feature: SKR AzureManagedRedis", Ordered, func() {
 		canNotCreateSkr(
 			"AzureManagedRedis with unknown tier value is rejected",
 			newTestAzureManagedRedisBuilder().WithRawTier("Z9"),
-			"spec.tier",
+			"spec.redisTier",
 		)
 
 		canNotCreateSkr(
 			"AzureManagedRedis with C-tier below C3 is rejected (CRD enum starts at C3)",
 			newTestAzureManagedRedisBuilder().WithRawTier("C1"),
-			"spec.tier",
+			"spec.redisTier",
 		)
 
 		canNotChangeSkr(
@@ -107,7 +107,7 @@ var _ = Describe("Feature: SKR AzureManagedRedis", Ordered, func() {
 			func(b Builder[*cloudresourcesv1beta1.AzureManagedRedis]) {
 				b.(*testAzureManagedRedisBuilder).WithTier(cloudresourcesv1beta1.AzureManagedRedisTierP2)
 			},
-			"tier is immutable",
+			"redisTier is immutable",
 		)
 	})
 

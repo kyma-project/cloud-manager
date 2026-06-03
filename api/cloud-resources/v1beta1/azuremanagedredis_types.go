@@ -8,12 +8,12 @@ import (
 
 // AzureManagedRedisSpec defines the desired state of AzureManagedRedis.
 type AzureManagedRedisSpec struct {
-	// Tier defines the Kyma service tier. The letter encodes the workload class:
+	// RedisTier defines the Kyma service tier. The letter encodes the workload class:
 	// S = single-node dev, P = HA production, C = clustered (sharded) HA.
 	// All tiers map to a single underlying Azure Managed Redis cluster.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="tier is immutable."
-	Tier AzureManagedRedisTier `json:"tier"`
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="redisTier is immutable."
+	RedisTier AzureManagedRedisTier `json:"redisTier"`
 
 	// AuthSecret customises the name and labels of the generated connection secret.
 	// +optional
@@ -54,7 +54,7 @@ type AzureManagedRedisStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:categories={kyma-cloud-manager}
-// +kubebuilder:printcolumn:name="Tier",type="string",JSONPath=".spec.tier"
+// +kubebuilder:printcolumn:name="Tier",type="string",JSONPath=".spec.redisTier"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // AzureManagedRedis is the Schema for the AzureManagedRedis API.

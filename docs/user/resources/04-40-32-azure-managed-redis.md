@@ -1,6 +1,6 @@
 # AzureManagedRedis Custom Resource
 
-The `azuremanagedredis.cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes a single Azure Managed Redis (Microsoft.Cache/redisEnterprise) cluster provisioned in your Kyma runtime through Cloud Manager. A single SKR kind covers three workload classes — single-node dev, HA production, and HA + sharded clustered Redis — through the `tier` field.
+The `azuremanagedredis.cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes a single Azure Managed Redis (Microsoft.Cache/redisEnterprise) cluster provisioned in your Kyma runtime through Cloud Manager. A single SKR kind covers three workload classes — single-node dev, HA production, and HA + sharded clustered Redis — through the `redisTier` field.
 
 > Azure Managed Redis is a separate product from Azure Cache for Redis. It is **not yet available** in Azure China or Azure US Government regions; only commercial Azure regions are supported.
 
@@ -10,7 +10,7 @@ This table lists the parameters of `AzureManagedRedis.spec`.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| **tier** (required) | string | Kyma service tier. Encodes the underlying SKU + high-availability + clustering policy. See the [Tier Reference](#tier-reference) below. Allowed values: `S1`, `S2`, `S3`, `S4`, `S5`, `P1`, `P2`, `P3`, `P4`, `P5`, `C3`, `C4`, `C5`, `C6`, `C7`. **Immutable.** |
+| **redisTier** (required) | string | Kyma service tier. Encodes the underlying SKU + high-availability + clustering policy. See the [Tier Reference](#tier-reference) below. Allowed values: `S1`, `S2`, `S3`, `S4`, `S5`, `P1`, `P2`, `P3`, `P4`, `P5`, `C3`, `C4`, `C5`, `C6`, `C7`. **Immutable.** |
 | **authSecret** | object | Customises the generated connection secret. |
 | **authSecret.name** | string | Name of the secret. Defaults to the `AzureManagedRedis` resource name. |
 | **authSecret.labels** | map[string]string | Labels applied to the secret. |
@@ -21,7 +21,7 @@ This table lists the parameters of `AzureManagedRedis.spec`.
 
 ### Tier Reference
 
-The `tier` letter encodes three things in one field. Choose by workload class first, then by size.
+The `redisTier` letter encodes three things in one field. Choose by workload class first, then by size.
 
 | Tier | Underlying Azure SKU | Memory (GB) | High-Availability | Clustering Policy | Use case |
 |------|----------------------|-------------|-------------------|-------------------|----------|
@@ -76,7 +76,7 @@ metadata:
   name: my-managed-redis
   namespace: default
 spec:
-  tier: P2
+  redisTier: P2
 ```
 
 A clustered example:
@@ -88,7 +88,7 @@ metadata:
   name: my-redis-cluster
   namespace: default
 spec:
-  tier: C5
+  redisTier: C5
   authSecret:
     name: redis-cluster-conn
     labels:
@@ -99,7 +99,7 @@ spec:
 
 ## Notes and Limitations
 
-- **Immutable fields.** `spec.tier`, `spec.ipRange`, and `spec.authSecret.name` cannot be changed after creation. To resize, delete and recreate the resource (data will be lost).
+- **Immutable fields.** `spec.redisTier`, `spec.ipRange`, and `spec.authSecret.name` cannot be changed after creation. To resize, delete and recreate the resource (data will be lost).
 - **Public network access is disabled.** Connections are only possible from within the Kyma SKR network through the auto-provisioned Private Endpoint.
 - **TLS only.** AMR enforces TLS 1.2 client connections; plaintext is not supported.
 - **Single database per cluster.** Cloud Manager provisions exactly one database (`default`) per `AzureManagedRedis` resource.

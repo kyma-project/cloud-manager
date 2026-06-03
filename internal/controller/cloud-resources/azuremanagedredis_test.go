@@ -15,17 +15,21 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+// One happy-path scenario covers the create→ready→delete loop end-to-end on
+// a representative production tier (P2: HA + EnterpriseCluster). The full
+// tier-letter → KCP-spec expansion table is exercised by unit tests in
+// pkg/skr/azuremanagedredis/util_test.go, so this controller test does not
+// run per-tier — that would only re-execute the same reconciler plumbing.
 var _ = Describe("Feature: SKR AzureManagedRedis", func() {
 
-	// runScenario exercises the full create→ready→delete loop for a single tier.
-	// We run it once per representative tier — S1 (non-HA dev), P2
-	// (HA EnterpriseCluster) and C5 (HA OSSCluster) — to assert that the SKR
-	// controller correctly expands each tier letter into the right KCP spec
-	// (SKU + HighAvailability + ClusteringPolicy).
-	runScenario := func(tier cloudresourcesv1beta1.AzureManagedRedisTier, name string) {
-		amrName := name
+	It("Scenario: SKR AzureManagedRedis happy path on P2 tier", func() {
+		const (
+			tier    = cloudresourcesv1beta1.AzureManagedRedisTierP2
+			amrName = "amr-p2-instance"
+		)
+
 		skrKymaRef := util.Must(infra.ScopeProvider().GetScope(infra.Ctx(), types.NamespacedName{Name: amrName}))
-		skrIpRangeId := "5c70629f-a13f-4b04-af47-1ab274c1c7" + string(tier[0]) + string(tier[1])
+		const skrIpRangeId = "5c70629f-a13f-4b04-af47-1ab274c1c7p2"
 		amr := &cloudresourcesv1beta1.AzureManagedRedis{}
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
@@ -170,17 +174,5 @@ var _ = Describe("Feature: SKR AzureManagedRedis", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())
 		})
-	}
-
-	It("Scenario: SKR AzureManagedRedis with S1 tier (non-HA, EnterpriseCluster, Balanced)", func() {
-		runScenario(cloudresourcesv1beta1.AzureManagedRedisTierS1, "amr-s1-instance")
-	})
-
-	It("Scenario: SKR AzureManagedRedis with P2 tier (HA, EnterpriseCluster, ComputeOptimized)", func() {
-		runScenario(cloudresourcesv1beta1.AzureManagedRedisTierP2, "amr-p2-instance")
-	})
-
-	It("Scenario: SKR AzureManagedRedis with C5 tier (HA, OSSCluster, ComputeOptimized)", func() {
-		runScenario(cloudresourcesv1beta1.AzureManagedRedisTierC5, "amr-c5-cluster")
 	})
 })

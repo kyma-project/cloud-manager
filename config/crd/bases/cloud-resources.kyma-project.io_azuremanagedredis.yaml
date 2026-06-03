@@ -18,7 +18,7 @@ spec:
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
-        - jsonPath: .spec.tier
+        - jsonPath: .spec.redisTier
           name: Tier
           type: string
         - jsonPath: .status.state
@@ -84,9 +84,9 @@ spec:
                   required:
                     - name
                   type: object
-                tier:
+                redisTier:
                   description: |-
-                    Tier defines the Kyma service tier. The letter encodes the workload class:
+                    RedisTier defines the Kyma service tier. The letter encodes the workload class:
                     S = single-node dev, P = HA production, C = clustered (sharded) HA.
                     All tiers map to a single underlying Azure Managed Redis cluster.
                   enum:
@@ -107,10 +107,10 @@ spec:
                     - C7
                   type: string
                   x-kubernetes-validations:
-                    - message: tier is immutable.
+                    - message: redisTier is immutable.
                       rule: (self == oldSelf)
               required:
-                - tier
+                - redisTier
               type: object
             status:
               description: AzureManagedRedisStatus defines the observed state of AzureManagedRedis.

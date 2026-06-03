@@ -13,7 +13,7 @@ import (
 )
 
 // createKcpAzureManagedRedis materialises the SKR AzureManagedRedis as a
-// matching KCP AzureManagedRedis. The Kyma Tier letter is expanded via
+// matching KCP AzureManagedRedis. The Kyma RedisTier letter is expanded via
 // TierToSpec to fill SKU / HighAvailability / ClusteringPolicy on the KCP spec.
 func createKcpAzureManagedRedis(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
@@ -25,10 +25,10 @@ func createKcpAzureManagedRedis(ctx context.Context, st composed.State) (error, 
 
 	amr := state.ObjAsAzureManagedRedis()
 
-	tierSpec, err := TierToSpec(amr.Spec.Tier)
+	tierSpec, err := TierToSpec(amr.Spec.RedisTier)
 	if err != nil {
 		errMsg := "Failed to map AzureManagedRedis tier to AMR cluster spec"
-		logger.Error(err, errMsg, "tier", amr.Spec.Tier)
+		logger.Error(err, errMsg, "redisTier", amr.Spec.RedisTier)
 		amr.Status.State = cloudresourcesv1beta1.StateError
 		return composed.UpdateStatus(amr).
 			SetCondition(metav1.Condition{

@@ -25,8 +25,8 @@ func CreateSkrAzureManagedRedis(ctx context.Context, clnt client.Client, obj *cl
 	if obj.Name == "" {
 		return errors.New("the SKR AzureManagedRedis must have name set")
 	}
-	if obj.Spec.Tier == "" {
-		return errors.New("the SKR AzureManagedRedis must have spec.tier set")
+	if obj.Spec.RedisTier == "" {
+		return errors.New("the SKR AzureManagedRedis must have spec.redisTier set")
 	}
 
 	return clnt.Create(ctx, obj)
@@ -37,7 +37,7 @@ func WithSkrAzureManagedRedisTier(tier cloudresourcesv1beta1.AzureManagedRedisTi
 	return &objAction{
 		f: func(obj client.Object) {
 			if amr, ok := obj.(*cloudresourcesv1beta1.AzureManagedRedis); ok {
-				amr.Spec.Tier = tier
+				amr.Spec.RedisTier = tier
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithSkrAzureManagedRedisTier", obj))
