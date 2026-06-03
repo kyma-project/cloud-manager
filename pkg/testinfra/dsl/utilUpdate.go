@@ -28,10 +28,6 @@ func UpdateStatus(ctx context.Context, clnt client.Client, obj client.Object, op
 		return errors.New("the object for UpdateStatus() can not be nil")
 	}
 
-	if err := LoadAndCheck(ctx, clnt, obj, NewObjActions()); err != nil {
-		return err
-	}
-
 	NewObjActions(opts...).
 		ApplyOnStatus(obj)
 
