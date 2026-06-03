@@ -1,6 +1,8 @@
 ---
 name: testing-cloud-manager-code
 description: Use when writing tests in Cloud Manager — reconciler behavior (controller tests), CRD field validation and immutability (API tests), complex pure functions (unit tests), or full feature scenarios on a real cluster (e2e tests). Also use when creating mock implementations for cloud provider APIs.
+role: worker
+user-invocable: true
 ---
 
 # Testing Cloud Manager Code

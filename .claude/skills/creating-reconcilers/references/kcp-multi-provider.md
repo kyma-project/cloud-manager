@@ -23,6 +23,8 @@ composed.State
                     └── provider/{provider}/{resource}.State
 ```
 
+> Legacy multi-provider resources (`NfsInstance`, `RedisInstance`, `IpRange`) use `focal.State` in place of `kcpcommonaction.State` at the second level. Maintain those as-is; do not introduce them in new code. See the legacy callout in `SKILL.md`.
+
 **What kcpcommonaction.New() loads**:
 - Subscription
 - IpRange
