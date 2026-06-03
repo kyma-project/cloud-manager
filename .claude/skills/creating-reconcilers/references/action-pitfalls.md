@@ -127,13 +127,13 @@ composed.ComposeActionsNoName(
 )
 ```
 
-## 10. Mutating state in actions (state changes are local)
+## 9. Mutating state in actions (state changes are local)
 
 Actions receive a pointer to state but mutations to local-scope values are not shared between separate action pipelines.
 
 Store shared data in context or in the State struct fields that are passed by pointer.
 
-## 11. Using IfElse instead of separate If blocks
+## 10. Using IfElse instead of separate If blocks
 
 ```go
 // BAD:
@@ -144,7 +144,7 @@ composed.If(composed.MarkedForDeletionPredicate, deleteFlow),
 composed.If(composed.NotMarkedForDeletionPredicate, createFlow),
 ```
 
-## 12. Calling time.Now() directly
+## 11. Calling time.Now() directly
 
 ```go
 // BAD: not testable, clock not injected
@@ -154,12 +154,12 @@ nextRun := time.Now().Add(interval)
 nextRun := r.clock.Now().Add(interval)
 ```
 
-## 13. NEW pattern vs OLD pattern confusion
+## 12. NEW pattern vs OLD pattern confusion
 
 New resources (post-2024) MUST use provider-specific CRDs (`GcpRedisCluster`, not `RedisInstance`).
 `RedisInstance`, `NfsInstance`, `IpRange` use the legacy multi-provider pattern — maintain as-is, do not replicate.
 
-## 14. Using multi-provider state hierarchy for a single-provider resource
+## 13. Using multi-provider state hierarchy for a single-provider resource
 
 ```go
 // BAD: single-provider resource adds unnecessary types/ subpackage and interface layer

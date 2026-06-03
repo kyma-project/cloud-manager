@@ -549,8 +549,10 @@ func getAuthSecretBaseData(kcpRedis *cloudcontrolv1beta1.RedisInstance) map[stri
 
 ## Differences from KCP Reconcilers
 
-| Aspect | SKR | KCP |
-|--------|-----|-----|
+This table compares the SKR-with-backing-KCP pattern (this file) against KCP reconcilers. For the SKR-Only pattern (no backing KCP resource), see `skr-only-pattern.md` — SKR-Only reconcilers may invoke KCP/cloud clients directly.
+
+| Aspect | SKR (with backing KCP) | KCP |
+|--------|------------------------|-----|
 | Provider branching | NO | YES (Switch by provider) |
 | State factories | One | Multiple (per provider) |
 | Cluster access | SKR (local) + KCP | KCP only |

@@ -1,6 +1,8 @@
 ---
 name: creating-reconcilers
 description: Use when creating or modifying reconcilers in Cloud Manager — adding a new KCP resource (cloud-control API), a new SKR resource (cloud-resources API), or adding a new provider (AWS, GCP, Azure, OpenStack) to an existing resource. Also use when implementing action pipelines, StateFactory, or ComposeActionsNoName patterns.
+role: worker
+user-invocable: true
 ---
 
 # Creating Reconcilers
@@ -49,7 +51,7 @@ Runs in Kyma Control Plane. Reconciles cloud provider resources (VPC, NFS, Redis
 
 ### SKR (cloud-resources) — Data Plane
 
-Runs in each SAP BTP Kyma Runtime (user's cluster). No provider branching — linear pipelines. Syncs SKR spec to KCP objects, KCP status back to SKR. May also create local K8s resources (PV, PVC, Secrets).
+Runs in each SAP BTP Kyma Runtime (user's cluster). No provider branching — linear pipelines. Syncs SKR spec to KCP objects, KCP status back to SKR. May also create local K8s resources (PV, PVC, Secrets). SKR-Only resources (schedules, backups) skip the backing KCP CRD and call KCP/cloud clients directly.
 
 ## Quick Reference
 
@@ -86,9 +88,9 @@ Runs in each SAP BTP Kyma Runtime (user's cluster). No provider branching — li
 - `MarkedForDeletionPredicate` — Object has deletion timestamp
 - `NotMarkedForDeletionPredicate` — Object not marked for deletion (use this instead of `Not(MarkedForDeletionPredicate)`)
 
-## Coding Conventions
+## Constraints
 
-ALWAYS follow these rules:
+ALWAYS follow these rules. Deeper guidance on action signatures, file naming, error handling, logger usage, and interface compliance is in `references/conventions.md` — load it when creating a new reconciler package.
 
 1. **Use `ComposeActionsNoName`** — avoid `ComposeActions` with names
 2. **One action per line** when composing
@@ -110,7 +112,7 @@ ALWAYS follow these rules:
 6. **Don't generate speculative actions** — use comment placeholders unless explicitly specified
 7. **Sequential only** — actions execute one at a time. NEVER compose actions to run in parallel.
 8. **Finalizer law** — every resource requiring deletion cleanup MUST have a finalizer. Add it on the create path. Remove it ONLY after deletion is fully confirmed (see pitfall #8).
-9. **Injectable clock** — if a reconciler performs any time-based logic (scheduling, expiry, rate limiting), the StateFactory MUST accept `clock.Clock`. Use `clock.RealClock{}` in production and `clock.NewFakeClock()` in tests (see pitfall #12).
+9. **Injectable clock** — if a reconciler performs any time-based logic (scheduling, expiry, rate limiting), the StateFactory MUST accept `clock.Clock`. Use `clock.RealClock{}` in production and `clock.NewFakeClock()` in tests (see pitfall #11).
 
 ### Common Rationalizations — STOP
 
@@ -129,7 +131,7 @@ See `references/action-pitfalls.md`. Most frequent:
 - **#1** state type assertion panic — ALWAYS assert through the full hierarchy, never skip levels
 - **#2** missing `StopAndForget` at flow end — every successful path MUST terminate
 - **#7** missing KCP labels when creating from SKR — breaks status sync and cross-cluster debugging
-- **#14** adding `types/` subpackage to single-provider resources — only needed when multiple providers share a state interface
+- **#13** adding `types/` subpackage to single-provider resources — only needed when multiple providers share a state interface
 
 ## References
 
@@ -152,8 +154,10 @@ See `references/action-pitfalls.md`. Most frequent:
 
 ## Before Completing
 
-Verify all of these before reporting done:
+Verify all of these before reporting done. Each item requires evidence — a specific code reference or command output, not a self-attestation:
 
-1. **Every create path**: finalizer added (`AddCommonFinalizer` / `PatchAddCommonFinalizer`) before any cloud API call?
-3. **Every success path**: ends with `StopAndForget` or `StopAndForgetAction`?
-4. **Every action return**: second return value is `ctx`, not `nil`?
+1. **Every create path**: finalizer added (`AddCommonFinalizer` / `PatchAddCommonFinalizer`) before any cloud API call? *Evidence:* quote the file:line where the finalizer action is composed, and confirm it appears in the pipeline before the first cloud client call.
+2. **Every SKR-created KCP object**: includes `LabelKymaName`, `LabelRemoteName`, `LabelRemoteNamespace`? *Evidence:* quote the `Labels:` map from the KCP object construction.
+3. **Every success path**: ends with `StopAndForget` or `StopAndForgetAction`? *Evidence:* paste the tail of the composed pipeline showing the terminator.
+4. **Every action return**: second return value is `ctx`, not `nil`? *Evidence:* `Grep` for `return .*, nil$` in your new files — must return zero matches.
+5. **Compilation**: `make build` succeeds. *Evidence:* paste the final line of `make build` output.

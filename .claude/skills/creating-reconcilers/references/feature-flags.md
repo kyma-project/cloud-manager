@@ -105,4 +105,3 @@ myFeature:
 - Run `make test-ff` after every YAML edit
 - Never hardcode landscape/provider in code — use flags
 - FFs may gate business logic (algorithm selection, new behavior) during gradual rollout — but the old code path and the flag MUST be removed after full rollout. Flags are not permanent configuration switches.
-- Remove flags after full rollout
