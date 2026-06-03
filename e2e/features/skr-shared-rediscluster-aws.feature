@@ -5,6 +5,8 @@ Feature: AwsRedisCluster feature
 
     Given there is shared SKR with "AWS" provider
 
+    Given eventually timeout is 20m
+
     And resource declaration:
       | Alias  | Kind            | ApiVersion                              | Name                         | Namespace |
       | redis  | AwsRedisCluster | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                  |           |
