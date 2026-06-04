@@ -1,6 +1,8 @@
 package infrastructuremanagerv1
 
 import (
+	"maps"
+
 	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -302,9 +304,7 @@ func (in *OIDCConfig) DeepCopyInto(out *OIDCConfig) {
 	if in.RequiredClaims != nil {
 		in, out := &in.RequiredClaims, &out.RequiredClaims
 		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
+		maps.Copy((*out), *in)
 	}
 	if in.SigningAlgs != nil {
 		in, out := &in.SigningAlgs, &out.SigningAlgs
