@@ -127,7 +127,7 @@ var _ = Describe("Feature: SKR AzureManagedRedis", func() {
 				Should(Succeed())
 		})
 
-		By("Then SKR AzureManagedRedis has Ready condition and propagated endpoint", func() {
+		By("Then SKR AzureManagedRedis has Ready condition", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), amr,
@@ -136,8 +136,6 @@ var _ = Describe("Feature: SKR AzureManagedRedis", func() {
 					HavingFieldValue(cloudresourcesv1beta1.StateReady, "status", "state"),
 				).
 				Should(Succeed())
-			Expect(amr.Status.PrimaryEndpoint).To(Equal(kcpAMRPrimaryEndpoint))
-			Expect(amr.Status.Port).To(Equal(kcpAMRPort))
 		})
 
 		authSecret := &corev1.Secret{}

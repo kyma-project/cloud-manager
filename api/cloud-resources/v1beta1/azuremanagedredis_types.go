@@ -33,14 +33,6 @@ type AzureManagedRedisStatus struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
-	// PrimaryEndpoint is the connection hostname reported after provisioning.
-	// +optional
-	PrimaryEndpoint string `json:"primaryEndpoint,omitempty"`
-
-	// Port is the Redis client port.
-	// +optional
-	Port int32 `json:"port,omitempty"`
-
 	// List of status conditions
 	// +optional
 	// +listType=map
@@ -58,6 +50,9 @@ type AzureManagedRedisStatus struct {
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 
 // AzureManagedRedis is the Schema for the AzureManagedRedis API.
+//
+// Beta: this resource is available only per request for SAP-internal
+// teams and may change in incompatible ways before GA.
 type AzureManagedRedis struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

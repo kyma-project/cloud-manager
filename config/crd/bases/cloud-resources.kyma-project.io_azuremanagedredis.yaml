@@ -27,7 +27,11 @@ spec:
       name: v1beta1
       schema:
         openAPIV3Schema:
-          description: AzureManagedRedis is the Schema for the AzureManagedRedis API.
+          description: |-
+            AzureManagedRedis is the Schema for the AzureManagedRedis API.
+
+            Beta: this resource is available only per request for SAP-internal
+            teams and may change in incompatible ways before GA.
           properties:
             apiVersion:
               description: |-
@@ -179,13 +183,6 @@ spec:
                 observedGeneration:
                   format: int64
                   type: integer
-                port:
-                  description: Port is the Redis client port.
-                  format: int32
-                  type: integer
-                primaryEndpoint:
-                  description: PrimaryEndpoint is the connection hostname reported after provisioning.
-                  type: string
                 state:
                   type: string
               type: object

@@ -11,7 +11,8 @@ import (
 )
 
 // updateStatus mirrors the KCP AzureManagedRedis Ready/Error condition onto the
-// SKR object, and copies through PrimaryEndpoint+Port for client convenience.
+// SKR object. Connection info (endpoint/port/authString) is exposed via the
+// auth Secret only, matching AzureRedisInstance/AzureRedisCluster.
 func updateStatus(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
@@ -42,8 +43,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if kcpCondReady != nil && skrCondReady == nil {
 		logger.Info("Updating SKR AzureManagedRedis status with Ready condition")
 		amr.Status.State = cloudresourcesv1beta1.StateReady
-		amr.Status.PrimaryEndpoint = state.KcpAzureManagedRedis.Status.PrimaryEndpoint
-		amr.Status.Port = state.KcpAzureManagedRedis.Status.Port
 		return composed.UpdateStatus(amr).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudresourcesv1beta1.ConditionTypeReady,
