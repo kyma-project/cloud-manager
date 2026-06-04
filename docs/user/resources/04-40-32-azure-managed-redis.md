@@ -1,5 +1,8 @@
 # AzureManagedRedis Custom Resource
 
+> [!WARNING]
+> This is a beta feature available only per request for SAP-internal teams.
+
 The `azuremanagedredis.cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes a single Azure Managed Redis (Microsoft.Cache/redisEnterprise) cluster provisioned in your Kyma runtime through Cloud Manager. A single SKR kind covers three workload classes — single-node dev, HA production, and HA + sharded clustered Redis — through the `redisTier` field.
 
 > Azure Managed Redis is a separate product from Azure Cache for Redis. It is **not yet available** in Azure China or Azure US Government regions; only commercial Azure regions are supported.
