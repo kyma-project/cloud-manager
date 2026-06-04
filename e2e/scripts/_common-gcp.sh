@@ -1,51 +1,58 @@
 
 initRoleFileDefault() {
-  local DEFAULT_VALUE=$1
-  ROLE_FILE_DEFAULT="${ROLE_FILE_DEFAULT:-$DEFAULT_VALUE}"
+  local default_value=$1
+  ROLE_FILE_DEFAULT="${ROLE_FILE_DEFAULT:-$default_value}"
   case $ROLE_FILE_DEFAULT in (/*) : ;; (*) ROLE_FILE_DEFAULT="${SCRIPT_DIR}/${ROLE_FILE_DEFAULT}" ;; esac
-  if [ ! -f "$ROLE_FILE_DEFAULT" ]; then
+  if [[ ! -f "$ROLE_FILE_DEFAULT" ]]; then
     echo "ROLE_FILE_DEFAULT $ROLE_FILE_DEFAULT not found"
     exit 1
   fi
+  return 0
 }
 
 initRoleFilePeering() {
-  local DEFAULT_VALUE=$1
-  ROLE_FILE_PEERING="${ROLE_FILE_PEERING:-$DEFAULT_VALUE}"
+  local default_value=$1
+  ROLE_FILE_PEERING="${ROLE_FILE_PEERING:-$default_value}"
   case $ROLE_FILE_PEERING in (/*) : ;; (*) ROLE_FILE_PEERING="${SCRIPT_DIR}/${ROLE_FILE_PEERING}" ;; esac
-  if [ ! -f "$ROLE_FILE_PEERING" ]; then
+  if [[ ! -f "$ROLE_FILE_PEERING" ]]; then
     echo "ROLE_FILE_PEERING $ROLE_FILE_PEERING not found"
     exit 1
   fi
+  return 0
 }
 
 initSANameDefault() {
-  local DEFAULT_VALUE=$1
-  SA_NAME_DEFAULT="${SA_NAME_DEFAULT:-$DEFAULT_VALUE}"
+  local default_value=$1
+  SA_NAME_DEFAULT="${SA_NAME_DEFAULT:-$default_value}"
+  return 0
 }
 
 initSANamePeering() {
-  local DEFAULT_VALUE=$1
-  SA_NAME_PEERING="${SA_NAME_PEERING:-$DEFAULT_VALUE}"
+  local default_value=$1
+  SA_NAME_PEERING="${SA_NAME_PEERING:-$default_value}"
+  return 0
 }
 
 initRoleNameDefault() {
-  local DEFAULT_VALUE=$1
-  ROLE_NAME_DEFAULT="${ROLE_NAME_DEFAULT:-$DEFAULT_VALUE}"
+  local default_value=$1
+  ROLE_NAME_DEFAULT="${ROLE_NAME_DEFAULT:-$default_value}"
+  return 0
 }
 
 initRoleNamePeering() {
-  local DEFAULT_VALUE=$1
-  ROLE_NAME_PEERING="${ROLE_NAME_PEERING:-$DEFAULT_VALUE}"
+  local default_value=$1
+  ROLE_NAME_PEERING="${ROLE_NAME_PEERING:-$default_value}"
+  return 0
 }
 
 # GCP Specific
 
 gcpValidateProject() {
-  if [ -z "${GCP_PROJECT+x}" ]; then
+  if [[ -z "${GCP_PROJECT+x}" ]]; then
     echo "GCP_PROJECT is not set"
     exit 1
   fi
+  return 0
 }
 
 gcpInit() {
@@ -70,5 +77,6 @@ gcpInit() {
   echo "ROLE_NAME_PEERING=$ROLE_NAME_PEERING"
   echo "ROLE_FILE_PEERING=$ROLE_FILE_PEERING"
   echo ""
-}
 
+  return 0
+}

@@ -10,94 +10,106 @@ source $SCRIPT_DIR/_common-aws.sh
 awsInit
 
 createUser() {
-  local USER_NAME=$1
+  local user_name=$1
 
-  if ! aws iam get-user --user-name "$USER_NAME" > /dev/null 2>&1 ; then
-    log "User $USER_NAME does not exist, creating it now..."
-    aws iam create-user --user-name "$USER_NAME" > /dev/null
-    log "User $USER_NAME is created"
+  if ! aws iam get-user --user-name "$user_name" > /dev/null 2>&1 ; then
+    log "User $user_name does not exist, creating it now..."
+    aws iam create-user --user-name "$user_name" > /dev/null
+    log "User $user_name is created"
   else
-    log "User $USER_NAME already exists"
+    log "User $user_name already exists"
   fi
+
+  return 0
 }
 
 createPolicy() {
-  local POLICY_NAME=$1
-  local POLICY_FILE=$2
-  local POLICY_ARN
-  POLICY_ARN=$(aws iam list-policies --scope Local --query "Policies[?PolicyName=='$POLICY_NAME'].Arn" --output text)
-  if [ -z "$POLICY_ARN" ]; then
-    log "Policy $POLICY_NAME does not exist, creating it now from $POLICY_FILE ..."
-    POLICY_ARN=$(aws iam create-policy --policy-name "$POLICY_NAME" --policy-document "file://$POLICY_FILE" --query 'Policy.Arn' --output text)
-    log "Policy $POLICY_NAME is created with ARN $POLICY_ARN"
+  local policy_name=$1
+  local policy_file=$2
+  local policy_arn
+  policy_arn=$(aws iam list-policies --scope Local --query "Policies[?PolicyName=='$policy_name'].Arn" --output text)
+  if [[ -z "$policy_arn" ]]; then
+    log "Policy $policy_name does not exist, creating it now from $policy_file ..."
+    policy_arn=$(aws iam create-policy --policy-name "$policy_name" --policy-document "file://$policy_file" --query 'Policy.Arn' --output text)
+    log "Policy $policy_name is created with ARN $policy_arn"
   else
-    log "Policy $POLICY_NAME exists with ARN $POLICY_ARN"
-    local VERSION_COUNT
-    VERSION_COUNT=$(aws iam list-policy-versions --policy-arn "$POLICY_ARN" | jq -r ".Versions | length")
-    if [ "$VERSION_COUNT" -ge 4 ]; then
+    log "Policy $policy_name exists with ARN $policy_arn"
+    local version_count
+    version_count=$(aws iam list-policy-versions --policy-arn "$policy_arn" | jq -r ".Versions | length")
+    if [[ "$version_count" -ge 4 ]]; then
       local OLDEST_VERSION_ID
-      OLDEST_VERSION_ID=$(aws iam list-policy-versions --policy-arn "$POLICY_ARN" | jq -r '.Versions | sort_by(.CreateDate) | .[0] | .VersionId')
-      log "Policy $POLICY_NAME has $VERSION_COUNT versions, deleting oldest version $OLDEST_VERSION_ID ..."
-      aws iam delete-policy-version --policy-arn "$POLICY_ARN" --version-id "$OLDEST_VERSION_ID" > /dev/null
+      OLDEST_VERSION_ID=$(aws iam list-policy-versions --policy-arn "$policy_arn" | jq -r '.Versions | sort_by(.CreateDate) | .[0] | .VersionId')
+      log "Policy $policy_name has $version_count versions, deleting oldest version $OLDEST_VERSION_ID ..."
+      aws iam delete-policy-version --policy-arn "$policy_arn" --version-id "$OLDEST_VERSION_ID" > /dev/null
     fi
 
-    log "Updating policy $POLICY_NAME from $POLICY_FILE..."
-    aws iam create-policy-version --policy-arn "$POLICY_ARN" --policy-document "file://$POLICY_FILE" --set-as-default > /dev/null
+    log "Updating policy $policy_name from $policy_file..."
+    aws iam create-policy-version --policy-arn "$policy_arn" --policy-document "file://$policy_file" --set-as-default > /dev/null
   fi
+
+  return 0
 }
 
 createCMRole() {
-  local ROLE_NAME=$1
-  local SA_NAME=$2
-  local TRUST_TEMPLATE=$3
-  local FILE
-  FILE=$(mktemp)
-  trap "rm -f \"$FILE\"" EXIT
-  jq ".Statement[0].Principal.AWS |= \"arn:aws:iam::${AWS_ACCOUNT}:user/${SA_NAME}\"" $TRUST_TEMPLATE > "$FILE"
+  local role_name=$1
+  local sa_name=$2
+  local trust_template=$3
+  local file
+  file=$(mktemp)
+  trap "rm -f \"$file\"" EXIT
+  jq ".Statement[0].Principal.AWS |= \"arn:aws:iam::${AWS_ACCOUNT}:user/${sa_name}\"" $trust_template > "$file"
 
-  createRole "$ROLE_NAME" "$FILE"
-  rm -f "$FILE"
+  createRole "$role_name" "$file"
+  rm -f "$file"
+
+  return 0
 }
 
 createRole() {
-  local ROLE_NAME=$1
-  local TRUST_FILE=$2
+  local role_name=$1
+  local trust_file=$2
 
-  local ROLE_ARN
-  ROLE_ARN=$(aws iam get-role --role-name "$ROLE_NAME" --query 'Role.Arn' --output text 2>/dev/null || true)
+  local role_arn
+  role_arn=$(aws iam get-role --role-name "$role_name" --query 'Role.Arn' --output text 2>/dev/null || true)
 
-  if [ -z "$ROLE_ARN" ]; then
-    log "Role $ROLE_NAME does not exist, creating it now from $TRUST_FILE ..."
-    ROLE_ARN=$(aws iam create-role --role-name "$ROLE_NAME" --assume-role-policy-document "file://$TRUST_FILE" --query 'Role.Arn' --output text)
-    log "Role $ROLE_NAME is created with ARN $ROLE_ARN"
+  if [[ -z "$role_arn" ]]; then
+    log "Role $role_name does not exist, creating it now from $trust_file ..."
+    role_arn=$(aws iam create-role --role-name "$role_name" --assume-role-policy-document "file://$trust_file" --query 'Role.Arn' --output text)
+    log "Role $role_name is created with ARN $role_arn"
   else
-    log "Role $ROLE_NAME exists with ARN $ROLE_ARN, updating it now from $TRUST_FILE..."
-    aws iam update-assume-role-policy --role-name "$ROLE_NAME" --policy-document "file://$TRUST_FILE" > /dev/null
+    log "Role $role_name exists with ARN $role_arn, updating it now from $trust_file..."
+    aws iam update-assume-role-policy --role-name "$role_name" --policy-document "file://$trust_file" > /dev/null
   fi
+
+  return 0
 }
 
 attachPolicyToUser() {
-  local USER_NAME=$1
-  local POLICY_NAME=$2
-  local POLICY_ARN="arn:aws:iam::${AWS_ACCOUNT}:policy/${POLICY_NAME}"
+  local user_name=$1
+  local policy_name=$2
+  local policy_arn="arn:aws:iam::${AWS_ACCOUNT}:policy/${policy_name}"
 
-  log "Attaching policy $POLICY_ARN to user $USER_NAME"
+  log "Attaching policy $policy_arn to user $user_name"
 
-  aws iam attach-user-policy --user-name "$USER_NAME" --policy-arn "$POLICY_ARN" > /dev/null
+  aws iam attach-user-policy --user-name "$user_name" --policy-arn "$policy_arn" > /dev/null
+
+  return 0
 }
 
 attachPolicyToRole() {
-  local ROLE_NAME=$1
-  local POLICY_NAME=$2
-  local POLICY_ARN
-  case "$POLICY_NAME" in
-  (arn:*) POLICY_ARN="$POLICY_NAME" ;; # arm already given
-  (*) POLICY_ARN="arn:aws:iam::${AWS_ACCOUNT}:policy/${POLICY_NAME}" ;; # policy name given, create arm out of it
+  local role_name=$1
+  local policy_name=$2
+  local policy_arn
+  case "$policy_name" in
+  (arn:*) policy_arn="$policy_name" ;; # arm already given
+  (*) policy_arn="arn:aws:iam::${AWS_ACCOUNT}:policy/${policy_name}" ;; # policy name given, create arm out of it
   esac
 
-  log "Attaching policy $POLICY_ARN to role $ROLE_NAME"
+  log "Attaching policy $policy_arn to role $role_name"
 
-  aws iam attach-role-policy --role-name "$ROLE_NAME" --policy-arn "$POLICY_ARN" > /dev/null
+  aws iam attach-role-policy --role-name "$role_name" --policy-arn "$policy_arn" > /dev/null
+
+  return 0
 }
 
 

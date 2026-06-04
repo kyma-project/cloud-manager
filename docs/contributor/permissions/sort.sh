@@ -14,11 +14,13 @@ sort_azure() {
     .notDataActions |= sort
   ' "$file" > "$tmp"
   mv "$tmp" "$file"
+  return 0
 }
 
 sort_gcp() {
   local file="$1"
   yq -i '.includedPermissions |= sort' "$file"
+  return 0
 }
 
 sort_aws() {
@@ -31,6 +33,7 @@ sort_aws() {
     )
   ' "$file" > "$tmp"
   mv "$tmp" "$file"
+  return 0
 }
 
 sort_azure "$SCRIPT_DIR/azure_default.json"

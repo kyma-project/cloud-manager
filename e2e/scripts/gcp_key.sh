@@ -16,7 +16,9 @@ usage() {
   echo "  list - list SA keys"
   echo "  create - create new key"
   echo "  delete - delete oldest key"
-  exit $1
+  local exit_code
+  exit_code=${1:-0}
+  exit $exit_code
 }
 
 listKeys() {
@@ -24,43 +26,53 @@ listKeys() {
   trap "rm -f \"$KEYS_FILE\"" EXIT
   gcloud iam service-accounts keys list --iam-account="$SA" --project "$GCP_PROJECT" --format=json --filter='keyType: USER_MANAGED' \
     | jq -r "sort_by(.validAfterTime)" > $KEYS_FILE
+
+  return 0
 }
 
 create() {
   log "Creating new key for SA $SA"
-  local FN=$(mktemp)
-  trap "rm -f \"$FN\"" EXIT
-  gcloud iam service-accounts keys create "$FN" --iam-account="$SA" --project $GCP_PROJECT
+  local fn
+  fn=$(mktemp)
+  trap "rm -f \"$fn\"" EXIT
+  gcloud iam service-accounts keys create "$fn" --iam-account="$SA" --project $GCP_PROJECT
 
   echo ""
-  cat $FN
+  cat $fn
 
-  local VAL=$(cat "$FN")
-  putCredentialKeyVal "serviceaccount.json" "$VAL"
-  if [ "$SA_TYPE" = "default" ]; then
+  local val
+  val=$(cat "$fn")
+  putCredentialKeyVal "serviceaccount.json" "$val"
+  if [[ "$SA_TYPE" = "default" ]]; then
     saveCredentialsToGarden "$GCP_GARDEN_DEFAULT_SECRET"
   else
     saveCredentialsToGarden "$GCP_GARDEN_PEERING_SECRET"
   fi
 
-  rm -r "$FN"
+  rm -r "$fn"
+
+  return 0
 }
 
 
 delete() {
   log "Deleting oldest key of SA $SA"
   listKeys
-  local ID=$(cat $KEYS_FILE | jq -r "sort_by(.validAfterTime) | .[0] | .name")
-  ID=$(basename "$ID")
-  log "Oldest key id is $ID"
-  gcloud iam service-accounts keys delete $ID --iam-account="$SA" --project "$GCP_PROJECT"
-  log "The key with id $ID is deleted"
+  local id
+  id=$(cat $KEYS_FILE | jq -r "sort_by(.validAfterTime) | .[0] | .name")
+  id=$(basename "$id")
+  log "Oldest key id is $id"
+  gcloud iam service-accounts keys delete $id --iam-account="$SA" --project "$GCP_PROJECT"
+  log "The key with id $id is deleted"
+
+  return 0
 }
 
 list() {
   log "Listing keys of SA $SA"
   listKeys
   cat $KEYS_FILE
+  return 0
 }
 
 SA_TYPE=$1

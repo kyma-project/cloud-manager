@@ -14,7 +14,9 @@ usage() {
   echo "  list - list SA keys"
   echo "  create - create new key"
   echo "  delete - delete oldest key"
-  exit $1
+  local exit_code
+  exit_code=${1:-0}
+  exit $exit_code
 }
 
 listKeys() {
@@ -22,48 +24,56 @@ listKeys() {
   trap "rm -f \"$KEYS_FILE\"" EXIT
   aws iam list-access-keys --user-name "$SA" \
     | jq -r ".AccessKeyMetadata | sort_by(.CreateDate)" > $KEYS_FILE
+
+  return 0
 }
 
 create() {
   log "Creating new key for SA $SA"
-  local FN
-  FN=$(mktemp)
-  trap "rm -f \"$FN\"" EXIT
+  local fn
+  fn=$(mktemp)
+  trap "rm -f \"$fn\"" EXIT
 
-  aws iam create-access-key --user-name "$SA" | tee "$FN"
+  aws iam create-access-key --user-name "$SA" | tee "$fn"
 
-  local KEY
-  KEY=$(jq -r '.AccessKey.AccessKeyId' "$FN" | tr -d '\n')
-  local SECRET
-  SECRET=$(jq -r '.AccessKey.SecretAccessKey' "$FN" | tr -d '\n')
-  putCredentialKeyVal "accessKeyID" "$KEY"
-  putCredentialKeyVal "secretAccessKey" "$SECRET"
-  if [ "$SA_TYPE" = "default" ]; then
+  local key
+  key=$(jq -r '.AccessKey.AccessKeyId' "$fn" | tr -d '\n')
+  local secret
+  secret=$(jq -r '.AccessKey.SecretAccessKey' "$fn" | tr -d '\n')
+  putCredentialKeyVal "accessKeyID" "$key"
+  putCredentialKeyVal "secretAccessKey" "$secret"
+  if [[ "$SA_TYPE" = "default" ]]; then
     saveCredentialsToGarden "$AWS_GARDEN_DEFAULT_SECRET"
   else
     saveCredentialsToGarden "$AWS_GARDEN_PEERING_SECRET"
   fi
+
+  return 0
 }
 
 
 delete() {
   log "Deleting oldest key of SA $SA"
   listKeys
-  local ID
-  ID=$(cat $KEYS_FILE | jq -r "sort_by(.CreateDate) | .[0] | .AccessKeyId")
-  log "Oldest key id is $ID"
-  if [ "$ID" == "null" ]; then
+  local id
+  id=$(cat "$KEYS_FILE" | jq -r "sort_by(.CreateDate) | .[0] | .AccessKeyId")
+  log "Oldest key id is $id"
+  if [[ "$id" == "null" ]]; then
     log "The SA $SA has no keys that can be deleted"
     exit 1
   fi
-  aws iam delete-access-key --user-name "$SA" --access-key-id "$ID"
-  log "The key with id $ID is deleted"
+  aws iam delete-access-key --user-name "$SA" --access-key-id "$id"
+  log "The key with id $id is deleted"
+
+  return 0
 }
 
 list() {
   log "Listing keys of SA $SA"
   listKeys
   cat $KEYS_FILE
+
+  return 0
 }
 
 SA_TYPE=$1
