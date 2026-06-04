@@ -47,8 +47,8 @@ func TestTierToSpec_AllEnumValuesCovered(t *testing.T) {
 	}
 }
 
-// TestTierToSpec_FamilyInvariants asserts the structural rules described in
-// docs/user/resources/04-40-32-azure-managed-redis.md:
+// TestTierToSpec_FamilyInvariants asserts the structural rules of the AMR
+// tier table:
 //   - S* are non-HA, EnterpriseCluster, Balanced family.
 //   - P* are HA,     EnterpriseCluster, ComputeOptimized family.
 //   - C* are HA,     OSSCluster,        ComputeOptimized family.
