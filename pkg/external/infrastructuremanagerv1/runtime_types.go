@@ -186,15 +186,24 @@ type Kubernetes struct {
 
 // OIDCConfig contains configuration settings for the OIDC provider.
 // Note: Descriptions were taken from the Kubernetes documentation.
+// Fields were inlined from gardener.OIDCConfig which was removed in gardener v1.143.0.
 type OIDCConfig struct {
-	gardener.OIDCConfig `json:",omitempty"`
-	JWKS                []byte `json:"jwks,omitempty"`
+	CABundle       *string           `json:"caBundle,omitempty"`
+	ClientID       *string           `json:"clientID,omitempty"`
+	GroupsClaim    *string           `json:"groupsClaim,omitempty"`
+	GroupsPrefix   *string           `json:"groupsPrefix,omitempty"`
+	IssuerURL      *string           `json:"issuerURL,omitempty"`
+	RequiredClaims map[string]string `json:"requiredClaims,omitempty"`
+	SigningAlgs     []string          `json:"signingAlgs,omitempty"`
+	UsernameClaim  *string           `json:"usernameClaim,omitempty"`
+	UsernamePrefix *string           `json:"usernamePrefix,omitempty"`
+	JWKS           []byte            `json:"jwks,omitempty"`
 }
 
 type APIServer struct {
-	OidcConfig           gardener.OIDCConfig `json:"oidcConfig,omitempty"`
-	AdditionalOidcConfig *[]OIDCConfig       `json:"additionalOidcConfig,omitempty"`
-	ACL                  *ACL                `json:"acl,omitempty"`
+	OidcConfig           OIDCConfig  `json:"oidcConfig,omitempty"`
+	AdditionalOidcConfig *[]OIDCConfig `json:"additionalOidcConfig,omitempty"`
+	ACL                  *ACL        `json:"acl,omitempty"`
 }
 type ACL struct {
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
