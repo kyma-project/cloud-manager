@@ -76,3 +76,9 @@ const (
 const (
 	ReasonSubnetNotFound = "SubnetNotFound"
 )
+
+const (
+	ReasonProviderError           = "ProviderError"
+	ReasonStatementTypeRestricted = "StatementTypeRestricted"
+	ReasonReady                   = "Ready"
+)
