@@ -194,16 +194,16 @@ type OIDCConfig struct {
 	GroupsPrefix   *string           `json:"groupsPrefix,omitempty"`
 	IssuerURL      *string           `json:"issuerURL,omitempty"`
 	RequiredClaims map[string]string `json:"requiredClaims,omitempty"`
-	SigningAlgs     []string          `json:"signingAlgs,omitempty"`
+	SigningAlgs    []string          `json:"signingAlgs,omitempty"`
 	UsernameClaim  *string           `json:"usernameClaim,omitempty"`
 	UsernamePrefix *string           `json:"usernamePrefix,omitempty"`
 	JWKS           []byte            `json:"jwks,omitempty"`
 }
 
 type APIServer struct {
-	OidcConfig           OIDCConfig  `json:"oidcConfig,omitempty"`
+	OidcConfig           OIDCConfig    `json:"oidcConfig,omitempty"`
 	AdditionalOidcConfig *[]OIDCConfig `json:"additionalOidcConfig,omitempty"`
-	ACL                  *ACL        `json:"acl,omitempty"`
+	ACL                  *ACL          `json:"acl,omitempty"`
 }
 type ACL struct {
 	AllowedCIDRs []string `json:"allowedCIDRs,omitempty"`
