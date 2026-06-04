@@ -62,7 +62,7 @@ func (p PlanSpec) extensionErrors(resp armsecurity.PricingsClientUpdateResponse)
 		if ext.Name == nil || ext.OperationStatus == nil || ext.OperationStatus.Code == nil {
 			continue
 		}
-		if *ext.OperationStatus.Code == armsecurity.CodeFailed {
+		if *ext.OperationStatus.Code == "Failed" {
 			msg := *ext.Name
 			if ext.OperationStatus.Message != nil {
 				msg += ": " + *ext.OperationStatus.Message
