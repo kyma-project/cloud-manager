@@ -1,0 +1,11 @@
+resource:
+    kind: AwsCertificate
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: awscertificates
+name: AWS Certificates
+scope: cluster
+category: Security
+icon: locked
+description: >-
+    AWS Certificate Manager (ACM) certificates for secure communications

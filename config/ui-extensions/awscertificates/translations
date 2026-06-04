@@ -1,0 +1,8 @@
+en:
+  metadata.name: Name
+  spec.secretRef: Secret Reference
+  status.state: State
+  status.arn: ARN
+  status.expirationDate: Expiration Date
+  configuration: Configuration
+  status: Status
