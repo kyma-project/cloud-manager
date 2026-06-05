@@ -30,6 +30,7 @@ func loadCertificate(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	state.certificateDetail = detail
+	state.certificateArn = *detail.CertificateArn
 	logger.Info("Certificate loaded from ACM successfully")
 
 	return nil, ctx

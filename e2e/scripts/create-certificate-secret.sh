@@ -12,8 +12,7 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CERT_DIR="${SCRIPT_DIR}/../tmp/certs"
+CERT_DIR="./tmp/certs"
 
 SECRET_NAME="e2e-test-certificate"
 NAMESPACE="default"
@@ -37,13 +36,14 @@ if [ ! -f "${CERT_DIR}/ca.crt" ]; then
   exit 1
 fi
 
-echo "Creating Kubernetes Secret '${SECRET_NAME}' in namespace '${NAMESPACE}'..."
+echo "Creating/Updating Kubernetes Secret '${SECRET_NAME}' in namespace '${NAMESPACE}'..."
 
-# Create TLS Secret from certificate files
+# Create/Update TLS Secret from certificate files
 kubectl create secret tls "${SECRET_NAME}" \
   --cert="${CERT_DIR}/tls.crt" \
   --key="${CERT_DIR}/tls.key" \
-  --namespace="${NAMESPACE}"
+  --namespace="${NAMESPACE}" \
+  --dry-run=client -o yaml | kubectl apply -f -
 
 echo "Adding CA certificate to Secret..."
 
@@ -63,7 +63,7 @@ kubectl patch secret "${SECRET_NAME}" \
   -p "{\"data\":{\"ca.crt\":\"${CA_CERT_BASE64}\"}}"
 
 echo ""
-echo "✓ Secret '${SECRET_NAME}' created successfully in namespace '${NAMESPACE}'"
+echo "✓ Secret '${SECRET_NAME}' created/updated successfully in namespace '${NAMESPACE}'"
 echo ""
 echo "Secret contents:"
 kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o jsonpath='{.data}' | jq 'keys'
