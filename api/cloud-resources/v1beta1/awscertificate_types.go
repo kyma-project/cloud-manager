@@ -125,6 +125,16 @@ func (in *AwsCertificate) SetStatusProcessing() {
 	})
 }
 
+func (in *AwsCertificate) SetStatusDeleting() {
+	in.Status.State = StateDeleting
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionUnknown,
+		ObservedGeneration: in.Status.ObservedGeneration,
+		Reason:             v1beta1.ReasonDeleting,
+		Message:            v1beta1.ReasonDeleting,
+	})
+}
 func (in *AwsCertificate) Conditions() *[]metav1.Condition { return &in.Status.Conditions }
 
 func (in *AwsCertificate) GetObjectMeta() *metav1.ObjectMeta { return &in.ObjectMeta }

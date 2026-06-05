@@ -29,12 +29,13 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 	input := &acm.ImportCertificateInput{
 		Certificate: state.certificateData.Certificate,
 		PrivateKey:  state.certificateData.PrivateKey,
-		Tags:        convertTags(cert, state.Scope()),
 	}
 
 	// Add certificate ARN if updating existing certificate
 	if cert.Status.Arn != "" {
 		input.CertificateArn = ptr.To(cert.Status.Arn)
+	} else {
+		input.Tags = convertTags(cert, state.Scope())
 	}
 
 	// Add certificate chain if provided
