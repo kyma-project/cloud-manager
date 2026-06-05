@@ -11,8 +11,7 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CERT_DIR="${SCRIPT_DIR}/../tmp/certs"
+CERT_DIR="./tmp/certs"
 
 # Configuration
 CERT_DAYS=7300  # 20 years validity

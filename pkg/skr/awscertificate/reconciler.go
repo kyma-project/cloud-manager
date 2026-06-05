@@ -83,11 +83,13 @@ func (r *reconciler) newAction() composed.Action {
 				statusInitial,
 				loadCertificate,
 				compareCertificateData,
+				statusProcessing,
 				importCertificate,
 				updateStatus,
 			),
 			composed.ComposeActions(
 				"awsCertificate-delete",
+				statusDeleting,
 				deleteCertificate,
 				actions.RemoveCommonFinalizer(),
 				composed.StopAndForgetAction,
