@@ -70,6 +70,8 @@ func (r *managedRedisReconciler) newAction() composed.Action {
 				loadDatabase,
 				loadPrivateEndPoint,
 				loadPrivateDnsZoneGroup,
+				loadPrivateDnsZone,
+				loadVirtualNetworkLink,
 				composed.If(composed.NotMarkedForDeletionPredicate,
 					composed.ComposeActionsNoName(
 						createManagedRedis,
@@ -79,6 +81,10 @@ func (r *managedRedisReconciler) newAction() composed.Action {
 						waitDatabaseAvailable,
 						createPrivateEndPoint,
 						waitPrivateEndPointAvailable,
+						createPrivateDnsZone,
+						waitPrivateDnsZoneAvailable,
+						createVirtualNetworkLink,
+						waitVirtualNetworkLinkAvailable,
 						createPrivateDnsZoneGroup,
 						updateStatus,
 						composed.StopAndForgetAction,
@@ -98,7 +104,6 @@ func (r *managedRedisReconciler) newAction() composed.Action {
 						composed.StopAndForgetAction,
 					),
 				),
-				composed.StopAndForgetAction,
 			)(ctx, newState(st.(kcpcommonaction.State)))
 		},
 	)

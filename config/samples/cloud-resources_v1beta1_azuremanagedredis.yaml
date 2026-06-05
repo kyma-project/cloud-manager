@@ -1,0 +1,12 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AzureManagedRedis
+metadata:
+  name: my-managed-redis
+  namespace: default
+spec:
+  # Tier letter encodes SKU + HA + clustering policy.
+  # See the AzureManagedRedis user docs for the full tier table.
+  #   S1-S5 → Balanced, non-HA, EnterpriseCluster (dev/test)
+  #   P1-P5 → ComputeOptimized, HA, EnterpriseCluster (production HA)
+  #   C3-C7 → ComputeOptimized, HA, OSSCluster (production HA + sharding)
+  redisTier: P1

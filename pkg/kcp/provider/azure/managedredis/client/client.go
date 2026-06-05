@@ -5,6 +5,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 )
@@ -36,6 +37,8 @@ type Client interface {
 	ManagedRedisClient
 	azureclient.PrivateEndPointsClient
 	azureclient.PrivateDnsZoneGroupClient
+	azureclient.PrivateDnsZoneClient
+	azureclient.VirtualNetworkLinkClient
 }
 
 // NewClientProvider returns a factory that creates a Client from Azure credentials.
@@ -66,10 +69,17 @@ func NewClientProvider() azureclient.ClientProvider[Client] {
 			return nil, err
 		}
 
+		privateDnsClientFactory, err := armprivatedns.NewClientFactory(subscriptionId, cred, azureclient.NewClientOptionsBuilder().Build())
+		if err != nil {
+			return nil, err
+		}
+
 		return newClient(
 			newManagedRedisClient(redisEnterpriseClient, databasesClient),
 			azureclient.NewPrivateEndPointClient(privateEndPointsClient),
 			azureclient.NewPrivateDnsZoneGroupClient(privateDnsZoneGroupClient),
+			azureclient.NewPrivateDnsZoneClient(privateDnsClientFactory.NewPrivateZonesClient()),
+			azureclient.NewVirtualNetworkLinkClient(privateDnsClientFactory.NewVirtualNetworkLinksClient()),
 		), nil
 	}
 }
@@ -154,12 +164,22 @@ type compositeClient struct {
 	ManagedRedisClient
 	azureclient.PrivateEndPointsClient
 	azureclient.PrivateDnsZoneGroupClient
+	azureclient.PrivateDnsZoneClient
+	azureclient.VirtualNetworkLinkClient
 }
 
-func newClient(managedRedis ManagedRedisClient, peClient azureclient.PrivateEndPointsClient, dnsClient azureclient.PrivateDnsZoneGroupClient) Client {
+func newClient(
+	managedRedis ManagedRedisClient,
+	peClient azureclient.PrivateEndPointsClient,
+	dnsGroupClient azureclient.PrivateDnsZoneGroupClient,
+	dnsZoneClient azureclient.PrivateDnsZoneClient,
+	vnetLinkClient azureclient.VirtualNetworkLinkClient,
+) Client {
 	return &compositeClient{
 		ManagedRedisClient:        managedRedis,
 		PrivateEndPointsClient:    peClient,
-		PrivateDnsZoneGroupClient: dnsClient,
+		PrivateDnsZoneGroupClient: dnsGroupClient,
+		PrivateDnsZoneClient:      dnsZoneClient,
+		VirtualNetworkLinkClient:  vnetLinkClient,
 	}
 }

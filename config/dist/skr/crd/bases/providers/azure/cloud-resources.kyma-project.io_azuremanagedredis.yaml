@@ -4,27 +4,34 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.1
-  name: azuremanagedredisclusters.cloud-resources.kyma-project.io
+    cloud-resources.kyma-project.io/version: v0.0.2
+  name: azuremanagedredis.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
   names:
     categories:
       - kyma-cloud-manager
-    kind: AzureManagedRedisCluster
-    listKind: AzureManagedRedisClusterList
-    plural: azuremanagedredisclusters
-    singular: azuremanagedrediscluster
+    kind: AzureManagedRedis
+    listKind: AzureManagedRedisList
+    plural: azuremanagedredis
+    singular: azuremanagedredis
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
+        - jsonPath: .spec.redisTier
+          name: Tier
+          type: string
         - jsonPath: .status.state
           name: State
           type: string
       name: v1beta1
       schema:
         openAPIV3Schema:
-          description: AzureManagedRedisCluster is the Schema for the AzureManagedRedisClusters API.
+          description: |-
+            AzureManagedRedis is the Schema for the AzureManagedRedis API.
+
+            Beta: this resource is available only per request for SAP-internal
+            teams and may change in incompatible ways before GA.
           properties:
             apiVersion:
               description: |-
@@ -44,7 +51,7 @@ spec:
             metadata:
               type: object
             spec:
-              description: AzureManagedRedisClusterSpec defines the desired state of AzureManagedRedisCluster.
+              description: AzureManagedRedisSpec defines the desired state of AzureManagedRedis.
               properties:
                 authSecret:
                   description: AuthSecret customises the name and labels of the generated connection secret.
@@ -72,7 +79,9 @@ spec:
                           rule: self == '' || oldSelf == '' || self == oldSelf
                   type: object
                 ipRange:
-                  description: IpRange references the IpRange resource used for private connectivity.
+                  description: |-
+                    IpRange references the IpRange resource used for private connectivity.
+                    If omitted, the SKR controller selects the default IpRange.
                   properties:
                     name:
                       type: string
@@ -80,8 +89,21 @@ spec:
                     - name
                   type: object
                 redisTier:
-                  description: RedisTier defines the Kyma service tier. C tiers are HA clustered (OSSCluster mode).
+                  description: |-
+                    RedisTier defines the Kyma service tier. The letter encodes the workload class:
+                    S = single-node dev, P = HA production, C = clustered (sharded) HA.
+                    All tiers map to a single underlying Azure Managed Redis cluster.
                   enum:
+                    - S1
+                    - S2
+                    - S3
+                    - S4
+                    - S5
+                    - P1
+                    - P2
+                    - P3
+                    - P4
+                    - P5
                     - C3
                     - C4
                     - C5
@@ -95,7 +117,7 @@ spec:
                 - redisTier
               type: object
             status:
-              description: AzureManagedRedisClusterStatus defines the observed state of AzureManagedRedisCluster.
+              description: AzureManagedRedisStatus defines the observed state of AzureManagedRedis.
               properties:
                 conditions:
                   description: List of status conditions
@@ -161,13 +183,6 @@ spec:
                 observedGeneration:
                   format: int64
                   type: integer
-                port:
-                  description: Port is the Redis client port.
-                  format: int32
-                  type: integer
-                primaryEndpoint:
-                  description: PrimaryEndpoint is the connection hostname reported after provisioning.
-                  type: string
                 state:
                   type: string
               type: object

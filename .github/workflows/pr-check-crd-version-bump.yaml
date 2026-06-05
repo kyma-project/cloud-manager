@@ -60,6 +60,13 @@ jobs:
             echo "---"
             echo "Checking: $CRD_BASENAME"
 
+            # If the CRD file was deleted at HEAD (e.g. consolidated into another
+            # CRD), there's no version annotation to bump. Skip.
+            if ! git cat-file -e "${HEAD_REF}:${CRD_FILE}" 2>/dev/null; then
+              echo "  CRD file deleted at HEAD - no version bump required. OK."
+              continue
+            fi
+
             # Get the file content at base and head, stripping the version annotation
             # to determine if there's a real (substantive) change
             BASE_CONTENT=$(git show "${BASE_REF}:${CRD_FILE}" 2>/dev/null | \
