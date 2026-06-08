@@ -76,7 +76,7 @@ A test plan is a document outlining the objectives, resources, and procedures fo
 
 | Name                                                             | Description                              |
 |------------------------------------------------------------------|------------------------------------------|
-| [e2e-tests](https://github.com/kyma-project/cloud-manager-tests) | End to end BDD test using Gherkin syntax |
+| [e2e-tests](https://github.com/kyma-project/cloud-manager/tree/main/e2e) | End to end BDD test using Gherkin syntax |
 
 
 ### Appendix A. Quality Evidence Registry
