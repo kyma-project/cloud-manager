@@ -13,7 +13,7 @@ require (
 	cloud.google.com/go/resourcemanager v1.15.0
 	cloud.google.com/go/securitycentermanagement v1.6.0
 	github.com/3th1nk/cidr v0.3.0
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dnsresolver/armdnsresolver v1.3.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5 v5.2.0
