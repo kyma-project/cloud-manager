@@ -144,8 +144,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.19.22 h1:SHfH6wyPsEgG7fVsi5rQxWEt7tu
 github.com/aws/aws-sdk-go-v2/credentials v1.19.22/go.mod h1:54nO8lKD4aQPOntM/VTWjnR+DYzTwx0YkSMZMhAgewQ=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.28 h1:b+kcDejJrXc30zU/w8Tc9klISwaO5wh+6T0sMBdDoHM=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.28/go.mod h1:LnI62O9GnSv6GcuLXxOYqlq0C8EmxMcgnF6m7LdYuOY=
-github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.1.21 h1:FwkMh0ChhW75LhLSZKAD6RIM3Qyvf4vVtuX5w2fQp0g=
-github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.1.21/go.mod h1:mu725LPEVyuzXIIkALC+OGjErZ7fuFKSWwsvvgK/eNg=
+github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.1.22 h1:J8KSg6X2NelTzsldlft6voT2Vd4IVX2wbbAr9sLi35Q=
+github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.1.22/go.mod h1:EODlN3yrJdOOZMaAd98SrnG/ATa/AkbBBl+1/BkpwMM=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.28 h1:Xf2j7NdVcUKomlZ4iihOP4AZ3Fzlr8h4yKpXeP+OFPg=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.28/go.mod h1:O8cDo1dW63jU7ki//kRe1z+tLGcpnD1jrouitsQddDw=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.28 h1:KqIfN9kpkKkcBqBbNpNGTIrXO6ExTUvFKvXkC+YAzVo=
@@ -667,8 +667,8 @@ github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/thejerf/slogassert v0.3.4 h1:VoTsXixRbXMrRSSxDjYTiEDCM4VWbsYPW5rB/hX24kM=
 github.com/thejerf/slogassert v0.3.4/go.mod h1:0zn9ISLVKo1aPMTqcGfG1o6dWwt+Rk574GlUxHD4rs8=
-github.com/thomaspoignant/go-feature-flag v1.53.0 h1:4SAMkbfRCX1lmgGNgHVegZUtpEf+nHGLVV5FvsOI7pY=
-github.com/thomaspoignant/go-feature-flag v1.53.0/go.mod h1:jxdic8g6G8zg/CL2FknOmupfilTj84Akx0MY1Cr6tF0=
+github.com/thomaspoignant/go-feature-flag v1.54.0 h1:lKk2DATVEcGHFYK5bl8+e1NMfxnd1X57J46PsQ2hHZ4=
+github.com/thomaspoignant/go-feature-flag v1.54.0/go.mod h1:G+0ViLmfPUttWuCjLY3rhbmWOFZuU9C4pg11djJyd0M=
 github.com/thomaspoignant/go-feature-flag/modules/core v0.7.1 h1:KtX9Af4GYv7yzAbegZAyWeg1M7RXQZ+I3n39oWqIedU=
 github.com/thomaspoignant/go-feature-flag/modules/core v0.7.1/go.mod h1:K+lEVMDdKaXAyIfN9DeO0CtejpCqPS4F4RRCNL0ZO7U=
 github.com/tidwall/gjson v1.14.2/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
