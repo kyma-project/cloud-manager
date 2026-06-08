@@ -84,15 +84,13 @@ func NewRuntimeBuilder(cpr CloudProfileRegistry, config *e2econfig.ConfigType) *
 						KubeAPIServer: infrastructuremanagerv1.APIServer{
 							AdditionalOidcConfig: &[]infrastructuremanagerv1.OIDCConfig{
 								{
-									OIDCConfig: gardenertypes.OIDCConfig{
-										ClientID:       new(config.OidcClientId),
-										IssuerURL:      new(config.OidcIssuerUrl),
-										GroupsClaim:    new("groups"),
-										GroupsPrefix:   new("-"),
-										UsernameClaim:  new("sub"),
-										UsernamePrefix: new("-"),
-										SigningAlgs:    []string{"RS256"},
-									},
+									ClientID:       new(config.OidcClientId),
+									IssuerURL:      new(config.OidcIssuerUrl),
+									GroupsClaim:    new("groups"),
+									GroupsPrefix:   new("-"),
+									UsernameClaim:  new("sub"),
+									UsernamePrefix: new("-"),
+									SigningAlgs:    []string{"RS256"},
 								},
 							},
 						},
@@ -252,15 +250,13 @@ func (b *RuntimeBuilder) WithOidc(clientId, issuerUrl string) *RuntimeBuilder {
 	data = append(
 		data,
 		infrastructuremanagerv1.OIDCConfig{
-			OIDCConfig: gardenertypes.OIDCConfig{
-				ClientID:       new(clientId),
-				IssuerURL:      new(issuerUrl),
-				GroupsClaim:    new("groups"),
-				GroupsPrefix:   new("-"),
-				UsernameClaim:  new("sub"),
-				UsernamePrefix: new("-"),
-				SigningAlgs:    []string{"RS256"},
-			},
+			ClientID:       new(clientId),
+			IssuerURL:      new(issuerUrl),
+			GroupsClaim:    new("groups"),
+			GroupsPrefix:   new("-"),
+			UsernameClaim:  new("sub"),
+			UsernamePrefix: new("-"),
+			SigningAlgs:    []string{"RS256"},
 		},
 	)
 	b.Obj.Spec.Shoot.Kubernetes.KubeAPIServer.AdditionalOidcConfig = &data
