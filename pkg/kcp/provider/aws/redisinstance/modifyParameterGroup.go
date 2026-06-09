@@ -4,9 +4,11 @@ import (
 	"context"
 
 	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func modifyParameterGroup(
@@ -42,7 +44,24 @@ func modifyParameterGroup(
 		logger.Info("Modifying cache parameters")
 		err := state.awsClient.ModifyElastiCacheParameterGroup(ctx, name, ToParametersSlice(forUpdateParameters))
 		if err != nil {
-			return awsmeta.LogErrorAndReturn(err, "Error modifying cache parameters", ctx)
+			logger.Error(err, "Error modifying cache parameters")
+			meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Status:  "True",
+				Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
+				Message: "Failed to modify cache parameters",
+			})
+			redisInstance.Status.State = cloudcontrolv1beta1.StateError
+			updateErr := state.UpdateObjStatus(ctx)
+			if updateErr != nil {
+				return composed.LogErrorAndReturn(updateErr,
+					"Error updating RedisInstance status due failed cache parameters modification",
+					composed.StopWithRequeueDelay(util.Timing.T10000ms()),
+					ctx,
+				)
+			}
+
+			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 		}
 
 		return composed.StopWithRequeueDelay(5 * util.Timing.T1000ms()), nil
