@@ -4,7 +4,6 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common"
 	skrazuremanagedredis "github.com/kyma-project/cloud-manager/pkg/skr/azuremanagedredis"
 	skriprange "github.com/kyma-project/cloud-manager/pkg/skr/iprange"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -95,8 +94,8 @@ var _ = Describe("Feature: SKR AzureManagedRedis", func() {
 			Expect(kcpAMR.Spec.RemoteRef.Namespace).To(Equal(amr.Namespace))
 			Expect(kcpAMR.Spec.RemoteRef.Name).To(Equal(amr.Name))
 
-			By("And has spec.vpcNetwork.name = KymaCommonName(kymaRef.Name)")
-			Expect(kcpAMR.Spec.VpcNetwork.Name).To(Equal(common.KcpNetworkKymaCommonName(skrKymaRef.Name)))
+			By("And has spec.vpcNetwork.name = kymaRef.Name")
+			Expect(kcpAMR.Spec.VpcNetwork.Name).To(Equal(skrKymaRef.Name))
 
 			By("And has spec.ipRange.name = SKR IpRange status.id")
 			Expect(kcpAMR.Spec.IpRange.Name).To(Equal(skrIpRangeId))
