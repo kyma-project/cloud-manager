@@ -23,6 +23,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -136,8 +137,8 @@ var _ = Describe("AwsCertificate Controller", func() {
 				}
 			}
 
-			// Verify Name tag
-			Expect(tagMap).To(HaveKeyWithValue("Name", objName))
+			// Verify cloud-manager name tag
+			Expect(tagMap).To(HaveKeyWithValue(common.TagCloudManagerName, objName))
 
 			// Verify ManagedBy tag
 			Expect(tagMap).To(HaveKeyWithValue("kyma-project.io/managed-by", "cloud-manager"))
