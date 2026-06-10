@@ -12,28 +12,23 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 	cert := state.ObjAsAwsCertificate()
 
-	if state.certificateDetail == nil {
-		return composed.NewStatusPatcherComposed(cert).
-			MutateStatus(func(c *cloudresourcesv1beta1.AwsCertificate) {
-				// Update ARN from state
-				c.Status.Arn = state.certificateArn
-			}).
-			OnStatusChanged(composed.Log("AwsCertificate ARN updated, requeing")).
-			OnSuccess(composed.Requeue).
-			Run(ctx, state.Cluster().K8sClient())
-	}
-
 	return composed.NewStatusPatcherComposed(cert).
 		MutateStatus(func(c *cloudresourcesv1beta1.AwsCertificate) {
-			// Update expiration date from certificate detail
-			if state.certificateDetail.NotAfter != nil {
-				c.Status.ExpirationDate = &metav1.Time{
-					Time: *state.certificateDetail.NotAfter,
-				}
+			// ALWAYS save ARN - set by loadCertificate or importCertificate
+			if state.certificateArn != "" {
+				c.Status.Arn = state.certificateArn
 			}
-			// Set Ready status (certificate detail is always loaded by importCertificate)
-			c.SetStatusReady()
+
+			// Conditional: Update expiration and ready condition only when we have detail
+			if state.certificateDetail != nil {
+				if state.certificateDetail.NotAfter != nil {
+					c.Status.ExpirationDate = &metav1.Time{
+						Time: *state.certificateDetail.NotAfter,
+					}
+				}
+				c.SetStatusReady()
+			}
 		}).
-		OnStatusChanged(composed.Log("AwsCertificate is Ready")).
+		OnStatusChanged(composed.Log("AwsCertificate status updated")).
 		Run(ctx, state.Cluster().K8sClient())
 }

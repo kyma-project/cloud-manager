@@ -13,6 +13,8 @@ type Client interface {
 	DescribeCertificate(ctx context.Context, arn string) (*acmtypes.CertificateDetail, error)
 	GetCertificate(ctx context.Context, arn string) (certificate string, certificateChain string, err error)
 	DeleteCertificate(ctx context.Context, arn string) error
+	SearchCertificates(ctx context.Context, input *acm.SearchCertificatesInput) ([]acmtypes.CertificateSearchResult, error)
+	ListTagsForCertificate(ctx context.Context, arn string) ([]acmtypes.Tag, error)
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[Client] {
@@ -51,4 +53,12 @@ func (c *client) DeleteCertificate(ctx context.Context, arn string) error {
 
 func (c *client) GetCertificate(ctx context.Context, arn string) (string, string, error) {
 	return c.acmClient.GetCertificate(ctx, arn)
+}
+
+func (c *client) SearchCertificates(ctx context.Context, input *acm.SearchCertificatesInput) ([]acmtypes.CertificateSearchResult, error) {
+	return c.acmClient.SearchCertificates(ctx, input)
+}
+
+func (c *client) ListTagsForCertificate(ctx context.Context, arn string) ([]acmtypes.Tag, error) {
+	return c.acmClient.ListTagsForCertificate(ctx, arn)
 }

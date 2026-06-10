@@ -11,22 +11,15 @@ func compareCertificateData(ctx context.Context, st composed.State) (error, cont
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	// If no ARN, need to import
-	if state.ObjAsAwsCertificate().Status.Arn == "" {
-		logger.Info("Certificate needs import (no ARN)")
-		state.certificateNeedsUpdate = true
-		return nil, ctx
-	}
-
-	// If certificate not found in ACM (loadCertificate cleared it), need to reimport
+	// If certificate not found in ACM (loadCertificate cleared it), need to import/reimport
 	if state.certificateDetail == nil {
-		logger.Info("Certificate not found in ACM, reimport needed")
+		logger.Info("Certificate not found in ACM, import needed")
 		state.certificateNeedsUpdate = true
 		return nil, ctx
 	}
 
-	// Get certificate data from ACM
-	awsCert, awsChain, err := state.awsClient.GetCertificate(ctx, state.ObjAsAwsCertificate().Status.Arn)
+	// Get certificate data from ACM for comparison
+	awsCert, awsChain, err := state.awsClient.GetCertificate(ctx, state.certificateArn)
 	if err != nil {
 		logger.Error(err, "Error getting certificate from ACM")
 		return composed.LogErrorAndReturn(err, "Error getting certificate from ACM", composed.StopWithRequeue, ctx)

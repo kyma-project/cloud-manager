@@ -11,7 +11,7 @@ import (
 )
 
 func TestConvertTags(t *testing.T) {
-	t.Run("Tags include Scope and Shoot", func(t *testing.T) {
+	t.Run("Tags include cloud-manager name, Scope and Shoot", func(t *testing.T) {
 		cert := &cloudresourcesv1beta1.AwsCertificate{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "test-cert",
@@ -40,7 +40,7 @@ func TestConvertTags(t *testing.T) {
 			}
 		}
 
-		assert.Equal(t, "test-cert", tagMap["Name"])
+		assert.Equal(t, "test-cert", tagMap[common.TagCloudManagerName])
 		assert.Equal(t, "cloud-manager", tagMap["kyma-project.io/managed-by"])
 		assert.Equal(t, "test-scope", tagMap[common.TagScope])
 		assert.Equal(t, "test-shoot", tagMap[common.TagShoot])
@@ -65,7 +65,7 @@ func TestConvertTags(t *testing.T) {
 
 		tags := convertTags(cert, scope)
 
-		// Should have exactly 4 tags (Name, managed-by, Scope, Shoot)
+		// Should have exactly 4 tags (cloud-manager-name, managed-by, Scope, Shoot)
 		assert.Len(t, tags, 4)
 
 		tagMap := make(map[string]string)
@@ -75,7 +75,7 @@ func TestConvertTags(t *testing.T) {
 			}
 		}
 
-		assert.Equal(t, "test-cert-no-labels", tagMap["Name"])
+		assert.Equal(t, "test-cert-no-labels", tagMap[common.TagCloudManagerName])
 		assert.Equal(t, "cloud-manager", tagMap["kyma-project.io/managed-by"])
 		assert.Equal(t, "scope-name", tagMap[common.TagScope])
 		assert.Equal(t, "shoot-name", tagMap[common.TagShoot])

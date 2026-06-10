@@ -34,8 +34,12 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 	// Add certificate ARN if updating existing certificate
 	if cert.Status.Arn != "" {
 		input.CertificateArn = ptr.To(cert.Status.Arn)
+		logger.WithValues("arn", cert.Status.Arn).Info("Updating existing certificate")
 	} else {
+		// Tags can only be applied on import.
+		// You cannot apply tags when reimporting a certificate.
 		input.Tags = convertTags(cert, state.Scope())
+		logger.Info("Creating new certificate with tags")
 	}
 
 	// Add certificate chain if provided
@@ -55,17 +59,20 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	// Store ARN in state (will be used by updateStatus action)
+	// Store ARN in state for updateStatus action
 	state.certificateArn = arn
 
-	logger.Info("Certificate imported to ACM successfully", "arn", arn)
+	logger.
+		WithValues("arn", arn).
+		Info("Certificate imported successfully")
+
 	return nil, ctx
 }
 
 func convertTags(cert *cloudresourcesv1beta1.AwsCertificate, scope *cloudcontrolv1beta1.Scope) []acmtypes.Tag {
 	tags := []acmtypes.Tag{
 		{
-			Key:   ptr.To("Name"),
+			Key:   ptr.To(common.TagCloudManagerName),
 			Value: ptr.To(cert.Name),
 		},
 		{

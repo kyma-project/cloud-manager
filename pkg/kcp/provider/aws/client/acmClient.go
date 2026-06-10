@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
@@ -13,6 +14,8 @@ type AcmClient interface {
 	DescribeCertificate(ctx context.Context, arn string) (*acmtypes.CertificateDetail, error)
 	GetCertificate(ctx context.Context, arn string) (certificate string, certificateChain string, err error)
 	DeleteCertificate(ctx context.Context, arn string) error
+	SearchCertificates(ctx context.Context, input *acm.SearchCertificatesInput) ([]acmtypes.CertificateSearchResult, error)
+	ListTagsForCertificate(ctx context.Context, arn string) ([]acmtypes.Tag, error)
 }
 
 func NewAcmClient(svc *acm.Client) AcmClient {
@@ -71,4 +74,26 @@ func (c *acmClient) GetCertificate(ctx context.Context, arn string) (string, str
 	certificateChain := ptr.Deref(out.CertificateChain, "")
 
 	return certificate, certificateChain, nil
+}
+
+func (c *acmClient) SearchCertificates(ctx context.Context, input *acm.SearchCertificatesInput) ([]acmtypes.CertificateSearchResult, error) {
+	result, err := c.svc.SearchCertificates(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("SearchCertificates failed: %w", err)
+	}
+
+	return result.Results, nil
+}
+
+func (c *acmClient) ListTagsForCertificate(ctx context.Context, arn string) ([]acmtypes.Tag, error) {
+	in := &acm.ListTagsForCertificateInput{
+		CertificateArn: ptr.To(arn),
+	}
+
+	out, err := c.svc.ListTagsForCertificate(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+
+	return out.Tags, nil
 }

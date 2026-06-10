@@ -2,6 +2,7 @@ package awscertificate
 
 import (
 	"context"
+	"math/big"
 
 	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -29,9 +30,11 @@ type State struct {
 }
 
 type CertificateData struct {
-	Certificate      []byte // tls.crt
-	PrivateKey       []byte // tls.key
-	CertificateChain []byte // ca.crt (optional)
+	Certificate      []byte   // tls.crt
+	PrivateKey       []byte   // tls.key
+	CertificateChain []byte   // ca.crt (optional)
+	SerialNumber     *big.Int // Serial number (raw)
+	SerialFormatted  string   // Serial number formatted for AWS ACM (hex with colons)
 }
 
 func newStateFactory(
