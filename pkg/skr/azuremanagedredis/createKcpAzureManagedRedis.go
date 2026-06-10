@@ -65,7 +65,7 @@ func createKcpAzureManagedRedis(ctx context.Context, st composed.State) (error, 
 				Name: state.SkrIpRange.Status.Id,
 			},
 			VpcNetwork: corev1.LocalObjectReference{
-				Name: common.KcpNetworkKymaCommonName(state.KymaRef.Name),
+				Name: state.KymaRef.Name,
 			},
 			SKU:              string(tierSpec.SKU),
 			HighAvailability: tierSpec.HighAvailability,
