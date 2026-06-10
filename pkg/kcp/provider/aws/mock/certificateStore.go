@@ -2,7 +2,11 @@ package mock
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/hex"
+	"encoding/pem"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -49,6 +53,25 @@ func newCertificateStore(account, region string) *certificateStore {
 	}
 }
 
+// formatSerialNumber formats a certificate serial number for AWS ACM
+// Expected format: [0-9a-f]{2}(:[0-9a-f]{2}){1,19}
+func formatSerialNumber(serialBytes []byte) string {
+	serialHex := hex.EncodeToString(serialBytes)
+	var result strings.Builder
+	for i := 0; i < len(serialHex); i += 2 {
+		if i > 0 {
+			result.WriteString(":")
+		}
+		if i+2 <= len(serialHex) {
+			result.WriteString(serialHex[i : i+2])
+		} else {
+			result.WriteString("0")
+			result.WriteString(serialHex[i:])
+		}
+	}
+	return result.String()
+}
+
 func (s *certificateStore) ImportCertificate(ctx context.Context, input *acm.ImportCertificateInput) (string, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -87,10 +110,23 @@ func (s *certificateStore) ImportCertificate(ctx context.Context, input *acm.Imp
 		s.items[arn] = entry
 	}
 
+	// Parse certificate to extract issuer and serial
+	var issuer, serial string
+	block, _ := pem.Decode(input.Certificate)
+	if block != nil {
+		x509Cert, err := x509.ParseCertificate(block.Bytes)
+		if err == nil {
+			issuer = x509Cert.Issuer.String()
+			serial = formatSerialNumber(x509Cert.SerialNumber.Bytes())
+		}
+	}
+
 	// Update certificate data
 	entry.detail.ImportedAt = ptr.To(time.Now())
 	entry.detail.NotBefore = ptr.To(time.Now())
 	entry.detail.NotAfter = ptr.To(time.Now().Add(365 * 24 * time.Hour)) // 1 year expiration
+	entry.detail.Issuer = ptr.To(issuer)
+	entry.detail.Serial = ptr.To(serial)
 
 	// Store the certificate and chain data
 	entry.certificate = input.Certificate
@@ -194,6 +230,17 @@ func (s *certificateStore) InitiateCertificate(arn string, cert []byte, key []by
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	// Parse certificate to extract issuer and serial
+	var issuer, serial string
+	block, _ := pem.Decode(cert)
+	if block != nil {
+		x509Cert, err := x509.ParseCertificate(block.Bytes)
+		if err == nil {
+			issuer = x509Cert.Issuer.String()
+			serial = formatSerialNumber(x509Cert.SerialNumber.Bytes())
+		}
+	}
+
 	entry := &certificateEntry{
 		detail: &acmtypes.CertificateDetail{
 			CertificateArn: ptr.To(arn),
@@ -204,6 +251,8 @@ func (s *certificateStore) InitiateCertificate(arn string, cert []byte, key []by
 			ImportedAt:     ptr.To(time.Now()),
 			NotBefore:      ptr.To(time.Now()),
 			NotAfter:       ptr.To(time.Now().Add(365 * 24 * time.Hour)),
+			Issuer:         ptr.To(issuer),
+			Serial:         ptr.To(serial),
 		},
 		certificate: cert,
 	}
@@ -246,6 +295,63 @@ func (s *certificateStore) GetCertificateTags(arn string) []acmtypes.Tag {
 	tagsCopy := make([]acmtypes.Tag, len(entry.tags))
 	copy(tagsCopy, entry.tags)
 	return tagsCopy
+}
+
+func (s *certificateStore) ListTagsForCertificate(ctx context.Context, arn string) ([]acmtypes.Tag, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	entry, ok := s.items[arn]
+	if !ok {
+		return nil, &smithy.GenericAPIError{
+			Code:    "ResourceNotFoundException",
+			Message: fmt.Sprintf("Certificate with ARN %s does not exist", arn),
+		}
+	}
+
+	// Return a copy of tags to avoid external modifications
+	tagsCopy := make([]acmtypes.Tag, len(entry.tags))
+	copy(tagsCopy, entry.tags)
+	return tagsCopy, nil
+}
+
+func (s *certificateStore) SearchCertificates(ctx context.Context, input *acm.SearchCertificatesInput) ([]acmtypes.CertificateSearchResult, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	var results []acmtypes.CertificateSearchResult
+
+	// Extract serial number from filter if present
+	var serialNumber string
+	if filter, ok := input.FilterStatement.(*acmtypes.CertificateFilterStatementMemberFilter); ok {
+		if x509Filter, ok := filter.Value.(*acmtypes.CertificateFilterMemberX509AttributeFilter); ok {
+			if serialFilter, ok := x509Filter.Value.(*acmtypes.X509AttributeFilterMemberSerialNumber); ok {
+				serialNumber = serialFilter.Value
+			}
+		}
+	}
+
+	for arn, entry := range s.items {
+		detail := entry.detail
+
+		// Match serial number if provided
+		if serialNumber != "" {
+			serialMatch := detail.Serial != nil && *detail.Serial == serialNumber
+			if !serialMatch {
+				continue
+			}
+		}
+
+		// Add to results - populate X509Attributes with issuer for filtering
+		results = append(results, acmtypes.CertificateSearchResult{
+			CertificateArn: ptr.To(arn),
+			X509Attributes: &acmtypes.X509Attributes{
+				SerialNumber: detail.Serial,
+			},
+		})
+	}
+
+	return results, nil
 }
 
 func (s *certificateStore) AcmClient() awsclient.AcmClient {
