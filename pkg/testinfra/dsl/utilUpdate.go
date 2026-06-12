@@ -31,6 +31,11 @@ func UpdateStatus(ctx context.Context, clnt client.Client, obj client.Object, op
 	NewObjActions(opts...).
 		ApplyOnStatus(obj)
 
+	fresh := obj.DeepCopyObject().(client.Object)
+	if err := clnt.Get(ctx, client.ObjectKeyFromObject(obj), fresh); err == nil {
+		obj.SetResourceVersion(fresh.GetResourceVersion())
+	}
+
 	err := clnt.Status().Update(ctx, obj)
 	return err
 }

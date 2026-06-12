@@ -16,8 +16,6 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 
 	It("Scenario: KCP AzureManagedRedis is created and deleted", func() {
 
-		Skip("fix me, I', flaky....")
-
 		name := "a3b1c2d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6"
 		scope := &cloudcontrolv1beta1.Scope{}
 
