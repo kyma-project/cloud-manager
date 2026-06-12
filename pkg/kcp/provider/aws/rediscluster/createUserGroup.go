@@ -7,6 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,6 +42,9 @@ func createUserGroup(ctx context.Context, st composed.State) (error, context.Con
 		},
 	})
 	if err != nil {
+		if awsmeta.IsErrorRetryable(err) {
+			return awsmeta.LogErrorAndReturn(err, "Error creating user group", ctx)
+		}
 		logger.Error(err, "Error creating user group")
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,

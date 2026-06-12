@@ -6,6 +6,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,6 +77,9 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 
 	err := state.awsClient.AuthorizeElastiCacheSecurityGroupIngress(ctx, state.securityGroupId, permissions)
 	if err != nil {
+		if awsmeta.IsErrorRetryable(err) {
+			return awsmeta.LogErrorAndReturn(err, "Error adding security group ingress", ctx)
+		}
 		logger.Error(err, "Error adding security group ingress")
 		redisInstance := state.ObjAsRedisCluster()
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{

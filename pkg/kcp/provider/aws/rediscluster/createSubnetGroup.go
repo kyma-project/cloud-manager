@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,6 +48,9 @@ func createSubnetGroup(ctx context.Context, st composed.State) (error, context.C
 		},
 	})
 	if err != nil {
+		if awsmeta.IsErrorRetryable(err) {
+			return awsmeta.LogErrorAndReturn(err, "Error creating subnet group", ctx)
+		}
 		logger.Error(err, "Error creating subnet group")
 		meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
