@@ -71,7 +71,7 @@ func (a *account) Region(region string) AccountRegion {
 
 	reg, ok := a.regionalStores[region]
 	if !ok {
-		reg = newAccountRegionStore(region)
+		reg = newAccountRegionStore(a.accountId, region)
 		a.regionalStores[region] = reg
 	}
 

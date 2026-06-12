@@ -95,7 +95,7 @@ test: manifests generate fmt vet envtest test-ff build_ui ## Run tests.
 	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" GOFIPS140=v1.0.0 go test $(if $(TEST_PATH),./$(TEST_PATH)/...,./...) -test.v -v -coverprofile cover.out -coverpkg=./...
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
-GOLANGCI_LINT_VERSION ?= v1.54.2
+GOLANGCI_LINT_VERSION ?= v2.10.1
 golangci-lint:
 	@[ -f $(GOLANGCI_LINT) ] || { \
 	set -e ;\
@@ -178,6 +178,7 @@ build_ui: manifests kustomize # Build CRDS test
 	@$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumerestores > config/ui-extensions/awsnfsvolumerestores/cloud-resources.kyma-project.io_awsnfsvolumerestores_ui.yaml
 	@$(KUSTOMIZE) build config/ui-extensions/awsnfsbackupschedules > config/ui-extensions/awsnfsbackupschedules/cloud-resources.kyma-project.io_awsnfsbackupschedules_ui.yaml
 	@$(KUSTOMIZE) build config/ui-extensions/awsredisclusters > config/ui-extensions/awsredisclusters/cloud-resources.kyma-project.io_awsredisclusters_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/awswebacls > config/ui-extensions/awswebacls/cloud-resources.kyma-project.io_awswebacls_ui.yaml
 
 	@$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
 	@$(KUSTOMIZE) build config/ui-extensions/azureredisinstances > config/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml
