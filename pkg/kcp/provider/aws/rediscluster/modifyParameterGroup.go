@@ -6,6 +6,7 @@ import (
 	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,6 +45,9 @@ func modifyParameterGroup(
 		logger.Info("Modifying cache parameters")
 		err := state.awsClient.ModifyElastiCacheParameterGroup(ctx, name, ToParametersSlice(forUpdateParameters))
 		if err != nil {
+			if awsmeta.IsErrorRetryable(err) {
+				return awsmeta.LogErrorAndReturn(err, "Error modifying cache parameters", ctx)
+			}
 			logger.Error(err, "Error modifying cache parameters")
 			meta.SetStatusCondition(redisInstance.Conditions(), metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
