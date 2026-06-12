@@ -4,6 +4,11 @@ gardenKubeconfig: /path/to/garden/kubeconfig
 
 shootPrefix: your-two-letter-name-initials
 shootAnnotations: {}
+shootLabels:
+  cloud-manager.kyma-project.io/created-by: "your-username"
+  cloud-manager.kyma-project.io/team: "cloud-manager"
+  # Optional: Add more labels for easier shoot identification and cleanup
+  # cloud-manager.kyma-project.io/purpose: "local-dev"
 
 # if omitted, defaults to kcp-system
 kcpNamespace: kcp-system

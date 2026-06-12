@@ -156,5 +156,9 @@ func (f *gardenClientFactory) getRestConfig(ctx context.Context) (*rest.Config, 
 		return nil, fmt.Errorf("error creating gardener rest client config: %w", err)
 	}
 
+	// e2e operations need unrestricted API access for reliable test execution
+	restConfig.QPS = 1000
+	restConfig.Burst = 2000
+
 	return restConfig, nil
 }
