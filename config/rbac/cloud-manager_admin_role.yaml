@@ -1,0 +1,16 @@
+# Aggregated admin role for cloud-manager module.
+# Grants full access to all cloud-resources CRDs in the SKR cluster.
+# Automatically aggregated into the standard "admin" ClusterRole.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+  name: kyma-cloud-manager-admin
+rules:
+- apiGroups:
+  - cloud-resources.kyma-project.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
