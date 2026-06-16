@@ -8,6 +8,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -23,6 +24,15 @@ func createPrivateDnsZone(ctx context.Context, st composed.State) (error, contex
 
 	err := state.client.CreatePrivateDnsZone(ctx, state.resourceGroupName, state.PrivateDNSZoneName(), nil)
 	if err != nil {
+		// 409 Conflict on the shared private DNS zone happens when multiple AMR
+		// reconciles race on the same `privatelink.redis.azure.net` zone — Azure
+		// serializes upserts and rejects concurrent requests with a queued-operation
+		// 409. Treat it as transient: loadPrivateDnsZone will pick the zone up on
+		// the next reconcile once the in-flight upsert finishes.
+		if azuremeta.IsConflictError(err) {
+			composed.LoggerFromCtx(ctx).Info("Private DNS Zone create conflicted with concurrent operation; will retry", "zone", state.PrivateDNSZoneName())
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		}
 		composed.LoggerFromCtx(ctx).Error(err, "Error creating Private DNS Zone for Azure Managed Redis")
 		obj.Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.UpdateStatus(obj).
