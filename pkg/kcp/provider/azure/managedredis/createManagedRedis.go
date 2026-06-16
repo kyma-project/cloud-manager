@@ -30,12 +30,10 @@ func createManagedRedis(ctx context.Context, st composed.State) (error, context.
 		MinimumTLSVersion:   &tlsVersion,
 		PublicNetworkAccess: &publicNetworkAccess,
 	}
-	// Only send HighAvailability when the user wants it Disabled (non-HA Balanced tiers).
-	// On ComputeOptimized SKUs in zonal regions, Azure rejects an explicit
-	// HighAvailability=Enabled with "Specifying zones for SKU '...' is not supported.
-	// Zone redundancy is enabled by default for this SKU in regions with zones."
-	// Leaving the field unset lets Azure pick the SKU/region default (Enabled+ZR
-	// for ComputeOptimized in zonal regions).
+	// Zone redundancy is the default in zonal regions (see link); on ComputeOptimized
+	// SKUs Azure rejects an explicit Enabled with "Specifying zones for SKU '...' is
+	// not supported." Send the field only when the user wants it Disabled.
+	// https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-high-availability#zone-redundancy
 	if !obj.Spec.HighAvailability {
 		ha := armredisenterprise.HighAvailabilityDisabled
 		props.HighAvailability = &ha
@@ -60,11 +58,6 @@ func createManagedRedis(ctx context.Context, st composed.State) (error, context.
 			"highAvailability", haStr,
 		).
 		Info("Submitting Azure Managed Redis cluster create request")
-
-	// Note: PublicNetworkAccess is set on create only. There is no updateManagedRedis
-	// action, so clusters created before this field was introduced will not be patched.
-	// This is intentional: AMR is a new resource type with no existing instances in the
-	// field at the time this was added.
 
 	err := state.client.CreateOrUpdateCluster(ctx, state.resourceGroupName, obj.Name, cluster)
 	if err != nil {

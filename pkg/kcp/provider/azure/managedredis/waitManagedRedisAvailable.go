@@ -31,6 +31,8 @@ func waitManagedRedisAvailable(ctx context.Context, st composed.State) (error, c
 		resourceStateStr = string(*state.managedRedis.Properties.ResourceState)
 	}
 
+	// Failed and Canceled are terminal per the ARM async-operation contract.
+	// https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/async-operations#provisioningstate-values
 	if provisioningState == armredisenterprise.ProvisioningStateFailed ||
 		provisioningState == armredisenterprise.ProvisioningStateCanceled {
 		composed.LoggerFromCtx(ctx).

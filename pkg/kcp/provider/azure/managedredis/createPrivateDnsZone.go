@@ -24,11 +24,9 @@ func createPrivateDnsZone(ctx context.Context, st composed.State) (error, contex
 
 	err := state.client.CreatePrivateDnsZone(ctx, state.resourceGroupName, state.PrivateDNSZoneName(), nil)
 	if err != nil {
-		// 409 Conflict on the shared private DNS zone happens when multiple AMR
-		// reconciles race on the same `privatelink.redis.azure.net` zone — Azure
-		// serializes upserts and rejects concurrent requests with a queued-operation
-		// 409. Treat it as transient: loadPrivateDnsZone will pick the zone up on
-		// the next reconcile once the in-flight upsert finishes.
+		// AMR private endpoints share `privatelink.redis.azure.net` (see link); concurrent
+		// reconciles upserting the same zone race and one of them gets 409 — transient.
+		// https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns#databases
 		if azuremeta.IsConflictError(err) {
 			composed.LoggerFromCtx(ctx).Info("Private DNS Zone create conflicted with concurrent operation; will retry", "zone", state.PrivateDNSZoneName())
 			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
