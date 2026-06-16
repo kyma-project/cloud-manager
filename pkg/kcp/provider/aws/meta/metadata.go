@@ -20,6 +20,7 @@ const (
 	UnauthorizedOperation = "UnauthorizedOperation"
 	AccessDenied          = "AccessDenied"
 	RouteNotSupported     = "RouteNotSupported"
+	DependencyViolation   = "DependencyViolation"
 )
 
 type awsAccountKeyType struct{}
@@ -92,6 +93,14 @@ func IsRouteNotSupported(err error) bool {
 	var apiError smithy.APIError
 	if errors.As(err, &apiError) {
 		return apiError.ErrorCode() == RouteNotSupported
+	}
+	return false
+}
+
+func IsDependencyViolation(err error) bool {
+	var apiError smithy.APIError
+	if errors.As(err, &apiError) {
+		return apiError.ErrorCode() == DependencyViolation
 	}
 	return false
 }

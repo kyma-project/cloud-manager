@@ -22,8 +22,7 @@ func removePersistenceVolumeFinalizer(ctx context.Context, st composed.State) (e
 	}
 
 	// KCP NfsInstance does not exist, remove the finalizer so PV is also deleted
-	controllerutil.RemoveFinalizer(state.PV, api.CommonFinalizerDeletionHook)
-	err := state.SkrCluster.K8sClient().Update(ctx, state.PV)
+	_, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, state.PV, state.SkrCluster.K8sClient())
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error saving SKR PersistentVolume after finalizer removal", composed.StopWithRequeue, ctx)
 	}

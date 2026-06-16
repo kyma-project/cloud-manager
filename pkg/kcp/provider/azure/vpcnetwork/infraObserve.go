@@ -7,6 +7,8 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )
 
@@ -14,6 +16,9 @@ func infraObserve(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 
 	resourceGroup, err := state.azureClient.GetResourceGroup(ctx, state.ObjAsVpcNetwork().Status.Identifiers.Name)
+	if azuremeta.IsNotFound(err) {
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+	}
 	if err != nil {
 		composed.LoggerFromCtx(ctx).Error(err, "Error observing resource group")
 		return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).
@@ -25,6 +30,9 @@ func infraObserve(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	virtualNetwork, err := state.azureClient.GetNetwork(ctx, state.ObjAsVpcNetwork().Status.Identifiers.Name, state.ObjAsVpcNetwork().Status.Identifiers.Name)
+	if azuremeta.IsNotFound(err) {
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+	}
 	if err != nil {
 		composed.LoggerFromCtx(ctx).Error(err, "Error observing virtual network")
 		return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).

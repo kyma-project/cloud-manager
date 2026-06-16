@@ -25,8 +25,7 @@ func removePersistenceVolumeClaimFinalizer(ctx context.Context, st composed.Stat
 		return nil, ctx
 	}
 
-	controllerutil.RemoveFinalizer(state.PVC, api.CommonFinalizerDeletionHook)
-	err := state.Cluster().K8sClient().Update(ctx, state.PVC)
+	_, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, state.PVC, state.Cluster().K8sClient())
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error saving SKR PersistentVolumeClaim after finalizer removal", composed.StopWithRequeue, ctx)
 	}
