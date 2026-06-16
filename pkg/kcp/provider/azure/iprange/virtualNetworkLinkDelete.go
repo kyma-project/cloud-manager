@@ -33,6 +33,11 @@ func virtualNetworkLinkDelete(ctx context.Context, st composed.State) (error, co
 			ctx,
 		)
 	}
+	if azuremeta.IsConflictError(err) {
+		// Another delete operation is already queued for this link — requeue and wait for it.
+		logger.Info("Azure KCP IpRange virtualNetworkLink delete conflict, another operation pending, requeueing")
+		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
+	}
 	if err != nil {
 		logger.Error(err, "Error deleting Azure KCP IpRange virtualNetworkLink")
 

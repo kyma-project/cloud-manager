@@ -32,6 +32,11 @@ func privateDnsZoneDelete(ctx context.Context, st composed.State) (error, contex
 			ctx,
 		)
 	}
+	if azuremeta.IsConflictError(err) {
+		// Nested resources (virtualNetworkLinks) still being deleted — requeue and wait.
+		logger.Info("Azure KCP IpRange dnsZone delete conflict, nested resources still pending, requeueing")
+		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
+	}
 	if err != nil {
 		logger.Error(err, "Error deleting Azure KCP IpRange dnsZone")
 
