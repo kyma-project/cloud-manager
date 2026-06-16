@@ -20,7 +20,7 @@ Feature: AzureManagedRedis feature
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
       | redis.status.state == 'Error' |
-      | #timeout=45m                  |
+      | #timeout=30m                  |
 
     And "findConditionTrue(redis, 'Ready')" is ok
 
@@ -61,7 +61,7 @@ Feature: AzureManagedRedis feature
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
       | redis.status.state == 'Error' |
-      | #timeout=45m                  |
+      | #timeout=30m                  |
 
     And "findConditionTrue(redis, 'Ready')" is ok
 
