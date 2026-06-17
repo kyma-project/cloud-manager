@@ -15,7 +15,7 @@ This table lists the parameters of `AzureManagedRedis.spec`.
 |-----------|------|-------------|
 | **redisTier** (required) | string | Kyma service tier. Encodes the underlying SKU + high-availability + clustering policy. See the [Tier Reference](#tier-reference) below. Allowed values: `S1`, `S2`, `S3`, `S4`, `S5`, `P1`, `P2`, `P3`, `P4`, `P5`, `C3`, `C4`, `C5`, `C6`, `C7`. **Immutable.** |
 | **authSecret** | object | Customises the generated connection secret. |
-| **authSecret.name** | string | Name of the secret. Defaults to the `AzureManagedRedis` resource name. |
+| **authSecret.name** | string | Name of the secret. Defaults to the `AzureManagedRedis` resource name. **Immutable once set.** |
 | **authSecret.labels** | map[string]string | Labels applied to the secret. |
 | **authSecret.annotations** | map[string]string | Annotations applied to the secret. |
 | **authSecret.extraData** | map[string]string | Additional secret keys, supporting Go templates that reference `host`, `port`, `primaryEndpoint`, `authString`. |
@@ -44,7 +44,7 @@ The `redisTier` letter encodes three things in one field. Choose by workload cla
 | `C6` | `ComputeOptimized_X50`  | 60  | Yes | OSSCluster        | Production sharded (Redis Cluster) |
 | `C7` | `ComputeOptimized_X100` | 120 | Yes | OSSCluster        | Production sharded (Redis Cluster) |
 
-P-tiers and C-tiers of equal numeric rank (e.g. `P3` and `C5`) provision the **same Azure SKU at the same price**; they differ only in the database-level `ClusteringPolicy`. Choose `C*` if your client uses Redis Cluster commands and key hash-slot routing; choose `P*` for a single primary endpoint.
+P-tiers and C-tiers map to the **same Azure SKU at the same price** when their underlying SKU matches (P1↔C3, P2↔C4, P3↔C5, P4↔C6, P5↔C7); they differ only in the database-level `ClusteringPolicy`. Choose `C*` if your client uses Redis Cluster commands and key hash-slot routing; choose `P*` for a single primary endpoint.
 
 ## Status Fields
 
@@ -61,9 +61,9 @@ Once `state` is `Ready`, Cloud Manager creates (or updates) a Kubernetes `Secret
 
 | Key | Description |
 |-----|-------------|
-| `primaryEndpoint` | Hostname of the AMR cluster. |
-| `host` | Same as `primaryEndpoint` (kept for compatibility with other Redis SKR kinds). |
-| `port` | Redis client port (typically `10000` for AMR). |
+| `primaryEndpoint` | Hostname of the AMR cluster (hostname only, not `host:port`). |
+| `host` | Same as `primaryEndpoint`. |
+| `port` | Redis client port. Always `10000` for Azure Managed Redis. |
 | `authString` | Access key for client authentication. |
 
 Any keys you list under `spec.authSecret.extraData` are added on top, with Go template expansion against the four base keys above.
