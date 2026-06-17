@@ -7,6 +7,7 @@ import (
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	kcpsubscription "github.com/kyma-project/cloud-manager/pkg/kcp/subscription"
+	kcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -58,6 +59,8 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 				WithSubscription(name).
 				WithCidrBlocks("10.250.0.0/22").
 				Build()
+
+			kcpvpcnetwork.Ignore.AddName(name)
 
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcNetwork).
