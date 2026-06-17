@@ -52,8 +52,6 @@ P-tiers and C-tiers of equal numeric rank (e.g. `P3` and `C5`) provision the **s
 |-------|------|-------------|
 | **id** | string | Internal Cloud Manager identifier. |
 | **state** | string | Lifecycle state: `Processing`, `Creating`, `Ready`, `Deleting`, `Error`. |
-| **primaryEndpoint** | string | Hostname for client connections. |
-| **port** | int32 | Redis client port (always `10000` for AMR). |
 | **observedGeneration** | int64 | Most recent reconciled `metadata.generation`. |
 | **conditions** | list | Standard Kubernetes conditions, including `Ready` and `Error`. |
 
@@ -65,7 +63,7 @@ Once `state` is `Ready`, Cloud Manager creates (or updates) a Kubernetes `Secret
 |-----|-------------|
 | `primaryEndpoint` | Hostname of the AMR cluster. |
 | `host` | Same as `primaryEndpoint` (kept for compatibility with other Redis SKR kinds). |
-| `port` | Always `10000`. |
+| `port` | Redis client port (typically `10000` for AMR). |
 | `authString` | Access key for client authentication. |
 
 Any keys you list under `spec.authSecret.extraData` are added on top, with Go template expansion against the four base keys above.
@@ -102,7 +100,7 @@ spec:
 
 ## Notes and Limitations
 
-- **Immutable fields.** `spec.redisTier`, `spec.ipRange`, and `spec.authSecret.name` cannot be changed after creation. To resize, delete and recreate the resource (data will be lost).
+- **Immutable fields.** `spec.redisTier` and `spec.authSecret.name` cannot be changed after creation. To resize, delete and recreate the resource (data will be lost).
 - **Public network access is disabled.** Connections are only possible from within the Kyma SKR network through the auto-provisioned Private Endpoint.
 - **TLS only.** AMR enforces TLS 1.2 client connections; plaintext is not supported.
 - **Single database per cluster.** Cloud Manager provisions exactly one database (`default`) per `AzureManagedRedis` resource.
