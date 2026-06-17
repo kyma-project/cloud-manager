@@ -62,7 +62,7 @@ func (c *checker) singleCheck(ctx context.Context, skrCluster cluster.Cluster) b
 		return false
 	}
 	if len(list.Items) == 0 {
-		c.logger.Error(err, "SKR readiness failed - no CloudResources created")
+		c.logger.Info("SKR readiness not confirmed - no CloudResources found")
 		return false
 	}
 	allDeletedAndNoFinalizer := true

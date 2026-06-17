@@ -134,6 +134,7 @@ func (s *skrStatusSaver) Save(ctx context.Context, skrStatus *SkrStatus) error {
 		api.Spec.AverageIntervalSeconds = int(math.Round(sum / float64(count)))
 	}
 
+	api.Spec.Conditions = []cloudcontrolv1beta1.SkrStatusCondition{}
 	api.Spec.Conditions = pie.Map(skrStatus.handles, func(x *KindHandle) cloudcontrolv1beta1.SkrStatusCondition {
 		return cloudcontrolv1beta1.SkrStatusCondition{
 			Title:           x.title,

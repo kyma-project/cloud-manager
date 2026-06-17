@@ -105,6 +105,11 @@ func IsDependencyViolation(err error) bool {
 	return false
 }
 
+func IsSecretMarkedForDeletion(err error) bool {
+	var e *secretsmanagertypes.InvalidRequestException
+	return errors.As(err, &e)
+}
+
 // https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html
 var notFoundErrorCodes = map[string]struct{}{
 	(&efstypes.FileSystemNotFound{}).ErrorCode():                    {},

@@ -16,6 +16,10 @@ func loadAuthTokenSecret(ctx context.Context, st composed.State) (error, context
 	logger := composed.LoggerFromCtx(ctx)
 
 	authTokenValue, err := state.awsClient.GetAuthTokenSecretValue(ctx, GetAwsAuthTokenSecretName(state.Obj().GetName()))
+	if awsmeta.IsSecretMarkedForDeletion(err) {
+		logger.Info("Auth token secret is marked for deletion, skipping")
+		return nil, ctx
+	}
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error getting auth token", ctx)
 	}
