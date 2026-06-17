@@ -119,9 +119,10 @@ spec:
 
 ## Notes and Limitations
 
-- **All spec fields are immutable.** `spec.redisTier` and `spec.authSecret.name` cannot be changed after creation. To resize or change the tier, delete and recreate the resource (data will be lost).
+- **Immutable fields.** `spec.redisTier` and `spec.authSecret.name` cannot be changed after creation. To resize or change the tier, delete and recreate the resource (data will be lost). All other fields (`authSecret.labels`, `authSecret.annotations`, `authSecret.extraData`, `ipRange`) are mutable and take effect on the next reconciliation.
 - **Public network access is disabled.** Connections are only possible from within the Kyma SKR network through the auto-provisioned Private Endpoint.
 - **TLS only.** AMR enforces TLS 1.2 client connections; plaintext is not supported.
 - **Redis version.** Azure Managed Redis runs Redis 7.4. There is no `redisVersion` field; the version is managed by Azure.
 - **Single database per instance.** Cloud Manager provisions exactly one database (`default`) per `AzureManagedRedis` resource.
 - **No sovereign cloud support.** AMR is not yet available in Azure China or US Government clouds. Use `AzureRedisInstance` / `AzureRedisCluster` (legacy `armredis` SKUs) on those landscapes.
+- **Auth secret name conflict.** If a Kubernetes Secret with the same name already exists in the namespace and belongs to a different `AzureManagedRedis` resource, the instance will enter `Error` state. Use a unique `spec.authSecret.name` to avoid conflicts.
