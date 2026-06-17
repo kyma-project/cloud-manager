@@ -62,6 +62,14 @@ func networkReferenceKymaCreate(ctx context.Context, st composed.State) (error, 
 				NetworkName: state.ObjAsScope().Spec.Scope.OpenStack.VpcNetwork,
 			},
 		}
+	case cloudcontrolv1beta1.ProviderAlicloud:
+		kymaNet.Spec.Network.Reference = &cloudcontrolv1beta1.NetworkReference{
+			Alicloud: &cloudcontrolv1beta1.AlicloudNetworkReference{
+				AccountId:   state.ObjAsScope().Spec.Scope.Alicloud.AccountId,
+				Region:      state.ObjAsScope().Spec.Region,
+				NetworkName: state.ObjAsScope().Spec.Scope.Alicloud.VpcNetwork,
+			},
+		}
 	}
 
 	logger := composed.LoggerFromCtx(ctx)

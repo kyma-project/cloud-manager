@@ -71,6 +71,9 @@ type ScopeInfo struct {
 
 	// +optional
 	OpenStack *OpenStackScope `json:"openstack,omitempty"`
+
+	// +optional
+	Alicloud *AlicloudScope `json:"alicloud,omitempty"`
 }
 
 type OpenStackScope struct {
@@ -93,6 +96,38 @@ type OpenStackNetwork struct {
 
 	// +optional
 	Zones []string `json:"zones,omitempty"`
+}
+
+type AlicloudScope struct {
+	// +kubebuilder:validation:Required
+	AccountId string `json:"accountId"`
+
+	// +kubebuilder:validation:Required
+	VpcNetwork string `json:"vpcNetwork"`
+
+	Network AlicloudNetwork `json:"network"`
+}
+
+type AlicloudNetwork struct {
+	// +optional
+	Nodes string `json:"nodes,omitempty"`
+
+	// +optional
+	Pods string `json:"pods,omitempty"`
+
+	// +optional
+	Services string `json:"services,omitempty"`
+
+	// +optional
+	VPC AlicloudVPC `json:"vpc"`
+
+	// +optional
+	Zones []string `json:"zones,omitempty"`
+}
+
+type AlicloudVPC struct {
+	Id   string `json:"id,omitempty"`
+	CIDR string `json:"cidr,omitempty"`
 }
 
 type GcpScope struct {

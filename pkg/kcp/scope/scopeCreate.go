@@ -19,6 +19,8 @@ func scopeCreate(ctx context.Context, st composed.State) (error, context.Context
 		return scopeCreateAws(ctx, state)
 	case cloudcontrolv1beta1.ProviderOpenStack:
 		return scopeCreateOpenStack(ctx, state)
+	case cloudcontrolv1beta1.ProviderAlicloud:
+		return scopeCreateAlicloud(ctx, state)
 	}
 
 	err := fmt.Errorf("unable to handle unknown provider '%s'", state.provider)

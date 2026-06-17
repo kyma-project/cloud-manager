@@ -173,6 +173,7 @@ func initConfig(cfg config.Config, obj *ConfigType) {
 				"azure":     "az",
 				"gcp":       "gcp",
 				"openstack": "converged-cloud-kyma",
+				"alicloud":  "alicloud",
 			}),
 		),
 
@@ -264,6 +265,10 @@ func Stub() *ConfigType {
 		{
 			Name:     "openstack",
 			Provider: cloudcontrolv1beta1.ProviderOpenStack,
+		},
+		{
+			Name:     "alicloud",
+			Provider: cloudcontrolv1beta1.ProviderAlicloud,
 		},
 	}
 	return result
