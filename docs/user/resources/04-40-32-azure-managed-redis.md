@@ -3,9 +3,21 @@
 > [!WARNING]
 > This is a beta feature available only per request for SAP-internal teams.
 
-The `azuremanagedredis.cloud-resources.kyma-project.io` Custom Resource Definition (CRD) describes a single Azure Managed Redis (Microsoft.Cache/redisEnterprise) cluster provisioned in your Kyma runtime through Cloud Manager. A single SKR kind covers three workload classes — single-node dev, HA production, and HA + sharded clustered Redis — through the `redisTier` field.
+The `azuremanagedredis.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
+It describes a single Azure Managed Redis (Microsoft.Cache/redisEnterprise) cluster provisioned in your Kyma runtime through Cloud Manager.
+Once the cluster is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
+By default, the created auth Secret has the same name as the AzureManagedRedis, unless specified otherwise.
+
+A single SKR kind covers three workload classes — single-node dev, HA production, and HA + sharded clustered Redis — through the `redisTier` field.
 
 > Azure Managed Redis is a separate product from Azure Cache for Redis. It is **not yet available** in Azure China or Azure US Government regions; only commercial Azure regions are supported.
+
+> [!TIP] _Only for advanced cases of network topology_
+> IP addresses are allocated from the [IpRange CR](./04-10-iprange.md). If an IpRange CR is not specified in the AzureManagedRedis, then the default IpRange is used. If the default IpRange does not exist, it is automatically created. Manually create a non-default IpRange with specified Classless Inter-Domain Routing (CIDR) and use it only in advanced cases of network topology when you want to control the network segments to avoid range conflicts with other networks.
+
+When creating AzureManagedRedis, one field is mandatory: `redisTier`.
+
+Optionally, you can specify the `authSecret` and `ipRange` fields.
 
 ## Specification
 
@@ -14,13 +26,13 @@ This table lists the parameters of `AzureManagedRedis.spec`.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | **redisTier** (required) | string | Kyma service tier. Encodes the underlying SKU + high-availability + clustering policy. See the [Tier Reference](#tier-reference) below. Allowed values: `S1`, `S2`, `S3`, `S4`, `S5`, `P1`, `P2`, `P3`, `P4`, `P5`, `C3`, `C4`, `C5`, `C6`, `C7`. **Immutable.** |
-| **authSecret** | object | Customises the generated connection secret. |
-| **authSecret.name** | string | Name of the secret. Defaults to the `AzureManagedRedis` resource name. **Immutable once set.** |
-| **authSecret.labels** | map[string]string | Labels applied to the secret. |
-| **authSecret.annotations** | map[string]string | Annotations applied to the secret. |
-| **authSecret.extraData** | map[string]string | Additional secret keys, supporting Go templates that reference `host`, `port`, `primaryEndpoint`, `authString`. |
-| **ipRange** | object | Reference to an `IpRange` for private connectivity. If omitted, the default `IpRange` is used. |
-| **ipRange.name** | string | Name of the referenced `IpRange`. |
+| **authSecret** | object | Optional. Customises the generated connection secret. |
+| **authSecret.name** | string | Optional. Name of the secret. Defaults to the `AzureManagedRedis` resource name. **Immutable once set.** |
+| **authSecret.labels** | map[string]string | Optional. Labels applied to the secret. |
+| **authSecret.annotations** | map[string]string | Optional. Annotations applied to the secret. |
+| **authSecret.extraData** | map[string]string | Optional. Additional secret keys, supporting Go templates that reference `host`, `port`, `primaryEndpoint`, `authString`. The templating follows the [Golang templating syntax](https://pkg.go.dev/text/template). |
+| **ipRange** | object | Optional. IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created. |
+| **ipRange.name** | string | Required. Name of the existing IpRange to use. |
 
 ### Tier Reference
 
@@ -55,20 +67,23 @@ P-tiers and C-tiers map to the **same Azure SKU at the same price** when their u
 | **observedGeneration** | int64 | Most recent reconciled `metadata.generation`. |
 | **conditions** | list | Standard Kubernetes conditions, including `Ready` and `Error`. |
 
-## Connection Secret
+## Auth Secret Details
 
-Once `state` is `Ready`, Cloud Manager creates (or updates) a Kubernetes `Secret` in the same namespace with the following keys:
+The following table lists the meaningful parameters of the auth Secret:
 
-| Key | Description |
-|-----|-------------|
-| `primaryEndpoint` | Hostname of the AMR cluster (hostname only, not `host:port`). |
-| `host` | Same as `primaryEndpoint`. |
-| `port` | Redis client port. Always `10000` for Azure Managed Redis. |
-| `authString` | Access key for client authentication. |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| **.metadata.name** | string | Name of the auth Secret. It shares the name with AzureManagedRedis unless specified otherwise. |
+| **.metadata.labels** | object | Specified custom labels (if any). |
+| **.metadata.annotations** | object | Specified custom annotations (if any). |
+| **.data.primaryEndpoint** | string | Hostname of the AMR cluster (hostname only, not `host:port`). Base64 encoded. |
+| **.data.host** | string | Same as `primaryEndpoint`. Base64 encoded. |
+| **.data.port** | string | Redis client port. Always `10000` for Azure Managed Redis. Base64 encoded. |
+| **.data.authString** | string | Access key for client authentication. Base64 encoded. |
 
 Any keys you list under `spec.authSecret.extraData` are added on top, with Go template expansion against the four base keys above.
 
-## Example
+## Sample Custom Resource
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
