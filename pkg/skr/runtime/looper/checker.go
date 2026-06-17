@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-logr/logr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"time"
 )
@@ -58,7 +59,11 @@ func (c *checker) singleCheck(ctx context.Context, skrCluster cluster.Cluster) b
 	list := &cloudresourcesv1beta1.CloudResourcesList{}
 	err := skrCluster.GetAPIReader().List(ctx, list)
 	if err != nil {
-		c.logger.Error(err, "SKR readiness failed - CloudResources CRD not installed")
+		if apimeta.IsNoMatchError(err) {
+			c.logger.Info("SKR readiness not confirmed - CloudResources CRD not yet installed")
+		} else {
+			c.logger.Error(err, "SKR readiness check failed - transient API server error")
+		}
 		return false
 	}
 	if len(list.Items) == 0 {

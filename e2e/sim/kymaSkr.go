@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const timeoutAddModuleToReadyState = 2 * time.Minute
+const timeoutAddModuleToReadyState = 3 * time.Minute
 const timeoutRemoveModuleToErrorState = 35 * time.Minute
 const timeoutForceRemoveModule = 10 * time.Minute
 
