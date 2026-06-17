@@ -6,6 +6,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -40,6 +41,9 @@ func deleteAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 
 	err = state.Cluster().K8sClient().Delete(ctx, state.AuthSecret)
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, ctx
+		}
 		return composed.LogErrorAndReturn(err, "Error deleting AuthSecret for AwsRedisInstance", composed.StopWithRequeue, ctx)
 	}
 

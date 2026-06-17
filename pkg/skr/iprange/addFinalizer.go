@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -25,6 +26,9 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 
 	err := state.UpdateObj(ctx)
 	if err != nil {
+		if apierrors.IsConflict(err) {
+			return composed.StopWithRequeue, nil
+		}
 		return composed.LogErrorAndReturn(err, "Error saving object after finalizer added", composed.StopWithRequeue, ctx)
 	}
 
