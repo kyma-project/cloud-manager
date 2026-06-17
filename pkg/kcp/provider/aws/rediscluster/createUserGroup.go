@@ -23,7 +23,7 @@ func createUserGroup(ctx context.Context, st composed.State) (error, context.Con
 	logger := composed.LoggerFromCtx(ctx)
 	redisInstance := state.ObjAsRedisCluster()
 
-	out, err := state.awsClient.CreateUserGroup(ctx, GetAwsElastiCacheParameterGroupName(state.Obj().GetName()), []types.Tag{
+	out, err := state.awsClient.CreateUserGroup(ctx, GetAwsElastiCacheUserGroupName(state.Obj().GetName()), []types.Tag{
 		{
 			Key:   ptr.To(common.TagCloudManagerName),
 			Value: new(state.Name().String()),
