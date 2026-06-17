@@ -6,6 +6,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -74,6 +75,9 @@ func RemoveFinalizers(finalizers ...string) composed.Action {
 		logger.Info(fmt.Sprintf("RemoveFinalizers: %v", finalizers))
 
 		if err := state.UpdateObj(ctx); err != nil {
+			if apierrors.IsNotFound(err) {
+				return nil, ctx
+			}
 			return composed.LogErrorAndReturn(err, fmt.Sprintf("Error removing Finalizers: %v", finalizers), composed.StopWithRequeue, ctx)
 		}
 
