@@ -78,7 +78,7 @@ func kcpNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 
 	err := state.Cluster().K8sClient().Create(ctx, net)
 	if apierrors.IsAlreadyExists(err) {
-		return composed.LogErrorAndReturn(err, "Error creating CM KCP Network - already exists", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
 	}
 	if err != nil {
 		logger.Error(err, "Error creating CM KCP Network")
