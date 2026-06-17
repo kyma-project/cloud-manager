@@ -4,8 +4,8 @@
 > This is a beta feature available only per request for SAP-internal teams.
 
 The `azuremanagedredis.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
-It describes a single Azure Managed Redis (Microsoft.Cache/redisEnterprise) cluster provisioned in your Kyma runtime through Cloud Manager.
-Once the cluster is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
+It describes an Azure Managed Redis (Microsoft.Cache/redisEnterprise) instance provisioned in your Kyma runtime through Cloud Manager.
+Once the instance is provisioned, a Kubernetes Secret with endpoint and credential details is provided in the same namespace.
 By default, the created auth Secret has the same name as the AzureManagedRedis, unless specified otherwise.
 
 A single SKR kind covers three workload classes — single-node dev, HA production, and HA + sharded clustered Redis — through the `redisTier` field.
@@ -32,7 +32,7 @@ This table lists the parameters of `AzureManagedRedis.spec`.
 | **authSecret.annotations** | map[string]string | Optional. Annotations applied to the secret. |
 | **authSecret.extraData** | map[string]string | Optional. Additional secret keys, supporting Go templates that reference `host`, `port`, `primaryEndpoint`, `authString`. The templating follows the [Golang templating syntax](https://pkg.go.dev/text/template). |
 | **ipRange** | object | Optional. IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created. |
-| **ipRange.name** | string | Required. Name of the existing IpRange to use. |
+| **ipRange.name** | string | Required when `ipRange` is specified. Name of the existing IpRange to use. |
 
 ### Tier Reference
 
@@ -40,11 +40,11 @@ The `redisTier` letter encodes three things in one field. Choose by workload cla
 
 | Tier | Underlying Azure SKU | Memory (GB) | High-Availability | Clustering Policy | Use case |
 |------|----------------------|-------------|-------------------|-------------------|----------|
-| `S1` | `Balanced_B0`        | 1   | No  | EnterpriseCluster | Dev / test                          |
-| `S2` | `Balanced_B3`        | 3   | No  | EnterpriseCluster | Dev / test                          |
-| `S3` | `Balanced_B5`        | 6   | No  | EnterpriseCluster | Dev / test                          |
-| `S4` | `Balanced_B10`       | 12  | No  | EnterpriseCluster | Dev / test                          |
-| `S5` | `Balanced_B20`       | 24  | No  | EnterpriseCluster | Dev / test                          |
+| `S1` | `Balanced_B0`        | 1   | No  | EnterpriseCluster | Dev / test (no replica, no HA)      |
+| `S2` | `Balanced_B3`        | 3   | No  | EnterpriseCluster | Dev / test (no replica, no HA)      |
+| `S3` | `Balanced_B5`        | 6   | No  | EnterpriseCluster | Dev / test (no replica, no HA)      |
+| `S4` | `Balanced_B10`       | 12  | No  | EnterpriseCluster | Dev / test (no replica, no HA)      |
+| `S5` | `Balanced_B20`       | 24  | No  | EnterpriseCluster | Dev / test (no replica, no HA)      |
 | `P1` | `ComputeOptimized_X5`   | 6   | Yes | EnterpriseCluster | Production single-shard HA       |
 | `P2` | `ComputeOptimized_X10`  | 12  | Yes | EnterpriseCluster | Production single-shard HA       |
 | `P3` | `ComputeOptimized_X20`  | 24  | Yes | EnterpriseCluster | Production single-shard HA       |
@@ -58,6 +58,9 @@ The `redisTier` letter encodes three things in one field. Choose by workload cla
 
 P-tiers and C-tiers map to the **same Azure SKU at the same price** when their underlying SKU matches (P1↔C3, P2↔C4, P3↔C5, P4↔C6, P5↔C7); they differ only in the database-level `ClusteringPolicy`. Choose `C*` if your client uses Redis Cluster commands and key hash-slot routing; choose `P*` for a single primary endpoint.
 
+> [!NOTE]
+> S-tiers have no replica and no automatic failover. A node failure results in downtime and potential data loss. Use S-tiers for development and testing only.
+
 ## Status Fields
 
 | Field | Type | Description |
@@ -65,10 +68,11 @@ P-tiers and C-tiers map to the **same Azure SKU at the same price** when their u
 | **id** | string | Internal Cloud Manager identifier. |
 | **state** | string | Lifecycle state: `Processing`, `Creating`, `Ready`, `Deleting`, `Error`. |
 | **observedGeneration** | int64 | Most recent reconciled `metadata.generation`. |
-| **conditions** | list | Standard Kubernetes conditions, including `Ready` and `Error`. |
+| **conditions** | list | Standard Kubernetes conditions, including `Ready`, `Error`, and `Deleting`. |
 
 ## Auth Secret Details
 
+Once `state` is `Ready`, Cloud Manager creates (or updates) a Kubernetes `Secret` in the same namespace.
 The following table lists the meaningful parameters of the auth Secret:
 
 | Parameter | Type | Description |
@@ -76,7 +80,7 @@ The following table lists the meaningful parameters of the auth Secret:
 | **.metadata.name** | string | Name of the auth Secret. It shares the name with AzureManagedRedis unless specified otherwise. |
 | **.metadata.labels** | object | Specified custom labels (if any). |
 | **.metadata.annotations** | object | Specified custom annotations (if any). |
-| **.data.primaryEndpoint** | string | Hostname of the AMR cluster (hostname only, not `host:port`). Base64 encoded. |
+| **.data.primaryEndpoint** | string | Hostname of the AMR instance (hostname only, not `host:port`). Base64 encoded. |
 | **.data.host** | string | Same as `primaryEndpoint`. Base64 encoded. |
 | **.data.port** | string | Redis client port. Always `10000` for Azure Managed Redis. Base64 encoded. |
 | **.data.authString** | string | Access key for client authentication. Base64 encoded. |
@@ -115,8 +119,9 @@ spec:
 
 ## Notes and Limitations
 
-- **Immutable fields.** `spec.redisTier` and `spec.authSecret.name` cannot be changed after creation. To resize, delete and recreate the resource (data will be lost).
+- **All spec fields are immutable.** `spec.redisTier` and `spec.authSecret.name` cannot be changed after creation. To resize or change the tier, delete and recreate the resource (data will be lost).
 - **Public network access is disabled.** Connections are only possible from within the Kyma SKR network through the auto-provisioned Private Endpoint.
 - **TLS only.** AMR enforces TLS 1.2 client connections; plaintext is not supported.
-- **Single database per cluster.** Cloud Manager provisions exactly one database (`default`) per `AzureManagedRedis` resource.
+- **Redis version.** Azure Managed Redis runs Redis 7.4. There is no `redisVersion` field; the version is managed by Azure.
+- **Single database per instance.** Cloud Manager provisions exactly one database (`default`) per `AzureManagedRedis` resource.
 - **No sovereign cloud support.** AMR is not yet available in Azure China or US Government clouds. Use `AzureRedisInstance` / `AzureRedisCluster` (legacy `armredis` SKUs) on those landscapes.
