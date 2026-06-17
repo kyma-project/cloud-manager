@@ -7,6 +7,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/meta"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -187,6 +188,15 @@ func LogIf(condition bool, msg string) StatusPatchErrorHandler {
 	}
 }
 
+// IgnoreNotFound is a StatusPatchErrorHandler that silently stops handler chain
+// when the object being patched no longer exists (deleted between reconcile and patch).
+func IgnoreNotFound(_ context.Context, err error) (bool, error) {
+	if apierrors.IsNotFound(err) {
+		return true, nil
+	}
+	return false, nil
+}
+
 // NewStatusPatcherComposed handles proper status changes and composed Action results. This patcher embeds the StatusPatcher
 // and introduces new functions:
 //   - StatusPatcherComposed.Run() that returns Action results
@@ -240,6 +250,7 @@ func NewStatusPatcherComposed[T ObjWithStatus](obj T) *StatusPatcherComposed[T] 
 	return &StatusPatcherComposed[T]{
 		StatusPatcher: NewStatusPatcher(obj),
 		failureHandlers: []StatusPatchErrorHandler{
+			IgnoreNotFound,
 			Log(fmt.Sprintf("failed to patch status for object %T %s/%s", obj, obj.GetNamespace(), obj.GetName())),
 			Requeue,
 		},

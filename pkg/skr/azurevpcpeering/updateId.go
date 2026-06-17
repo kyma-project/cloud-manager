@@ -23,13 +23,13 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 
 	id := uuid.NewString()
 
-	if obj.Labels == nil {
-		obj.Labels = map[string]string{}
-	}
-
-	obj.Labels[cloudresourcesv1beta1.LabelId] = id
-
-	err := state.UpdateObj(ctx)
+	err := composed.MergePatchObj(ctx, obj, map[string]any{
+		"metadata": map[string]any{
+			"labels": map[string]any{
+				cloudresourcesv1beta1.LabelId: id,
+			},
+		},
+	}, state.Cluster().K8sClient())
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating SKR AzureVpcPeering with ID label", composed.StopWithRequeue, ctx)
 	}
@@ -38,7 +38,6 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	obj.Status.Id = id
 
 	err = state.UpdateObjStatus(ctx)
-
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error updating SKR AzureVpcPeering status with ID label", composed.StopWithRequeue, ctx)
 	}

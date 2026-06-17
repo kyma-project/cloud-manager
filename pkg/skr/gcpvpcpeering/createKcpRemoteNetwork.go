@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -51,7 +52,10 @@ func createKcpRemoteNetwork(ctx context.Context, st composed.State) (error, cont
 	}
 
 	err := state.KcpCluster.K8sClient().Create(ctx, remoteNetwork)
-
+	if apierrors.IsAlreadyExists(err) {
+		state.KcpRemoteNetwork = remoteNetwork
+		return nil, nil
+	}
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error creating GCP KCP Remote Network", composed.StopWithRequeue, ctx)
 	}
