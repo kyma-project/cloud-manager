@@ -26,6 +26,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
+	alicloudiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange"
+	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
@@ -53,6 +55,7 @@ func SetupIpRangeReconciler(
 	gcpV2SvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
 	gcpV2ComputeProvider gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient],
 	sapProvider sapclient.SapClientProvider[sapiprangeclient.Client],
+	alicloudClientProvider alicloudiprangeclient.ClientProvider,
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -74,6 +77,7 @@ func SetupIpRangeReconciler(
 			gcpV3StateFactory,
 			gcpV2StateFactory,
 			sapiprange.NewStateFactory(sapProvider),
+			alicloudiprange.NewStateFactory(alicloudClientProvider),
 		),
 	).SetupWithManager(ctx, kcpManager)
 }

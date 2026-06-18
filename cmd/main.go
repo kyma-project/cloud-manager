@@ -38,6 +38,7 @@ import (
 
 	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
+	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
 	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
 
@@ -447,6 +448,7 @@ func main() {
 		gcpiprangeclient.NewServiceNetworkingClientProviderV2(gcpClients),
 		gcpiprangeclient.NewOldComputeClientProviderV2(gcpClients),
 		sapiprangeclient.NewClientProvider(),
+		alicloudiprangeclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")

@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	alicloudiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange"
 	awsiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange"
 	azureiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/iprange"
 	gcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange"
@@ -28,11 +29,12 @@ type ipRangeReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	awsStateFactory   awsiprange.StateFactory
-	azureStateFactory azureiprange.StateFactory
-	gcpV3StateFactory gcpiprange.V3StateFactory // v3 refactored state factory (NEW pattern)
-	gcpV2StateFactory gcpiprange.V2StateFactory // v2 legacy state factory
-	sapStateFactory   sapiprange.StateFactory
+	awsStateFactory      awsiprange.StateFactory
+	azureStateFactory    azureiprange.StateFactory
+	gcpV3StateFactory    gcpiprange.V3StateFactory // v3 refactored state factory (NEW pattern)
+	gcpV2StateFactory    gcpiprange.V2StateFactory // v2 legacy state factory
+	sapStateFactory      sapiprange.StateFactory
+	alicloudStateFactory alicloudiprange.StateFactory
 }
 
 func NewIPRangeReconciler(
@@ -43,6 +45,7 @@ func NewIPRangeReconciler(
 	gcpV3StateFactory gcpiprange.V3StateFactory,
 	gcpV2StateFactory gcpiprange.V2StateFactory,
 	sapStateFactory sapiprange.StateFactory,
+	alicloudStateFactory alicloudiprange.StateFactory,
 ) IPRangeReconciler {
 	return &ipRangeReconciler{
 		composedStateFactory: composedStateFactory,
@@ -52,6 +55,7 @@ func NewIPRangeReconciler(
 		gcpV3StateFactory:    gcpV3StateFactory,
 		gcpV2StateFactory:    gcpV2StateFactory,
 		sapStateFactory:      sapStateFactory,
+		alicloudStateFactory: alicloudStateFactory,
 	}
 }
 
@@ -87,6 +91,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureiprange.NewAllocateIpRangeAction(r.azureStateFactory)),
 						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.NewAllocateIpRangeAction(r.gcpV3StateFactory, r.gcpV2StateFactory)),
 						composed.NewCase(statewithscope.OpenStackProviderPredicate, sapiprange.NewAllocateIpRangeAction(r.sapStateFactory)),
+						composed.NewCase(statewithscope.AlicloudProviderPredicate, alicloudiprange.NewAllocateIpRangeAction(r.alicloudStateFactory)),
 					),
 					allocateIpRange,
 				),
@@ -127,6 +132,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
 						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.New(r.gcpV3StateFactory, r.gcpV2StateFactory)),
 						composed.NewCase(statewithscope.OpenStackProviderPredicate, sapiprange.New(r.sapStateFactory)),
+						composed.NewCase(statewithscope.AlicloudProviderPredicate, alicloudiprange.New(r.alicloudStateFactory)),
 					),
 				),
 				// delete
