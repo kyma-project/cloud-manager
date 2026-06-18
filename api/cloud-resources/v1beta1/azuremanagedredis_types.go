@@ -11,8 +11,11 @@ type AzureManagedRedisSpec struct {
 	// RedisTier defines the Kyma service tier. The letter encodes the workload class:
 	// S = single-node dev, P = HA production, C = clustered (sharded) HA.
 	// All tiers map to a single underlying Azure Managed Redis cluster.
+	// Scaling within the same family is allowed (e.g. S1→S3, P1→P3, C3→C5).
+	// Switching between families is not allowed because it changes the clustering
+	// policy or high-availability mode, which Azure does not support after creation.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="redisTier is immutable."
+	// +kubebuilder:validation:XValidation:rule=(self[0] == oldSelf[0]), message="redisTier family is immutable: switching between S, P, and C families is not allowed."
 	RedisTier AzureManagedRedisTier `json:"redisTier"`
 
 	// AuthSecret customises the name and labels of the generated connection secret.

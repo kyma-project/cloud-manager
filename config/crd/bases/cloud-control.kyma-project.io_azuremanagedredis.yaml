@@ -148,8 +148,10 @@ spec:
                 - EnterpriseFlash_F1500
                 type: string
                 x-kubernetes-validations:
-                - message: sku is immutable.
-                  rule: (self == oldSelf)
+                - message: 'sku family is immutable: changing between Balanced, ComputeOptimized,
+                    MemoryOptimized, FlashOptimized, or Enterprise families is not
+                    allowed.'
+                  rule: (self.split('_')[0] == oldSelf.split('_')[0])
               vpcNetwork:
                 description: |-
                   LocalObjectReference contains enough information to let you locate the
