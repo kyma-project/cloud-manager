@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"os"
 
+	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
+	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	awsvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork/client"
 	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
@@ -529,6 +531,7 @@ func main() {
 		azurevpcnetwork.NewStateFactory(azurevpcnetworkclient.NewClientProvider()),
 		gcpvpcnetwork.NewStateFactory(gcpvpcnetworkclient.NewClientProvider(gcpClients)),
 		sapvpcnetwork.NewStateFactory(sapvpcnetworkclient.NewClientProvider()),
+		alicloudvpcnetwork.NewStateFactory(alicloudvpcnetworkclient.NewClientProvider()),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VpcNetwork")
 		os.Exit(1)
