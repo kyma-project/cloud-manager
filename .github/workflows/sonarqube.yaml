@@ -10,6 +10,8 @@ on:
 jobs:
   sonar:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Print details
         env:
@@ -29,6 +31,7 @@ jobs:
           # Disabling shallow clones is recommended for improving the relevancy of reporting
           fetch-depth: 0
           ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
 
       - name: Download coverage artifacts
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
