@@ -95,6 +95,11 @@ func handleNetworkReference(ctx context.Context, st composed.State) (error, cont
 			state.ObjAsNetwork().Status.Network.OpenStack.Project = state.Scope().Spec.Scope.OpenStack.TenantName
 			changed = true
 		}
+	case state.ObjAsNetwork().Status.Network.Alicloud != nil:
+		if state.ObjAsNetwork().Status.Network.Alicloud.AccountId == "" {
+			state.ObjAsNetwork().Status.Network.Alicloud.AccountId = state.Scope().Spec.Scope.Alicloud.AccountId
+			changed = true
+		}
 	}
 
 	if !changed {

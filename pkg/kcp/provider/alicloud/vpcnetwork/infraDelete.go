@@ -49,5 +49,9 @@ func infraDelete(ctx context.Context, st composed.State) (error, context.Context
 
 	logger.Info("AliCloud VPC deleted", "vpcId", vpcId)
 
-	return nil, ctx
+	return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).
+		MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
+			vpcNetwork.Status.Identifiers = cloudcontrolv1beta1.VpcNetworkStatusIdentifiers{}
+		}).
+		Run(ctx, state.Cluster().K8sClient())
 }

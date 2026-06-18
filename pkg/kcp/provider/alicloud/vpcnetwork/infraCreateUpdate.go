@@ -29,7 +29,12 @@ func infraCreateUpdate(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	if len(vpcs) > 0 {
-		// VPC already exists, update status
+		// VPC already exists - check if it's available
+		if vpcs[0].Status != "Available" {
+			logger.Info("AliCloud VPC not yet available, requeueing", "status", vpcs[0].Status)
+			return composed.StopWithRequeue, ctx
+		}
+		// VPC is available, update status
 		return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).
 			MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
 				vpcNetwork.Status.Identifiers.Vpc = vpcs[0].VpcId
@@ -62,6 +67,9 @@ func infraCreateUpdate(ctx context.Context, st composed.State) (error, context.C
 			vpcNetwork.Status.Identifiers.Vpc = vpcInfo.VpcId
 			vpcNetwork.Status.CidrBlocks = []string{cidr}
 		}).
-		OnSuccess(composed.Log("AliCloud VPC created successfully")).
+		OnSuccess(
+			composed.Log("AliCloud VPC created, requeueing to wait for Available"),
+			composed.Requeue,
+		).
 		Run(ctx, state.Cluster().K8sClient())
 }
