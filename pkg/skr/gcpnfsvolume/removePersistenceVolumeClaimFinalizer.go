@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -27,6 +28,9 @@ func removePersistenceVolumeClaimFinalizer(ctx context.Context, st composed.Stat
 
 	_, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, state.PVC, state.Cluster().K8sClient())
 	if err != nil {
+		if apierrors.IsConflict(err) {
+			return composed.StopWithRequeue, nil
+		}
 		return composed.LogErrorAndReturn(err, "Error saving SKR PersistentVolumeClaim after finalizer removal", composed.StopWithRequeue, ctx)
 	}
 

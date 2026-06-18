@@ -107,7 +107,15 @@ func IsDependencyViolation(err error) bool {
 
 func IsSecretMarkedForDeletion(err error) bool {
 	var e *secretsmanagertypes.InvalidRequestException
-	return errors.As(err, &e)
+	if errors.As(err, &e) {
+		return true
+	}
+	// AWS SDK wraps errors in *smithy.OperationError; fall back to error code check
+	var apiError smithy.APIError
+	if errors.As(err, &apiError) {
+		return apiError.ErrorCode() == "InvalidRequestException"
+	}
+	return false
 }
 
 // https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html

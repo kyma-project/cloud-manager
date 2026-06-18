@@ -5,6 +5,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -24,6 +25,9 @@ func removePersistenceVolumeFinalizer(ctx context.Context, st composed.State) (e
 	// KCP NfsInstance does not exist, remove the finalizer so PV is also deleted
 	_, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, state.PV, state.SkrCluster.K8sClient())
 	if err != nil {
+		if apierrors.IsConflict(err) {
+			return composed.StopWithRequeue, nil
+		}
 		return composed.LogErrorAndReturn(err, "Error saving SKR PersistentVolume after finalizer removal", composed.StopWithRequeue, ctx)
 	}
 
