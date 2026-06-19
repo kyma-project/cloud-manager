@@ -7,6 +7,7 @@ import (
 	azurecommon "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/common"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	kcpsubscription "github.com/kyma-project/cloud-manager/pkg/kcp/subscription"
+	kcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -15,8 +16,6 @@ import (
 var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 
 	It("Scenario: KCP AzureManagedRedis is created and deleted", func() {
-
-		Skip("fix me, I', flaky....")
 
 		name := "a3b1c2d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6"
 		scope := &cloudcontrolv1beta1.Scope{}
@@ -60,6 +59,8 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 				WithSubscription(name).
 				WithCidrBlocks("10.250.0.0/22").
 				Build()
+
+			kcpvpcnetwork.Ignore.AddName(name)
 
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), vpcNetwork).
