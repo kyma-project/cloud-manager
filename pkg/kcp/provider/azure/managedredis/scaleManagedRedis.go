@@ -51,7 +51,7 @@ func scaleManagedRedis(ctx context.Context, st composed.State) (error, context.C
 			// Service principal lacks listSkusForScaling/action permission — skip validation and attempt PATCH directly.
 			composed.LoggerFromCtx(ctx).
 				WithValues("currentSKU", currentSKU, "desiredSKU", desiredSKU).
-				Info("listSkusForScaling returned 403, skipping SKU validation and proceeding with scale PATCH")
+				Info("WARNING: listSkusForScaling returned 403, SKU validation skipped - add Microsoft.Cache/redisEnterprise/listSkusForScaling/action permission to enable it")
 		} else {
 			composed.LoggerFromCtx(ctx).Error(err, "Failed to list allowed SKUs for scaling Azure Managed Redis")
 			obj.Status.State = string(cloudcontrolv1beta1.StateError)
@@ -79,7 +79,7 @@ func scaleManagedRedis(ctx context.Context, st composed.State) (error, context.C
 				Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
 				Message: msg,
 			}).
-			SuccessError(composed.StopWithRequeue).
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 			Run(ctx, st)
 	}
 

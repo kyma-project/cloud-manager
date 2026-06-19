@@ -122,6 +122,9 @@ func (s *managedRedisStore) UpdateCluster(ctx context.Context, resourceGroupName
 		return azuremeta.NewAzureNotFoundError()
 	}
 
+	if cluster.SKU != nil && cluster.SKU.Name != nil {
+		existing.SKU.Name = cluster.SKU.Name
+	}
 	if cluster.Properties != nil {
 		if cluster.Properties.MinimumTLSVersion != nil {
 			existing.Properties.MinimumTLSVersion = cluster.Properties.MinimumTLSVersion
