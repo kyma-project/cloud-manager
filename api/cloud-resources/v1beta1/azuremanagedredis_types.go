@@ -15,7 +15,7 @@ type AzureManagedRedisSpec struct {
 	// Switching between families is not allowed because it changes the clustering
 	// policy or high-availability mode, which Azure does not support after creation.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule=(self[0] == oldSelf[0]), message="redisTier family is immutable: switching between S, P, and C families is not allowed."
+	// +kubebuilder:validation:XValidation:rule=(self.startsWith("S") == oldSelf.startsWith("S") && self.startsWith("P") == oldSelf.startsWith("P") && self.startsWith("C") == oldSelf.startsWith("C")),message="redisTier family is immutable: switching between S, P, and C families is not allowed."
 	RedisTier AzureManagedRedisTier `json:"redisTier"`
 
 	// AuthSecret customises the name and labels of the generated connection secret.

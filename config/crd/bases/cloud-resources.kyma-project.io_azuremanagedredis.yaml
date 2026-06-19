@@ -115,7 +115,7 @@ spec:
                   type: string
                   x-kubernetes-validations:
                     - message: 'redisTier family is immutable: switching between S, P, and C families is not allowed.'
-                      rule: (self[0] == oldSelf[0])
+                      rule: (self.startsWith("S") == oldSelf.startsWith("S") && self.startsWith("P") == oldSelf.startsWith("P") && self.startsWith("C") == oldSelf.startsWith("C"))
               required:
                 - redisTier
               type: object

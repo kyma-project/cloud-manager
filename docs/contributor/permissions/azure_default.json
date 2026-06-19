@@ -15,6 +15,7 @@
     "Microsoft.Cache/redisEnterprise/databases/regenerateKey/action",
     "Microsoft.Cache/redisEnterprise/databases/write",
     "Microsoft.Cache/redisEnterprise/delete",
+    "Microsoft.Cache/redisEnterprise/listSkusForScaling/action",
     "Microsoft.Cache/redisEnterprise/privateEndpointConnections/read",
     "Microsoft.Cache/redisEnterprise/privateEndpointConnections/write",
     "Microsoft.Cache/redisEnterprise/privateEndpointConnectionsApproval/action",
