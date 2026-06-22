@@ -6,7 +6,6 @@ import (
 	"math"
 	"time"
 
-	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
@@ -134,8 +133,9 @@ func (s *skrStatusSaver) Save(ctx context.Context, skrStatus *SkrStatus) error {
 		api.Spec.AverageIntervalSeconds = int(math.Round(sum / float64(count)))
 	}
 
-	api.Spec.Conditions = pie.Map(skrStatus.handles, func(x *KindHandle) cloudcontrolv1beta1.SkrStatusCondition {
-		return cloudcontrolv1beta1.SkrStatusCondition{
+	api.Spec.Conditions = []cloudcontrolv1beta1.SkrStatusCondition{}
+	for _, x := range skrStatus.handles {
+		api.Spec.Conditions = append(api.Spec.Conditions, cloudcontrolv1beta1.SkrStatusCondition{
 			Title:           x.title,
 			ObjKindGroup:    x.objKindGroup,
 			CrdKindGroup:    x.crdKindGroup,
@@ -146,10 +146,7 @@ func (s *skrStatusSaver) Save(ctx context.Context, skrStatus *SkrStatus) error {
 			Filename:        x.filename,
 			Ok:              x.ok,
 			Outcomes:        x.outcomes,
-		}
-	})
-	if api.Spec.Conditions == nil {
-		api.Spec.Conditions = []cloudcontrolv1beta1.SkrStatusCondition{}
+		})
 	}
 
 	return s.repo.Save(ctx, api.CloneForPatch())

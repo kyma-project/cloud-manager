@@ -35,14 +35,24 @@ func waitManagedRedisAvailable(ctx context.Context, st composed.State) (error, c
 	// https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/async-operations#provisioningstate-values
 	if provisioningState == armredisenterprise.ProvisioningStateFailed ||
 		provisioningState == armredisenterprise.ProvisioningStateCanceled {
+
+		conditionMsg := fmt.Sprintf("Azure Managed Redis cluster provisioning %s (resourceState=%s)", provisioningState, resourceStateStr)
+
+		// Already in Error state with this exact message — nothing to update.
+		if obj.Status.State == string(cloudcontrolv1beta1.StateError) {
+			for _, c := range obj.Status.Conditions {
+				if c.Type == cloudcontrolv1beta1.ConditionTypeError && c.Message == conditionMsg {
+					return composed.StopAndForget, nil
+				}
+			}
+		}
+
 		composed.LoggerFromCtx(ctx).
 			WithValues(
 				"provisioningState", string(provisioningState),
 				"resourceState", resourceStateStr,
 			).
 			Info("Azure Managed Redis cluster reached terminal failure state")
-
-		conditionMsg := fmt.Sprintf("Azure Managed Redis cluster provisioning %s (resourceState=%s)", provisioningState, resourceStateStr)
 
 		obj.Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.UpdateStatus(obj).
