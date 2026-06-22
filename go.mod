@@ -69,7 +69,7 @@ require (
 	github.com/rodaine/table v1.3.1
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	github.com/thomaspoignant/go-feature-flag v1.54.0
+	github.com/thomaspoignant/go-feature-flag v1.54.1
 	github.com/tidwall/gjson v1.19.0
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.28.0
