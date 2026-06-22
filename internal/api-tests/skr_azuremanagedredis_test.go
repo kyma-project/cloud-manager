@@ -101,13 +101,21 @@ var _ = Describe("Feature: SKR AzureManagedRedis", Ordered, func() {
 			"spec.redisTier",
 		)
 
-		canNotChangeSkr(
-			"AzureManagedRedis tier is immutable",
+		canChangeSkr(
+			"AzureManagedRedis tier can be changed within the same family (P1 -> P2)",
 			newTestAzureManagedRedisBuilder().WithTier(cloudresourcesv1beta1.AzureManagedRedisTierP1),
 			func(b Builder[*cloudresourcesv1beta1.AzureManagedRedis]) {
 				b.(*testAzureManagedRedisBuilder).WithTier(cloudresourcesv1beta1.AzureManagedRedisTierP2)
 			},
-			"redisTier is immutable",
+		)
+
+		canNotChangeSkr(
+			"AzureManagedRedis tier family is immutable (P1 -> S1 rejected)",
+			newTestAzureManagedRedisBuilder().WithTier(cloudresourcesv1beta1.AzureManagedRedisTierP1),
+			func(b Builder[*cloudresourcesv1beta1.AzureManagedRedis]) {
+				b.(*testAzureManagedRedisBuilder).WithTier(cloudresourcesv1beta1.AzureManagedRedisTierS1)
+			},
+			"redisTier family is immutable",
 		)
 	})
 

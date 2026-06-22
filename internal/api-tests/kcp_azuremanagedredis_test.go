@@ -109,13 +109,21 @@ var _ = Describe("Feature: KCP AzureManagedRedis", Ordered, func() {
 
 	Context("Scenario: SKU immutability", func() {
 
-		canNotChangeKcp(
-			"AzureManagedRedis sku cannot be changed",
+		canChangeKcp(
+			"AzureManagedRedis sku can be changed within the same family (Balanced_B5 -> Balanced_B10)",
 			newTestKcpAzureManagedRedisBuilder().WithSKU("Balanced_B5"),
 			func(b Builder[*cloudcontrolv1beta1.AzureManagedRedis]) {
 				b.(*testKcpAzureManagedRedisBuilder).WithSKU("Balanced_B10")
 			},
-			"sku is immutable",
+		)
+
+		canNotChangeKcp(
+			"AzureManagedRedis sku family is immutable (Balanced -> ComputeOptimized rejected)",
+			newTestKcpAzureManagedRedisBuilder().WithSKU("Balanced_B5"),
+			func(b Builder[*cloudcontrolv1beta1.AzureManagedRedis]) {
+				b.(*testKcpAzureManagedRedisBuilder).WithSKU("ComputeOptimized_X5")
+			},
+			"sku family is immutable",
 		)
 	})
 

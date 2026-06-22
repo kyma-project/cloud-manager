@@ -75,6 +75,7 @@ func (r *managedRedisReconciler) newAction() composed.Action {
 				composed.If(composed.NotMarkedForDeletionPredicate,
 					composed.ComposeActionsNoName(
 						createManagedRedis,
+						scaleManagedRedis,
 						waitManagedRedisAvailable,
 						updateStatusId,
 						createDatabase,

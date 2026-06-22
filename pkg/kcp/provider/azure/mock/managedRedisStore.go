@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
@@ -121,6 +122,9 @@ func (s *managedRedisStore) UpdateCluster(ctx context.Context, resourceGroupName
 		return azuremeta.NewAzureNotFoundError()
 	}
 
+	if cluster.SKU != nil && cluster.SKU.Name != nil {
+		existing.SKU.Name = cluster.SKU.Name
+	}
 	if cluster.Properties != nil {
 		if cluster.Properties.MinimumTLSVersion != nil {
 			existing.Properties.MinimumTLSVersion = cluster.Properties.MinimumTLSVersion
@@ -298,4 +302,45 @@ func (s *managedRedisStore) ListKeys(ctx context.Context, resourceGroupName, clu
 		return nil, err
 	}
 	return res, nil
+}
+
+// mockSKUsByFamily lists all known SKUs per Azure Managed Redis family prefix.
+// The mock allows scaling to any SKU in the same family as the current cluster.
+var mockSKUsByFamily = map[string][]string{
+	"ComputeOptimized": {"ComputeOptimized_X5", "ComputeOptimized_X10", "ComputeOptimized_X20", "ComputeOptimized_X50", "ComputeOptimized_X100"},
+	"MemoryOptimized":  {"MemoryOptimized_M10", "MemoryOptimized_M20", "MemoryOptimized_M50", "MemoryOptimized_M100"},
+	"Balanced":         {"Balanced_B5", "Balanced_B10", "Balanced_B20", "Balanced_B50", "Balanced_B100"},
+	"FlashOptimized":   {"FlashOptimized_A250", "FlashOptimized_A500", "FlashOptimized_A1000", "FlashOptimized_A2000", "FlashOptimized_A4500"},
+}
+
+func (s *managedRedisStore) ListSKUsForScaling(ctx context.Context, resourceGroupName, clusterName string) ([]string, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	if s.items[resourceGroupName] == nil {
+		return nil, azuremeta.NewAzureNotFoundError()
+	}
+	cluster, exists := s.items[resourceGroupName][clusterName]
+	if !exists {
+		return nil, azuremeta.NewAzureNotFoundError()
+	}
+	if cluster.SKU == nil || cluster.SKU.Name == nil {
+		return []string{}, nil
+	}
+	currentSKU := string(*cluster.SKU.Name)
+	for family, skus := range mockSKUsByFamily {
+		if strings.HasPrefix(currentSKU, family) {
+			result := make([]string, 0, len(skus)-1)
+			for _, s := range skus {
+				if s != currentSKU {
+					result = append(result, s)
+				}
+			}
+			return result, nil
+		}
+	}
+	return []string{}, nil
 }

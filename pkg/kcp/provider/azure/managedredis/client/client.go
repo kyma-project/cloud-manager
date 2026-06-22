@@ -30,6 +30,8 @@ type ManagedRedisClient interface {
 	DeleteDatabase(ctx context.Context, resourceGroupName, clusterName, databaseName string) error
 	// ListKeys retrieves the access keys for the default database.
 	ListKeys(ctx context.Context, resourceGroupName, clusterName, databaseName string) (*armredisenterprise.AccessKeys, error)
+	// ListSKUsForScaling returns the SKUs that the cluster can be scaled to.
+	ListSKUsForScaling(ctx context.Context, resourceGroupName, clusterName string) ([]string, error)
 }
 
 // Client composes ManagedRedisClient with reused networking clients.
@@ -157,6 +159,20 @@ func (c *managedRedisClientImpl) ListKeys(ctx context.Context, resourceGroupName
 		return nil, err
 	}
 	return &resp.AccessKeys, nil
+}
+
+func (c *managedRedisClientImpl) ListSKUsForScaling(ctx context.Context, resourceGroupName, clusterName string) ([]string, error) {
+	resp, err := c.clustersClient.ListSKUsForScaling(ctx, resourceGroupName, clusterName, nil)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]string, 0, len(resp.SKUs))
+	for _, sku := range resp.SKUs {
+		if sku != nil && sku.Name != nil {
+			result = append(result, *sku.Name)
+		}
+	}
+	return result, nil
 }
 
 // compositeClient embeds all sub-clients.

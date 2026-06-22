@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.0.3
   name: azuremanagedredis.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -93,6 +93,9 @@ spec:
                     RedisTier defines the Kyma service tier. The letter encodes the workload class:
                     S = single-node dev, P = HA production, C = clustered (sharded) HA.
                     All tiers map to a single underlying Azure Managed Redis cluster.
+                    Scaling within the same family is allowed (e.g. S1→S3, P1→P3, C3→C5).
+                    Switching between families is not allowed because it changes the clustering
+                    policy or high-availability mode, which Azure does not support after creation.
                   enum:
                     - S1
                     - S2
@@ -111,8 +114,8 @@ spec:
                     - C7
                   type: string
                   x-kubernetes-validations:
-                    - message: redisTier is immutable.
-                      rule: (self == oldSelf)
+                    - message: 'redisTier family is immutable: switching between S, P, and C families is not allowed.'
+                      rule: (self.startsWith("S") == oldSelf.startsWith("S") && self.startsWith("P") == oldSelf.startsWith("P") && self.startsWith("C") == oldSelf.startsWith("C"))
               required:
                 - redisTier
               type: object
