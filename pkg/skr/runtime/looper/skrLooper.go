@@ -282,4 +282,7 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 			logger.Error(err, "Error running SKR Runner")
 		}
 	}
+	if !runner.SkrWasReady() {
+		time.Sleep(util.Timing.T10000ms())
+	}
 }

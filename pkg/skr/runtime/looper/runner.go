@@ -55,6 +55,9 @@ type SkrRunner interface {
 	// ScopeProvider returns used ScopeProvider when started. Before that it's nil
 	ScopeProvider() scopeprovider.ScopeProviderRegistry
 
+	// SkrWasReady returns true if the SKR readiness check passed during Run.
+	SkrWasReady() bool
+
 	// Run starts the runner. Once run the ScopeProvider() is available
 	Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) error
 }
@@ -80,9 +83,10 @@ type skrRunner struct {
 
 	scopeProvider scopeprovider.ScopeProviderRegistry
 
-	runOnce sync.Once
-	started bool
-	stopped bool
+	runOnce  sync.Once
+	started  bool
+	stopped  bool
+	skrReady bool
 }
 
 func (r *skrRunner) isObjectActiveForProvider(scheme *runtime.Scheme, provider *cloudcontrolv1beta1.ProviderType, obj client.Object) bool {
@@ -94,6 +98,10 @@ func (r *skrRunner) isObjectActiveForProvider(scheme *runtime.Scheme, provider *
 
 func (r *skrRunner) ScopeProvider() scopeprovider.ScopeProviderRegistry {
 	return r.scopeProvider
+}
+
+func (r *skrRunner) SkrWasReady() bool {
+	return r.skrReady
 }
 
 func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, opts ...RunOption) (err error) {
@@ -125,6 +133,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				skrStatus.NotReady()
 				return
 			}
+			r.skrReady = true
 		}
 
 		if options.provider != nil {
