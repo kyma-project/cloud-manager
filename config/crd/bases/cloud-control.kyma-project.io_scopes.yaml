@@ -59,6 +59,37 @@ spec:
                 maxProperties: 1
                 minProperties: 1
                 properties:
+                  alicloud:
+                    properties:
+                      accountId:
+                        type: string
+                      network:
+                        properties:
+                          nodes:
+                            type: string
+                          pods:
+                            type: string
+                          services:
+                            type: string
+                          vpc:
+                            properties:
+                              cidr:
+                                type: string
+                              id:
+                                type: string
+                            type: object
+                          zones:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      vpcNetwork:
+                        type: string
+                    required:
+                    - accountId
+                    - network
+                    - vpcNetwork
+                    type: object
                   aws:
                     properties:
                       accountId:
