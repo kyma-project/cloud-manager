@@ -22,7 +22,7 @@ This table lists the parameters of **AzureManagedRedis.spec**:
 
 | Parameter | Type | Required | Immutable | Description |
 |-----------|------|----------|-----------|-------------|
-| **redisTier** | string | Yes | Yes | Kyma service tier. Encodes the underlying SKU, high-availability, and clustering policy. See the [Tier Reference](#tier-reference) below. Allowed values: `S1`, `S2`, `S3`, `S4`, `S5`, `P1`, `P2`, `P3`, `P4`, `P5`, `C3`, `C4`, `C5`, `C6`, `C7`. |
+| **redisTier** | string | Yes | No* | Kyma service tier. Encodes the underlying SKU, high-availability, and clustering policy. See the [Tier Reference](#tier-reference) below. Allowed values: `S1`, `S2`, `S3`, `S4`, `S5`, `P1`, `P2`, `P3`, `P4`, `P5`, `C3`, `C4`, `C5`, `C6`, `C7`. *Tier family (`S`, `P`, `C`) is immutable; see [Scaling](#scaling). |
 | **authSecret** | object | No | No | Customizes the generated connection Secret. |
 | **authSecret.name** | string | No | Yes | Name of the Secret. Defaults to the `AzureManagedRedis` resource name. |
 | **authSecret.labels** | map[string]string | No | No | Labels applied to the Secret. |
@@ -57,6 +57,19 @@ P-tiers and C-tiers map to the **same Azure SKU at the same price** when their u
 
 > [!NOTE]
 > S-tiers have no replica and no automatic failover. A node failure results in downtime and potential data loss. Use S-tiers for development and testing only.
+
+### Scaling
+
+You can scale an existing instance up or down by changing `spec.redisTier` to another tier **within the same family**:
+
+- **S-family** (single-node): `S1` ↔ `S2` ↔ `S3` ↔ `S4` ↔ `S5`
+- **P-family** (HA, EnterpriseCluster): `P1` ↔ `P2` ↔ `P3` ↔ `P4` ↔ `P5`
+- **C-family** (HA, OSSCluster): `C3` ↔ `C4` ↔ `C5` ↔ `C6` ↔ `C7`
+
+Switching between families (for example, `S3` → `P1` or `P2` → `C4`) is **not allowed** and is rejected by the API server. The reason is that a family change would alter high-availability or clustering policy, which Azure does not support for a running instance.
+
+> [!NOTE]
+> Azure scales an instance without data loss or client connection interruption when the target tier is a valid scale target. However, a brief performance impact may occur during the scaling operation.
 
 ## Status Fields
 
@@ -122,4 +135,4 @@ spec:
 - **Public network access is disabled.** Connections are only possible from within the Kyma SKR network through the auto-provisioned Private Endpoint.
 - **No sovereign cloud support.** AMR is not yet available in Azure China or US Government clouds. Use `AzureRedisInstance` / `AzureRedisCluster` (legacy `armredis` SKUs) on those landscapes.
 - **Auth Secret name conflict.** If a Kubernetes Secret with the same name already exists in the namespace and belongs to a different `AzureManagedRedis` resource, the instance enters the `Error` state. Use a unique **spec.authSecret.name** to avoid conflicts.
-- **Resize requires recreation.** You can't change **spec.redisTier** after creation. To resize or change the tier, delete and recreate the resource (data will be lost).
+- **Family change requires recreation.** Switching families (for example, `P1` → `S3`) requires deleting and recreating the resource; data will be lost. Scaling within the same family does not require recreation.
