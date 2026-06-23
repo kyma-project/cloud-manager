@@ -6,23 +6,16 @@ on:
     paths-ignore:
       - .github/workflows/stale.yaml
       - docs/**
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, labeled]
-    paths-ignore:
-      - .github/workflows/stale.yaml
-      - docs/**
 
 jobs:
   approve-image-build:
-    if: ${{ github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
     environment: e2e
     runs-on: ubuntu-latest
-    permissions: {}
     steps:
       - run: echo "Build approved"
 
   build-image:
-    if: ${{ github.event_name == 'pull_request_target' }}
     permissions:
       id-token: write # This is required for requesting the JWT token
       contents: read # This is required for actions/checkout
@@ -35,15 +28,13 @@ jobs:
 
   local-build:
     name: Build Image Locally
-    if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'pr-build-image') }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - name: Checkout PR head
         uses: actions/checkout@v7
         with:
-          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Build Image Locally
         uses: docker/build-push-action@v7
         with:
