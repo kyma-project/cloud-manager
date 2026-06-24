@@ -330,6 +330,8 @@ github.com/gardener/etcd-druid/api v0.36.4 h1:o/17ciPrbh/w+igKMUuglW7N9XLjoMh7Av
 github.com/gardener/etcd-druid/api v0.36.4/go.mod h1:RwZzKp8K415AS0zg8VoODjBxYepCAUYyLgXnZc1bmbo=
 github.com/gardener/gardener v1.144.1 h1:DgofBa2WTY7xVSTVRqAuPAE14+uOA9X9hsN1Bb1BxDA=
 github.com/gardener/gardener v1.144.1/go.mod h1:RBqX3h3eiMtEUG7oDZqVM+wOYT1T1sr7c1WPs3akTeE=
+github.com/gardener/gardener-extension-provider-alicloud v1.71.0 h1:ye8p7kU1EPsgbgtsEQMOFSKV3i0WH7hh+3QxaEgY8Rk=
+github.com/gardener/gardener-extension-provider-alicloud v1.71.0/go.mod h1:pD4xTTuxW+Xw5MtmEos222y1DP18dkpXj9Zkt2lXJkE=
 github.com/gardener/gardener-extension-provider-aws v1.71.0 h1:obbJ21a5jyWHYSxIYIPmCtVFmdWyr75enVk2vWCnQ60=
 github.com/gardener/gardener-extension-provider-aws v1.71.0/go.mod h1:YJC4vxMQpMSZro7x5I4dBPks39l7UZA+D6Su4XU3dfY=
 github.com/gardener/gardener-extension-provider-azure v1.61.0 h1:gQFugiwurpbwoNmqrZWm+evMYjasA0dAJJi2GgL+q4I=
