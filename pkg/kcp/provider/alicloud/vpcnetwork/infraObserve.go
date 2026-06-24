@@ -17,7 +17,8 @@ func infraObserve(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, ctx
 	}
 
-	vpcs, err := state.alicloudClient.DescribeVpcs(ctx, name)
+	// Gardener names the VPC as "<shootName>-vpc" on Alicloud
+	vpcs, err := state.alicloudClient.DescribeVpcs(ctx, name+"-vpc")
 	if err != nil {
 		composed.LoggerFromCtx(ctx).Error(err, "Error observing AliCloud VPC")
 		return composed.NewStatusPatcherComposed(state.ObjAsVpcNetwork()).

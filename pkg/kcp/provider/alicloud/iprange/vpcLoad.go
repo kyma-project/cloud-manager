@@ -18,7 +18,8 @@ func vpcLoad(ctx context.Context, st composed.State) (error, context.Context) {
 		return composed.StopWithRequeue, ctx
 	}
 
-	networkName := state.Network().Status.Network.Alicloud.NetworkName
+	// Gardener names the VPC as "<shootName>-vpc" on Alicloud
+	networkName := state.Network().Status.Network.Alicloud.NetworkName + "-vpc"
 
 	vpcs, err := state.client.DescribeVpcs(ctx, networkName)
 	if err != nil {
