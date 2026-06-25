@@ -1,0 +1,785 @@
+package awswebacl
+
+import (
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
+)
+
+func convertDefaultAction(action cloudresourcesv1beta1.AwsWebAclDefaultAction) (*wafv2types.DefaultAction, error) {
+	result := &wafv2types.DefaultAction{}
+
+	if action.Allow != nil {
+		allowAction := &wafv2types.AllowAction{}
+		if action.Allow.CustomRequestHandling != nil {
+			allowAction.CustomRequestHandling = convertCustomRequestHandling(action.Allow.CustomRequestHandling)
+		}
+		result.Allow = allowAction
+		return result, nil
+	}
+
+	if action.Block != nil {
+		blockAction := &wafv2types.BlockAction{}
+		if action.Block.CustomResponse != nil {
+			blockAction.CustomResponse = convertCustomResponse(action.Block.CustomResponse)
+		}
+		result.Block = blockAction
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("defaultAction must have either allow or block set")
+}
+
+func convertRules(rules []cloudresourcesv1beta1.AwsWebAclRule) ([]wafv2types.Rule, error) {
+	if len(rules) == 0 {
+		return nil, nil
+	}
+
+	result := make([]wafv2types.Rule, 0, len(rules))
+	for _, rule := range rules {
+		wafRule, err := convertRule(rule)
+		if err != nil {
+			return nil, fmt.Errorf("error converting rule %s: %w", rule.Name, err)
+		}
+		result = append(result, *wafRule)
+	}
+	return result, nil
+}
+
+func convertRule(rule cloudresourcesv1beta1.AwsWebAclRule) (*wafv2types.Rule, error) {
+	statement, err := convertRuleStatement(&rule)
+	if err != nil {
+		return nil, err
+	}
+
+	visibilityConfig := convertVisibilityConfig(rule.VisibilityConfig, rule.Name)
+
+	wafRule := &wafv2types.Rule{
+		Name:             &rule.Name,
+		Priority:         rule.Priority,
+		Statement:        statement,
+		VisibilityConfig: visibilityConfig,
+	}
+
+	// Convert RuleLabels if present
+	if len(rule.RuleLabels) > 0 {
+		wafRule.RuleLabels = convertRuleLabels(rule.RuleLabels)
+	}
+
+	// Convert per-rule CaptchaConfig if present (overrides global)
+	if rule.CaptchaConfig != nil {
+		wafRule.CaptchaConfig = convertCaptchaConfig(rule.CaptchaConfig)
+	}
+
+	// Convert per-rule ChallengeConfig if present (overrides global)
+	if rule.ChallengeConfig != nil {
+		wafRule.ChallengeConfig = convertChallengeConfig(rule.ChallengeConfig)
+	}
+
+	// Validate: exactly one of Action or OverrideAction must be set
+	if rule.Action != nil && rule.OverrideAction != nil {
+		return nil, fmt.Errorf("rule %s: cannot set both action and overrideAction", rule.Name)
+	}
+	if rule.Action == nil && rule.OverrideAction == nil {
+		return nil, fmt.Errorf("rule %s: must set either action or overrideAction", rule.Name)
+	}
+
+	// Convert Action or OverrideAction
+	if rule.Action != nil {
+		action, err := convertRuleActionType(rule.Action)
+		if err != nil {
+			return nil, fmt.Errorf("rule %s: %w", rule.Name, err)
+		}
+		wafRule.Action = action
+	}
+
+	if rule.OverrideAction != nil {
+		overrideAction, err := convertOverrideAction(rule.OverrideAction)
+		if err != nil {
+			return nil, fmt.Errorf("rule %s: %w", rule.Name, err)
+		}
+		wafRule.OverrideAction = overrideAction
+	}
+
+	return wafRule, nil
+}
+
+func convertRuleActionType(actionType *cloudresourcesv1beta1.AwsWebAclRuleAction) (*wafv2types.RuleAction, error) {
+	result := &wafv2types.RuleAction{}
+
+	if actionType.Allow != nil {
+		allowAction := &wafv2types.AllowAction{}
+		if actionType.Allow.CustomRequestHandling != nil {
+			allowAction.CustomRequestHandling = convertCustomRequestHandling(actionType.Allow.CustomRequestHandling)
+		}
+		result.Allow = allowAction
+		return result, nil
+	}
+
+	if actionType.Block != nil {
+		blockAction := &wafv2types.BlockAction{}
+		if actionType.Block.CustomResponse != nil {
+			blockAction.CustomResponse = convertCustomResponse(actionType.Block.CustomResponse)
+		}
+		result.Block = blockAction
+		return result, nil
+	}
+
+	if actionType.Count != nil {
+		countAction := &wafv2types.CountAction{}
+		if actionType.Count.CustomRequestHandling != nil {
+			countAction.CustomRequestHandling = convertCustomRequestHandling(actionType.Count.CustomRequestHandling)
+		}
+		result.Count = countAction
+		return result, nil
+	}
+
+	if actionType.Captcha != nil {
+		captchaAction := &wafv2types.CaptchaAction{}
+		if actionType.Captcha.CustomRequestHandling != nil {
+			captchaAction.CustomRequestHandling = convertCustomRequestHandling(actionType.Captcha.CustomRequestHandling)
+		}
+		result.Captcha = captchaAction
+		return result, nil
+	}
+
+	if actionType.Challenge != nil {
+		challengeAction := &wafv2types.ChallengeAction{}
+		if actionType.Challenge.CustomRequestHandling != nil {
+			challengeAction.CustomRequestHandling = convertCustomRequestHandling(actionType.Challenge.CustomRequestHandling)
+		}
+		result.Challenge = challengeAction
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("action must have one of allow, block, count, captcha, or challenge set")
+}
+
+func convertOverrideAction(overrideAction *cloudresourcesv1beta1.AwsWebAclOverrideAction) (*wafv2types.OverrideAction, error) {
+	result := &wafv2types.OverrideAction{}
+
+	if overrideAction.None != nil {
+		result.None = &wafv2types.NoneAction{}
+		return result, nil
+	}
+
+	if overrideAction.Count != nil {
+		countAction := &wafv2types.CountAction{}
+		if overrideAction.Count.CustomRequestHandling != nil {
+			countAction.CustomRequestHandling = convertCustomRequestHandling(overrideAction.Count.CustomRequestHandling)
+		}
+		result.Count = countAction
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("overrideAction must have either none or count set")
+}
+
+func convertGeoMatchStatement(geo *cloudresourcesv1beta1.AwsWebAclGeoMatchStatement) (*wafv2types.GeoMatchStatement, error) {
+	countryCodes := make([]wafv2types.CountryCode, 0, len(geo.CountryCodes))
+	for _, code := range geo.CountryCodes {
+		countryCodes = append(countryCodes, wafv2types.CountryCode(code))
+	}
+
+	stmt := &wafv2types.GeoMatchStatement{
+		CountryCodes: countryCodes,
+	}
+
+	if geo.ForwardedIPConfig != nil {
+		stmt.ForwardedIPConfig = convertForwardedIPConfig(geo.ForwardedIPConfig)
+	}
+
+	return stmt, nil
+}
+
+func convertRateBasedStatement(rate *cloudresourcesv1beta1.AwsWebAclRateBasedStatement) (*wafv2types.RateBasedStatement, error) {
+	stmt := &wafv2types.RateBasedStatement{
+		Limit:            aws.Int64(rate.Limit),
+		AggregateKeyType: wafv2types.RateBasedStatementAggregateKeyType(rate.AggregateKeyType),
+	}
+
+	// EvaluationWindowSec (default 300 if not specified)
+	if rate.EvaluationWindowSec != nil {
+		stmt.EvaluationWindowSec = int64(*rate.EvaluationWindowSec)
+	} else {
+		stmt.EvaluationWindowSec = 300
+	}
+
+	// ForwardedIPConfig
+	if rate.ForwardedIPConfig != nil {
+		stmt.ForwardedIPConfig = convertForwardedIPConfig(rate.ForwardedIPConfig)
+	}
+
+	// CustomKeys (required when AggregateKeyType=CUSTOM_KEYS)
+	if len(rate.CustomKeys) > 0 {
+		stmt.CustomKeys = make([]wafv2types.RateBasedStatementCustomKey, len(rate.CustomKeys))
+		for i, ck := range rate.CustomKeys {
+			converted, err := convertCustomKey(ck)
+			if err != nil {
+				return nil, fmt.Errorf("invalid customKey[%d]: %w", i, err)
+			}
+			stmt.CustomKeys[i] = *converted
+		}
+	}
+
+	return stmt, nil
+}
+
+func convertCustomKey(ck cloudresourcesv1beta1.AwsWebAclRateBasedStatementCustomKey) (*wafv2types.RateBasedStatementCustomKey, error) {
+	result := &wafv2types.RateBasedStatementCustomKey{}
+
+	if ck.Header != nil {
+		transforms, err := convertTextTransformations(ck.Header.TextTransformations)
+		if err != nil {
+			return nil, err
+		}
+		result.Header = &wafv2types.RateLimitHeader{
+			Name:                aws.String(ck.Header.Name),
+			TextTransformations: transforms,
+		}
+		return result, nil
+	}
+
+	if ck.Cookie != nil {
+		transforms, err := convertTextTransformations(ck.Cookie.TextTransformations)
+		if err != nil {
+			return nil, err
+		}
+		result.Cookie = &wafv2types.RateLimitCookie{
+			Name:                aws.String(ck.Cookie.Name),
+			TextTransformations: transforms,
+		}
+		return result, nil
+	}
+
+	if ck.QueryArgument != nil {
+		transforms, err := convertTextTransformations(ck.QueryArgument.TextTransformations)
+		if err != nil {
+			return nil, err
+		}
+		result.QueryArgument = &wafv2types.RateLimitQueryArgument{
+			Name:                aws.String(ck.QueryArgument.Name),
+			TextTransformations: transforms,
+		}
+		return result, nil
+	}
+
+	if ck.QueryString != nil {
+		transforms, err := convertTextTransformations(ck.QueryString.TextTransformations)
+		if err != nil {
+			return nil, err
+		}
+		result.QueryString = &wafv2types.RateLimitQueryString{
+			TextTransformations: transforms,
+		}
+		return result, nil
+	}
+
+	if ck.HTTPMethod != nil {
+		result.HTTPMethod = &wafv2types.RateLimitHTTPMethod{}
+		return result, nil
+	}
+
+	if ck.ForwardedIP != nil {
+		result.ForwardedIP = &wafv2types.RateLimitForwardedIP{}
+		return result, nil
+	}
+
+	if ck.IP != nil {
+		result.IP = &wafv2types.RateLimitIP{}
+		return result, nil
+	}
+
+	if ck.LabelNamespace != nil {
+		result.LabelNamespace = &wafv2types.RateLimitLabelNamespace{
+			Namespace: aws.String(ck.LabelNamespace.Namespace),
+		}
+		return result, nil
+	}
+
+	if ck.UriPath != nil {
+		transforms, err := convertTextTransformations(ck.UriPath.TextTransformations)
+		if err != nil {
+			return nil, err
+		}
+		result.UriPath = &wafv2types.RateLimitUriPath{
+			TextTransformations: transforms,
+		}
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("no custom key type specified")
+}
+
+func convertManagedRuleGroupStatement(managed *cloudresourcesv1beta1.AwsWebAclManagedRuleGroupStatement) (*wafv2types.ManagedRuleGroupStatement, error) {
+	stmt := &wafv2types.ManagedRuleGroupStatement{
+		VendorName: &managed.VendorName,
+		Name:       &managed.Name,
+	}
+
+	if managed.Version != "" {
+		stmt.Version = &managed.Version
+	}
+
+	if len(managed.ExcludedRules) > 0 {
+		stmt.ExcludedRules = make([]wafv2types.ExcludedRule, 0, len(managed.ExcludedRules))
+		for _, excluded := range managed.ExcludedRules {
+			stmt.ExcludedRules = append(stmt.ExcludedRules, wafv2types.ExcludedRule{
+				Name: &excluded.Name,
+			})
+		}
+	}
+
+	if len(managed.RuleActionOverrides) > 0 {
+		stmt.RuleActionOverrides = make([]wafv2types.RuleActionOverride, 0, len(managed.RuleActionOverrides))
+		for _, override := range managed.RuleActionOverrides {
+			action, err := convertRuleActionType(override.ActionToUse)
+			if err != nil {
+				return nil, fmt.Errorf("error converting rule action override for rule %s: %w", override.Name, err)
+			}
+
+			stmt.RuleActionOverrides = append(stmt.RuleActionOverrides, wafv2types.RuleActionOverride{
+				Name:        &override.Name,
+				ActionToUse: action,
+			})
+		}
+	}
+
+	return stmt, nil
+}
+
+func convertVisibilityConfig(config *cloudresourcesv1beta1.AwsWebAclVisibilityConfig, defaultName string) *wafv2types.VisibilityConfig {
+	// If no visibility config provided, use defaults with metrics/sampling disabled
+	if config == nil {
+		return &wafv2types.VisibilityConfig{
+			CloudWatchMetricsEnabled: false,
+			MetricName:               &defaultName,
+			SampledRequestsEnabled:   false,
+		}
+	}
+
+	// Default metricName to defaultName if not specified
+	metricName := config.MetricName
+	if metricName == "" {
+		metricName = defaultName
+	}
+
+	return &wafv2types.VisibilityConfig{
+		CloudWatchMetricsEnabled: config.CloudWatchMetricsEnabled,
+		MetricName:               &metricName,
+		SampledRequestsEnabled:   config.SampledRequestsEnabled,
+	}
+}
+
+func ScopeRegional() wafv2types.Scope {
+	// For now, always use REGIONAL
+	return wafv2types.ScopeRegional
+}
+
+func convertTags(webAcl *cloudresourcesv1beta1.AwsWebAcl, scope *cloudcontrolv1beta1.Scope) []wafv2types.Tag {
+	tags := []wafv2types.Tag{
+		{
+			Key:   aws.String("Name"),
+			Value: &webAcl.Name,
+		},
+		{
+			Key:   aws.String("ManagedBy"),
+			Value: aws.String("cloud-manager"),
+		},
+		{
+			Key:   aws.String(common.TagScope),
+			Value: &scope.Name,
+		},
+		{
+			Key:   aws.String(common.TagShoot),
+			Value: &scope.Spec.ShootName,
+		},
+	}
+
+	// Add labels as tags
+	for key, value := range webAcl.Labels {
+		k := key
+		v := value
+		tags = append(tags, wafv2types.Tag{
+			Key:   &k,
+			Value: &v,
+		})
+	}
+
+	return tags
+}
+
+func convertByteMatchStatement(byteMatch *cloudresourcesv1beta1.AwsWebAclByteMatchStatement) (*wafv2types.ByteMatchStatement, error) {
+	fieldToMatch, err := convertFieldToMatch(byteMatch.FieldToMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	transformations, err := convertTextTransformations(byteMatch.TextTransformations)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wafv2types.ByteMatchStatement{
+		SearchString:         []byte(byteMatch.SearchString),
+		FieldToMatch:         fieldToMatch,
+		PositionalConstraint: wafv2types.PositionalConstraint(byteMatch.PositionalConstraint),
+		TextTransformations:  transformations,
+	}, nil
+}
+
+func convertFieldToMatch(field cloudresourcesv1beta1.AwsWebAclFieldToMatch) (*wafv2types.FieldToMatch, error) {
+	result := &wafv2types.FieldToMatch{}
+
+	if field.UriPath != nil {
+		result.UriPath = &wafv2types.UriPath{}
+		return result, nil
+	}
+
+	if field.QueryString != nil {
+		result.QueryString = &wafv2types.QueryString{}
+		return result, nil
+	}
+
+	if field.Method != nil {
+		result.Method = &wafv2types.Method{}
+		return result, nil
+	}
+
+	if field.SingleHeader != nil {
+		result.SingleHeader = &wafv2types.SingleHeader{
+			Name: aws.String(field.SingleHeader.Name),
+		}
+		return result, nil
+	}
+
+	if field.Body != nil {
+		oversizeHandling := wafv2types.OversizeHandlingContinue
+		if field.Body.OversizeHandling != "" {
+			switch field.Body.OversizeHandling {
+			case "CONTINUE":
+				oversizeHandling = wafv2types.OversizeHandlingContinue
+			case "MATCH":
+				oversizeHandling = wafv2types.OversizeHandlingMatch
+			case "NO_MATCH":
+				oversizeHandling = wafv2types.OversizeHandlingNoMatch
+			}
+		}
+		result.Body = &wafv2types.Body{
+			OversizeHandling: oversizeHandling,
+		}
+		return result, nil
+	}
+
+	if field.AllQueryArguments != nil {
+		result.AllQueryArguments = &wafv2types.AllQueryArguments{}
+		return result, nil
+	}
+
+	if field.SingleQueryArgument != nil {
+		result.SingleQueryArgument = &wafv2types.SingleQueryArgument{
+			Name: aws.String(field.SingleQueryArgument.Name),
+		}
+		return result, nil
+	}
+
+	if field.JsonBody != nil {
+		jsonBody := &wafv2types.JsonBody{
+			MatchScope:              wafv2types.JsonMatchScope(field.JsonBody.MatchScope),
+			InvalidFallbackBehavior: wafv2types.BodyParsingFallbackBehavior(field.JsonBody.InvalidFallbackBehavior),
+			OversizeHandling:        wafv2types.OversizeHandlingContinue,
+		}
+
+		if field.JsonBody.OversizeHandling != "" {
+			jsonBody.OversizeHandling = wafv2types.OversizeHandling(field.JsonBody.OversizeHandling)
+		}
+
+		// Convert MatchPattern
+		jsonBody.MatchPattern = &wafv2types.JsonMatchPattern{}
+		if field.JsonBody.MatchPattern.All != nil {
+			jsonBody.MatchPattern.All = &wafv2types.All{}
+		} else if len(field.JsonBody.MatchPattern.IncludedPaths) > 0 {
+			jsonBody.MatchPattern.IncludedPaths = field.JsonBody.MatchPattern.IncludedPaths
+		}
+
+		result.JsonBody = jsonBody
+		return result, nil
+	}
+
+	if field.Cookies != nil {
+		cookies := &wafv2types.Cookies{
+			MatchScope:       wafv2types.MapMatchScope(field.Cookies.MatchScope),
+			OversizeHandling: wafv2types.OversizeHandlingContinue,
+		}
+
+		if field.Cookies.OversizeHandling != "" {
+			cookies.OversizeHandling = wafv2types.OversizeHandling(field.Cookies.OversizeHandling)
+		}
+
+		// Convert MatchPattern
+		cookies.MatchPattern = &wafv2types.CookieMatchPattern{}
+		if field.Cookies.MatchPattern.All != nil {
+			cookies.MatchPattern.All = &wafv2types.All{}
+		} else if len(field.Cookies.MatchPattern.IncludedCookies) > 0 {
+			cookies.MatchPattern.IncludedCookies = field.Cookies.MatchPattern.IncludedCookies
+		} else if len(field.Cookies.MatchPattern.ExcludedCookies) > 0 {
+			cookies.MatchPattern.ExcludedCookies = field.Cookies.MatchPattern.ExcludedCookies
+		}
+
+		result.Cookies = cookies
+		return result, nil
+	}
+
+	if field.Headers != nil {
+		headers := &wafv2types.Headers{
+			MatchScope:       wafv2types.MapMatchScope(field.Headers.MatchScope),
+			OversizeHandling: wafv2types.OversizeHandlingContinue,
+		}
+
+		if field.Headers.OversizeHandling != "" {
+			headers.OversizeHandling = wafv2types.OversizeHandling(field.Headers.OversizeHandling)
+		}
+
+		// Convert MatchPattern
+		headers.MatchPattern = &wafv2types.HeaderMatchPattern{}
+		if field.Headers.MatchPattern.All != nil {
+			headers.MatchPattern.All = &wafv2types.All{}
+		} else if len(field.Headers.MatchPattern.IncludedHeaders) > 0 {
+			headers.MatchPattern.IncludedHeaders = field.Headers.MatchPattern.IncludedHeaders
+		} else if len(field.Headers.MatchPattern.ExcludedHeaders) > 0 {
+			headers.MatchPattern.ExcludedHeaders = field.Headers.MatchPattern.ExcludedHeaders
+		}
+
+		result.Headers = headers
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("no field to match specified")
+}
+
+func convertTextTransformations(transformations []cloudresourcesv1beta1.AwsWebAclTextTransformation) ([]wafv2types.TextTransformation, error) {
+	if len(transformations) == 0 {
+		return nil, fmt.Errorf("at least one text transformation is required")
+	}
+
+	result := make([]wafv2types.TextTransformation, 0, len(transformations))
+	for _, t := range transformations {
+		result = append(result, wafv2types.TextTransformation{
+			Priority: t.Priority,
+			Type:     wafv2types.TextTransformationType(t.Type),
+		})
+	}
+
+	return result, nil
+}
+
+func convertForwardedIPConfig(config *cloudresourcesv1beta1.AwsWebAclForwardedIPConfig) *wafv2types.ForwardedIPConfig {
+	return &wafv2types.ForwardedIPConfig{
+		HeaderName:       &config.HeaderName,
+		FallbackBehavior: wafv2types.FallbackBehavior(config.FallbackBehavior),
+	}
+}
+
+func convertCustomRequestHandling(handling *cloudresourcesv1beta1.AwsWebAclCustomRequestHandling) *wafv2types.CustomRequestHandling {
+	if handling == nil || len(handling.InsertHeaders) == 0 {
+		return nil
+	}
+
+	headers := make([]wafv2types.CustomHTTPHeader, 0, len(handling.InsertHeaders))
+	for _, h := range handling.InsertHeaders {
+		headers = append(headers, wafv2types.CustomHTTPHeader{
+			Name:  &h.Name,
+			Value: &h.Value,
+		})
+	}
+
+	return &wafv2types.CustomRequestHandling{
+		InsertHeaders: headers,
+	}
+}
+
+func convertCustomResponse(response *cloudresourcesv1beta1.AwsWebAclCustomResponse) *wafv2types.CustomResponse {
+	if response == nil {
+		return nil
+	}
+
+	result := &wafv2types.CustomResponse{
+		ResponseCode: &response.ResponseCode,
+	}
+
+	if response.CustomResponseBodyKey != "" {
+		result.CustomResponseBodyKey = &response.CustomResponseBodyKey
+	}
+
+	if len(response.ResponseHeaders) > 0 {
+		headers := make([]wafv2types.CustomHTTPHeader, 0, len(response.ResponseHeaders))
+		for _, h := range response.ResponseHeaders {
+			headers = append(headers, wafv2types.CustomHTTPHeader{
+				Name:  &h.Name,
+				Value: &h.Value,
+			})
+		}
+		result.ResponseHeaders = headers
+	}
+
+	return result
+}
+
+func convertCustomResponseBodies(bodies map[string]cloudresourcesv1beta1.AwsWebAclCustomResponseBody) map[string]wafv2types.CustomResponseBody {
+	if len(bodies) == 0 {
+		return nil
+	}
+
+	result := make(map[string]wafv2types.CustomResponseBody, len(bodies))
+	for key, body := range bodies {
+		result[key] = wafv2types.CustomResponseBody{
+			ContentType: wafv2types.ResponseContentType(body.ContentType),
+			Content:     &body.Content,
+		}
+	}
+	return result
+}
+
+func convertCaptchaConfig(config *cloudresourcesv1beta1.AwsWebAclCaptchaConfig) *wafv2types.CaptchaConfig {
+	if config == nil {
+		return nil
+	}
+
+	return &wafv2types.CaptchaConfig{
+		ImmunityTimeProperty: &wafv2types.ImmunityTimeProperty{
+			ImmunityTime: &config.ImmunityTime,
+		},
+	}
+}
+
+func convertChallengeConfig(config *cloudresourcesv1beta1.AwsWebAclChallengeConfig) *wafv2types.ChallengeConfig {
+	if config == nil {
+		return nil
+	}
+
+	return &wafv2types.ChallengeConfig{
+		ImmunityTimeProperty: &wafv2types.ImmunityTimeProperty{
+			ImmunityTime: &config.ImmunityTime,
+		},
+	}
+}
+
+func convertRuleLabels(labels []cloudresourcesv1beta1.AwsWebAclLabel) []wafv2types.Label {
+	if len(labels) == 0 {
+		return nil
+	}
+
+	result := make([]wafv2types.Label, 0, len(labels))
+	for _, label := range labels {
+		result = append(result, wafv2types.Label{
+			Name: &label.Name,
+		})
+	}
+	return result
+}
+func convertLabelMatchStatement(labelMatch *cloudresourcesv1beta1.AwsWebAclLabelMatchStatement) *wafv2types.LabelMatchStatement {
+	return &wafv2types.LabelMatchStatement{
+		Key:   &labelMatch.Key,
+		Scope: wafv2types.LabelMatchScope(labelMatch.Scope),
+	}
+}
+
+func convertSizeConstraintStatement(sizeConstraint *cloudresourcesv1beta1.AwsWebAclSizeConstraintStatement) (*wafv2types.SizeConstraintStatement, error) {
+	fieldToMatch, err := convertFieldToMatch(sizeConstraint.FieldToMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	transformations, err := convertTextTransformations(sizeConstraint.TextTransformations)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wafv2types.SizeConstraintStatement{
+		ComparisonOperator:  wafv2types.ComparisonOperator(sizeConstraint.ComparisonOperator),
+		Size:                sizeConstraint.Size,
+		FieldToMatch:        fieldToMatch,
+		TextTransformations: transformations,
+	}, nil
+}
+
+func convertSqliMatchStatement(sqliMatch *cloudresourcesv1beta1.AwsWebAclSqliMatchStatement) (*wafv2types.SqliMatchStatement, error) {
+	fieldToMatch, err := convertFieldToMatch(sqliMatch.FieldToMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	transformations, err := convertTextTransformations(sqliMatch.TextTransformations)
+	if err != nil {
+		return nil, err
+	}
+
+	stmt := &wafv2types.SqliMatchStatement{
+		FieldToMatch:        fieldToMatch,
+		TextTransformations: transformations,
+	}
+
+	// SensitivityLevel is optional, default is LOW
+	if sqliMatch.SensitivityLevel != "" {
+		stmt.SensitivityLevel = wafv2types.SensitivityLevel(sqliMatch.SensitivityLevel)
+	} else {
+		stmt.SensitivityLevel = wafv2types.SensitivityLevelLow
+	}
+
+	return stmt, nil
+}
+
+func convertXssMatchStatement(xssMatch *cloudresourcesv1beta1.AwsWebAclXssMatchStatement) (*wafv2types.XssMatchStatement, error) {
+	fieldToMatch, err := convertFieldToMatch(xssMatch.FieldToMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	transformations, err := convertTextTransformations(xssMatch.TextTransformations)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wafv2types.XssMatchStatement{
+		FieldToMatch:        fieldToMatch,
+		TextTransformations: transformations,
+	}, nil
+}
+
+func convertRegexMatchStatement(regexMatch *cloudresourcesv1beta1.AwsWebAclRegexMatchStatement) (*wafv2types.RegexMatchStatement, error) {
+	fieldToMatch, err := convertFieldToMatch(regexMatch.FieldToMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	transformations, err := convertTextTransformations(regexMatch.TextTransformations)
+	if err != nil {
+		return nil, err
+	}
+
+	return &wafv2types.RegexMatchStatement{
+		RegexString:         &regexMatch.RegexString,
+		FieldToMatch:        fieldToMatch,
+		TextTransformations: transformations,
+	}, nil
+}
+
+func convertAsnMatchStatement(asnMatch *cloudresourcesv1beta1.AwsWebAclAsnMatchStatement) (*wafv2types.AsnMatchStatement, error) {
+	if len(asnMatch.AutonomousSystemNumbers) == 0 {
+		return nil, fmt.Errorf("autonomousSystemNumbers must have at least one entry")
+	}
+
+	stmt := &wafv2types.AsnMatchStatement{
+		AsnList: asnMatch.AutonomousSystemNumbers,
+	}
+
+	if asnMatch.ForwardedIPConfig != nil {
+		stmt.ForwardedIPConfig = convertForwardedIPConfig(asnMatch.ForwardedIPConfig)
+	}
+
+	return stmt, nil
+}
