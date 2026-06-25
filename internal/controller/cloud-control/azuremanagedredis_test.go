@@ -341,6 +341,15 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 			Expect(dzg).ToNot(BeNil())
 		})
 
+		By("And Then Azure cluster HighAvailability is explicitly set to Enabled", func() {
+			cluster, err := azureMock.GetManagedRedisCluster(infra.Ctx(), resourceGroupName, name)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cluster).NotTo(BeNil())
+			Expect(cluster.Properties).NotTo(BeNil())
+			Expect(cluster.Properties.HighAvailability).NotTo(BeNil(), "HighAvailability must not be nil")
+			Expect(string(*cluster.Properties.HighAvailability)).To(Equal(string(armredisenterprise.HighAvailabilityEnabled)))
+		})
+
 		// DELETE
 
 		By("When KCP AzureManagedRedis is deleted", func() {

@@ -30,11 +30,14 @@ func createManagedRedis(ctx context.Context, st composed.State) (error, context.
 		MinimumTLSVersion:   &tlsVersion,
 		PublicNetworkAccess: &publicNetworkAccess,
 	}
-	// Zone redundancy is the default in zonal regions (see link); on ComputeOptimized
-	// SKUs Azure rejects an explicit Enabled with "Specifying zones for SKU '...' is
-	// not supported." Send the field only when the user wants it Disabled.
+	// Always send HighAvailability explicitly. Azure defaults to Enabled only for
+	// Enterprise/EnterpriseFlash SKUs; Balanced and ComputeOptimized SKUs require
+	// an explicit value and return provisioningState=Failed when the field is omitted.
 	// https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-high-availability#zone-redundancy
-	if !obj.Spec.HighAvailability {
+	if obj.Spec.HighAvailability {
+		ha := armredisenterprise.HighAvailabilityEnabled
+		props.HighAvailability = &ha
+	} else {
 		ha := armredisenterprise.HighAvailabilityDisabled
 		props.HighAvailability = &ha
 	}
@@ -46,10 +49,7 @@ func createManagedRedis(ctx context.Context, st composed.State) (error, context.
 		Properties: props,
 	}
 
-	haStr := "<unset>"
-	if props.HighAvailability != nil {
-		haStr = string(*props.HighAvailability)
-	}
+	haStr := string(*props.HighAvailability)
 	composed.LoggerFromCtx(ctx).
 		WithValues(
 			"clusterName", obj.Name,
