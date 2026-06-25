@@ -40,4 +40,5 @@ resources:
 - cloud-resources_v1beta1_sapnfsvolumesnapshot.yaml
 - cloud-resources_v1beta1_sapnfsvolumesnapshotrestore.yaml
 - cloud-resources_v1beta1_sapnfsvolumesnapshotschedule.yaml
+- cloud-resources_v1beta1_awswebacl.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
