@@ -22,6 +22,8 @@ jobs:
             ffFile: pkg/feature/ff_edge.yaml
     runs-on: ubuntu-latest
     name: ${{ matrix.name }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7

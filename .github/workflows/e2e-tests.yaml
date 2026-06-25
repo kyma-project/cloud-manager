@@ -60,6 +60,8 @@ jobs:
   test:
     name: Test ${{ inputs.provider }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       AWS_ROLE_NAME: CloudManagerRole
       AWS_PEERING_ROLE_NAME: CloudManagerPeeringRole
