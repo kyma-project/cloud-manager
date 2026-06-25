@@ -33,6 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.43.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.30
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.29
+	github.com/aws/aws-sdk-go-v2/service/acm v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/backup v1.58.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.316.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.43.1
