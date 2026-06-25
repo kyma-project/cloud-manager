@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("AwsCertificate Controller", func() {
+var _ = Describe("AwsCertificate Controller", Focus, func() {
 
 	It("Scenario: SKR AwsCertificate is created with valid Secret then deleted", func() {
 
@@ -157,8 +157,14 @@ var _ = Describe("AwsCertificate Controller", func() {
 			err := infra.SKR().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(secret), secret)
 			Expect(err).NotTo(HaveOccurred())
 
-			// Update the certificate data
-			secret.Data["tls.crt"] = []byte("-----BEGIN CERTIFICATE-----\nNEW_CERT_DATA\n-----END CERTIFICATE-----")
+			// Generate a new valid certificate with different serial number and CA chain
+			certPEM, keyPEM, caPEM, err := GenerateTestCertificate("updated.example.com", "Updated Test Org")
+			Expect(err).NotTo(HaveOccurred())
+
+			// Update the certificate data with new valid certificate
+			secret.Data["tls.crt"] = certPEM
+			secret.Data["tls.key"] = keyPEM
+			secret.Data["ca.crt"] = caPEM
 
 			// Save the updated secret
 			err = infra.SKR().Client().Update(infra.Ctx(), secret)
