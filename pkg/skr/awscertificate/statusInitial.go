@@ -9,9 +9,8 @@ import (
 
 func statusInitial(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	cert := state.ObjAsAwsCertificate()
 
-	sp := composed.NewStatusPatcherComposed(cert)
+	sp := composed.NewStatusPatcherComposed(state.ObjAsAwsCertificate())
 	if !sp.IsStale() {
 		return nil, ctx
 	}
