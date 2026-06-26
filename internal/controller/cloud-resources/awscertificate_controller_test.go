@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("AwsCertificate Controller", Focus, func() {
+var _ = Describe("AwsCertificate Controller", func() {
 
 	It("Scenario: SKR AwsCertificate is created with valid Secret then deleted", func() {
 
@@ -450,13 +450,13 @@ var _ = Describe("AwsCertificate Controller", Focus, func() {
 				WithArguments(
 					infra.Ctx(), infra.SKR().Client(), awsCertificate,
 					NewObjActions(),
-					NotHavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed),
 				).
 				Should(Succeed())
 
-			cond := meta.FindStatusCondition(awsCertificate.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
+			cond := meta.FindStatusCondition(awsCertificate.Status.Conditions, cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed)
 			Expect(cond).NotTo(BeNil())
-			Expect(cond.Status).To(Equal(metav1.ConditionFalse))
+			Expect(cond.Status).To(Equal(metav1.ConditionTrue))
 			Expect(cond.Message).To(ContainSubstring("in use"))
 		})
 
