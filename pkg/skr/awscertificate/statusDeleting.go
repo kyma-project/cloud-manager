@@ -3,15 +3,21 @@ package awscertificate
 import (
 	"context"
 
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
 func statusDeleting(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	cert := state.ObjAsAwsCertificate()
 
-	sp := composed.NewStatusPatcherComposed(state.ObjAsAwsCertificate())
+	sp := composed.NewStatusPatcherComposed(cert)
 
-	state.ObjAsAwsCertificate().SetStatusDeleting()
+	sp.MutateStatus(func(c *cloudresourcesv1beta1.AwsCertificate) {
+		c.SetStatusDeleting()
+	})
+
+	//cert.SetStatusDeleting()
 
 	return sp.
 		OnSuccess(composed.Continue).
