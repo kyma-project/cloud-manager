@@ -112,3 +112,10 @@ runtimeSecurityGcp:
     disabled: false
   defaultRule:
     variation: disabled
+
+alicloud:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
