@@ -53,7 +53,7 @@ require (
 	github.com/google/cel-go v0.28.1
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.22.0
-	github.com/gophercloud/gophercloud/v2 v2.12.0
+	github.com/gophercloud/gophercloud/v2 v2.13.0
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/golang-lru/v2 v2.0.7
