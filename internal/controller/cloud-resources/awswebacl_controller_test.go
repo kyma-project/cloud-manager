@@ -324,4 +324,125 @@ var _ = Describe("AwsWebAcl Controller", func() {
 		})
 	})
 
+	It("Scenario: AwsWebAcl deletion is blocked when WebACL is associated with resources", func() {
+
+		awsAccountLocal := infra.AwsMock().NewAccount()
+		defer awsAccountLocal.Delete()
+
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		scopeName := "dd2e3b37-92a6-4c7f-b923-1f742f8e5c29"
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(scopeName)
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccountLocal.AccountId(), WithName(scopeName))).To(Succeed())
+		})
+
+		Expect(scope.Namespace).To(Equal(infra.KCP().Namespace()))
+		Expect(scope.Name).To(Equal(scopeName))
+
+		objName := "test-webacl-in-use"
+		infra.ScopeProvider().Add(scopeprovider.MatchingObj(objName, scope))
+
+		awsMockLocal := awsAccountLocal.Region(scope.Spec.Region)
+
+		By("And Given scope is ready", func() {
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.KCP().Client(), scope,
+					WithConditions(KcpReadyCondition()),
+				).
+				Should(Succeed())
+		})
+
+		awsWebAcl := &cloudresourcesv1beta1.AwsWebAcl{}
+
+		By("When AwsWebAcl is created", func() {
+			awsWebAcl.Spec = cloudresourcesv1beta1.AwsWebAclSpec{
+				DefaultAction: cloudresourcesv1beta1.DefaultActionAllow(),
+				VisibilityConfig: &cloudresourcesv1beta1.AwsWebAclVisibilityConfig{
+					CloudWatchMetricsEnabled: true,
+					MetricName:               "test-webacl-in-use-metric",
+					SampledRequestsEnabled:   true,
+				},
+			}
+			Eventually(CreateAwsWebAcl).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAcl,
+					WithName(objName),
+				).
+				Should(Succeed())
+		})
+
+		By("Then AwsWebAcl becomes Ready", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsWebAcl,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		var id string
+
+		By("And Then WebACL is created in AWS", func() {
+			webAcl, _, err := awsMockLocal.GetWebACL(infra.Ctx(), objName, "", wafv2types.ScopeRegional)
+			Expect(err).NotTo(HaveOccurred(), "expected WebACL to exist in AWS")
+			Expect(webAcl).NotTo(BeNil())
+			Expect(webAcl.Id).NotTo(BeNil())
+			id = *webAcl.Id
+		})
+
+		By("When WebACL is marked as associated in AWS", func() {
+			awsMockLocal.SetWebAclInUse(id, true)
+		})
+
+		By("And When AwsWebAcl is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAcl).
+				Should(Succeed())
+		})
+
+		By("Then AwsWebAcl has DeleteWhileUsed condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), awsWebAcl,
+					NewObjActions(),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeDeleteWhileUsed),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then AwsWebAcl state is DeleteWhileUsed", func() {
+			Expect(awsWebAcl.Status.State).To(Equal(cloudresourcesv1beta1.ReasonDeleteWhileUsed))
+		})
+
+		By("And Then AwsWebAcl finalizer is NOT removed", func() {
+			Expect(awsWebAcl.GetFinalizers()).To(ContainElement(api.CommonFinalizerDeletionHook))
+		})
+
+		By("And Then WebACL still exists in AWS", func() {
+			webAcl, _, err := awsMockLocal.GetWebACL(infra.Ctx(), objName, id, wafv2types.ScopeRegional)
+			Expect(err).NotTo(HaveOccurred(), "expected WebACL to still exist")
+			Expect(webAcl).NotTo(BeNil())
+		})
+
+		By("When WebACL association is removed in AWS", func() {
+			awsMockLocal.SetWebAclInUse(id, false)
+		})
+
+		By("Then AwsWebAcl is eventually deleted", func() {
+			Eventually(IsDeleted, "30s").
+				WithArguments(infra.Ctx(), infra.SKR().Client(), awsWebAcl).
+				Should(Succeed())
+		})
+
+		By("And Then WebACL is deleted from AWS", func() {
+			_, _, err := awsMockLocal.GetWebACL(infra.Ctx(), objName, id, wafv2types.ScopeRegional)
+			Expect(err).To(HaveOccurred(), "expected WebACL to be deleted")
+			Expect(err.Error()).To(ContainSubstring("WAFNonexistentItemException"), "expected not found error")
+		})
+	})
+
 })
