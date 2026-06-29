@@ -2,6 +2,7 @@ package awswebacl
 
 import (
 	"context"
+	"strings"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -60,6 +61,18 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 			return nil, ctx
 		}
 
+		// If WebACL is still associated with resources, set DeleteWhileUsed condition
+		if isWebAclAssociatedError(err) {
+			logger.Error(err, "WebACL is still associated with AWS resources, cannot delete")
+			return composed.NewStatusPatcherComposed(webAcl).
+				MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+					acl.SetStatusDeleteWhileUsed("WebACL is still associated with AWS resources. Remove all associations before deleting.")
+				}).
+				OnSuccess(composed.Requeue).
+				OnStatusChanged(composed.Log("AwsWebAcl DeleteWhileUsed")).
+				Run(ctx, state.Cluster().K8sClient())
+		}
+
 		logger.Error(err, "Error deleting WebACL")
 
 		return composed.NewStatusPatcherComposed(webAcl).
@@ -71,7 +84,28 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
+	// If deletion succeeded and we had a DeleteWhileUsed condition, remove it
+	if webAcl.Status.State == cloudresourcesv1beta1.ReasonDeleteWhileUsed {
+		logger.Info("WebACL is no longer associated, removing DeleteWhileUsed condition")
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.AwsWebAcl) {
+				acl.RemoveStatusDeleteWhileUsed()
+			}).
+			OnSuccess(composed.Continue).
+			OnFailure(composed.Log("Failed to remove DeleteWhileUsed condition")).
+			Run(ctx, state.Cluster().K8sClient())
+	}
+
 	logger.Info("WebACL deleted successfully")
 
 	return nil, ctx
+}
+
+func isWebAclAssociatedError(err error) bool {
+	if err == nil {
+		return false
+	}
+	// AWS WAFv2 returns errors with "associated" in message when WebACL is still in use
+	return strings.Contains(err.Error(), "associated") ||
+		strings.Contains(err.Error(), "WAFAssociatedItemException")
 }

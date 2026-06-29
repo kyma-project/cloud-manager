@@ -629,6 +629,22 @@ func (in *AwsWebAcl) SetStatusProcessing() {
 	})
 }
 
+func (in *AwsWebAcl) SetStatusDeleteWhileUsed(msg string) {
+	in.Status.State = ReasonDeleteWhileUsed
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeDeleteWhileUsed,
+		Status:             metav1.ConditionTrue,
+		ObservedGeneration: in.Status.ObservedGeneration,
+		Reason:             ReasonDeleteWhileUsed,
+		Message:            msg,
+	})
+}
+
+func (in *AwsWebAcl) RemoveStatusDeleteWhileUsed() {
+	in.Status.State = StateDeleting
+	meta.RemoveStatusCondition(&in.Status.Conditions, ConditionTypeDeleteWhileUsed)
+}
+
 func (in *AwsWebAcl) Conditions() *[]metav1.Condition { return &in.Status.Conditions }
 
 func (in *AwsWebAcl) GetObjectMeta() *metav1.ObjectMeta { return &in.ObjectMeta }
