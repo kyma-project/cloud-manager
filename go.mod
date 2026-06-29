@@ -59,7 +59,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/imdario/mergo v0.3.16
 	github.com/mitchellh/copystructure v1.2.0
-	github.com/onsi/ginkgo/v2 v2.31.0
+	github.com/onsi/ginkgo/v2 v2.32.0
 	github.com/onsi/gomega v1.42.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/peterbourgon/mergemap v0.0.1
