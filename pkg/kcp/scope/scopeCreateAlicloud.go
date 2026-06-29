@@ -3,6 +3,7 @@ package scope
 import (
 	"context"
 
+	"github.com/elliotchance/pie/v2"
 	gardeneraliclouddapi "github.com/gardener/gardener-extension-provider-alicloud/pkg/apis/alicloud/v1alpha1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -34,6 +35,12 @@ func scopeCreateAlicloud(ctx context.Context, st composed.State) (error, context
 							Id:   ptr.Deref(infra.Networks.VPC.ID, ""),
 							CIDR: ptr.Deref(infra.Networks.VPC.CIDR, ""),
 						},
+						Zones: pie.Map(infra.Networks.Zones, func(z gardeneraliclouddapi.Zone) cloudcontrolv1beta1.AlicloudZone {
+							return cloudcontrolv1beta1.AlicloudZone{
+								Name:    z.Name,
+								Workers: z.Workers,
+							}
+						}),
 					},
 				},
 			},

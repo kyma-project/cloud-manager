@@ -122,12 +122,17 @@ type AlicloudNetwork struct {
 	VPC AlicloudVPC `json:"vpc"`
 
 	// +optional
-	Zones []string `json:"zones,omitempty"`
+	Zones []AlicloudZone `json:"zones,omitempty"`
 }
 
 type AlicloudVPC struct {
 	Id   string `json:"id,omitempty"`
 	CIDR string `json:"cidr,omitempty"`
+}
+
+type AlicloudZone struct {
+	Name    string `json:"name"`
+	Workers string `json:"workers"`
 }
 
 type GcpScope struct {

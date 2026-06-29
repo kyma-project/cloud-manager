@@ -52,7 +52,7 @@ func resolveZone(ctx context.Context, state *State) (string, error) {
 	// Use zone from scope if available
 	zones := state.Scope().Spec.Scope.Alicloud.Network.Zones
 	if len(zones) > 0 {
-		return zones[0], nil
+		return zones[0].Name, nil
 	}
 
 	// Otherwise query available zones from AliCloud

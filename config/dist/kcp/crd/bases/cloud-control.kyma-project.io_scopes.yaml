@@ -80,7 +80,15 @@ spec:
                             type: object
                           zones:
                             items:
-                              type: string
+                              properties:
+                                name:
+                                  type: string
+                                workers:
+                                  type: string
+                              required:
+                              - name
+                              - workers
+                              type: object
                             type: array
                         type: object
                       vpcNetwork:
