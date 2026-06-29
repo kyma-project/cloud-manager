@@ -18,6 +18,7 @@ import (
 
 type WebAclConfig interface {
 	SetWebAclError(id string, err error)
+	SetWebAclInUse(id string, inUse bool)
 	InitiateWebAcl(id, name string, scope types.Scope)
 	GetWebAclTags(arn string) []types.Tag
 }
@@ -29,18 +30,20 @@ type webAclEntry struct {
 }
 
 type webAclStore struct {
-	m        sync.Mutex
-	items    []*webAclEntry
-	errorMap map[string]error
-	account  string
-	region   string
+	m          sync.Mutex
+	items      []*webAclEntry
+	errorMap   map[string]error
+	inUseState map[string]bool // Track which WebACLs are marked as "in use"
+	account    string
+	region     string
 }
 
 func newWebAclStore(account, region string) *webAclStore {
 	return &webAclStore{
-		errorMap: make(map[string]error),
-		account:  account,
-		region:   region,
+		errorMap:   make(map[string]error),
+		inUseState: make(map[string]bool),
+		account:    account,
+		region:     region,
 	}
 }
 
@@ -212,6 +215,14 @@ func (s *webAclStore) DeleteWebACL(ctx context.Context, name, id string, scope t
 		return err
 	}
 
+	// Check if marked as in-use for testing
+	if s.inUseState[id] {
+		return &smithy.GenericAPIError{
+			Code:    "WAFAssociatedItemException",
+			Message: fmt.Sprintf("WebACL %s is still associated with one or more resources", id),
+		}
+	}
+
 	deleted := false
 	for _, x := range s.items {
 		if ptr.Equal(x.webAcl.Id, new(id)) {
@@ -264,6 +275,12 @@ func (s *webAclStore) ListWebACLs(ctx context.Context, scope types.Scope) ([]typ
 
 func (s *webAclStore) SetWebAclError(id string, err error) {
 	s.errorMap[id] = err
+}
+
+func (s *webAclStore) SetWebAclInUse(id string, inUse bool) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	s.inUseState[id] = inUse
 }
 
 func (s *webAclStore) InitiateWebAcl(id, name string, scope types.Scope) {
