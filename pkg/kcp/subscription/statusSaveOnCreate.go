@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"k8s.io/utils/ptr"
 )
 
@@ -118,6 +119,31 @@ func statusSaveOnCreate(ctx context.Context, st composed.State) (error, context.
 			OpenStack: &cloudcontrolv1beta1.SubscriptionInfoOpenStack{
 				DomainName: domainName,
 				TenantName: tenantName,
+			},
+		}
+
+	case cloudcontrolv1beta1.ProviderAlicloud:
+		if !feature.Alicloud.Value(ctx) {
+			theErr = multierror.Append(theErr, errors.New("alicloud feature flag is disabled"))
+			break
+		}
+		accessKeyID, ok := state.credentialData["accessKeyID"]
+		if !ok {
+			theErr = multierror.Append(theErr, errors.New("gardener credentials for alicloud missing accessKeyID key"))
+		}
+		_, ok = state.credentialData["accessKeySecret"]
+		if !ok {
+			theErr = multierror.Append(theErr, errors.New("gardener credentials for alicloud missing accessKeySecret key"))
+		}
+		if theErr != nil {
+			break
+		}
+		// AliCloud credentials don't have a direct equivalent to STS GetCallerIdentity,
+		// so we store the accessKeyID as the account identifier
+		_ = accessKeyID
+		state.ObjAsSubscription().Status.SubscriptionInfo = &cloudcontrolv1beta1.SubscriptionInfo{
+			Alicloud: &cloudcontrolv1beta1.SubscriptionInfoAlicloud{
+				AccountId: accessKeyID,
 			},
 		}
 	} // case

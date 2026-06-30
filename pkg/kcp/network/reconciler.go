@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	alicloudnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/network"
 	awsnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/network"
 	azurenetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network"
 	gcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/network"
@@ -26,9 +27,10 @@ type networkReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	awsStateFactory   awsnetwork.StateFactory
-	azureStateFactory azurenetwork.StateFactory
-	gcpStateFactory   gcpnetwork.StateFactory
+	awsStateFactory      awsnetwork.StateFactory
+	azureStateFactory    azurenetwork.StateFactory
+	gcpStateFactory      gcpnetwork.StateFactory
+	alicloudStateFactory alicloudnetwork.StateFactory
 }
 
 func NewNetworkReconciler(
@@ -37,6 +39,7 @@ func NewNetworkReconciler(
 	awsStateFactory awsnetwork.StateFactory,
 	azureStateFactory azurenetwork.StateFactory,
 	gcpStateFactory gcpnetwork.StateFactory,
+	alicloudStateFactory alicloudnetwork.StateFactory,
 ) NetworkReconciler {
 	return &networkReconciler{
 		composedStateFactory: composedStateFactory,
@@ -44,6 +47,7 @@ func NewNetworkReconciler(
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
 		gcpStateFactory:      gcpStateFactory,
+		alicloudStateFactory: alicloudStateFactory,
 	}
 }
 
@@ -93,6 +97,15 @@ func (r *networkReconciler) newAction() composed.Action {
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsnetwork.New(r.awsStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurenetwork.New(r.azureStateFactory)),
 					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnetwork.New(r.gcpStateFactory)),
+					composed.NewCase(
+						composed.All(
+							statewithscope.AlicloudProviderPredicate,
+							func(ctx context.Context, _ composed.State) bool {
+								return feature.Alicloud.Value(ctx)
+							},
+						),
+						alicloudnetwork.New(r.alicloudStateFactory),
+					),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

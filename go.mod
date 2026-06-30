@@ -7,14 +7,14 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
 	cloud.google.com/go/compute v1.64.0
 	cloud.google.com/go/filestore v1.15.0
-	cloud.google.com/go/longrunning v1.1.0
+	cloud.google.com/go/longrunning v1.0.0
 	cloud.google.com/go/networkconnectivity v1.26.0
 	cloud.google.com/go/redis v1.23.0
 	cloud.google.com/go/resourcemanager v1.15.0
 	cloud.google.com/go/securitycentermanagement v1.6.0
 	github.com/3th1nk/cidr v0.3.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.14.0
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dnsresolver/armdnsresolver v1.3.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5 v5.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights v1.2.0
@@ -30,36 +30,37 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.25
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.24
 	github.com/aws/aws-sdk-go-v2/service/backup v1.57.6
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.308.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.307.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/sts v1.43.3
-	github.com/aws/smithy-go v1.27.3
+	github.com/aws/smithy-go v1.27.2
 	github.com/cucumber/godog v0.15.1
 	github.com/cucumber/messages/go/v21 v21.0.1
 	github.com/dop251/goja v0.0.0-20251008123653-cf18d89f3cf6
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.19.0
 	github.com/fsnotify/fsnotify v1.10.1
-	github.com/gardener/gardener v1.145.0
-	github.com/gardener/gardener-extension-provider-aws v1.71.1
+	github.com/gardener/gardener v1.144.1
+	github.com/gardener/gardener-extension-provider-alicloud v1.71.0
+	github.com/gardener/gardener-extension-provider-aws v1.71.0
 	github.com/gardener/gardener-extension-provider-azure v1.61.0
 	github.com/gardener/gardener-extension-provider-gcp v1.52.0
-	github.com/gardener/gardener-extension-provider-openstack v1.56.0
-	github.com/gardener/gardener/pkg/apis v1.145.0
+	github.com/gardener/gardener-extension-provider-openstack v1.55.3
+	github.com/gardener/gardener/pkg/apis v1.143.1
 	github.com/go-logr/logr v1.4.3
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.28.1
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.22.0
-	github.com/gophercloud/gophercloud/v2 v2.13.0
+	github.com/gophercloud/gophercloud/v2 v2.12.0
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/imdario/mergo v0.3.16
 	github.com/mitchellh/copystructure v1.2.0
-	github.com/onsi/ginkgo/v2 v2.32.0
+	github.com/onsi/ginkgo/v2 v2.29.0
 	github.com/onsi/gomega v1.42.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/peterbourgon/mergemap v0.0.1
@@ -69,14 +70,14 @@ require (
 	github.com/rodaine/table v1.3.1
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	github.com/thomaspoignant/go-feature-flag v1.54.1
+	github.com/thomaspoignant/go-feature-flag v1.54.0
 	github.com/tidwall/gjson v1.19.0
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.28.0
 	golang.org/x/oauth2 v0.36.0
-	google.golang.org/api v0.286.0
+	google.golang.org/api v0.284.0
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 	gopkg.in/yaml.v3 v3.0.1
@@ -162,7 +163,7 @@ require (
 	github.com/nikunjy/rules v1.5.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/common v0.68.1 // indirect
+	github.com/prometheus/common v0.68.0 // indirect
 	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/thomaspoignant/go-feature-flag/modules/core v0.7.1 // indirect
@@ -178,18 +179,18 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.53.0 // indirect
-	golang.org/x/exp v0.0.0-20260527015227-08cc5374adb3 // indirect
-	golang.org/x/mod v0.37.0 // indirect
-	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
+	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
+	golang.org/x/mod v0.36.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/term v0.44.0 // indirect
-	golang.org/x/text v0.38.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/term v0.43.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.46.0 // indirect
+	golang.org/x/tools v0.45.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260615183401-62b3387ff324 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260511170946-3700d4141b60 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/component-base v0.36.2 // indirect

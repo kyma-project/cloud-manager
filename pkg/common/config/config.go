@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/config"
+	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
 	azureconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
 	gcpconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
@@ -31,6 +32,7 @@ func CreateNewConfigAndLoad() config.Config {
 func LoadConfigInstance(cfg config.Config) {
 	awsconfig.InitConfig(cfg)
 	azureconfig.InitConfig(cfg)
+	alicloudconfig.InitConfig(cfg)
 	sapconfig.InitConfig(cfg)
 	quota.InitConfig(cfg)
 	skrruntimeconfig.InitConfig(cfg)

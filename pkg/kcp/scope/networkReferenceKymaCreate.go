@@ -5,6 +5,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -60,6 +61,18 @@ func networkReferenceKymaCreate(ctx context.Context, st composed.State) (error, 
 				Domain:      state.ObjAsScope().Spec.Scope.OpenStack.DomainName,
 				Project:     state.ObjAsScope().Spec.Scope.OpenStack.TenantName,
 				NetworkName: state.ObjAsScope().Spec.Scope.OpenStack.VpcNetwork,
+			},
+		}
+	case cloudcontrolv1beta1.ProviderAlicloud:
+		if !feature.Alicloud.Value(ctx) {
+			composed.LoggerFromCtx(ctx).Info("AliCloud feature flag is disabled, skipping AliCloud Kyma network reference creation")
+			return nil, ctx
+		}
+		kymaNet.Spec.Network.Reference = &cloudcontrolv1beta1.NetworkReference{
+			Alicloud: &cloudcontrolv1beta1.AlicloudNetworkReference{
+				AccountId:   state.ObjAsScope().Spec.Scope.Alicloud.AccountId,
+				Region:      state.ObjAsScope().Spec.Region,
+				NetworkName: state.ObjAsScope().Spec.Scope.Alicloud.VpcNetwork,
 			},
 		}
 	}

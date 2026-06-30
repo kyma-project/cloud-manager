@@ -212,6 +212,16 @@ func isScopeCreateOrUpdateNeeded(ctx context.Context, st composed.State) bool {
 		}
 	}
 
+	// check if Alicloud scope needs to be updated with VPC CIDR or zone workers from shoot
+	if state.ObjAsScope().Spec.Provider == cloudcontrolv1beta1.ProviderAlicloud && feature.Alicloud.Value(ctx) {
+		if state.ObjAsScope().Spec.Scope.Alicloud.Network.VPC.CIDR == "" {
+			return true
+		}
+		if len(state.ObjAsScope().Spec.Scope.Alicloud.Network.Zones) == 0 {
+			return true
+		}
+	}
+
 	return false
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 )
 
 func handleNonGardenerSubscriptionType(ctx context.Context, st composed.State) (error, context.Context) {
@@ -21,6 +22,9 @@ func handleNonGardenerSubscriptionType(ctx context.Context, st composed.State) (
 	state.ObjAsSubscription().Status.SubscriptionInfo.Azure = state.ObjAsSubscription().Spec.Details.Azure
 	state.ObjAsSubscription().Status.SubscriptionInfo.Gcp = state.ObjAsSubscription().Spec.Details.Gcp
 	state.ObjAsSubscription().Status.SubscriptionInfo.OpenStack = state.ObjAsSubscription().Spec.Details.Openstack
+	if feature.Alicloud.Value(ctx) {
+		state.ObjAsSubscription().Status.SubscriptionInfo.Alicloud = state.ObjAsSubscription().Spec.Details.Alicloud
+	}
 
 	return sp.
 		OnSuccess(composed.Forget).
