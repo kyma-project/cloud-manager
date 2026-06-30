@@ -40,7 +40,8 @@ on:
 jobs:
   aws:
     if: ${{ github.event_name == 'schedule' || inputs.aws }}
-    permissions: {}
+    permissions:
+      contents: read
     uses: ./.github/workflows/e2e-tests.yaml
     secrets: inherit
     with:
@@ -50,7 +51,8 @@ jobs:
       debug: ${{ inputs.debug || true }}
   azure:
     if: ${{ github.event_name == 'schedule' || inputs.azure }}
-    permissions: {}
+    permissions:
+      contents: read
     uses: ./.github/workflows/e2e-tests.yaml
     secrets: inherit
     with:
@@ -60,7 +62,8 @@ jobs:
       debug: ${{ inputs.debug || true }}
   gcp:
     if: ${{ github.event_name == 'schedule' || inputs.gcp }}
-    permissions: {}
+    permissions:
+      contents: read
     uses: ./.github/workflows/e2e-tests.yaml
     secrets: inherit
     with:
