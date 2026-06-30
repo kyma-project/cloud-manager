@@ -76,6 +76,22 @@ spec:
                     maxProperties: 1
                     minProperties: 1
                     properties:
+                      alicloud:
+                        properties:
+                          accountId:
+                            type: string
+                          networkName:
+                            type: string
+                          region:
+                            type: string
+                          vpcId:
+                            type: string
+                        required:
+                        - accountId
+                        - networkName
+                        - region
+                        - vpcId
+                        type: object
                       aws:
                         properties:
                           awsAccountId:
@@ -234,6 +250,22 @@ spec:
                 maxProperties: 1
                 minProperties: 1
                 properties:
+                  alicloud:
+                    properties:
+                      accountId:
+                        type: string
+                      networkName:
+                        type: string
+                      region:
+                        type: string
+                      vpcId:
+                        type: string
+                    required:
+                    - accountId
+                    - networkName
+                    - region
+                    - vpcId
+                    type: object
                   aws:
                     properties:
                       awsAccountId:

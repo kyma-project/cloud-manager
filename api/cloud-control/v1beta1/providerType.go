@@ -12,6 +12,7 @@ const (
 	ProviderAzure     = ProviderType("azure")
 	ProviderAws       = ProviderType("aws")
 	ProviderOpenStack = ProviderType("openstack")
+	ProviderAlicloud  = ProviderType("alicloud")
 )
 
 func ParseProviderType(provider string) (ProviderType, error) {
@@ -24,6 +25,8 @@ func ParseProviderType(provider string) (ProviderType, error) {
 		return ProviderAws, nil
 	case string(ProviderOpenStack):
 		return ProviderOpenStack, nil
+	case string(ProviderAlicloud):
+		return ProviderAlicloud, nil
 	default:
 		return "", fmt.Errorf("invalid provider: %s", provider)
 	}
