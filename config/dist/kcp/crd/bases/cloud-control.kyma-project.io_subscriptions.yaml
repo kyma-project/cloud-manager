@@ -48,6 +48,16 @@ spec:
             properties:
               details:
                 properties:
+                  alicloud:
+                    properties:
+                      accountId:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: AccountId is required
+                          rule: (size(self) > 0)
+                    required:
+                    - accountId
+                    type: object
                   aws:
                     properties:
                       account:
@@ -112,11 +122,11 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-validations:
-                - message: Exactly one of garden, aws, azure, gcp or openstack must
-                    be specified
+                - message: Exactly one of garden, aws, azure, gcp, openstack or alicloud
+                    must be specified
                   rule: '((has(self.garden) ? 1 : 0) + (has(self.aws) ? 1 : 0) + (has(self.gcp)
                     ? 1 : 0) + (has(self.azure) ? 1 : 0) + (has(self.openstack) ?
-                    1 : 0)) == 1'
+                    1 : 0) + (has(self.alicloud) ? 1 : 0)) == 1'
             required:
             - details
             type: object
@@ -200,6 +210,16 @@ spec:
                 maxProperties: 1
                 minProperties: 1
                 properties:
+                  alicloud:
+                    properties:
+                      accountId:
+                        type: string
+                        x-kubernetes-validations:
+                        - message: AccountId is required
+                          rule: (size(self) > 0)
+                    required:
+                    - accountId
+                    type: object
                   aws:
                     properties:
                       account:

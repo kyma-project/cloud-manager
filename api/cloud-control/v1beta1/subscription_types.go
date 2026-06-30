@@ -43,13 +43,14 @@ type SubscriptionSpec struct {
 	Details SubscriptionDetails `json:"details"`
 }
 
-// +kubebuilder:validation:XValidation:rule="((has(self.garden) ? 1 : 0) + (has(self.aws) ? 1 : 0) + (has(self.gcp) ? 1 : 0) + (has(self.azure) ? 1 : 0) + (has(self.openstack) ? 1 : 0)) == 1",message="Exactly one of garden, aws, azure, gcp or openstack must be specified"
+// +kubebuilder:validation:XValidation:rule="((has(self.garden) ? 1 : 0) + (has(self.aws) ? 1 : 0) + (has(self.gcp) ? 1 : 0) + (has(self.azure) ? 1 : 0) + (has(self.openstack) ? 1 : 0) + (has(self.alicloud) ? 1 : 0)) == 1",message="Exactly one of garden, aws, azure, gcp, openstack or alicloud must be specified"
 type SubscriptionDetails struct {
 	Garden    *SubscriptionGarden        `json:"garden,omitempty"`
 	Aws       *SubscriptionInfoAws       `json:"aws,omitempty"`
 	Azure     *SubscriptionInfoAzure     `json:"azure,omitempty"`
 	Gcp       *SubscriptionInfoGcp       `json:"gcp,omitempty"`
 	Openstack *SubscriptionInfoOpenStack `json:"openstack,omitempty"`
+	Alicloud  *SubscriptionInfoAlicloud  `json:"alicloud,omitempty"`
 }
 
 type SubscriptionGarden struct {
@@ -87,6 +88,7 @@ type SubscriptionInfo struct {
 	Azure     *SubscriptionInfoAzure     `json:"azure,omitempty"`
 	Aws       *SubscriptionInfoAws       `json:"aws,omitempty"`
 	OpenStack *SubscriptionInfoOpenStack `json:"openStack,omitempty"`
+	Alicloud  *SubscriptionInfoAlicloud  `json:"alicloud,omitempty"`
 }
 
 type SubscriptionInfoGcp struct {
@@ -111,6 +113,11 @@ type SubscriptionInfoOpenStack struct {
 	DomainName string `json:"domainName"`
 	// +kubebuilder:validation:XValidation:rule=(size(self) > 0), message="TenantName is required"
 	TenantName string `json:"tenantName"`
+}
+
+type SubscriptionInfoAlicloud struct {
+	// +kubebuilder:validation:XValidation:rule=(size(self) > 0), message="AccountId is required"
+	AccountId string `json:"accountId"`
 }
 
 // +kubebuilder:object:root=true

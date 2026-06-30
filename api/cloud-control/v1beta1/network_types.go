@@ -95,6 +95,9 @@ type NetworkReference struct {
 
 	// +optional
 	OpenStack *OpenStackNetworkReference `json:"openstack,omitempty"`
+
+	// +optional
+	Alicloud *AlicloudNetworkReference `json:"alicloud,omitempty"`
 }
 
 func (r *NetworkReference) Equals(other *NetworkReference) bool {
@@ -136,6 +139,16 @@ type OpenStackNetworkReference struct {
 	Project string `json:"project"`
 
 	NetworkId string `json:"networkId"`
+
+	NetworkName string `json:"networkName"`
+}
+
+type AlicloudNetworkReference struct {
+	AccountId string `json:"accountId"`
+
+	Region string `json:"region"`
+
+	VpcId string `json:"vpcId"`
 
 	NetworkName string `json:"networkName"`
 }
