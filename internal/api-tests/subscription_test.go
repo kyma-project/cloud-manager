@@ -19,7 +19,7 @@ var _ = ginkgo.Describe("Feature: KCP Subscription", func() {
 	canNotCreateKcp(
 		"Empty Subscription can not be created",
 		b(),
-		"Exactly one of garden, aws, azure, gcp or openstack must be specified",
+		"Exactly one of garden, aws, azure, gcp, openstack or alicloud must be specified",
 	)
 
 	canCreateKcp(

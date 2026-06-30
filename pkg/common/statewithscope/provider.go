@@ -41,3 +41,7 @@ func GcpProviderPredicate(ctx context.Context, st composed.State) bool {
 func OpenStackProviderPredicate(ctx context.Context, st composed.State) bool {
 	return StateProviderPredicate(cloudcontrolv1beta1.ProviderOpenStack)(ctx, st)
 }
+
+func AlicloudProviderPredicate(ctx context.Context, st composed.State) bool {
+	return StateProviderPredicate(cloudcontrolv1beta1.ProviderAlicloud)(ctx, st)
+}
