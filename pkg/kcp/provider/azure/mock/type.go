@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
 	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
 	dnsresolverclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnsresolver/client"
 	azurevnetlinkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone/client"
@@ -147,9 +148,14 @@ type RedisConfig interface {
 	AzureSetRedisInstanceState(ctx context.Context, resourceGroupName, redisInstanceName string, state armredis.ProvisioningState) error
 }
 
+type ManagedRedisConfig interface {
+	GetManagedRedisCluster(ctx context.Context, resourceGroupName, clusterName string) (*armredisenterprise.Cluster, error)
+}
+
 type Configs interface {
 	NetworkConfig
 	RedisConfig
+	ManagedRedisConfig
 	DnsForwardingRulesetConfig
 	DnsResolverVNetLinkConfig
 }
