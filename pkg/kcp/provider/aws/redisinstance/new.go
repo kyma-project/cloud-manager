@@ -66,14 +66,16 @@ func New(stateFactory StateFactory) composed.Action {
 						modifyTempParameterGroup(state),
 					),
 					createAuthTokenSecret,
-					createUserGroup,
+					composed.If(
+						shouldCreateTransientUserGroupPredicate(),
+						composed.ComposeActions("transient-ug-create", createUserGroup, waitUserGroupActive),
+					),
 					createSecurityGroup,
 					authorizeSecurityGroupIngress,
 					createElastiCacheCluster,
 					updateStatusId,
 					addUpdatingCondition,
 					waitElastiCacheAvailable,
-					waitUserGroupActive,
 					modifyCacheNodeType,
 					modifyAutoMinorVersionUpgrade,
 					modifyPreferredMaintenanceWindow,
@@ -81,6 +83,10 @@ func New(stateFactory StateFactory) composed.Action {
 					composed.If(
 						shouldUpdateRedisPredicate(),
 						updateElastiCacheCluster(),
+					),
+					composed.If(
+						shouldDeleteTransientUserGroupPredicate(),
+						composed.ComposeActions("transient-ug-delete", deleteUserGroup, waitUserGroupDeleted),
 					),
 					composed.If(
 						shouldUpgradeRedisPredicate(),
