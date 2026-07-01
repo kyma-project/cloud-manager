@@ -37,7 +37,17 @@ func compareCertificateData(ctx context.Context, st composed.State) (error, cont
 	// Compare certificate chains (optional)
 	secretChainPEM := string(state.certificateData.CertificateChain)
 
-	if !arePEMsEqual(awsChain, secretChainPEM) {
+	if len(secretChainPEM) == 0 {
+		// Secret has no chain - check if this is self-signed or chain was removed
+		if !arePEMsEqual(awsChain, secretCertPEM) {
+			// AWS chain differs from certificate - chain was removed from secret
+			logger.Info("Certificate chain removed from secret, update needed")
+			state.certificateNeedsUpdate = true
+			return nil, ctx
+		}
+		// Self-signed: AWS chain equals certificate (expected), no update needed
+	} else if !arePEMsEqual(awsChain, secretChainPEM) {
+		// Secret has chain but it differs from AWS
 		logger.Info("Certificate chain differs, update needed")
 		state.certificateNeedsUpdate = true
 		return nil, ctx
