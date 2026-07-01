@@ -341,6 +341,17 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 			Expect(dzg).ToNot(BeNil())
 		})
 
+		By("And Then Azure cluster HighAvailability is nil (defaults to Enabled on Azure side)", func() {
+			cluster, err := azureMock.GetManagedRedisCluster(infra.Ctx(), resourceGroupName, name)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cluster).NotTo(BeNil())
+			Expect(cluster.Properties).NotTo(BeNil())
+			// HighAvailability is intentionally left unset for HA=true clusters: Azure
+			// enables zone redundancy by default in zonal regions; sending Enabled causes
+			// a 400 BadRequest on ComputeOptimized SKUs.
+			Expect(cluster.Properties.HighAvailability).To(BeNil(), "HighAvailability must not be sent for HA=true clusters")
+		})
+
 		// DELETE
 
 		By("When KCP AzureManagedRedis is deleted", func() {

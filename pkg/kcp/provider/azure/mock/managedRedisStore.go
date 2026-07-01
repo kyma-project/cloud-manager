@@ -304,6 +304,10 @@ func (s *managedRedisStore) ListKeys(ctx context.Context, resourceGroupName, clu
 	return res, nil
 }
 
+func (s *managedRedisStore) GetManagedRedisCluster(ctx context.Context, resourceGroupName, clusterName string) (*armredisenterprise.Cluster, error) {
+	return s.GetCluster(ctx, resourceGroupName, clusterName)
+}
+
 // mockSKUsByFamily lists all known SKUs per Azure Managed Redis family prefix.
 // The mock allows scaling to any SKU in the same family as the current cluster.
 var mockSKUsByFamily = map[string][]string{
