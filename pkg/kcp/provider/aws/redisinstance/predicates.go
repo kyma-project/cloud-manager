@@ -2,6 +2,7 @@ package redisinstance
 
 import (
 	"context"
+	"slices"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/utils/ptr"
@@ -125,12 +126,7 @@ func isUserGroupAttached(state *State) bool {
 		return false
 	}
 	name := ptr.Deref(state.userGroup.UserGroupId, "")
-	for _, id := range state.elastiCacheReplicationGroup.UserGroupIds {
-		if id == name {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(state.elastiCacheReplicationGroup.UserGroupIds, name)
 }
 
 // shouldDeleteTransientUserGroupPredicate fires when the transient user group

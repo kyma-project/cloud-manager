@@ -20,8 +20,8 @@ func TestElastiCacheFake_AuthTokenPropagation(t *testing.T) {
 	newFakeWithAuthEnabledRG := func(name string) *elastiCacheClientFake {
 		client := newElastiCacheClientFake()
 		client.replicationGroups[name] = &elasticachetypes.ReplicationGroup{
-			ReplicationGroupId: ptr.To(name),
-			AuthTokenEnabled:   ptr.To(true),
+			ReplicationGroupId: new(name),
+			AuthTokenEnabled:   new(true),
 			UserGroupIds:       []string{},
 		}
 		return client
@@ -48,8 +48,8 @@ func TestElastiCacheFake_AuthTokenPropagation(t *testing.T) {
 		// touched the field, the assertion below would fail.
 		client := newElastiCacheClientFake()
 		client.replicationGroups["cm-test"] = &elasticachetypes.ReplicationGroup{
-			ReplicationGroupId: ptr.To("cm-test"),
-			AuthTokenEnabled:   ptr.To(true),
+			ReplicationGroupId: new("cm-test"),
+			AuthTokenEnabled:   new(true),
 			UserGroupIds:       []string{"cm-test"},
 		}
 

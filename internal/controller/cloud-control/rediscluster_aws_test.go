@@ -325,7 +325,7 @@ var _ = Describe("Feature: KCP RedisCluster", func() {
 			Expect(awsMock.CreateUserGroupCalls()).To(Equal([]string{expectedUGName}))
 			Expect(awsMock.DeleteUserGroupCalls()).To(Equal([]string{expectedUGName}))
 			modifies := awsMock.ModifyReplicationGroupCalls()
-			var addAt, removeAt int = -1, -1
+			var addAt, removeAt = -1, -1
 			for i, m := range modifies {
 				if len(m.UserGroupIdsToAdd) > 0 && addAt < 0 {
 					addAt = i

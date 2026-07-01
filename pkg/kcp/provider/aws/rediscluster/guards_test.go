@@ -38,7 +38,7 @@ var _ awsclient.ElastiCacheClient = &elastiCacheStub{}
 
 func (s *elastiCacheStub) CreateUserGroup(ctx context.Context, id string, tags []elasticachetypes.Tag) (*elasticache.CreateUserGroupOutput, error) {
 	s.createUserGroupCalls = append(s.createUserGroupCalls, id)
-	return &elasticache.CreateUserGroupOutput{UserGroupId: ptr.To(id)}, nil
+	return &elasticache.CreateUserGroupOutput{UserGroupId: new(id)}, nil
 }
 
 func (s *elastiCacheStub) DeleteUserGroup(ctx context.Context, id string) error {
@@ -137,7 +137,7 @@ func newTestStateWithClient(t *testing.T, clusterName string, ug *elasticachetyp
 func TestCreateUserGroupGuard_UGAlreadyPresent(t *testing.T) {
 	stub := newElastiCacheStub()
 	state := newTestStateWithClient(t, "abc", &elasticachetypes.UserGroup{
-		UserGroupId: ptr.To("cm-abc"),
+		UserGroupId: new("cm-abc"),
 		Status:      ptr.To(string(awsmeta.ElastiCache_UserGroup_ACTIVE)),
 	}, stub)
 
@@ -160,7 +160,7 @@ func TestDeleteUserGroupGuard_UGNil(t *testing.T) {
 func TestDeleteUserGroupGuard_UGDeleting(t *testing.T) {
 	stub := newElastiCacheStub()
 	state := newTestStateWithClient(t, "abc", &elasticachetypes.UserGroup{
-		UserGroupId: ptr.To("cm-abc"),
+		UserGroupId: new("cm-abc"),
 		Status:      ptr.To(string(awsmeta.ElastiCache_UserGroup_DELETING)),
 	}, stub)
 
@@ -176,7 +176,7 @@ func TestDeleteUserGroupGuard_UGDeleting(t *testing.T) {
 func TestDeleteUserGroupGuard_UGCreating(t *testing.T) {
 	stub := newElastiCacheStub()
 	state := newTestStateWithClient(t, "abc", &elasticachetypes.UserGroup{
-		UserGroupId: ptr.To("cm-abc"),
+		UserGroupId: new("cm-abc"),
 		Status:      ptr.To(string(awsmeta.ElastiCache_UserGroup_CREATING)),
 	}, stub)
 
@@ -216,7 +216,7 @@ func TestLoadUserGroup_ForeignNameUntouched(t *testing.T) {
 	// Pre-seed a foreign UG that must not be affected.
 	foreignName := "cm-different-cluster"
 	foreignUG := &elasticachetypes.UserGroup{
-		UserGroupId: ptr.To(foreignName),
+		UserGroupId: new(foreignName),
 		Status:      ptr.To(string(awsmeta.ElastiCache_UserGroup_ACTIVE)),
 	}
 	stub.preloadedUserGroups[foreignName] = foreignUG
@@ -224,7 +224,7 @@ func TestLoadUserGroup_ForeignNameUntouched(t *testing.T) {
 	// Also pre-seed our expected name so the load succeeds.
 	ourName := GetAwsElastiCacheUserGroupName("abc")
 	stub.preloadedUserGroups[ourName] = &elasticachetypes.UserGroup{
-		UserGroupId: ptr.To(ourName),
+		UserGroupId: new(ourName),
 		Status:      ptr.To(string(awsmeta.ElastiCache_UserGroup_ACTIVE)),
 	}
 
@@ -256,7 +256,7 @@ func TestDeleteUserGroupGuard_ProceedsWhenActive(t *testing.T) {
 	stub := newElastiCacheStub()
 	id := GetAwsElastiCacheUserGroupName("abc")
 	state := newTestStateWithClient(t, "abc", &elasticachetypes.UserGroup{
-		UserGroupId: ptr.To(id),
+		UserGroupId: new(id),
 		Status:      ptr.To(string(awsmeta.ElastiCache_UserGroup_ACTIVE)),
 	}, stub)
 

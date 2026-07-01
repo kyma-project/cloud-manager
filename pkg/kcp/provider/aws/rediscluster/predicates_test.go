@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -94,14 +93,14 @@ func TestShouldCreateTransientUserGroupPredicate(t *testing.T) {
 			var rg *elasticachetypes.ReplicationGroup
 			if tt.rgPresent {
 				rg = &elasticachetypes.ReplicationGroup{
-					AuthTokenEnabled: ptr.To(tt.currentAuth),
+					AuthTokenEnabled: new(tt.currentAuth),
 				}
 			}
 			var ug *elasticachetypes.UserGroup
 			if tt.ugPresent {
 				ug = &elasticachetypes.UserGroup{
-					UserGroupId: ptr.To("cm-test"),
-					Status:      ptr.To("active"),
+					UserGroupId: new("cm-test"),
+					Status:      new("active"),
 				}
 			}
 			state := newTestState(t, "test", tt.desiredAuth, rg, ug)
@@ -136,14 +135,14 @@ func TestShouldDeleteTransientUserGroupPredicate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rg := &elasticachetypes.ReplicationGroup{
-				AuthTokenEnabled: ptr.To(tt.currentAuth),
+				AuthTokenEnabled: new(tt.currentAuth),
 				UserGroupIds:     tt.attachedList,
 			}
 			var ug *elasticachetypes.UserGroup
 			if tt.ugPresent {
 				ug = &elasticachetypes.UserGroup{
-					UserGroupId: ptr.To(attachedName),
-					Status:      ptr.To("active"),
+					UserGroupId: new(attachedName),
+					Status:      new("active"),
 				}
 			}
 			state := newTestState(t, clusterName, tt.desiredAuth, rg, ug)
@@ -171,7 +170,7 @@ func TestIsUserGroupAttached(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			state := newTestState(t, clusterName, false,
 				&elasticachetypes.ReplicationGroup{UserGroupIds: tt.attachedList},
-				&elasticachetypes.UserGroup{UserGroupId: ptr.To(attached)},
+				&elasticachetypes.UserGroup{UserGroupId: new(attached)},
 			)
 			assert.Equal(t, tt.expected, isUserGroupAttached(state))
 		})
