@@ -24,6 +24,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	alicloudnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/network"
 	awsnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/network"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azurenetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/network"
@@ -50,6 +51,7 @@ func SetupNetworkReconciler(
 			awsnetwork.NewStateFactory(),
 			azurenetwork.NewStateFactory(azureProvider),
 			gcpnetwork.NewStateFactory(),
+			alicloudnetwork.NewStateFactory(),
 		),
 	).SetupWithManager(ctx, kcpManager)
 }

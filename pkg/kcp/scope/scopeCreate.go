@@ -5,6 +5,7 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 )
 
 func scopeCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -19,6 +20,12 @@ func scopeCreate(ctx context.Context, st composed.State) (error, context.Context
 		return scopeCreateAws(ctx, state)
 	case cloudcontrolv1beta1.ProviderOpenStack:
 		return scopeCreateOpenStack(ctx, state)
+	case cloudcontrolv1beta1.ProviderAlicloud:
+		if !feature.Alicloud.Value(ctx) {
+			composed.LoggerFromCtx(ctx).Info("AliCloud feature flag is disabled, skipping AliCloud scope creation")
+			return composed.StopAndForget, nil
+		}
+		return scopeCreateAlicloud(ctx, state)
 	}
 
 	err := fmt.Errorf("unable to handle unknown provider '%s'", state.provider)

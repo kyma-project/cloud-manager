@@ -42,12 +42,13 @@ require (
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.19.0
 	github.com/fsnotify/fsnotify v1.10.1
-	github.com/gardener/gardener v1.145.0
-	github.com/gardener/gardener-extension-provider-aws v1.71.1
+	github.com/gardener/gardener v1.144.1
+	github.com/gardener/gardener-extension-provider-alicloud v1.71.0
+	github.com/gardener/gardener-extension-provider-aws v1.71.0
 	github.com/gardener/gardener-extension-provider-azure v1.61.0
 	github.com/gardener/gardener-extension-provider-gcp v1.52.0
-	github.com/gardener/gardener-extension-provider-openstack v1.56.0
-	github.com/gardener/gardener/pkg/apis v1.145.0
+	github.com/gardener/gardener-extension-provider-openstack v1.55.3
+	github.com/gardener/gardener/pkg/apis v1.143.1
 	github.com/go-logr/logr v1.4.3
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.28.1
@@ -179,15 +180,15 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
-	golang.org/x/exp v0.0.0-20260527015227-08cc5374adb3 // indirect
-	golang.org/x/mod v0.37.0 // indirect
+	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
+	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.46.0 // indirect
+	golang.org/x/tools v0.45.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260615183401-62b3387ff324 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
