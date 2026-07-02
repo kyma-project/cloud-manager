@@ -67,6 +67,17 @@ func (c *GcpCredentials) toEnv(env map[string]string) {
 	env["GOOGLE_PROJECT"] = c.Project
 }
 
+type AlicloudCredentials struct {
+	AccessKeyID     string
+	AccessKeySecret string
+}
+
+func (c *AlicloudCredentials) toEnv(env map[string]string) {
+	env["ALICLOUD_ACCESS_KEY"] = c.AccessKeyID
+	env["ALICLOUD_SECRET_KEY"] = c.AccessKeySecret
+	env["ALICLOUD_REGION"] = e2elib.DefaultRegions[cloudcontrolv1beta1.ProviderAlicloud]
+}
+
 type credentialsHandlerImpl struct {
 	m sync.Mutex
 
@@ -106,6 +117,11 @@ func (h *credentialsHandlerImpl) LoadAllOnce(ctx context.Context) error {
 	if err := h.LoadSubscriptionCredentials(ctx, h.config.Subscriptions.GetDefaultForProvider(cloudcontrolv1beta1.ProviderGCP).Name); err != nil {
 		result = multierror.Append(result, fmt.Errorf("gcp: %w", err))
 	}
+	if sub := h.config.Subscriptions.GetDefaultForProvider(cloudcontrolv1beta1.ProviderAlicloud); sub != nil {
+		if err := h.LoadSubscriptionCredentials(ctx, sub.Name); err != nil {
+			result = multierror.Append(result, fmt.Errorf("alicloud: %w", err))
+		}
+	}
 	h.isLoaded = true
 
 	return result
@@ -135,6 +151,8 @@ func (h *credentialsHandlerImpl) LoadSubscriptionCredentials(ctx context.Context
 		creds, err = h.azureCredentials(out.CredentialsData)
 	case cloudcontrolv1beta1.ProviderGCP:
 		creds, err = h.gcpCredentials(out.CredentialsData)
+	case cloudcontrolv1beta1.ProviderAlicloud:
+		creds, err = h.alicloudCredentials(out.CredentialsData)
 	default:
 		return fmt.Errorf("unsupported provider type: %s", out.Provider)
 	}
@@ -207,5 +225,21 @@ func (h *credentialsHandlerImpl) gcpCredentials(credentialsData map[string]strin
 	return &GcpCredentials{
 		ServiceAccountKey: txt,
 		Project:           projectId,
+	}, nil
+}
+
+func (h *credentialsHandlerImpl) alicloudCredentials(credentialsData map[string]string) (*AlicloudCredentials, error) {
+	accessKeyID, ok := credentialsData["accessKeyID"]
+	if !ok {
+		return nil, fmt.Errorf("missing credential key %s", "accessKeyID")
+	}
+	accessKeySecret, ok := credentialsData["accessKeySecret"]
+	if !ok {
+		return nil, fmt.Errorf("missing credential key %s", "accessKeySecret")
+	}
+
+	return &AlicloudCredentials{
+		AccessKeyID:     accessKeyID,
+		AccessKeySecret: accessKeySecret,
 	}, nil
 }
