@@ -8,7 +8,6 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
 	skrawsnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolume"
-	backupschedule "github.com/kyma-project/cloud-manager/pkg/skr/backupschedule/v1"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -21,10 +20,9 @@ import (
 var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 
 	const (
-		interval        = time.Millisecond * 50
-		timeout         = time.Second * 20
-		awsAccountId    = "974658265573"
-		toleranceWindow = 120 * time.Second
+		interval     = time.Millisecond * 50
+		timeout      = time.Second * 20
+		awsAccountId = "974658265573"
 	)
 
 	It("Scenario: Creates recurring backup schedule with existing backups", func() {
@@ -44,9 +42,6 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				Namespace: DefaultSkrNamespace,
 			},
 		}
-
-		// Set tolerance for backup schedule timing
-		backupschedule.ToleranceInterval = toleranceWindow
 
 		// Stop reconciliation to prevent interference
 		skrawsnfsvol.Ignore.AddName(skrNfsVolumeName)
@@ -111,11 +106,6 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 					WithSchedule("* * * * *"), // Every minute
 				).
 				Should(Succeed())
-
-			// Verify it was actually created
-			err := infra.SKR().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(backupSchedule), backupSchedule)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(backupSchedule.Name).To(Equal(scheduleName))
 		})
 
 		By("Then AwsNfsBackupSchedule has Active state", func() {
@@ -131,29 +121,33 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			Expect(len(backupSchedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
 		})
 
+		By("And When fake clock advances past the first scheduled run", func() {
+			testFakeClock.Step(2 * time.Minute)
+		})
+
 		By("And Then scheduled AwsNfsVolumeBackup is created", func() {
 			Eventually(func() error {
 				list := &cloudresourcesv1beta1.AwsNfsVolumeBackupList{}
-				err := infra.SKR().Client().List(infra.Ctx(), list)
-				if err != nil {
+				if err := infra.SKR().Client().List(infra.Ctx(), list); err != nil {
 					return err
 				}
-				// Filter backups for THIS volume only (to avoid counting backups from parallel tests)
 				var volumeBackups []cloudresourcesv1beta1.AwsNfsVolumeBackup
-				var allBackupNames []string
 				for _, backup := range list.Items {
-					allBackupNames = append(allBackupNames, fmt.Sprintf("%s(vol:%s)", backup.Name, backup.Spec.Source.Volume.Name))
 					if backup.Spec.Source.Volume.Name == skrNfsVolumeName {
 						volumeBackups = append(volumeBackups, backup)
 					}
 				}
 				// Should have 2 backups: existing + scheduled
 				if len(volumeBackups) != 2 {
+					var names []string
+					for _, b := range list.Items {
+						names = append(names, fmt.Sprintf("%s(vol:%s)", b.Name, b.Spec.Source.Volume.Name))
+					}
 					return fmt.Errorf("expected 2 backups for volume %s, got %d; all backups: %v",
-						skrNfsVolumeName, len(volumeBackups), allBackupNames)
+						skrNfsVolumeName, len(volumeBackups), names)
 				}
 				return nil
-			}, timeout*3).Should(Succeed()) // Increased to 60s for parallel execution
+			}, timeout*3, interval).Should(Succeed())
 		})
 
 		By("And Then existing AwsNfsVolumeBackup still exists", func() {
@@ -188,9 +182,9 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		skrNfsVolume := &cloudresourcesv1beta1.AwsNfsVolume{}
 		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 		backupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
+		scheduledBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 
-		// Set tolerance and stop reconciliation
-		backupschedule.ToleranceInterval = toleranceWindow
+		// Stop reconciliation to prevent interference
 		skrawsnfsvol.Ignore.AddName(skrNfsVolumeName)
 		nfsinstance.Ignore.AddName(nfsInstanceName)
 
@@ -239,7 +233,7 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				Should(Succeed())
 		})
 
-		now := time.Now().UTC()
+		now := testFakeClock.Now().UTC()
 		startTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute()+1, 0, 0, now.Location()).UTC()
 
 		By("When AwsNfsBackupSchedule is created with one-time schedule", func() {
@@ -268,12 +262,15 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			Expect(nextRunTime).To(BeTemporally("~", startTime, time.Second))
 		})
 
+		By("And When fake clock advances past start time", func() {
+			testFakeClock.Step(3 * time.Minute)
+		})
+
 		By("And Then scheduled AwsNfsVolumeBackup is created", func() {
 			expectedBackupName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, startTime.Format("20060102-150405"))
-			backup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{}
 
 			Eventually(LoadAndCheck, timeout*6, interval).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), backup,
+				WithArguments(infra.Ctx(), infra.SKR().Client(), scheduledBackup,
 					NewObjActions(WithName(expectedBackupName)),
 				).
 				Should(Succeed())
@@ -282,8 +279,12 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		By("// cleanup: Delete test resources", func() {
 			Expect(Delete(infra.Ctx(), infra.SKR().Client(), backupSchedule)).To(Succeed())
 			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), backupSchedule).Should(Succeed())
+			Expect(Delete(infra.Ctx(), infra.SKR().Client(), scheduledBackup)).To(Succeed())
+			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), scheduledBackup).Should(Succeed())
 			Expect(Delete(infra.Ctx(), infra.SKR().Client(), skrNfsVolume)).To(Succeed())
 			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.SKR().Client(), skrNfsVolume).Should(Succeed())
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), nfsInstance)).To(Succeed())
+			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).Should(Succeed())
 			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
 			Eventually(IsDeleted).WithArguments(infra.Ctx(), infra.KCP().Client(), scope).Should(Succeed())
 		})

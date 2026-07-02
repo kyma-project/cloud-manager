@@ -155,7 +155,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupGcpVpcPeeringReconciler(infra.Registry())).NotTo(HaveOccurred())
 
 	//AzureRwxBackup Schedule
-	Expect(SetupAzureRwxBackupScheduleReconciler(infra.Registry(), env)).NotTo(HaveOccurred())
+	Expect(SetupAzureRwxBackupScheduleReconciler(infra.Registry(), env, testFakeClock)).NotTo(HaveOccurred())
 
 	// SapNfsVolumeSnapshot
 	Expect(SetupSapNfsVolumeSnapshotReconciler(infra.Registry(), infra.SapMock().SnapshotClientProvider(), testFakeClock)).

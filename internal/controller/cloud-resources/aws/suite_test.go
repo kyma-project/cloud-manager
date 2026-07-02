@@ -20,12 +20,14 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
+	clocktesting "k8s.io/utils/clock/testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -39,6 +41,9 @@ import (
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
 var infra testinfra.Infra
+
+// testFakeClock is shared across backup schedule controller tests.
+var testFakeClock = clocktesting.NewFakeClock(time.Now())
 
 func TestControllers(t *testing.T) {
 	if len(os.Getenv("PROJECTROOT")) == 0 {
@@ -83,7 +88,7 @@ var _ = BeforeSuite(func() {
 
 	// AwsNfsBackupSchedule
 	Expect(cloudresourcescontroller.SetupAwsNfsBackupScheduleReconciler(
-		infra.Registry(), env)).NotTo(HaveOccurred())
+		infra.Registry(), env, testFakeClock)).NotTo(HaveOccurred())
 
 	// AwsNfsVolumeRestore
 	Expect(cloudresourcescontroller.SetupAwsNfsVolumeRestoreReconciler(
