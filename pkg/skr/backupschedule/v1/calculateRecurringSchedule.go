@@ -17,7 +17,7 @@ func calculateRecurringSchedule(ctx context.Context, st composed.State) (error, 
 	state := st.(*State)
 	schedule := state.ObjAsBackupSchedule()
 	logger := composed.LoggerFromCtx(ctx)
-	now := time.Now()
+	now := state.Scheduler.Now()
 
 	//If marked for deletion, continue
 	if composed.MarkedForDeletionPredicate(ctx, st) {
