@@ -12,6 +12,7 @@ import (
 	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 )
@@ -78,11 +79,11 @@ func (r *Reconciler) newAction() composed.Action {
 }
 
 func NewReconciler(scopeProvider scopeprovider.ScopeProvider, kcpCluster cluster.Cluster, skrCluster cluster.Cluster,
-	env abstractions.Environment, scheduleType ScheduleType) Reconciler {
+	env abstractions.Environment, scheduleType ScheduleType, clk clock.Clock) Reconciler {
 	compSkrCluster := composed.NewStateClusterFromCluster(skrCluster)
 	compKcpCluster := composed.NewStateClusterFromCluster(kcpCluster)
 	composedStateFactory := composed.NewStateFactory(compSkrCluster)
-	stateFactory := NewStateFactory(scopeProvider, compKcpCluster, compSkrCluster, env)
+	stateFactory := NewStateFactory(scopeProvider, compKcpCluster, compSkrCluster, env, clk)
 
 	return Reconciler{
 		composedStateFactory: composedStateFactory,

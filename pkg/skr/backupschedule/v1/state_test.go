@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/clock"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -182,7 +183,7 @@ func newTestStateFactoryWithObj(object client.Object) (*testStateFactory, error)
 		Build()
 	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)
 	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
-	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster, env)
+	factory := NewStateFactory(kymaRef, kcpCluster, skrCluster, env, clock.RealClock{})
 
 	return &testStateFactory{
 		factory:    factory,
