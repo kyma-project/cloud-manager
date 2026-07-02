@@ -3,7 +3,6 @@ package v1
 import (
 	"context"
 	"fmt"
-	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -32,7 +31,7 @@ func validateTimes(ctx context.Context, st composed.State) (error, context.Conte
 		return nil, nil
 	}
 
-	refTime := time.Now().UTC()
+	refTime := state.Scheduler.Now()
 	createTime := schedule.GetCreationTimestamp()
 	if !(&createTime).IsZero() {
 		refTime = schedule.GetCreationTimestamp().Time

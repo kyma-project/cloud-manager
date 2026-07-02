@@ -2,7 +2,6 @@ package v1
 
 import (
 	"context"
-	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -28,7 +27,7 @@ func checkCompleted(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state)
 	}
 
-	now := time.Now().UTC()
+	now := state.Scheduler.Now()
 	endTime := schedule.GetEndTime()
 	//If the current time is after the end time, stop reconciliation
 	if endTime != nil && !endTime.IsZero() && endTime.Time.Before(now) {

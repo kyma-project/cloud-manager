@@ -27,13 +27,3 @@ func GetRemainingTimeWithTolerance(to, from *time.Time, tolerance time.Duration)
 	}
 	return time.Duration(timeLeft) * time.Second
 }
-
-func GetRemainingTimeFromNow(to *time.Time) time.Duration {
-	now := time.Now().UTC()
-	return GetRemainingTime(to, &now)
-}
-
-func GetRemainingTimeFromNowWithTolerance(to *time.Time, tolerance time.Duration) time.Duration {
-	now := time.Now().UTC()
-	return GetRemainingTimeWithTolerance(to, &now, tolerance)
-}
