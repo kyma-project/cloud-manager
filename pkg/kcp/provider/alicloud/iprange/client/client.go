@@ -39,11 +39,11 @@ type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecr
 func NewClientProvider() ClientProvider {
 	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error) {
 		config := &openapi.Config{
-			AccessKeyId:     tea.String(accessKeyId),
-			AccessKeySecret: tea.String(accessKeySecret),
-			RegionId:        tea.String(region),
+			AccessKeyId:     new(accessKeyId),
+			AccessKeySecret: new(accessKeySecret),
+			RegionId:        new(region),
 		}
-		config.Endpoint = tea.String(fmt.Sprintf("vpc.%s.aliyuncs.com", region))
+		config.Endpoint = new(fmt.Sprintf("vpc.%s.aliyuncs.com", region))
 
 		vpcClient, err := vpc.NewClient(config)
 		if err != nil {
@@ -64,11 +64,11 @@ type alicloudClient struct {
 
 func (c *alicloudClient) CreateVSwitch(ctx context.Context, vpcId, zoneId, cidrBlock, name string) (string, error) {
 	req := &vpc.CreateVSwitchRequest{
-		RegionId:    tea.String(c.region),
-		VpcId:       tea.String(vpcId),
-		ZoneId:      tea.String(zoneId),
-		CidrBlock:   tea.String(cidrBlock),
-		VSwitchName: tea.String(name),
+		RegionId:    new(c.region),
+		VpcId:       new(vpcId),
+		ZoneId:      new(zoneId),
+		CidrBlock:   new(cidrBlock),
+		VSwitchName: new(name),
 	}
 
 	resp, err := c.vpcClient.CreateVSwitch(req)
@@ -81,8 +81,8 @@ func (c *alicloudClient) CreateVSwitch(ctx context.Context, vpcId, zoneId, cidrB
 
 func (c *alicloudClient) DescribeVSwitch(ctx context.Context, vSwitchId string) (*VSwitchInfo, error) {
 	req := &vpc.DescribeVSwitchesRequest{
-		RegionId:  tea.String(c.region),
-		VSwitchId: tea.String(vSwitchId),
+		RegionId:  new(c.region),
+		VSwitchId: new(vSwitchId),
 	}
 
 	resp, err := c.vpcClient.DescribeVSwitches(req)
@@ -107,9 +107,9 @@ func (c *alicloudClient) DescribeVSwitch(ctx context.Context, vSwitchId string) 
 
 func (c *alicloudClient) DescribeVSwitchesByName(ctx context.Context, vpcId, name string) ([]VSwitchInfo, error) {
 	req := &vpc.DescribeVSwitchesRequest{
-		RegionId:    tea.String(c.region),
-		VpcId:       tea.String(vpcId),
-		VSwitchName: tea.String(name),
+		RegionId:    new(c.region),
+		VpcId:       new(vpcId),
+		VSwitchName: new(name),
 	}
 
 	resp, err := c.vpcClient.DescribeVSwitches(req)
@@ -136,8 +136,8 @@ func (c *alicloudClient) DescribeVSwitchesByName(ctx context.Context, vpcId, nam
 
 func (c *alicloudClient) DeleteVSwitch(ctx context.Context, vSwitchId string) error {
 	req := &vpc.DeleteVSwitchRequest{
-		RegionId:  tea.String(c.region),
-		VSwitchId: tea.String(vSwitchId),
+		RegionId:  new(c.region),
+		VSwitchId: new(vSwitchId),
 	}
 
 	_, err := c.vpcClient.DeleteVSwitch(req)
@@ -150,8 +150,8 @@ func (c *alicloudClient) DeleteVSwitch(ctx context.Context, vSwitchId string) er
 
 func (c *alicloudClient) DescribeVpcs(ctx context.Context, name string) ([]VpcInfo, error) {
 	req := &vpc.DescribeVpcsRequest{
-		RegionId: tea.String(c.region),
-		VpcName:  tea.String(name),
+		RegionId: new(c.region),
+		VpcName:  new(name),
 	}
 
 	resp, err := c.vpcClient.DescribeVpcs(req)
@@ -176,7 +176,7 @@ func (c *alicloudClient) DescribeVpcs(ctx context.Context, name string) ([]VpcIn
 
 func (c *alicloudClient) DescribeZones(ctx context.Context) ([]string, error) {
 	req := &vpc.DescribeZonesRequest{
-		RegionId: tea.String(c.region),
+		RegionId: new(c.region),
 	}
 
 	resp, err := c.vpcClient.DescribeZones(req)
