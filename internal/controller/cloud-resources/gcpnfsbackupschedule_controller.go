@@ -63,7 +63,7 @@ func (f *GcpNfsBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerAr
 	}
 
 	reconciler := backupschedulev1.NewReconciler(
-		args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, backupschedulev1.GcpNfsBackupSchedule,
+		args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, backupschedulev1.GcpNfsBackupSchedule, f.clk,
 	)
 	return &GcpNfsBackupScheduleReconciler{reconciler: &reconciler}
 }
