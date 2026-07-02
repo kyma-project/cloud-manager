@@ -27,6 +27,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
+	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
@@ -116,6 +117,7 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().ServiceNetworkingClientProvider(),   // v2: OLD pattern (ClientProvider)
 		infra.GcpMock().OldComputeClientProvider(),          // v2: OLD pattern (ClientProvider)
 		infra.SapMock().IpRangeProvider(),
+		alicloudiprangeclient.NewClientProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	// NfsInstance
