@@ -362,7 +362,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupAwsNfsBackupScheduleReconciler(skrRegistry, env); err != nil {
+	if err = cloudresourcescontroller.SetupAwsNfsBackupScheduleReconciler(skrRegistry, env, clock.RealClock{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsBackupSchedule")
 		os.Exit(1)
 	}
@@ -382,7 +382,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env); err != nil {
+	if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env, clock.RealClock{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureRwxBackupSchedule")
 		os.Exit(1)
 	}
