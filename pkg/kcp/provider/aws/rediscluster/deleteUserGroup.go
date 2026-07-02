@@ -21,6 +21,15 @@ func deleteUserGroup(ctx context.Context, st composed.State) (error, context.Con
 	if userGroupState == awsmeta.ElastiCache_UserGroup_DELETING {
 		return nil, ctx
 	}
+	// Defensive guard against a fresh-create → downgrade race: if the transient
+	// user group was just created (predicate fired) and hasn't reached ACTIVE
+	// yet, AWS rejects DeleteUserGroup on a CREATING resource and lands the
+	// cluster in an error state. Wait for the status to settle before
+	// attempting the delete.
+	if userGroupState == awsmeta.ElastiCache_UserGroup_CREATING {
+		logger.Info("User group is still CREATING, requeueing before delete")
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+	}
 
 	logger.Info("Deleting userGroup")
 

@@ -27,6 +27,18 @@ type AwsElastiCacheMockUtils interface {
 	DeleteAwsElastiCacheByName(name string)
 	DeleteAwsElastiCacheUserGroupByName(name string)
 	DescribeAwsElastiCacheParametersByName(groupName string) map[string]string
+
+	CreateUserGroupCallCount() int
+	DeleteUserGroupCallCount() int
+	CreateUserGroupCalls() []string
+	DeleteUserGroupCalls() []string
+	ModifyReplicationGroupCalls() []awsclient.ModifyElastiCacheClusterOptions
+
+	// PreCreateUserGroup seeds a user group in the given status, simulating
+	// pre-fix legacy state for backfill tests.
+	PreCreateUserGroup(name string, state awsmeta.ElastiCacheUserGroupState)
+
+	GetAwsElastiCacheUserGroupByName(name string) *elasticachetypes.UserGroup
 }
 
 func getDefaultParams() map[string]elasticachetypes.Parameter {
@@ -60,6 +72,10 @@ type elastiCacheClientFake struct {
 	userGroups        map[string]*elasticachetypes.UserGroup
 	secretStore       map[string]*secretsmanager.GetSecretValueOutput
 	securityGroups    []*ec2types.SecurityGroup
+
+	createUserGroupCalls        []string
+	deleteUserGroupCalls        []string
+	modifyReplicationGroupCalls []awsclient.ModifyElastiCacheClusterOptions
 }
 
 func newElastiCacheClientFake() *elastiCacheClientFake {
@@ -115,6 +131,63 @@ func (client *elastiCacheClientFake) DeleteAwsElastiCacheUserGroupByName(name st
 	defer client.mutex.Unlock()
 
 	delete(client.userGroups, name)
+}
+
+func (client *elastiCacheClientFake) CreateUserGroupCallCount() int {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+	return len(client.createUserGroupCalls)
+}
+
+func (client *elastiCacheClientFake) DeleteUserGroupCallCount() int {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+	return len(client.deleteUserGroupCalls)
+}
+
+// CreateUserGroupCalls returns a copy of the recorded ids, preserving invocation order.
+func (client *elastiCacheClientFake) CreateUserGroupCalls() []string {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+	out := make([]string, len(client.createUserGroupCalls))
+	copy(out, client.createUserGroupCalls)
+	return out
+}
+
+// DeleteUserGroupCalls returns a copy of the recorded ids, preserving invocation order.
+func (client *elastiCacheClientFake) DeleteUserGroupCalls() []string {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+	out := make([]string, len(client.deleteUserGroupCalls))
+	copy(out, client.deleteUserGroupCalls)
+	return out
+}
+
+// ModifyReplicationGroupCalls returns a copy of the recorded options, preserving invocation order.
+func (client *elastiCacheClientFake) ModifyReplicationGroupCalls() []awsclient.ModifyElastiCacheClusterOptions {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+	out := make([]awsclient.ModifyElastiCacheClusterOptions, len(client.modifyReplicationGroupCalls))
+	copy(out, client.modifyReplicationGroupCalls)
+	return out
+}
+
+func (client *elastiCacheClientFake) PreCreateUserGroup(name string, state awsmeta.ElastiCacheUserGroupState) {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+
+	client.userGroups[name] = &elasticachetypes.UserGroup{
+		Engine:      new("redis"),
+		UserGroupId: new(name),
+		Status:      new(state),
+		UserIds:     []string{"default"},
+	}
+}
+
+func (client *elastiCacheClientFake) GetAwsElastiCacheUserGroupByName(name string) *elasticachetypes.UserGroup {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+	return client.userGroups[name]
 }
 
 func (client *elastiCacheClientFake) DescribeAwsElastiCacheParametersByName(groupName string) map[string]string {
@@ -400,6 +473,8 @@ func (client *elastiCacheClientFake) ModifyElastiCacheReplicationGroup(ctx conte
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
+	client.modifyReplicationGroupCalls = append(client.modifyReplicationGroupCalls, options)
+
 	if instance, ok := client.replicationGroups[id]; ok {
 		instance.Status = new("modifying")
 		if options.CacheNodeType != nil {
@@ -509,6 +584,7 @@ func (client *elastiCacheClientFake) CreateUserGroup(ctx context.Context, id str
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
+	client.createUserGroupCalls = append(client.createUserGroupCalls, id)
 	client.userGroups[id] = &elasticachetypes.UserGroup{
 		Engine:      new("redis"),
 		UserGroupId: new(id),
@@ -527,6 +603,7 @@ func (client *elastiCacheClientFake) DeleteUserGroup(ctx context.Context, id str
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 
+	client.deleteUserGroupCalls = append(client.deleteUserGroupCalls, id)
 	if instance, ok := client.userGroups[id]; ok {
 		instance.Status = new("deleting")
 	}
