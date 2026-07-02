@@ -25,6 +25,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
+	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
+	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
@@ -195,6 +197,7 @@ var _ = BeforeSuite(func() {
 		azurevpcnetwork.NewStateFactory(infra.AzureMock().VpcNetworkProvider()),
 		gcpvpcnetwork.NewStateFactory(infra.GcpMock2().VpcNetworkProvider()),
 		sapvpcnetwork.NewStateFactory(infra.SapMock().VpcNetworkProvider()),
+		alicloudvpcnetwork.NewStateFactory(alicloudvpcnetworkclient.NewClientProvider()),
 	)).To(Succeed())
 	// Subscription
 	Expect(SetupSubscriptionReconciler(
