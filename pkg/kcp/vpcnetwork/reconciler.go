@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
+	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
 	gcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork"
@@ -29,6 +30,7 @@ func New(
 	azureStateFactory azurevpcnetwork.StateFactory,
 	gcpStateFactory gcpvpcnetwork.StateFactory,
 	sapStateFactory sapvpcnetwork.StateFactory,
+	alicloudStateFactory alicloudvpcnetwork.StateFactory,
 ) VpcNetworkReconciler {
 	return &vpcNetworkReconciler{
 		composedStateFactory:  composedStateFactory,
@@ -37,6 +39,7 @@ func New(
 		azureStateFactory:     azureStateFactory,
 		gcpStateFactory:       gcpStateFactory,
 		sapStateFactory:       sapStateFactory,
+		alicloudStateFactory:  alicloudStateFactory,
 	}
 }
 
@@ -44,10 +47,11 @@ type vpcNetworkReconciler struct {
 	composedStateFactory  composed.StateFactory
 	kcpCommonStateFactory kcpcommonaction.StateFactory
 
-	awsStateFactory   awsvpcnetwork.StateFactory
-	azureStateFactory azurevpcnetwork.StateFactory
-	gcpStateFactory   gcpvpcnetwork.StateFactory
-	sapStateFactory   sapvpcnetwork.StateFactory
+	awsStateFactory      awsvpcnetwork.StateFactory
+	azureStateFactory    azurevpcnetwork.StateFactory
+	gcpStateFactory      gcpvpcnetwork.StateFactory
+	sapStateFactory      sapvpcnetwork.StateFactory
+	alicloudStateFactory alicloudvpcnetwork.StateFactory
 }
 
 func (r *vpcNetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -76,6 +80,15 @@ func (r *vpcNetworkReconciler) newAction() composed.Action {
 		composed.NewCase(kcpcommonaction.AzureProviderPredicate, azurevpcnetwork.New(r.azureStateFactory)),
 		composed.NewCase(kcpcommonaction.GcpProviderPredicate, gcpvpcnetwork.New(r.gcpStateFactory)),
 		composed.NewCase(kcpcommonaction.OpenStackProviderPredicate, sapvpcnetwork.New(r.sapStateFactory)),
+		composed.NewCase(
+			composed.All(
+				kcpcommonaction.AlicloudProviderPredicate,
+				func(ctx context.Context, _ composed.State) bool {
+					return feature.Alicloud.Value(ctx)
+				},
+			),
+			alicloudvpcnetwork.New(r.alicloudStateFactory),
+		),
 	)
 
 	return composed.ComposeActionsNoName(

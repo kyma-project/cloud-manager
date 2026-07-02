@@ -21,6 +21,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
+	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
 	gcpvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork"
@@ -39,6 +40,7 @@ func SetupVpcNetworkReconciler(
 	azureStateFactory azurevpcnetwork.StateFactory,
 	gcpStateFactory gcpvpcnetwork.StateFactory,
 	sapStateFactory sapvpcnetwork.StateFactory,
+	alicloudStateFactory alicloudvpcnetwork.StateFactory,
 ) error {
 	return NewVpcNetworkReconciler(
 		kcpvpcnetwork.New(
@@ -48,6 +50,7 @@ func SetupVpcNetworkReconciler(
 			azureStateFactory,
 			gcpStateFactory,
 			sapStateFactory,
+			alicloudStateFactory,
 		),
 	).SetupWithManager(kcpManager)
 }
