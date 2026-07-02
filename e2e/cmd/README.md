@@ -61,7 +61,7 @@ Drives a one-shot terraform workspace: builds it, destroys any previous state, r
 | `--var` |   | no, repeatable | Input variable in `key="value"` (or `key=123`) form. |
 | `--confirm-delete` | `-c` | no | Pause and wait for `[enter]` before the final `destroy`. |
 
-Source: [e2e/cmd/cloudTf.go](e2e/cmd/cloudTf.go)
+Source: [cloudTf.go](./cloudTf.go)
 
 ---
 
@@ -69,7 +69,7 @@ Source: [e2e/cmd/cloudTf.go](e2e/cmd/cloudTf.go)
 
 Prints the loaded `e2econfig.yaml` (after env merging) as YAML to stdout. No flags beyond the globals.
 
-Source: [e2e/cmd/configDump.go](e2e/cmd/configDump.go)
+Source: [configDump.go](./configDump.go)
 
 ---
 
@@ -77,7 +77,7 @@ Source: [e2e/cmd/configDump.go](e2e/cmd/configDump.go)
 
 Downloads the Garden secrets listed in `config.DownloadGardenSecrets` and writes the requested keys as files under `--config-dir`. Requires `--config-dir` to be set. No command-specific flags.
 
-Source: [e2e/cmd/credentialsDownload.go](e2e/cmd/credentialsDownload.go)
+Source: [credentialsDownload.go](./credentialsDownload.go)
 
 ---
 
@@ -90,7 +90,7 @@ Starts a local `envtest` Kubernetes API server using the binaries under `<config
 | `--output` | `-o` | yes | File path the generated kubeconfig is written to. |
 | `--version` |  | yes (or via `ENVTEST_K8S_VERSION`) | Kubernetes version of the envtest assets to use. |
 
-Source: [e2e/cmd/envtestRun.go](e2e/cmd/envtestRun.go)
+Source: [envtestRun.go](./envtestRun.go)
 
 ---
 
@@ -105,7 +105,7 @@ Creates a new Kyma runtime via KEB with a fresh global/sub account UUID, given a
 | `--wait` | `-w` | no | Wait for instance to be ready. |
 | `--timeout` | `-t` | no | Wait timeout (default `15m0s`). |
 
-Source: [e2e/cmd/instanceCreate.go](e2e/cmd/instanceCreate.go)
+Source: [instanceCreate.go](./instanceCreate.go)
 
 ---
 
@@ -120,7 +120,7 @@ Marks an instance for deletion via KEB; optionally waits for full destruction. O
 | `--wait` | `-w` | no | Wait for instance to be deleted. |
 | `--timeout` | `-t` | no | Wait timeout (default `40m0s`). |
 
-Source: [e2e/cmd/instanceDelete.go](e2e/cmd/instanceDelete.go)
+Source: [instanceDelete.go](./instanceDelete.go)
 
 ---
 
@@ -132,7 +132,7 @@ Lists all KEB instances. Output is a table (`default` or `wide`) by default; `js
 |------|-------|-------------|
 | `--output` | `-o` | One of `default` (default), `wide`, `json`, `yaml`. The wide format adds Global Account / Sub Account columns. |
 
-Source: [e2e/cmd/instanceList.go](e2e/cmd/instanceList.go)
+Source: [instanceList.go](./instanceList.go)
 
 ---
 
@@ -145,7 +145,7 @@ Prints YAML details for a single instance. Exactly one of `--runtime-id` / `--al
 | `--runtime-id` | `-r` | Runtime ID. |
 | `--alias` | `-a` | Alias name. |
 
-Source: [e2e/cmd/instanceShow.go](e2e/cmd/instanceShow.go)
+Source: [instanceShow.go](./instanceShow.go)
 
 ---
 
@@ -162,7 +162,7 @@ Waits for instance(s) to reach the completed state. At least one of `--runtime`,
 
 With `--verbose` the wait emits progress lines for each polling iteration.
 
-Source: [e2e/cmd/instanceWait.go](e2e/cmd/instanceWait.go)
+Source: [instanceWait.go](./instanceWait.go)
 
 ---
 
@@ -195,7 +195,7 @@ e2e instance clean --alias my-test-cluster
 e2e instance clean --runtime-id abc-123 --verbose
 ```
 
-Source: [e2e/cmd/instanceClean.go](e2e/cmd/instanceClean.go)
+Source: [instanceClean.go](./instanceClean.go)
 
 ---
 
@@ -213,7 +213,7 @@ Exactly one of the following must be given (mutually exclusive):
 | `--ignore <alias…>` | `-i` | Ignore the listed aliases (or runtime names); enable all others. |
 | `--enable <alias…>` | `-e` | Enable the listed aliases; ignore all others. |
 
-Source: [e2e/cmd/instanceIgnore.go](e2e/cmd/instanceIgnore.go)
+Source: [instanceIgnore.go](./instanceIgnore.go)
 
 ---
 
@@ -225,7 +225,7 @@ Fetches the SKR `Kyma` CR (`kyma-system/default`) from the runtime and prints it
 |------|-------|----------|-------------|
 | `--runtime-id` | `-r` | yes | The runtime ID. |
 
-Source: [e2e/cmd/instanceKyma.go](e2e/cmd/instanceKyma.go)
+Source: [instanceKyma.go](./instanceKyma.go)
 
 ---
 
@@ -243,7 +243,7 @@ Prints a table of modules for the matching runtime(s) showing whether the module
 | `--alias` | `-a` | Restrict to runtimes matching alias. |
 | `--module-name` | `-m` | Filter by module name (repeatable). |
 
-Source: [e2e/cmd/instanceModulesList.go](e2e/cmd/instanceModulesList.go)
+Source: [instanceModulesList.go](./instanceModulesList.go)
 
 ### `instance modules add`
 
@@ -257,7 +257,7 @@ Adds a module to the SKR `Kyma` (`kyma-system/default`) `.spec.modules`. If `--w
 | `--wait` | `-w` | no | Wait until the module is Ready (only honoured for `cloud-manager`). |
 | `--timeout` | `-t` | no | Wait timeout (default `5m0s`). |
 
-Source: [e2e/cmd/instanceModulesAdd.go](e2e/cmd/instanceModulesAdd.go)
+Source: [instanceModulesAdd.go](./instanceModulesAdd.go)
 
 ### `instance modules remove`
 
@@ -269,7 +269,7 @@ Removes a module from the SKR `Kyma` `.spec.modules`. No-op if the module is not
 | `--runtime-id` | `-r` | one-of | Runtime ID. |
 | `--alias` | `-a` | one-of | Runtime alias. |
 
-Source: [e2e/cmd/instanceModulesRemove.go](e2e/cmd/instanceModulesRemove.go)
+Source: [instanceModulesRemove.go](./instanceModulesRemove.go)
 
 ---
 
@@ -286,7 +286,7 @@ Prints the SKR kubeconfig (along with a `# expires at <RFC3339>` comment) to std
 | `--runtime-id` | `-r` | Runtime ID. |
 | `--alias` | `-a` | Runtime alias. |
 
-Source: [e2e/cmd/instanceCredentialsDump.go](e2e/cmd/instanceCredentialsDump.go)
+Source: [instanceCredentialsDump.go](./instanceCredentialsDump.go)
 
 ### `instance credentials renew`
 
@@ -296,7 +296,7 @@ Renews the SKR kubeconfig for a runtime via KEB.
 |------|-------|----------|-------------|
 | `--runtime-id` | `-r` | yes | The runtime ID. |
 
-Source: [e2e/cmd/instanceCredentialsRenew.go](e2e/cmd/instanceCredentialsRenew.go)
+Source: [instanceCredentialsRenew.go](./instanceCredentialsRenew.go)
 
 ---
 
@@ -308,4 +308,4 @@ Runs the e2e simulator (`e2e/sim`) against the loaded config until interrupted o
 |------|-------|-------------|
 | `--timeout` | `-t` | Time to run before quitting. `0` (default) means run until Ctrl-C. |
 
-Source: [e2e/cmd/simRun.go](e2e/cmd/simRun.go)
+Source: [simRun.go](./simRun.go)
