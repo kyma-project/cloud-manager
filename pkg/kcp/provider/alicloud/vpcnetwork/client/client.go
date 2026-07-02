@@ -27,11 +27,11 @@ type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecr
 func NewClientProvider() ClientProvider {
 	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error) {
 		config := &openapi.Config{
-			AccessKeyId:     tea.String(accessKeyId),
-			AccessKeySecret: tea.String(accessKeySecret),
-			RegionId:        tea.String(region),
+			AccessKeyId:     new(accessKeyId),
+			AccessKeySecret: new(accessKeySecret),
+			RegionId:        new(region),
 		}
-		config.Endpoint = tea.String(fmt.Sprintf("vpc.%s.aliyuncs.com", region))
+		config.Endpoint = new(fmt.Sprintf("vpc.%s.aliyuncs.com", region))
 
 		vpcClient, err := vpc.NewClient(config)
 		if err != nil {
@@ -52,9 +52,9 @@ type alicloudClient struct {
 
 func (c *alicloudClient) CreateVpc(ctx context.Context, name string, cidrBlock string) (*VpcInfo, error) {
 	req := &vpc.CreateVpcRequest{
-		RegionId:  tea.String(c.region),
-		VpcName:   tea.String(name),
-		CidrBlock: tea.String(cidrBlock),
+		RegionId:  new(c.region),
+		VpcName:   new(name),
+		CidrBlock: new(cidrBlock),
 	}
 
 	resp, err := c.vpcClient.CreateVpc(req)
@@ -72,8 +72,8 @@ func (c *alicloudClient) CreateVpc(ctx context.Context, name string, cidrBlock s
 
 func (c *alicloudClient) DescribeVpcs(ctx context.Context, name string) ([]VpcInfo, error) {
 	req := &vpc.DescribeVpcsRequest{
-		RegionId: tea.String(c.region),
-		VpcName:  tea.String(name),
+		RegionId: new(c.region),
+		VpcName:  new(name),
 	}
 
 	resp, err := c.vpcClient.DescribeVpcs(req)
@@ -98,8 +98,8 @@ func (c *alicloudClient) DescribeVpcs(ctx context.Context, name string) ([]VpcIn
 
 func (c *alicloudClient) DeleteVpc(ctx context.Context, vpcId string) error {
 	req := &vpc.DeleteVpcRequest{
-		RegionId: tea.String(c.region),
-		VpcId:    tea.String(vpcId),
+		RegionId: new(c.region),
+		VpcId:    new(vpcId),
 	}
 
 	_, err := c.vpcClient.DeleteVpc(req)
