@@ -41,6 +41,14 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 				Name:      existingBackupName,
 				Namespace: DefaultSkrNamespace,
 			},
+			Spec: cloudresourcesv1beta1.AwsNfsVolumeBackupSpec{
+				Source: cloudresourcesv1beta1.AwsNfsVolumeBackupSource{
+					Volume: cloudresourcesv1beta1.VolumeRef{
+						Name:      skrNfsVolumeName,
+						Namespace: DefaultSkrNamespace,
+					},
+				},
+			},
 		}
 
 		// Stop reconciliation to prevent interference
