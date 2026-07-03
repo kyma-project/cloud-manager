@@ -121,12 +121,12 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			Expect(len(backupSchedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
 		})
 
-		By("And When fake clock advances past the first scheduled run", func() {
-			testFakeClock.Step(2 * time.Minute)
-		})
-
-		By("And Then scheduled AwsNfsVolumeBackup is created", func() {
+		By("And Then scheduled AwsNfsVolumeBackup is created after fake clock advances", func() {
 			Eventually(func() error {
+				// Advance the fake clock on every poll so the reconciler's
+				// requeue window always lands past the next scheduled run.
+				testFakeClock.Step(2 * time.Minute)
+
 				list := &cloudresourcesv1beta1.AwsNfsVolumeBackupList{}
 				if err := infra.SKR().Client().List(infra.Ctx(), list); err != nil {
 					return err
@@ -262,18 +262,16 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 			Expect(nextRunTime).To(BeTemporally("~", startTime, time.Second))
 		})
 
-		By("And When fake clock advances past start time", func() {
-			testFakeClock.Step(3 * time.Minute)
-		})
-
-		By("And Then scheduled AwsNfsVolumeBackup is created", func() {
+		By("And Then scheduled AwsNfsVolumeBackup is created after fake clock advances", func() {
 			expectedBackupName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, startTime.Format("20060102-150405"))
 
-			Eventually(LoadAndCheck, timeout*6, interval).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), scheduledBackup,
-					NewObjActions(WithName(expectedBackupName)),
-				).
-				Should(Succeed())
+			Eventually(func() error {
+				// Advance the fake clock on every poll so the reconciler's
+				// requeue window always lands past the scheduled start time.
+				testFakeClock.Step(1 * time.Minute)
+				return LoadAndCheck(infra.Ctx(), infra.SKR().Client(), scheduledBackup,
+					NewObjActions(WithName(expectedBackupName)))
+			}, timeout*6, interval).Should(Succeed())
 		})
 
 		By("// cleanup: Delete test resources", func() {
