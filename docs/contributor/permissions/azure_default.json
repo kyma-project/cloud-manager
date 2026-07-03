@@ -89,6 +89,7 @@
     "Microsoft.Resources/subscriptions/resourceGroups/delete",
     "Microsoft.Resources/subscriptions/resourceGroups/read",
     "Microsoft.Resources/subscriptions/resourceGroups/write",
+    "Microsoft.Security/alerts/read",
     "Microsoft.Security/pricings/SecurityOperators/read",
     "Microsoft.Security/pricings/SecurityOperators/write",
     "Microsoft.Security/pricings/read",
