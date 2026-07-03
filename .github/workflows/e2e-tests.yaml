@@ -129,7 +129,7 @@ jobs:
         env:
           KUBECONFIG: ./tmp/kubeconfig-kcp.yaml
         run: |
-          go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -t 30m -w -v
+          go run ./e2e/cmd instance create -a shared-$PROVIDER -p $PROVIDER -t 60m -w -v
 
       - name: Print Instance Details
         env:
