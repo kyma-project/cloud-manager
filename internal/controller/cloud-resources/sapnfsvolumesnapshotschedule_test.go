@@ -35,6 +35,20 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 		skrsapnfsvolume.Ignore.AddName(sapNfsVolumeName)
 		defer skrsapnfsvolume.Ignore.RemoveName(sapNfsVolumeName)
 
+		// Pre-arm Ignore for the snapshot name the schedule will create on its
+		// first cron tick, BEFORE creating the schedule. Otherwise, when
+		// testFakeClock happens to sit within the scheduler's 1s tolerance of a
+		// minute boundary, the reconciler creates the snapshot before the test
+		// can arm Ignore — the snapshot picks up the common finalizer and gets
+		// stuck in Error/NfsVolumeNotReady, and cascade Delete() can never
+		// complete. For cron "* * * * *" with no StartTime, the reconciler's
+		// nextRunTime is deterministically the next minute boundary after
+		// testFakeClock.Now(), so we can compute the exact name up front.
+		firstTick := testFakeClock.Now().UTC().Truncate(time.Minute).Add(time.Minute)
+		snapshotName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, firstTick.Format("20060102-150405"))
+		skrsapnfsvolumesnapshot.Ignore.AddName(snapshotName)
+		defer skrsapnfsvolumesnapshot.Ignore.RemoveName(snapshotName)
+
 		By("Given KCP Scope exists", func() {
 			Eventually(func() error {
 				return GivenScopeOpenStackExists(infra.Ctx(), infra, scope, sapMock.ProviderParams(), WithName(skrKymaRef.Name))
@@ -89,12 +103,7 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 			Expect(len(schedule.Status.NextRunTimes)).To(BeNumerically(">", 0))
 		})
 
-		var snapshotName string
 		By("And When fake clock advances past the first scheduled run", func() {
-			expected, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
-			Expect(err).NotTo(HaveOccurred())
-			snapshotName = fmt.Sprintf("%s-%d-%s", scheduleName, 1, expected.Format("20060102-150405"))
-			skrsapnfsvolumesnapshot.Ignore.AddName(snapshotName)
 			testFakeClock.Step(2 * time.Minute)
 		})
 
