@@ -51,7 +51,7 @@ func (o *waitOptions) validate() error {
 		o.interval = 10 * time.Second
 	}
 	if o.errorCountThreshold == 0 {
-		o.errorCountThreshold = 12 // with interval 5s = 1min
+		o.errorCountThreshold = 36 // with interval 5s = 1min
 	}
 	if o.sleeper == nil {
 		o.sleeper = util.SleeperFunc(util.RealSleeperFunc)
