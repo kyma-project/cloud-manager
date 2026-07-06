@@ -40,7 +40,7 @@ func (p *providerConfig) IntVariation(ctx context.Context, flagKey string, defau
 	if res.Type == gjson.Null {
 		return defaultValue
 	}
-	v, err := strconv.ParseInt(res.String(), 10, 0)
+	v, err := strconv.ParseInt(res.String(), 10, 64)
 	if err != nil {
 		return defaultValue
 	}

@@ -141,3 +141,23 @@ func (b *NetworkBuilder) WithOpenStackRef(domain, project, id, name string) *Net
 	}
 	return b
 }
+
+func (b *NetworkBuilder) WithAlicloudRef(accountId, region, vpcId, networkName string) *NetworkBuilder {
+	if accountId == "" && region == "" && vpcId == "" && networkName == "" {
+		if b.Obj.Spec.Network.Reference == nil {
+			return b
+		}
+		b.Obj.Spec.Network.Reference.Alicloud = nil
+		return b
+	}
+	if b.Obj.Spec.Network.Reference == nil {
+		b.Obj.Spec.Network.Reference = &NetworkReference{}
+	}
+	b.Obj.Spec.Network.Reference.Alicloud = &AlicloudNetworkReference{
+		AccountId:   accountId,
+		Region:      region,
+		VpcId:       vpcId,
+		NetworkName: networkName,
+	}
+	return b
+}

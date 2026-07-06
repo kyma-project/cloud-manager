@@ -25,9 +25,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
-	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
 	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
-	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
@@ -117,7 +115,7 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().ServiceNetworkingClientProvider(),   // v2: OLD pattern (ClientProvider)
 		infra.GcpMock().OldComputeClientProvider(),          // v2: OLD pattern (ClientProvider)
 		infra.SapMock().IpRangeProvider(),
-		alicloudiprangeclient.NewClientProvider(),
+		infra.AlicloudMock().IpRangeClientProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	// NfsInstance
@@ -199,7 +197,7 @@ var _ = BeforeSuite(func() {
 		azurevpcnetwork.NewStateFactory(infra.AzureMock().VpcNetworkProvider()),
 		gcpvpcnetwork.NewStateFactory(infra.GcpMock2().VpcNetworkProvider()),
 		sapvpcnetwork.NewStateFactory(infra.SapMock().VpcNetworkProvider()),
-		alicloudvpcnetwork.NewStateFactory(alicloudvpcnetworkclient.NewClientProvider()),
+		alicloudvpcnetwork.NewStateFactory(infra.AlicloudMock().VpcNetworkClientProvider()),
 	)).To(Succeed())
 	// Subscription
 	Expect(SetupSubscriptionReconciler(
