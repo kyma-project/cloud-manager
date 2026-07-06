@@ -94,11 +94,11 @@
     "Microsoft.Security/pricings/SecurityOperators/write",
     "Microsoft.Security/pricings/read",
     "Microsoft.Security/pricings/write",
+    "Microsoft.Storage/storageAccounts/delete",
     "Microsoft.Storage/storageAccounts/fileServices/shares/delete",
     "Microsoft.Storage/storageAccounts/fileServices/shares/read",
     "Microsoft.Storage/storageAccounts/fileServices/shares/write",
     "Microsoft.Storage/storageAccounts/listKeys/action",
-    "Microsoft.Storage/storageAccounts/delete",
     "Microsoft.Storage/storageAccounts/read",
     "Microsoft.Storage/storageAccounts/write"
   ],
