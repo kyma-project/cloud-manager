@@ -95,6 +95,8 @@
         "elasticfilesystem:DescribeMountTargets",
         "elasticfilesystem:TagResource",
         "elasticfilesystem:UntagResource",
+        "guardduty:GetFindings",
+        "guardduty:ListFindings",
         "kms:CreateGrant",
         "kms:Decrypt",
         "kms:DescribeKey",
