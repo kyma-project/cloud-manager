@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/elliotchance/pie/v2"
@@ -75,10 +76,8 @@ func (s *vpcStore) AddVSwitch(vpcId, vSwitchId, name, zoneId, cidr string) *VSwi
 func (s *vpcStore) AddZone(zoneId string) {
 	s.m.Lock()
 	defer s.m.Unlock()
-	for _, z := range s.zones {
-		if z == zoneId {
-			return
-		}
+	if slices.Contains(s.zones, zoneId) {
+		return
 	}
 	s.zones = append(s.zones, zoneId)
 }
@@ -173,7 +172,7 @@ func (s *vpcStore) CreateVSwitch(ctx context.Context, vpcId, zoneId, cidrBlock, 
 func (s *vpcStore) checkVSwitchOverlap(vpcId, cidr string) error {
 	for _, vsw := range s.vSwitches {
 		if vsw.VpcId == vpcId && vsw.CidrBlock == cidr {
-			return fmt.Errorf("Specified CIDR block overlapped with other subnets. The CIDR was: %s", cidr)
+			return fmt.Errorf("specified CIDR block overlapped with other subnets. The CIDR was: %s", cidr)
 		}
 	}
 	return nil
