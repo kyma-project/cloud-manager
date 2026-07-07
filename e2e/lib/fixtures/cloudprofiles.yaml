@@ -11412,7 +11412,7 @@ items:
       - classification: preview
         version: 1.33.4
       - classification: supported
-        expirationDate: "2026-09-14T23:59:59Z"
+        expirationDate: "2036-09-14T23:59:59Z"
         version: 1.33.3
       - classification: deprecated
         expirationDate: "2026-09-14T23:59:59Z"
@@ -23978,7 +23978,7 @@ items:
         expirationDate: "2026-07-03T23:59:59Z"
         version: 1.32.8
       - classification: supported
-        expirationDate: "2026-07-03T23:59:59Z"
+        expirationDate: "2036-07-03T23:59:59Z"
         version: 1.32.7
       - classification: deprecated
         expirationDate: "2026-07-03T23:59:59Z"
@@ -78190,7 +78190,7 @@ items:
       - classification: preview
         version: 1.33.4
       - classification: supported
-        expirationDate: "2026-09-14T23:59:59Z"
+        expirationDate: "2036-09-14T23:59:59Z"
         version: 1.33.3
       - classification: deprecated
         expirationDate: "2026-09-14T23:59:59Z"
@@ -97973,7 +97973,7 @@ items:
       - classification: preview
         version: 1.33.4
       - classification: supported
-        expirationDate: "2026-09-14T23:59:59Z"
+        expirationDate: "2036-09-14T23:59:59Z"
         version: 1.33.3
       - classification: deprecated
         expirationDate: "2026-09-14T23:59:59Z"
