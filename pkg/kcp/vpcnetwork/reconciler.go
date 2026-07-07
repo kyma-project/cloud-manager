@@ -80,15 +80,7 @@ func (r *vpcNetworkReconciler) newAction() composed.Action {
 		composed.NewCase(kcpcommonaction.AzureProviderPredicate, azurevpcnetwork.New(r.azureStateFactory)),
 		composed.NewCase(kcpcommonaction.GcpProviderPredicate, gcpvpcnetwork.New(r.gcpStateFactory)),
 		composed.NewCase(kcpcommonaction.OpenStackProviderPredicate, sapvpcnetwork.New(r.sapStateFactory)),
-		composed.NewCase(
-			composed.All(
-				kcpcommonaction.AlicloudProviderPredicate,
-				func(ctx context.Context, _ composed.State) bool {
-					return feature.Alicloud.Value(ctx)
-				},
-			),
-			alicloudvpcnetwork.New(r.alicloudStateFactory),
-		),
+		composed.NewCase(kcpcommonaction.AlicloudProviderPredicate, alicloudvpcnetwork.New(r.alicloudStateFactory)),
 	)
 
 	return composed.ComposeActionsNoName(

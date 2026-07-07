@@ -117,5 +117,9 @@ alicloud:
   variations:
     enabled: true
     disabled: false
+  targeting:
+    - name: Enable for AliCloud provider
+      query: provider == "alicloud"
+      variation: enabled
   defaultRule:
     variation: disabled
