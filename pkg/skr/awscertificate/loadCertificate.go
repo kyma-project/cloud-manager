@@ -9,7 +9,6 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -54,7 +53,7 @@ func loadCertificate(ctx context.Context, st composed.State) (error, context.Con
 
 		searchInput := &acm.SearchCertificatesInput{
 			FilterStatement: filter,
-			MaxResults:      ptr.To(int32(100)),
+			MaxResults:      new(int32(100)),
 		}
 
 		results, err := state.awsClient.SearchCertificates(ctx, searchInput)

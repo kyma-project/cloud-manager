@@ -40,7 +40,7 @@ func (c *acmClient) ImportCertificate(ctx context.Context, input *acm.ImportCert
 
 func (c *acmClient) DescribeCertificate(ctx context.Context, arn string) (*acmtypes.CertificateDetail, error) {
 	in := &acm.DescribeCertificateInput{
-		CertificateArn: ptr.To(arn),
+		CertificateArn: new(arn),
 	}
 
 	out, err := c.svc.DescribeCertificate(ctx, in)
@@ -53,7 +53,7 @@ func (c *acmClient) DescribeCertificate(ctx context.Context, arn string) (*acmty
 
 func (c *acmClient) DeleteCertificate(ctx context.Context, arn string) error {
 	in := &acm.DeleteCertificateInput{
-		CertificateArn: ptr.To(arn),
+		CertificateArn: new(arn),
 	}
 
 	_, err := c.svc.DeleteCertificate(ctx, in)
@@ -62,7 +62,7 @@ func (c *acmClient) DeleteCertificate(ctx context.Context, arn string) error {
 
 func (c *acmClient) GetCertificate(ctx context.Context, arn string) (string, string, error) {
 	in := &acm.GetCertificateInput{
-		CertificateArn: ptr.To(arn),
+		CertificateArn: new(arn),
 	}
 
 	out, err := c.svc.GetCertificate(ctx, in)
@@ -87,7 +87,7 @@ func (c *acmClient) SearchCertificates(ctx context.Context, input *acm.SearchCer
 
 func (c *acmClient) ListTagsForCertificate(ctx context.Context, arn string) ([]acmtypes.Tag, error) {
 	in := &acm.ListTagsForCertificateInput{
-		CertificateArn: ptr.To(arn),
+		CertificateArn: new(arn),
 	}
 
 	out, err := c.svc.ListTagsForCertificate(ctx, in)
