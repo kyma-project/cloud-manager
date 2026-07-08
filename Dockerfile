@@ -35,5 +35,5 @@ COPY --from=builder /src/manager .
 COPY --chown=65532:65532 --from=builder /src/providers /cloud-manager/providers/
 USER 65532:65532
 
-ENV GODEBUG=fips140=only,tlsmlkem=0
+ENV GODEBUG=fips140=on,tlsmlkem=0
 ENTRYPOINT ["/manager"]
