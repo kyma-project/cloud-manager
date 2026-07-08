@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"k8s.io/utils/ptr"
 )
 
@@ -123,10 +122,6 @@ func statusSaveOnCreate(ctx context.Context, st composed.State) (error, context.
 		}
 
 	case cloudcontrolv1beta1.ProviderAlicloud:
-		if !feature.Alicloud.Value(ctx) {
-			theErr = multierror.Append(theErr, errors.New("alicloud feature flag is disabled"))
-			break
-		}
 		accessKeyID, ok := state.credentialData["accessKeyID"]
 		if !ok {
 			theErr = multierror.Append(theErr, errors.New("gardener credentials for alicloud missing accessKeyID key"))
