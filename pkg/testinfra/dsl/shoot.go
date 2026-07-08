@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	gardeneraliclouddapi "github.com/gardener/gardener-extension-provider-alicloud/pkg/apis/alicloud/v1alpha1"
 	gardenerawsapi "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws/v1alpha1"
 	gardenerazureapi "github.com/gardener/gardener-extension-provider-azure/pkg/apis/azure/v1alpha1"
 	gardeneropenstackapi "github.com/gardener/gardener-extension-provider-openstack/pkg/apis/openstack/v1alpha1"
@@ -192,6 +193,83 @@ func restConfigToKubeconfig(restConfig *rest.Config) *clientcmdapi.Config {
 	}
 
 	return clientConfig
+}
+
+func CreateShootAlicloud(ctx context.Context, infra testinfra.Infra, shoot *gardenerapicore.Shoot, accessKeyId, accessKeySecret string, opts ...ObjAction) error {
+	if err := CreateGardenerCredentials(ctx, infra); err != nil {
+		return err
+	}
+	if shoot == nil {
+		shoot = &gardenerapicore.Shoot{}
+	}
+	actions := NewObjActions(opts...).Append(WithNamespace(DefaultGardenNamespace))
+
+	actions.ApplyOnObject(shoot)
+	shoot.Spec = gardenerapicore.ShootSpec{
+		CredentialsBindingName: new(shoot.Name),
+		CloudProfile: &gardenerapicore.CloudProfileReference{
+			Kind: "CloudProfile",
+			Name: "alicloud",
+		},
+		Region: "ap-southeast-1",
+		Networking: &gardenerapicore.Networking{
+			IPFamilies: []gardenerapicore.IPFamily{gardenerapicore.IPFamilyIPv4},
+			Nodes:      new("10.180.0.0/16"),
+			Pods:       new("172.16.0.0/13"),
+			Services:   new("172.24.0.0/13"),
+		},
+		Provider: gardenerapicore.Provider{
+			Type: string(cloudcontrolv1beta1.ProviderAlicloud),
+			InfrastructureConfig: &runtime.RawExtension{
+				Object: &gardeneraliclouddapi.InfrastructureConfig{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "InfrastructureConfig",
+						APIVersion: "alicloud.provider.extensions.gardener.cloud/v1alpha1",
+					},
+					Networks: gardeneraliclouddapi.Networks{
+						VPC: gardeneraliclouddapi.VPC{
+							CIDR: new("10.180.0.0/16"),
+						},
+						Zones: []gardeneraliclouddapi.Zone{
+							{
+								Name:    "ap-southeast-1a",
+								Workers: "10.180.0.0/18",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := infra.Garden().Client().Create(ctx, shoot); err != nil {
+		return fmt.Errorf("error creating Alicloud Shoot: %w", err)
+	}
+
+	credentialsBinding := &gardenerapisecurity.CredentialsBinding{}
+	actions.ApplyOnObject(credentialsBinding)
+	credentialsBinding.Provider.Type = string(cloudcontrolv1beta1.ProviderAlicloud)
+	credentialsBinding.CredentialsRef = corev1.ObjectReference{
+		Kind:       "Secret",
+		Namespace:  shoot.Namespace,
+		Name:       shoot.Name,
+		APIVersion: "v1",
+	}
+	if err := infra.Garden().Client().Create(ctx, credentialsBinding); err != nil {
+		return fmt.Errorf("error creating Alicloud CredentialsBinding: %w", err)
+	}
+
+	secret := &corev1.Secret{}
+	actions.ApplyOnObject(secret)
+	secret.StringData = map[string]string{
+		"accessKeyID":     accessKeyId,
+		"accessKeySecret": accessKeySecret,
+	}
+	if err := infra.Garden().Client().Create(ctx, secret); err != nil {
+		return fmt.Errorf("error creating Alicloud garden secret: %w", err)
+	}
+
+	return nil
 }
 
 func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenerapicore.Shoot, opts ...ObjAction) error {

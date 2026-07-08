@@ -16,6 +16,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	alicloudmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/mock"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
@@ -210,6 +211,7 @@ func StartEx(opts StartOptions) (Infra, error) {
 		gcpMock2:            gcpmock2.New(),
 		azureMock:           azuremock.New(),
 		sapMock:             sapmock.New(),
+		alicloudMock:        alicloudmock.New(),
 		skrKymaRef: klog.ObjectRef{
 			Name:      "5e32a9dd-4e68-47c7-aac7-64a4880a00d7",
 			Namespace: infra.KCP().Namespace(),

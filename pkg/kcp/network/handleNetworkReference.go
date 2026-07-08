@@ -6,7 +6,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	networktypes "github.com/kyma-project/cloud-manager/pkg/kcp/network/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -97,10 +96,6 @@ func handleNetworkReference(ctx context.Context, st composed.State) (error, cont
 			changed = true
 		}
 	case state.ObjAsNetwork().Status.Network.Alicloud != nil:
-		if !feature.Alicloud.Value(ctx) {
-			composed.LoggerFromCtx(ctx).Info("AliCloud feature flag is disabled, skipping AliCloud network reference handling")
-			return nil, ctx
-		}
 		if state.ObjAsNetwork().Status.Network.Alicloud.AccountId == "" {
 			state.ObjAsNetwork().Status.Network.Alicloud.AccountId = state.Scope().Spec.Scope.Alicloud.AccountId
 			changed = true

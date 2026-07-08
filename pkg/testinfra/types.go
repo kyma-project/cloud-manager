@@ -5,6 +5,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/config"
+	alicloudmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/mock"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
@@ -59,6 +60,7 @@ type InfraEnv interface {
 	GcpMock2() gcpmock2.Server
 	AzureMock() azuremock.Server
 	SapMock() sapmock.Server
+	AlicloudMock() alicloudmock.Server
 	SkrRunner() skrruntime.SkrRunner
 	ScopeProvider() scopeprovider.ScopeProviderRegistry
 	Config() config.Config

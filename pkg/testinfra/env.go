@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/kyma-project/cloud-manager/pkg/config"
+	alicloudmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/mock"
 	awsmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/mock"
 	azuremock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/mock"
 	gcpmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock"
@@ -34,6 +35,7 @@ type infraEnv struct {
 	gcpMock2            gcpmock2.Server
 	azureMock           azuremock.Server
 	sapMock             sapmock.Server
+	alicloudMock        alicloudmock.Server
 	skrKymaRef          klog.ObjectRef
 	skrManager          skrmanager.SkrManager
 	runner              skrruntime.SkrRunner
@@ -73,6 +75,8 @@ func (ie *infraEnv) AzureMock() azuremock.Server { return ie.azureMock }
 func (ie *infraEnv) SapMock() sapmock.Server {
 	return ie.sapMock
 }
+
+func (ie *infraEnv) AlicloudMock() alicloudmock.Server { return ie.alicloudMock }
 
 func (ie *infraEnv) SkrKymaRef() klog.ObjectRef {
 	return ie.skrKymaRef

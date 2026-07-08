@@ -105,3 +105,17 @@ func SubscriptionPatchStatusReadyGcp(ctx context.Context, infra testinfra.Infra,
 		}).
 		Patch(ctx, infra.KCP().Client())
 }
+
+func SubscriptionPatchStatusReadyAlicloud(ctx context.Context, infra testinfra.Infra, subscription *cloudcontrolv1beta1.Subscription, accessKeyId string) error {
+	return composed.NewStatusPatcher(subscription).
+		MutateStatus(func(sub *cloudcontrolv1beta1.Subscription) {
+			sub.Status.Provider = cloudcontrolv1beta1.ProviderAlicloud
+			sub.Status.SubscriptionInfo = &cloudcontrolv1beta1.SubscriptionInfo{
+				Alicloud: &cloudcontrolv1beta1.SubscriptionInfoAlicloud{
+					AccountId: accessKeyId,
+				},
+			}
+			sub.SetStatusReady()
+		}).
+		Patch(ctx, infra.KCP().Client())
+}
