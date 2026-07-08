@@ -33,7 +33,7 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 
 	// Add certificate ARN if updating existing certificate
 	if cert.Status.Arn != "" {
-		input.CertificateArn = ptr.To(cert.Status.Arn)
+		input.CertificateArn = new(cert.Status.Arn)
 		logger.WithValues("arn", cert.Status.Arn).Info("Updating existing certificate")
 	} else {
 		// Tags can only be applied on import.
@@ -73,11 +73,11 @@ func convertTags(cert *cloudresourcesv1beta1.AwsCertificate, scope *cloudcontrol
 	tags := []acmtypes.Tag{
 		{
 			Key:   ptr.To(common.TagCloudManagerName),
-			Value: ptr.To(cert.Name),
+			Value: new(cert.Name),
 		},
 		{
-			Key:   ptr.To("kyma-project.io/managed-by"),
-			Value: ptr.To("cloud-manager"),
+			Key:   new("kyma-project.io/managed-by"),
+			Value: new("cloud-manager"),
 		},
 		{
 			Key:   ptr.To(common.TagScope),
@@ -92,8 +92,8 @@ func convertTags(cert *cloudresourcesv1beta1.AwsCertificate, scope *cloudcontrol
 	// Add user-defined labels as tags
 	for k, v := range cert.Labels {
 		tags = append(tags, acmtypes.Tag{
-			Key:   ptr.To(k),
-			Value: ptr.To(v),
+			Key:   new(k),
+			Value: new(v),
 		})
 	}
 

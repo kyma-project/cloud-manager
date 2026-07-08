@@ -100,11 +100,11 @@ func (s *certificateStore) ImportCertificate(ctx context.Context, input *acm.Imp
 		arn = awsutil.CertificateArn(s.region, s.account, id)
 		entry = &certificateEntry{
 			detail: &acmtypes.CertificateDetail{
-				CertificateArn: ptr.To(arn),
-				DomainName:     ptr.To("example.com"), // Parse from certificate in real impl
+				CertificateArn: new(arn),
+				DomainName:     new("example.com"), // Parse from certificate in real impl
 				Status:         acmtypes.CertificateStatusIssued,
 				Type:           acmtypes.CertificateTypeImported,
-				CreatedAt:      ptr.To(time.Now()),
+				CreatedAt:      new(time.Now()),
 			},
 		}
 		s.items[arn] = entry
@@ -122,11 +122,11 @@ func (s *certificateStore) ImportCertificate(ctx context.Context, input *acm.Imp
 	}
 
 	// Update certificate data
-	entry.detail.ImportedAt = ptr.To(time.Now())
-	entry.detail.NotBefore = ptr.To(time.Now())
-	entry.detail.NotAfter = ptr.To(time.Now().Add(365 * 24 * time.Hour)) // 1 year expiration
-	entry.detail.Issuer = ptr.To(issuer)
-	entry.detail.Serial = ptr.To(serial)
+	entry.detail.ImportedAt = new(time.Now())
+	entry.detail.NotBefore = new(time.Now())
+	entry.detail.NotAfter = new(time.Now().Add(365 * 24 * time.Hour)) // 1 year expiration
+	entry.detail.Issuer = new(issuer)
+	entry.detail.Serial = new(serial)
 
 	// Store the certificate and chain data
 	entry.certificate = input.Certificate
@@ -243,16 +243,16 @@ func (s *certificateStore) InitiateCertificate(arn string, cert []byte, key []by
 
 	entry := &certificateEntry{
 		detail: &acmtypes.CertificateDetail{
-			CertificateArn: ptr.To(arn),
-			DomainName:     ptr.To("example.com"),
+			CertificateArn: new(arn),
+			DomainName:     new("example.com"),
 			Status:         acmtypes.CertificateStatusIssued,
 			Type:           acmtypes.CertificateTypeImported,
-			CreatedAt:      ptr.To(time.Now()),
-			ImportedAt:     ptr.To(time.Now()),
-			NotBefore:      ptr.To(time.Now()),
-			NotAfter:       ptr.To(time.Now().Add(365 * 24 * time.Hour)),
-			Issuer:         ptr.To(issuer),
-			Serial:         ptr.To(serial),
+			CreatedAt:      new(time.Now()),
+			ImportedAt:     new(time.Now()),
+			NotBefore:      new(time.Now()),
+			NotAfter:       new(time.Now().Add(365 * 24 * time.Hour)),
+			Issuer:         new(issuer),
+			Serial:         new(serial),
 		},
 		certificate: cert,
 	}
@@ -344,7 +344,7 @@ func (s *certificateStore) SearchCertificates(ctx context.Context, input *acm.Se
 
 		// Add to results - populate X509Attributes with issuer for filtering
 		results = append(results, acmtypes.CertificateSearchResult{
-			CertificateArn: ptr.To(arn),
+			CertificateArn: new(arn),
 			X509Attributes: &acmtypes.X509Attributes{
 				SerialNumber: detail.Serial,
 			},
