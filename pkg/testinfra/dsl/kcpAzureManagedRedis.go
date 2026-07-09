@@ -76,15 +76,3 @@ func WithKcpAzureManagedRedisVpcNetwork(vpcNetworkName string) ObjAction {
 		},
 	}
 }
-
-func WithKcpAzureManagedRedisScope(scopeName string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if amr, ok := obj.(*cloudcontrolv1beta1.AzureManagedRedis); ok {
-				amr.Spec.Scope = cloudcontrolv1beta1.ScopeRef{Name: scopeName}
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithKcpAzureManagedRedisScope", obj))
-		},
-	}
-}

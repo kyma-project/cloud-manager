@@ -3,6 +3,7 @@ package cloudcontrol
 import (
 	"fmt"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redisenterprise/armredisenterprise/v3"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -11,6 +12,7 @@ import (
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	kcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
+	kcpazuremanagedredis "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/managedredis"
 	kcpredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	kcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
@@ -117,6 +119,25 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 			)).To(Succeed(), "failed creating NfsInstance")
 		})
 
+		azureManagedRedisName := "c3d4e5f6-a7b8-9c0d-e1f2-a3b4c5d6e7f8"
+		azureManagedRedis := &cloudcontrolv1beta1.AzureManagedRedis{}
+
+		By("And Given AzureManagedRedis exists", func() {
+			kcpazuremanagedredis.Ignore.AddName(azureManagedRedisName)
+
+			Expect(CreateKcpAzureManagedRedis(infra.Ctx(), infra.KCP().Client(), azureManagedRedis,
+				WithName(azureManagedRedisName),
+				AddFinalizer(api.CommonFinalizerDeletionHook),
+				WithRemoteRef("foo-amr"),
+				WithScope(kymaName),
+				WithIpRange(ipRange.Name),
+				WithKcpAzureManagedRedisVpcNetwork(kymaName),
+				WithKcpAzureManagedRedisSKU(armredisenterprise.SKUNameBalancedB5),
+				WithKcpAzureManagedRedisClusteringPolicy(armredisenterprise.ClusteringPolicyEnterpriseCluster),
+				WithKcpAzureManagedRedisHighAvailability(false),
+			)).To(Succeed(), "failed creating AzureManagedRedis")
+		})
+
 		nuke := &cloudcontrolv1beta1.Nuke{}
 
 		By("When Nuke for the Scope is created", func() {
@@ -135,11 +156,12 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 		})
 
 		resources := map[string]focal.CommonObject{
-			"VpcPeering":    vpcPeering,
-			"RedisInstance": redisInstance,
-			"NfsInstance":   nfsInstance,
-			"IpRange":       ipRange,
-			"Network":       cmNetwork,
+			"VpcPeering":        vpcPeering,
+			"RedisInstance":     redisInstance,
+			"NfsInstance":       nfsInstance,
+			"IpRange":           ipRange,
+			"Network":           cmNetwork,
+			"AzureManagedRedis": azureManagedRedis,
 		}
 
 		for kind, obj := range resources {

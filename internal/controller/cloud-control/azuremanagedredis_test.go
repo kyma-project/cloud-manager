@@ -103,7 +103,7 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 					WithKcpAzureManagedRedisSKU(armredisenterprise.SKUNameBalancedB5),
 					WithKcpAzureManagedRedisClusteringPolicy(armredisenterprise.ClusteringPolicyEnterpriseCluster),
 					WithKcpAzureManagedRedisHighAvailability(false),
-					WithKcpAzureManagedRedisScope(name),
+					WithScope(name),
 				).
 				Should(Succeed(), "failed creating AzureManagedRedis")
 		})
@@ -293,7 +293,7 @@ var _ = Describe("Feature: KCP AzureManagedRedis", func() {
 					WithKcpAzureManagedRedisSKU(armredisenterprise.SKUNameBalancedB5),
 					WithKcpAzureManagedRedisClusteringPolicy(armredisenterprise.ClusteringPolicyEnterpriseCluster),
 					WithKcpAzureManagedRedisHighAvailability(true),
-					WithKcpAzureManagedRedisScope(name),
+					WithScope(name),
 				).
 				Should(Succeed(), "failed creating AzureManagedRedis")
 		})
