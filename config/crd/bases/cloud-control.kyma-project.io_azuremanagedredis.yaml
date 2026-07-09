@@ -88,6 +88,18 @@ spec:
                 x-kubernetes-validations:
                 - message: RemoteRef is immutable.
                   rule: (self == oldSelf)
+              scope:
+                properties:
+                  name:
+                    type: string
+                    x-kubernetes-validations:
+                    - message: Scope is immutable.
+                      rule: (self == oldSelf)
+                    - message: Scope is required.
+                      rule: (self != "")
+                required:
+                - name
+                type: object
               sku:
                 description: SKU defines the pricing tier.
                 enum:
@@ -177,6 +189,7 @@ spec:
             - clusteringPolicy
             - ipRange
             - remoteRef
+            - scope
             - sku
             - vpcNetwork
             type: object

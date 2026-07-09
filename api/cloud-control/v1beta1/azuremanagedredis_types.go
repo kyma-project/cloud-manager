@@ -38,6 +38,9 @@ type AzureManagedRedisSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="ClusteringPolicy is immutable."
 	ClusteringPolicy string `json:"clusteringPolicy"`
+
+	// +kubebuilder:validation:Required
+	Scope ScopeRef `json:"scope"`
 }
 
 // AzureManagedRedisStatus defines the observed state of AzureManagedRedis.
@@ -111,6 +114,14 @@ func (in *AzureManagedRedis) State() string {
 
 func (in *AzureManagedRedis) SetState(v string) {
 	in.Status.State = v
+}
+
+func (in *AzureManagedRedis) ScopeRef() ScopeRef {
+	return in.Spec.Scope
+}
+
+func (in *AzureManagedRedis) SetScopeRef(scopeRef ScopeRef) {
+	in.Spec.Scope = scopeRef
 }
 
 // +kubebuilder:object:root=true
