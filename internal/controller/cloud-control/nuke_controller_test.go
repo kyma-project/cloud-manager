@@ -13,6 +13,7 @@ import (
 	kcpnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/network"
 	kcpnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
 	kcpazuremanagedredis "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/managedredis"
+	kcpvnetlinkdnszone "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vnetlink/dnszone"
 	kcpredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	kcpvpcpeering "github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering"
@@ -138,6 +139,21 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 			)).To(Succeed(), "failed creating AzureManagedRedis")
 		})
 
+		azureVNetLinkName := "d4e5f6a7-b8c9-0d1e-f2a3-b4c5d6e7f8a9"
+		azureVNetLink := &cloudcontrolv1beta1.AzureVNetLink{}
+
+		By("And Given AzureVNetLink exists", func() {
+			kcpvnetlinkdnszone.Ignore.AddName(azureVNetLinkName)
+
+			azureVNetLink.Spec.RemotePrivateDnsZone = "privatelink.redis.cache.windows.net"
+			azureVNetLink.Spec.RemoteVNetLinkName = "foo-vnetlink"
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), azureVNetLink,
+				WithName(azureVNetLinkName),
+				AddFinalizer(api.CommonFinalizerDeletionHook),
+				WithScope(kymaName),
+			)).To(Succeed(), "failed creating AzureVNetLink")
+		})
+
 		nuke := &cloudcontrolv1beta1.Nuke{}
 
 		By("When Nuke for the Scope is created", func() {
@@ -162,6 +178,7 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 			"IpRange":           ipRange,
 			"Network":           cmNetwork,
 			"AzureManagedRedis": azureManagedRedis,
+			"AzureVNetLink":     azureVNetLink,
 		}
 
 		for kind, obj := range resources {
