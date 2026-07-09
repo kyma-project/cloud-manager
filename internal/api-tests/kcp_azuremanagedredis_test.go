@@ -27,6 +27,9 @@ func newTestKcpAzureManagedRedisBuilder() *testKcpAzureManagedRedisBuilder {
 				},
 				SKU:              "Balanced_B5",
 				ClusteringPolicy: "EnterpriseCluster",
+				Scope: cloudcontrolv1beta1.ScopeRef{
+					Name: uuid.NewString(),
+				},
 			},
 		},
 	}
