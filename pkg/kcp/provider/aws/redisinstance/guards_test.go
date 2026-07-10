@@ -276,7 +276,7 @@ func TestWaitElastiCacheAvailable_NonTerminalStatesRequeue(t *testing.T) {
 	} {
 		t.Run(status, func(t *testing.T) {
 			state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
-				Status: ptr.To(status),
+				Status: new(status),
 			}, nil)
 			err, _ := waitElastiCacheAvailable(context.Background(), state)
 			assert.NotNil(t, err, "waitElastiCacheAvailable must requeue while RG is %q", status)
