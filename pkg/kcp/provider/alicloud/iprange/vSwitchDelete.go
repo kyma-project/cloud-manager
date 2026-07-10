@@ -10,16 +10,14 @@ func vSwitchDelete(ctx context.Context, st composed.State) (error, context.Conte
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.vSwitch == nil {
-		return nil, ctx
-	}
+	for _, vsw := range state.vSwitches {
+		logger.Info("Deleting AliCloud VSwitch for IpRange", "vSwitchId", vsw.VSwitchId)
 
-	logger.Info("Deleting AliCloud VSwitch for IpRange", "vSwitchId", state.vSwitch.VSwitchId)
-
-	err := state.client.DeleteVSwitch(ctx, state.vSwitch.VSwitchId)
-	if err != nil {
-		logger.Error(err, "Error deleting AliCloud VSwitch for IpRange")
-		return composed.StopWithRequeue, ctx
+		err := state.client.DeleteVSwitch(ctx, vsw.VSwitchId)
+		if err != nil {
+			logger.Error(err, "Error deleting AliCloud VSwitch for IpRange", "vSwitchId", vsw.VSwitchId)
+			return composed.StopWithRequeue, ctx
+		}
 	}
 
 	return nil, ctx

@@ -10,7 +10,7 @@ import (
 func statusPatch(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if state.vSwitch == nil {
+	if len(state.vSwitches) == 0 {
 		return nil, ctx
 	}
 
@@ -21,12 +21,15 @@ func statusPatch(ctx context.Context, st composed.State) (error, context.Context
 		changed = true
 	}
 
-	expectedSubnets := cloudcontrolv1beta1.IpRangeSubnets{{
-		Id:    state.vSwitch.VSwitchId,
-		Zone:  state.vSwitch.ZoneId,
-		Range: state.vSwitch.CidrBlock,
-		Name:  state.vSwitch.VSwitchName,
-	}}
+	expectedSubnets := make(cloudcontrolv1beta1.IpRangeSubnets, 0, len(state.vSwitches))
+	for _, vsw := range state.vSwitches {
+		expectedSubnets = append(expectedSubnets, cloudcontrolv1beta1.IpRangeSubnet{
+			Id:    vsw.VSwitchId,
+			Zone:  vsw.ZoneId,
+			Range: vsw.CidrBlock,
+			Name:  vsw.VSwitchName,
+		})
+	}
 
 	if !state.ObjAsIpRange().Status.Subnets.Equals(expectedSubnets) {
 		state.ObjAsIpRange().Status.Subnets = expectedSubnets

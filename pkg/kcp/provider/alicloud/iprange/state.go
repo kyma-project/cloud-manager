@@ -14,9 +14,10 @@ type State struct {
 
 	client alicloudiprangeclient.Client
 
-	vpcId     string
-	vSwitchId string
-	vSwitch   *alicloudiprangeclient.VSwitchInfo
+	vpcId               string
+	secondaryCidrBlocks []string
+	zoneCidrs           []string // per-zone CIDRs after splitting
+	vSwitches           []*alicloudiprangeclient.VSwitchInfo
 }
 
 type StateFactory interface {
@@ -49,6 +50,6 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 	}, nil
 }
 
-func (s *State) VSwitchName() string {
-	return fmt.Sprintf("cm-%s", s.ObjAsIpRange().Name)
+func (s *State) VSwitchName(index int) string {
+	return fmt.Sprintf("cm-%s-%d", s.ObjAsIpRange().Name, index)
 }

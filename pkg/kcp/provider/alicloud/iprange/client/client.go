@@ -22,8 +22,12 @@ type Client interface {
 	CreateVSwitch(ctx context.Context, vpcId, zoneId, cidrBlock, name string) (string, error)
 	DescribeVSwitch(ctx context.Context, vSwitchId string) (*VSwitchInfo, error)
 	DescribeVSwitchesByName(ctx context.Context, vpcId, name string) ([]VSwitchInfo, error)
+	DescribeVSwitchesByVpcId(ctx context.Context, vpcId string) ([]VSwitchInfo, error)
 	DeleteVSwitch(ctx context.Context, vSwitchId string) error
 	DescribeVpcs(ctx context.Context, name string) ([]VpcInfo, error)
+	DescribeVpcAttribute(ctx context.Context, vpcId string) (*VpcAttributeInfo, error)
+	AssociateVpcCidrBlock(ctx context.Context, vpcId, cidrBlock string) error
+	UnassociateVpcCidrBlock(ctx context.Context, vpcId, cidrBlock string) error
 	DescribeZones(ctx context.Context) ([]string, error)
 }
 
@@ -32,6 +36,11 @@ type VpcInfo struct {
 	VpcName   string
 	CidrBlock string
 	Status    string
+}
+
+type VpcAttributeInfo struct {
+	VpcId               string
+	SecondaryCidrBlocks []string
 }
 
 type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error)
@@ -192,4 +201,88 @@ func (c *alicloudClient) DescribeZones(ctx context.Context) ([]string, error) {
 	}
 
 	return result, nil
+}
+
+func (c *alicloudClient) DescribeVSwitchesByVpcId(ctx context.Context, vpcId string) ([]VSwitchInfo, error) {
+	req := &vpc.DescribeVSwitchesRequest{
+		RegionId: new(c.region),
+		VpcId:    new(vpcId),
+	}
+
+	resp, err := c.vpcClient.DescribeVSwitches(req)
+	if err != nil {
+		return nil, fmt.Errorf("error describing alicloud vswitches for vpc %s: %w", vpcId, err)
+	}
+
+	var result []VSwitchInfo
+	if resp.Body != nil && resp.Body.VSwitches != nil {
+		for _, v := range resp.Body.VSwitches.VSwitch {
+			result = append(result, VSwitchInfo{
+				VSwitchId:   tea.StringValue(v.VSwitchId),
+				VSwitchName: tea.StringValue(v.VSwitchName),
+				CidrBlock:   tea.StringValue(v.CidrBlock),
+				VpcId:       tea.StringValue(v.VpcId),
+				ZoneId:      tea.StringValue(v.ZoneId),
+				Status:      tea.StringValue(v.Status),
+			})
+		}
+	}
+
+	return result, nil
+}
+
+func (c *alicloudClient) DescribeVpcAttribute(ctx context.Context, vpcId string) (*VpcAttributeInfo, error) {
+	req := &vpc.DescribeVpcAttributeRequest{
+		RegionId: new(c.region),
+		VpcId:    new(vpcId),
+	}
+
+	resp, err := c.vpcClient.DescribeVpcAttribute(req)
+	if err != nil {
+		return nil, fmt.Errorf("error describing alicloud vpc attribute for %s: %w", vpcId, err)
+	}
+
+	info := &VpcAttributeInfo{
+		VpcId: vpcId,
+	}
+
+	if resp.Body != nil && resp.Body.SecondaryCidrBlocks != nil {
+		for _, cidr := range resp.Body.SecondaryCidrBlocks.SecondaryCidrBlock {
+			if cidr != nil {
+				info.SecondaryCidrBlocks = append(info.SecondaryCidrBlocks, *cidr)
+			}
+		}
+	}
+
+	return info, nil
+}
+
+func (c *alicloudClient) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidrBlock string) error {
+	req := &vpc.AssociateVpcCidrBlockRequest{
+		RegionId:           new(c.region),
+		VpcId:              new(vpcId),
+		SecondaryCidrBlock: new(cidrBlock),
+	}
+
+	_, err := c.vpcClient.AssociateVpcCidrBlock(req)
+	if err != nil {
+		return fmt.Errorf("error associating alicloud vpc cidr block %s to vpc %s: %w", cidrBlock, vpcId, err)
+	}
+
+	return nil
+}
+
+func (c *alicloudClient) UnassociateVpcCidrBlock(ctx context.Context, vpcId, cidrBlock string) error {
+	req := &vpc.UnassociateVpcCidrBlockRequest{
+		RegionId:           new(c.region),
+		VpcId:              new(vpcId),
+		SecondaryCidrBlock: new(cidrBlock),
+	}
+
+	_, err := c.vpcClient.UnassociateVpcCidrBlock(req)
+	if err != nil {
+		return fmt.Errorf("error unassociating alicloud vpc cidr block %s from vpc %s: %w", cidrBlock, vpcId, err)
+	}
+
+	return nil
 }

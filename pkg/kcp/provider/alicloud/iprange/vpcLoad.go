@@ -44,5 +44,14 @@ func vpcLoad(ctx context.Context, st composed.State) (error, context.Context) {
 
 	state.vpcId = vpcs[0].VpcId
 
+	// Load VPC attribute to get existing secondary CIDR blocks
+	vpcAttr, err := state.client.DescribeVpcAttribute(ctx, state.vpcId)
+	if err != nil {
+		logger.Error(err, "Error loading AliCloud VPC attribute for IpRange")
+		return composed.StopWithRequeue, ctx
+	}
+
+	state.secondaryCidrBlocks = vpcAttr.SecondaryCidrBlocks
+
 	return nil, ctx
 }

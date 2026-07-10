@@ -24,6 +24,22 @@ func (c *iprangeClientView) DescribeVpcs(ctx context.Context, name string) ([]al
 	return out, nil
 }
 
+func (c *iprangeClientView) DescribeVpcAttribute(ctx context.Context, vpcId string) (*alicloudiprangeclient.VpcAttributeInfo, error) {
+	return c.vpcStore.DescribeVpcAttribute(ctx, vpcId)
+}
+
+func (c *iprangeClientView) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidrBlock string) error {
+	return c.vpcStore.AssociateVpcCidrBlock(ctx, vpcId, cidrBlock)
+}
+
+func (c *iprangeClientView) UnassociateVpcCidrBlock(ctx context.Context, vpcId, cidrBlock string) error {
+	return c.vpcStore.UnassociateVpcCidrBlock(ctx, vpcId, cidrBlock)
+}
+
+func (c *iprangeClientView) DescribeVSwitchesByVpcId(ctx context.Context, vpcId string) ([]alicloudiprangeclient.VSwitchInfo, error) {
+	return c.vpcStore.DescribeVSwitchesByVpcId(ctx, vpcId)
+}
+
 // vpcnetworkClientView adapts vpcStore to alicloudvpcnetworkclient.Client.
 type vpcnetworkClientView struct{ *vpcStore }
 

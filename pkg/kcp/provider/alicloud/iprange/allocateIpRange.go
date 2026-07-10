@@ -2,7 +2,6 @@ package iprange
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -14,14 +13,27 @@ import (
 )
 
 // NewAllocateIpRangeAction allocates a /22 CIDR within the shoot VPC CIDR,
-// avoiding overlap with the shoot's Nodes/Pods/Services ranges.
+// avoiding overlap with the shoot's Nodes/Pods/Services/Workers ranges.
 func NewAllocateIpRangeAction(_ StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		state := st.(iprangetypes.State)
 
+		if state.Scope().Spec.Scope.Alicloud == nil {
+			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
+			return composed.PatchStatus(state.ObjAsIpRange()).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudcontrolv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudcontrolv1beta1.ReasonCidrAllocationFailed,
+					Message: "AliCloud scope not populated",
+				}).
+				ErrorLogMessage("Failed patching KCP IpRange status with error due to missing AliCloud scope").
+				SuccessLogMsg("Forgetting KCP IpRange in error state due to missing AliCloud scope").
+				SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
+				Run(ctx, st)
+		}
+
 		if len(state.Scope().Spec.Scope.Alicloud.Network.Nodes) == 0 {
-			logger := composed.LoggerFromCtx(ctx)
-			logger.Error(errors.New("network nodes empty"), "AliCloud scope has no nodes specified, unable to allocate IpRange cidr")
 			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 			return composed.PatchStatus(state.ObjAsIpRange()).
 				SetExclusiveConditions(metav1.Condition{
@@ -38,8 +50,6 @@ func NewAllocateIpRangeAction(_ StateFactory) composed.Action {
 
 		vpcCidr := state.Scope().Spec.Scope.Alicloud.Network.VPC.CIDR
 		if vpcCidr == "" {
-			logger := composed.LoggerFromCtx(ctx)
-			logger.Error(errors.New("vpc cidr empty"), "AliCloud scope has no VPC CIDR specified, unable to allocate IpRange cidr")
 			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 			return composed.PatchStatus(state.ObjAsIpRange()).
 				SetExclusiveConditions(metav1.Condition{
@@ -64,6 +74,8 @@ func NewAllocateIpRangeAction(_ StateFactory) composed.Action {
 			)
 		}
 
+		// Reserve all occupied ranges: Pods, Services, and per-zone Workers
+		// (Nodes is the VPC CIDR itself so it's already the address space boundary)
 		occupied := []string{
 			state.Scope().Spec.Scope.Alicloud.Network.Pods,
 			state.Scope().Spec.Scope.Alicloud.Network.Services,
