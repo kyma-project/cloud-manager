@@ -14,6 +14,10 @@ import (
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/utils/ptr"
+
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/meta"
 )
 
 // elastiCacheStub is a minimal awsclient.ElastiCacheClient implementation for
@@ -264,4 +268,53 @@ func TestDeleteUserGroupGuard_ProceedsWhenActive(t *testing.T) {
 
 	assert.Equal(t, []string{id}, stub.deleteUserGroupCalls,
 		"deleteUserGroup must invoke AWS with the UG id when the UG is ACTIVE")
+}
+
+func TestWaitElastiCacheAvailable_Available(t *testing.T) {
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(string(awsmeta.ElastiCache_AVAILABLE)),
+	}, nil)
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+	assert.Nil(t, err, "waitElastiCacheAvailable must proceed (nil) when RG is AVAILABLE")
+}
+
+func TestWaitElastiCacheAvailable_NonTerminalStatesRequeue(t *testing.T) {
+	for _, status := range []string{
+		awsmeta.ElastiCache_CREATING,
+		awsmeta.ElastiCache_MODIFYING,
+		awsmeta.ElastiCache_SNAPSHOTTING,
+		awsmeta.ElastiCache_DELETING,
+		"some-unexpected-status",
+		"",
+	} {
+		t.Run(status, func(t *testing.T) {
+			state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+				Status: ptr.To(status),
+			}, nil)
+			err, _ := waitElastiCacheAvailable(context.Background(), state)
+			assert.NotNil(t, err, "waitElastiCacheAvailable must requeue while RG is %q", status)
+			assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisCluster().Status.State,
+				"non-terminal states must not set a terminal error state for %q", status)
+		})
+	}
+}
+
+func TestWaitElastiCacheAvailable_CreateFailedSurfacesError(t *testing.T) {
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
+	}, nil)
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+
+	assert.Equal(t, composed.StopAndForget, err,
+		"waitElastiCacheAvailable must StopAndForget when RG is create-failed")
+	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisCluster().Status.State,
+		"RedisCluster must be set to StateError when RG is create-failed")
+	cond := meta.FindStatusCondition(state.ObjAsRedisCluster().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.NotNil(t, cond, "Error condition must be set when RG is create-failed")
+	assert.Equal(t, cloudcontrolv1beta1.ReasonCloudProviderError, cond.Reason,
+		"Error condition must use the CloudProviderError reason")
+	assert.Equal(t, "Failed to provision RedisCluster", cond.Message,
+		"condition message must stay abstract and not leak cloud provider internals")
+	assert.NotContains(t, cond.Message, string(awsmeta.ElastiCache_CREATE_FAILED),
+		"condition message must not expose the raw AWS replication group status")
 }
