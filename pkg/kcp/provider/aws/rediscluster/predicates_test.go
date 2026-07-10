@@ -43,9 +43,6 @@ func (s *testRedisClusterState) SetIpRange(r *cloudcontrolv1beta1.IpRange) {
 func newTestState(t *testing.T, clusterName string, desiredAuth bool, rg *elasticachetypes.ReplicationGroup, ug *elasticachetypes.UserGroup) *State {
 	t.Helper()
 
-	fakeClient := fake.NewClientBuilder().WithScheme(commonscheme.KcpScheme).Build()
-	cluster := composed.NewStateCluster(fakeClient, fakeClient, nil, fakeClient.Scheme())
-
 	obj := &cloudcontrolv1beta1.RedisCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      clusterName,
@@ -59,6 +56,13 @@ func newTestState(t *testing.T, clusterName string, desiredAuth bool, rg *elasti
 			},
 		},
 	}
+
+	fakeClient := fake.NewClientBuilder().
+		WithScheme(commonscheme.KcpScheme).
+		WithObjects(obj).
+		WithStatusSubresource(obj).
+		Build()
+	cluster := composed.NewStateCluster(fakeClient, fakeClient, nil, fakeClient.Scheme())
 
 	focalState := focal.NewStateFactory().NewState(
 		composed.NewStateFactory(cluster).NewState(k8stypes.NamespacedName{Name: clusterName, Namespace: "kcp-system"}, obj),

@@ -3,6 +3,7 @@ package rediscluster
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -34,6 +35,27 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 	}
 
 	cacheState := ptr.Deref(state.elastiCacheReplicationGroup.Status, "")
+
+	// create-failed is terminal - the replication group won't recover on its own.
+	if cacheState == awsmeta.ElastiCache_CREATE_FAILED {
+		redisInstance := st.Obj().(*cloudcontrolv1beta1.RedisCluster)
+		logger.Error(
+			fmt.Errorf("ElastiCache replication group is in an unrecoverable state: %q", cacheState),
+			"ElastiCache replication group provisioning failed",
+		)
+		redisInstance.Status.State = cloudcontrolv1beta1.StateError
+		return composed.UpdateStatus(redisInstance).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
+				Message: "Failed to provision RedisCluster",
+			}).
+			SuccessError(composed.StopAndForget).
+			SuccessLogMsg("RedisCluster failed to provision and cannot recover in place").
+			Run(ctx, st)
+	}
+
 	if cacheState == awsmeta.ElastiCache_AVAILABLE {
 		return nil, ctx
 	}
