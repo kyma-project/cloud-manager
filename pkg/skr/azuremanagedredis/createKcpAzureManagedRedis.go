@@ -70,6 +70,9 @@ func createKcpAzureManagedRedis(ctx context.Context, st composed.State) (error, 
 			SKU:              string(tierSpec.SKU),
 			HighAvailability: tierSpec.HighAvailability,
 			ClusteringPolicy: string(tierSpec.ClusteringPolicy),
+			Scope: cloudcontrolv1beta1.ScopeRef{
+				Name: state.KymaRef.Name,
+			},
 		},
 	}
 
