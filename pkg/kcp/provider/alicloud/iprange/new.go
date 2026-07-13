@@ -9,7 +9,8 @@ import (
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 )
 
-// New returns an Action that will provision and deprovision a VSwitch in AliCloud.
+// New returns an Action that will provision and deprovision vSwitches in AliCloud
+// inside a secondary CIDR block associated to the Gardener VPC.
 func New(sf StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		ipRangeState := st.(iprangetypes.State)
@@ -36,6 +37,10 @@ func New(sf StateFactory) composed.Action {
 			composed.If(
 				composed.NotMarkedForDeletionPredicate,
 				// create
+				rangeSplitByZones,
+				rangeCheckVSwitchOverlap,
+				rangeExtendVpcAddressSpace,
+				rangeWaitBlockAssociated,
 				vSwitchCreate,
 				vSwitchWait,
 				statusPatch,
@@ -44,6 +49,7 @@ func New(sf StateFactory) composed.Action {
 				composed.MarkedForDeletionPredicate,
 				// delete
 				vSwitchDelete,
+				rangeDisassociateVpcAddressSpace,
 			),
 		)(ctx, state)
 	}

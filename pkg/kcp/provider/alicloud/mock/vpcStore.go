@@ -15,10 +15,11 @@ import (
 
 // VpcEntry is the stored representation of a VPC.
 type VpcEntry struct {
-	VpcId     string
-	VpcName   string
-	CidrBlock string
-	Status    string
+	VpcId               string
+	VpcName             string
+	CidrBlock           string
+	Status              string
+	SecondaryCidrBlocks []string
 }
 
 // VSwitchEntry is the stored representation of a vSwitch.
@@ -210,6 +211,21 @@ func (s *vpcStore) DescribeVSwitchesByName(ctx context.Context, vpcId, name stri
 	return out, nil
 }
 
+func (s *vpcStore) DescribeVSwitchesByVpcId(ctx context.Context, vpcId string) ([]alicloudiprangeclient.VSwitchInfo, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	var out []alicloudiprangeclient.VSwitchInfo
+	for _, v := range s.vSwitches {
+		if v.VpcId == vpcId {
+			out = append(out, alicloudiprangeclient.VSwitchInfo{VSwitchId: v.VSwitchId, VSwitchName: v.VSwitchName, CidrBlock: v.CidrBlock, VpcId: v.VpcId, ZoneId: v.ZoneId, Status: v.Status})
+		}
+	}
+	return out, nil
+}
+
 func (s *vpcStore) DeleteVSwitch(ctx context.Context, vSwitchId string) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
@@ -236,4 +252,51 @@ func (s *vpcStore) DescribeZones(ctx context.Context) ([]string, error) {
 	out := make([]string, len(s.zones))
 	copy(out, s.zones)
 	return out, nil
+}
+
+func (s *vpcStore) DescribeVpcAttribute(ctx context.Context, vpcId string) (*alicloudiprangeclient.VpcAttributeInfo, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	idx := pie.FindFirstUsing(s.vpcs, func(v *VpcEntry) bool { return v.VpcId == vpcId })
+	if idx == -1 {
+		return nil, fmt.Errorf("vpc %s not found", vpcId)
+	}
+	v := s.vpcs[idx]
+	out := make([]string, len(v.SecondaryCidrBlocks))
+	copy(out, v.SecondaryCidrBlocks)
+	return &alicloudiprangeclient.VpcAttributeInfo{VpcId: vpcId, SecondaryCidrBlocks: out}, nil
+}
+
+func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidrBlock string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	idx := pie.FindFirstUsing(s.vpcs, func(v *VpcEntry) bool { return v.VpcId == vpcId })
+	if idx == -1 {
+		return fmt.Errorf("vpc %s not found", vpcId)
+	}
+	if slices.Contains(s.vpcs[idx].SecondaryCidrBlocks, cidrBlock) {
+		return nil
+	}
+	s.vpcs[idx].SecondaryCidrBlocks = append(s.vpcs[idx].SecondaryCidrBlocks, cidrBlock)
+	return nil
+}
+
+func (s *vpcStore) UnassociateVpcCidrBlock(ctx context.Context, vpcId, cidrBlock string) error {
+	if isContextCanceled(ctx) {
+		return context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+	idx := pie.FindFirstUsing(s.vpcs, func(v *VpcEntry) bool { return v.VpcId == vpcId })
+	if idx == -1 {
+		return fmt.Errorf("vpc %s not found", vpcId)
+	}
+	s.vpcs[idx].SecondaryCidrBlocks = pie.Filter(s.vpcs[idx].SecondaryCidrBlocks, func(c string) bool { return c != cidrBlock })
+	return nil
 }
