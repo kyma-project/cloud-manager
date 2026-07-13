@@ -1,0 +1,4 @@
+name: kyma-project.io/kyma-runtime/kcp-components/cloud-manager
+team: kyma/phoenix
+images:
+  - europe-docker.pkg.dev/kyma-project/prod/cloud-manager:main
