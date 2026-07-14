@@ -360,7 +360,11 @@ func (s *scenarioSession) EventuallyValueIsOK(ctx context.Context, expression st
 				return false, err
 			}
 			if unlessOk {
-				return false, fmt.Errorf("unless expression %s has evaluated truthfully", expression)
+				txt, dErr := s.DebugDumpDeclaredResources(ctx)
+				if dErr != nil {
+					return false, fmt.Errorf("%w, %w", dErr, err)
+				}
+				return false, fmt.Errorf("unless expression %s has evaluated truthfully:\n%s", unless, txt)
 			}
 		}
 		return false, nil

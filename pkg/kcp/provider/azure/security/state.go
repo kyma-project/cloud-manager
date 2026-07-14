@@ -97,6 +97,9 @@ type State struct {
 const (
 	tagKymaRuntimeId = "kyma.runtime-id"
 	tagKymaShootName = "kyma.shoot-name"
+	tagKymaPurpose   = "kyma.purpose"
+
+	tagValuePurposeNetworkFlowLogs = "networkFlowLogs"
 
 	flowLogRetentionDays = 30
 )

@@ -22,8 +22,10 @@ func storageAccountLoad(ctx context.Context, st composed.State) (error, context.
 	for _, acc := range list {
 		if acc.Tags != nil {
 			if tagVal := ptr.Deref(acc.Tags[tagKymaRuntimeId], ""); tagVal == runtimeId {
-				state.storageAccount = acc
-				break
+				if tagVal := ptr.Deref(acc.Tags[tagKymaPurpose], ""); tagVal == tagValuePurposeNetworkFlowLogs {
+					state.storageAccount = acc
+					break
+				}
 			}
 		}
 	}
