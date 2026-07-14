@@ -1,5 +1,5 @@
 # Default owners of the `cloud-manager` repository
-* @kyma-project/Phoenix
+* @kyma-project/Phoenix @kyma-project/phoenix-maintainers
 
 # All files and subdirectories in /docs/user/
 /docs/user/ @kyma-project/technical-writers
