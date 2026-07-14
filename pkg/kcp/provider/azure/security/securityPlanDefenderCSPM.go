@@ -23,9 +23,9 @@ var defenderCSPMPlan = PlanSpec{
 		{Name: "ApiPosture"},
 	},
 	DisabledExtensions: []string{
-		//"ContainerRegistriesVulnerabilityAssessments",
-		//"AgentlessDiscoveryForKubernetes",
-		//"AgentlessServerlessPosture",
+		"ContainerRegistriesVulnerabilityAssessments",
+		"AgentlessDiscoveryForKubernetes",
+		"AgentlessServerlessPosture",
 		//"DatabricksSecurityPosture",
 	},
 }

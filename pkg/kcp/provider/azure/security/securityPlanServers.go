@@ -20,8 +20,8 @@ var serversPlan = PlanSpec{
 		},
 	},
 	DisabledExtensions: []string{
-		//"MdeDesignatedSubscription",
-		//"FileIntegrityMonitoring",
+		"MdeDesignatedSubscription",
+		"FileIntegrityMonitoring",
 	},
 }
 
