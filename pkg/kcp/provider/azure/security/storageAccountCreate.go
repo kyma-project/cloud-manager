@@ -34,6 +34,7 @@ func storageAccountCreate(ctx context.Context, st composed.State) (error, contex
 		Tags: map[string]*string{
 			tagKymaRuntimeId: new(state.ObjAsRuntime().Name),
 			tagKymaShootName: new(state.ObjAsRuntime().Spec.Shoot.Name),
+			tagKymaPurpose:   new(tagValuePurposeNetworkFlowLogs),
 		},
 		Properties: &armstorage.AccountPropertiesCreateParameters{
 			AllowBlobPublicAccess:  new(false),

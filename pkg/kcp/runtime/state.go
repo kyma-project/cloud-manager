@@ -65,6 +65,13 @@ func (s *State) SecurityDataSourceEnabledOnRuntimePredicate(_ context.Context, s
 }
 
 func (s *State) PatchStatusAnnotations(ctx context.Context, newStatus, newMessage string, observedGeneration int64) (error, context.Context) {
+	existingStatus := s.ObjAsRuntime().GetAnnotations()[cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation]
+	existingMessage := s.ObjAsRuntime().GetAnnotations()[cloudcontrolv1beta1.RuntimeSecurityMessageAnnotation]
+	existingObservedGeneration := s.ObjAsRuntime().GetAnnotations()[cloudcontrolv1beta1.RuntimeSecurityObservedGenerationAnnotation]
+	if existingStatus == newStatus && existingMessage == newMessage && existingObservedGeneration == strconv.FormatInt(observedGeneration, 10) {
+		return nil, ctx
+	}
+
 	_, err := composed.PatchObjMergeAnnotations(ctx, s.ObjAsRuntime(), s.Cluster().K8sClient(), map[string]string{
 		cloudcontrolv1beta1.RuntimeSecurityStatusAnnotation:             newStatus,
 		cloudcontrolv1beta1.RuntimeSecurityMessageAnnotation:            newMessage,

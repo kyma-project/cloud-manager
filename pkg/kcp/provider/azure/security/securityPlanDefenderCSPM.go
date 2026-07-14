@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
+	"gopkg.in/yaml.v3"
 )
 
 var defenderCSPMPlan = PlanSpec{
@@ -22,10 +23,10 @@ var defenderCSPMPlan = PlanSpec{
 		{Name: "ApiPosture"},
 	},
 	DisabledExtensions: []string{
-		"ContainerRegistriesVulnerabilityAssessments",
-		"AgentlessDiscoveryForKubernetes",
-		"AgentlessServerlessPosture",
-		"DatabricksSecurityPosture",
+		//"ContainerRegistriesVulnerabilityAssessments",
+		//"AgentlessDiscoveryForKubernetes",
+		//"AgentlessServerlessPosture",
+		//"DatabricksSecurityPosture",
 	},
 }
 
@@ -61,11 +62,17 @@ func securityPlanDefenderCSPM(ctx context.Context, st composed.State) (error, co
 	resp, err := state.azureClient.UpdateSecurityPricing(ctx, scopeId, defenderCSPMPlan.PlanName, pricing, nil)
 	if err != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error updating defender security pricing CSPM: %s", err.Error()), state.ObjAsRuntime().Generation)
-		return composed.LogErrorAndReturn(err, "Error updating CloudPosture security pricing", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
+		txtCurrent, _ := yaml.Marshal(currentPricing)
+		txtNew, _ := yaml.Marshal(pricing)
+		logger.Error(err, "Error updating CloudPosture security pricing", "currentPricing", string(txtCurrent), "updatePricing", string(txtNew))
+		return composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx
 	}
 	if extErr := defenderCSPMPlan.extensionErrors(resp); extErr != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error enabling defender security pricing CSPM extensions: %s", extErr.Error()), state.ObjAsRuntime().Generation)
-		return composed.LogErrorAndReturn(extErr, "Error enabling CloudPosture security pricing extensions", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
+		txtCurrent, _ := yaml.Marshal(currentPricing)
+		txtNew, _ := yaml.Marshal(pricing)
+		logger.Error(err, "Error enabling CloudPosture security pricing extensions", "currentPricing", string(txtCurrent), "updatePricing", string(txtNew))
+		return composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx
 	}
 
 	return nil, ctx
