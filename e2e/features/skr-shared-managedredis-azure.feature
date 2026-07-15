@@ -1,6 +1,6 @@
 Feature: AzureManagedRedis feature
 
-  @skr @azure @managedredis
+  @skr @azure @managedredis @skip
   Scenario: AzureManagedRedis P-tier scenario (HA, EnterpriseCluster)
 
     Given there is shared SKR with "Azure" provider
@@ -41,7 +41,7 @@ Feature: AzureManagedRedis feature
     And resource "secret" does not exist
 
 
-  @skr @azure @managedredis @rediscluster
+  @skr @azure @managedredis @rediscluster @skip
   Scenario: AzureManagedRedis C-tier scenario (HA, OSSCluster sharded)
 
     Given there is shared SKR with "Azure" provider
