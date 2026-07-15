@@ -31,7 +31,7 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	//Check next run time. If it is not time to run, return
-	if GetRemainingTimeFromNow(&state.nextRunTime) > 0 {
+	if state.Scheduler.GetRemainingTime(state.nextRunTime) > 0 {
 		return nil, nil
 	}
 
