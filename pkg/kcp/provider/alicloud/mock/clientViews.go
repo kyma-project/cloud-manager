@@ -4,6 +4,7 @@ import (
 	"context"
 
 	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
+	alicloudnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance/client"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
 )
 
@@ -56,3 +57,9 @@ func (c *vpcnetworkClientView) DescribeVpcs(ctx context.Context, name string) ([
 	}
 	return out, nil
 }
+
+// nfsInstanceClientView adapts nasStore to alicloudnfsinstanceclient.Client.
+// nasStore already implements the full Client interface, so the view only embeds it.
+type nfsInstanceClientView struct{ *nasStore }
+
+var _ alicloudnfsinstanceclient.Client = (*nfsInstanceClientView)(nil)

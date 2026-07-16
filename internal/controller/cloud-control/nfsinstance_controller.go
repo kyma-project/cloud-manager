@@ -24,6 +24,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance"
+	alicloudnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance"
+	alicloudnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance/client"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
@@ -48,6 +50,7 @@ func SetupNfsInstanceReconciler(
 	filestoreClientProviderV1 gcpclient.ClientProvider[gcpnfsinstancev1client.FilestoreClient],
 	filestoreClientProviderV2 gcpclient.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient],
 	sapProvider sapclient.SapClientProvider[sapnfsinstanceclient.Client],
+	alicloudProvider alicloudnfsinstanceclient.ClientProvider,
 	env abstractions.Environment,
 ) error {
 	if env == nil {
@@ -62,6 +65,7 @@ func SetupNfsInstanceReconciler(
 			gcpnfsinstancev1.NewStateFactory(filestoreClientProviderV1, env),
 			gcpnfsinstancev2.NewStateFactory(filestoreClientProviderV2, env),
 			sapnfsinstance.NewStateFactory(sapProvider),
+			alicloudnfsinstance.NewStateFactory(alicloudProvider),
 		),
 	).SetupWithManager(kcpManager)
 }

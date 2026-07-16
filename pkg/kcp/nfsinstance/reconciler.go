@@ -5,6 +5,7 @@ import (
 
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	alicloudnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance"
 	awsnfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
 	gcpnfsinstancev1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1" //nolint:staticcheck // SA1019: v1 maintained for backward compatibility until v2 is default
@@ -33,6 +34,7 @@ type nfsInstanceReconciler struct {
 	gcpStateFactoryV1 gcpnfsinstancev1.StateFactory
 	gcpStateFactoryV2 gcpnfsinstancev2.StateFactory
 	sapStateFactory   sapnfsinstance.StateFactory
+	alicloudStateFactory alicloudnfsinstance.StateFactory
 }
 
 func NewNfsInstanceReconciler(
@@ -43,6 +45,7 @@ func NewNfsInstanceReconciler(
 	gcpStateFactoryV1 gcpnfsinstancev1.StateFactory,
 	gcpStateFactoryV2 gcpnfsinstancev2.StateFactory,
 	sapStateFactory sapnfsinstance.StateFactory,
+	alicloudStateFactory alicloudnfsinstance.StateFactory,
 ) NfsInstanceReconciler {
 	return &nfsInstanceReconciler{
 		composedStateFactory: composedStateFactory,
@@ -52,6 +55,7 @@ func NewNfsInstanceReconciler(
 		gcpStateFactoryV1:    gcpStateFactoryV1,
 		gcpStateFactoryV2:    gcpStateFactoryV2,
 		sapStateFactory:      sapStateFactory,
+		alicloudStateFactory: alicloudStateFactory,
 	}
 }
 
@@ -87,6 +91,15 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
 					composed.NewCase(statewithscope.GcpProviderPredicate, r.gcpActionRouter()),
 					composed.NewCase(statewithscope.OpenStackProviderPredicate, sapnfsinstance.New(r.sapStateFactory)),
+					composed.NewCase(
+						composed.All(
+							statewithscope.AlicloudProviderPredicate,
+							func(ctx context.Context, _ composed.State) bool {
+								return feature.Alicloud.Value(ctx)
+							},
+						),
+						alicloudnfsinstance.New(r.alicloudStateFactory),
+					),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},
