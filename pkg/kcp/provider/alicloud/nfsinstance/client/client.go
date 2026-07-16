@@ -65,11 +65,11 @@ type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecr
 func NewClientProvider() ClientProvider {
 	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error) {
 		config := &openapi.Config{
-			AccessKeyId:     tea.String(accessKeyId),
-			AccessKeySecret: tea.String(accessKeySecret),
-			RegionId:        tea.String(region),
+			AccessKeyId:     new(accessKeyId),
+			AccessKeySecret: new(accessKeySecret),
+			RegionId:        new(region),
 		}
-		config.Endpoint = tea.String(fmt.Sprintf("nas.%s.aliyuncs.com", region))
+		config.Endpoint = new(fmt.Sprintf("nas.%s.aliyuncs.com", region))
 
 		nasClient, err := nas.NewClient(config)
 		if err != nil {
@@ -93,8 +93,8 @@ type alicloudClient struct {
 
 func (c *alicloudClient) DescribeFileSystem(ctx context.Context, fileSystemId string) (*FileSystemInfo, error) {
 	req := &nas.DescribeFileSystemsRequest{
-		FileSystemId:   tea.String(fileSystemId),
-		FileSystemType: tea.String(fileSystemType),
+		FileSystemId:   new(fileSystemId),
+		FileSystemType: new(fileSystemType),
 	}
 
 	resp, err := c.nasClient.DescribeFileSystems(req)
@@ -121,13 +121,13 @@ func (c *alicloudClient) DescribeFileSystem(ctx context.Context, fileSystemId st
 
 func (c *alicloudClient) CreateFileSystem(ctx context.Context, protocolType, storageType, zoneId string) (string, error) {
 	req := &nas.CreateFileSystemRequest{
-		FileSystemType: tea.String(fileSystemType),
-		ProtocolType:   tea.String(protocolType),
-		StorageType:    tea.String(storageType),
-		ChargeType:     tea.String("PayAsYouGo"),
+		FileSystemType: new(fileSystemType),
+		ProtocolType:   new(protocolType),
+		StorageType:    new(storageType),
+		ChargeType:     new("PayAsYouGo"),
 	}
 	if zoneId != "" {
-		req.ZoneId = tea.String(zoneId)
+		req.ZoneId = new(zoneId)
 	}
 
 	resp, err := c.nasClient.CreateFileSystem(req)
@@ -143,7 +143,7 @@ func (c *alicloudClient) CreateFileSystem(ctx context.Context, protocolType, sto
 
 func (c *alicloudClient) DeleteFileSystem(ctx context.Context, fileSystemId string) error {
 	req := &nas.DeleteFileSystemRequest{
-		FileSystemId: tea.String(fileSystemId),
+		FileSystemId: new(fileSystemId),
 	}
 
 	_, err := c.nasClient.DeleteFileSystem(req)
@@ -156,7 +156,7 @@ func (c *alicloudClient) DeleteFileSystem(ctx context.Context, fileSystemId stri
 
 func (c *alicloudClient) DescribeMountTargets(ctx context.Context, fileSystemId string) ([]MountTargetInfo, error) {
 	req := &nas.DescribeMountTargetsRequest{
-		FileSystemId: tea.String(fileSystemId),
+		FileSystemId: new(fileSystemId),
 	}
 
 	resp, err := c.nasClient.DescribeMountTargets(req)
@@ -183,11 +183,11 @@ func (c *alicloudClient) DescribeMountTargets(ctx context.Context, fileSystemId 
 
 func (c *alicloudClient) CreateMountTarget(ctx context.Context, fileSystemId, vpcId, vSwitchId, accessGroupName string) (string, error) {
 	req := &nas.CreateMountTargetRequest{
-		FileSystemId:    tea.String(fileSystemId),
-		NetworkType:     tea.String("Vpc"),
-		VpcId:           tea.String(vpcId),
-		VSwitchId:       tea.String(vSwitchId),
-		AccessGroupName: tea.String(accessGroupName),
+		FileSystemId:    new(fileSystemId),
+		NetworkType:     new("Vpc"),
+		VpcId:           new(vpcId),
+		VSwitchId:       new(vSwitchId),
+		AccessGroupName: new(accessGroupName),
 	}
 
 	resp, err := c.nasClient.CreateMountTarget(req)
@@ -203,8 +203,8 @@ func (c *alicloudClient) CreateMountTarget(ctx context.Context, fileSystemId, vp
 
 func (c *alicloudClient) DeleteMountTarget(ctx context.Context, fileSystemId, mountTargetDomain string) error {
 	req := &nas.DeleteMountTargetRequest{
-		FileSystemId:      tea.String(fileSystemId),
-		MountTargetDomain: tea.String(mountTargetDomain),
+		FileSystemId:      new(fileSystemId),
+		MountTargetDomain: new(mountTargetDomain),
 	}
 
 	_, err := c.nasClient.DeleteMountTarget(req)
@@ -217,8 +217,8 @@ func (c *alicloudClient) DeleteMountTarget(ctx context.Context, fileSystemId, mo
 
 func (c *alicloudClient) DescribeAccessGroups(ctx context.Context, accessGroupName string) ([]AccessGroupInfo, error) {
 	req := &nas.DescribeAccessGroupsRequest{
-		AccessGroupName: tea.String(accessGroupName),
-		FileSystemType:  tea.String(fileSystemType),
+		AccessGroupName: new(accessGroupName),
+		FileSystemType:  new(fileSystemType),
 	}
 
 	resp, err := c.nasClient.DescribeAccessGroups(req)
@@ -242,10 +242,10 @@ func (c *alicloudClient) DescribeAccessGroups(ctx context.Context, accessGroupNa
 
 func (c *alicloudClient) CreateAccessGroup(ctx context.Context, accessGroupName, description string) error {
 	req := &nas.CreateAccessGroupRequest{
-		AccessGroupName: tea.String(accessGroupName),
-		AccessGroupType: tea.String("Vpc"),
-		FileSystemType:  tea.String(fileSystemType),
-		Description:     tea.String(description),
+		AccessGroupName: new(accessGroupName),
+		AccessGroupType: new("Vpc"),
+		FileSystemType:  new(fileSystemType),
+		Description:     new(description),
 	}
 
 	_, err := c.nasClient.CreateAccessGroup(req)
@@ -258,8 +258,8 @@ func (c *alicloudClient) CreateAccessGroup(ctx context.Context, accessGroupName,
 
 func (c *alicloudClient) DeleteAccessGroup(ctx context.Context, accessGroupName string) error {
 	req := &nas.DeleteAccessGroupRequest{
-		AccessGroupName: tea.String(accessGroupName),
-		FileSystemType:  tea.String(fileSystemType),
+		AccessGroupName: new(accessGroupName),
+		FileSystemType:  new(fileSystemType),
 	}
 
 	_, err := c.nasClient.DeleteAccessGroup(req)
@@ -272,8 +272,8 @@ func (c *alicloudClient) DeleteAccessGroup(ctx context.Context, accessGroupName 
 
 func (c *alicloudClient) DescribeAccessRules(ctx context.Context, accessGroupName string) ([]string, error) {
 	req := &nas.DescribeAccessRulesRequest{
-		AccessGroupName: tea.String(accessGroupName),
-		FileSystemType:  tea.String(fileSystemType),
+		AccessGroupName: new(accessGroupName),
+		FileSystemType:  new(fileSystemType),
 	}
 
 	resp, err := c.nasClient.DescribeAccessRules(req)
@@ -293,11 +293,11 @@ func (c *alicloudClient) DescribeAccessRules(ctx context.Context, accessGroupNam
 
 func (c *alicloudClient) CreateAccessRule(ctx context.Context, accessGroupName, sourceCidrIp string) error {
 	req := &nas.CreateAccessRuleRequest{
-		AccessGroupName: tea.String(accessGroupName),
-		FileSystemType:  tea.String(fileSystemType),
-		SourceCidrIp:    tea.String(sourceCidrIp),
-		RWAccessType:    tea.String("RDWR"),
-		UserAccessType:  tea.String("no_squash"),
+		AccessGroupName: new(accessGroupName),
+		FileSystemType:  new(fileSystemType),
+		SourceCidrIp:    new(sourceCidrIp),
+		RWAccessType:    new("RDWR"),
+		UserAccessType:  new("no_squash"),
 		Priority:        tea.Int32(1),
 	}
 
