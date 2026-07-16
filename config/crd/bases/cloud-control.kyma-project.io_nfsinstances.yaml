@@ -53,6 +53,21 @@ spec:
                 maxProperties: 1
                 minProperties: 1
                 properties:
+                  alicloud:
+                    properties:
+                      protocolType:
+                        default: NFS
+                        enum:
+                        - NFS
+                        type: string
+                      storageType:
+                        default: Performance
+                        enum:
+                        - Performance
+                        - Capacity
+                        - Premium
+                        type: string
+                    type: object
                   aws:
                     properties:
                       performanceMode:

@@ -43,6 +43,22 @@ const (
 	AwsThroughputModeElastic  = AwsThroughputMode("elastic")
 )
 
+// +kubebuilder:validation:Enum=Performance;Capacity;Premium
+type AlicloudStorageType string
+
+const (
+	AlicloudStorageTypePerformance = AlicloudStorageType("Performance")
+	AlicloudStorageTypeCapacity    = AlicloudStorageType("Capacity")
+	AlicloudStorageTypePremium     = AlicloudStorageType("Premium")
+)
+
+// +kubebuilder:validation:Enum=NFS
+type AlicloudProtocolType string
+
+const (
+	AlicloudProtocolTypeNFS = AlicloudProtocolType("NFS")
+)
+
 // NfsInstanceSpec defines the desired state of NfsInstance
 // +kubebuilder:validation:XValidation:rule=self.ipRange.name != "", message="IpRange is required."
 // +kubebuilder:validation:XValidation:rule=self.remoteRef.name != "", message="RemoteRef is required."
@@ -76,6 +92,9 @@ type NfsInstanceInfo struct {
 
 	// +optional
 	OpenStack *NfsInstanceOpenStack `json:"openStack,omitempty"`
+
+	// +optional
+	Alicloud *NfsInstanceAlicloud `json:"alicloud,omitempty"`
 }
 
 type NfsInstanceGcp NfsOptionsGcp
@@ -97,6 +116,14 @@ type NfsInstanceAws struct {
 
 	// +kubebuilder:default=bursting
 	Throughput AwsThroughputMode `json:"throughput,omitempty"`
+}
+
+type NfsInstanceAlicloud struct {
+	// +kubebuilder:default=Performance
+	StorageType AlicloudStorageType `json:"storageType,omitempty"`
+
+	// +kubebuilder:default=NFS
+	ProtocolType AlicloudProtocolType `json:"protocolType,omitempty"`
 }
 
 // NfsInstanceStatus defines the observed state of NfsInstance
