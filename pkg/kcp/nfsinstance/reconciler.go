@@ -29,11 +29,11 @@ type nfsInstanceReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	awsStateFactory   awsnfsinstance.StateFactory
-	azureStateFactory azurenfsinstance.StateFactory
-	gcpStateFactoryV1 gcpnfsinstancev1.StateFactory
-	gcpStateFactoryV2 gcpnfsinstancev2.StateFactory
-	sapStateFactory   sapnfsinstance.StateFactory
+	awsStateFactory      awsnfsinstance.StateFactory
+	azureStateFactory    azurenfsinstance.StateFactory
+	gcpStateFactoryV1    gcpnfsinstancev1.StateFactory
+	gcpStateFactoryV2    gcpnfsinstancev2.StateFactory
+	sapStateFactory      sapnfsinstance.StateFactory
 	alicloudStateFactory alicloudnfsinstance.StateFactory
 }
 
