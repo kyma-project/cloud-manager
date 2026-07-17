@@ -169,6 +169,62 @@ func TestAlicloudNasFileSystemLifecycle(t *testing.T) {
 	}
 }
 
+// TestAlicloudNasDescribeMissingResources probes the "describe a resource that does not
+// exist" behavior for EVERY describe method. AliCloud NAS is inconsistent here — some
+// describes return an empty result for an absent resource, others return HTTP 404. The
+// reconciler loads-before-create, so every describe MUST surface "absent" as an empty
+// result, not an error. This test asserts that contract against the REAL API for all four
+// methods (so any future SDK/API change that flips one of them is caught here, not on a
+// live cluster). If a method starts 404-ing, the client needs a not-found guard for it.
+func TestAlicloudNasDescribeMissingResources(t *testing.T) {
+	client := newTestClient(t)
+	ctx := context.Background()
+
+	missingName := fmt.Sprintf("cm-does-not-exist-%d", time.Now().UnixNano())
+	// NAS file system ids are short alphanumeric; use a plausible-but-absent one.
+	missingFsId := fmt.Sprintf("00000000%d", time.Now().Unix()%100000000)
+
+	t.Run("DescribeAccessGroups(missing)->empty,no-error", func(t *testing.T) {
+		groups, err := client.DescribeAccessGroups(ctx, missingName)
+		if err != nil {
+			t.Fatalf("must not error for a missing access group, got: %v", err)
+		}
+		if len(groups) != 0 {
+			t.Fatalf("expected empty, got: %+v", groups)
+		}
+	})
+
+	t.Run("DescribeAccessRules(missing)->empty,no-error", func(t *testing.T) {
+		rules, err := client.DescribeAccessRules(ctx, missingName)
+		if err != nil {
+			t.Fatalf("must not error for a missing access group, got: %v", err)
+		}
+		if len(rules) != 0 {
+			t.Fatalf("expected empty, got: %+v", rules)
+		}
+	})
+
+	t.Run("DescribeFileSystem(missing)->nil,no-error", func(t *testing.T) {
+		fs, err := client.DescribeFileSystem(ctx, missingFsId)
+		if err != nil {
+			t.Fatalf("must not error for a missing file system, got: %v", err)
+		}
+		if fs != nil {
+			t.Fatalf("expected nil for a missing file system, got: %+v", fs)
+		}
+	})
+
+	t.Run("DescribeMountTargets(missing-fs)->empty,no-error", func(t *testing.T) {
+		mts, err := client.DescribeMountTargets(ctx, missingFsId)
+		if err != nil {
+			t.Fatalf("must not error for a missing file system, got: %v", err)
+		}
+		if len(mts) != 0 {
+			t.Fatalf("expected empty, got: %+v", mts)
+		}
+	})
+}
+
 func TestAlicloudNasMountTargetLifecycle(t *testing.T) {
 	client := newTestClient(t)
 	ctx := context.Background()

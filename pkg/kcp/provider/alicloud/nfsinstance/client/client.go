@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
@@ -86,6 +87,31 @@ func NewClientProvider() ClientProvider {
 // fileSystemType is fixed to general-purpose NAS. Extreme/CPFS are out of scope.
 const fileSystemType = "standard"
 
+// isAccessGroupNotFound reports whether err is the AliCloud NAS "access group does not
+// exist" error. DescribeAccessGroups / DescribeAccessRules return this (HTTP 404,
+// Code=InvalidAccessGroup.NotFound) instead of an empty result when the group is absent,
+// so callers that load-before-create must treat it as "not found", not a failure.
+func isAccessGroupNotFound(err error) bool {
+	return isSdkErrorWithCode(err, "InvalidAccessGroup.NotFound")
+}
+
+// isFileSystemNotFound reports whether err is the AliCloud NAS "file system does not exist"
+// error. DescribeFileSystems / DescribeMountTargets return this (HTTP 404,
+// Code=InvalidFileSystem.NotFound) instead of an empty result when the file system is
+// absent, so load-before-create callers must treat it as "not found", not a failure.
+func isFileSystemNotFound(err error) bool {
+	return isSdkErrorWithCode(err, "InvalidFileSystem.NotFound")
+}
+
+// isSdkErrorWithCode reports whether err is an AliCloud SDK error with the given Code.
+func isSdkErrorWithCode(err error, code string) bool {
+	var sdkErr *tea.SDKError
+	if errors.As(err, &sdkErr) {
+		return tea.StringValue(sdkErr.Code) == code
+	}
+	return false
+}
+
 type alicloudClient struct {
 	nasClient *nas.Client
 	region    string
@@ -99,6 +125,9 @@ func (c *alicloudClient) DescribeFileSystem(ctx context.Context, fileSystemId st
 
 	resp, err := c.nasClient.DescribeFileSystems(req)
 	if err != nil {
+		if isFileSystemNotFound(err) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("error describing alicloud nas file system %s: %w", fileSystemId, err)
 	}
 
@@ -161,6 +190,9 @@ func (c *alicloudClient) DescribeMountTargets(ctx context.Context, fileSystemId 
 
 	resp, err := c.nasClient.DescribeMountTargets(req)
 	if err != nil {
+		if isFileSystemNotFound(err) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("error describing alicloud nas mount targets for %s: %w", fileSystemId, err)
 	}
 
@@ -223,6 +255,9 @@ func (c *alicloudClient) DescribeAccessGroups(ctx context.Context, accessGroupNa
 
 	resp, err := c.nasClient.DescribeAccessGroups(req)
 	if err != nil {
+		if isAccessGroupNotFound(err) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("error describing alicloud nas access groups %s: %w", accessGroupName, err)
 	}
 
@@ -278,6 +313,9 @@ func (c *alicloudClient) DescribeAccessRules(ctx context.Context, accessGroupNam
 
 	resp, err := c.nasClient.DescribeAccessRules(req)
 	if err != nil {
+		if isAccessGroupNotFound(err) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("error describing alicloud nas access rules for %s: %w", accessGroupName, err)
 	}
 
