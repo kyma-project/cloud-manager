@@ -109,6 +109,19 @@ func WithNfsInstanceSap(sizeGb int) ObjAction {
 	}
 }
 
+func WithNfsInstanceAlicloud() ObjAction {
+	return &objAction{
+		f: func(obj client.Object) {
+			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
+				x.Spec.Instance.Alicloud = &cloudcontrolv1beta1.NfsInstanceAlicloud{
+					StorageType:  cloudcontrolv1beta1.AlicloudStorageTypePerformance,
+					ProtocolType: cloudcontrolv1beta1.AlicloudProtocolTypeNFS,
+				}
+			}
+		},
+	}
+}
+
 func WithNfsInstanceGcp(location string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

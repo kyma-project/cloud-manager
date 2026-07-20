@@ -125,6 +125,7 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock().FilestoreClientProvider(),
 		infra.GcpMock2().NfsInstanceV2Provider(),
 		infra.SapMock().NfsInstanceProvider(),
+		infra.AlicloudMock().NfsInstanceClientProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	//VpcPeering

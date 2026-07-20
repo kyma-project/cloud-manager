@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
+	alicloudnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance/client"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
 )
 
@@ -89,6 +90,19 @@ func (s *server) VpcNetworkClientProvider() alicloudvpcnetworkclient.ClientProvi
 			return nil, ErrInvalidCredentials
 		}
 		return a.Region(region).VpcNetworkClient(), nil
+	}
+}
+
+func (s *server) NfsInstanceClientProvider() alicloudnfsinstanceclient.ClientProvider {
+	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (alicloudnfsinstanceclient.Client, error) {
+		a, err := s.Login(accessKeyId, accessKeySecret)
+		if err != nil {
+			a = s.firstAccount()
+		}
+		if a == nil {
+			return nil, ErrInvalidCredentials
+		}
+		return a.Region(region).NfsInstanceClient(), nil
 	}
 }
 

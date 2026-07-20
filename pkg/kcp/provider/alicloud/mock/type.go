@@ -2,6 +2,7 @@ package mock
 
 import (
 	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
+	alicloudnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance/client"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
 )
 
@@ -14,9 +15,16 @@ type VpcConfig interface {
 	SetVSwitchError(vSwitchId string, err error)
 }
 
+// NasConfig is the test-side seeding API for NAS file systems.
+type NasConfig interface {
+	AddNasFileSystem(id, protocolType, storageType, zoneId string) *NasFileSystemEntry
+	SetNasFileSystemError(fileSystemId string, err error)
+}
+
 // Configs aggregates all test-side seeding interfaces.
 type Configs interface {
 	VpcConfig
+	NasConfig
 }
 
 // AccountRegion is the per-(account, region) mock surface.
@@ -25,6 +33,7 @@ type AccountRegion interface {
 
 	IpRangeClient() alicloudiprangeclient.Client
 	VpcNetworkClient() alicloudvpcnetworkclient.Client
+	NfsInstanceClient() alicloudnfsinstanceclient.Client
 
 	Region() string
 }
@@ -47,6 +56,7 @@ type Account interface {
 type Providers interface {
 	IpRangeClientProvider() alicloudiprangeclient.ClientProvider
 	VpcNetworkClientProvider() alicloudvpcnetworkclient.ClientProvider
+	NfsInstanceClientProvider() alicloudnfsinstanceclient.ClientProvider
 }
 
 // Server is the top-level mock — owns accounts and yields providers.

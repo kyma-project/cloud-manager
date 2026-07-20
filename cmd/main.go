@@ -39,6 +39,7 @@ import (
 	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
+	alicloudnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance/client"
 	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
 
@@ -423,6 +424,7 @@ func main() {
 		gcpnfsinstancev1client.NewFilestoreClientProvider(),
 		gcpnfsinstancev2client.NewFilestoreClientProvider(gcpClients),
 		sapnfsinstanceclient.NewClientProvider(),
+		alicloudnfsinstanceclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NfsInstance")
