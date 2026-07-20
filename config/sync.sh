@@ -98,8 +98,7 @@ cp $SCRIPT_DIR/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnf
 
 # ============= AliCloud ================
 
-# AliCloud (only the provider-agnostic IpRange is supported on the SKR side so far)
-mkdir -p $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+# AliCloud
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml       $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 
 # AliCloud UI
