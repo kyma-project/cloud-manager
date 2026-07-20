@@ -1,6 +1,8 @@
 package common
 
 import (
+	"strconv"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 )
@@ -11,6 +13,10 @@ func IsSecurityScanEnabledOnRuntime(obj *infrastructuremanagerv1.Runtime) bool {
 	if composed.IsMarkedForDeletion(obj) {
 		return false
 	}
-	_, ok := obj.Labels[TmpRuntimeSecurityEnabledLabel]
+	val, ok := obj.Labels[TmpRuntimeSecurityEnabledLabel]
+	if !ok {
+		return false
+	}
+	ok, _ = strconv.ParseBool(val)
 	return ok
 }
