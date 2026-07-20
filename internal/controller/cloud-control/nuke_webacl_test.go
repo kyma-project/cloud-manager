@@ -57,7 +57,7 @@ var _ = Describe("Feature: Nuke AWS WebACL", func() {
 		var webAcl *wafv2types.WebACL
 		By("And Given WebACL exists in AWS mock with scope tags", func() {
 			var err error
-			webAcl, _, err = awsRegion.CreateWebACL(infra.Ctx(), &wafv2.CreateWebACLInput{
+			err = awsRegion.CreateWebACL(infra.Ctx(), &wafv2.CreateWebACLInput{
 				Name: new(aclName),
 				Tags: []wafv2types.Tag{
 					{
