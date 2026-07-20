@@ -96,6 +96,15 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotsch
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 cp $SCRIPT_DIR/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnfsvolumes_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 
+# ============= AliCloud ================
+
+# AliCloud (only the provider-agnostic IpRange is supported on the SKR side so far)
+mkdir -p $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml       $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+
+# AliCloud UI
+cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+
 echo "CRD resources are copied to ./dist kcp and skr dirs"
 echo "Note that no files are removed - you must remove them manually"
 echo "Don't forget to adjust the kustomization.yaml files in that case as well!!!"

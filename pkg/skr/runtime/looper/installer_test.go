@@ -125,4 +125,12 @@ func TestInstaller(t *testing.T) {
 			{"sapnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 		})
 	})
+
+	t.Run("alicloud", func(t *testing.T) {
+		// AliCloud currently supports only the provider-agnostic IpRange on the SKR side.
+		run(context.Background(), t, cloudcontrolv1beta1.ProviderAlicloud, []SkrStatusTestCase{
+			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+		})
+	})
 }
