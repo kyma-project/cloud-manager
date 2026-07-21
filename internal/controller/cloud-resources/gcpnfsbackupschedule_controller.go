@@ -21,8 +21,6 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
-	backupschedulev1 "github.com/kyma-project/cloud-manager/pkg/skr/backupschedule/v1"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsbackupschedule"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -31,7 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// gcpNfsBackupScheduleRunner is a common interface for v1 and v2 reconcilers
 type gcpNfsBackupScheduleRunner interface {
 	Run(ctx context.Context, req ctrl.Request) (ctrl.Result, error)
 }
@@ -55,15 +52,8 @@ type GcpNfsBackupScheduleReconcilerFactory struct {
 }
 
 func (f *GcpNfsBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
-	if feature.BackupScheduleV2.Value(context.Background()) {
-		reconciler := gcpnfsbackupschedule.NewReconciler(
-			args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, f.clk,
-		)
-		return &GcpNfsBackupScheduleReconciler{reconciler: &reconciler}
-	}
-
-	reconciler := backupschedulev1.NewReconciler(
-		args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, backupschedulev1.GcpNfsBackupSchedule,
+	reconciler := gcpnfsbackupschedule.NewReconciler(
+		args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, f.clk,
 	)
 	return &GcpNfsBackupScheduleReconciler{reconciler: &reconciler}
 }
