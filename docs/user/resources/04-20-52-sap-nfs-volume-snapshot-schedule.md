@@ -7,7 +7,7 @@ The `sapnfsvolumesnapshotschedule.cloud-resources.kyma-project.io` namespaced cu
 
 The CR performs the following actions:
 
-- Creates `SapNfsVolumeSnapshot` resources automatically at the specified interval, or once immediately for one-time mode.
+- Creates SapNfsVolumeSnapshot resources automatically at the specified interval, or once immediately for one-time mode.
 - Stamps each created snapshot with a `deleteAfterDays` value derived from `maxRetentionDays`, enabling time-based automatic expiry.
 - Enforces count-based retention: evicts the oldest `Ready` snapshot before creating a new one when `maxReadySnapshots` would be exceeded, and garbage-collects `Failed` snapshots beyond `maxFailedSnapshots`.
 - Enables you to temporarily suspend or permanently stop snapshot creation.
@@ -15,11 +15,11 @@ The CR performs the following actions:
 Created snapshots are named using the pattern `{prefix}-{index}`, where `prefix` defaults to the schedule name and `index` is a monotonically incrementing counter.
 
 > [!NOTE]
-> Snapshot quota is shared across the entire OpenStack project. The default per-project limit is **50 snapshots** across all volumes and schedules. The `maxReadySnapshots` default of `50` aligns with this limit but is applied per schedule — multiple schedules targeting different volumes in the same project compete for the same quota pool. Consider lowering `maxReadySnapshots` when running multiple schedules in the same project.
+> Snapshot quota is shared across the entire OpenStack project. The default per-project limit is 50 snapshots across all volumes and schedules. The `maxReadySnapshots` default of `50` aligns with this limit but is applied per schedule — multiple schedules targeting different volumes in the same project compete for the same quota pool. Consider lowering `maxReadySnapshots` when running multiple schedules in the same project.
 
 ## How It Works <!-- {docsify-ignore} -->
 
-A `SapNfsVolumeSnapshotSchedule` progresses through the following states:
+An SapNfsVolumeSnapshotSchedule progresses through the following states:
 
 | State | Description |
 |-------|-------------|
@@ -37,9 +37,9 @@ This table lists the parameters of the given resource together with their descri
 
 | Parameter | Type | Required | Immutable | Description |
 |-----------|------|----------|-----------|-------------|
-| **template** | object | Yes | No | Template for the `SapNfsVolumeSnapshot` resources created by this schedule. |
-| **template.spec.sourceVolume** | object | Yes | No | Reference to the `SapNfsVolume` to snapshot. The volume must be in `Ready` state when each snapshot is created. |
-| **template.spec.sourceVolume.name** | string | Yes | No | Name of the source `SapNfsVolume`. |
+| **template** | object | Yes | No | Template for the SapNfsVolumeSnapshot resources created by this schedule. |
+| **template.spec.sourceVolume** | object | Yes | No | Reference to the SapNfsVolume to snapshot. The volume must be in the `Ready` state when each snapshot is created. |
+| **template.spec.sourceVolume.name** | string | Yes | No | Name of the source SapNfsVolume. |
 | **template.spec.sourceVolume.namespace** | string | No | No | Namespace of the source `SapNfsVolume`. Defaults to the schedule's namespace if not provided. |
 | **template.labels** | map\[string\]string | No | No | Labels applied to each created `SapNfsVolumeSnapshot`. Merged with schedule-managed labels. |
 | **template.annotations** | map\[string\]string | No | No | Annotations applied to each created `SapNfsVolumeSnapshot`. |

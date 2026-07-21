@@ -77,10 +77,10 @@ This table lists the parameters of the given resource together with their descri
 
 ## Limitations <!-- {docsify-ignore} -->
 
-- **In-place revert: most recent snapshot only.** The Manila "Revert share to snapshot" API only succeeds if the referenced snapshot is the most recent one for that share. If newer snapshots exist, the restore will set state to `Failed`. To revert to an older state, delete the newer snapshots first, then create a new `SapNfsVolumeSnapshotRestore`.
-- **In-place revert: snapshot must belong to the destination volume.** Manila only allows reverting a share to its own snapshot. Cross-volume revert is not supported.
-- **New-volume restore: same availability zone.** The new volume is created in the same OpenStack project and availability zone as the parent share of the snapshot.
-- **Immutable after completion.** Once a restore reaches `Done` or `Failed`, create a new `SapNfsVolumeSnapshotRestore` resource to retry.
+- In-place revert: most recent snapshot only: The Manila "Revert share to snapshot" API only succeeds if the referenced snapshot is the most recent one for that share. If newer snapshots exist, the restore will set state to `Failed`. To revert to an older state, delete the newer snapshots first, then create a new SapNfsVolumeSnapshotRestore.
+- In-place revert: snapshot must belong to the destination volume: Manila only allows reverting a share to its own snapshot. Cross-volume revert is not supported.
+- New-volume restore: same availability zone: The new volume is created in the same OpenStack project and availability zone as the parent share of the snapshot.
+- Immutable after completion: Once a restore reaches `Done` or `Failed`, create a new SapNfsVolumeSnapshotRestore resource to retry.
 
 ## Sample Custom Resources <!-- {docsify-ignore} -->
 

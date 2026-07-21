@@ -5,14 +5,14 @@
 
 The `sapnfsvolumesnapshot.cloud-resources.kyma-project.io` namespaced custom resource (CR) describes a point-in-time, read-only snapshot of a [SapNfsVolume](./04-20-50-sap-nfs-volume.md). Snapshots are created using the OpenStack Manila Share Snapshots API and let you capture the state of an NFS share at a specific moment for data recovery.
 
-Unlike backups, snapshots are **bound to their parent share**. Snapshot data is not copied to separate storage — it resides on the same backend as the source volume and cannot exist independently. A `SapNfsVolume` cannot be deleted while it has associated snapshots — all snapshots must be removed first.
+Unlike backups, snapshots are bound to their parent share. Snapshot data is not copied to separate storage — it resides on the same backend as the source volume and cannot exist independently. You cannot delete an SapNfsVolume while it has associated snapshots — you must remove all snapshots first.
 
 > [!NOTE]
-> Manila snapshots are subject to per-project quotas. The default limits are **50 snapshots** and **1000 GiB** of total snapshot storage per OpenStack project. All `SapNfsVolumeSnapshot` resources across all volumes in the same project share this quota. Contact your OpenStack administrator to adjust these limits if needed.
+> Manila snapshots are subject to per-project quotas. The default limits are 50 snapshots and 1000 GiB of total snapshot storage per OpenStack project. All SapNfsVolumeSnapshot resources across all volumes in the same project share this quota. Contact your OpenStack administrator to adjust these limits if needed.
 
 ## How It Works <!-- {docsify-ignore} -->
 
-A `SapNfsVolumeSnapshot` progresses through the following states:
+An SapNfsVolumeSnapshot progresses through the following states:
 
 | State | Description |
 |-------|-------------|
@@ -53,10 +53,10 @@ This table lists the parameters of the given resource together with their descri
 
 ## Limitations <!-- {docsify-ignore} -->
 
-- **Snapshots are bound to their parent share.** A snapshot cannot be moved to a different volume or OpenStack project. It exists in the same project and availability zone as the source `SapNfsVolume`.
-- **A `SapNfsVolume` cannot be deleted while it has active snapshots.** All snapshots referencing a volume must be deleted before the volume can be removed.
-- **In-place revert supports the most recent snapshot only.** When restoring to an existing volume using `SapNfsVolumeSnapshotRestore`, the snapshot must be the most recent one taken from that volume. This is an OpenStack Manila constraint.
-- **Project-wide quota.** The 50-snapshot default limit is shared across all volumes and schedules in the same OpenStack project.
+- Snapshots are bound to their parent share: A snapshot cannot be moved to a different volume or OpenStack project. It exists in the same project and availability zone as the source `SapNfsVolume`.
+- An SapNfsVolume cannot be deleted while it has active snapshots: All snapshots referencing a volume must be deleted before the volume can be removed.
+- In-place revert supports the most recent snapshot only: When restoring to an existing volume using SapNfsVolumeSnapshotRestore, the snapshot must be the most recent one taken from that volume. This is an OpenStack Manila constraint.
+- Project-wide quota.: The 50-snapshot default limit is shared across all volumes and schedules in the same OpenStack project.
 
 ## Sample Custom Resources <!-- {docsify-ignore} -->
 
