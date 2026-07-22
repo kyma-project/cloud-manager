@@ -2,6 +2,7 @@ package nuke
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
@@ -20,8 +21,6 @@ func checkIfAllProviderResourcesDeleted(ctx context.Context, st composed.State) 
 	}
 
 	if allDeleted {
-		logger.Info("All orphan provided resources nuke deleted")
-
 		return nil, ctx
 	}
 

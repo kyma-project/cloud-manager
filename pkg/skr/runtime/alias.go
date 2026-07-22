@@ -8,6 +8,10 @@ import (
 
 var NewLooper = looper.New
 var NewActiveSkrCollection = looper.NewActiveSkrCollection
+var NewNotificationListener = looper.NewNotificationListener
+
+// NotificationComponentName is the runtime-watcher component name for cloud-manager.
+const NotificationComponentName = looper.NotificationComponentName
 
 //var ActiveSkrCollectionToCtx = looper.ActiveSkrCollectionToCtx
 //var ActiveSkrCollectionFromCtx = looper.ActiveSkrCollectionFromCtx

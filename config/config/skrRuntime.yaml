@@ -1,2 +1,7 @@
 providersDir: config/dist/skr/crd/bases/providers
 lockingLeaseDuration: 10m
+notificationConcurrency: 8
+cyclicConcurrency: 1
+cyclicMinInterval: 60s
+notificationListenerAddr: ":8083"
+gateConflictRetryDelay: 1s
