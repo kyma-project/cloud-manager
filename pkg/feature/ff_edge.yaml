@@ -47,27 +47,6 @@ gcpNfsInstanceV2:
   defaultRule:
     variation: enabled
 
-gcpBackupV2:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: enabled
-
-gcpNfsRestoreV2:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: enabled
-
-backupScheduleV2:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: enabled
-
 runtimeSecurityAws:
   variations:
     enabled: true

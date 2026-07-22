@@ -1,13 +1,11 @@
 package cloudresources
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -19,12 +17,6 @@ import (
 )
 
 var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
-
-	BeforeEach(func() {
-		if !feature.BackupScheduleV2.Value(context.Background()) {
-			Skip("Skipping v2 GcpNfsBackupSchedule tests because backupScheduleV2 feature flag is disabled")
-		}
-	})
 
 	It("Scenario: Recurring schedule full lifecycle", func() {
 		const (

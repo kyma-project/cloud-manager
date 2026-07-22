@@ -1,16 +1,13 @@
 package cloudresources
 
 import (
-	"context"
 	"fmt"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
-	skrgcpnfsvolbackupv1 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v1"
 	skrgcpnfsvolbackupv2 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v2"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -22,12 +19,6 @@ import (
 )
 
 var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
-
-	BeforeEach(func() {
-		if !feature.GcpNfsRestoreV2.Value(context.Background()) {
-			Skip("Skipping v2 GcpNfsVolumeRestore tests because gcpNfsRestoreV2 feature flag is disabled")
-		}
-	})
 
 	It("Scenario: SKR GcpNfsVolumeRestore V2 is created with backup ref and completed", func() {
 		gcpMock := infra.GcpMock2().NewSubscription("nfs-restore-v2")
@@ -156,7 +147,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 		})
 
 		By("And Given SKR GcpNfsVolumeBackup exists in Ready state", func() {
-			skrgcpnfsvolbackupv1.Ignore.AddName(skrGcpNfsBackupName)
 			skrgcpnfsvolbackupv2.Ignore.AddName(skrGcpNfsBackupName)
 			Eventually(CreateGcpNfsVolumeBackup).
 				WithArguments(
@@ -355,7 +345,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 		})
 
 		By("And Given SKR GcpNfsVolumeBackup exists in Ready state", func() {
-			skrgcpnfsvolbackupv1.Ignore.AddName(skrGcpNfsBackupName)
 			skrgcpnfsvolbackupv2.Ignore.AddName(skrGcpNfsBackupName)
 			Eventually(CreateGcpNfsVolumeBackup).
 				WithArguments(
@@ -456,7 +445,6 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 		})
 
 		By("And Given SKR GcpNfsVolumeBackup exists in Ready state", func() {
-			skrgcpnfsvolbackupv1.Ignore.AddName(skrGcpNfsBackupName)
 			skrgcpnfsvolbackupv2.Ignore.AddName(skrGcpNfsBackupName)
 			Eventually(CreateGcpNfsVolumeBackup).
 				WithArguments(
