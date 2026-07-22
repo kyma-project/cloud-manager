@@ -294,18 +294,15 @@ func (l *skrLooper) notificationWorker(id int) {
 	logger := l.logger.WithValues("skrNotificationWorkerId", id)
 	logger.Info("SKR Looper notification worker started")
 	q := l.NotificationQueue()
-	for {
-		// FIFO drain: no self re-add. On success also push the cyclic entry to the
-		// future so the background sleeve does not immediately re-do the same work.
-		// Guarded on membership so a Remove that fired mid-flight is not undone by
-		// re-adding the SKR to the cyclic queue.
-		if l.processOne(id, q, "notification", func(kymaName string) {
-			if l.Contains(kymaName) {
-				l.CyclicQueue().Delay(kymaName)
-			}
-		}) {
-			break
+	// FIFO drain: no self re-add. On success also push the cyclic entry to the
+	// future so the background sleeve does not immediately re-do the same work.
+	// Guarded on membership so a Remove that fired mid-flight is not undone by
+	// re-adding the SKR to the cyclic queue.
+	for !l.processOne(id, q, "notification", func(kymaName string) {
+		if l.Contains(kymaName) {
+			l.CyclicQueue().Delay(kymaName)
 		}
+	}) {
 	}
 	logger.Info("SKR Looper notification worker returning")
 }
@@ -315,18 +312,15 @@ func (l *skrLooper) cyclicWorker(id int) {
 	logger := l.logger.WithValues("skrCyclicWorkerId", id)
 	logger.Info("SKR Looper cyclic worker started")
 	q := l.CyclicQueue()
-	for {
-		// Round-robin: re-schedule self after the minimum interval on success, but
-		// only while still a member. A Remove that fired during handle (the SKR's own
-		// "cleanup done, safe to deactivate" signal) must stop the cycle — otherwise
-		// AddAfter would re-record membership and re-activate a deactivated SKR.
-		if l.processOne(id, q, "cyclic", func(kymaName string) {
-			if l.Contains(kymaName) {
-				q.AddAfter(kymaName, l.cyclicMinInterval)
-			}
-		}) {
-			break
+	// Round-robin: re-schedule self after the minimum interval on success, but
+	// only while still a member. A Remove that fired during handle (the SKR's own
+	// "cleanup done, safe to deactivate" signal) must stop the cycle — otherwise
+	// AddAfter would re-record membership and re-activate a deactivated SKR.
+	for !l.processOne(id, q, "cyclic", func(kymaName string) {
+		if l.Contains(kymaName) {
+			q.AddAfter(kymaName, l.cyclicMinInterval)
 		}
+	}) {
 	}
 	logger.Info("SKR Looper cyclic worker returning")
 }

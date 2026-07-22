@@ -27,7 +27,7 @@ spec:
     resource: "*"         # wildcard = all resources/kinds in the group (plural resource-name wildcard)
   field: spec             # fire on .spec changes; resources without .spec fall back to firing on any UPDATE
   serviceInfo:
-    name: cloud-manager   # KCP Service fronting the SKREventListener port
+    name: cloud-manager-watcher   # KCP Service fronting the SKREventListener port (chart: {{ fullname }}-watcher)
     namespace: kcp-system
     port: 8083            # must match cloud-manager listener bind port (SkrRuntimeConfig.NotificationListenerAddr, default ":8083")
   gateway:

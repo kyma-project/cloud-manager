@@ -53,10 +53,7 @@ func (c *ConfigStruct) AfterConfigLoaded() {
 	c.SkrCyclicMinInterval = GetDuration(c.CyclicMinInterval, 60*time.Second)
 
 	// Floor-clamp the gate conflict retry delay to avoid a busy-requeue loop on misconfiguration.
-	c.SkrGateConflictRetryDelay = GetDuration(c.GateConflictRetryDelay, 1*time.Second)
-	if c.SkrGateConflictRetryDelay < 200*time.Millisecond {
-		c.SkrGateConflictRetryDelay = 200 * time.Millisecond
-	}
+	c.SkrGateConflictRetryDelay = max(GetDuration(c.GateConflictRetryDelay, 1*time.Second), 200*time.Millisecond)
 
 	if c.NotificationListenerAddr == "" {
 		c.NotificationListenerAddr = ":8083"
