@@ -98,6 +98,7 @@ import (
 	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshot"
 	"github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshotrestore"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -220,6 +221,15 @@ func main() {
 		Build(ctx)
 
 	skrLoop := skrruntime.NewLooper(activeSkrCollection, mgr, skrRegistry, mgr.GetLogger())
+
+	// runtime-watcher notification listener: SKR resource change -> HTTP POST ->
+	// extract runtime-id (== kymaName) -> activeSkrCollection.Notify (fast sleeve).
+	notifListener := skrruntime.NewNotificationListener(
+		skrruntimeconfig.SkrRuntimeConfig.NotificationListenerAddr,
+		skrruntime.NotificationComponentName,
+		activeSkrCollection.Notify,
+		mgr.GetLogger(),
+	)
 
 	//Get env
 	env := abstractions.NewOSEnvironment()
@@ -570,6 +580,12 @@ func main() {
 	err = mgr.Add(skrLoop)
 	if err != nil {
 		setupLog.Error(err, "error adding SkrLooper to KCP manager")
+		os.Exit(1)
+	}
+
+	err = mgr.Add(notifListener)
+	if err != nil {
+		setupLog.Error(err, "error adding SKR notification listener to KCP manager")
 		os.Exit(1)
 	}
 

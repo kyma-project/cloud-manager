@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/elliotchance/pie/v2"
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -31,30 +30,43 @@ type ActiveSkrCollection interface {
 	RemoveScope(ctx context.Context, scope *cloudcontrolv1beta1.Scope)
 	AddKyma(ctx context.Context, kyma *unstructured.Unstructured)
 	RemoveKyma(ctx context.Context, kyma *unstructured.Unstructured)
+	// Notify enqueues a notification-driven reconcile for kymaName into the fast
+	// notification sleeve. It is a no-op if the SKR is not currently active.
+	Notify(kymaName string)
 	Contains(kymaName string) bool
 	GetKymaNames() []string
 }
 
 type ActiveSkrCollectionAdmin interface {
 	ActiveSkrCollection
-	Queue() *CyclicQueue
+	CyclicQueue() *Queue
+	NotificationQueue() *Queue
+	Gate() *SkrGate
 }
 
 func NewActiveSkrCollection() ActiveSkrCollectionAdmin {
 	return &activeSkrCollection{
-		queue: NewCyclicQueue(),
+		cyclicQueue: NewQueue(),
+		notifQueue:  NewQueue(),
+		gate:        NewSkrGate(),
 	}
 }
 
 var _ ActiveSkrCollectionAdmin = &activeSkrCollection{}
 
 type activeSkrCollection struct {
-	queue *CyclicQueue
+	// cyclicQueue holds active SKRs for the background round-robin sleeve. Its
+	// membership set is the source of truth for "is this SKR active" (Contains).
+	cyclicQueue *Queue
+	// notifQueue holds notification-driven SKRs for the fast user-facing sleeve.
+	notifQueue *Queue
+	// gate guarantees at most one live manager per SKR across both sleeves.
+	gate *SkrGate
 }
 
-func (l *activeSkrCollection) Queue() *CyclicQueue {
-	return l.queue
-}
+func (l *activeSkrCollection) CyclicQueue() *Queue       { return l.cyclicQueue }
+func (l *activeSkrCollection) NotificationQueue() *Queue { return l.notifQueue }
+func (l *activeSkrCollection) Gate() *SkrGate            { return l.gate }
 
 func (l *activeSkrCollection) AddScope(ctx context.Context, scope *cloudcontrolv1beta1.Scope) {
 	l.add(ctx, scope)
@@ -66,10 +78,6 @@ func (l *activeSkrCollection) AddKyma(ctx context.Context, kyma *unstructured.Un
 
 func (l *activeSkrCollection) add(ctx context.Context, obj client.Object) {
 	kymaName := obj.GetName()
-
-	if l.queue.Contains(kymaName) {
-		return
-	}
 
 	labels := obj.GetLabels()
 	if labels == nil {
@@ -91,11 +99,25 @@ func (l *activeSkrCollection) add(ctx context.Context, obj client.Object) {
 		"brokerPlanName", brokerPlanName,
 	).Info("Adding Kyma to SkrLooper")
 
-	l.queue.Add(kymaName)
+	// The workqueue dirty-set dedups, so a re-add of an already-queued SKR is a no-op
+	// there; but the module-active metric must only count a genuine activation, so
+	// guard it on the membership set.
+	alreadyActive := l.cyclicQueue.Contains(kymaName)
+	l.cyclicQueue.Add(kymaName)
+	if !alreadyActive {
+		metrics.
+			SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, globalAccountId, subaccountId, shootName, region, brokerPlanName).
+			Add(1)
+	}
+}
 
-	metrics.
-		SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, globalAccountId, subaccountId, shootName, region, brokerPlanName).
-		Add(1)
+func (l *activeSkrCollection) Notify(kymaName string) {
+	// Drop notifications for SKRs that are not active (never added, or deactivated).
+	// Re-activation only ever comes from the KCP reconciler via AddKyma/AddScope.
+	if !l.cyclicQueue.Contains(kymaName) {
+		return
+	}
+	l.notifQueue.Add(kymaName)
 }
 
 func (l *activeSkrCollection) RemoveScope(ctx context.Context, scope *cloudcontrolv1beta1.Scope) {
@@ -108,7 +130,7 @@ func (l *activeSkrCollection) RemoveKyma(ctx context.Context, kyma *unstructured
 
 func (l *activeSkrCollection) remove(ctx context.Context, obj client.Object) {
 	kymaName := obj.GetName()
-	if !l.queue.Contains(kymaName) {
+	if !l.cyclicQueue.Contains(kymaName) {
 		return
 	}
 
@@ -132,7 +154,11 @@ func (l *activeSkrCollection) remove(ctx context.Context, obj client.Object) {
 		"brokerPlanName", brokerPlanName,
 	).Info("Removing Kyma from SkrLooper")
 
-	l.queue.Remove(kymaName)
+	// Clear membership on both queues. This never aborts a running manager nor
+	// touches the gate claim; the owning worker's Release frees the claim when its
+	// manager finishes (graceful teardown).
+	l.cyclicQueue.Remove(kymaName)
+	l.notifQueue.Remove(kymaName)
 
 	metrics.
 		SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, globalAccountId, subaccountId, shootName, region, brokerPlanName).
@@ -140,13 +166,11 @@ func (l *activeSkrCollection) remove(ctx context.Context, obj client.Object) {
 }
 
 func (l *activeSkrCollection) Contains(kymaName string) bool {
-	return l.queue.Contains(kymaName)
+	return l.cyclicQueue.Contains(kymaName)
 }
 
 func (l *activeSkrCollection) GetKymaNames() []string {
-	return pie.Map(l.queue.Items(), func(x any) string {
-		return x.(string)
-	})
+	return l.cyclicQueue.Items()
 }
 
 // =====================================================================
@@ -157,15 +181,20 @@ type SkrLooper interface {
 }
 
 func New(activeSkrCollection ActiveSkrCollectionAdmin, kcpCluster cluster.Cluster, reg registry.SkrRegistry, logger logr.Logger) SkrLooper {
-	return &skrLooper{
+	l := &skrLooper{
 		ActiveSkrCollectionAdmin: activeSkrCollection,
 		logger:                   logger,
 		kcpCluster:               kcpCluster,
 		managerFactory:           skrmanager.NewFactory(kcpCluster.GetAPIReader(), "kcp-system"),
 		skrStatusSaver:           NewSkrStatusSaver(NewSkrStatusRepo(kcpCluster.GetClient()), "kcp-system"),
 		registry:                 reg,
-		concurrency:              skrruntimeconfig.SkrRuntimeConfig.Concurrency,
+		notificationConcurrency:  skrruntimeconfig.SkrRuntimeConfig.NotificationConcurrency,
+		cyclicConcurrency:        skrruntimeconfig.SkrRuntimeConfig.CyclicConcurrency,
+		cyclicMinInterval:        skrruntimeconfig.SkrRuntimeConfig.SkrCyclicMinInterval,
+		gateConflictDelay:        skrruntimeconfig.SkrRuntimeConfig.SkrGateConflictRetryDelay,
 	}
+	l.handleFn = l.handleOneSkr
+	return l
 }
 
 type skrLooper struct {
@@ -175,8 +204,16 @@ type skrLooper struct {
 	kcpCluster     cluster.Cluster
 	managerFactory skrmanager.Factory
 	registry       registry.SkrRegistry
-	concurrency    int
 	skrStatusSaver SkrStatusSaver
+
+	notificationConcurrency int
+	cyclicConcurrency       int
+	cyclicMinInterval       time.Duration
+	gateConflictDelay       time.Duration
+
+	// handleFn is the per-SKR handler; defaults to handleOneSkr and is injectable
+	// so the pool logic is testable without a live per-SKR manager (envtest).
+	handleFn func(skrWorkerId int, kymaName string)
 
 	// wg the WorkGroup for workers
 	wg      sync.WaitGroup
@@ -192,45 +229,106 @@ func (l *skrLooper) Start(ctx context.Context) error {
 	}
 	l.started = true
 
-	l.logger.Info("SkrLooper started")
+	l.logger.Info(
+		"SkrLooper started",
+		"notificationConcurrency", l.notificationConcurrency,
+		"cyclicConcurrency", l.cyclicConcurrency,
+	)
 	l.ctx = ctx
-	l.wg.Add(l.concurrency)
-	for x := 0; x < l.concurrency; x++ {
-		go l.worker(x)
+
+	l.wg.Add(l.notificationConcurrency + l.cyclicConcurrency)
+	for x := 0; x < l.notificationConcurrency; x++ {
+		go l.notificationWorker(x)
+	}
+	for x := 0; x < l.cyclicConcurrency; x++ {
+		go l.cyclicWorker(x)
 	}
 
 	<-ctx.Done()
 
-	l.logger.Info("SkrLooper context closed, shutting down the queue")
-	l.Queue().Shutdown()
+	l.logger.Info("SkrLooper context closed, shutting down the queues")
+	l.NotificationQueue().ShutDown()
+	l.CyclicQueue().ShutDown()
 	l.logger.Info("SkrLooper waiting workers to finish")
 	l.wg.Wait()
 	l.logger.Info("SkrLooper stopped")
 	return nil
 }
 
-func (l *skrLooper) worker(id int) {
+// processOne performs one guarded Get→handle cycle on q. It returns true when the
+// queue is shutting down (the worker should exit). reAdd runs on the SUCCESS path
+// only (after handle returns) — never on the shutdown, membership-drop, or gate-
+// conflict paths.
+func (l *skrLooper) processOne(id int, q *Queue, sleeve string, reAdd func(kymaName string)) bool {
+	item, shuttingDown := q.Get()
+	if shuttingDown {
+		return true
+	}
+	func() {
+		defer q.Done(item) // OUTERMOST defer
+
+		// Guard 1 — membership: drop stray work for deactivated runtimes. A stale
+		// delayed re-add OR a stray notification can deliver a kymaName that was
+		// removed while queued. Re-activation only ever comes from the KCP reconciler.
+		if !l.Contains(item) {
+			return // drop: no claim, no connect, no re-add
+		}
+
+		// Guard 2 — cross-sleeve single-manager guarantee.
+		if !l.Gate().TryClaim(item) {
+			metrics.SkrLooperGateConflictTotal.WithLabelValues(sleeve).Inc()
+			q.AddAfter(item, l.gateConflictDelay) // flat delay, to back; move on
+			return
+		}
+		defer l.Gate().Release(item) // INNER defer — runs before q.Done (LIFO)
+
+		l.handleFn(id, item)
+
+		reAdd(item) // success path only
+	}()
+	return false
+}
+
+func (l *skrLooper) notificationWorker(id int) {
 	defer l.wg.Done()
-	logger := l.logger.WithValues("skrWorkerId", id)
-	logger.Info("SKR Looper worker started")
+	logger := l.logger.WithValues("skrNotificationWorkerId", id)
+	logger.Info("SKR Looper notification worker started")
+	q := l.NotificationQueue()
 	for {
-		shouldStop := func() bool {
-			item, shuttingDown := l.Queue().Get()
-			defer l.Queue().Done(item)
-			if shuttingDown {
-				logger.Info("SKR Looper worker shutting down")
-				return true
+		// FIFO drain: no self re-add. On success also push the cyclic entry to the
+		// future so the background sleeve does not immediately re-do the same work.
+		// Guarded on membership so a Remove that fired mid-flight is not undone by
+		// re-adding the SKR to the cyclic queue.
+		if l.processOne(id, q, "notification", func(kymaName string) {
+			if l.Contains(kymaName) {
+				l.CyclicQueue().Delay(kymaName)
 			}
-			kymaName := item.(string)
-			time.Sleep(util.Timing.T100ms())
-			l.handleOneSkr(id, kymaName)
-			return false
-		}()
-		if shouldStop {
+		}) {
 			break
 		}
 	}
-	logger.Info("SKR Looper return from worker")
+	logger.Info("SKR Looper notification worker returning")
+}
+
+func (l *skrLooper) cyclicWorker(id int) {
+	defer l.wg.Done()
+	logger := l.logger.WithValues("skrCyclicWorkerId", id)
+	logger.Info("SKR Looper cyclic worker started")
+	q := l.CyclicQueue()
+	for {
+		// Round-robin: re-schedule self after the minimum interval on success, but
+		// only while still a member. A Remove that fired during handle (the SKR's own
+		// "cleanup done, safe to deactivate" signal) must stop the cycle — otherwise
+		// AddAfter would re-record membership and re-activate a deactivated SKR.
+		if l.processOne(id, q, "cyclic", func(kymaName string) {
+			if l.Contains(kymaName) {
+				q.AddAfter(kymaName, l.cyclicMinInterval)
+			}
+		}) {
+			break
+		}
+	}
+	logger.Info("SKR Looper cyclic worker returning")
 }
 
 func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {

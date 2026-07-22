@@ -1,0 +1,36 @@
+# REFERENCE/SAMPLE ONLY — source of truth for the Watcher CR shape.
+#
+# cloud-manager does NOT apply this manifest. The real Watcher CR is authored in
+# the cloud-manager management-plane Helm chart
+# (github.tools.sap/kyma/management-plane-charts/cloud-manager); this file is
+# mirrored into that chart during the Phase-5 chart work.
+#
+# Watches ALL resources (current & future kinds) in the cloud-resources group on
+# every SKR. runtime-watcher's webhook is resource-agnostic; the moduleName is
+# taken from the /validate/{module} URL path, so a single wildcard webhook routes
+# the whole group to one KCP endpoint.
+apiVersion: operator.kyma-project.io/v1beta2
+kind: Watcher
+metadata:
+  name: cloud-manager
+  namespace: kcp-system
+  labels:
+    operator.kyma-project.io/managed-by: cloud-manager
+spec:
+  # Component name — becomes /validate/{manager} on SKR and /v2/{manager}/event on KCP.
+  # MUST match the componentName passed to NewNotificationListener in cloud-manager
+  # (looper.NotificationComponentName == "cloud-manager").
+  manager: cloud-manager
+  resourceToWatch:
+    group: cloud-resources.kyma-project.io
+    version: "*"          # wildcard version (supported)
+    resource: "*"         # wildcard = all resources/kinds in the group (plural resource-name wildcard)
+  field: spec             # fire on .spec changes; resources without .spec fall back to firing on any UPDATE
+  serviceInfo:
+    name: cloud-manager   # KCP Service fronting the SKREventListener port
+    namespace: kcp-system
+    port: 8083            # must match cloud-manager listener bind port (SkrRuntimeConfig.NotificationListenerAddr, default ":8083")
+  gateway:
+    selector:
+      matchLabels:
+        operator.kyma-project.io/watcher-gateway: default

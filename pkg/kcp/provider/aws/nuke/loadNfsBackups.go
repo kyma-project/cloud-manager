@@ -2,6 +2,7 @@ package nuke
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
@@ -14,7 +15,6 @@ func loadNfsBackups(ctx context.Context, st composed.State) (error, context.Cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.vault == nil {
-		logger.Info("No vault exists.")
 		return nil, ctx
 	}
 
