@@ -210,6 +210,7 @@ func TestQueueAddAfterHonorsDelay(t *testing.T) {
 	fakeClock := clocktesting.NewFakeClock(time.Now())
 	q := newQueueWithClock(fakeClock)
 
+	base := fakeClock.Waiters() // waiter baseline BEFORE AddAfter schedules its timer
 	q.AddAfter("a", 5*time.Second)
 
 	// membership is recorded immediately even while the add is pending
@@ -218,7 +219,7 @@ func TestQueueAddAfterHonorsDelay(t *testing.T) {
 	// nothing dispatchable yet
 	assert.Eventually(t, func() bool { return q.Len() == 0 }, time.Second, 10*time.Millisecond)
 
-	fakeClock.Step(5 * time.Second)
+	stepAfterWaiter(t, fakeClock, base, 5*time.Second)
 
 	// the delayed add now lands in the queue
 	assert.Eventually(t, func() bool { return q.Len() == 1 }, time.Second, 10*time.Millisecond)

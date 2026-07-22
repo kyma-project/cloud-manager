@@ -37,6 +37,20 @@ func newTestLooper(col *activeSkrCollection, handle func(id int, kymaName string
 	}
 }
 
+// stepAfterWaiter waits until a new fake-clock waiter appears beyond base — the
+// waiter count captured *before* the AddAfter we intend to fire — then steps the
+// clock. This closes the race where workqueue's waitingLoop registers its NewTimer
+// asynchronously after AddAfter returns: stepping before that timer is registered
+// leaves it stuck with a past targetTime until the 10s heartbeat, well past the
+// assert.Eventually window.
+func stepAfterWaiter(t *testing.T, clk *clocktesting.FakeClock, base int, d time.Duration) {
+	t.Helper()
+	require.Eventually(t, func() bool { return clk.Waiters() > base },
+		2*time.Second, 5*time.Millisecond,
+		"AddAfter timer was never registered on the fake clock")
+	clk.Step(d)
+}
+
 func counterValue(t *testing.T, c prometheus.Counter) float64 {
 	t.Helper()
 	m := &dto.Metric{}
@@ -104,7 +118,8 @@ func TestWorkerGateConflict(t *testing.T) {
 	// Worker B processes "k": it must lose the claim, bump the conflict counter, and
 	// AddAfter(gateConflictDelay). processOne blocks on Get, so run it in a goroutine
 	// but it should return quickly (conflict path does not call handle).
-	col.cyclicQueue.Add("k") // dirty-set dedup: still one dispatchable "k"
+	base := fakeClock.Waiters() // waiter baseline BEFORE the conflict path schedules its timer
+	col.cyclicQueue.Add("k")    // dirty-set dedup: still one dispatchable "k"
 	done := make(chan bool, 1)
 	go func() {
 		done <- l.processOne(0, col.cyclicQueue, "cyclic", func(string) {})
@@ -124,9 +139,9 @@ func TestWorkerGateConflict(t *testing.T) {
 	// The conflict requeue is a delayed add; it is not dispatchable yet.
 	assert.Eventually(t, func() bool { return col.cyclicQueue.Len() == 0 }, time.Second, 10*time.Millisecond)
 
-	// Release worker A's claim; advance the clock so the requeued "k" lands.
+	// Release worker A's claim; wait for the requeued timer to register, then advance.
 	col.Gate().Release("k")
-	fakeClock.Step(1 * time.Second)
+	stepAfterWaiter(t, fakeClock, base, 1*time.Second)
 	assert.Eventually(t, func() bool { return col.cyclicQueue.Len() == 1 }, time.Second, 10*time.Millisecond)
 
 	// Worker B retries and now wins the claim → handle runs.
