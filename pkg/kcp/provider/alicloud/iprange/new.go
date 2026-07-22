@@ -38,6 +38,7 @@ func New(sf StateFactory) composed.Action {
 				composed.NotMarkedForDeletionPredicate,
 				// create
 				rangeSplitByZones,
+				rangeCheckPrimaryOverlap,
 				rangeCheckVSwitchOverlap,
 				rangeExtendVpcAddressSpace,
 				rangeWaitBlockAssociated,

@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 
-	It("Scenario: KCP Alicloud IpRange CIDR is automatically allocated within VPC and vSwitch is created", func() {
+	It("Scenario: KCP Alicloud IpRange CIDR is automatically allocated outside VPC CIDR and vSwitch is created", func() {
 		const (
 			kymaName    = "ac-ipr-alloc-01"
 			iprangeName = "ac-ipr-alloc-iprange-01"
@@ -82,13 +82,10 @@ var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 				Should(Succeed())
 		})
 
-		By("And Then KCP IpRange has allocated status.cidr within VPC CIDR 10.180.0.0/16", func() {
+		By("And Then KCP IpRange has allocated status.cidr disjoint from VPC CIDR 10.180.0.0/16", func() {
 			Expect(iprange.Status.Cidr).NotTo(BeEmpty())
-			// Must be a /22 within 10.180.0.0/16 but not overlap workers zone 10.180.0.0/18
-			Expect(iprange.Status.Cidr).To(HavePrefix("10.180."))
 			Expect(iprange.Status.Cidr).To(HaveSuffix("/22"))
-			// Must not be in the workers range 10.180.0.0/18 (10.180.0.0 - 10.180.63.255)
-			Expect(iprange.Status.Cidr).NotTo(Equal("10.180.0.0/22"))
+			Expect(iprange.Status.Cidr).NotTo(HavePrefix("10.180."))
 		})
 
 		By("And Then KCP IpRange has status.vpcId", func() {
@@ -147,7 +144,7 @@ var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 		const (
 			kymaName    = "ac-ipr-explicit-01"
 			iprangeName = "ac-ipr-explicit-iprange-01"
-			iprangeCidr = "10.180.64.0/22"
+			iprangeCidr = "10.181.0.0/22"
 			region      = "ap-southeast-1"
 		)
 
@@ -237,7 +234,7 @@ var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 		const (
 			kymaName    = "ac-ipr-multizone-01"
 			iprangeName = "ac-ipr-multizone-iprange-01"
-			iprangeCidr = "10.180.64.0/22"
+			iprangeCidr = "10.181.0.0/22"
 			region      = "ap-southeast-1"
 		)
 
@@ -384,6 +381,94 @@ var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 
 		By("// cleanup: delete Scope", func() {
 			Expect(infra.KCP().Client().Delete(infra.Ctx(), scope)).To(Succeed())
+		})
+	})
+
+	It("Scenario: KCP Alicloud IpRange with spec.cidr overlapping VPC primary CIDR errors", func() {
+		const (
+			kymaName    = "ac-ipr-overlap-01"
+			iprangeName = "ac-ipr-overlap-iprange-01"
+			iprangeCidr = "10.180.64.0/22"
+			region      = "ap-southeast-1"
+		)
+
+		alicloudAccount := infra.AlicloudMock().NewAccount()
+		defer alicloudAccount.Delete()
+		alicloudRegion := alicloudAccount.Region(region)
+
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			kcpscope.Ignore.AddName(kymaName)
+			Eventually(CreateScopeAlicloud).
+				WithArguments(infra.Ctx(), infra, scope, alicloudAccount.Credentials().AccessKeyId, WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		vpcName := common.GardenerVpcName(scope.Namespace, kymaName)
+		alicloudVpcName := vpcName + "-vpc"
+
+		By("And Given Alicloud VPC exists", func() {
+			alicloudRegion.AddVpc("vpc-ac-04", alicloudVpcName, "10.180.0.0/16")
+			alicloudRegion.AddZone("ap-southeast-1a")
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithAlicloudRef(scope.Spec.Scope.Alicloud.AccountId, scope.Spec.Region, "vpc-ac-04", scope.Spec.Scope.Alicloud.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		iprange := &cloudcontrolv1beta1.IpRange{}
+
+		By("When KCP IpRange is created with overlapping spec.cidr", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+					WithName(iprangeName),
+					WithKcpIpRangeRemoteRef(iprangeName),
+					WithScope(kymaName),
+					WithKcpIpRangeSpecCidr(iprangeCidr),
+				).
+				Should(Succeed())
+		})
+
+		By("Then KCP IpRange has Error condition with CidrOverlap reason", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+					NewObjActions(),
+					HavingConditionReasonTrue(cloudcontrolv1beta1.ConditionTypeError, cloudcontrolv1beta1.ReasonCidrOverlap),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then no secondary CIDR block is associated to VPC", func() {
+			attr, err := alicloudRegion.IpRangeClient().DescribeVpcAttribute(infra.Ctx(), "vpc-ac-04")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(attr.SecondaryCidrBlocks).To(BeEmpty())
+		})
+
+		By("// cleanup: delete KCP IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete KCP Kyma Network", func() {
+			Expect(infra.KCP().Client().Delete(infra.Ctx(), kcpNetworkKyma)).To(Succeed())
 		})
 	})
 })
