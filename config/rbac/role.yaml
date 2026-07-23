@@ -83,6 +83,7 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - awscertificates
   - awsnfsVolumeRestores
   - awsnfsbackupschedules
   - awsnfsvolumebackups
@@ -90,6 +91,7 @@ rules:
   - awsredisclusters
   - awsredisinstances
   - awsvpcpeerings
+  - awswebacls
   - azuremanagedredis
   - azureredisClusters
   - azureredisinstances
@@ -124,6 +126,7 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - awscertificates/finalizers
   - awsnfsVolumeRestores/finalizers
   - awsnfsbackupschedules/finalizers
   - awsnfsvolumebackups/finalizers
@@ -131,6 +134,7 @@ rules:
   - awsredisclusters/finalizers
   - awsredisinstances/finalizers
   - awsvpcpeerings/finalizers
+  - awswebacls/finalizers
   - azuremanagedredis/finalizers
   - azureredisClusters/finalizers
   - azureredisinstances/finalizers
@@ -159,6 +163,7 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - awscertificates/status
   - awsnfsVolumeRestores/status
   - awsnfsbackupschedules/status
   - awsnfsvolumebackups/status
@@ -166,6 +171,7 @@ rules:
   - awsredisclusters/status
   - awsredisinstances/status
   - awsvpcpeerings/status
+  - awswebacls/status
   - azuremanagedredis/status
   - azureredisClusters/status
   - azureredisinstances/status

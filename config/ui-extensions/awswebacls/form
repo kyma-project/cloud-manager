@@ -1,0 +1,4 @@
+- path: spec.description
+  name: spec.description
+  widget: Text
+  required: false

@@ -20,6 +20,8 @@ import (
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	awscertificateclient "github.com/kyma-project/cloud-manager/pkg/skr/awscertificate/client"
+	awswebaclclient "github.com/kyma-project/cloud-manager/pkg/skr/awswebacl/client"
 )
 
 var _ Server = &server{}
@@ -174,6 +176,26 @@ func (s *server) ExposedDataProvider() awsclient.SkrClientProvider[awsexposeddat
 
 func (s *server) VpcNetworkProvider() awsclient.SkrClientProvider[awsvpcnetworkclient.Client] {
 	return func(_ context.Context, account, region, key, secret, role string) (awsvpcnetworkclient.Client, error) {
+		acc := s.GetAccount(account)
+		if acc == nil {
+			return nil, ErrNoAccount
+		}
+		return acc.Region(region), nil
+	}
+}
+
+func (s *server) WebAclProvider() awsclient.SkrClientProvider[awswebaclclient.Client] {
+	return func(_ context.Context, account, region, key, secret, role string) (awswebaclclient.Client, error) {
+		acc := s.GetAccount(account)
+		if acc == nil {
+			return nil, ErrNoAccount
+		}
+		return acc.Region(region), nil
+	}
+}
+
+func (s *server) CertificateProvider() awsclient.SkrClientProvider[awscertificateclient.Client] {
+	return func(_ context.Context, account, region, key, secret, role string) (awscertificateclient.Client, error) {
 		acc := s.GetAccount(account)
 		if acc == nil {
 			return nil, ErrNoAccount

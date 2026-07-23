@@ -1,0 +1,21 @@
+body:
+    - name: configuration
+      widget: Panel
+      source: spec
+      children:
+        - widget: ResourceRef
+          source: secretRef
+          name: spec.secretRef
+    - name: status
+      widget: Panel
+      source: status
+      children:
+        - widget: Labels
+          source: state
+          name: status.state
+        - widget: Labels
+          source: arn
+          name: status.arn
+        - widget: Labels
+          source: expirationDate
+          name: status.expirationDate

@@ -65,6 +65,31 @@ func EfsArn(region, accountId, fileSystemId string) string {
 	return a.String()
 }
 
+func Waf2Arn(region, accountId, name, id string) string {
+	a := &arn.ARN{
+		Partition: awsconfig.AwsConfig.ArnPartition,
+		Service:   "wafv2",
+		Region:    region,
+		AccountID: accountId,
+		Resource:  fmt.Sprintf("regional/webacl/%s/%s", name, id),
+	}
+	return a.String()
+}
+
+// ACM ============================================================================
+
+// CertificateArn returns string arn in form "arn:<partition>:acm:<region>:<accountId>:certificate/<certificateId>"
+func CertificateArn(region, accountId, certificateId string) string {
+	a := &arn.ARN{
+		Partition: awsconfig.AwsConfig.ArnPartition,
+		Service:   "acm",
+		Region:    region,
+		AccountID: accountId,
+		Resource:  fmt.Sprintf("certificate/%s", certificateId),
+	}
+	return a.String()
+}
+
 // Backup =====================================================================
 
 // BackupVaultArn returns string arn in form "arn:<partition>:backup:<region>:<accountId>:backup-vault:<vaultName>"
