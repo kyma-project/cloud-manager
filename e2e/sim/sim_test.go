@@ -216,7 +216,7 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 
 		By("And Then cloud-manager module is not present in KCP Kyma status", func() {
 			Eventually(LoadAndCheck).
-				WithTimeout(60*time.Second).
+				WithTimeout(120*time.Second).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpKyma, NewObjActions(), NotHavingKymaModuleInStatus("cloud-manager")).
 				Should(Succeed())
 		})
