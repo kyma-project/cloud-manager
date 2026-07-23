@@ -23,19 +23,19 @@ type iprangeTestState struct {
 func (s *iprangeTestState) ObjAsIpRange() *cloudcontrolv1beta1.IpRange {
 	return s.Obj().(*cloudcontrolv1beta1.IpRange)
 }
-func (s *iprangeTestState) ExistingCidrRanges() []string        { return nil }
-func (s *iprangeTestState) SetExistingCidrRanges(_ []string)    {}
-func (s *iprangeTestState) Network() *cloudcontrolv1beta1.Network { return nil }
-func (s *iprangeTestState) SetNetwork(_ *cloudcontrolv1beta1.Network) {}
-func (s *iprangeTestState) NetworkKey() client.ObjectKey         { return client.ObjectKey{} }
-func (s *iprangeTestState) SetNetworkKey(_ client.ObjectKey)     {}
-func (s *iprangeTestState) IsCloudManagerNetwork() bool          { return false }
-func (s *iprangeTestState) SetIsCloudManagerNetwork(_ bool)      {}
-func (s *iprangeTestState) IsKymaNetwork() bool                  { return false }
-func (s *iprangeTestState) SetIsKymaNetwork(_ bool)              {}
-func (s *iprangeTestState) KymaNetwork() *cloudcontrolv1beta1.Network { return nil }
-func (s *iprangeTestState) SetKymaNetwork(_ *cloudcontrolv1beta1.Network) {}
-func (s *iprangeTestState) KymaPeering() *cloudcontrolv1beta1.VpcPeering { return nil }
+func (s *iprangeTestState) ExistingCidrRanges() []string                     { return nil }
+func (s *iprangeTestState) SetExistingCidrRanges(_ []string)                 {}
+func (s *iprangeTestState) Network() *cloudcontrolv1beta1.Network            { return nil }
+func (s *iprangeTestState) SetNetwork(_ *cloudcontrolv1beta1.Network)        {}
+func (s *iprangeTestState) NetworkKey() client.ObjectKey                     { return client.ObjectKey{} }
+func (s *iprangeTestState) SetNetworkKey(_ client.ObjectKey)                 {}
+func (s *iprangeTestState) IsCloudManagerNetwork() bool                      { return false }
+func (s *iprangeTestState) SetIsCloudManagerNetwork(_ bool)                  {}
+func (s *iprangeTestState) IsKymaNetwork() bool                              { return false }
+func (s *iprangeTestState) SetIsKymaNetwork(_ bool)                          {}
+func (s *iprangeTestState) KymaNetwork() *cloudcontrolv1beta1.Network        { return nil }
+func (s *iprangeTestState) SetKymaNetwork(_ *cloudcontrolv1beta1.Network)    {}
+func (s *iprangeTestState) KymaPeering() *cloudcontrolv1beta1.VpcPeering     { return nil }
 func (s *iprangeTestState) SetKymaPeering(_ *cloudcontrolv1beta1.VpcPeering) {}
 
 func buildCheckOverlapState(t *testing.T, statusCidr string, vpcCidr string, secondaryCidrs []string) *State {
