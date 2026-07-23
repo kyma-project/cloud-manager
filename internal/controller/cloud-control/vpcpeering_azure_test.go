@@ -918,8 +918,6 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 
 	It("Scenario: KCP Azure VpcPeering does not sync", func() {
 
-		Skip("I'm flaky, fix me")
-
 		const (
 			kymaName            = "b982e044-3030-4f08-b4ce-1a14594284c6"
 			kcpPeeringName      = "13c0671c-bcf5-43a9-94e8-d2300e2b0325"
@@ -1109,7 +1107,8 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			// Removing ready condition to make sure that reconciliation happened
 			Expect(meta.RemoveStatusCondition(&kcpPeering.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)).To(BeTrue())
 
-			Expect(composed.PatchObjStatus(infra.Ctx(), localKcpNet, infra.KCP().Client())).
+			//Expect(infra.KCP().Client().Status().Update(infra.Ctx(), kcpPeering)).To(Succeed())
+			Expect(composed.PatchObjStatus(infra.Ctx(), kcpPeering, infra.KCP().Client())).
 				To(Succeed())
 		})
 

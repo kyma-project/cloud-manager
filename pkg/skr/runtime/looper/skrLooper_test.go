@@ -87,6 +87,7 @@ func TestCyclicWorkerReschedules(t *testing.T) {
 	col.cyclicQueue.Add("k")
 
 	// one guarded cycle: handle runs, success reAdd schedules AddAfter(60s)
+	base := fakeClock.Waiters() // waiter baseline BEFORE the reAdd schedules its timer
 	require.False(t, l.processOne(0, col.cyclicQueue, "cyclic", func(kymaName string) {
 		if l.Contains(kymaName) {
 			col.cyclicQueue.AddAfter(kymaName, l.cyclicMinInterval)
@@ -98,7 +99,7 @@ func TestCyclicWorkerReschedules(t *testing.T) {
 	assert.Never(t, func() bool { return col.cyclicQueue.Len() > 0 }, 200*time.Millisecond, 20*time.Millisecond)
 
 	// after the interval it reappears
-	fakeClock.Step(60 * time.Second)
+	stepAfterWaiter(t, fakeClock, base, 60*time.Second)
 	assert.Eventually(t, func() bool { return col.cyclicQueue.Len() == 1 }, time.Second, 10*time.Millisecond)
 
 	col.cyclicQueue.ShutDown()
