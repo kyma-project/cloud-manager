@@ -1,0 +1,6 @@
+en:
+  spec.description: Description
+  status.state: State
+  status.capacity: Capacity
+  configuration: Configuration
+  status: Status
