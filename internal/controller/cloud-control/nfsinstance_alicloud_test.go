@@ -16,7 +16,7 @@ var _ = Describe("Feature: KCP NfsInstance for Alicloud", func() {
 			kymaName    = "ac-nfs-01"
 			iprangeName = "ac-nfs-iprange-01"
 			nfsName     = "ac-nfs-instance-01"
-			iprangeCidr = "10.180.64.0/22"
+			iprangeCidr = "10.181.0.0/22"
 			region      = "ap-southeast-1"
 		)
 

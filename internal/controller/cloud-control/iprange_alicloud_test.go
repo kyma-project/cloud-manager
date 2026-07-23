@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 
-	It("Scenario: KCP Alicloud IpRange CIDR is automatically allocated within VPC and vSwitch is created", func() {
+	It("Scenario: KCP Alicloud IpRange CIDR is automatically allocated outside VPC CIDR and vSwitch is created", func() {
 		const (
 			kymaName    = "ac-ipr-alloc-01"
 			iprangeName = "ac-ipr-alloc-iprange-01"
@@ -82,13 +82,10 @@ var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 				Should(Succeed())
 		})
 
-		By("And Then KCP IpRange has allocated status.cidr within VPC CIDR 10.180.0.0/16", func() {
+		By("And Then KCP IpRange has allocated status.cidr disjoint from VPC CIDR 10.180.0.0/16", func() {
 			Expect(iprange.Status.Cidr).NotTo(BeEmpty())
-			// Must be a /22 within 10.180.0.0/16 but not overlap workers zone 10.180.0.0/18
-			Expect(iprange.Status.Cidr).To(HavePrefix("10.180."))
 			Expect(iprange.Status.Cidr).To(HaveSuffix("/22"))
-			// Must not be in the workers range 10.180.0.0/18 (10.180.0.0 - 10.180.63.255)
-			Expect(iprange.Status.Cidr).NotTo(Equal("10.180.0.0/22"))
+			Expect(iprange.Status.Cidr).NotTo(HavePrefix("10.180."))
 		})
 
 		By("And Then KCP IpRange has status.vpcId", func() {
@@ -147,7 +144,7 @@ var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 		const (
 			kymaName    = "ac-ipr-explicit-01"
 			iprangeName = "ac-ipr-explicit-iprange-01"
-			iprangeCidr = "10.180.64.0/22"
+			iprangeCidr = "10.181.0.0/22"
 			region      = "ap-southeast-1"
 		)
 
@@ -237,7 +234,7 @@ var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 		const (
 			kymaName    = "ac-ipr-multizone-01"
 			iprangeName = "ac-ipr-multizone-iprange-01"
-			iprangeCidr = "10.180.64.0/22"
+			iprangeCidr = "10.181.0.0/22"
 			region      = "ap-southeast-1"
 		)
 
@@ -386,4 +383,5 @@ var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 			Expect(infra.KCP().Client().Delete(infra.Ctx(), scope)).To(Succeed())
 		})
 	})
+
 })

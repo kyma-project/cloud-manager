@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"slices"
 	"sync"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 // VpcEntry is the stored representation of a VPC.
@@ -282,6 +284,24 @@ func (s *vpcStore) AssociateVpcCidrBlock(ctx context.Context, vpcId, cidrBlock s
 	}
 	if slices.Contains(s.vpcs[idx].SecondaryCidrBlocks, cidrBlock) {
 		return nil
+	}
+	// Mirror AliCloud's IllegalParam.SecondaryCidrBlock rejection on overlap.
+	_, block, err := net.ParseCIDR(cidrBlock)
+	if err != nil {
+		return fmt.Errorf("IllegalParam.SecondaryCidrBlock: cannot parse %s: %w", cidrBlock, err)
+	}
+	forbidden := append([]string{s.vpcs[idx].CidrBlock}, s.vpcs[idx].SecondaryCidrBlocks...)
+	for _, other := range forbidden {
+		if other == "" {
+			continue
+		}
+		_, otherBlock, err := net.ParseCIDR(other)
+		if err != nil {
+			continue
+		}
+		if util.CidrOverlap(block, otherBlock) {
+			return fmt.Errorf("IllegalParam.SecondaryCidrBlock: %s overlaps with %s", cidrBlock, other)
+		}
 	}
 	s.vpcs[idx].SecondaryCidrBlocks = append(s.vpcs[idx].SecondaryCidrBlocks, cidrBlock)
 	return nil
