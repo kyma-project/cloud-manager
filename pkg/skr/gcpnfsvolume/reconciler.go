@@ -3,9 +3,8 @@ package gcpnfsvolume
 import (
 	"context"
 
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
@@ -66,6 +65,7 @@ func (r *Reconciler) newAction() composed.Action {
 			composed.ComposeActions(
 				"restoreFromSourceBackup",
 				loadScope,
+				createBackupClient,
 				loadBackup,
 				checkRestorePermissions,
 				populateBackupUrl),
@@ -95,13 +95,12 @@ func NewReconciler(
 	scopeProvider scopeprovider.ScopeProvider,
 	kcpCluster cluster.Cluster,
 	skrCluster cluster.Cluster,
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
-	env abstractions.Environment,
+	fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient],
 ) Reconciler {
 	compSkrCluster := composed.NewStateClusterFromCluster(skrCluster)
 	compKcpCluster := composed.NewStateClusterFromCluster(kcpCluster)
 	composedStateFactory := composed.NewStateFactory(compSkrCluster)
-	stateFactory := NewStateFactory(scopeProvider, compKcpCluster, compSkrCluster, fileBackupClientProvider, env)
+	stateFactory := NewStateFactory(scopeProvider, compKcpCluster, compSkrCluster, fileBackupClientProvider)
 	return Reconciler{
 		composedStateFactory: composedStateFactory,
 		stateFactory:         stateFactory,

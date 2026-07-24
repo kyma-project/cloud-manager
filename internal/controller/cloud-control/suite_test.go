@@ -171,7 +171,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupNukeReconciler(
 		infra.KcpManager(),
 		infra.ActiveSkrCollection(),
-		infra.GcpMock().FileBackupClientProvider(),
+		infra.GcpMock2().NfsBackupV2Provider(),
 		awsnukeclient.Mock(),
 		azurenukeclient.NukeProvider(infra.AzureMock().StorageProvider()),
 		env,

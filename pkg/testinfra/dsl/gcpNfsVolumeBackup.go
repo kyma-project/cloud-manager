@@ -5,12 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
-	"google.golang.org/api/file/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -38,14 +37,36 @@ func WithGcpNfsVolume(name string) ObjAction {
 	}
 }
 
-func CreateGcpFileBackupDirectly(ctx context.Context, backupClient gcpnfsbackupclientv1.FileBackupClient, project, location string, backup *file.Backup) error {
-	_, err := backupClient.CreateFileBackup(ctx, project, location, backup.Name, backup)
-	return err
+// CreateGcpFileBackupDirectly seeds a filestore backup into the mock2 store, bypassing
+// source-instance validation. backup.Name is expected to be a bare backup id on input and is
+// rewritten in place to the full resource path (projects/{p}/locations/{l}/backups/{id}) so
+// callers can assert against the same name the nuke reconciler reports.
+func CreateGcpFileBackupDirectly(ctx context.Context, backupClient gcpnfsbackupclientv2.FileBackupClient, project, location string, backup *filestorepb.Backup) error {
+	seeder, ok := backupClient.(interface {
+		AddFilestoreBackupDirectly(*filestorepb.Backup) error
+	})
+	if !ok {
+		return fmt.Errorf("backup client %T does not support direct backup seeding", backupClient)
+	}
+	backup.Name = gcpnfsbackupclientv2.GetFileBackupPath(project, location, backup.Name)
+	return seeder.AddFilestoreBackupDirectly(backup)
 }
 
-func ListGcpFileBackups(ctx context.Context, backupClient gcpnfsbackupclientv1.FileBackupClient, project, scopeName string) ([]*file.Backup, error) {
+func ListGcpFileBackups(ctx context.Context, backupClient gcpnfsbackupclientv2.FileBackupClient, project, scopeName string) ([]*filestorepb.Backup, error) {
 	filter := gcpclient.GetSkrBackupsFilter(scopeName)
-	return backupClient.ListFilesBackups(ctx, project, filter)
+	parent := gcpnfsbackupclientv2.GetFilestoreParentPath(project, "-")
+	iter := backupClient.ListFilestoreBackups(ctx, &filestorepb.ListBackupsRequest{
+		Parent: parent,
+		Filter: filter,
+	})
+	var backups []*filestorepb.Backup
+	for b, err := range iter.All() {
+		if err != nil {
+			return nil, err
+		}
+		backups = append(backups, b)
+	}
+	return backups, nil
 }
 
 func CreateGcpNfsVolumeBackup(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.GcpNfsVolumeBackup, opts ...ObjAction) error {
