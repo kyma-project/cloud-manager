@@ -27,6 +27,9 @@ export default [
     { text: 'GcpSubnet Custom Resource', link: './resources/04-50-21-gcp-subnet' },
     { text: 'AzureRedisCluster Custom Resource', link: './resources/04-50-30-azure-redis-cluster' },
     { text: 'SapNfsVolume Custom Resource', link: './resources/04-20-50-sap-nfs-volume' },
+    { text: 'SapNfsVolumeSnapshot Custom Resource', link: './resources/04-20-51-sap-nfs-volume-snapshot' },
+    { text: 'SapNfsVolumeSnapshotSchedule Custom Resource', link: './resources/04-20-52-sap-nfs-volume-snapshot-schedule' },
+    { text: 'SapNfsVolumeSnapshotRestore Custom Resource', link: './resources/04-20-53-sap-nfs-volume-snapshot-restore' },
     { text: 'AzureVpcDnsLink Custom Resource', link: './resources/04-40-40-azure-vpc-dns-link' }
     ] },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [

@@ -30,6 +30,10 @@ This table lists the parameters of the given resource together with their descri
 | **volumeClaim.name**        | string              | The PersistentVolumeClaim name. Optional. Defaults to the name of the SapNfsVolume resource.                                                                                                                                        |
 | **volumeClaim.labels**      | map\[string\]string | The PersistentVolumeClaim labels. Optional. Defaults to nil.                                                                                                                                                                        |
 | **volumeClaim.annotations** | map\[string\]string | The PersistentVolumeClaim annotations. Optional. Defaults to nil.                                                                                                                                                                   |
+| **dataSource**              | object              | Optional. Immutable. Identifies the source to restore the volume from. Typically set by [SapNfsVolumeSnapshotRestore](./04-20-53-sap-nfs-volume-snapshot-restore.md); manual use is supported but uncommon.                         |
+| **dataSource.snapshot**     | object              | Reference to the [SapNfsVolumeSnapshot](./04-20-51-sap-nfs-volume-snapshot.md) to restore from.                                                                                                                                     |
+| **dataSource.snapshot.name** | string             | Name of the SapNfsVolumeSnapshot resource.                                                                                                                                                                                          |
+| **dataSource.snapshot.namespace** | string        | Namespace of the SapNfsVolumeSnapshot resource.                                                                                                                                                                                     |
 
 **Status:**
 
@@ -59,3 +63,9 @@ metadata:
 spec:
   capacityGb: 1000
 ```
+
+## Related Resources <!-- {docsify-ignore} -->
+
+- [SapNfsVolumeSnapshot](./04-20-51-sap-nfs-volume-snapshot.md): Create point-in-time snapshots of this volume
+- [SapNfsVolumeSnapshotSchedule](./04-20-52-sap-nfs-volume-snapshot-schedule.md): Automate snapshot creation on a schedule
+- [SapNfsVolumeSnapshotRestore](./04-20-53-sap-nfs-volume-snapshot-restore.md): Restore a volume from a snapshot
