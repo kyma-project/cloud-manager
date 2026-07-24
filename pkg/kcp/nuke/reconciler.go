@@ -61,6 +61,7 @@ func (r *nukeReconciler) newAction() composed.Action {
 		"nukeMain",
 		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.Nuke{}),
 		focal.NewWithOptionalScope(),
+		nukeDeleteOld,
 		composed.If(
 			// if Nuke not marked for deletion
 			composed.Not(composed.MarkedForDeletionPredicate),
