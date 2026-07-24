@@ -12,9 +12,7 @@ import (
 	"github.com/googleapis/gax-go/v2"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
-	gcpnfsrestoreclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v1"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
@@ -55,8 +53,6 @@ func New() Server {
 		},
 		nfsStore:          &nfsStore{},
 		serviceUsageStore: &serviceUsageStore{},
-		nfsRestoreStore:   &nfsRestoreStore{},
-		nfsBackupStore:    &nfsBackupStore{},
 		vpcPeeringStore:   &vpcPeeringStore{},
 		exposedDataStore: &exposedDataStore{
 			ipPool: util.Must(iprangeallocate.NewAddressSpace("33.0.0.0/16")),
@@ -69,8 +65,6 @@ type server struct {
 	iprangeStoreLegacy *iprangeStoreLegacy
 	*nfsStore
 	*serviceUsageStore
-	*nfsRestoreStore
-	*nfsBackupStore
 	*vpcPeeringStore
 	*exposedDataStore
 }
@@ -158,18 +152,6 @@ func (s *server) FilestoreClientProvider() client.ClientProvider[gcpnfsinstancev
 
 func (s *server) ServiceUsageClientProvider() client.ClientProvider[client.ServiceUsageClient] {
 	return func(ctx context.Context, credentialsFile string) (client.ServiceUsageClient, error) {
-		return s, nil
-	}
-}
-
-func (s *server) FilerestoreClientProvider() client.ClientProvider[gcpnfsrestoreclientv1.FileRestoreClient] {
-	return func(ctx context.Context, credentialsFile string) (gcpnfsrestoreclientv1.FileRestoreClient, error) {
-		return s.nfsRestoreStore, nil
-	}
-}
-
-func (s *server) FileBackupClientProvider() client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient] {
-	return func(ctx context.Context, credentialsFile string) (gcpnfsbackupclientv1.FileBackupClient, error) {
 		return s, nil
 	}
 }

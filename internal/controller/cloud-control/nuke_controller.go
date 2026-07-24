@@ -13,7 +13,7 @@ import (
 	azurenuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnuke "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nuke"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -25,7 +25,7 @@ import (
 func SetupNukeReconciler(
 	kcpManager manager.Manager,
 	activeSkrCollection skrruntime.ActiveSkrCollection,
-	gcpFileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
+	gcpFileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient],
 	awsNukeNfsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient],
 	azureNukeRwxClientProvider azureclient.ClientProvider[azurenukeclient.NukeRwxBackupClient],
 	env abstractions.Environment,
@@ -35,7 +35,7 @@ func SetupNukeReconciler(
 		kcpnuke.New(
 			baseStateFactory,
 			activeSkrCollection,
-			gcpnuke.NewStateFactory(gcpFileBackupClientProvider, env),
+			gcpnuke.NewStateFactory(gcpFileBackupClientProvider),
 			awsnuke.NewStateFactory(awsNukeNfsClientProvider, env),
 			azurenuke.NewStateFactory(azureNukeRwxClientProvider, env),
 		),
