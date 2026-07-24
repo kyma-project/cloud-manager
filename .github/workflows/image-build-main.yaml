@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build-image:
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@c13ba7e3e1ad2a9b6b09d69caa1786bf136d7d5f # main
     with:
       tags: ${{ github.ref_name }}
       name: cloud-manager
