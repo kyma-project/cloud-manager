@@ -27,7 +27,7 @@ jobs:
       id-token: write # This is required for requesting the JWT token
       contents: read # This is required for actions/checkout
     needs: approve-image-build
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@c13ba7e3e1ad2a9b6b09d69caa1786bf136d7d5f # main
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
       name: cloud-manager
       dockerfile: Dockerfile
