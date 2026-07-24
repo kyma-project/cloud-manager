@@ -33,10 +33,15 @@ The evaluation context is stored in the golang context and is built using the [`
 
 ## General feature names
 
-| Feature   | Description                             |
-|-----------|-----------------------------------------|
-| nfs       | All NFS Volume related features.        |
-| nfsBackup | All NFS Volume Backup related features. |
-| peering   | All VPC Peering related features.       |
-| redis     | All Redis Peering related features.     |
+| Feature           | Description                             |
+|-------------------|-----------------------------------------|
+| nfs               | All NFS Volume related features.        |
+| nfsBackup         | All NFS Volume Backup related features. |
+| peering           | All VPC Peering related features.       |
+| redis             | All Redis Instance related features.    |
+| rediscluster      | All Redis Cluster features.             |
+| azureManagedRedis | Azure Managed Redis features.           | 
+| vpcdnslink        | All VPC DNS Link related features.      |
+
+
 
