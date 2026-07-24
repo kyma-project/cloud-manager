@@ -26,15 +26,16 @@ var _ = Describe("Feature: KCP Nuke AwsNfsVolumeBackup", func() {
 
 	recoveryPointArns := []string{"", ""}
 
-	awsAccountId := "37456563728"
-
 	BeforeEach(func() {
+		awsAccount := infra.AwsMock().NewAccount()
+		DeferCleanup(awsAccount.Delete)
+
 		By("Given KCP Scope exists", func() {
 			kcpscope.Ignore.AddName(scopeName)
 			// Given Scope exists
 			Eventually(CreateScopeAws).
 				WithArguments(
-					infra.Ctx(), infra, scope, awsAccountId,
+					infra.Ctx(), infra, scope, awsAccount.AccountId(),
 					WithName(scopeName),
 				).
 				Should(Succeed())
