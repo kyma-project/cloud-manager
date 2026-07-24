@@ -277,6 +277,10 @@ var _ = Describe("Feature: KCP IpRange for Alicloud", func() {
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
 				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope, NewObjActions()).
+				Should(Succeed())
 		})
 
 		vpcName := common.GardenerVpcName(scope.Namespace, kymaName)
