@@ -15,7 +15,7 @@ The CR performs the following actions:
 Created snapshots are named using the pattern `{prefix}-{index}`, where `prefix` defaults to the schedule name and `index` is a monotonically incrementing counter.
 
 > [!NOTE]
-> Snapshot quota is shared across the entire OpenStack project. The default per-project limit is 50 snapshots across all volumes and schedules. The `maxReadySnapshots` default of `50` aligns with this limit but is applied per schedule — multiple schedules targeting different volumes in the same project compete for the same quota pool. Consider lowering `maxReadySnapshots` when running multiple schedules in the same project.
+> Snapshot quota is shared across the entire OpenStack project. The default per-project limit is 50 snapshots across all volumes and schedules. The `maxReadySnapshots` default of `50` aligns with this limit but is applied per schedule. Multiple schedules targeting different volumes in the same project compete for the same quota pool. Consider lowering `maxReadySnapshots` when running multiple schedules in the same project.
 
 ## How It Works <!-- {docsify-ignore} -->
 
@@ -40,18 +40,18 @@ This table lists the parameters of the given resource together with their descri
 | **template** | object | Yes | No | Template for the SapNfsVolumeSnapshot resources created by this schedule. |
 | **template.spec.sourceVolume** | object | Yes | No | Reference to the SapNfsVolume to snapshot. The volume must be in the `Ready` state when each snapshot is created. |
 | **template.spec.sourceVolume.name** | string | Yes | No | Name of the source SapNfsVolume. |
-| **template.spec.sourceVolume.namespace** | string | No | No | Namespace of the source `SapNfsVolume`. Defaults to the schedule's namespace if not provided. |
-| **template.labels** | map\[string\]string | No | No | Labels applied to each created `SapNfsVolumeSnapshot`. Merged with schedule-managed labels. |
-| **template.annotations** | map\[string\]string | No | No | Annotations applied to each created `SapNfsVolumeSnapshot`. |
+| **template.spec.sourceVolume.namespace** | string | No | No | Namespace of the source SapNfsVolume. Defaults to the schedule's namespace if not provided. |
+| **template.labels** | map\[string\]string | No | No | Labels applied to each created SapNfsVolumeSnapshot. Merged with schedule-managed labels. |
+| **template.annotations** | map\[string\]string | No | No | Annotations applied to each created SapNfsVolumeSnapshot. |
 | **schedule** | string | No | No | Cron expression for the recurring schedule. When empty or not specified, a single snapshot is created immediately (one-time mode) and the schedule transitions to `Done`. See [Cron syntax](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax). |
-| **prefix** | string | No | No | Prefix for the names of created `SapNfsVolumeSnapshot` resources. Defaults to the name of this schedule. |
+| **prefix** | string | No | No | Prefix for the names of created SapNfsVolumeSnapshot resources. Defaults to the name of this schedule. |
 | **startTime** | string | No | No | Time before which no snapshots are created, in RFC 3339 format (e.g., `2026-06-01T00:00:00Z`). When not set, the schedule becomes effective immediately. |
 | **endTime** | string | No | No | Time after which no new snapshots are created, in RFC 3339 format. When reached, the schedule transitions to `Done`. When not set, the schedule runs indefinitely. |
 | **maxRetentionDays** | int | No | No | Maximum number of days to retain each created snapshot. Stamped as `deleteAfterDays` on each snapshot at creation time. Defaults to `375`. Minimum: `1`. |
 | **maxReadySnapshots** | int | No | No | Maximum number of `Ready` snapshots to retain. The oldest `Ready` snapshot is deleted before creating a new one when this limit would be exceeded. Defaults to `50`. Minimum: `1`. |
 | **maxFailedSnapshots** | int | No | No | Maximum number of `Failed` snapshots to retain. Oldest snapshots beyond this count are garbage-collected. Defaults to `5`. Minimum: `1`. |
 | **suspend** | boolean | No | No | When `true`, stops the schedule from creating new snapshots and sets state to `Suspended`. Existing snapshots are not affected. Defaults to `false`. |
-| **deleteCascade** | boolean | No | No | When `true`, all `SapNfsVolumeSnapshot` resources created by this schedule are deleted when the schedule itself is deleted. When `false`, existing snapshots are preserved. Defaults to `false`. |
+| **deleteCascade** | boolean | No | No | When `true`, all SapNfsVolumeSnapshot resources created by this schedule are deleted when the schedule itself is deleted. When `false`, existing snapshots are preserved. Defaults to `false`. |
 
 **Status:**
 
@@ -140,6 +140,6 @@ spec:
 
 ## Related Resources <!-- {docsify-ignore} -->
 
-- [SapNfsVolume](./04-20-50-sap-nfs-volume.md) — The source volume to snapshot
-- [SapNfsVolumeSnapshot](./04-20-51-sap-nfs-volume-snapshot.md) — The snapshot resources created by this schedule
-- [SapNfsVolumeSnapshotRestore](./04-20-53-sap-nfs-volume-snapshot-restore.md) — Restore a volume from a snapshot
+- [SapNfsVolume](./04-20-50-sap-nfs-volume.md): The source volume to snapshot
+- [SapNfsVolumeSnapshot](./04-20-51-sap-nfs-volume-snapshot.md): The snapshot resources created by this schedule
+- [SapNfsVolumeSnapshotRestore](./04-20-53-sap-nfs-volume-snapshot-restore.md): Restore a volume from a snapshot

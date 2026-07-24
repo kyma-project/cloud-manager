@@ -52,6 +52,18 @@ The `gcpnfsvolumebackupdiscovery.cloud-resources.kyma-project.io` CRD describes 
 
 The `sapnfsvolume.cloud-resources.kyma-project.io` custom resource (CR) describes an NFS volume that can be provisioned and used as a ReadWriteMany (RWX) volume in OpenStack environments. see [SapNfsVolume Custom Resource](./04-20-50-sap-nfs-volume.md).
 
+### SapNfsVolumeSnapshot CR [**Beta feature**]
+
+The `sapnfsvolumesnapshot.cloud-resources.kyma-project.io` CRD describes a point-in-time, read-only snapshot of an SapNfsVolume. For more information, see [SapNfsVolumeSnapshot Custom Resource](./04-20-51-sap-nfs-volume-snapshot.md).
+
+### SapNfsVolumeSnapshotSchedule CR [**Beta feature**]
+
+The `sapnfsvolumesnapshotschedule.cloud-resources.kyma-project.io` CRD describes the user-defined schedule for creating SapNfsVolumeSnapshot resources at regular intervals. For more information, see [SapNfsVolumeSnapshotSchedule Custom Resource](./04-20-52-sap-nfs-volume-snapshot-schedule.md).
+
+### SapNfsVolumeSnapshotRestore CR [**Beta feature**]
+
+The `sapnfsvolumesnapshotrestore.cloud-resources.kyma-project.io` CRD describes the restore of an SapNfsVolumeSnapshot to either an existing or a new SapNfsVolume. For more information, see [SapNfsVolumeSnapshotRestore Custom Resource](./04-20-53-sap-nfs-volume-snapshot-restore.md).
+
 ## VPC Peering Resources
 
 ### AwsVpcPeering CR

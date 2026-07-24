@@ -66,6 +66,6 @@ spec:
 
 ## Related Resources <!-- {docsify-ignore} -->
 
-- [SapNfsVolumeSnapshot](./04-20-51-sap-nfs-volume-snapshot.md) — Create point-in-time snapshots of this volume
-- [SapNfsVolumeSnapshotSchedule](./04-20-52-sap-nfs-volume-snapshot-schedule.md) — Automate snapshot creation on a schedule
-- [SapNfsVolumeSnapshotRestore](./04-20-53-sap-nfs-volume-snapshot-restore.md) — Restore a volume from a snapshot
+- [SapNfsVolumeSnapshot](./04-20-51-sap-nfs-volume-snapshot.md): Create point-in-time snapshots of this volume
+- [SapNfsVolumeSnapshotSchedule](./04-20-52-sap-nfs-volume-snapshot-schedule.md): Automate snapshot creation on a schedule
+- [SapNfsVolumeSnapshotRestore](./04-20-53-sap-nfs-volume-snapshot-restore.md): Restore a volume from a snapshot

@@ -3,26 +3,26 @@
 > [!WARNING]
 > This is a beta feature available only per request for SAP-internal teams.
 
-The `sapnfsvolumesnapshotrestore.cloud-resources.kyma-project.io` namespaced custom resource (CR) triggers a one-shot restore of a [SapNfsVolumeSnapshot](./04-20-51-sap-nfs-volume-snapshot.md) to either an existing or a new [SapNfsVolume](./04-20-50-sap-nfs-volume.md).
+The `sapnfsvolumesnapshotrestore.cloud-resources.kyma-project.io` namespaced custom resource (CR) triggers a one-shot restore of an [SapNfsVolumeSnapshot](./04-20-51-sap-nfs-volume-snapshot.md) to either an existing or a new [SapNfsVolume](./04-20-50-sap-nfs-volume.md).
 
 ## Overview <!-- {docsify-ignore} -->
 
-`SapNfsVolumeSnapshotRestore` supports two restore paths, selected by the `destination` field:
+SapNfsVolumeSnapshotRestore supports two restore paths, selected by the `destination` field:
 
-- **Existing volume (in-place revert)** — reverts an existing `SapNfsVolume` to the snapshot's state using the Manila "Revert share to snapshot" API. The volume's current data is overwritten. Due to an OpenStack Manila constraint, only the **most recent** snapshot of a given volume can be used for in-place revert.
+- **Existing volume (in-place revert)**: reverts an existing SapNfsVolume to the snapshot's state using the Manila "Revert share to snapshot" API. The volume's current data is overwritten. Due to an OpenStack Manila constraint, only the **most recent** snapshot of a given volume can be used for in-place revert.
 
-- **New volume (create from snapshot)** — creates a new `SapNfsVolume` pre-populated with the snapshot's data using the Manila "create share from snapshot" capability. This path works with any snapshot, not just the most recent, and produces an independent volume.
+- **New volume (create from snapshot)**: creates a new SapNfsVolume pre-populated with the snapshot's data using the Manila "create share from snapshot" capability. This path works with any snapshot, not just the most recent, and produces an independent volume.
 
 Exactly one of `destination.existingVolume` or `destination.newVolume` must be specified.
 
-`SapNfsVolumeSnapshotRestore` is a one-shot operation. Once a restore reaches `Done` or `Failed`, it cannot be retried. Create a new resource to attempt the operation again.
+SapNfsVolumeSnapshotRestore is a one-shot operation. Once a restore reaches `Done` or `Failed`, it cannot be retried. Create a new resource to attempt the operation again.
 
 ## Prerequisites <!-- {docsify-ignore} -->
 
-Before creating a `SapNfsVolumeSnapshotRestore`, ensure that:
+Before creating an SapNfsVolumeSnapshotRestore, ensure that:
 
-- The source `SapNfsVolumeSnapshot` exists and is in `Ready` state.
-- For existing-volume restores: the destination `SapNfsVolume` exists, is in `Ready` state, and the snapshot was taken from that volume.
+- The source SapNfsVolumeSnapshot exists and is in `Ready` state.
+- For existing-volume restores: the destination SapNfsVolume exists, is in `Ready` state, and the snapshot was taken from that volume.
 - For existing-volume restores: the snapshot is the **most recent** snapshot of the destination volume.
 - For new-volume restores: the `capacityGb` in the new volume spec is **greater than or equal to** the source snapshot's size in GiB.
 
@@ -43,18 +43,18 @@ This table lists the parameters of the given resource together with their descri
 
 | Parameter | Type | Required | Immutable | Description |
 |-----------|------|----------|-----------|-------------|
-| **sourceSnapshot** | object | Yes | Yes | Reference to the `SapNfsVolumeSnapshot` to restore from. The snapshot must be in `Ready` state. |
-| **sourceSnapshot.name** | string | Yes | Yes | Name of the source `SapNfsVolumeSnapshot`. |
-| **sourceSnapshot.namespace** | string | No | Yes | Namespace of the source `SapNfsVolumeSnapshot`. Defaults to the namespace of this resource if not provided. |
+| **sourceSnapshot** | object | Yes | Yes | Reference to the SapNfsVolumeSnapshot to restore from. The snapshot must be in `Ready` state. |
+| **sourceSnapshot.name** | string | Yes | Yes | Name of the source SapNfsVolumeSnapshot. |
+| **sourceSnapshot.namespace** | string | No | Yes | Namespace of the source SapNfsVolumeSnapshot. Defaults to the namespace of this resource if not provided. |
 | **destination** | object | Yes | Yes | Specifies where to restore the snapshot data. Exactly one of `existingVolume` or `newVolume` must be set. |
-| **destination.existingVolume** | object | No* | Yes | Reference to an existing `SapNfsVolume` to revert in-place. *Required if `newVolume` is not set. |
-| **destination.existingVolume.name** | string | Yes* | Yes | Name of the destination `SapNfsVolume`. *Required if `existingVolume` is set. |
-| **destination.existingVolume.namespace** | string | No | Yes | Namespace of the destination `SapNfsVolume`. Defaults to the namespace of this resource if not provided. |
-| **destination.newVolume** | object | No* | Yes | Defines a new `SapNfsVolume` to create from the snapshot. *Required if `existingVolume` is not set. |
-| **destination.newVolume.metadata.name** | string | Yes* | Yes | Name of the new `SapNfsVolume` to create. *Required if `newVolume` is set. |
-| **destination.newVolume.metadata.namespace** | string | No | Yes | Namespace of the new `SapNfsVolume`. Defaults to the namespace of this resource if not provided. |
-| **destination.newVolume.metadata.labels** | map\[string\]string | No | Yes | Labels for the new `SapNfsVolume`. |
-| **destination.newVolume.metadata.annotations** | map\[string\]string | No | Yes | Annotations for the new `SapNfsVolume`. |
+| **destination.existingVolume** | object | No* | Yes | Reference to an existing SapNfsVolume to revert in-place. *Required if `newVolume` is not set. |
+| **destination.existingVolume.name** | string | Yes* | Yes | Name of the destination SapNfsVolume. *Required if `existingVolume` is set. |
+| **destination.existingVolume.namespace** | string | No | Yes | Namespace of the destination SapNfsVolume. Defaults to the namespace of this resource if not provided. |
+| **destination.newVolume** | object | No* | Yes | Defines a new SapNfsVolume to create from the snapshot. *Required if `existingVolume` is not set. |
+| **destination.newVolume.metadata.name** | string | Yes* | Yes | Name of the new SapNfsVolume to create. *Required if `newVolume` is set. |
+| **destination.newVolume.metadata.namespace** | string | No | Yes | Namespace of the new SapNfsVolume. Defaults to the namespace of this resource if not provided. |
+| **destination.newVolume.metadata.labels** | map\[string\]string | No | Yes | Labels for the new SapNfsVolume. |
+| **destination.newVolume.metadata.annotations** | map\[string\]string | No | Yes | Annotations for the new SapNfsVolume. |
 | **destination.newVolume.spec.capacityGb** | int | Yes* | Yes | Capacity of the new volume in GiB. Must be greater than zero and greater than or equal to the snapshot's source share size. *Required if `newVolume` is set. |
 | **destination.newVolume.spec.ipRange** | object | No | Yes | IpRange reference for the new volume. If omitted, the default IpRange is used. |
 | **destination.newVolume.spec.ipRange.name** | string | No | Yes | Name of the existing IpRange to use. |
@@ -66,8 +66,8 @@ This table lists the parameters of the given resource together with their descri
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | **state** | string | Current state of the restore operation. Possible values: `InProgress`, `Done`, `Failed`, `Error`. |
-| **revertInitiated** | boolean | Indicates that the Manila revert API call was successfully submitted. Used internally for idempotency — prevents duplicate revert calls on reconciler requeue. |
-| **createdVolume** | objectRef | Reference to the `SapNfsVolume` created during a new-volume restore. Populated only for `newVolume` destination restores. |
+| **revertInitiated** | boolean | Indicates that the Manila revert API call was successfully submitted. Used internally for idempotency to prevent duplicate revert calls on reconciler requeue. |
+| **createdVolume** | objectRef | Reference to the SapNfsVolume created during a new-volume restore. Populated only for `newVolume` destination restores. |
 | **conditions** | \[\]object | Represents the current state of the CR's conditions. |
 | **conditions.lastTransitionTime** | string | Defines the date of the last condition status change. |
 | **conditions.message** | string | Provides more details about the condition status change. |
@@ -77,10 +77,10 @@ This table lists the parameters of the given resource together with their descri
 
 ## Limitations <!-- {docsify-ignore} -->
 
-- In-place revert: most recent snapshot only: The Manila "Revert share to snapshot" API only succeeds if the referenced snapshot is the most recent one for that share. If newer snapshots exist, the restore will set state to `Failed`. To revert to an older state, delete the newer snapshots first, then create a new SapNfsVolumeSnapshotRestore.
-- In-place revert: snapshot must belong to the destination volume: Manila only allows reverting a share to its own snapshot. Cross-volume revert is not supported.
-- New-volume restore: same availability zone: The new volume is created in the same OpenStack project and availability zone as the parent share of the snapshot.
-- Immutable after completion: Once a restore reaches `Done` or `Failed`, create a new SapNfsVolumeSnapshotRestore resource to retry.
+- **In-place revert (most recent snapshot only)**: the Manila "Revert share to snapshot" API only succeeds if the referenced snapshot is the most recent one for that share. If newer snapshots exist, the restore will set state to `Failed`. To revert to an older state, delete the newer snapshots first, then create a new SapNfsVolumeSnapshotRestore.
+- **In-place revert (snapshot must belong to the destination volume)**: Manila only allows reverting a share to its own snapshot. Cross-volume revert is not supported.
+- **New-volume restore (same availability zone)**: the new volume is created in the same OpenStack project and availability zone as the parent share of the snapshot.
+- **Immutable after completion**: once a restore reaches `Done` or `Failed`, create a new SapNfsVolumeSnapshotRestore resource to retry.
 
 ## Sample Custom Resources <!-- {docsify-ignore} -->
 
@@ -150,6 +150,6 @@ spec:
 
 ## Related Resources <!-- {docsify-ignore} -->
 
-- [SapNfsVolume](./04-20-50-sap-nfs-volume.md) — The source and destination volume resource
-- [SapNfsVolumeSnapshot](./04-20-51-sap-nfs-volume-snapshot.md) — The source snapshot to restore from
-- [SapNfsVolumeSnapshotSchedule](./04-20-52-sap-nfs-volume-snapshot-schedule.md) — Automate snapshot creation on a schedule
+- [SapNfsVolume](./04-20-50-sap-nfs-volume.md): The source and destination volume resource
+- [SapNfsVolumeSnapshot](./04-20-51-sap-nfs-volume-snapshot.md): The source snapshot to restore from
+- [SapNfsVolumeSnapshotSchedule](./04-20-52-sap-nfs-volume-snapshot-schedule.md): Automate snapshot creation on a schedule
