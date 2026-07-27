@@ -81,7 +81,6 @@ import (
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
-	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
@@ -424,7 +423,6 @@ func main() {
 	if err = cloudcontrolcontroller.SetupNfsInstanceReconciler(
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
-		gcpnfsinstancev1client.NewFilestoreClientProvider(),
 		gcpnfsinstancev2client.NewFilestoreClientProvider(gcpClients),
 		sapnfsinstanceclient.NewClientProvider(),
 		alicloudnfsinstanceclient.NewClientProvider(),

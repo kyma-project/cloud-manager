@@ -12,7 +12,6 @@ import (
 	"github.com/googleapis/gax-go/v2"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering/client"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
@@ -51,7 +50,6 @@ func New() Server {
 			addressStore:    sharedAddresses,
 			connectionStore: sharedConnections,
 		},
-		nfsStore:          &nfsStore{},
 		serviceUsageStore: &serviceUsageStore{},
 		vpcPeeringStore:   &vpcPeeringStore{},
 		exposedDataStore: &exposedDataStore{
@@ -63,30 +61,9 @@ func New() Server {
 type server struct {
 	iprangeStore       *iprangeStore
 	iprangeStoreLegacy *iprangeStoreLegacy
-	*nfsStore
 	*serviceUsageStore
 	*vpcPeeringStore
 	*exposedDataStore
-}
-
-func (s *server) SetCreateError(err *googleapi.Error) {
-	s.createError = err
-}
-
-func (s *server) SetPatchError(err *googleapi.Error) {
-	s.patchError = err
-}
-
-func (s *server) SetDeleteError(err *googleapi.Error) {
-	s.deleteError = err
-}
-
-func (s *server) SetGetError(err *googleapi.Error) {
-	s.getError = err
-}
-
-func (s *server) SetOperationError(err *googleapi.Error) {
-	s.operationError = err
 }
 
 func (s *server) SetSuEnableError(err *googleapi.Error) {
@@ -141,12 +118,6 @@ func (s *server) OldComputeClientProvider() client.ClientProvider[gcpiprangeclie
 	return func(ctx context.Context, credentialsFile string) (gcpiprangeclient.OldComputeClient, error) {
 		// Return the legacy store directly - it already implements OldComputeClient interface with Discovery API types
 		return s.iprangeStoreLegacy, nil
-	}
-}
-
-func (s *server) FilestoreClientProvider() client.ClientProvider[gcpnfsinstancev1client.FilestoreClient] {
-	return func(ctx context.Context, credentialsFile string) (gcpnfsinstancev1client.FilestoreClient, error) {
-		return s, nil
 	}
 }
 

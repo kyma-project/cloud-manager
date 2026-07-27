@@ -122,7 +122,6 @@ var _ = BeforeSuite(func() {
 	Expect(SetupNfsInstanceReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().NfsInstanceSkrProvider(),
-		infra.GcpMock().FilestoreClientProvider(),
 		infra.GcpMock2().NfsInstanceV2Provider(),
 		infra.SapMock().NfsInstanceProvider(),
 		infra.AlicloudMock().NfsInstanceClientProvider(),

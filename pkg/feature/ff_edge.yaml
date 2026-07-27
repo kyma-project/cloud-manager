@@ -40,13 +40,6 @@ nfs41Gcp:
   defaultRule:
     variation: enabled
 
-gcpNfsInstanceV2:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: enabled
-
 runtimeSecurityAws:
   variations:
     enabled: true
