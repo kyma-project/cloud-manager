@@ -19,9 +19,8 @@ package cloudresources
 import (
 	"context"
 
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	"github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
@@ -34,15 +33,14 @@ import (
 )
 
 type GcpNfsVolumeReconcilerFactory struct {
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
-	env                      abstractions.Environment
+	fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
 }
 
 func (f *GcpNfsVolumeReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &GcpNfsVolumeReconciler{
 		kcpCluster: args.KcpCluster,
 		skrCluster: args.SkrCluster,
-		Reconciler: gcpnfsvolume.NewReconciler(args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.fileBackupClientProvider, f.env),
+		Reconciler: gcpnfsvolume.NewReconciler(args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.fileBackupClientProvider),
 	}
 }
 
@@ -72,13 +70,11 @@ func (r *GcpNfsVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 func SetupGcpNfsVolumeReconciler(
 	reg skrruntime.SkrRegistry,
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
-	env abstractions.Environment,
+	fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient],
 ) error {
 	return reg.Register().
 		WithFactory(&GcpNfsVolumeReconcilerFactory{
 			fileBackupClientProvider: fileBackupClientProvider,
-			env:                      env,
 		}).
 		For(&cloudresourcesv1beta1.GcpNfsVolume{}).
 		Watches(&corev1.PersistentVolume{}, gcpnfsvolume.PVEventHandler).

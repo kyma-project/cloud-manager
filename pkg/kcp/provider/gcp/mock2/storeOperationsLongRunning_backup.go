@@ -16,6 +16,9 @@ import (
 
 type FileStoreBackupOperationsConfig interface {
 	ResolveFilestoreBackupOperation(ctx context.Context, operationName string, opts ...FilestoreBackupOperationOptionCall) error
+	ResolvePendingBackupDeleteOperations(ctx context.Context) error
+	AddFilestoreBackupDirectly(backup *filestorepb.Backup) error
+	SetListFilestoreBackupsError(err error)
 }
 
 // Filestore operation resolving
@@ -77,6 +80,40 @@ func (s *store) ResolveFilestoreBackupOperation(ctx context.Context, operationNa
 	if meta != nil && meta.Verb == "delete" {
 		s.backups = s.backups.FilterNotByCallback(func(item FilterableListItem[*filestorepb.Backup]) bool {
 			return item.Name.Equal(opBuilder.relatedItemName)
+		})
+	}
+	return nil
+}
+
+// ResolvePendingBackupDeleteOperations completes every not-yet-done backup delete operation,
+// removing the corresponding backup from the store. It models GCP's asynchronous completion of
+// delete operations for fire-and-forget callers (e.g. the KCP nuke reconciler) that do not track
+// operation names. Tests drive it in an Eventually loop while the reconciler runs.
+func (s *store) ResolvePendingBackupDeleteOperations(ctx context.Context) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if util.IsContextDone(ctx) {
+		return ctx.Err()
+	}
+
+	for _, opBuilder := range s.longRunningOperations.GetItems() {
+		if opBuilder.GetOperationPB().Done {
+			continue
+		}
+		meta, err := ReadOperationMetadata[*commonpb.OperationMetadata](opBuilder)
+		if err != nil {
+			return err
+		}
+		if meta == nil || meta.Verb != "delete" {
+			continue
+		}
+		backupName := opBuilder.relatedItemName
+		if _, found := s.backups.FindByName(backupName); !found {
+			continue
+		}
+		opBuilder.WithDone(true)
+		s.backups = s.backups.FilterNotByCallback(func(item FilterableListItem[*filestorepb.Backup]) bool {
+			return item.Name.Equal(backupName)
 		})
 	}
 	return nil

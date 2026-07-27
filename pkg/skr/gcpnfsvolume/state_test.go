@@ -6,18 +6,15 @@ import (
 	"net/http/httptest"
 	"time"
 
-	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
-
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
+	gcpmock2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/mock2"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
-	"google.golang.org/api/file/v1"
-	"google.golang.org/api/option"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -217,6 +214,7 @@ type testStateFactory struct {
 	factory             StateFactory
 	skrCluster          composed.StateCluster
 	kcpCluster          composed.StateCluster
+	backupStore         gcpmock2.Store
 	gcpNfsVolume        *cloudresourcesv1beta1.GcpNfsVolume
 	deletedGcpNfsVolume *cloudresourcesv1beta1.GcpNfsVolume
 }
@@ -249,15 +247,19 @@ func newTestStateFactoryWithObject(fakeHttpServer *httptest.Server, backup *clou
 
 	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)
 
-	nfsRestoreClientBackup := NewFakeFileBackupClientProvider(fakeHttpServer)
-	env := abstractions.NewMockedEnvironment(map[string]string{"GCP_SA_JSON_KEY_PATH": "test"})
+	// The V2 backup client is backed by a mock2 store. The provider ignores the project id
+	// (unit tests use a single store) and always returns the same subscription.
+	mockServer := gcpmock2.New()
+	backupStore := mockServer.NewSubscription("test-gcpnfsvolume")
+	backupClientProvider := gcpmock2Provider(backupStore)
 
-	factory := NewStateFactory(scopeprovider.Always(kymaRef.Namespace, kymaRef.Name), kcpCluster, skrCluster, nfsRestoreClientBackup, env)
+	factory := NewStateFactory(scopeprovider.Always(kymaRef.Namespace, kymaRef.Name), kcpCluster, skrCluster, backupClientProvider)
 
 	return &testStateFactory{
 		factory:             factory,
 		skrCluster:          skrCluster,
 		kcpCluster:          kcpCluster,
+		backupStore:         backupStore,
 		gcpNfsVolume:        &gcpNfsVolume,
 		deletedGcpNfsVolume: &deletedGcpNfsVolume,
 	}, nil
@@ -286,14 +288,10 @@ func (s *State) PatchObjStatus(ctx context.Context) error {
 	return s.Cluster().K8sClient().Status().Update(ctx, s.Obj())
 }
 
-func NewFakeFileBackupClientProvider(fakeHttpServer *httptest.Server) client.ClientProvider[gcpnfsbackupclientv1.FileBackupClient] {
-	return client.NewCachedClientProvider(
-		func(ctx context.Context, credentialsFile string) (gcpnfsbackupclientv1.FileBackupClient, error) {
-			fsClient, err := file.NewService(ctx, option.WithoutAuthentication(), option.WithEndpoint(fakeHttpServer.URL))
-			if err != nil {
-				return nil, err
-			}
-			return gcpnfsbackupclientv1.NewFileBackupClient(fsClient), nil
-		},
-	)
+// gcpmock2Provider returns a V2 backup client provider that always yields the given mock2
+// store, regardless of the requested project id (unit tests use a single subscription).
+func gcpmock2Provider(store gcpmock2.Store) gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient] {
+	return func(_ string) gcpnfsbackupclientv2.FileBackupClient {
+		return store
+	}
 }

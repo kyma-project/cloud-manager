@@ -75,6 +75,10 @@ type store struct {
 	filestores *FilterableList[*filestorepb.Instance]
 	backups    *FilterableList[*filestorepb.Backup]
 
+	// listBackupsErr, when set, makes ListFilestoreBackups return an error iterator.
+	// Used by tests to exercise the backup-listing error path.
+	listBackupsErr error
+
 	redisInstances *FilterableList[*redispb.Instance]
 	redisClusters  *FilterableList[*clusterpb.Cluster]
 

@@ -300,6 +300,36 @@ func (s *store) getFilestoreBackupNoLock(backupName string) (*filestorepb.Backup
 	return b, nil
 }
 
+// AddFilestoreBackupDirectly injects a backup into the store bypassing source-instance
+// validation. Tests use it to seed backups with arbitrary labels and states (e.g. DELETING).
+// backup.Name must be a full resource path: projects/{p}/locations/{l}/backups/{n}.
+func (s *store) AddFilestoreBackupDirectly(backup *filestorepb.Backup) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	if backup == nil {
+		return gcpmeta.NewBadRequestError("backup is required")
+	}
+	backupNd, err := gcputil.ParseNameDetail(backup.Name)
+	if err != nil {
+		return gcpmeta.NewBadRequestError("invalid file store backup name: %v", err)
+	}
+	if _, found := s.backups.FindByName(backupNd); found {
+		return gcpmeta.NewBadRequestError("backup %s already exists", backupNd.String())
+	}
+
+	s.backups.Add(backup, backupNd)
+	return nil
+}
+
+// SetListFilestoreBackupsError makes ListFilestoreBackups return an error iterator carrying err.
+// Pass nil to clear. Used by tests to exercise the backup-listing error path.
+func (s *store) SetListFilestoreBackupsError(err error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	s.listBackupsErr = err
+}
+
 func (s *store) UpdateFilestoreBackup(ctx context.Context, req *filestorepb.UpdateBackupRequest, _ ...gax.CallOption) (gcpclient.ResultOperation[*filestorepb.Backup], error) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -360,6 +390,11 @@ func (s *store) ListFilestoreBackups(ctx context.Context, req *filestorepb.ListB
 	if util.IsContextDone(ctx) {
 		return &iteratorMocked[*filestorepb.Backup]{
 			err: ctx.Err(),
+		}
+	}
+	if s.listBackupsErr != nil {
+		return &iteratorMocked[*filestorepb.Backup]{
+			err: s.listBackupsErr,
 		}
 	}
 

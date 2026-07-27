@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -21,7 +22,6 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"google.golang.org/api/file/v1"
 )
 
 var _ = Describe("Feature: Cleanup orphan resources", func() {
@@ -30,14 +30,16 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 		const kymaName = "c2467bcb-ee77-46ab-8f68-f4176ed7eb27"
 
 		scope := &cloudcontrolv1beta1.Scope{}
-		backupClient, err := infra.GcpMock().FileBackupClientProvider()(infra.Ctx(), "")
-		Expect(err).To(Succeed())
+
+		gcpMock := infra.GcpMock2().NewSubscription("nuke-gcp")
+		defer gcpMock.Delete()
+		backupClient := infra.GcpMock2().NfsBackupV2Provider()(gcpMock.ProjectId())
 
 		By("Given Scope exists", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpscope.Ignore.AddName(kymaName)
 
-			Expect(CreateScopeGcp(infra.Ctx(), infra, scope, WithName(kymaName))).
+			Expect(CreateScopeGcp2(infra.Ctx(), infra, scope, gcpMock.ProjectId(), WithName(kymaName))).
 				To(Succeed(), "failed creating scope")
 		})
 
@@ -126,14 +128,14 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 		})
 
 		filestoreBackupName := "03b42b69-3ef4-44cc-aa44-fd2f1522784e"
-		filestoreBackup := &file.Backup{}
+		filestoreBackup := &filestorepb.Backup{}
 		filestoreBackup.Name = filestoreBackupName
 		filestoreBackup.Labels = map[string]string{
 			gcpclient.ScopeNameKey: scope.Name,
 			gcpclient.ManagedByKey: gcpclient.ManagedByValue,
 		}
 		anotherBackupName := "42720e1d-91f1-4b77-bee7-53e6f20a6853"
-		anotherBackup := &file.Backup{}
+		anotherBackup := &filestorepb.Backup{}
 		anotherBackup.Name = anotherBackupName
 		const anotherScopeName = "238bc7ac-7119-4d88-8a46-850819b7c981"
 		anotherBackup.Labels = map[string]string{
@@ -277,8 +279,8 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 		}
 
 		if feature.FFNukeBackupsGcp.Value(context.Background()) {
-			providerResources := map[string]file.Backup{
-				"FilestoreBackup": *filestoreBackup,
+			providerResources := map[string]*filestorepb.Backup{
+				"FilestoreBackup": filestoreBackup,
 			}
 
 			for kind, backup := range providerResources {
@@ -296,11 +298,18 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 			for kind, backup := range providerResources {
 				By(fmt.Sprintf("And Then provider resource %s does not exist", kind), func() {
 					Eventually(func() error {
+						// Nuke fires backup deletes fire-and-forget; model GCP's async
+						// delete completion so the listing eventually empties.
+						if err := gcpMock.ResolvePendingBackupDeleteOperations(infra.Ctx()); err != nil {
+							return err
+						}
 						backupsOnGcp, err := ListGcpFileBackups(infra.Ctx(), backupClient, scope.Spec.Scope.Gcp.Project, scope.Name)
 						if err != nil {
 							return err
 						}
-						Expect(backupsOnGcp).To(HaveLen(0))
+						if len(backupsOnGcp) != 0 {
+							return fmt.Errorf("expected 0 backups for scope, got %d", len(backupsOnGcp))
+						}
 						return nil
 					}).Should(Succeed())
 				})
@@ -328,7 +337,9 @@ var _ = Describe("Feature: Cleanup orphan resources", func() {
 					if err != nil {
 						return err
 					}
-					Expect(backupsOnGcp).To(HaveLen(1))
+					if len(backupsOnGcp) != 1 {
+						return fmt.Errorf("expected 1 backup for other scope, got %d", len(backupsOnGcp))
+					}
 					return nil
 				}).Should(Succeed())
 			})

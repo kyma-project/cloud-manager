@@ -4,18 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/config"
-
+	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
+	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
 	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"google.golang.org/api/file/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 )
@@ -32,9 +29,10 @@ type State struct {
 	Scope             *cloudcontrolv1beta1.Scope
 	SrcBackupFullPath string
 
-	fileBackup *file.Backup
+	fileBackup *filestorepb.Backup
 
-	fileBackupClient gcpnfsbackupclientv1.FileBackupClient
+	fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
+	fileBackupClient         gcpnfsbackupclientv2.FileBackupClient
 }
 
 type StateFactory interface {
@@ -45,15 +43,13 @@ func NewStateFactory(
 	scopeProvider scopeprovider.ScopeProvider,
 	kcpCluster composed.StateCluster,
 	skrCluster composed.StateCluster,
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient],
-	env abstractions.Environment,
+	fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient],
 ) StateFactory {
 	return &stateFactory{
 		scopeProvider:            scopeProvider,
 		kcpCluster:               kcpCluster,
 		skrCluster:               skrCluster,
 		fileBackupClientProvider: fileBackupClientProvider,
-		env:                      env,
 	}
 }
 
@@ -61,8 +57,7 @@ type stateFactory struct {
 	scopeProvider            scopeprovider.ScopeProvider
 	kcpCluster               composed.StateCluster
 	skrCluster               composed.StateCluster
-	fileBackupClientProvider gcpclient.ClientProvider[gcpnfsbackupclientv1.FileBackupClient]
-	env                      abstractions.Environment
+	fileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient]
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
@@ -71,17 +66,12 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 		return nil, err
 	}
 
-	fbc, err := f.fileBackupClientProvider(ctx, config.GcpConfig.CredentialsFile)
-	if err != nil {
-		return nil, err
-	}
-
 	return &State{
-		State:            baseState,
-		KymaRef:          kymaRef,
-		KcpCluster:       f.kcpCluster,
-		SkrCluster:       f.skrCluster,
-		fileBackupClient: fbc,
+		State:                    baseState,
+		KymaRef:                  kymaRef,
+		KcpCluster:               f.kcpCluster,
+		SkrCluster:               f.skrCluster,
+		fileBackupClientProvider: f.fileBackupClientProvider,
 	}, nil
 }
 
@@ -110,14 +100,14 @@ func (s *State) IsAllowedToRestoreBackup() bool {
 		return false
 	}
 
-	labels := s.fileBackup.Labels
+	labels := s.fileBackup.GetLabels()
 	if labels == nil {
 		return false
 	}
 
 	shootName := s.Scope.Spec.ShootName
 
-	managed, exists := s.fileBackup.Labels[gcpclient.ManagedByKey]
+	managed, exists := labels[gcpclient.ManagedByKey]
 	if !exists || managed != gcpclient.ManagedByValue {
 		return false
 	}
@@ -127,7 +117,7 @@ func (s *State) IsAllowedToRestoreBackup() bool {
 		return true
 	}
 
-	owner, exists := s.fileBackup.Labels[util.GcpLabelShootName]
+	owner, exists := labels[util.GcpLabelShootName]
 	if exists && owner == shootName {
 		return true
 	}

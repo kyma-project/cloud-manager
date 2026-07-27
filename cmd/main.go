@@ -80,7 +80,6 @@ import (
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	gcpnfsbackupclientv1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v1"
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
 	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
@@ -256,7 +255,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolume")
 		os.Exit(1)
 	}
-	if err = cloudresourcescontroller.SetupGcpNfsVolumeReconciler(skrRegistry, gcpnfsbackupclientv1.NewFileBackupClientProvider(), env); err != nil {
+	if err = cloudresourcescontroller.SetupGcpNfsVolumeReconciler(skrRegistry, gcpnfsbackupclientv2.NewFileBackupClientProvider(gcpClients)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolume")
 		os.Exit(1)
 	}
@@ -481,7 +480,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupNukeReconciler(
 		mgr,
 		activeSkrCollection,
-		gcpnfsbackupclientv1.NewFileBackupClientProvider(),
+		gcpnfsbackupclientv2.NewFileBackupClientProvider(gcpClients),
 		awsnukeclient.NewClientProvider(),
 		azurenukeclient.NewClientProvider(),
 		env,
