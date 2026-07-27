@@ -5,11 +5,11 @@ go 1.26.5
 require (
 	cloud.google.com/go/auth v0.22.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/compute v1.64.0
+	cloud.google.com/go/compute v1.65.0
 	cloud.google.com/go/filestore v1.16.0
 	cloud.google.com/go/longrunning v1.2.0
-	cloud.google.com/go/networkconnectivity v1.27.0
-	cloud.google.com/go/redis v1.24.0
+	cloud.google.com/go/networkconnectivity v1.28.0
+	cloud.google.com/go/redis v1.25.0
 	cloud.google.com/go/resourcemanager v1.16.0
 	cloud.google.com/go/securitycentermanagement v1.6.0
 	github.com/3th1nk/cidr v0.3.0
@@ -55,7 +55,7 @@ require (
 	github.com/gardener/gardener/pkg/apis v1.147.0
 	github.com/go-logr/logr v1.4.3
 	github.com/go-viper/mapstructure/v2 v2.5.0
-	github.com/google/cel-go v0.29.2
+	github.com/google/cel-go v0.30.0
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.23.0
 	github.com/gophercloud/gophercloud/v2 v2.13.0
@@ -80,7 +80,7 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.28.0
 	golang.org/x/oauth2 v0.36.0
-	google.golang.org/api v0.289.0
+	google.golang.org/api v0.290.0
 	google.golang.org/genproto v0.0.0-20260519071638-aa98bba5eb94
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800
 	google.golang.org/grpc v1.82.1
