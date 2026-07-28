@@ -129,7 +129,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		}
 
 		By("And When the remote network is tagged", func() {
-			infra.GcpMock().SetMockVpcPeeringTags(remoteProject, remoteVpc, []string{kymaVpc})
+			infra.GcpMock().SetMockVpcPeeringTags(remoteProject, remoteVpc, []string{kymaName})
 		})
 
 		By("And When the KCP VpcPeering is created", func() {
@@ -418,7 +418,7 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 		By("And Given Remote Network exists in KCP", func() {
 			// Tell Scope reconciler to ignore this kymaName
 			kcpnetwork.Ignore.AddName(remoteNetworkName)
-			infra.GcpMock().SetMockVpcPeeringTags(remoteProject, remoteVpc, []string{kymaVpc})
+			infra.GcpMock().SetMockVpcPeeringTags(remoteProject, remoteVpc, []string{kymaName})
 			Eventually(CreateObj).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), remoteNetwork, WithName(remoteNetworkName), WithScope(scope.Name), WithState("Ready")).
 				Should(Succeed())
