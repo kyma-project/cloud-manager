@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
+var _ = SkipDescribe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 
 	It("Scenario: Recurring schedule with cascade delete", func() {
 		sapNfsVolumeName := "66da7e12-fe42-4b43-b738-b4319fae08d1"

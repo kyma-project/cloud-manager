@@ -22,6 +22,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+// exposedDataRequeueInterval drives the Scope reconciler's self-scheduled requeue so the exposed
+// data loop refreshes on a steady cadence independent of Scope/GardenerCluster external events.
+// The actual cloud read is still gated by isExposedDataReadNeeded (> time.Hour); this 30m tick
+// re-samples that guard ~3x per intended ~1.5h cycle so a missed tick self-heals quickly.
+const exposedDataRequeueInterval = 30 * time.Minute
+
 type ScopeReconciler interface {
 	reconcile.Reconciler
 }
@@ -145,6 +151,9 @@ func (r *scopeReconciler) newAction() composed.Action {
 				),
 
 				conditionReady,
+				// always requeue so the exposed data loop runs on a steady cadence,
+				// independent of Scope/GardenerCluster external triggers
+				composed.StopWithRequeueDelayAction(exposedDataRequeueInterval),
 			),
 
 			composed.ComposeActionsNoName(
