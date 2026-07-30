@@ -96,3 +96,17 @@ alicloud:
       variation: enabled
   defaultRule:
     variation: disabled
+
+alicloudRedisInstance:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
+alicloudRedisCluster:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
