@@ -1,0 +1,18 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AlicloudRedisInstance
+metadata:
+  labels:
+    app.kubernetes.io/name: alicloudredisinstance
+    app.kubernetes.io/instance: alicloudredisinstance-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: alicloudredisinstance-sample
+spec:
+  # required fields
+  redisTier: "S1"
+
+  # optional fields
+  engineVersion: "7.0"
+  parameters:
+    maxmemory-policy: volatile-lru

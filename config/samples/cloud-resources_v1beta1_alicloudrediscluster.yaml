@@ -1,0 +1,19 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: AlicloudRedisCluster
+metadata:
+  labels:
+    app.kubernetes.io/name: alicloudrediscluster
+    app.kubernetes.io/instance: alicloudrediscluster-sample
+    app.kubernetes.io/part-of: cloud-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cloud-manager
+  name: alicloudrediscluster-sample
+spec:
+  # required fields
+  redisTier: "C3"
+  shardCount: 3
+
+  # optional fields
+  engineVersion: "7.0"
+  parameters:
+    maxmemory-policy: volatile-lru

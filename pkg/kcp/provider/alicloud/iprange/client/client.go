@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
@@ -285,4 +286,24 @@ func (c *alicloudClient) UnassociateVpcCidrBlock(ctx context.Context, vpcId, cid
 	}
 
 	return nil
+}
+
+// IsCidrInUseErr returns true when AliCloud rejects disassociation because the
+// CIDR block is still referenced by at least one vSwitch.
+func IsCidrInUseErr(err error) bool {
+	var sdkErr *tea.SDKError
+	if errors.As(err, &sdkErr) && sdkErr.Code != nil {
+		return tea.StringValue(sdkErr.Code) == "OperationFailed.CidrInUse"
+	}
+	return false
+}
+
+// IsVSwitchCidrOverlapErr returns true when AliCloud rejects a CreateVSwitch
+// call because the requested CIDR block overlaps with an existing vSwitch.
+func IsVSwitchCidrOverlapErr(err error) bool {
+	var sdkErr *tea.SDKError
+	if errors.As(err, &sdkErr) && sdkErr.Code != nil {
+		return tea.StringValue(sdkErr.Code) == "InvalidCidrBlock.Overlapped"
+	}
+	return false
 }

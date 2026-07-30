@@ -82,6 +82,12 @@ cp $SCRIPT_DIR/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project
 cp $SCRIPT_DIR/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_azurevpcdnslinks_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 
+# ============= AliCloud ================
+
+# AliCloud
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml             $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisinstances.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisclusters.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 
 # ============= OpenStack ================
 

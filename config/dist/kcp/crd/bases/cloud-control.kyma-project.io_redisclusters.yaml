@@ -50,6 +50,65 @@ spec:
                 maxProperties: 1
                 minProperties: 1
                 properties:
+                  alicloud:
+                    description: |-
+                      RedisClusterAlicloud describes an AliCloud r-kvstore sharded cloud-native
+                      cluster instance in the KCP RedisCluster CRD.
+
+                      InstanceClass is the per-shard AliCloud r-kvstore instance class string
+                      (e.g. "redis.logic.sharding.4g.3db.0rodb.4proxy.default"). It is resolved
+                      by the SKR reconciler from the SKR-side redisTier abstraction using a
+                      proxy-based sharding class. Proxy-based classes always have ReadOnlyCount=0.
+
+                      AliCloud does not support changing InstanceClass and ShardCount in the same
+                      ModifyInstanceSpec call. The KCP cluster pipeline uses two separate modify
+                      actions, each followed by a wait for the instance to become available. See
+                      design decision 8 in issue #2012.
+                    properties:
+                      engineVersion:
+                        default: "5.0"
+                        description: |-
+                          EngineVersion is set at creation and is immutable. Defaults to "5.0" for
+                          cluster instances (proxy-based sharding classes are available on engine 5.0
+                          in all AliCloud international regions).
+                        enum:
+                        - "5.0"
+                        - "6.0"
+                        - "7.0"
+                        type: string
+                        x-kubernetes-validations:
+                        - message: engineVersion is immutable.
+                          rule: (self == oldSelf)
+                      instanceClass:
+                        type: string
+                      parameters:
+                        additionalProperties:
+                          type: string
+                        description: Parameters are passed to the AliCloud instance
+                          as runtime configuration.
+                        type: object
+                      replicasPerShard:
+                        default: 0
+                        description: |-
+                          ReplicasPerShard is the number of read-only replicas per shard. Not
+                          applicable to proxy-based sharding classes (redis.logic.sharding.*),
+                          which always have ReadOnlyCount=0. For non-proxy classes, 0 = no replica,
+                          1 = one read-only replica per shard.
+                        format: int32
+                        maximum: 1
+                        minimum: 0
+                        type: integer
+                      shardCount:
+                        description: ShardCount is the number of data shards in the
+                          cluster.
+                        format: int32
+                        maximum: 32
+                        minimum: 1
+                        type: integer
+                    required:
+                    - instanceClass
+                    - shardCount
+                    type: object
                   aws:
                     properties:
                       authEnabled:
@@ -193,6 +252,8 @@ spec:
             description: RedisClusterStatus defines the observed state of RedisCluster
             properties:
               authString:
+                type: string
+              caCert:
                 type: string
               conditions:
                 description: List of status conditions to indicate the status of a

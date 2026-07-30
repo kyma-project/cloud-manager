@@ -10,6 +10,10 @@ func vSwitchDelete(ctx context.Context, st composed.State) (error, context.Conte
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	if len(state.vSwitches) == 0 {
+		return nil, ctx
+	}
+
 	for _, vsw := range state.vSwitches {
 		logger.Info("Deleting AliCloud VSwitch for IpRange", "vSwitchId", vsw.VSwitchId)
 
@@ -20,5 +24,7 @@ func vSwitchDelete(ctx context.Context, st composed.State) (error, context.Conte
 		}
 	}
 
-	return nil, ctx
+	// Requeue to let AliCloud finish removing vSwitches before attempting
+	// to disassociate the VPC address space (which fails if vSwitches still exist).
+	return composed.StopWithRequeue, ctx
 }

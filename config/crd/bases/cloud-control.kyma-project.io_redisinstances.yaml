@@ -50,6 +50,53 @@ spec:
                 maxProperties: 1
                 minProperties: 1
                 properties:
+                  alicloud:
+                    description: |-
+                      RedisInstanceAlicloud describes an AliCloud r-kvstore standard (non-sharded)
+                      HA instance in the KCP RedisInstance CRD.
+
+                      InstanceClass is the AliCloud r-kvstore instance class string
+                      (e.g. "tair.rdb.4g"). It is resolved by the SKR reconciler from the
+                      SKR-side redisTier abstraction.
+
+                      ReadOnlyCount encodes the service tier for classes that support it:
+                      0 = S tier (no read-only replica), 1 = P tier (one read-only replica).
+                      Note: some class families (tair.rdb.*, redis.amber.master.*) silently
+                      ignore ReadOnlyCount; the instance reconciler skips drift checks for these.
+                      Both InstanceClass and ReadOnlyCount are mutable via ModifyInstanceSpec.
+                    properties:
+                      engineVersion:
+                        default: "5.0"
+                        description: |-
+                          EngineVersion is set at creation and is immutable. Defaults to "5.0" for
+                          standard instances (broad class compatibility).
+                        enum:
+                        - "5.0"
+                        - "6.0"
+                        - "7.0"
+                        type: string
+                        x-kubernetes-validations:
+                        - message: engineVersion is immutable.
+                          rule: (self == oldSelf)
+                      instanceClass:
+                        type: string
+                      parameters:
+                        additionalProperties:
+                          type: string
+                        description: Parameters are passed to the AliCloud instance
+                          as runtime configuration.
+                        type: object
+                      readOnlyCount:
+                        default: 0
+                        description: 'ReadOnlyCount: 0 = S tier (no read replica),
+                          1 = P tier (one read replica).'
+                        format: int32
+                        maximum: 1
+                        minimum: 0
+                        type: integer
+                    required:
+                    - instanceClass
+                    type: object
                   aws:
                     properties:
                       authEnabled:
