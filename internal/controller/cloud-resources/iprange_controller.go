@@ -128,6 +128,26 @@ func SetupIpRangeReconciler(reg skrruntime.SkrRegistry) error {
 		}
 		return []string{redisCluster.Spec.IpRange.Name}
 	})
+	reg.IndexField(&cloudresourcesv1beta1.AlicloudRedisInstance{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
+		redisInstance, ok := object.(*cloudresourcesv1beta1.AlicloudRedisInstance)
+		if !ok {
+			return []string{}
+		}
+		if redisInstance.Spec.IpRange.Name == "" {
+			return []string{"default"}
+		}
+		return []string{redisInstance.Spec.IpRange.Name}
+	})
+	reg.IndexField(&cloudresourcesv1beta1.AlicloudRedisCluster{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
+		redisCluster, ok := object.(*cloudresourcesv1beta1.AlicloudRedisCluster)
+		if !ok {
+			return []string{}
+		}
+		if redisCluster.Spec.IpRange.Name == "" {
+			return []string{"default"}
+		}
+		return []string{redisCluster.Spec.IpRange.Name}
+	})
 
 	return reg.Register().
 		WithFactory(&IpRangeReconcilerFactory{}).

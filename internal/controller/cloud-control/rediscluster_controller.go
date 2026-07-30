@@ -23,6 +23,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	alicloudrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/rediscluster"
+	alicloudredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/rediscluster/client"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/rediscluster"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
@@ -39,6 +41,7 @@ func SetupRedisClusterReconciler(
 	kcpManager manager.Manager,
 	awsFilestoreClientProvider awsclient.SkrClientProvider[awsclient.ElastiCacheClient],
 	azureRedisCacheClientProvider azureclient.ClientProvider[azureredisclusterclient.Client],
+	alicloudRedisClusterClientProvider alicloudredisclusterclient.ClientProvider,
 	env abstractions.Environment,
 ) error {
 	return NewRedisClusterReconciler(
@@ -47,6 +50,7 @@ func SetupRedisClusterReconciler(
 			focal.NewStateFactory(),
 			awsrediscluster.NewStateFactory(awsFilestoreClientProvider),
 			azurerediscluster.NewStateFactory(azureRedisCacheClientProvider),
+			alicloudrediscluster.NewStateFactory(alicloudRedisClusterClientProvider),
 		),
 	).SetupWithManager(kcpManager)
 }

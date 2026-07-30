@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 
+	alicloudredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance"
 	awsredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/redisinstance"
 	azureredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/redisinstance"
 	gcpredisinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/redisinstance"
@@ -27,9 +28,10 @@ type redisInstanceReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	gcpStateFactory   gcpredisinstance.StateFactory
-	azureStateFactory azureredisinstance.StateFactory
-	awsStateFactory   awsredisinstance.StateFactory
+	gcpStateFactory      gcpredisinstance.StateFactory
+	azureStateFactory    azureredisinstance.StateFactory
+	awsStateFactory      awsredisinstance.StateFactory
+	alicloudStateFactory alicloudredisinstance.StateFactory
 }
 
 func NewRedisInstanceReconciler(
@@ -38,6 +40,7 @@ func NewRedisInstanceReconciler(
 	gcpStateFactory gcpredisinstance.StateFactory,
 	azureStateFactory azureredisinstance.StateFactory,
 	awsStateFactory awsredisinstance.StateFactory,
+	alicloudStateFactory alicloudredisinstance.StateFactory,
 ) RedisInstanceReconciler {
 	return &redisInstanceReconciler{
 		composedStateFactory: composedStateFactory,
@@ -45,6 +48,7 @@ func NewRedisInstanceReconciler(
 		gcpStateFactory:      gcpStateFactory,
 		azureStateFactory:    azureStateFactory,
 		awsStateFactory:      awsStateFactory,
+		alicloudStateFactory: alicloudStateFactory,
 	}
 }
 
@@ -76,6 +80,15 @@ func (r *redisInstanceReconciler) newAction() composed.Action {
 					composed.NewCase(statewithscope.GcpProviderPredicate, gcpredisinstance.New(r.gcpStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azureredisinstance.New(r.azureStateFactory)),
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsredisinstance.New(r.awsStateFactory)),
+					composed.NewCase(
+						composed.All(
+							statewithscope.AlicloudProviderPredicate,
+							func(ctx context.Context, st composed.State) bool {
+								return feature.AlicloudRedisInstance.Value(ctx)
+							},
+						),
+						alicloudredisinstance.New(r.alicloudStateFactory),
+					),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

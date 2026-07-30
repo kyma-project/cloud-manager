@@ -54,6 +54,18 @@ func WithIpRange(ipRangeName string) ObjAction {
 				}
 				return
 			}
+			if x, ok := obj.(*cloudresourcesv1beta1.AlicloudRedisInstance); ok {
+				if x.Spec.IpRange.Name == "" {
+					x.Spec.IpRange.Name = ipRangeName
+				}
+				return
+			}
+			if x, ok := obj.(*cloudresourcesv1beta1.AlicloudRedisCluster); ok {
+				if x.Spec.IpRange.Name == "" {
+					x.Spec.IpRange.Name = ipRangeName
+				}
+				return
+			}
 
 			// KCP
 			if x, ok := obj.(*cloudcontrolv1beta1.NfsInstance); ok {
