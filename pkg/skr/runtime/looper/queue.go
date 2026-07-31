@@ -114,6 +114,15 @@ func (q *Queue) Len() int {
 	return q.wq.Len()
 }
 
+// MembershipLen returns the number of active SKRs (members), independent of how many
+// are queued/ready right now. This is the fleet size used to decide the cyclic re-add
+// mode; it differs from Len(), which reports the workqueue's ready depth.
+func (q *Queue) MembershipLen() int {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return len(q.membership)
+}
+
 func (q *Queue) Contains(item string) bool {
 	q.mu.Lock()
 	defer q.mu.Unlock()

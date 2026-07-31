@@ -27,13 +27,17 @@ func newTestCollection(c clock.WithTicker) *activeSkrCollection {
 
 // newTestLooper wires a skrLooper over col with a stub handler and small delays. It
 // does NOT set managerFactory/registry — handleFn replaces handleOneSkr so no live
-// per-SKR manager is created.
+// per-SKR manager is created. cyclicImmediateThreshold defaults to 1 (FIFO re-add for
+// any non-empty fleet); tests needing the AddAfter small-fleet path pass their own
+// reAdd closure to processOne, or set the field explicitly.
 func newTestLooper(col *activeSkrCollection, handle func(id int, kymaName string)) *skrLooper {
 	return &skrLooper{
 		ActiveSkrCollectionAdmin: col,
 		handleFn:                 handle,
 		cyclicMinInterval:        60 * time.Second,
 		gateConflictDelay:        1 * time.Second,
+		reconcileTimeout:         10 * time.Second,
+		cyclicImmediateThreshold: 1,
 	}
 }
 
