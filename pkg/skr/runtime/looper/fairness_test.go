@@ -2,8 +2,6 @@ package looper
 
 import (
 	"fmt"
-	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -81,16 +79,24 @@ func TestCyclicReAddDropsNonMember(t *testing.T) {
 }
 
 // TestCyclicFairDistribution is the regression for the unfair-distribution bug. With
-// FIFO re-add (fleet >= threshold) and randomized-but-deterministic per-SKR handle
-// durations (simulating the 100ms-vs-10s completion-time variance that random-walked
-// each SKR's readyAt-heap position under the old AddAfter re-add), every SKR must be
-// connected a near-equal number of times across many cycles. assertTracked checks the
-// relative spread (max-min)/min < 0.2. Under the old AddAfter-into-readyAt-heap re-add
-// this spread was unbounded; FIFO keeps it tight.
+// FIFO re-add (fleet >= threshold) the cyclic queue is a strict round-robin: an SKR
+// re-added on Done goes to the tail, so a single worker draining the queue serves every
+// SKR exactly once per pass, in the same order, every pass — regardless of how long any
+// individual handle takes. After exactly K complete passes every SKR has been served
+// exactly K times (rel spread == 0). Under the old AddAfter-into-readyAt-heap re-add,
+// per-cycle completion-time variance random-walked each SKR's heap position and the
+// spread was unbounded; this test would have caught that.
+//
+// A single worker is used deliberately: it makes the rotation order fully deterministic
+// so the assertion has no dependence on goroutine scheduling (the earlier multi-worker
+// version was flaky — stopping on a shared connect budget cut the final pass off at a
+// scheduling-dependent point, leaving a large, nondeterministic spread). Handle-time
+// variance is simulated per call but, by the FIFO invariant, must not affect fairness.
 func TestCyclicFairDistribution(t *testing.T) {
 	col := newTestCollection(clocktesting.NewFakeClock(time.Now()))
 
 	const fleet = 60
+	const passes = 20
 	items := make([]string, fleet)
 	for i := range items {
 		items[i] = fmt.Sprintf("kyma-%03d", i)
@@ -99,25 +105,20 @@ func TestCyclicFairDistribution(t *testing.T) {
 	freq := newFreqType()
 	freq.reset(items...)
 
-	// Per-SKR deterministic handle "cost": a busy no-op whose iteration count varies
-	// widely by a per-key call counter, simulating the 100ms-vs-10s completion-time
-	// variance that random-walked each SKR's readyAt-heap position under the old AddAfter
-	// re-add. No wall-clock sleeps — deterministic and fast. Under FIFO re-add this
-	// variance must NOT affect rotation fairness.
-	var mu sync.Mutex
+	// Per-SKR handle "cost": a busy no-op whose iteration count varies by a per-key call
+	// counter, simulating the 100ms-vs-10s completion-time variance that random-walked
+	// each SKR's readyAt-heap position under the old AddAfter re-add. Under FIFO re-add
+	// this variance must NOT affect rotation fairness.
 	callCount := map[string]int{}
 	handle := func(_ int, kymaName string) {
-		mu.Lock()
 		n := callCount[kymaName]
 		callCount[kymaName] = n + 1
-		mu.Unlock()
-		// vary the work: even calls cheap, odd calls ~100x heavier
 		iters := 1000
 		if n%2 == 1 {
-			iters = 100000
+			iters = 100000 // odd calls ~100x heavier
 		}
 		sink := 0
-		for i := 0; i < iters; i++ {
+		for i := range iters {
 			sink += i
 		}
 		_ = sink
@@ -130,27 +131,14 @@ func TestCyclicFairDistribution(t *testing.T) {
 		col.cyclicQueue.Add(it)
 	}
 
-	// Run a fixed number of guarded cycles across several workers, using the PRODUCTION
-	// re-add (l.cyclicReAdd) so the test covers shipped logic. Stop after enough total
-	// connects that each SKR should have been served many times in a fair rotation.
-	const workers = 8
-	const totalConnects = fleet * 20
-	var remaining int64 = totalConnects
-	var wg sync.WaitGroup
-	wg.Add(workers)
-	for w := range workers {
-		go func(id int) {
-			defer wg.Done()
-			for atomic.AddInt64(&remaining, -1) >= 0 {
-				if l.processOne(id, col.cyclicQueue, "cyclic", l.cyclicReAdd) {
-					return // shutting down
-				}
-			}
-		}(w)
+	// Single worker, exactly fleet*passes guarded cycles → K complete FIFO passes, using
+	// the PRODUCTION re-add (l.cyclicReAdd) so shipped logic is covered. Deterministic:
+	// no concurrency, no clock steps (FIFO re-add is immediate Add, not AddAfter).
+	for range fleet * passes {
+		require.False(t, l.processOne(0, col.cyclicQueue, "cyclic", l.cyclicReAdd))
 	}
-	wg.Wait()
 
-	// Fairness: every tracked SKR was served, and the spread is tight.
+	// Fairness: every SKR was served, and the spread is tight (in fact exactly `passes`).
 	freq.assertTracked(t, fleet)
 
 	col.cyclicQueue.ShutDown()
