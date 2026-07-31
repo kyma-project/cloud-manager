@@ -192,7 +192,13 @@ func New(activeSkrCollection ActiveSkrCollectionAdmin, kcpCluster cluster.Cluste
 		cyclicConcurrency:        skrruntimeconfig.SkrRuntimeConfig.CyclicConcurrency,
 		cyclicMinInterval:        skrruntimeconfig.SkrRuntimeConfig.SkrCyclicMinInterval,
 		gateConflictDelay:        skrruntimeconfig.SkrRuntimeConfig.SkrGateConflictRetryDelay,
+		reconcileTimeout:         debugged.When(15*time.Minute, 10*time.Second),
 	}
+	// A full cyclic pass takes ~ fleet*reconcileTimeout/cyclicConcurrency; the
+	// cyclicMinInterval floor is only binding while the fleet is below
+	// cyclicConcurrency*cyclicMinInterval/reconcileTimeout. At/above that size FIFO
+	// re-add is used (fair, order-stable); below it the AddAfter floor is kept.
+	l.cyclicImmediateThreshold = max(1, int(time.Duration(l.cyclicConcurrency)*l.cyclicMinInterval/l.reconcileTimeout))
 	l.handleFn = l.handleOneSkr
 	return l
 }
@@ -210,6 +216,19 @@ type skrLooper struct {
 	cyclicConcurrency       int
 	cyclicMinInterval       time.Duration
 	gateConflictDelay       time.Duration
+
+	// reconcileTimeout bounds a single handleOneSkr connection (10s normally, 15min
+	// under the `debug` build tag). It is also the denominator of the cyclic re-add
+	// threshold, so keeping it in one field keeps the two in sync.
+	reconcileTimeout time.Duration
+
+	// cyclicImmediateThreshold is the active-fleet size at/above which the cyclic
+	// worker re-adds an SKR immediately (FIFO) instead of via AddAfter(cyclicMinInterval).
+	// Above it a full cyclic pass already exceeds cyclicMinInterval, so the interval
+	// floor is non-binding and the AddAfter readyAt heap only destabilises rotation
+	// order; FIFO gives a stable, fair round-robin. Below it the floor still protects
+	// a small fleet from hot-looping. Derived in New() from the worker count.
+	cyclicImmediateThreshold int
 
 	// handleFn is the per-SKR handler; defaults to handleOneSkr and is injectable
 	// so the pool logic is testable without a live per-SKR manager (envtest).
@@ -233,6 +252,7 @@ func (l *skrLooper) Start(ctx context.Context) error {
 		"SkrLooper started",
 		"notificationConcurrency", l.notificationConcurrency,
 		"cyclicConcurrency", l.cyclicConcurrency,
+		"cyclicImmediateThreshold", l.cyclicImmediateThreshold,
 	)
 	l.ctx = ctx
 
@@ -294,10 +314,11 @@ func (l *skrLooper) notificationWorker(id int) {
 	logger := l.logger.WithValues("skrNotificationWorkerId", id)
 	logger.Info("SKR Looper notification worker started")
 	q := l.NotificationQueue()
-	// FIFO drain: no self re-add. On success also push the cyclic entry to the
-	// future so the background sleeve does not immediately re-do the same work.
-	// Guarded on membership so a Remove that fired mid-flight is not undone by
-	// re-adding the SKR to the cyclic queue.
+	// FIFO drain: no self re-add. On success also push the cyclic entry so the
+	// background sleeve does not immediately re-do the same work. Guarded on membership
+	// so a Remove that fired mid-flight is not undone by re-adding to the cyclic queue.
+	// Delay is Add(), i.e. move-to-tail — consistent with the cyclic worker's FIFO re-add
+	// path: both mean "take a normal turn at the back of the cyclic rotation".
 	for !l.processOne(id, q, "notification", func(kymaName string) {
 		if l.Contains(kymaName) {
 			l.CyclicQueue().Delay(kymaName)
@@ -312,17 +333,33 @@ func (l *skrLooper) cyclicWorker(id int) {
 	logger := l.logger.WithValues("skrCyclicWorkerId", id)
 	logger.Info("SKR Looper cyclic worker started")
 	q := l.CyclicQueue()
-	// Round-robin: re-schedule self after the minimum interval on success, but
-	// only while still a member. A Remove that fired during handle (the SKR's own
-	// "cleanup done, safe to deactivate" signal) must stop the cycle — otherwise
-	// AddAfter would re-record membership and re-activate a deactivated SKR.
-	for !l.processOne(id, q, "cyclic", func(kymaName string) {
-		if l.Contains(kymaName) {
-			q.AddAfter(kymaName, l.cyclicMinInterval)
-		}
-	}) {
+	for !l.processOne(id, q, "cyclic", l.cyclicReAdd) {
 	}
 	logger.Info("SKR Looper cyclic worker returning")
+}
+
+// cyclicReAdd re-schedules an SKR for the next cyclic pass on the success path. It
+// re-adds only while still a member: a Remove that fired during handle (the SKR's own
+// "cleanup done, safe to deactivate" signal) must stop the cycle — otherwise re-adding
+// would re-record membership and re-activate a deactivated SKR.
+//
+// Above cyclicImmediateThreshold the fleet is large enough that a full pass already
+// exceeds cyclicMinInterval, so the interval floor is non-binding and routing through
+// AddAfter's readyAt heap only destabilises rotation order (per-cycle handle-time
+// variance random-walks each SKR's heap position, causing unfair, oscillating cadence).
+// Immediate FIFO Add appends to the ready tail and preserves rotation order across
+// cycles → stable, fair round-robin. Below the threshold the small fleet keeps the
+// AddAfter floor so a handful of SKRs is not hot-looped.
+func (l *skrLooper) cyclicReAdd(kymaName string) {
+	q := l.CyclicQueue()
+	if !l.Contains(kymaName) {
+		return
+	}
+	if q.MembershipLen() >= l.cyclicImmediateThreshold {
+		q.Add(kymaName)
+	} else {
+		q.AddAfter(kymaName, l.cyclicMinInterval)
+	}
 }
 
 func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
@@ -363,12 +400,8 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 	logger = feature.DecorateLogger(ctx, logger)
 
 	runner := NewSkrRunner(l.registry, l.kcpCluster, l.skrStatusSaver, kymaName)
-	to := 10 * time.Second
-	if debugged.Debugged {
-		to = 15 * time.Minute
-	}
 
-	err = runner.Run(ctx, skrManager, WithTimeout(to), WithProvider(scope.Spec.Provider))
+	err = runner.Run(ctx, skrManager, WithTimeout(l.reconcileTimeout), WithProvider(scope.Spec.Provider))
 	if util.IgnoreContextCanceledAndDeadlineExceeded(err) != nil {
 		if !apierrors.IsTimeout(err) {
 			logger.Error(err, "Error running SKR Runner")
