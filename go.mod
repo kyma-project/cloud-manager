@@ -48,11 +48,11 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gardener/gardener v1.146.3
 	github.com/gardener/gardener-extension-provider-alicloud v1.72.0
-	github.com/gardener/gardener-extension-provider-aws v1.72.0
+	github.com/gardener/gardener-extension-provider-aws v1.72.1
 	github.com/gardener/gardener-extension-provider-azure v1.62.1
 	github.com/gardener/gardener-extension-provider-gcp v1.53.4
 	github.com/gardener/gardener-extension-provider-openstack v1.57.0
-	github.com/gardener/gardener/pkg/apis v1.147.1
+	github.com/gardener/gardener/pkg/apis v1.147.2
 	github.com/go-logr/logr v1.4.4
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.30.0
