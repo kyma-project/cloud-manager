@@ -35,6 +35,7 @@ cyclicConcurrency: 2
 cyclicMinInterval: 90s
 notificationListenerAddr: ":9090"
 gateConflictRetryDelay: 2s
+workerTimeout: 5m
 `), 0644)
 	assert.NoError(t, err, "error creating key file")
 
@@ -53,6 +54,7 @@ gateConflictRetryDelay: 2s
 	assert.Equal(t, 90*time.Second, SkrRuntimeConfig.SkrCyclicMinInterval)
 	assert.Equal(t, ":9090", SkrRuntimeConfig.NotificationListenerAddr)
 	assert.Equal(t, 2*time.Second, SkrRuntimeConfig.SkrGateConflictRetryDelay)
+	assert.Equal(t, 5*time.Minute, SkrRuntimeConfig.SkrWorkerTimeout)
 }
 
 func TestConfigDefaults(t *testing.T) {
@@ -73,6 +75,7 @@ func TestConfigDefaults(t *testing.T) {
 	assert.Equal(t, 60*time.Second, SkrRuntimeConfig.SkrCyclicMinInterval)
 	assert.Equal(t, ":8083", SkrRuntimeConfig.NotificationListenerAddr)
 	assert.Equal(t, 1*time.Second, SkrRuntimeConfig.SkrGateConflictRetryDelay)
+	assert.Equal(t, 10*time.Minute, SkrRuntimeConfig.SkrWorkerTimeout)
 }
 
 func TestGateConflictRetryDelayFloor(t *testing.T) {
@@ -132,4 +135,22 @@ func TestGateConflictRetryDelayFromEnv(t *testing.T) {
 	cfg.Read()
 
 	assert.Equal(t, 3*time.Second, SkrRuntimeConfig.SkrGateConflictRetryDelay)
+}
+
+func TestWorkerTimeoutFromEnv(t *testing.T) {
+	dir, err := os.MkdirTemp("", "cloud-manager-config")
+	assert.NoError(t, err, "error creating tmp dir")
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
+	env := abstractions.NewMockedEnvironment(map[string]string{
+		"SKR_RUNTIME_WORKER_TIMEOUT": "15m",
+	})
+	cfg := config.NewConfig(env)
+	cfg.BaseDir(dir)
+	InitConfig(cfg)
+	cfg.Read()
+
+	assert.Equal(t, 15*time.Minute, SkrRuntimeConfig.SkrWorkerTimeout)
 }

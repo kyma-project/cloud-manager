@@ -10,6 +10,7 @@ type ConfigStruct struct {
 	SkrLockingLeaseDuration   time.Duration
 	SkrCyclicMinInterval      time.Duration
 	SkrGateConflictRetryDelay time.Duration
+	SkrWorkerTimeout          time.Duration
 
 	ProvidersDir         string `yaml:"providersDir,omitempty" json:"providersDir,omitempty"`
 	Concurrency          int    `yaml:"concurrency,omitempty" json:"concurrency,omitempty"`
@@ -23,6 +24,7 @@ type ConfigStruct struct {
 	CyclicMinInterval        string `yaml:"cyclicMinInterval,omitempty" json:"cyclicMinInterval,omitempty"`
 	NotificationListenerAddr string `yaml:"notificationListenerAddr,omitempty" json:"notificationListenerAddr,omitempty"`
 	GateConflictRetryDelay   string `yaml:"gateConflictRetryDelay,omitempty" json:"gateConflictRetryDelay,omitempty"`
+	WorkerTimeout            string `yaml:"workerTimeout,omitempty" json:"workerTimeout,omitempty"`
 }
 
 func (c *ConfigStruct) AfterConfigLoaded() {
@@ -54,6 +56,8 @@ func (c *ConfigStruct) AfterConfigLoaded() {
 
 	// Floor-clamp the gate conflict retry delay to avoid a busy-requeue loop on misconfiguration.
 	c.SkrGateConflictRetryDelay = max(GetDuration(c.GateConflictRetryDelay, 1*time.Second), 200*time.Millisecond)
+
+	c.SkrWorkerTimeout = GetDuration(c.WorkerTimeout, 10*time.Minute)
 
 	if c.NotificationListenerAddr == "" {
 		c.NotificationListenerAddr = ":8083"
@@ -102,6 +106,11 @@ func InitConfig(cfg config.Config) {
 			"gateConflictRetryDelay",
 			config.DefaultScalar("1s"),
 			config.SourceEnv("SKR_RUNTIME_GATE_CONFLICT_RETRY_DELAY"),
+		),
+		config.Path(
+			"workerTimeout",
+			config.DefaultScalar("10m"),
+			config.SourceEnv("SKR_RUNTIME_WORKER_TIMEOUT"),
 		),
 		config.SourceFile("skrRuntime.yaml"),
 		config.Bind(SkrRuntimeConfig),

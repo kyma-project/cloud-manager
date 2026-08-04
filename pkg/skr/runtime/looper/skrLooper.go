@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -193,6 +194,7 @@ func New(activeSkrCollection ActiveSkrCollectionAdmin, kcpCluster cluster.Cluste
 		cyclicMinInterval:        skrruntimeconfig.SkrRuntimeConfig.SkrCyclicMinInterval,
 		gateConflictDelay:        skrruntimeconfig.SkrRuntimeConfig.SkrGateConflictRetryDelay,
 		reconcileTimeout:         debugged.When(15*time.Minute, 10*time.Second),
+		workerTimeout:            skrruntimeconfig.SkrRuntimeConfig.SkrWorkerTimeout,
 	}
 	// A full cyclic pass takes ~ fleet*reconcileTimeout/cyclicConcurrency; the
 	// cyclicMinInterval floor is only binding while the fleet is below
@@ -221,6 +223,12 @@ type skrLooper struct {
 	// under the `debug` build tag). It is also the denominator of the cyclic re-add
 	// threshold, so keeping it in one field keeps the two in sync.
 	reconcileTimeout time.Duration
+
+	// workerTimeout is the overall budget for one handleOneSkr call (pre-amble + Start).
+	// It is configurable via skrRuntime.workerTimeout / SKR_RUNTIME_WORKER_TIMEOUT.
+	// A generous default (10m) protects against permanently stalled workers without
+	// cutting off slow-but-progressing SKRs.
+	workerTimeout time.Duration
 
 	// cyclicImmediateThreshold is the active-fleet size at/above which the cyclic
 	// worker re-adds an SKR immediately (FIFO) instead of via AddAfter(cyclicMinInterval).
@@ -370,8 +378,25 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 		"skrWorkerId", skrWorkerId,
 		"kyma", kymaName,
 	)
-	ctx := composed.LoggerIntoCtx(l.ctx, logger)
+
+	workerCtx, cancel := context.WithTimeout(l.ctx, l.workerTimeout)
+	defer cancel()
+
+	tTotal := time.Now()
+	defer func() {
+		timedOut := strconv.FormatBool(workerCtx.Err() != nil)
+		metrics.SkrLooperConnectTotalSeconds.WithLabelValues(kymaName, timedOut).Observe(time.Since(tTotal).Seconds())
+		if workerCtx.Err() != nil {
+			logger.Error(nil, "SKR worker timeout exceeded", "workerTimeout", l.workerTimeout)
+		}
+	}()
+
+	ctx := composed.LoggerIntoCtx(workerCtx, logger)
+
+	tCM := time.Now()
 	skrManager, scope, err := l.managerFactory.CreateManager(ctx, kymaName, logger)
+	metrics.SkrLooperConnectPhaseSeconds.WithLabelValues("create_manager", kymaName, strconv.FormatBool(ctx.Err() != nil)).Observe(time.Since(tCM).Seconds())
+
 	if errors.Is(err, context.DeadlineExceeded) {
 		return
 	}
