@@ -44,6 +44,25 @@ var (
 		Name: "cloud_manager_skr_looper_notification_dropped_total",
 		Help: "Total runtime-watcher notifications dropped due to a missing or invalid runtime-id",
 	})
+
+	// SkrLooperConnectPhaseSeconds measures per-SKR connect time broken down by phase.
+	// Phases: create_manager (KCP secret+Scope reads), skr_readiness (SKR readiness check;
+	// zero if skipped), installer (manifest apply + status save; zero if skipped),
+	// pre_start (scopeProvider + indexers + controllers setup), start (skrManager.Start, ~10s floor).
+	// Labels: phase, kyma, timeout (true/false).
+	SkrLooperConnectPhaseSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "cloud_manager_skr_looper_connect_phase_seconds",
+		Help:    "Duration of each SKR connect phase (create_manager, skr_readiness, installer, pre_start, start) per kyma name and timeout outcome",
+		Buckets: []float64{1, 2, 5, 10, 20, 30, 60, 120, 300},
+	}, []string{"phase", "kyma", "timeout"})
+
+	// SkrLooperConnectTotalSeconds measures the total wall-clock time for one SKR connect.
+	// Labels: kyma, timeout (true/false).
+	SkrLooperConnectTotalSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "cloud_manager_skr_looper_connect_total_seconds",
+		Help:    "Total duration of one SKR connect (pre-amble + Start) per kyma name and timeout outcome",
+		Buckets: []float64{1, 2, 5, 10, 20, 30, 60, 120, 300},
+	}, []string{"kyma", "timeout"})
 )
 
 func init() {
@@ -54,5 +73,7 @@ func init() {
 		SkrLooperGateInFlight,
 		SkrLooperNotificationReceivedTotal,
 		SkrLooperNotificationDroppedTotal,
+		SkrLooperConnectPhaseSeconds,
+		SkrLooperConnectTotalSeconds,
 	)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/metrics"
 	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
@@ -118,15 +120,19 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			r.saveSkrStatus(ctx, skrStatus, logger)
 		}()
 
+		tReadiness := time.Now()
 		if options.checkSkrReadiness {
 			chkr := &checker{logger: logger}
 			if !chkr.IsReady(ctx, skrManager) {
+				metrics.SkrLooperConnectPhaseSeconds.WithLabelValues("skr_readiness", r.kymaName, strconv.FormatBool(ctx.Err() != nil)).Observe(time.Since(tReadiness).Seconds())
 				logger.Info("SKR cluster is not ready")
 				skrStatus.NotReady()
 				return
 			}
 		}
+		metrics.SkrLooperConnectPhaseSeconds.WithLabelValues("skr_readiness", r.kymaName, strconv.FormatBool(ctx.Err() != nil)).Observe(time.Since(tReadiness).Seconds())
 
+		tInstaller := time.Now()
 		if options.provider != nil {
 			//logger.Info(fmt.Sprintf("This SKR cluster is started with provider option %s", ptr.Deref(options.provider, "")))
 			instlr := &installer{
@@ -136,6 +142,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			}
 			err = instlr.Handle(ctx, string(ptr.Deref(options.provider, "")), ToCluster(skrManager))
 			if err != nil {
+				metrics.SkrLooperConnectPhaseSeconds.WithLabelValues("installer", r.kymaName, strconv.FormatBool(ctx.Err() != nil)).Observe(time.Since(tInstaller).Seconds())
 				err = fmt.Errorf("installer error: %w", err)
 				if util.IgnoreContextCanceledAndDeadlineExceeded(err) != nil {
 					logger.
@@ -145,7 +152,9 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				return
 			}
 		}
+		metrics.SkrLooperConnectPhaseSeconds.WithLabelValues("installer", r.kymaName, strconv.FormatBool(ctx.Err() != nil)).Observe(time.Since(tInstaller).Seconds())
 
+		tPreStart := time.Now()
 		r.scopeProvider = scopeprovider.New().
 			Add(scopeprovider.Always(skrManager.KymaRef().Namespace, skrManager.KymaRef().Name))
 
@@ -241,6 +250,8 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		// executed it will not save it again
 		r.saveSkrStatus(ctx, skrStatus, logger)
 
+		metrics.SkrLooperConnectPhaseSeconds.WithLabelValues("pre_start", r.kymaName, strconv.FormatBool(ctx.Err() != nil)).Observe(time.Since(tPreStart).Seconds())
+
 		if options.timeout == 0 {
 			options.timeout = time.Minute
 		}
@@ -251,7 +262,9 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 		}
 		defer cancel()
 
+		tStart := time.Now()
 		err = skrManager.Start(timeoutCtx)
+		metrics.SkrLooperConnectPhaseSeconds.WithLabelValues("start", r.kymaName, strconv.FormatBool(timeoutCtx.Err() != nil)).Observe(time.Since(tStart).Seconds())
 		if err != nil {
 			skrManager.GetLogger().Error(err, "error starting SKR manager")
 		}
