@@ -65,4 +65,9 @@ resources:
 - cloud-control_vpcnetwork_viewer_role.yaml
 - cloud-control_skrstatus_admin_role.yaml
 - cloud-control_skrstatus_editor_role.yaml
-- cloud-control_skrstatus_viewer_role.yaml
+- cloud-control_skrstatus_viewer_role.yaml# For each CRD, "Editor" and "Viewer" roles are scaffolded by
+# default, aiding admins in cluster management. Those roles are
+# not used by the cloud-manager itself. You can comment the following lines
+# if you do not want those helpers be installed with your Project.
+- cloud-resources_awswebacl_editor_role.yaml
+- cloud-resources_awswebacl_viewer_role.yaml
