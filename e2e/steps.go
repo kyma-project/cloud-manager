@@ -1056,8 +1056,8 @@ func tfModuleIsApplied(ctx context.Context, alias string, tbl *godog.Table) (con
 		return ctx, fmt.Errorf("failed to apply tf workspace: %w", err)
 	}
 
-	// Sleeping for 5m to allow cloud-init to finish
-	time.Sleep(5 * time.Minute)
+	// Sleeping for 10m to allow cloud-init to finish
+	time.Sleep(10 * time.Minute)
 
 	return ctx, nil
 }
