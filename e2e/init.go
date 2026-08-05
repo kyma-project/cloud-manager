@@ -80,6 +80,8 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^debug wait "([^"]*)"$`, debugWait)
 	ctx.Step(`^debug log (true|false)$`, debugLog)
 
+	ctx.Step(`^waiting ([0-9]+(?:\.[0-9]+)?(?:ns|us|µs|ms|s|m|h))(?:\s+for\s+(.*))?$`, waitingDuration)
+
 	ctx.Step(`^eventually timeout is "([^"]*)"$`, eventuallyTimeoutIs)
 
 	ctx.Step(`^there is shared SKR with "(AWS|Azure|GCP|OpenStack)" provider$`, thereIsSharedSKRWithProvider)

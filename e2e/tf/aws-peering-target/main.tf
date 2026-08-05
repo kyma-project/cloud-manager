@@ -57,7 +57,7 @@ resource "aws_security_group" "sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["10.250.0.0/16"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -97,6 +97,7 @@ resource "aws_instance" "vm" {
   vpc_security_group_ids      = [aws_security_group.sg.id]
   associate_public_ip_address = true
   user_data                   = file("${path.module}/cloud-init-docker.txt")
+  user_data_replace_on_change = true
 
   tags = {
     Name = local.vm_name

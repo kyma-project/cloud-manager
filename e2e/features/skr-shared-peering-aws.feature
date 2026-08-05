@@ -17,6 +17,14 @@ Feature: AwsVpcPeering feature
       | vpc_cidr           | "10.3.0.0/16"               |
       | public_subnet_cidr | "10.3.124.0/24"             |
 
+    And waiting 10m for cloud-init to complete
+
+    # Verify cloud-init completed and HTTP service is ready via public endpoint
+    Then HTTP operation succeeds:
+      | Url            | http://${tf.public_ip_address}/base64/SFRUUEJJTiBpcyBhd2Vzb21l |
+      | ExpectedOutput | HTTPBIN is awesome                                               |
+      | MaxTime        | 120                                                              |
+
     When resource "peering" is created:
       """
       apiVersion: cloud-resources.kyma-project.io/v1beta1

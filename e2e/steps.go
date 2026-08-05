@@ -42,6 +42,28 @@ func debugLog(ctx context.Context, onOff string) (context.Context, error) {
 	return ctx, nil
 }
 
+func waitingDuration(ctx context.Context, durationStr string, reason string) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+
+	d, err := time.ParseDuration(durationStr)
+	if err != nil {
+		return ctx, fmt.Errorf("error parsing duration %q: %w", durationStr, err)
+	}
+
+	if reason != "" {
+		session.Logger(ctx).Info("waiting", "duration", d.String(), "reason", reason)
+	} else {
+		session.Logger(ctx).Info("waiting", "duration", d.String())
+	}
+
+	time.Sleep(d)
+
+	return ctx, nil
+}
+
 func debugWait(ctx context.Context, suffix string) (context.Context, error) {
 	session := GetCurrentScenarioSession(ctx)
 	if session == nil {
@@ -1055,9 +1077,6 @@ func tfModuleIsApplied(ctx context.Context, alias string, tbl *godog.Table) (con
 	if err := ws.Apply(); err != nil {
 		return ctx, fmt.Errorf("failed to apply tf workspace: %w", err)
 	}
-
-	// Sleeping for 10m to allow cloud-init to finish
-	time.Sleep(10 * time.Minute)
 
 	return ctx, nil
 }

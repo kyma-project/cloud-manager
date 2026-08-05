@@ -2,6 +2,10 @@ output "private_ip_address" {
   value = aws_instance.vm.private_ip
 }
 
+output "public_ip_address" {
+  value = aws_instance.vm.public_ip
+}
+
 output "vpc_id" {
   value = aws_vpc.main.id
 }

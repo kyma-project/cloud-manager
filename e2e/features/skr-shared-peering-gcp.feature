@@ -17,6 +17,8 @@ Feature: GcpVpcPeering feature
       | name                          | "${_.peering.name}"          |
       | subnet_cidr                   | "192.168.255.0/25"           |
 
+    And waiting 5m for cloud-init to complete
+
     When resource "peering" is created:
       """
       apiVersion: cloud-resources.kyma-project.io/v1beta1
