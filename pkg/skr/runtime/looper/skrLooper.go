@@ -21,6 +21,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util/debugged"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/utils/clock"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -43,13 +44,23 @@ type ActiveSkrCollectionAdmin interface {
 	CyclicQueue() *Queue
 	NotificationQueue() *Queue
 	Gate() *SkrGate
+	// recordNotifConnect stamps a completed notification-driven connect for the per-SKR
+	// notification rate limiter. Called by the notification worker on the success path.
+	recordNotifConnect(kymaName string)
 }
 
 func NewActiveSkrCollection() ActiveSkrCollectionAdmin {
+	return newActiveSkrCollectionWithClock(clock.RealClock{})
+}
+
+func newActiveSkrCollectionWithClock(c clock.Clock) *activeSkrCollection {
 	return &activeSkrCollection{
-		cyclicQueue: NewQueue(),
-		notifQueue:  NewQueue(),
-		gate:        NewSkrGate(),
+		cyclicQueue:      NewQueue(),
+		notifQueue:       NewQueue(),
+		gate:             NewSkrGate(),
+		clock:            c,
+		notifMinInterval: skrruntimeconfig.SkrRuntimeConfig.SkrNotifMinInterval,
+		lastNotifConnect: map[string]time.Time{},
 	}
 }
 
@@ -63,6 +74,15 @@ type activeSkrCollection struct {
 	notifQueue *Queue
 	// gate guarantees at most one live manager per SKR across both sleeves.
 	gate *SkrGate
+
+	// Per-SKR notification rate limiter. Notifications arriving within notifMinInterval of
+	// an SKR's last notification-driven connect are dropped (coalesced). This bounds how
+	// often a hot SKR can occupy the notification sleeve; it never affects the cyclic sleeve,
+	// so every SKR still gets its fair cyclic turn. clock is injectable for tests.
+	clock            clock.Clock
+	notifMinInterval time.Duration
+	notifMu          sync.Mutex
+	lastNotifConnect map[string]time.Time
 }
 
 func (l *activeSkrCollection) CyclicQueue() *Queue       { return l.cyclicQueue }
@@ -118,7 +138,29 @@ func (l *activeSkrCollection) Notify(kymaName string) {
 	if !l.cyclicQueue.Contains(kymaName) {
 		return
 	}
+	// Per-SKR rate limit: drop (coalesce) notifications arriving within notifMinInterval of
+	// this SKR's last notification-driven connect. A disabled/zero interval lets all through.
+	if l.notifMinInterval > 0 {
+		l.notifMu.Lock()
+		last, ok := l.lastNotifConnect[kymaName]
+		tooSoon := ok && l.clock.Now().Sub(last) < l.notifMinInterval
+		l.notifMu.Unlock()
+		if tooSoon {
+			metrics.SkrLooperNotificationRateLimitedTotal.WithLabelValues(kymaName).Inc()
+			return
+		}
+	}
 	l.notifQueue.Add(kymaName)
+}
+
+// recordNotifConnect stamps the time an SKR's notification-driven connect completed. The
+// next Notify within notifMinInterval of this stamp is coalesced. Keyed on connect time
+// (not receive time) so a burst collapses to one connect per interval, after which the SKR
+// flows down the cyclic rotation normally until the limiter reopens.
+func (l *activeSkrCollection) recordNotifConnect(kymaName string) {
+	l.notifMu.Lock()
+	l.lastNotifConnect[kymaName] = l.clock.Now()
+	l.notifMu.Unlock()
 }
 
 func (l *activeSkrCollection) RemoveScope(ctx context.Context, scope *cloudcontrolv1beta1.Scope) {
@@ -192,7 +234,6 @@ func New(activeSkrCollection ActiveSkrCollectionAdmin, kcpCluster cluster.Cluste
 		notificationConcurrency:  skrruntimeconfig.SkrRuntimeConfig.NotificationConcurrency,
 		cyclicConcurrency:        skrruntimeconfig.SkrRuntimeConfig.CyclicConcurrency,
 		cyclicMinInterval:        skrruntimeconfig.SkrRuntimeConfig.SkrCyclicMinInterval,
-		gateConflictDelay:        skrruntimeconfig.SkrRuntimeConfig.SkrGateConflictRetryDelay,
 		reconcileTimeout:         debugged.When(15*time.Minute, 10*time.Second),
 		workerTimeout:            skrruntimeconfig.SkrRuntimeConfig.SkrWorkerTimeout,
 	}
@@ -217,7 +258,6 @@ type skrLooper struct {
 	notificationConcurrency int
 	cyclicConcurrency       int
 	cyclicMinInterval       time.Duration
-	gateConflictDelay       time.Duration
 
 	// reconcileTimeout bounds a single handleOneSkr connection (10s normally, 15min
 	// under the `debug` build tag). It is also the denominator of the cyclic re-add
@@ -286,8 +326,10 @@ func (l *skrLooper) Start(ctx context.Context) error {
 // processOne performs one guarded Get→handle cycle on q. It returns true when the
 // queue is shutting down (the worker should exit). reAdd runs on the SUCCESS path
 // only (after handle returns) — never on the shutdown, membership-drop, or gate-
-// conflict paths.
-func (l *skrLooper) processOne(id int, q *Queue, sleeve string, reAdd func(kymaName string)) bool {
+// conflict paths. onConflict runs when the cross-sleeve gate is already held by the
+// other sleeve; it is sleeve-specific (see the worker call sites) and must NOT reorder
+// the cyclic queue (that is what caused the fairness long-tail).
+func (l *skrLooper) processOne(id int, q *Queue, sleeve string, reAdd func(kymaName string), onConflict func(item string)) bool {
 	item, shuttingDown := q.Get()
 	if shuttingDown {
 		return true
@@ -305,7 +347,7 @@ func (l *skrLooper) processOne(id int, q *Queue, sleeve string, reAdd func(kymaN
 		// Guard 2 — cross-sleeve single-manager guarantee.
 		if !l.Gate().TryClaim(item) {
 			metrics.SkrLooperGateConflictTotal.WithLabelValues(sleeve).Inc()
-			q.AddAfter(item, l.gateConflictDelay) // flat delay, to back; move on
+			onConflict(item) // sleeve-specific; must not reshuffle the cyclic tail
 			return
 		}
 		defer l.Gate().Release(item) // INNER defer — runs before q.Done (LIFO)
@@ -322,16 +364,15 @@ func (l *skrLooper) notificationWorker(id int) {
 	logger := l.logger.WithValues("skrNotificationWorkerId", id)
 	logger.Info("SKR Looper notification worker started")
 	q := l.NotificationQueue()
-	// FIFO drain: no self re-add. On success also push the cyclic entry so the
-	// background sleeve does not immediately re-do the same work. Guarded on membership
-	// so a Remove that fired mid-flight is not undone by re-adding to the cyclic queue.
-	// Delay is Add(), i.e. move-to-tail — consistent with the cyclic worker's FIFO re-add
-	// path: both mean "take a normal turn at the back of the cyclic rotation".
-	for !l.processOne(id, q, "notification", func(kymaName string) {
-		if l.Contains(kymaName) {
-			l.CyclicQueue().Delay(kymaName)
-		}
-	}) {
+	// FIFO drain: no self re-add, and — crucially — NO write into the cyclic queue.
+	// The SKR stays a cyclic member at its existing rotation position; this connect was
+	// an out-of-band bonus. Re-adding into the cyclic queue here (the old
+	// CyclicQueue().Delay call) invoked the workqueue's Touch for an already-queued item,
+	// moving it to the tail. Hot SKRs firing constant notifications thereby leapfrogged the
+	// genuine tail-dwellers on every notification, starving a fixed set of SKRs. On success
+	// only stamp the notification-connect time for the per-SKR rate limiter (no cyclic write).
+	// On gate conflict the SKR is already being served → drop (no re-add).
+	for !l.processOne(id, q, "notification", l.recordNotifConnect, func(string) {}) {
 	}
 	logger.Info("SKR Looper notification worker returning")
 }
@@ -341,7 +382,12 @@ func (l *skrLooper) cyclicWorker(id int) {
 	logger := l.logger.WithValues("skrCyclicWorkerId", id)
 	logger.Info("SKR Looper cyclic worker started")
 	q := l.CyclicQueue()
-	for !l.processOne(id, q, "cyclic", l.cyclicReAdd) {
+	// On gate conflict the SKR is currently being served by the notification sleeve. It
+	// must stay in rotation, so re-add it — but via a plain FIFO tail append, NOT
+	// AddAfter (which routes through the delaying/readyAt path and reshuffles order). At
+	// this point the item is in the workqueue's `processing` set (it was Get'd), so this
+	// Add only marks it dirty; the outer q.Done then Pushes it to the tail with no Touch.
+	for !l.processOne(id, q, "cyclic", l.cyclicReAdd, q.Add) {
 	}
 	logger.Info("SKR Looper cyclic worker returning")
 }

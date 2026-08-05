@@ -135,7 +135,7 @@ func TestCyclicFairDistribution(t *testing.T) {
 	// the PRODUCTION re-add (l.cyclicReAdd) so shipped logic is covered. Deterministic:
 	// no concurrency, no clock steps (FIFO re-add is immediate Add, not AddAfter).
 	for range fleet * passes {
-		require.False(t, l.processOne(0, col.cyclicQueue, "cyclic", l.cyclicReAdd))
+		require.False(t, l.processOne(0, col.cyclicQueue, "cyclic", l.cyclicReAdd, col.cyclicQueue.Add))
 	}
 
 	// Fairness: every SKR was served, and the spread is tight (in fact exactly `passes`).
@@ -179,4 +179,62 @@ func drainQueue(t *testing.T, q *Queue, n int) {
 		require.False(t, shutdown)
 		q.Done(item)
 	}
+}
+
+// TestNotificationGateConflictDrops: when a notification worker Gets an SKR that is already
+// being served (gate held by the cyclic sleeve), it must DROP it — no re-add to either
+// queue — because the in-flight connect already satisfies the notification intent.
+func TestNotificationGateConflictDrops(t *testing.T) {
+	col := newTestCollection(clocktesting.NewFakeClock(time.Now()))
+	calls := 0
+	l := newTestLooper(col, func(_ int, _ string) { calls++ })
+
+	// SKR active; simulate the cyclic sleeve holding the gate.
+	col.cyclicQueue.Add("k")
+	col.notifQueue.Add("k")
+	require.True(t, col.Gate().TryClaim("k"))
+
+	// Notification worker processes "k" with production callbacks (reAdd = stamp connect,
+	// onConflict = drop). It must hit the conflict, not call handle, and not re-queue.
+	require.False(t, l.processOne(0, col.notifQueue, "notification", l.recordNotifConnect, func(string) {}))
+
+	assert.Equal(t, 0, calls, "handle must not run on the notification conflict path")
+	assert.Equal(t, 0, col.notifQueue.Len(), "notification conflict must drop (no notif re-add)")
+	// Cyclic queue: only the original membership entry, nothing extra pushed by the conflict.
+	assert.True(t, col.Contains("k"))
+
+	col.Gate().Release("k")
+	col.cyclicQueue.ShutDown()
+	col.notifQueue.ShutDown()
+}
+
+// TestNotifyRateLimitCoalesces: two notifications for the same SKR within notifMinInterval
+// of its last notification connect are coalesced — only the first enqueues; the second is
+// dropped and counted. After the interval elapses, a notification enqueues again.
+func TestNotifyRateLimitCoalesces(t *testing.T) {
+	fakeClock := clocktesting.NewFakeClock(time.Now())
+	col := newTestCollection(fakeClock)
+	col.notifMinInterval = 10 * time.Second
+
+	col.cyclicQueue.Add("k") // must be an active member for Notify to accept
+
+	// First notification enqueues (no prior connect stamp).
+	col.Notify("k")
+	assert.Equal(t, 1, col.notifQueue.Len(), "first notification must enqueue")
+
+	// Simulate the notification connect completing (stamps last-connect = now).
+	drainQueue(t, col.notifQueue, 1)
+	col.recordNotifConnect("k")
+
+	// A notification within the interval is coalesced (dropped).
+	col.Notify("k")
+	assert.Equal(t, 0, col.notifQueue.Len(), "notification within notifMinInterval must be dropped")
+
+	// After the interval, a notification enqueues again.
+	fakeClock.Step(11 * time.Second)
+	col.Notify("k")
+	assert.Equal(t, 1, col.notifQueue.Len(), "notification after notifMinInterval must enqueue")
+
+	col.cyclicQueue.ShutDown()
+	col.notifQueue.ShutDown()
 }

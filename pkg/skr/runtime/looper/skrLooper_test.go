@@ -92,7 +92,7 @@ func TestCyclicWorkerReschedules(t *testing.T) {
 		if l.Contains(kymaName) {
 			col.cyclicQueue.AddAfter(kymaName, l.cyclicMinInterval)
 		}
-	}))
+	}, col.cyclicQueue.Add))
 	assert.Equal(t, int64(1), atomic.LoadInt64(&calls))
 
 	// not dispatchable yet
@@ -106,31 +106,42 @@ func TestCyclicWorkerReschedules(t *testing.T) {
 	col.notifQueue.ShutDown()
 }
 
-// TestNotificationWorkerFifoDrainAndDelaysCyclic: the notification worker does NOT
-// re-add itself (FIFO drain), and on success it Delays the cyclic entry.
-func TestNotificationWorkerFifoDrainAndDelaysCyclic(t *testing.T) {
+// TestNotificationWorkerFifoDrainDoesNotTouchCyclic: the notification worker drains its
+// own queue FIFO (no self re-add) and MUST NOT write into the cyclic queue. Re-adding
+// into cyclic here (the old CyclicQueue().Delay) moved an already-queued SKR to the tail
+// via the workqueue's Touch, letting hot SKRs leapfrog the rotation and starve the tail.
+func TestNotificationWorkerFifoDrainDoesNotTouchCyclic(t *testing.T) {
 	fakeClock := clocktesting.NewFakeClock(time.Now())
 	col := newTestCollection(fakeClock)
 
 	var calls int64
 	l := newTestLooper(col, func(_ int, _ string) { atomic.AddInt64(&calls, 1) })
 
-	// SKR is active (in cyclic queue) and has a pending notification.
+	// Seed the cyclic queue with a fixed order; "k" sits behind others waiting its turn.
+	col.cyclicQueue.Add("a")
 	col.cyclicQueue.Add("k")
+	col.cyclicQueue.Add("b")
 	col.notifQueue.Add("k")
 
-	require.False(t, l.processOne(0, col.notifQueue, "notification", func(kymaName string) {
-		if l.Contains(kymaName) {
-			col.CyclicQueue().Delay(kymaName)
-		}
-	}))
+	// Process the notification for "k" with the PRODUCTION notification callbacks:
+	// reAdd is a no-op and onConflict drops — neither touches the cyclic queue.
+	require.False(t, l.processOne(0, col.notifQueue, "notification", func(string) {}, func(string) {}))
 	assert.Equal(t, int64(1), atomic.LoadInt64(&calls))
 
 	// FIFO drain: the notification queue is empty (no self re-add).
 	assert.Equal(t, 0, col.notifQueue.Len())
 
-	// The cyclic entry was Delay'd (Add) — still present/dispatchable.
-	assert.True(t, col.Contains("k"))
+	// The cyclic queue is untouched: "k" kept its position (was NOT moved to the tail),
+	// so the head is still "a". Drain and assert the original order a, k, b.
+	require.Equal(t, 3, col.cyclicQueue.Len(), "notification must not add/remove cyclic entries")
+	got := make([]string, 0, 3)
+	for range 3 {
+		item, shutdown := col.cyclicQueue.Get()
+		require.False(t, shutdown)
+		got = append(got, item)
+		col.cyclicQueue.Done(item)
+	}
+	assert.Equal(t, []string{"a", "k", "b"}, got, "notification must not reorder the cyclic queue")
 
 	col.cyclicQueue.ShutDown()
 	col.notifQueue.ShutDown()
