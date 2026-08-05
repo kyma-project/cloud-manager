@@ -45,6 +45,15 @@ var (
 		Help: "Total runtime-watcher notifications dropped due to a missing or invalid runtime-id",
 	})
 
+	// SkrLooperNotificationRateLimitedTotal counts notifications dropped (coalesced) by the
+	// per-SKR notifMinInterval rate limit: a notification arrived within the minimum interval
+	// of that SKR's last notification-driven connect. High values for a kyma indicate a hot SKR
+	// whose notification rate is being throttled to protect cyclic-sleeve fairness.
+	SkrLooperNotificationRateLimitedTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "cloud_manager_skr_looper_notification_rate_limited_total",
+		Help: "Total runtime-watcher notifications dropped by the per-SKR notifMinInterval rate limit, per kyma name",
+	}, []string{"kyma"})
+
 	// SkrLooperConnectPhaseSeconds measures per-SKR connect time broken down by phase.
 	// Phases: create_manager (KCP secret+Scope reads), skr_readiness (SKR readiness check;
 	// zero if skipped), installer (manifest apply + status save; zero if skipped),
@@ -73,6 +82,7 @@ func init() {
 		SkrLooperGateInFlight,
 		SkrLooperNotificationReceivedTotal,
 		SkrLooperNotificationDroppedTotal,
+		SkrLooperNotificationRateLimitedTotal,
 		SkrLooperConnectPhaseSeconds,
 		SkrLooperConnectTotalSeconds,
 	)
