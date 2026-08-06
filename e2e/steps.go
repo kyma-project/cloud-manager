@@ -650,6 +650,49 @@ func eventuallyResourceDoesNotExist(ctx context.Context, alias string) (context.
 	return ctx, err
 }
 
+func eventuallyResourceDoesNotExistWith(ctx context.Context, alias string, tbl *godog.Table) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+
+	current := session.Timing()
+	newTiming := &Timing{
+		EventuallyTimeout:  current.EventuallyTimeout,
+		EventuallyInterval: current.EventuallyInterval,
+	}
+
+	for _, row := range tbl.Rows {
+		if len(row.Cells) < 2 {
+			return ctx, fmt.Errorf("timing table row must have two columns, got %d", len(row.Cells))
+		}
+		name := strings.TrimPrefix(strings.TrimSpace(row.Cells[0].Value), "#")
+		value := strings.TrimSpace(row.Cells[1].Value)
+		switch name {
+		case "timeout":
+			d, err := time.ParseDuration(value)
+			if err != nil {
+				return ctx, fmt.Errorf("invalid timeout value %q: %w", value, err)
+			}
+			newTiming.EventuallyTimeout = d
+		case "interval":
+			d, err := time.ParseDuration(value)
+			if err != nil {
+				return ctx, fmt.Errorf("invalid interval value %q: %w", value, err)
+			}
+			newTiming.EventuallyInterval = d
+		default:
+			return ctx, fmt.Errorf("unknown timing parameter %q", name)
+		}
+	}
+
+	session.PushTiming(newTiming)
+	defer func() { _ = session.PopTiming() }()
+
+	err := session.EventuallyResourceDoesNotExist(ctx, alias)
+	return ctx, err
+}
+
 func resourceDoesNotExist(ctx context.Context, alias string) (context.Context, error) {
 	session := GetCurrentScenarioSession(ctx)
 	if session == nil {

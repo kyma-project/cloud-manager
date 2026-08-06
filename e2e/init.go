@@ -98,6 +98,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^resource "([^"]*)" is created:$`, resourceIsCreated)
 	ctx.Step(`^resource "([^"]*)" is deleted$`, resourceIsDeleted)
 	ctx.Step(`^eventually resource "([^"]*)" does not exist$`, eventuallyResourceDoesNotExist)
+	ctx.Step(`^eventually resource "([^"]*)" does not exist, with:$`, eventuallyResourceDoesNotExistWith)
 	ctx.Step(`^resource "([^"]*)" does not exist$`, resourceDoesNotExist)
 	ctx.Step(`^logs of container "([^"]*)" in pod "([^"]*)" contain "([^"]*)"$`, logsOfContainerInPodContain)
 	ctx.Step(`^HTTP operation succeeds:$`, httpOperationSucceeds)
