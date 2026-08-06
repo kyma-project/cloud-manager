@@ -17,6 +17,14 @@ Feature: GcpVpcPeering feature
       | name                          | "${_.peering.name}"          |
       | subnet_cidr                   | "192.168.255.0/25"           |
 
+    Then waiting 5m for cloud-init to complete
+
+    # Verify cloud-init completed and HTTP service is ready via public endpoint
+    Then HTTP operation succeeds:
+      | Url            | http://${tf.public_ip_address} |
+      | ExpectedOutput | GCP VPC Peering is working!    |
+      | MaxTime        | 120                            |
+
     When resource "peering" is created:
       """
       apiVersion: cloud-resources.kyma-project.io/v1beta1
