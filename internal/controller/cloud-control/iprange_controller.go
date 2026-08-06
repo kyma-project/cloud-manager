@@ -52,8 +52,6 @@ func SetupIpRangeReconciler(
 	azureProvider azureclient.ClientProvider[azureiprangeclient.Client],
 	gcpSvcNetProvider gcpclient.GcpClientProvider[gcpiprangeclient.ServiceNetworkingClient],
 	gcpComputeProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
-	gcpV2SvcNetProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
-	gcpV2ComputeProvider gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient],
 	sapProvider sapclient.SapClientProvider[sapiprangeclient.Client],
 	alicloudClientProvider alicloudiprangeclient.ClientProvider,
 	env abstractions.Environment,
@@ -62,11 +60,7 @@ func SetupIpRangeReconciler(
 		env = abstractions.NewOSEnvironment()
 	}
 
-	// Create v3 GCP state factory (NEW pattern with clean actions)
 	gcpV3StateFactory := gcpiprange.NewV3StateFactory(gcpSvcNetProvider, gcpComputeProvider)
-
-	// Create v2 GCP state factory (legacy implementation)
-	gcpV2StateFactory := gcpiprange.NewV2StateFactory(gcpV2SvcNetProvider, gcpV2ComputeProvider, env)
 
 	return NewIpRangeReconciler(
 		iprange.NewIPRangeReconciler(
@@ -75,7 +69,6 @@ func SetupIpRangeReconciler(
 			awsiprange.NewStateFactory(awsProvider),
 			azureiprange.NewStateFactory(azureProvider),
 			gcpV3StateFactory,
-			gcpV2StateFactory,
 			sapiprange.NewStateFactory(sapProvider),
 			alicloudiprange.NewStateFactory(alicloudClientProvider),
 		),

@@ -448,8 +448,6 @@ func main() {
 		azureiprangeclient.NewClientProvider(),
 		gcpiprangeclient.NewServiceNetworkingClientProvider(gcpClients),
 		gcpiprangeclient.NewComputeClientProvider(gcpClients),
-		gcpiprangeclient.NewServiceNetworkingClientProviderV2(gcpClients),
-		gcpiprangeclient.NewOldComputeClientProviderV2(gcpClients),
 		sapiprangeclient.NewClientProvider(),
 		alicloudiprangeclient.NewClientProvider(),
 		env,

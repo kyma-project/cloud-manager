@@ -1,10 +1,8 @@
 package iprange
 
 import (
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
-	gcpiprangev2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v2"
 	gcpiprangev3 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/v3"
 )
 
@@ -17,16 +15,4 @@ func NewV3StateFactory(
 	computeClientProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
 ) V3StateFactory {
 	return gcpiprangev3.NewStateFactory(serviceNetworkingClientProvider, computeClientProvider)
-}
-
-// V2StateFactory is an alias for gcpiprangev2.StateFactory to be used by the reconciler.
-type V2StateFactory = gcpiprangev2.StateFactory
-
-// NewV2StateFactory is a wrapper for gcpiprangev2.NewStateFactory to be called from controller setup.
-func NewV2StateFactory(
-	serviceNetworkingClientProvider gcpclient.ClientProvider[gcpiprangeclient.ServiceNetworkingClient],
-	oldComputeClientProvider gcpclient.ClientProvider[gcpiprangeclient.OldComputeClient],
-	env abstractions.Environment,
-) V2StateFactory {
-	return gcpiprangev2.NewStateFactory(serviceNetworkingClientProvider, oldComputeClientProvider, env)
 }
