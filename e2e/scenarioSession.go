@@ -48,6 +48,8 @@ type ScenarioSession interface {
 	Eval(ctx context.Context) (Evaluator, error)
 
 	Timing() *Timing
+	PushTiming(newTiming *Timing)
+	PopTiming() error
 
 	EventuallyValueIsOK(ctx context.Context, expression string, arrUnless ...string) error
 	EventuallyResourceDoesNotExist(ctx context.Context, alias string) error
@@ -235,7 +237,8 @@ type scenarioSession struct {
 
 	terminated bool
 
-	timing *Timing
+	timing      *Timing
+	timingStack []*Timing
 }
 
 func (s *scenarioSession) SetStepName(v string) {
@@ -306,7 +309,11 @@ func (s *scenarioSession) EventuallyResourceDoesNotExist(ctx context.Context, al
 	})
 
 	if errors.Is(err, context.DeadlineExceeded) {
-		err = fmt.Errorf("timeout after %s: %w", s.Timing().EventuallyTimeout, err)
+		txt, dErr := s.DebugDumpDeclaredResources(ctx)
+		if dErr != nil {
+			return fmt.Errorf("%w, %w", dErr, err)
+		}
+		err = fmt.Errorf("timeout after %s: %w\n\n%s", s.Timing().EventuallyTimeout, err, txt)
 	}
 
 	return err
@@ -550,6 +557,21 @@ func (s *scenarioSession) Eval(ctx context.Context) (Evaluator, error) {
 
 func (s *scenarioSession) Timing() *Timing {
 	return s.timing
+}
+
+func (s *scenarioSession) PushTiming(newTiming *Timing) {
+	s.timingStack = append(s.timingStack, s.timing)
+	s.timing = newTiming
+}
+
+func (s *scenarioSession) PopTiming() error {
+	if len(s.timingStack) == 0 {
+		return errors.New("timing stack is empty")
+	}
+	last := len(s.timingStack) - 1
+	s.timing = s.timingStack[last]
+	s.timingStack = s.timingStack[:last]
+	return nil
 }
 
 func (s *scenarioSession) AliasInfo(alias string) AliasInfo {
