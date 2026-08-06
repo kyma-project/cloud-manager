@@ -565,8 +565,9 @@ func (s *scenarioSession) PushTiming(newTiming *Timing) {
 }
 
 func (s *scenarioSession) PopTiming() error {
-	if len(s.timingStack) == 0 {
-		return errors.New("timing stack is empty")
+	// ensure there's always a timing config
+	if len(s.timingStack) <= 1 {
+		return errors.New("timing stack has one entry and can not be reduced more")
 	}
 	last := len(s.timingStack) - 1
 	s.timing = s.timingStack[last]
