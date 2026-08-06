@@ -373,9 +373,7 @@ func TestAddKymaConcurrentNoStrand(t *testing.T) {
 	// Driver: continuously re-activate already-active members (the KCP reconciler behavior
 	// that exposed the strand). Goes through the REAL add() path where the race lives.
 	var driver sync.WaitGroup
-	driver.Add(1)
-	go func() {
-		defer driver.Done()
+	driver.Go(func() {
 		for {
 			select {
 			case <-stop:
@@ -386,7 +384,7 @@ func TestAddKymaConcurrentNoStrand(t *testing.T) {
 				}
 			}
 		}
-	}()
+	})
 
 	// Let the rotation run long enough that every member should be served many times.
 	assert.Eventually(t, func() bool {
