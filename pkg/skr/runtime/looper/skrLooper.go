@@ -120,12 +120,18 @@ func (l *activeSkrCollection) add(ctx context.Context, obj client.Object) {
 		"brokerPlanName", brokerPlanName,
 	).Info("Adding Kyma to SkrLooper")
 
-	// The workqueue dirty-set dedups, so a re-add of an already-queued SKR is a no-op
-	// there; but the module-active metric must only count a genuine activation, so
-	// guard it on the membership set.
+	// Only enqueue (and count) a genuinely new activation. An already-active SKR is
+	// already in the cyclic rotation and must NOT be re-added: the KCP Kyma reconciler
+	// periodically re-activates live SKRs via AddKyma, and workqueue dedup does NOT make
+	// that a safe no-op. Dedup protects only *queued* items (dirty set); an SKR mid-connect
+	// is in the workqueue's *processing* set, not dirty/ready. An Add during that window
+	// races the connect's own Get/reAdd/Done state transitions and can leave the SKR a
+	// member that is in neither the dirty set nor the ready queue — stranded, never cycling
+	// again (cyclic re-add only fires on the next successful connect, which never comes).
+	// Re-adds belong to the cyclic worker's own success path (cyclicReAdd) only.
 	alreadyActive := l.cyclicQueue.Contains(kymaName)
-	l.cyclicQueue.Add(kymaName)
 	if !alreadyActive {
+		l.cyclicQueue.Add(kymaName)
 		metrics.
 			SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, globalAccountId, subaccountId, shootName, region, brokerPlanName).
 			Add(1)

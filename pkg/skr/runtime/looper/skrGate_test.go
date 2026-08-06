@@ -66,6 +66,13 @@ func counterValue(t *testing.T, c prometheus.Counter) float64 {
 	return m.GetCounter().GetValue()
 }
 
+func gaugeValue(t *testing.T, g prometheus.Gauge) float64 {
+	t.Helper()
+	m := &dto.Metric{}
+	require.NoError(t, g.Write(m))
+	return m.GetGauge().GetValue()
+}
+
 // TestSkrGateAtomicity: N goroutines racing TryClaim on one key → exactly one wins;
 // after Release a fresh TryClaim succeeds; Release is idempotent.
 func TestSkrGateAtomicity(t *testing.T) {
