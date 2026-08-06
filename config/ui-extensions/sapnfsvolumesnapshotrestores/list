@@ -1,0 +1,9 @@
+- source: spec.sourceSnapshot.name
+  name: spec.sourceSnapshot.name
+  sort: true
+- source: status.state
+  name: status.state
+  sort: true
+- source: status.createdVolume.name
+  name: status.createdVolume.name
+  sort: true

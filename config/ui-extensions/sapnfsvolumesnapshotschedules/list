@@ -1,0 +1,12 @@
+- source: spec.schedule
+  name: spec.schedule
+  sort: true
+- source: status.lastCreateRun
+  name: status.lastCreateRun
+  sort: true
+- source: status.state
+  name: status.state
+  sort: true
+- source: status.backupCount
+  name: status.backupCount
+  sort: true

@@ -1,0 +1,179 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - widget: Labels
+            source: sourceSnapshot.name
+            name: spec.sourceSnapshot.name
+          - widget: Labels
+            source: sourceSnapshot.namespace
+            name: spec.sourceSnapshot.namespace
+          - widget: Labels
+            source: destination.existingVolume.name
+            name: spec.destination.existingVolume.name
+          - widget: Labels
+            source: destination.existingVolume.namespace
+            name: spec.destination.existingVolume.namespace
+          - widget: Labels
+            source: destination.newVolume.metadata.name
+            name: spec.destination.newVolume.metadata.name
+          - widget: Labels
+            source: destination.newVolume.metadata.namespace
+            name: spec.destination.newVolume.metadata.namespace
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - widget: Labels
+            source: state
+            name: status.state
+          - widget: Labels
+            source: revertInitiated
+            name: status.revertInitiated
+          - widget: Labels
+            source: createdVolume.name
+            name: status.createdVolume.name
+          - widget: Labels
+            source: createdVolume.namespace
+            name: status.createdVolume.namespace
+  form: |
+    - path: spec.sourceSnapshot
+      name: spec.sourceSnapshot
+      widget: FormGroup
+      required: true
+      children:
+        - path: name
+          name: spec.sourceSnapshot.name
+          widget: Text
+          required: true
+          disableOnEdit: true
+          description: The SapNfsVolumeSnapshot to restore from. Immutable once set.
+        - path: namespace
+          name: spec.sourceSnapshot.namespace
+          widget: Text
+          required: false
+          disableOnEdit: true
+          description: Immutable once set.
+    - path: spec.destination.existingVolume
+      name: spec.destination.existingVolume
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.destination.existingVolume.name
+          widget: Text
+          required: false
+          disableOnEdit: true
+          description: >-
+            Fill EITHER Existing Volume OR New Volume - not both. The referenced
+            snapshot must be the most recent snapshot of this volume. Immutable once set.
+        - path: namespace
+          name: spec.destination.existingVolume.namespace
+          widget: Text
+          required: false
+          disableOnEdit: true
+          description: Immutable once set.
+    - path: spec.destination.newVolume
+      name: spec.destination.newVolume
+      widget: FormGroup
+      required: false
+      children:
+        - path: metadata.name
+          name: spec.destination.newVolume.metadata.name
+          widget: Text
+          required: false
+          disableOnEdit: true
+          description: >-
+            Fill EITHER New Volume OR Existing Volume - not both. Leave empty when
+            restoring in place to an existing volume. Immutable once set.
+        - path: metadata.namespace
+          name: spec.destination.newVolume.metadata.namespace
+          widget: Text
+          required: false
+          disableOnEdit: true
+          description: Immutable once set.
+        - path: metadata.labels
+          name: spec.destination.newVolume.metadata.labels
+          widget: KeyValuePair
+          required: false
+          disableOnEdit: true
+        - path: metadata.annotations
+          name: spec.destination.newVolume.metadata.annotations
+          widget: KeyValuePair
+          required: false
+          disableOnEdit: true
+        - path: spec.capacityGb
+          name: spec.destination.newVolume.spec.capacityGb
+          widget: Number
+          required: false
+          disableOnEdit: true
+          description: Immutable once set.
+        - path: spec.volume.name
+          name: spec.destination.newVolume.spec.volume.name
+          widget: Text
+          required: false
+          disableOnEdit: true
+          description: Immutable once set.
+        - path: spec.volumeClaim.name
+          name: spec.destination.newVolume.spec.volumeClaim.name
+          widget: Text
+          required: false
+          disableOnEdit: true
+          description: Immutable once set.
+  general: |
+    resource:
+      group: cloud-resources.kyma-project.io
+      kind: SapNfsVolumeSnapshotRestore
+      version: v1beta1
+    urlPath: sapnfsvolumesnapshotrestores
+    name: SAP NFS Volume Snapshot Restore
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: SapNfsVolumeSnapshotRestore describes a request to restore a SapNfsVolume from a snapshot.
+  list: |
+    - source: spec.sourceSnapshot.name
+      name: spec.sourceSnapshot.name
+      sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+    - source: status.createdVolume.name
+      name: status.createdVolume.name
+      sort: true
+  translations: |
+    en:
+      configuration: Configuration
+      spec.sourceSnapshot: Source Snapshot
+      spec.sourceSnapshot.name: Source Snapshot Name
+      spec.sourceSnapshot.namespace: Source Snapshot Namespace
+      spec.destination.existingVolume: Existing Volume
+      spec.destination.existingVolume.name: Existing Volume Name
+      spec.destination.existingVolume.namespace: Existing Volume Namespace
+      spec.destination.newVolume: New Volume
+      spec.destination.newVolume.metadata.name: New Volume Name
+      spec.destination.newVolume.metadata.namespace: New Volume Namespace
+      spec.destination.newVolume.metadata.labels: New Volume Labels
+      spec.destination.newVolume.metadata.annotations: New Volume Annotations
+      spec.destination.newVolume.spec.capacityGb: New Volume Capacity Gb
+      spec.destination.newVolume.spec.volume.name: New Volume Persistent Volume Name
+      spec.destination.newVolume.spec.volumeClaim.name: New Volume Persistent Volume Claim Name
+      status: Status
+      status.state: State
+      status.revertInitiated: Revert Initiated
+      status.createdVolume.name: Created Volume Name
+      status.createdVolume.namespace: Created Volume Namespace
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: sapnfsvolumesnapshotrestores-ui.operator.kyma-project.io
+  namespace: kyma-system

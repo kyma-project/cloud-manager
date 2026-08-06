@@ -1,0 +1,26 @@
+en:
+  configuration: Configuration
+  spec.schedule: Schedule
+  spec.prefix: Prefix
+  spec.startTime: Start Time
+  spec.endTime: End Time
+  spec.maxRetentionDays: Max Retention Days
+  spec.maxReadySnapshots: Max Ready Snapshots
+  spec.maxFailedSnapshots: Max Failed Snapshots
+  spec.suspend: Suspend
+  spec.deleteCascade: Delete Cascade
+  spec.template.labels: Template Labels
+  spec.template.annotations: Template Annotations
+  template: Template
+  spec.template.spec.sourceVolume: Source Volume
+  spec.template.spec.sourceVolume.name: Source Volume Name
+  spec.template.spec.sourceVolume.namespace: Source Volume Namespace
+  spec.template.spec.deleteAfterDays: Delete After Days
+  status: Status
+  status.state: State
+  status.schedule: Active Schedule
+  status.nextRunTimes: Next Run Times
+  status.lastCreateRun: Last Run Time
+  status.lastCreatedBackup.name: Last Created Snapshot
+  status.snapshotIndex: Snapshot Index
+  status.backupCount: Snapshot Count
