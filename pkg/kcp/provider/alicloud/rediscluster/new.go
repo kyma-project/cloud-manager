@@ -24,11 +24,18 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActionsNoName(
 			actions.AddCommonFinalizer(),
 			loadRedis,
+			// Sync the Updating condition immediately after loading the instance so
+			// that a Changing state (set by a prior modify step) is reflected in the
+			// KCP status before the reconcile blocks on waitRedisAvailable.
+			addUpdatingCondition,
 
 			// delete ================================================================================
 			composed.If(composed.MarkedForDeletionPredicate,
 				composed.ComposeActionsNoName(
 					removeReadyCondition,
+					// Wait for Normal before deleting: AliCloud rejects DeleteInstance
+					// while the instance is still Creating or Changing.
+					waitRedisAvailable,
 					deleteRedis,
 					waitRedisDeleted,
 					actions.RemoveCommonFinalizer(),
@@ -43,13 +50,10 @@ func New(stateFactory StateFactory) composed.Action {
 					waitRedisAvailable,
 					setSecurityIps,
 					enableSsl,
-					addUpdatingCondition,
 					modifyInstanceClass,
 					waitRedisAvailable,
-					addUpdatingCondition,
 					modifyShardCount,
 					waitRedisAvailable,
-					addUpdatingCondition,
 					modifyParameters,
 					// Re-check SSL after modify steps: AliCloud may disable SSL during a
 					// class or shard-count change; restoring it here avoids waiting for

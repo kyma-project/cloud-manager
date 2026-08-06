@@ -25,6 +25,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
+	alicloud "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud"
 	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
@@ -66,6 +67,11 @@ var _ = BeforeSuite(func() {
 
 	commongardener.SetGardenerNamespaceProviderMock("kyma-test")
 	rate.SetValuesForTests()
+
+	// Stub out the live CA cert fetch so controller tests run without outbound network calls.
+	alicloud.CACertFetcher = func(_ context.Context) (string, error) {
+		return "test-ca-cert", nil
+	}
 
 	var err error
 	infra, err = testinfra.Start()

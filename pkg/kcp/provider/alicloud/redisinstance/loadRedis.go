@@ -62,6 +62,14 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 	}
 	if info != nil {
+		// Cross-check VpcId to guard against adopting a different instance that
+		// happens to share the name (possible under eventual consistency during
+		// name reuse after deletion).
+		if state.IpRange() != nil && state.IpRange().Status.VpcId != "" && info.VpcId != state.IpRange().Status.VpcId {
+			logger.Info("Name-matched AliCloud r-kvstore instance belongs to a different VPC, ignoring",
+				"instanceId", info.InstanceId, "instanceVpc", info.VpcId, "expectedVpc", state.IpRange().Status.VpcId)
+			return nil, ctx
+		}
 		logger.Info("Recovered AliCloud r-kvstore instance by name", "instanceId", info.InstanceId)
 		state.ObjAsRedisInstance().Status.Id = info.InstanceId
 		if updErr := state.PatchObjStatus(ctx); updErr != nil {

@@ -8,8 +8,13 @@ import (
 )
 
 // modifyShardCount grows or shrinks the cluster to match the desired ShardCount.
-// Per issue #2012 design decision 8, ShardCount must be changed in a separate
-// ModifyInstanceSpec call from InstanceClass changes.
+// For proxy-based classes (redis.logic.sharding.*), AliCloud exposes dedicated
+// AddShardingNode/DeleteShardingNode APIs that accept the target shard count
+// directly; the server updates the embedded shard-count token in the class name.
+// For cloud-native classes (redis.shard.*.ce), these same APIs are also used.
+// ShardCount changes are always issued in a separate pipeline step from
+// InstanceClass changes so that the intermediate waitRedisAvailable can
+// confirm the instance has stabilised between the two operations.
 func modifyShardCount(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.instance == nil {

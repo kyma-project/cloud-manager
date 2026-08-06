@@ -14,10 +14,18 @@ import (
 
 const apsaraDBCACertURL = "https://apsaradb-public.oss-ap-southeast-1.aliyuncs.com/ApsaraDB-CA-Chain.zip"
 
+// CACertFetcher is the function used to retrieve the ApsaraDB CA cert.
+// Tests can replace it with a stub to avoid real outbound HTTP calls.
+var CACertFetcher = fetchApsaraDBCACertFromURL
+
 // FetchApsaraDBCACert downloads the AliCloud ApsaraDB CA certificate chain
-// from the public URL and returns the PEM content. AliCloud r-kvstore uses a
-// proprietary CA that is not in the standard system trust store.
+// and returns the PEM content. Delegates to CACertFetcher so tests can inject
+// a stub without any real network calls.
 func FetchApsaraDBCACert(ctx context.Context) (string, error) {
+	return CACertFetcher(ctx)
+}
+
+func fetchApsaraDBCACertFromURL(ctx context.Context) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apsaraDBCACertURL, nil)
 	if err != nil {
 		return "", fmt.Errorf("building ApsaraDB CA request: %w", err)

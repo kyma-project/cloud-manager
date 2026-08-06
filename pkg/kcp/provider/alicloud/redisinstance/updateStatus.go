@@ -21,6 +21,15 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	}
 	kcp := state.ObjAsRedisInstance()
 
+	// AuthString was written at CreateInstance time. If it is missing now the
+	// password is unrecoverable - surface an error rather than silently proceeding.
+	if kcp.Status.AuthString == "" {
+		return composed.LogErrorAndReturn(
+			fmt.Errorf("AuthString is empty; password was never persisted or was lost"),
+			"AliCloud r-kvstore instance has no AuthString",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
+	}
+
 	primaryEndpoint := fmt.Sprintf("%s:%d", state.instance.ConnectionDomain, state.instance.Port)
 	changed := false
 	if kcp.Status.PrimaryEndpoint != primaryEndpoint {
@@ -41,15 +50,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	if kcp.Status.ReplicaCount != state.instance.ReadOnlyCount {
 		kcp.Status.ReplicaCount = state.instance.ReadOnlyCount
 		changed = true
-	}
-
-	// AuthString was written at CreateInstance time. If it is missing now the
-	// password is unrecoverable - surface an error rather than silently proceeding.
-	if kcp.Status.AuthString == "" {
-		return composed.LogErrorAndReturn(
-			fmt.Errorf("AuthString is empty; password was never persisted or was lost"),
-			"AliCloud r-kvstore instance has no AuthString",
-			composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
 	}
 
 	if kcp.Status.CaCert == "" {
