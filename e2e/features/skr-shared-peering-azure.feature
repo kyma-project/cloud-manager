@@ -18,7 +18,13 @@ Feature: AzureVpcPeering feature
       | name                          | "${_.peering.name}"          |
       | virtual_network_address_space | "192.168.255.0/25"           |
 
-    And waiting 5m for cloud-init to complete
+    And waiting 10m for cloud-init to complete
+
+    # Verify cloud-init completed and HTTP service is ready via public endpoint
+    Then HTTP operation succeeds:
+      | Url            | http://${tf.public_ip_address}/base64/SFRUUEJJTiBpcyBhd2Vzb21l |
+      | ExpectedOutput | HTTPBIN is awesome                                               |
+      | MaxTime        | 120                                                              |
 
     When resource "peering" is created:
       """

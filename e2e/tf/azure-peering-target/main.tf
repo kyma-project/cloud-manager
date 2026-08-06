@@ -40,6 +40,26 @@ resource "azurerm_network_security_group" "nsg" {
   name = local.network_security_group_name
   location = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
+
+  security_rule {
+    name                       = "AllowHTTP"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_public_ip" "public_ip" {
+  name                = "${var.name}-public-ip"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 resource "azurerm_subnet" "subnet" {
@@ -62,6 +82,7 @@ resource "azurerm_network_interface" "nic" {
     name = local.ip_configuration_name
     private_ip_address_allocation = "Dynamic"
     subnet_id = azurerm_subnet.subnet.id
+    public_ip_address_id = azurerm_public_ip.public_ip.id
   }
 }
 

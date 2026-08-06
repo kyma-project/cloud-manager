@@ -65,5 +65,5 @@ resource "google_compute_firewall" "allow-ssh-on-peering-target" {
      ports    = ["80"]
    }
 
-   source_ranges = ["10.250.0.0/16","10.96.0.0/13"]
+   source_ranges = ["0.0.0.0/0"]
 }
