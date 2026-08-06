@@ -114,7 +114,6 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock2().IpRangeComputeProvider(),           // v3: NEW pattern (GcpClientProvider) via mock2
 		infra.SapMock().IpRangeProvider(),
 		infra.AlicloudMock().IpRangeClientProvider(),
-		env,
 	)).NotTo(HaveOccurred())
 	// NfsInstance
 	Expect(SetupNfsInstanceReconciler(

@@ -450,7 +450,6 @@ func main() {
 		gcpiprangeclient.NewComputeClientProvider(gcpClients),
 		sapiprangeclient.NewClientProvider(),
 		alicloudiprangeclient.NewClientProvider(),
-		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
 		os.Exit(1)

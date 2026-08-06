@@ -22,7 +22,6 @@ import (
 	"time"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
@@ -54,12 +53,7 @@ func SetupIpRangeReconciler(
 	gcpComputeProvider gcpclient.GcpClientProvider[gcpiprangeclient.ComputeClient],
 	sapProvider sapclient.SapClientProvider[sapiprangeclient.Client],
 	alicloudClientProvider alicloudiprangeclient.ClientProvider,
-	env abstractions.Environment,
 ) error {
-	if env == nil {
-		env = abstractions.NewOSEnvironment()
-	}
-
 	gcpV3StateFactory := gcpiprange.NewV3StateFactory(gcpSvcNetProvider, gcpComputeProvider)
 
 	return NewIpRangeReconciler(
