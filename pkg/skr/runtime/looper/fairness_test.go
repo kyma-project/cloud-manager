@@ -1,10 +1,13 @@
 package looper
 
 import (
+	"context"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/kyma-project/cloud-manager/pkg/metrics"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	clocktesting "k8s.io/utils/clock/testing"
@@ -237,4 +240,172 @@ func TestNotifyRateLimitCoalesces(t *testing.T) {
 
 	col.cyclicQueue.ShutDown()
 	col.notifQueue.ShutDown()
+}
+
+// moduleActiveValue reads the current module-active gauge for a bare kymaName (all other
+// labels empty, as the strand tests build label-free objects).
+func moduleActiveValue(t *testing.T, kymaName string) float64 {
+	t.Helper()
+	return gaugeValue(t, metrics.SkrRuntimeModuleActiveCount.WithLabelValues(kymaName, "", "", "", "", ""))
+}
+
+// TestAddKymaOnActiveMemberIsNoOp is the deterministic regression for the AddKyma strand
+// fix. The KCP Kyma reconciler periodically re-activates live SKRs via AddKyma. A
+// re-activation of an already-active member must be a pure no-op on the cyclic queue:
+//
+//   - it must NOT re-enqueue the SKR (the unconditional pre-fix Add routed through the
+//     workqueue's Touch, moving an already-queued member to the TAIL — the same reorder
+//     class that starved the fairness tail, and the write that races an in-flight connect
+//     and can strand the SKR), and
+//   - it must NOT double-count the module-active gauge.
+//
+// The reorder is the directly observable pre/post-fix difference: pre-fix, re-activating a
+// queued member Touches it to the tail (head changes); post-fix the queue order is
+// untouched. The strand itself is a concurrent race (guarded by TestAddKymaConcurrentNoStrand
+// and the looper_sim harness); this test pins the deterministic contract the fix rests on.
+func TestAddKymaOnActiveMemberIsNoOp(t *testing.T) {
+	ctx := context.Background()
+	col := newTestCollection(clocktesting.NewFakeClock(time.Now()))
+
+	const k = "kyma-addkyma-noop"
+	before := moduleActiveValue(t, k)
+
+	// First activation: enqueues once, counts once.
+	col.AddKyma(ctx, kymaObj(k))
+	require.True(t, col.Contains(k))
+	require.Equal(t, 1, col.cyclicQueue.Len(), "first activation must enqueue exactly once")
+	assert.InDelta(t, before+1, moduleActiveValue(t, k), 1e-9, "first activation must count module-active once")
+
+	// Periodic re-activation of an already-active member: must be a no-op on the queue and
+	// on the gauge.
+	col.AddKyma(ctx, kymaObj(k))
+	col.AddKyma(ctx, kymaObj(k))
+	assert.Equal(t, 1, col.cyclicQueue.Len(),
+		"re-activating an already-active SKR must NOT enqueue a duplicate")
+	assert.InDelta(t, before+1, moduleActiveValue(t, k), 1e-9,
+		"re-activating an already-active SKR must NOT double-count module-active")
+
+	col.cyclicQueue.ShutDown()
+	col.notifQueue.ShutDown()
+}
+
+// TestAddKymaDoesNotReorderQueuedMember pins the observable pre/post-fix difference. A
+// queued cyclic member sits at a fixed rotation position. Pre-fix, AddKyma re-activation
+// called l.cyclicQueue.Add unconditionally; for an already-queued item the workqueue calls
+// slidingQueue.Touch, which moves it to the TAIL — reshuffling rotation order (the fairness
+// hazard) and, concurrently with an in-flight connect, the write that can strand it. Post-fix
+// the Add is guarded on !alreadyActive, so the re-activation leaves the queue untouched.
+//
+// Pre-fix this drains as [b, c, a] (a Touched to tail) → FAIL; post-fix [a, b, c].
+func TestAddKymaDoesNotReorderQueuedMember(t *testing.T) {
+	ctx := context.Background()
+	col := newTestCollection(clocktesting.NewFakeClock(time.Now()))
+
+	// Seed three active members in a fixed rotation order; "a" is at the head.
+	col.AddKyma(ctx, kymaObj("a"))
+	col.AddKyma(ctx, kymaObj("b"))
+	col.AddKyma(ctx, kymaObj("c"))
+	require.Equal(t, 3, col.cyclicQueue.Len())
+
+	// Periodic re-activation of the head member. Pre-fix this Touches "a" to the tail.
+	col.AddKyma(ctx, kymaObj("a"))
+
+	require.Equal(t, 3, col.cyclicQueue.Len(), "re-activation must not change queue depth")
+	got := make([]string, 0, 3)
+	for range 3 {
+		item, shutdown := col.cyclicQueue.Get()
+		require.False(t, shutdown)
+		got = append(got, item)
+		col.cyclicQueue.Done(item)
+	}
+	assert.Equal(t, []string{"a", "b", "c"}, got,
+		"re-activating an already-queued member must NOT reorder the cyclic rotation")
+
+	col.cyclicQueue.ShutDown()
+	col.notifQueue.ShutDown()
+}
+
+// TestAddKymaConcurrentNoStrand is the concurrent regression for the strand: real cyclic
+// workers rotate the fleet while a driver goroutine hammers AddKyma on already-active
+// members — mirroring the KCP Kyma reconciler periodically re-activating live SKRs
+// concurrently with the connect lifecycle (Get → handle → cyclicReAdd → Done). The invariant
+// the fix guarantees: every active member remains serviceable — none is silently stranded
+// (a member absent from the ready queue with nothing to re-add it). We assert every member is
+// served repeatedly and none disappears from rotation over the run.
+//
+// Pre-fix, the unconditional external Add races the connect lifecycle and can leave a member
+// out of both the dirty set and the ready queue → that member's service count flatlines.
+// Post-fix, the external Add is a guarded no-op, so the cyclic worker's own success-path
+// re-add is the sole writer and rotation stays complete.
+func TestAddKymaConcurrentNoStrand(t *testing.T) {
+	ctx := context.Background()
+	col := newTestCollection(clocktesting.NewFakeClock(time.Now()))
+
+	const fleet = 24
+	const workers = 4
+	items := make([]string, fleet)
+	for i := range items {
+		items[i] = fmt.Sprintf("kyma-%02d", i)
+	}
+
+	freq := newFreqType()
+	freq.reset(items...)
+
+	l := newTestLooper(col, func(_ int, kymaName string) { freq.inc(kymaName) })
+	l.cyclicImmediateThreshold = 1 // large-fleet FIFO re-add (matches prod)
+
+	for _, it := range items {
+		col.cyclicQueue.Add(it)
+	}
+
+	// Real cyclic workers with the PRODUCTION re-add path.
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+	for w := range workers {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			for !l.processOne(id, col.cyclicQueue, "cyclic", l.cyclicReAdd, col.cyclicQueue.Add) {
+			}
+		}(w)
+	}
+
+	// Driver: continuously re-activate already-active members (the KCP reconciler behavior
+	// that exposed the strand). Goes through the REAL add() path where the race lives.
+	var driver sync.WaitGroup
+	driver.Go(func() {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				for _, it := range items {
+					col.AddKyma(ctx, kymaObj(it))
+				}
+			}
+		}
+	})
+
+	// Let the rotation run long enough that every member should be served many times.
+	assert.Eventually(t, func() bool {
+		_, served, _, _ := freq.statsTracked()
+		return served == fleet
+	}, 5*time.Second, 10*time.Millisecond, "every active member must be served — none stranded")
+
+	// Run a while longer so a strand (a member that stops cycling) would show as a stalled
+	// service count while others climb.
+	time.Sleep(500 * time.Millisecond)
+
+	close(stop)
+	driver.Wait()
+	col.cyclicQueue.ShutDown()
+	col.notifQueue.ShutDown()
+	wg.Wait()
+
+	// Fairness/liveness: every member served, and the spread stays bounded (a stranded
+	// member would be served ~once while the rest climb into the hundreds → huge rel spread).
+	cnt, served, _, rel := freq.statsTracked()
+	assert.Equal(t, fleet, cnt)
+	assert.Equal(t, fleet, served, "every active member must have been served at least once")
+	assert.Less(t, rel, 1.0, "no member may be stranded — service spread must stay bounded")
 }

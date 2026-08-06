@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/utils/clock"
 )
 
@@ -22,14 +24,14 @@ import (
 //   go test -tags looper_sim -run TestLooperFairnessSim -v -timeout 30m \
 //       ./pkg/skr/runtime/looper/ \
 //       -args -sim.fleet=730 -sim.cyclic=24 -sim.notif=8 -sim.hot=3 \
-//             -sim.connect=10ms -sim.duration=30s -sim.seed=1
+//             -sim.connect=10ms -sim.duration=30s -sim.seed=1 -sim.addKymaEvery=30ms
 //
 // It exercises the REAL shipped fairness code (Queue, SkrGate, processOne, cyclicReAdd,
-// Notify, recordNotifConnect) with a dummy sleeping handler in place of the per-SKR
-// manager — no IO, no real 10s. Time is SCALED: what matters for fairness is the ratios
-// (hot vs cold notification rate, connect time vs notifMinInterval, fleet/workers), not the
-// absolute magnitudes. A ~30s wall-time run at these scaled values reproduces many hours of
-// production rotation behavior.
+// Notify, recordNotifConnect, and — via the AddKyma driver — the real add() path) with a
+// dummy sleeping handler in place of the per-SKR manager — no IO, no real 10s. Time is
+// SCALED: what matters for fairness is the ratios (hot vs cold notification rate, connect
+// time vs notifMinInterval, fleet/workers), not the absolute magnitudes. A ~30s wall-time run
+// at these scaled values reproduces many hours of production rotation behavior.
 //
 // The report prints the theoretical fair mean gap vs the observed mean/percentile/max gaps
 // and the worst offenders (the long tail). It fails if any SKR's max gap exceeds
@@ -46,6 +48,12 @@ var (
 	simHotEvery = flag.Duration("sim.hotEvery", 2*time.Millisecond, "hot SKR notification firing period")
 	simDuration = flag.Duration("sim.duration", 30*time.Second, "total simulated wall-clock run time")
 	simSeed     = flag.Int64("sim.seed", 1, "RNG seed (fixed for reproducibility)")
+
+	// simAddKymaEvery models the KCP Kyma reconciler periodically re-activating already-active
+	// SKRs via AddKyma. This goes through the REAL add() path — where the strand race lives —
+	// so the sim exercises re-activation concurrently with the connect lifecycle. Set to 0 to
+	// disable the driver.
+	simAddKymaEvery = flag.Duration("sim.addKymaEvery", 30*time.Millisecond, "period between full-fleet AddKyma re-activation sweeps (0 disables)")
 
 	maxGapFactor = 3.0 // fail if any max gap > maxGapFactor × mean gap
 )
@@ -158,6 +166,40 @@ func TestLooperFairnessSim(t *testing.T) {
 			}
 		}
 	}()
+
+	// AddKyma driver: periodically re-activate the whole (already-active) fleet via the REAL
+	// add() path, mirroring the KCP Kyma reconciler that re-activates live SKRs on a periodic
+	// resync. This is the driver that reproduces the strand: against the unfixed add()
+	// (unconditional cyclicQueue.Add), these re-activations race the cyclic connect lifecycle
+	// and some members stop cycling — their service count flatlines and the max-gap/mean ratio
+	// blows past the fairness threshold → FAIRNESS FAIL. Against the fixed add() the re-add is
+	// a guarded no-op and the distribution stays tight → FAIRNESS OK. It runs concurrently with
+	// the notification driver, matching prod (notifications + periodic re-activation together).
+	//
+	// add() calls composed.LoggerFromCtx, so a real context carrying a discard logger is used
+	// (a nil ctx would panic). The object is a bare *unstructured.Unstructured with the kyma
+	// name (labels omitted; the sim does not assert on the label-keyed module-active gauge).
+	if *simAddKymaEvery > 0 {
+		addCtx := composed.LoggerIntoCtx(t.Context(), logr.Discard())
+		drivers.Add(1)
+		go func() {
+			defer drivers.Done()
+			ticker := time.NewTicker(*simAddKymaEvery)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-stop:
+					return
+				case <-ticker.C:
+					for _, k := range kymas {
+						obj := &unstructured.Unstructured{}
+						obj.SetName(k)
+						col.AddKyma(addCtx, obj)
+					}
+				}
+			}
+		}()
+	}
 
 	time.Sleep(*simDuration)
 

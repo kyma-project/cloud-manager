@@ -48,6 +48,48 @@ Removing membership does **not** abort a running manager or free the gate (grace
 owning worker's `Release` does that). A gate conflict (`TryClaim` fails) means the *other* sleeve is
 mid-connect; it is not a membership or queue problem.
 
+## Invariants that MUST hold
+
+These are the load-bearing constraints the looper's fairness and correctness rest on. Each was learned
+the hard way (a production incident + a fix). If any breaks, fairness or correctness fails. Stated as
+rule → why → what breaks it:
+
+1. **Nothing outside the cyclic worker may write to the cyclic queue for an SKR that is already an
+   active member.** Not the notification sleeve, not `AddKyma` re-activation. *Why:* any external
+   `Add`/`Delay`/`AddAfter` on an already-queued-or-processing member either reshuffles the tail (→
+   starvation, the #2083 bug) or races the connect lifecycle (→ stranding, the AddKyma-strand bug).
+   *Breaks it:* the notification success path's old `CyclicQueue().Delay` (fixed); the unconditional
+   `cyclicQueue.Add` in `add()` on re-activation (fixed — guarded on `!alreadyActive`). Re-adds belong
+   to the cyclic worker's own success path (`cyclicReAdd`) **only**.
+
+2. **workqueue dedup protects only *queued* items, never *processing* ones.** *Why:* client-go's
+   `Add` short-circuits (`dirty.Has` → `Touch`-or-return) only while the item sits in the queue; once a
+   worker has `Get`'d it, it is in the `processing` set, not `dirty`/`queue`. *Breaks it:* assuming "the
+   dirty-set dedups, so a re-add is a harmless no-op" — false during the connect window. An external
+   `Add` interleaved with the connect's own `Get`/re-add/`Done` transitions can leave the SKR a member
+   present in neither the dirty set nor the ready queue → stranded. This false assumption caused the
+   AddKyma strand.
+
+3. **The single-manager gate is the only cross-sleeve exclusion; membership ≠ queued ≠ processing ≠
+   gate-claimed.** *Why:* these four states are independent (see the three-states section above; the
+   gate adds the fourth). *Breaks it:* conflating any two — e.g. treating "is a member" as "is queued",
+   or "gate free" as "not processing". This is the recurring trap behind both bugs.
+
+4. **`AddKyma` must be idempotent for already-active SKRs.** *Why:* the KCP Kyma reconciler calls it
+   periodically (resync) for live SKRs, not just once at activation. *Breaks it:* doing queue work
+   (enqueue/Touch/count) on re-activation — activation adds to rotation and counts module-active
+   exactly once; re-activation must be a pure no-op.
+
+5. **The ~10s `Start` window is required work; fairness is achieved by ordering, not throughput.**
+   *Why:* the worker keeps the per-SKR manager and its reconcilers alive to do real work; the window is
+   not idle slack. *Breaks it:* trying to shrink gaps by cutting the connect time or tuning
+   `workerTimeout` — the wrong lever (see "Why throughput is NOT the lever").
+
+6. **A connect must always end by either re-queuing the SKR (success) or being a deliberate,
+   documented drop.** *Why:* a live member silently left out of the queue never cycles again — that is
+   exactly the strand. *Breaks it:* any code path through `processOne` that neither re-adds nor is an
+   explicit, commented drop (membership-drop, gate-conflict-drop, shutdown).
+
 ## The starvation bug — the reasoning chain (this is the core value of this doc)
 
 Symptom: individual SKRs showed large reconnect gaps (mode ~10 min, tail well past 20 min) in
@@ -126,6 +168,43 @@ Hold these invariants when touching the looper:
 4. **`workerTimeout` stays** as a safety net (it correctly never fires today). Don't tune it to chase
    gaps — that was the wrong lever.
 
+## The AddKyma strand — the second reasoning chain
+
+This is a **distinct, latent bug** from the starvation above. It predates the fairness work (the
+unconditional `Add` was always there) but only became visible once per-SKR gaps were measured closely,
+and it survived the fairness fix. Follow the chain — it took several days, multiple PRs, and prod
+deploys to diagnose.
+
+Symptom: after the fairness fix landed on stage, `count(increase(...reconcile_total[20m]) == 0)`
+climbed and oscillated (26→43→59→…). It was **two populations**: a churning tail (~30, normal for a
+6.6-min-mean saturated queue probed at the 3×-mean `[20m]` window) **plus a persistent stranded core
+(~16)**. A single stranded SKR told the whole story: `reconcile_total` **flat at 1 for its entire
+70-min container lifetime** — it connected exactly once. It was an active member
+(`module_active_count=1`), had **no** notification activity, **no** gate conflicts, **no** panic, **no**
+error log. The *only* activity after its single connect: repeated "Adding Kyma to SkrLooper" from the
+KCP Kyma reconciler (`pkg/kcp/kyma/skrActivate.go` → `AddKyma`), firing periodically.
+
+The race: `activeSkrCollection.add()` called `cyclicQueue.Add(kymaName)` **unconditionally**, even for
+an SKR already in rotation. The periodic `AddKyma` therefore issued `q.Add(X)` for SKRs already
+cycling, **racing the cyclic connect lifecycle** (the worker's `Get` clears dirty; `cyclicReAdd`/`Done`
+re-push based on the dirty/processing state). Under the wrong interleaving between a mid-flight
+connect's `Get`/re-add/`Done` and a concurrent external `Add`, X ends up a member absent from **both**
+the workqueue dirty set and the ready queue — and nothing re-adds it (cyclic re-add only happens on the
+*next* successful connect, which never comes). Result: stranded — member, one connect, never cycles.
+
+Why a **persistent core + churning tail** (not a uniform tail): the strand is a one-way trap. Once an
+SKR falls out of rotation it stays out (its counter flatlines), so the same names recur in every
+`increase[20m]==0` snapshot — that is the persistent core. The churning tail is the ordinary,
+healthy rotation of a saturated queue probed at a window wider than the mean gap.
+
+The fix: guard the queue write on membership — an already-active SKR is already in rotation and must
+not be re-added (invariants 1 and 4 above). In `add()`, `cyclicQueue.Add` and the module-active count
+move **inside** the `!alreadyActive` block. A genuinely new activation still enqueues + counts; a
+periodic re-activation of an already-cycling SKR becomes a pure no-op and cannot race its in-flight
+connect. Note the old comment ("the workqueue dirty-set dedups, so a re-add is a no-op there") was the
+flawed assumption — invariant 2: dedup holds only while the item is *queued*, never while it is being
+*processed* (mid-connect), which is exactly the window the race exploits.
+
 ## Diagnostic playbook (re-derive it fast)
 
 - **Is any SKR starved?** `count by (kyma)(increase(cloud_manager_skr_runtime_reconcile_total[20m]) == 0)`
@@ -134,6 +213,14 @@ Hold these invariants when touching the looper:
 - **Fixed set vs rotating tail?** Export the above as a time series and check whether the same `kyma`
   labels recur (starvation) or differ each sample (normal tail). This distinction is what proved it
   was a bug, not saturation.
+- **Persistent-core vs churning-tail (the strand tell)?** Take **two `increase[20m]==0` snapshots ~20
+  min apart** and diff the `kyma` sets. Names in **both** are the persistent stranded core (the AddKyma
+  strand); names rotating in/out are the normal saturated-queue tail. A pure saturation tail has an
+  empty "in both" set.
+- **Single-SKR strand tell:** a **flat `reconcile_total` (stuck at 1) for a live member** — active
+  (`module_active_count=1`), connected once, then no growth — with no notification activity, no gate
+  conflict, no panic, no error, and only periodic "Adding Kyma to SkrLooper" logs. That is a stranded
+  SKR, not a slow one.
 - **Are connects actually fast?** `sum by (le)(rate(cloud_manager_skr_looper_connect_total_seconds_bucket[30m]))`
   — if all mass is ≤ the 20s bucket, no connect is held; gaps are queueing, not hangs.
 - **Is the worker timeout firing?** `cloud_manager_skr_looper_connect_total_seconds_count{timeout="true"}`
@@ -145,6 +232,16 @@ Hold these invariants when touching the looper:
 ## Validating fairness changes
 
 Use the dev-time simulation (`fairness_sim_test.go`, build tag `looper_sim`) — see
-`pkg/skr/runtime/looper/README.md`. It runs the real queues/gate/`processOne`/`Notify` with a dummy
-sleeping handler and a hot/cold notification skew, then reports mean vs max gaps and fails if any SKR's
-max gap exceeds 3× the mean. It reproduces the starvation and confirms it is gone — without a cluster.
+`pkg/skr/runtime/looper/README.md`. It runs the real queues/gate/`processOne`/`Notify` — and, via the
+`-sim.addKymaEvery` driver, the real `add()` path — with a dummy sleeping handler, a hot/cold
+notification skew, and periodic full-fleet `AddKyma` re-activation (mirroring the KCP Kyma reconciler's
+resync). It reports mean vs max gaps and fails if any SKR's max gap exceeds 3× the mean.
+
+It now reproduces **both** bugs and confirms both are gone — without a cluster:
+
+- **Starvation** — driven by the hot/cold notification skew.
+- **AddKyma strand** — driven by the periodic `AddKyma` sweep. This is why the `AddKyma` driver
+  matters: the notification-only sim reported "FAIRNESS OK" while prod was stranding SKRs, because it
+  never exercised `add()`. Against the unfixed `add()`, the sim with the driver reports FAIRNESS FAIL
+  with a max gap in the tens of seconds (100×+ mean); against the fixed `add()` it stays ~1× mean. Set
+  `-sim.addKymaEvery=0` to disable the driver.
