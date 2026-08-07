@@ -23,6 +23,7 @@ import (
 	backupschedule "github.com/kyma-project/cloud-manager/pkg/skr/backupschedule/v1"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
+	"k8s.io/utils/clock"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -53,18 +54,19 @@ func (r *AzureRwxBackupScheduleReconciler) Reconcile(ctx context.Context, req ct
 
 type AzureRwxBackupScheduleReconcilerFactory struct {
 	env abstractions.Environment
+	clk clock.Clock
 }
 
 func (f *AzureRwxBackupScheduleReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &AzureRwxBackupScheduleReconciler{
-		Reconciler: backupschedule.NewReconciler(args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, backupschedule.AzureRwxBackupSchedule),
+		Reconciler: backupschedule.NewReconciler(args.ScopeProvider, args.KcpCluster, args.SkrCluster, f.env, backupschedule.AzureRwxBackupSchedule, f.clk),
 	}
 }
 
-func SetupAzureRwxBackupScheduleReconciler(reg skrruntime.SkrRegistry, env abstractions.Environment) error {
+func SetupAzureRwxBackupScheduleReconciler(reg skrruntime.SkrRegistry, env abstractions.Environment, clk clock.Clock) error {
 
 	return reg.Register().
-		WithFactory(&AzureRwxBackupScheduleReconcilerFactory{env: env}).
+		WithFactory(&AzureRwxBackupScheduleReconcilerFactory{env: env, clk: clk}).
 		For(&cloudresourcesv1beta1.AzureRwxBackupSchedule{}).
 		Complete()
 }
