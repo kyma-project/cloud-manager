@@ -6,8 +6,8 @@ import gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 // All other codes indicate user misconfiguration or permanent infrastructure failures.
 // Source: Gardener dashboard frontend/src/utils/errorCodes.js (temporaryError flag).
 var transientShootErrorCodes = map[gardenertypes.ErrorCode]bool{
-	gardenertypes.ErrorInfraRateLimitsExceeded:     true, // ERR_INFRA_RATE_LIMITS_EXCEEDED
-	gardenertypes.ErrorRetryableInfraDependencies:  true, // ERR_RETRYABLE_INFRA_DEPENDENCIES
+	gardenertypes.ErrorInfraRateLimitsExceeded:    true, // ERR_INFRA_RATE_LIMITS_EXCEEDED
+	gardenertypes.ErrorRetryableInfraDependencies: true, // ERR_RETRYABLE_INFRA_DEPENDENCIES
 }
 
 // IsTransientShootErrors returns true when all present error codes are known-transient and
