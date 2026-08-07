@@ -14,6 +14,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
+	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
@@ -215,6 +216,9 @@ type InstanceDetails struct {
 	BeingDeleted bool `json:"beingDeleted" yaml:"beingDeleted"`
 
 	Ignored bool `json:"ignored" yaml:"ignored"`
+
+	ShootLastErrors    []gardenerapicore.LastError    `json:"shootLastErrors,omitempty" yaml:"shootLastErrors,omitempty"`
+	ShootLastOperation *gardenerapicore.LastOperation `json:"shootLastOperation,omitempty" yaml:"shootLastOperation,omitempty"`
 }
 
 func (id InstanceDetails) AddLoggerValues(log logr.Logger) logr.Logger {
@@ -257,12 +261,23 @@ func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetai
 		State:                 string(rt.Status.State),
 		BeingDeleted:          rt.DeletionTimestamp != nil,
 		Ignored:               rt.Labels[e2elib.DoNotReconcile] != "",
+		ShootLastErrors:       rt.Status.ShootLastErrors,
+		ShootLastOperation:    rt.Status.ShootLastOperation,
 	}
 	errCond := meta.FindStatusCondition(rt.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	if errCond != nil && errCond.Status == metav1.ConditionTrue {
 		id.Message = errCond.Message
 	}
 	return id
+}
+
+// HasTerminalShootError returns true when the shoot error is permanent and WaitCompleted
+// should stop waiting immediately. This covers both Gardener giving up (LastOperation.State == Failed)
+// and user-caused errors (misconfiguration, quota exceeded, bad credentials, etc.).
+// Only transient errors (rate limits, retryable infra dependencies) return false.
+func (id InstanceDetails) HasTerminalShootError() bool {
+	return commongardener.IsTerminalShootLastOperation(id.ShootLastOperation) ||
+		!commongardener.IsTransientShootErrors(id.ShootLastErrors)
 }
 
 func (k *defaultKeb) Config() *e2econfig.ConfigType {
