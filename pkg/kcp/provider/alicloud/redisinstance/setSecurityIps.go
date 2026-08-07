@@ -22,11 +22,6 @@ func setSecurityIps(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, ctx
 	}
 
-	kcp := state.ObjAsRedisInstance()
-	if kcp.Status.Id == "" {
-		return nil, ctx
-	}
-
 	scope := state.Scope()
 	if scope.Spec.Scope.Alicloud == nil {
 		return nil, ctx
@@ -43,7 +38,7 @@ func setSecurityIps(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, ctx
 	}
 
-	existing, err := state.client.DescribeSecurityIps(ctx, kcp.Status.Id)
+	existing, err := state.client.DescribeSecurityIps(ctx, state.instance.InstanceId)
 	if err != nil {
 		return composed.LogErrorAndReturn(err,
 			"Error describing AliCloud r-kvstore instance security IPs",
@@ -54,7 +49,7 @@ func setSecurityIps(ctx context.Context, st composed.State) (error, context.Cont
 		return nil, ctx
 	}
 
-	if err := state.client.ModifySecurityIps(ctx, kcp.Status.Id, strings.Join(required, ",")); err != nil {
+	if err := state.client.ModifySecurityIps(ctx, state.instance.InstanceId, strings.Join(required, ",")); err != nil {
 		return composed.LogErrorAndReturn(err,
 			"Error setting AliCloud r-kvstore instance security IPs",
 			composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)

@@ -16,7 +16,8 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 		return nil, ctx
 	}
 	kcp := state.ObjAsRedisCluster()
-	isChanging := state.instance.InstanceStatus == alicloudclient.InstanceStatusChanging
+	isChanging := state.instance.InstanceStatus == alicloudclient.InstanceStatusChanging ||
+		state.instance.InstanceStatus == alicloudclient.InstanceStatusSSLModifying
 	hasUpdating := meta.FindStatusCondition(kcp.Status.Conditions, cloudcontrolv1beta1.ConditionTypeUpdating) != nil
 
 	if isChanging == hasUpdating {

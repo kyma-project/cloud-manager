@@ -83,19 +83,17 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 				).Should(Succeed(), "expected RedisCluster to get status.id")
 		})
 
-		By("When AliCloud Redis transitions to Normal", func() {
-			alicloudMock.TransitionAllToNormal()
-		})
-
 		By("Then RedisCluster has Ready condition", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
 					HavingFieldSet("status", "discoveryEndpoint"),
 					HavingFieldSet("status", "authString"),
-				).Should(Succeed(), "expected RedisCluster to reach Ready state")
+				)
+			}).Should(Succeed(), "expected RedisCluster to reach Ready state")
 		})
 
 		By("And Then SSL is enabled on the AliCloud cluster", func() {
@@ -190,12 +188,14 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 		})
 
 		By("And Given RedisCluster is Ready", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
-				).Should(Succeed())
+				)
+			}).Should(Succeed())
 		})
 
 		By("When shard count is increased to 6", func() {
@@ -310,12 +310,14 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 		})
 
 		By("And Given RedisCluster is Ready", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
-				).Should(Succeed())
+				)
+			}).Should(Succeed())
 		})
 
 		By("When replicasPerShard is changed to 0", func() {
@@ -420,13 +422,14 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
 				).Should(Succeed())
-			alicloudMock.TransitionAllToNormal()
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
-				).Should(Succeed())
+				)
+			}).Should(Succeed())
 			entry := alicloudMock.GetRedisCluster(redisCluster.Status.Id)
 			Expect(entry).NotTo(BeNil())
 			Expect(entry.SslEnabled).To(BeTrue(), "SSL should be enabled after initial provisioning")
@@ -548,12 +551,14 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 		})
 
 		By("Then RedisCluster is Ready and parameters are applied", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
-				).Should(Succeed(), "expected RedisCluster to reach Ready with parameters")
+				)
+			}).Should(Succeed(), "expected RedisCluster to reach Ready with parameters")
 		})
 
 		By("And Given mock Config reflects the applied parameters", func() {
@@ -681,12 +686,14 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 		})
 
 		By("And Given RedisCluster is Ready", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
-				).Should(Succeed())
+				)
+			}).Should(Succeed())
 		})
 
 		By("When shard count is decreased to 2", func() {

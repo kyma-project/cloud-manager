@@ -144,16 +144,42 @@ func (s *redisStore) SetRedisClusterError(instanceId string, err error) {
 	}
 }
 
+// GetRedisInstance returns a direct pointer to the internal entry.
+// Callers must not modify the returned value concurrently with reconciler
+// operations; use SetRedisInstance for safe mutation.
 func (s *redisStore) GetRedisInstance(instanceId string) *RedisInstanceEntry {
 	s.m.Lock()
 	defer s.m.Unlock()
 	return s.instances[instanceId]
 }
 
+// GetRedisCluster returns a direct pointer to the internal entry.
+// Callers must not modify the returned value concurrently with reconciler
+// operations; use SetRedisCluster for safe mutation.
 func (s *redisStore) GetRedisCluster(instanceId string) *RedisClusterEntry {
 	s.m.Lock()
 	defer s.m.Unlock()
 	return s.clusters[instanceId]
+}
+
+// SetRedisInstance acquires the store lock and calls mutate on the entry with
+// the given instanceId. Safe to call concurrently with reconciler operations.
+func (s *redisStore) SetRedisInstance(instanceId string, mutate func(*RedisInstanceEntry)) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if entry, ok := s.instances[instanceId]; ok {
+		mutate(entry)
+	}
+}
+
+// SetRedisCluster acquires the store lock and calls mutate on the entry with
+// the given instanceId. Safe to call concurrently with reconciler operations.
+func (s *redisStore) SetRedisCluster(instanceId string, mutate func(*RedisClusterEntry)) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	if entry, ok := s.clusters[instanceId]; ok {
+		mutate(entry)
+	}
 }
 
 // === Instance-client ops ====================================================

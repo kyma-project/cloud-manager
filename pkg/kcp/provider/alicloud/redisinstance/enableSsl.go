@@ -18,12 +18,7 @@ func enableSsl(ctx context.Context, st composed.State) (error, context.Context) 
 		return nil, ctx
 	}
 
-	kcp := state.ObjAsRedisInstance()
-	if kcp.Status.Id == "" {
-		return nil, ctx
-	}
-
-	sslEnabled, err := state.client.DescribeInstanceSSL(ctx, kcp.Status.Id)
+	sslEnabled, err := state.client.DescribeInstanceSSL(ctx, state.instance.InstanceId)
 	if err != nil {
 		return composed.LogErrorAndReturn(err,
 			"Error describing AliCloud r-kvstore instance SSL",
@@ -34,7 +29,7 @@ func enableSsl(ctx context.Context, st composed.State) (error, context.Context) 
 		return nil, ctx
 	}
 
-	if err := state.client.ModifyInstanceSSL(ctx, kcp.Status.Id, true); err != nil {
+	if err := state.client.ModifyInstanceSSL(ctx, state.instance.InstanceId, true); err != nil {
 		return composed.LogErrorAndReturn(err,
 			"Error enabling SSL on AliCloud r-kvstore instance",
 			composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)

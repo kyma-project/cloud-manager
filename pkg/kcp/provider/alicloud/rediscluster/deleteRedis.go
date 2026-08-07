@@ -18,13 +18,7 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 	if state.instance.InstanceStatus == alicloudclient.InstanceStatusReleased {
 		return nil, ctx
 	}
-	// AliCloud rejects DeleteInstance while the instance is Creating, Changing, or SSLModifying.
-	// Wait for Normal before issuing the delete.
-	if state.instance.InstanceStatus == alicloudclient.InstanceStatusCreating ||
-		state.instance.InstanceStatus == alicloudclient.InstanceStatusChanging ||
-		state.instance.InstanceStatus == alicloudclient.InstanceStatusSSLModifying {
-		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
-	}
+	// waitRedisAvailable in the delete pipeline guarantees Normal status on entry.
 
 	if err := state.client.DeleteInstance(ctx, state.instance.InstanceId); err != nil {
 		if alicloudclient.IsPermanentError(err) {

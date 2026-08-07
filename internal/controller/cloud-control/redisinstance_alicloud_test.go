@@ -82,19 +82,17 @@ var _ = Describe("Feature: KCP AliCloud RedisInstance", func() {
 				).Should(Succeed(), "expected RedisInstance to get status.id")
 		})
 
-		By("When AliCloud Redis transitions to Normal", func() {
-			alicloudMock.TransitionAllToNormal()
-		})
-
 		By("Then RedisInstance has Ready condition", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
 					HavingFieldSet("status", "primaryEndpoint"),
 					HavingFieldSet("status", "authString"),
-				).Should(Succeed(), "expected RedisInstance to reach Ready state")
+				)
+			}).Should(Succeed(), "expected RedisInstance to reach Ready state")
 		})
 
 		By("And Then SSL is enabled on the AliCloud instance", func() {
@@ -197,16 +195,17 @@ var _ = Describe("Feature: KCP AliCloud RedisInstance", func() {
 
 		By("When error is cleared", func() {
 			alicloudMock.SetRedisInstanceError(redisInstance.Status.Id, nil)
-			alicloudMock.TransitionAllToNormal()
 		})
 
 		By("Then RedisInstance recovers to Ready", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
-				).Should(Succeed())
+				)
+			}).Should(Succeed())
 		})
 
 		// cleanup
@@ -254,9 +253,9 @@ var _ = Describe("Feature: KCP AliCloud RedisInstance", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
-					WithKcpIpRangeStatusVpcId("vpc-alicloud-test-05"),
+					WithKcpIpRangeStatusVpcId("vpc-alicloud-test-09"),
 					WithKcpIpRangeStatusSubnets(cloudcontrolv1beta1.IpRangeSubnet{
-						Id:   "vsw-alicloud-test-05",
+						Id:   "vsw-alicloud-test-09",
 						Zone: "cn-hangzhou-a",
 					}),
 					WithConditions(KcpReadyCondition()),
@@ -294,12 +293,14 @@ var _ = Describe("Feature: KCP AliCloud RedisInstance", func() {
 		})
 
 		By("And Given RedisInstance is Ready", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
-				).Should(Succeed())
+				)
+			}).Should(Succeed())
 		})
 
 		By("When instanceClass and readOnlyCount are changed (S→P tier upgrade)", func() {
@@ -370,9 +371,9 @@ var _ = Describe("Feature: KCP AliCloud RedisInstance", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
 					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
-					WithKcpIpRangeStatusVpcId("vpc-alicloud-test-06"),
+					WithKcpIpRangeStatusVpcId("vpc-alicloud-test-10"),
 					WithKcpIpRangeStatusSubnets(cloudcontrolv1beta1.IpRangeSubnet{
-						Id:   "vsw-alicloud-test-06",
+						Id:   "vsw-alicloud-test-10",
 						Zone: "cn-hangzhou-a",
 					}),
 					WithConditions(KcpReadyCondition()),
@@ -409,12 +410,14 @@ var _ = Describe("Feature: KCP AliCloud RedisInstance", func() {
 		})
 
 		By("Then RedisInstance is Ready and parameters are applied to the instance", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), redisInstance,
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
-				).Should(Succeed(), "expected RedisInstance to reach Ready with parameters")
+				)
+			}).Should(Succeed(), "expected RedisInstance to reach Ready with parameters")
 		})
 
 		By("And Given mock Config reflects the applied parameters", func() {

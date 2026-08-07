@@ -28,6 +28,11 @@ func (b *testAlicloudRedisInstanceBuilder) WithRedisTier(redisTier cloudresource
 	return b
 }
 
+func (b *testAlicloudRedisInstanceBuilder) WithIpRange(ipRangeName string) *testAlicloudRedisInstanceBuilder {
+	b.AlicloudRedisInstanceBuilder.WithIpRange(ipRangeName)
+	return b
+}
+
 func (b *testAlicloudRedisInstanceBuilder) WithEngineVersion(engineVersion string) *testAlicloudRedisInstanceBuilder {
 	b.AlicloudRedisInstanceBuilder.WithEngineVersion(engineVersion)
 	return b
@@ -153,6 +158,27 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", Ordered, func() {
 			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisInstance]) {
 				b.(*testAlicloudRedisInstanceBuilder).WithAuthSecretExtraData(map[string]string{"key": "v2"})
 			},
+		)
+	})
+
+	Context("Scenario: redisTier enum validation", func() {
+
+		canNotCreateSkr(
+			"AlicloudRedisInstance cannot be created with invalid redisTier",
+			newTestAlicloudRedisInstanceBuilder().WithRedisTier("X1"),
+			"",
+		)
+	})
+
+	Context("Scenario: IpRange immutability", func() {
+
+		canNotChangeSkr(
+			"AlicloudRedisInstance IpRange cannot be changed",
+			newTestAlicloudRedisInstanceBuilder().WithIpRange("original-ip-range"),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisInstance]) {
+				b.(*testAlicloudRedisInstanceBuilder).WithIpRange("changed-ip-range")
+			},
+			"IpRange is immutable.",
 		)
 	})
 })
