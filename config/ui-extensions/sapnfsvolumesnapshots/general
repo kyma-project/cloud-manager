@@ -1,0 +1,10 @@
+resource:
+  group: cloud-resources.kyma-project.io
+  kind: SapNfsVolumeSnapshot
+  version: v1beta1
+urlPath: sapnfsvolumesnapshots
+name: SAP NFS Volume Snapshot
+scope: namespace
+category: Storage
+icon: shelf
+description: SapNfsVolumeSnapshot is a point-in-time snapshot of a SapNfsVolume.

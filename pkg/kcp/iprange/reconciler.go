@@ -31,8 +31,7 @@ type ipRangeReconciler struct {
 
 	awsStateFactory      awsiprange.StateFactory
 	azureStateFactory    azureiprange.StateFactory
-	gcpV3StateFactory    gcpiprange.V3StateFactory // v3 refactored state factory (NEW pattern)
-	gcpV2StateFactory    gcpiprange.V2StateFactory // v2 legacy state factory
+	gcpV3StateFactory    gcpiprange.V3StateFactory
 	sapStateFactory      sapiprange.StateFactory
 	alicloudStateFactory alicloudiprange.StateFactory
 }
@@ -43,7 +42,6 @@ func NewIPRangeReconciler(
 	awsStateFactory awsiprange.StateFactory,
 	azureStateFactory azureiprange.StateFactory,
 	gcpV3StateFactory gcpiprange.V3StateFactory,
-	gcpV2StateFactory gcpiprange.V2StateFactory,
 	sapStateFactory sapiprange.StateFactory,
 	alicloudStateFactory alicloudiprange.StateFactory,
 ) IPRangeReconciler {
@@ -53,7 +51,6 @@ func NewIPRangeReconciler(
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
 		gcpV3StateFactory:    gcpV3StateFactory,
-		gcpV2StateFactory:    gcpV2StateFactory,
 		sapStateFactory:      sapStateFactory,
 		alicloudStateFactory: alicloudStateFactory,
 	}
@@ -89,7 +86,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 						nil,
 						composed.NewCase(statewithscope.AwsProviderPredicate, awsiprange.NewAllocateIpRangeAction(r.awsStateFactory)),
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureiprange.NewAllocateIpRangeAction(r.azureStateFactory)),
-						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.NewAllocateIpRangeAction(r.gcpV3StateFactory, r.gcpV2StateFactory)),
+						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.NewAllocateIpRangeAction(r.gcpV3StateFactory)),
 						composed.NewCase(statewithscope.OpenStackProviderPredicate, sapiprange.NewAllocateIpRangeAction(r.sapStateFactory)),
 						composed.NewCase(
 							composed.All(
@@ -138,7 +135,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 						nil,
 						composed.NewCase(statewithscope.AwsProviderPredicate, awsiprange.New(r.awsStateFactory)),
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
-						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.New(r.gcpV3StateFactory, r.gcpV2StateFactory)),
+						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.New(r.gcpV3StateFactory)),
 						composed.NewCase(statewithscope.OpenStackProviderPredicate, sapiprange.New(r.sapStateFactory)),
 						composed.NewCase(
 							composed.All(

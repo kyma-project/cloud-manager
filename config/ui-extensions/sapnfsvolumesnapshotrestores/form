@@ -1,0 +1,83 @@
+- path: spec.sourceSnapshot
+  name: spec.sourceSnapshot
+  widget: FormGroup
+  required: true
+  children:
+    - path: name
+      name: spec.sourceSnapshot.name
+      widget: Text
+      required: true
+      disableOnEdit: true
+      description: The SapNfsVolumeSnapshot to restore from. Immutable once set.
+    - path: namespace
+      name: spec.sourceSnapshot.namespace
+      widget: Text
+      required: false
+      disableOnEdit: true
+      description: Immutable once set.
+- path: spec.destination.existingVolume
+  name: spec.destination.existingVolume
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.destination.existingVolume.name
+      widget: Text
+      required: false
+      disableOnEdit: true
+      description: >-
+        Fill EITHER Existing Volume OR New Volume - not both. The referenced
+        snapshot must be the most recent snapshot of this volume. Immutable once set.
+    - path: namespace
+      name: spec.destination.existingVolume.namespace
+      widget: Text
+      required: false
+      disableOnEdit: true
+      description: Immutable once set.
+- path: spec.destination.newVolume
+  name: spec.destination.newVolume
+  widget: FormGroup
+  required: false
+  children:
+    - path: metadata.name
+      name: spec.destination.newVolume.metadata.name
+      widget: Text
+      required: false
+      disableOnEdit: true
+      description: >-
+        Fill EITHER New Volume OR Existing Volume - not both. Leave empty when
+        restoring in place to an existing volume. Immutable once set.
+    - path: metadata.namespace
+      name: spec.destination.newVolume.metadata.namespace
+      widget: Text
+      required: false
+      disableOnEdit: true
+      description: Immutable once set.
+    - path: metadata.labels
+      name: spec.destination.newVolume.metadata.labels
+      widget: KeyValuePair
+      required: false
+      disableOnEdit: true
+    - path: metadata.annotations
+      name: spec.destination.newVolume.metadata.annotations
+      widget: KeyValuePair
+      required: false
+      disableOnEdit: true
+    - path: spec.capacityGb
+      name: spec.destination.newVolume.spec.capacityGb
+      widget: Number
+      required: false
+      disableOnEdit: true
+      description: Immutable once set.
+    - path: spec.volume.name
+      name: spec.destination.newVolume.spec.volume.name
+      widget: Text
+      required: false
+      disableOnEdit: true
+      description: Immutable once set.
+    - path: spec.volumeClaim.name
+      name: spec.destination.newVolume.spec.volumeClaim.name
+      widget: Text
+      required: false
+      disableOnEdit: true
+      description: Immutable once set.

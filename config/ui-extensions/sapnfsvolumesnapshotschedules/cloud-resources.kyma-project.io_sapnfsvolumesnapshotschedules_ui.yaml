@@ -1,0 +1,190 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - widget: Labels
+            source: schedule
+            name: spec.schedule
+          - widget: Labels
+            source: prefix
+            name: spec.prefix
+          - widget: Labels
+            source: startTime
+            name: spec.startTime
+          - widget: Labels
+            source: endTime
+            name: spec.endTime
+          - widget: Labels
+            source: maxRetentionDays
+            name: spec.maxRetentionDays
+          - widget: Labels
+            source: maxReadySnapshots
+            name: spec.maxReadySnapshots
+          - widget: Labels
+            source: maxFailedSnapshots
+            name: spec.maxFailedSnapshots
+          - widget: Labels
+            source: suspend
+            name: spec.suspend
+          - widget: Labels
+            source: deleteCascade
+            name: spec.deleteCascade
+      - name: template
+        widget: Panel
+        source: spec.template
+        children:
+          - widget: Labels
+            source: spec.sourceVolume.name
+            name: spec.template.spec.sourceVolume.name
+          - widget: Labels
+            source: spec.sourceVolume.namespace
+            name: spec.template.spec.sourceVolume.namespace
+          - widget: Labels
+            source: spec.deleteAfterDays
+            name: spec.template.spec.deleteAfterDays
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - widget: Labels
+            source: state
+            name: status.state
+          - widget: Labels
+            source: schedule
+            name: status.schedule
+          - widget: Labels
+            source: nextRunTimes
+            name: status.nextRunTimes
+          - widget: Labels
+            source: lastCreateRun
+            name: status.lastCreateRun
+          - widget: Labels
+            source: lastCreatedBackup.name
+            name: status.lastCreatedBackup.name
+          - widget: Labels
+            source: snapshotIndex
+            name: status.snapshotIndex
+          - widget: Labels
+            source: backupCount
+            name: status.backupCount
+  form: |
+    - path: spec.template.spec.sourceVolume
+      name: spec.template.spec.sourceVolume
+      widget: FormGroup
+      required: true
+      children:
+        - path: name
+          name: spec.template.spec.sourceVolume.name
+          widget: Text
+          required: true
+          description: The SapNfsVolume to snapshot on each run.
+        - path: namespace
+          name: spec.template.spec.sourceVolume.namespace
+          widget: Text
+          required: false
+    - path: spec.schedule
+      name: spec.schedule
+      widget: Text
+      required: false
+      description: Cron expression. If empty, a one-time snapshot is created.
+    - path: spec.prefix
+      name: spec.prefix
+      required: false
+    - path: spec.startTime
+      name: spec.startTime
+      required: false
+    - path: spec.endTime
+      name: spec.endTime
+      required: false
+    - path: spec.maxRetentionDays
+      name: spec.maxRetentionDays
+      widget: Number
+      required: false
+    - path: spec.maxReadySnapshots
+      name: spec.maxReadySnapshots
+      widget: Number
+      required: false
+    - path: spec.maxFailedSnapshots
+      name: spec.maxFailedSnapshots
+      widget: Number
+      required: false
+    - path: spec.suspend
+      name: spec.suspend
+      required: false
+    - path: spec.deleteCascade
+      name: spec.deleteCascade
+      required: false
+      description: When enabled, deleting this schedule also deletes all snapshots it created.
+    - path: spec.template.labels
+      name: spec.template.labels
+      widget: KeyValuePair
+      required: false
+    - path: spec.template.annotations
+      name: spec.template.annotations
+      widget: KeyValuePair
+      required: false
+  general: |
+    resource:
+      group: cloud-resources.kyma-project.io
+      kind: SapNfsVolumeSnapshotSchedule
+      version: v1beta1
+    urlPath: sapnfsvolumesnapshotschedules
+    name: SAP NFS Volume Snapshot Schedule
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: SapNfsVolumeSnapshotSchedule schedules recurring snapshots of a SapNfsVolume.
+  list: |
+    - source: spec.schedule
+      name: spec.schedule
+      sort: true
+    - source: status.lastCreateRun
+      name: status.lastCreateRun
+      sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+    - source: status.backupCount
+      name: status.backupCount
+      sort: true
+  translations: |
+    en:
+      configuration: Configuration
+      spec.schedule: Schedule
+      spec.prefix: Prefix
+      spec.startTime: Start Time
+      spec.endTime: End Time
+      spec.maxRetentionDays: Max Retention Days
+      spec.maxReadySnapshots: Max Ready Snapshots
+      spec.maxFailedSnapshots: Max Failed Snapshots
+      spec.suspend: Suspend
+      spec.deleteCascade: Delete Cascade
+      spec.template.labels: Template Labels
+      spec.template.annotations: Template Annotations
+      template: Template
+      spec.template.spec.sourceVolume: Source Volume
+      spec.template.spec.sourceVolume.name: Source Volume Name
+      spec.template.spec.sourceVolume.namespace: Source Volume Namespace
+      spec.template.spec.deleteAfterDays: Delete After Days
+      status: Status
+      status.state: State
+      status.schedule: Active Schedule
+      status.nextRunTimes: Next Run Times
+      status.lastCreateRun: Last Run Time
+      status.lastCreatedBackup.name: Last Created Snapshot
+      status.snapshotIndex: Snapshot Index
+      status.backupCount: Snapshot Count
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: sapnfsvolumesnapshotschedules-ui.operator.kyma-project.io
+  namespace: kyma-system

@@ -112,11 +112,8 @@ var _ = BeforeSuite(func() {
 		infra.AzureMock().IpRangeProvider(),
 		infra.GcpMock2().IpRangeServiceNetworkingProvider(), // v3: NEW pattern (GcpClientProvider) via mock2
 		infra.GcpMock2().IpRangeComputeProvider(),           // v3: NEW pattern (GcpClientProvider) via mock2
-		infra.GcpMock().ServiceNetworkingClientProvider(),   // v2: OLD pattern (ClientProvider)
-		infra.GcpMock().OldComputeClientProvider(),          // v2: OLD pattern (ClientProvider)
 		infra.SapMock().IpRangeProvider(),
 		infra.AlicloudMock().IpRangeClientProvider(),
-		env,
 	)).NotTo(HaveOccurred())
 	// NfsInstance
 	Expect(SetupNfsInstanceReconciler(
