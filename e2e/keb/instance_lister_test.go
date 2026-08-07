@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/elliotchance/pie/v2"
+	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,6 +34,12 @@ func (tid *TestableInstanceDetails) Change(ch IdChange) {
 	if ch.removeMe != nil {
 		tid.RemoveMe = *ch.removeMe
 	}
+	if ch.shootLastErrors != nil {
+		tid.ShootLastErrors = *ch.shootLastErrors
+	}
+	if ch.shootLastOperation != nil {
+		tid.ShootLastOperation = *ch.shootLastOperation
+	}
 }
 
 type IdChange struct {
@@ -43,6 +50,8 @@ type IdChange struct {
 	message               *string
 	provisioningCompleted *bool
 	removeMe              *bool
+	shootLastErrors       *[]gardenertypes.LastError
+	shootLastOperation    **gardenertypes.LastOperation
 }
 
 func NewIdChange(callCount int, opts ...IdChangeOption) IdChange {
@@ -82,6 +91,18 @@ func ChMessage(v string) IdChangeOption {
 func ChProvisioned(v bool) IdChangeOption {
 	return func(idChange *IdChange) {
 		idChange.provisioningCompleted = &v
+	}
+}
+
+func ChShootLastErrors(v []gardenertypes.LastError) IdChangeOption {
+	return func(idChange *IdChange) {
+		idChange.shootLastErrors = &v
+	}
+}
+
+func ChShootLastOperation(v *gardenertypes.LastOperation) IdChangeOption {
+	return func(idChange *IdChange) {
+		idChange.shootLastOperation = &v
 	}
 }
 
