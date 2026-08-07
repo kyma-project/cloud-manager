@@ -38,7 +38,7 @@ var _ = func() {
 
 	// filtering addresses by network
 	// ListGlobalAddresses
-	// pkg/kcp/provider/gcp/iprange/client/oldComputeClient.go
+	// pkg/kcp/provider/gcp/iprange/client/computeClient.go
 	var _ = fmt.Sprintf("network=\"https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s\"", projectId, vpc)
 
 	// FindRestoreOperation
