@@ -255,6 +255,14 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 			rt.Status.State = infrastructuremanagerv1.RuntimeStateFailed
 			statusChanged = true
 		}
+		if rt.Status.ShootLastOperation != shoot.Status.LastOperation {
+			rt.Status.ShootLastOperation = shoot.Status.LastOperation
+			statusChanged = true
+		}
+		if len(rt.Status.ShootLastErrors) != len(shoot.Status.LastErrors) {
+			rt.Status.ShootLastErrors = shoot.Status.LastErrors
+			statusChanged = true
+		}
 
 		if statusChanged {
 			logger.Info("Updating Runtime Status with shoot error state")
@@ -273,6 +281,14 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 		}
 		if rt.Status.State == infrastructuremanagerv1.RuntimeStateFailed || rt.Status.State == "" {
 			rt.Status.State = infrastructuremanagerv1.RuntimeStatePending
+			statusChanged = true
+		}
+		if rt.Status.ShootLastOperation != nil {
+			rt.Status.ShootLastOperation = nil
+			statusChanged = true
+		}
+		if len(rt.Status.ShootLastErrors) != 0 {
+			rt.Status.ShootLastErrors = nil
 			statusChanged = true
 		}
 		if statusChanged {

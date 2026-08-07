@@ -26,14 +26,15 @@ type WaitOption interface {
 }
 
 type waitOptions struct {
-	runtimeId           string
-	alias               string
-	timeout             time.Duration
-	interval            time.Duration
-	progressCallback    func(WaitProgress)
-	logger              logr.Logger
-	errorCountThreshold int
-	sleeper             util.Sleeper
+	runtimeId        string
+	alias            string
+	timeout          time.Duration
+	interval         time.Duration
+	progressCallback func(WaitProgress)
+	logger           logr.Logger
+	errorDuration    time.Duration
+	sleeper          util.Sleeper
+	nowFunc          func() time.Time
 }
 
 func (o *waitOptions) validate() error {
@@ -50,11 +51,14 @@ func (o *waitOptions) validate() error {
 	if o.interval == 0 {
 		o.interval = 10 * time.Second
 	}
-	if o.errorCountThreshold == 0 {
-		o.errorCountThreshold = 36 // with interval 5s = 1min
+	if o.errorDuration == 0 {
+		o.errorDuration = 10 * time.Minute
 	}
 	if o.sleeper == nil {
 		o.sleeper = util.SleeperFunc(util.RealSleeperFunc)
+	}
+	if o.nowFunc == nil {
+		o.nowFunc = time.Now
 	}
 	return nil
 }
@@ -104,7 +108,7 @@ var defaultWaitOptions = []WaitOption{
 	WithTimeout(15 * time.Minute),
 	WithInterval(5 * time.Second),
 	WithProgressCallback(func(WaitProgress) {}),
-	WithErrorCountThreshold(12), // with interval 5s = 1min
+	WithErrorDuration(10 * time.Minute),
 	WithSleeperFunc(util.RealSleeperFunc),
 }
 
@@ -119,7 +123,8 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 
 	lastNotifyHash := "-"
 
-	runtimeErrorCount := map[string]int{}
+	// tracks the first time a transient error was seen per runtimeID
+	errorFirstSeen := map[string]time.Time{}
 
 	// map wait options to list options
 	var listOpts []ListOption
@@ -133,6 +138,8 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(ctx, options.timeout)
 	defer cancel()
+
+outerLoop:
 	for {
 		arr, err := lister.List(ctx, listOpts...)
 		if apierrors.IsNotFound(err) || meta.IsNoMatchError(err) {
@@ -181,17 +188,34 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 		lastNotifyHash = currentNotifyHash
 		options.progressCallback(wp)
 
-		// increase the error count for this runtime
+		// process instances in error state
 		for _, id := range withErr {
-			v := runtimeErrorCount[id.RuntimeID]
-			v++
-			runtimeErrorCount[id.RuntimeID] = v
+			// terminal or user-caused errors: fail immediately — no point waiting
+			if id.HasTerminalShootError() {
+				loopErr = fmt.Errorf("instance %s %s has terminal shoot error: %q", id.Alias, id.RuntimeID, id.Message)
+				break outerLoop
+			}
+			// transient error: record when we first saw it
+			if _, seen := errorFirstSeen[id.RuntimeID]; !seen {
+				errorFirstSeen[id.RuntimeID] = options.nowFunc()
+			}
 		}
 
-		// go through all runtimes with error counts and make err with those crossing the threshold
+		// clear recovered instances from the error tracker
+		withErrSet := make(map[string]bool, len(withErr))
+		for _, id := range withErr {
+			withErrSet[id.RuntimeID] = true
+		}
+		for runtimeID := range errorFirstSeen {
+			if !withErrSet[runtimeID] {
+				delete(errorFirstSeen, runtimeID)
+			}
+		}
+
+		// check if any transient error has exceeded the tolerance window
 		err = nil
-		for runtimeID, errorCount := range runtimeErrorCount {
-			if errorCount > options.errorCountThreshold {
+		for runtimeID, since := range errorFirstSeen {
+			if options.nowFunc().Sub(since) > options.errorDuration {
 				var id *InstanceDetails
 				for _, x := range arr {
 					if x.RuntimeID == runtimeID {
@@ -210,7 +234,7 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 			loopErr = err
 			break
 		}
-		// this is early exit, exiting the loop if no more pending, or there's some instance with error
+		// early exit when nothing left to wait for
 		if len(pending) == 0 && len(withErr) == 0 {
 			break
 		}
@@ -224,3 +248,4 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 
 	return nil
 }
+
