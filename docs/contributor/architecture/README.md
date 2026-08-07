@@ -16,7 +16,7 @@ Cloud Control reconcilers locally reconcile the `cloud-control.kyma-project.io` 
 
 Both sets of reconcilers must also maintain the status of the resources they reconcile. This means that Cloud Control reconcilers observe the status of the Cloud Resources resource group and project it into the status of the Cloud Control resources in KCP. At the same time, Cloud Resources reconcilers observe the status of the Cloud Control resources and project it into the status of the Cloud Control resource group in SKR.
 
-![API and Reconcilers](./assets/api-and-reconcilers.drawio.svg "API and Reconcilers")
+![API and Reconcilers](./assets/api-and-reconcilers.drawio.png "API and Reconcilers")
 
 ## KCP Cloud Control Controller Manager
 
@@ -28,7 +28,7 @@ Due to the non-scalable concurrent reconciliation of a large number of clusters,
 
 The reconciler-facing API, like `Reconcile()` and `.SetupWithManager()` functions, remains as close as possible to the one defined by controller-runtime and used by Kubebuilder.
 
-![SKR Controller Manager](./assets/skr-controller-manager.drawio.svg)
+![SKR Controller Manager](./assets/skr-controller-manager.drawio.png)
 
 ## CloudControl Scope Resource
 
