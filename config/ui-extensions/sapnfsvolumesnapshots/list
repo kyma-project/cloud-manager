@@ -1,0 +1,9 @@
+- source: spec.sourceVolume.name
+  name: spec.sourceVolume.name
+  sort: true
+- source: status.state
+  name: status.state
+  sort: true
+- source: status.sizeGb
+  name: status.sizeGb
+  sort: true

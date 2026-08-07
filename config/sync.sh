@@ -95,6 +95,9 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotsch
 # OpenStack UI
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 cp $SCRIPT_DIR/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnfsvolumes_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
+cp $SCRIPT_DIR/ui-extensions/sapnfsvolumesnapshots/cloud-resources.kyma-project.io_sapnfsvolumesnapshots_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
+cp $SCRIPT_DIR/ui-extensions/sapnfsvolumesnapshotrestores/cloud-resources.kyma-project.io_sapnfsvolumesnapshotrestores_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
+cp $SCRIPT_DIR/ui-extensions/sapnfsvolumesnapshotschedules/cloud-resources.kyma-project.io_sapnfsvolumesnapshotschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 
 # ============= AliCloud ================
 

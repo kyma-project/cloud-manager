@@ -1,0 +1,33 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - widget: Labels
+        source: sourceVolume.name
+        name: spec.sourceVolume.name
+      - widget: Labels
+        source: sourceVolume.namespace
+        name: spec.sourceVolume.namespace
+      - widget: Labels
+        source: deleteAfterDays
+        name: spec.deleteAfterDays
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - widget: Labels
+        source: state
+        name: status.state
+      - widget: Labels
+        source: id
+        name: status.id
+      - widget: Labels
+        source: openstackId
+        name: status.openstackId
+      - widget: Labels
+        source: sizeGb
+        name: status.sizeGb
+      - widget: Labels
+        source: shareId
+        name: status.shareId

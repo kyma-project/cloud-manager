@@ -1,0 +1,55 @@
+- path: spec.template.spec.sourceVolume
+  name: spec.template.spec.sourceVolume
+  widget: FormGroup
+  required: true
+  children:
+    - path: name
+      name: spec.template.spec.sourceVolume.name
+      widget: Text
+      required: true
+      description: The SapNfsVolume to snapshot on each run.
+    - path: namespace
+      name: spec.template.spec.sourceVolume.namespace
+      widget: Text
+      required: false
+- path: spec.schedule
+  name: spec.schedule
+  widget: Text
+  required: false
+  description: Cron expression. If empty, a one-time snapshot is created.
+- path: spec.prefix
+  name: spec.prefix
+  required: false
+- path: spec.startTime
+  name: spec.startTime
+  required: false
+- path: spec.endTime
+  name: spec.endTime
+  required: false
+- path: spec.maxRetentionDays
+  name: spec.maxRetentionDays
+  widget: Number
+  required: false
+- path: spec.maxReadySnapshots
+  name: spec.maxReadySnapshots
+  widget: Number
+  required: false
+- path: spec.maxFailedSnapshots
+  name: spec.maxFailedSnapshots
+  widget: Number
+  required: false
+- path: spec.suspend
+  name: spec.suspend
+  required: false
+- path: spec.deleteCascade
+  name: spec.deleteCascade
+  required: false
+  description: When enabled, deleting this schedule also deletes all snapshots it created.
+- path: spec.template.labels
+  name: spec.template.labels
+  widget: KeyValuePair
+  required: false
+- path: spec.template.annotations
+  name: spec.template.annotations
+  widget: KeyValuePair
+  required: false
