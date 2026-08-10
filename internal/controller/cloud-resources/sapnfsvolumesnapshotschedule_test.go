@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = SkipDescribe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
+var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 
 	It("Scenario: Recurring schedule with cascade delete", func() {
 		sapNfsVolumeName := "66da7e12-fe42-4b43-b738-b4319fae08d1"
@@ -35,15 +35,10 @@ var _ = SkipDescribe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 		skrsapnfsvolume.Ignore.AddName(sapNfsVolumeName)
 		defer skrsapnfsvolume.Ignore.RemoveName(sapNfsVolumeName)
 
-		// Pre-arm Ignore for the snapshot name the schedule will create on its
-		// first cron tick, BEFORE creating the schedule. Otherwise, when
-		// testFakeClock happens to sit within the scheduler's 1s tolerance of a
-		// minute boundary, the reconciler creates the snapshot before the test
-		// can arm Ignore — the snapshot picks up the common finalizer and gets
-		// stuck in Error/NfsVolumeNotReady, and cascade Delete() can never
-		// complete. For cron "* * * * *" with no StartTime, the reconciler's
-		// nextRunTime is deterministically the next minute boundary after
-		// testFakeClock.Now(), so we can compute the exact name up front.
+		// Pre-arm Ignore for the snapshot the schedule creates on its first tick, before
+		// creating the schedule, so the snapshot reconciler never picks up the common
+		// finalizer. For cron "* * * * *" with no StartTime the first run is the next
+		// minute boundary after now, so the name is deterministic.
 		firstTick := testFakeClock.Now().UTC().Truncate(time.Minute).Add(time.Minute)
 		snapshotName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, firstTick.Format("20060102-150405"))
 		skrsapnfsvolumesnapshot.Ignore.AddName(snapshotName)
