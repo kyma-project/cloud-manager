@@ -28,6 +28,7 @@ import (
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 )
 
 // KEB =============================================
@@ -278,6 +279,20 @@ func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetai
 func (id InstanceDetails) HasTerminalShootError() bool {
 	return commongardener.IsTerminalShootLastOperation(id.ShootLastOperation) ||
 		!commongardener.IsTransientShootErrors(id.ShootLastErrors)
+}
+
+func (id InstanceDetails) ShootInfo() string {
+	b, err := yaml.Marshal(struct {
+		ShootLastErrors    []gardenerapicore.LastError    `yaml:"shootLastErrors,omitempty"`
+		ShootLastOperation *gardenerapicore.LastOperation `yaml:"shootLastOperation,omitempty"`
+	}{
+		ShootLastErrors:    id.ShootLastErrors,
+		ShootLastOperation: id.ShootLastOperation,
+	})
+	if err != nil {
+		return fmt.Sprintf("shootLastErrors=%v shootLastOperation=%v", id.ShootLastErrors, id.ShootLastOperation)
+	}
+	return string(b)
 }
 
 func (k *defaultKeb) Config() *e2econfig.ConfigType {

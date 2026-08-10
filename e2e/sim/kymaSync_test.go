@@ -146,6 +146,28 @@ var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 				{Name: "aaa", State: operatorshared.StateReady},
 			},
 		},
+		{
+			// Stale-read shape: the SKR spec no longer lists the module (it was
+			// removed) but a stale cache read still shows it in SKR status. Once
+			// the reconcile resolves the removal (Processed with Ready), the
+			// module must be gone from BOTH SKR and KCP status - otherwise a
+			// lagging reconcile can strand it in KCP status (the sim flake).
+			title:   "sole module removed from spec, resolved and dropped from both statuses",
+			skrSpec: nil,
+			skrStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "cloud-manager", State: operatorshared.StateProcessing},
+			},
+			kcpSpec: nil,
+			kcpStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "cloud-manager", State: operatorshared.StateProcessing},
+			},
+			processed:        map[string]operatorshared.State{"cloud-manager": operatorshared.StateReady},
+			changedSkrStatus: true,
+			changedKcpSpec:   false,
+			changedKcpStatus: true,
+			removedModules:   []string{"cloud-manager"},
+			expectedStatus:   nil,
+		},
 	}
 
 	for _, tc := range testData {
