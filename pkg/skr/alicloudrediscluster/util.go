@@ -101,10 +101,7 @@ func redisTierToInstanceClass(tier cloudresourcesv1beta1.AlicloudRedisClusterTie
 	if !exists {
 		return "", errors.New("unknown redis cluster tier")
 	}
-	proxyCount := shardCount
-	if proxyCount < 4 {
-		proxyCount = 4
-	}
+	proxyCount := max(shardCount, 4)
 	return fmt.Sprintf("redis.logic.sharding.%dg.%ddb.0rodb.%dproxy.default", memGb, shardCount, proxyCount), nil
 }
 

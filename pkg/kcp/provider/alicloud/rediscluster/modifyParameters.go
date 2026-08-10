@@ -30,7 +30,7 @@ func modifyParameters(ctx context.Context, st composed.State) (error, context.Co
 	// including system defaults.
 	currentFull := map[string]string{}
 	if state.instance.Config != "" {
-		raw := map[string]interface{}{}
+		raw := map[string]any{}
 		if err := json.Unmarshal([]byte(state.instance.Config), &raw); err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error parsing AliCloud r-kvstore cluster config JSON",
