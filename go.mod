@@ -28,18 +28,18 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.8.1
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
 	github.com/alibabacloud-go/nas-20170626/v3 v3.5.2
-	github.com/alibabacloud-go/tea v1.5.2
+	github.com/alibabacloud-go/tea v1.5.3
 	github.com/alibabacloud-go/vpc-20160428/v6 v6.16.0
-	github.com/aws/aws-sdk-go-v2 v1.43.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.31
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.30
-	github.com/aws/aws-sdk-go-v2/service/backup v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.317.0
-	github.com/aws/aws-sdk-go-v2/service/efs v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.56.0
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/sts v1.45.0
-	github.com/aws/smithy-go v1.27.4
+	github.com/aws/aws-sdk-go-v2 v1.43.2
+	github.com/aws/aws-sdk-go-v2/config v1.32.33
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.32
+	github.com/aws/aws-sdk-go-v2/service/backup v1.59.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.318.0
+	github.com/aws/aws-sdk-go-v2/service/efs v1.44.2
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.56.2
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.44.2
+	github.com/aws/aws-sdk-go-v2/service/sts v1.45.2
+	github.com/aws/smithy-go v1.27.5
 	github.com/cucumber/godog v0.15.1
 	github.com/cucumber/messages/go/v21 v21.0.1
 	github.com/dop251/goja v0.0.0-20251008123653-cf18d89f3cf6
@@ -48,11 +48,11 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gardener/gardener v1.146.3
 	github.com/gardener/gardener-extension-provider-alicloud v1.72.0
-	github.com/gardener/gardener-extension-provider-aws v1.72.0
+	github.com/gardener/gardener-extension-provider-aws v1.72.1
 	github.com/gardener/gardener-extension-provider-azure v1.62.1
 	github.com/gardener/gardener-extension-provider-gcp v1.53.4
 	github.com/gardener/gardener-extension-provider-openstack v1.57.0
-	github.com/gardener/gardener/pkg/apis v1.147.1
+	github.com/gardener/gardener/pkg/apis v1.147.2
 	github.com/go-logr/logr v1.4.4
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.30.0
@@ -69,7 +69,7 @@ require (
 	github.com/onsi/gomega v1.42.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/peterbourgon/mergemap v0.0.1
-	github.com/prometheus/client_golang v1.24.0-rc.0
+	github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/client_model v0.6.2
 	github.com/rdumont/assistdog v0.0.0-20240711132531-b5b791dd7452
 	github.com/rodaine/table v1.3.1
@@ -112,15 +112,15 @@ require (
 	github.com/alibabacloud-go/tea-utils/v2 v2.0.9 // indirect
 	github.com/aliyun/credentials-go v1.4.5 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.31 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.31 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.31 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.32 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.31 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.5.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.33.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.0 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.33 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.33 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.33 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.34 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.14 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.33 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.5.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.33.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -176,7 +176,7 @@ require (
 	github.com/nikunjy/rules v1.5.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/common v0.70.0 // indirect
+	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/thomaspoignant/go-feature-flag/modules/core v0.7.2 // indirect
