@@ -11,7 +11,6 @@ import (
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
-	"k8s.io/utils/ptr"
 )
 
 func Mock() awsclient.SkrClientProvider[NukeClient] {
@@ -57,15 +56,15 @@ func (m *mockClient) AddWebACL(name, id, arn string, tags []wafv2types.Tag) {
 
 	m.webAcls[arn] = &mockWebACL{
 		Summary: wafv2types.WebACLSummary{
-			ARN:  ptr.To(arn),
-			Name: ptr.To(name),
-			Id:   ptr.To(id),
+			ARN:  new(arn),
+			Name: new(name),
+			Id:   new(id),
 		},
 		Tags: tags,
 		WebACL: &wafv2types.WebACL{
-			ARN:  ptr.To(arn),
-			Name: ptr.To(name),
-			Id:   ptr.To(id),
+			ARN:  new(arn),
+			Name: new(name),
+			Id:   new(id),
 		},
 		LockToken: "mock-lock-token-" + id,
 	}
@@ -79,7 +78,7 @@ func (m *mockClient) AddCertificate(arn string, tags []acmtypes.Tag) {
 
 	m.certificates[arn] = &mockCertificate{
 		Summary: acmtypes.CertificateSummary{
-			CertificateArn: ptr.To(arn),
+			CertificateArn: new(arn),
 		},
 		Tags: tags,
 	}
