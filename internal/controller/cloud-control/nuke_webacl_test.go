@@ -37,7 +37,7 @@ var _ = Describe("Feature: Nuke AWS WebACL", func() {
 
 		// Nuke reconciler is not triggered if there are no resources to delete see [resourceStatusDeleting]
 		vpcPeering := cloudcontrolv1beta1.NewVpcPeeringBuilder().
-			WithName("76b8fbba-588f-4662-b8d0-f5e9beacad47").
+			WithName("ad249d39-795a-44c8-9997-2344a3fe16f5").
 			WithScope(kymaName).
 			WithRemoteRef(DefaultSkrNamespace, "name").
 			WithAzurePeering("remotePeeringName", "remoteVNet", "remoteResourceGroup", false).
