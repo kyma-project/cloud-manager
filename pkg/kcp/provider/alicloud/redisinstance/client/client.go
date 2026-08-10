@@ -216,11 +216,11 @@ type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecr
 func NewClientProvider() ClientProvider {
 	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error) {
 		config := &openapi.Config{
-			AccessKeyId:     tea.String(accessKeyId),
-			AccessKeySecret: tea.String(accessKeySecret),
-			RegionId:        tea.String(region),
+			AccessKeyId:     new(accessKeyId),
+			AccessKeySecret: new(accessKeySecret),
+			RegionId:        new(region),
 		}
-		config.Endpoint = tea.String(fmt.Sprintf("r-kvstore.%s.aliyuncs.com", region))
+		config.Endpoint = new(fmt.Sprintf("r-kvstore.%s.aliyuncs.com", region))
 
 		rc, err := rkvstore.NewClient(config)
 		if err != nil {
@@ -258,32 +258,32 @@ type alicloudRedisClient struct {
 //   - redis.shard.*.ce                  → non-proxy cloud-native cluster (separate ShardCount)
 func (c *alicloudRedisClient) CreateInstance(ctx context.Context, opts CreateInstanceOptions) (string, error) {
 	req := &rkvstore.CreateInstanceRequest{
-		RegionId:      tea.String(c.region),
-		InstanceName:  tea.String(opts.InstanceName),
-		InstanceClass: tea.String(opts.InstanceClass),
-		EngineVersion: tea.String(opts.EngineVersion),
-		VpcId:         tea.String(opts.VpcId),
-		VSwitchId:     tea.String(opts.VSwitchId),
-		NetworkType:   tea.String(NetworkType),
-		ChargeType:    tea.String(ChargeType),
+		RegionId:      new(c.region),
+		InstanceName:  new(opts.InstanceName),
+		InstanceClass: new(opts.InstanceClass),
+		EngineVersion: new(opts.EngineVersion),
+		VpcId:         new(opts.VpcId),
+		VSwitchId:     new(opts.VSwitchId),
+		NetworkType:   new(NetworkType),
+		ChargeType:    new(ChargeType),
 	}
 	if opts.Password != "" {
-		req.Password = tea.String(opts.Password)
+		req.Password = new(opts.Password)
 	}
 	if opts.Port > 0 {
 		portStr := fmt.Sprintf("%d", opts.Port)
-		req.Port = tea.String(portStr)
+		req.Port = new(portStr)
 	}
 	if opts.ShardCount > 0 {
-		req.ShardCount = tea.Int32(opts.ShardCount)
+		req.ShardCount = new(opts.ShardCount)
 	}
 	// AliCloud defaults ReadOnlyCount to 0 for redis.master.* classes, so
 	// omitting the field for S-tier (ReadOnlyCount==0) is safe and correct.
 	if opts.ReadOnlyCount > 0 {
-		req.ReadOnlyCount = tea.Int32(opts.ReadOnlyCount)
+		req.ReadOnlyCount = new(opts.ReadOnlyCount)
 	}
 	if opts.Token != "" {
-		req.Token = tea.String(opts.Token)
+		req.Token = new(opts.Token)
 	}
 
 	resp, err := c.c.CreateInstance(req)
@@ -300,7 +300,7 @@ func (c *alicloudRedisClient) CreateInstance(ctx context.Context, opts CreateIns
 // when the instance is not found (caller should treat as "does not exist").
 func (c *alicloudRedisClient) DescribeInstance(ctx context.Context, instanceId string) (*InstanceInfo, error) {
 	req := &rkvstore.DescribeInstanceAttributeRequest{
-		InstanceId: tea.String(instanceId),
+		InstanceId: new(instanceId),
 	}
 	resp, err := c.c.DescribeInstanceAttribute(req)
 	if err != nil {
@@ -340,10 +340,10 @@ func (c *alicloudRedisClient) DescribeInstanceByName(ctx context.Context, name s
 	pageNum := int32(1)
 	for {
 		req := &rkvstore.DescribeInstancesRequest{
-			RegionId:   tea.String(c.region),
-			SearchKey:  tea.String(name),
+			RegionId:   new(c.region),
+			SearchKey:  new(name),
 			PageSize:   tea.Int32(pageSize),
-			PageNumber: tea.Int32(pageNum),
+			PageNumber: new(pageNum),
 		}
 		resp, err := c.c.DescribeInstances(req)
 		if err != nil {
@@ -371,13 +371,13 @@ func (c *alicloudRedisClient) DescribeInstanceByName(ctx context.Context, name s
 // separate calls.
 func (c *alicloudRedisClient) ModifyInstanceSpec(ctx context.Context, instanceId string, opts ModifyInstanceSpecOptions) error {
 	req := &rkvstore.ModifyInstanceSpecRequest{
-		InstanceId: tea.String(instanceId),
+		InstanceId: new(instanceId),
 	}
 	if opts.InstanceClass != "" {
-		req.InstanceClass = tea.String(opts.InstanceClass)
+		req.InstanceClass = new(opts.InstanceClass)
 	}
 	if opts.ShardCount > 0 {
-		req.ShardCount = tea.Int32(opts.ShardCount)
+		req.ShardCount = new(opts.ShardCount)
 	}
 	if opts.ReadOnlyCount != nil {
 		req.ReadOnlyCount = opts.ReadOnlyCount
@@ -393,7 +393,7 @@ func (c *alicloudRedisClient) ModifyInstanceSpec(ctx context.Context, instanceId
 // cannot be deleted via API (design decision 5) and are not supported in v1.
 func (c *alicloudRedisClient) DeleteInstance(ctx context.Context, instanceId string) error {
 	req := &rkvstore.DeleteInstanceRequest{
-		InstanceId: tea.String(instanceId),
+		InstanceId: new(instanceId),
 	}
 	if _, err := c.c.DeleteInstance(req); err != nil {
 		return fmt.Errorf("error deleting alicloud r-kvstore instance %s: %w", instanceId, err)
@@ -407,9 +407,9 @@ func (c *alicloudRedisClient) DeleteInstance(ctx context.Context, instanceId str
 // password at CreateInstance time (design decision 6).
 func (c *alicloudRedisClient) ResetAccountPassword(ctx context.Context, instanceId, accountName, password string) error {
 	req := &rkvstore.ResetAccountPasswordRequest{
-		InstanceId:      tea.String(instanceId),
-		AccountName:     tea.String(accountName),
-		AccountPassword: tea.String(password),
+		InstanceId:      new(instanceId),
+		AccountName:     new(accountName),
+		AccountPassword: new(password),
 	}
 	if _, err := c.c.ResetAccountPassword(req); err != nil {
 		return fmt.Errorf("error resetting password for alicloud r-kvstore instance %s account %s: %w", instanceId, accountName, err)
@@ -421,8 +421,8 @@ func (c *alicloudRedisClient) ResetAccountPassword(ctx context.Context, instance
 // instance. config must be a JSON object string as required by the AliCloud API.
 func (c *alicloudRedisClient) ModifyInstanceConfig(ctx context.Context, instanceId, config string) error {
 	req := &rkvstore.ModifyInstanceConfigRequest{
-		InstanceId: tea.String(instanceId),
-		Config:     tea.String(config),
+		InstanceId: new(instanceId),
+		Config:     new(config),
 	}
 	if _, err := c.c.ModifyInstanceConfig(req); err != nil {
 		return fmt.Errorf("error modifying alicloud r-kvstore instance %s config: %w", instanceId, err)
@@ -432,10 +432,10 @@ func (c *alicloudRedisClient) ModifyInstanceConfig(ctx context.Context, instance
 
 func (c *alicloudRedisClient) ModifySecurityIps(ctx context.Context, instanceId, securityIps string) error {
 	req := &rkvstore.ModifySecurityIpsRequest{
-		InstanceId:          tea.String(instanceId),
-		SecurityIps:         tea.String(securityIps),
-		SecurityIpGroupName: tea.String("default"),
-		ModifyMode:          tea.String("Cover"),
+		InstanceId:          new(instanceId),
+		SecurityIps:         new(securityIps),
+		SecurityIpGroupName: new("default"),
+		ModifyMode:          new("Cover"),
 	}
 	if _, err := c.c.ModifySecurityIps(req); err != nil {
 		return fmt.Errorf("error modifying alicloud r-kvstore instance %s security IPs: %w", instanceId, err)
@@ -445,7 +445,7 @@ func (c *alicloudRedisClient) ModifySecurityIps(ctx context.Context, instanceId,
 
 func (c *alicloudRedisClient) DescribeSecurityIps(ctx context.Context, instanceId string) (string, error) {
 	req := &rkvstore.DescribeSecurityIpsRequest{
-		InstanceId: tea.String(instanceId),
+		InstanceId: new(instanceId),
 	}
 	resp, err := c.c.DescribeSecurityIps(req)
 	if err != nil {
@@ -464,7 +464,7 @@ func (c *alicloudRedisClient) DescribeSecurityIps(ctx context.Context, instanceI
 
 func (c *alicloudRedisClient) DescribeInstanceSSL(ctx context.Context, instanceId string) (bool, error) {
 	req := &rkvstore.DescribeInstanceSSLRequest{
-		InstanceId: tea.String(instanceId),
+		InstanceId: new(instanceId),
 	}
 	resp, err := c.c.DescribeInstanceSSL(req)
 	if err != nil {
@@ -482,8 +482,8 @@ func (c *alicloudRedisClient) ModifyInstanceSSL(ctx context.Context, instanceId 
 		sslEnabled = "Enable"
 	}
 	req := &rkvstore.ModifyInstanceSSLRequest{
-		InstanceId: tea.String(instanceId),
-		SSLEnabled: tea.String(sslEnabled),
+		InstanceId: new(instanceId),
+		SSLEnabled: new(sslEnabled),
 	}
 	if _, err := c.c.ModifyInstanceSSL(req); err != nil {
 		return fmt.Errorf("error modifying alicloud r-kvstore instance %s SSL: %w", instanceId, err)

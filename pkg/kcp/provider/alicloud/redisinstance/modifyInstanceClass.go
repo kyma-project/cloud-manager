@@ -3,7 +3,6 @@ package redisinstance
 import (
 	"context"
 
-	"github.com/alibabacloud-go/tea/tea"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	alicloudclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -46,7 +45,7 @@ func modifyInstanceClass(ctx context.Context, st composed.State) (error, context
 	// (COMMODITY.INVALID_COMPONENT), so sending it unconditionally would break
 	// every class-only modification on those classes.
 	if readOnlyDrift {
-		opts.ReadOnlyCount = tea.Int32(desiredReadOnly)
+		opts.ReadOnlyCount = new(desiredReadOnly)
 	}
 
 	if err := state.client.ModifyInstanceSpec(ctx, state.instance.InstanceId, opts); err != nil {

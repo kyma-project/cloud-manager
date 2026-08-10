@@ -19,7 +19,6 @@ import (
 
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	rkvstore "github.com/alibabacloud-go/r-kvstore-20150101/v7/client"
-	"github.com/alibabacloud-go/tea/tea"
 
 	instanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
 )
@@ -49,11 +48,11 @@ type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecr
 func NewClientProvider() ClientProvider {
 	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error) {
 		config := &openapi.Config{
-			AccessKeyId:     tea.String(accessKeyId),
-			AccessKeySecret: tea.String(accessKeySecret),
-			RegionId:        tea.String(region),
+			AccessKeyId:     new(accessKeyId),
+			AccessKeySecret: new(accessKeySecret),
+			RegionId:        new(region),
 		}
-		config.Endpoint = tea.String(fmt.Sprintf("r-kvstore.%s.aliyuncs.com", region))
+		config.Endpoint = new(fmt.Sprintf("r-kvstore.%s.aliyuncs.com", region))
 
 		rc, err := rkvstore.NewClient(config)
 		if err != nil {
@@ -76,8 +75,8 @@ type alicloudRedisClusterClient struct {
 
 func (c *alicloudRedisClusterClient) AddShardingNode(ctx context.Context, instanceId string, targetShardCount int32) error {
 	req := &rkvstore.AddShardingNodeRequest{
-		InstanceId: tea.String(instanceId),
-		ShardCount: tea.Int32(targetShardCount),
+		InstanceId: new(instanceId),
+		ShardCount: new(targetShardCount),
 	}
 	if _, err := c.c.AddShardingNode(req); err != nil {
 		return fmt.Errorf("error adding sharding node to alicloud r-kvstore cluster %s: %w", instanceId, err)
@@ -87,8 +86,8 @@ func (c *alicloudRedisClusterClient) AddShardingNode(ctx context.Context, instan
 
 func (c *alicloudRedisClusterClient) DeleteShardingNode(ctx context.Context, instanceId string, targetShardCount int32) error {
 	req := &rkvstore.DeleteShardingNodeRequest{
-		InstanceId: tea.String(instanceId),
-		ShardCount: tea.Int32(targetShardCount),
+		InstanceId: new(instanceId),
+		ShardCount: new(targetShardCount),
 	}
 	if _, err := c.c.DeleteShardingNode(req); err != nil {
 		return fmt.Errorf("error deleting sharding node from alicloud r-kvstore cluster %s: %w", instanceId, err)
