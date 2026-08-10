@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/yaml"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/utils/clock"
@@ -278,6 +279,20 @@ func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetai
 func (id InstanceDetails) HasTerminalShootError() bool {
 	return commongardener.IsTerminalShootLastOperation(id.ShootLastOperation) ||
 		!commongardener.IsTransientShootErrors(id.ShootLastErrors)
+}
+
+func (id InstanceDetails) ShootInfo() string {
+	b, err := yaml.Marshal(struct {
+		ShootLastErrors    []gardenerapicore.LastError    `yaml:"shootLastErrors,omitempty"`
+		ShootLastOperation *gardenerapicore.LastOperation `yaml:"shootLastOperation,omitempty"`
+	}{
+		ShootLastErrors:    id.ShootLastErrors,
+		ShootLastOperation: id.ShootLastOperation,
+	})
+	if err != nil {
+		return fmt.Sprintf("shootLastErrors=%v shootLastOperation=%v", id.ShootLastErrors, id.ShootLastOperation)
+	}
+	return string(b)
 }
 
 func (k *defaultKeb) Config() *e2econfig.ConfigType {

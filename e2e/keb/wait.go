@@ -192,7 +192,7 @@ outerLoop:
 		for _, id := range withErr {
 			// terminal or user-caused errors: fail immediately — no point waiting
 			if id.HasTerminalShootError() {
-				loopErr = fmt.Errorf("instance %s %s has terminal shoot error: %q", id.Alias, id.RuntimeID, id.Message)
+				loopErr = fmt.Errorf("instance %s %s has terminal shoot error: %q %s", id.Alias, id.RuntimeID, id.Message, id.ShootInfo())
 				break outerLoop
 			}
 			// transient error: record when we first saw it
