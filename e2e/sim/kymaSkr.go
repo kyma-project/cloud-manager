@@ -373,6 +373,18 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
+	// If any module was resolved as removed this cycle, requeue once more as a
+	// backstop. Module removal is only fully applied on the cm==nil path, and a
+	// subsequent watch-triggered reconcile can run against a stale SKR cache
+	// read that still lists the module - re-mirroring it onto KCP status - after
+	// which the caches settle with no further watch event to correct it (the sim
+	// flake). The extra reconcile re-asserts the removal against a caught-up
+	// cache. Once SKR spec and status no longer list the module, modulesToRemove
+	// is empty and this returns without requeue, so it cannot loop indefinitely.
+	if len(outcome.AllRemovedModules()) > 0 {
+		return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
+	}
+
 	return reconcile.Result{}, nil
 }
 
