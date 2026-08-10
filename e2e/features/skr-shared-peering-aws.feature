@@ -33,8 +33,8 @@ Feature: AwsVpcPeering feature
 
     And HTTP operation succeeds:
       | Url            | http://${tf.private_ip_address}/base64/SFRUUEJJTiBpcyBhd2Vzb21l |
-      | ExpectedOutput | HTTPBIN is awesome                                               |
-      | MaxTime        | 30                                                               |
+      | ExpectedOutput | HTTPBIN is awesome                                              |
+      | Retry          | 10                                                              |
 
     When resource "peering" is deleted
     Then eventually resource "peering" does not exist

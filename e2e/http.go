@@ -14,6 +14,7 @@ type HttpOperation struct {
 	ContentType    string
 	Data           string
 	MaxTime        int
+	Retry          int
 	ExpectedOutput string
 }
 
@@ -37,6 +38,14 @@ func (h *HttpOperation) Args() []string {
 		"curl",
 		"-L", // follow location 3xx redirects
 		"-m", fmt.Sprintf("%d", h.MaxTime),
+	}
+	if h.Retry > 0 {
+		// By default, curl's --retry only retries on transient HTTP-level errors (5xx responses, transfer timeouts). It does not retry on connection-level failures like:
+		// - Error 7: Connection refused
+		// - Error 6: Could not resolve host
+		// Without --retry-all-errors, curl exits immediately on these errors instead of retrying.
+		curlArgs = append(curlArgs, "--retry", fmt.Sprintf("%d", h.Retry))
+		curlArgs = append(curlArgs, "--retry-all-errors")
 	}
 	if h.Method != "" {
 		curlArgs = append(curlArgs, "-X", h.Method)

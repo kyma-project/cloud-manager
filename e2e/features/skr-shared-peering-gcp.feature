@@ -36,7 +36,7 @@ Feature: GcpVpcPeering feature
     And HTTP operation succeeds:
       | Url            | http://${tf.instance_ip_address}|
       | ExpectedOutput | GCP VPC Peering is working!     |
-      | MaxTime        | 30                              |
+      | Retry          | 10                              |
 
     When resource "peering" is deleted
     Then eventually resource "peering" does not exist
