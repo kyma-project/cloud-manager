@@ -94,7 +94,7 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisclusters.y
 # Once designed, add alicloudredisinstances_ui.yaml and alicloudredisclusters_ui.yaml here.
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 
-
+# ============= OpenStack ================
 
 # OpenStack
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml       $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack

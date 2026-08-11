@@ -94,6 +94,16 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 
 	Context("Scenario: shardCount validation", func() {
 
+		canCreateSkr(
+			"AlicloudRedisCluster can be created with shardCount=1 (minimum)",
+			newTestAlicloudRedisClusterBuilder().WithShardCount(1),
+		)
+
+		canCreateSkr(
+			"AlicloudRedisCluster can be created with shardCount=32 (maximum)",
+			newTestAlicloudRedisClusterBuilder().WithShardCount(32),
+		)
+
 		canNotCreateSkr(
 			"AlicloudRedisCluster cannot be created with shardCount=0",
 			newTestAlicloudRedisClusterBuilder().WithShardCount(0),

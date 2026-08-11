@@ -74,7 +74,8 @@ func vSwitchCreate(ctx context.Context, st composed.State) (error, context.Conte
 				existing, lookupErr := state.client.DescribeVSwitchesByName(ctx, state.vpcId, name)
 				if lookupErr == nil && len(existing) > 0 {
 					logger.Info("AliCloud VSwitch already exists, reusing", "vSwitchId", existing[0].VSwitchId, "zone", zoneName)
-					state.vSwitches = append(state.vSwitches, &existing[0])
+					found := existing[0]
+					state.vSwitches = append(state.vSwitches, &found)
 					anyCreated = true
 					continue
 				}
