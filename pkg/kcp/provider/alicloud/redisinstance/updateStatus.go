@@ -30,6 +30,15 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
 	}
 
+	// ConnectionDomain is only populated once the instance leaves Creating; guard
+	// against writing a bare ":6379" endpoint if this runs before it is set.
+	if state.instance.ConnectionDomain == "" {
+		return composed.LogErrorAndReturn(
+			fmt.Errorf("ConnectionDomain is empty; instance endpoint not yet assigned"),
+			"AliCloud r-kvstore instance has no ConnectionDomain",
+			composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+	}
+
 	primaryEndpoint := fmt.Sprintf("%s:%d", state.instance.ConnectionDomain, state.instance.Port)
 	changed := false
 	if kcp.Status.PrimaryEndpoint != primaryEndpoint {
@@ -65,8 +74,11 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	hasReady := meta.FindStatusCondition(kcp.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) != nil
 	hasReadyState := kcp.Status.State == cloudcontrolv1beta1.StateReady
+	// A lingering Updating condition must not coexist with Ready. If one is present
+	// fall through to SetExclusiveConditions below, which clears it.
+	hasUpdating := meta.FindStatusCondition(kcp.Status.Conditions, cloudcontrolv1beta1.ConditionTypeUpdating) != nil
 
-	if !changed && hasReady && hasReadyState {
+	if !changed && hasReady && hasReadyState && !hasUpdating {
 		return composed.StopAndForget, ctx
 	}
 	kcp.Status.State = cloudcontrolv1beta1.StateReady
