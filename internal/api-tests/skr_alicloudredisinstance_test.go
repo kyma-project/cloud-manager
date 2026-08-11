@@ -13,7 +13,8 @@ func newTestAlicloudRedisInstanceBuilder() *testAlicloudRedisInstanceBuilder {
 	return &testAlicloudRedisInstanceBuilder{
 		instance: cloudresourcesv1beta1.AlicloudRedisInstance{
 			Spec: cloudresourcesv1beta1.AlicloudRedisInstanceSpec{
-				RedisTier: cloudresourcesv1beta1.AlicloudRedisTierS1,
+				RedisTier:     cloudresourcesv1beta1.AlicloudRedisTierS1,
+				EngineVersion: "5.0",
 			},
 		},
 	}
