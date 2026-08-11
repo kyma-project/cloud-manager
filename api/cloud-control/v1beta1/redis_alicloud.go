@@ -41,7 +41,6 @@ type RedisInstanceAlicloud struct {
 	EngineVersion string `json:"engineVersion"`
 
 	// ReadOnlyCount: 0 = S tier (no read replica), 1 = P tier (one read replica).
-	// +optional
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1
@@ -91,7 +90,7 @@ type RedisClusterAlicloud struct {
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1
-	ReplicasPerShard int32 `json:"replicasPerShard,omitempty"`
+	ReplicasPerShard int32 `json:"replicasPerShard"`
 
 	// Parameters are passed to the AliCloud instance as runtime configuration.
 	// +optional

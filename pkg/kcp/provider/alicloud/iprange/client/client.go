@@ -205,18 +205,25 @@ func (c *alicloudClient) DescribeZones(ctx context.Context) ([]string, error) {
 }
 
 func (c *alicloudClient) DescribeVSwitchesByVpcId(ctx context.Context, vpcId string) ([]VSwitchInfo, error) {
-	req := &vpc.DescribeVSwitchesRequest{
-		RegionId: new(c.region),
-		VpcId:    new(vpcId),
-	}
-
-	resp, err := c.vpcClient.DescribeVSwitches(req)
-	if err != nil {
-		return nil, fmt.Errorf("error describing alicloud vswitches for vpc %s: %w", vpcId, err)
-	}
-
 	var result []VSwitchInfo
-	if resp.Body != nil && resp.Body.VSwitches != nil {
+	var pageNumber int32 = 1
+	const pageSize int32 = 50
+	for {
+		req := &vpc.DescribeVSwitchesRequest{
+			RegionId:   new(c.region),
+			VpcId:      new(vpcId),
+			PageNumber: new(pageNumber),
+			PageSize:   new(pageSize),
+		}
+
+		resp, err := c.vpcClient.DescribeVSwitches(req)
+		if err != nil {
+			return nil, fmt.Errorf("error describing alicloud vswitches for vpc %s: %w", vpcId, err)
+		}
+
+		if resp.Body == nil || resp.Body.VSwitches == nil {
+			break
+		}
 		for _, v := range resp.Body.VSwitches.VSwitch {
 			result = append(result, VSwitchInfo{
 				VSwitchId:   tea.StringValue(v.VSwitchId),
@@ -227,8 +234,11 @@ func (c *alicloudClient) DescribeVSwitchesByVpcId(ctx context.Context, vpcId str
 				Status:      tea.StringValue(v.Status),
 			})
 		}
+		if int32(len(resp.Body.VSwitches.VSwitch)) < pageSize {
+			break
+		}
+		pageNumber++
 	}
-
 	return result, nil
 }
 

@@ -96,6 +96,7 @@ spec:
                         type: integer
                     required:
                     - instanceClass
+                    - readOnlyCount
                     type: object
                   aws:
                     properties:

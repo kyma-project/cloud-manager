@@ -78,6 +78,9 @@ func vSwitchCreate(ctx context.Context, st composed.State) (error, context.Conte
 					anyCreated = true
 					continue
 				}
+				if lookupErr != nil {
+					logger.Error(lookupErr, "Error looking up existing AliCloud VSwitch after CIDR overlap", "zone", zoneName)
+				}
 			}
 			logger.Error(err, "Error creating AliCloud VSwitch for IpRange")
 			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError

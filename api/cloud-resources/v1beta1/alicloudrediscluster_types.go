@@ -29,7 +29,7 @@ import (
 type AlicloudRedisClusterSpec struct {
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf),message="IpRange is immutable."
-	IpRange IpRangeRef `json:"ipRange"`
+	IpRange IpRangeRef `json:"ipRange,omitempty"`
 
 	// RedisTier defines per-shard capacity.
 	// Total capacity = tier_memory × shardCount.
@@ -72,6 +72,9 @@ type AlicloudRedisClusterSpec struct {
 type AlicloudRedisClusterStatus struct {
 	// +optional
 	Id string `json:"id,omitempty"`
+
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// List of status conditions
 	// +optional

@@ -34,6 +34,15 @@ func TestEmbeddedConfig(t *testing.T) {
 	assert.True(t, ApiDisabled.Value(ContextBuilderFromCtx(ctx).BrokerPlan("trial").Build(ctx)),
 		"apiDisabled targeting broker plan trial should be true")
 
+	assert.True(t, ApiDisabled.Value(ContextBuilderFromCtx(ctx).Feature(types.FeatureAzureManagedRedis).Build(ctx)),
+		"apiDisabled targeting feature azureManagedRedis should be true")
+
+	assert.True(t, ApiDisabled.Value(ContextBuilderFromCtx(ctx).Feature(types.FeatureAlicloudRedisInstance).Build(ctx)),
+		"apiDisabled targeting feature alicloudRedisInstance should be true")
+
+	assert.True(t, ApiDisabled.Value(ContextBuilderFromCtx(ctx).Feature(types.FeatureAlicloudRedisCluster).Build(ctx)),
+		"apiDisabled targeting feature alicloudRedisCluster should be true")
+
 	assert.False(t, ApiDisabled.Value(ContextBuilderFromCtx(ctx).Feature(types.FeaturePeering).Build(ctx)),
 		"apiDisabled targeting feature peering should be false")
 

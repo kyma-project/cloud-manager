@@ -29,6 +29,11 @@ func (b *AlicloudRedisClusterBuilder) WithShardCount(shardCount int32) *Alicloud
 	return b
 }
 
+func (b *AlicloudRedisClusterBuilder) WithReplicasPerShard(replicasPerShard int32) *AlicloudRedisClusterBuilder {
+	b.AlicloudRedisCluster.Spec.ReplicasPerShard = replicasPerShard
+	return b
+}
+
 func (b *AlicloudRedisClusterBuilder) WithEngineVersion(engineVersion string) *AlicloudRedisClusterBuilder {
 	b.AlicloudRedisCluster.Spec.EngineVersion = engineVersion
 	return b

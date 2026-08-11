@@ -199,6 +199,9 @@ spec:
                   x-kubernetes-list-type: map
                 id:
                   type: string
+                observedGeneration:
+                  format: int64
+                  type: integer
                 state:
                   type: string
               type: object
