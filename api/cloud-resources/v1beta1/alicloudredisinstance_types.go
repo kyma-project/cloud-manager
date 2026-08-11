@@ -28,7 +28,9 @@ import (
 // r-kvstore instance. See AlicloudRedisCluster for sharded clusters.
 type AlicloudRedisInstanceSpec struct {
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf),message="IpRange is immutable."
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
+	// omitempty is required: without it an unset IpRange serialises as {"name":""}, which combined
+	// with the self==oldSelf XValidation permanently locks IpRange to the empty-string on creation.
 	IpRange IpRangeRef `json:"ipRange,omitempty"`
 
 	// RedisTier defines service and capacity tier.
@@ -39,10 +41,11 @@ type AlicloudRedisInstanceSpec struct {
 	RedisTier AlicloudRedisTier `json:"redisTier"`
 
 	// EngineVersion is the Redis engine version. Immutable after creation.
+	// +optional
 	// +kubebuilder:default="5.0"
 	// +kubebuilder:validation:Enum="5.0";"6.0";"7.0"
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf),message="engineVersion is immutable."
-	EngineVersion string `json:"engineVersion"`
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="engineVersion is immutable."
+	EngineVersion string `json:"engineVersion,omitempty"`
 
 	// Parameters are passed to the AliCloud instance as runtime configuration.
 	// +optional

@@ -6,55 +6,49 @@ import (
 )
 
 type testAlicloudRedisClusterBuilder struct {
-	instance cloudresourcesv1beta1.AlicloudRedisCluster
+	*cloudresourcesv1beta1.AlicloudRedisClusterBuilder
 }
 
 func newTestAlicloudRedisClusterBuilder() *testAlicloudRedisClusterBuilder {
 	return &testAlicloudRedisClusterBuilder{
-		instance: cloudresourcesv1beta1.AlicloudRedisCluster{
-			Spec: cloudresourcesv1beta1.AlicloudRedisClusterSpec{
-				RedisTier:     cloudresourcesv1beta1.AlicloudRedisClusterTierC3,
-				ShardCount:    2,
-				EngineVersion: "5.0",
-			},
-		},
+		AlicloudRedisClusterBuilder: cloudresourcesv1beta1.NewAlicloudRedisClusterBuilder().
+			WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC3).
+			WithShardCount(2).
+			WithEngineVersion("5.0"),
 	}
 }
 
 func (b *testAlicloudRedisClusterBuilder) Build() *cloudresourcesv1beta1.AlicloudRedisCluster {
-	return &b.instance
+	return &b.AlicloudRedisCluster
 }
 
 func (b *testAlicloudRedisClusterBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.AlicloudRedisClusterTier) *testAlicloudRedisClusterBuilder {
-	b.instance.Spec.RedisTier = redisTier
+	b.AlicloudRedisClusterBuilder.WithRedisTier(redisTier)
 	return b
 }
 
 func (b *testAlicloudRedisClusterBuilder) WithIpRange(ipRangeName string) *testAlicloudRedisClusterBuilder {
-	b.instance.Spec.IpRange.Name = ipRangeName
+	b.AlicloudRedisClusterBuilder.WithIpRange(ipRangeName)
 	return b
 }
 
 func (b *testAlicloudRedisClusterBuilder) WithEngineVersion(engineVersion string) *testAlicloudRedisClusterBuilder {
-	b.instance.Spec.EngineVersion = engineVersion
+	b.AlicloudRedisClusterBuilder.WithEngineVersion(engineVersion)
 	return b
 }
 
 func (b *testAlicloudRedisClusterBuilder) WithReplicasPerShard(replicasPerShard int32) *testAlicloudRedisClusterBuilder {
-	b.instance.Spec.ReplicasPerShard = replicasPerShard
+	b.AlicloudRedisClusterBuilder.WithReplicasPerShard(replicasPerShard)
 	return b
 }
 
 func (b *testAlicloudRedisClusterBuilder) WithShardCount(shardCount int32) *testAlicloudRedisClusterBuilder {
-	b.instance.Spec.ShardCount = shardCount
+	b.AlicloudRedisClusterBuilder.WithShardCount(shardCount)
 	return b
 }
 
 func (b *testAlicloudRedisClusterBuilder) WithAuthSecretName(name string) *testAlicloudRedisClusterBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Name = name
+	b.AlicloudRedisClusterBuilder.WithAuthSecretName(name)
 	return b
 }
 

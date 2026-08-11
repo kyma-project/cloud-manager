@@ -14,6 +14,13 @@ type AlicloudRedisInstanceBuilder struct {
 	AlicloudRedisInstance AlicloudRedisInstance
 }
 
+func (b *AlicloudRedisInstanceBuilder) Reset() *AlicloudRedisInstanceBuilder {
+	b.AlicloudRedisInstance = AlicloudRedisInstance{
+		Spec: AlicloudRedisInstanceSpec{},
+	}
+	return b
+}
+
 func (b *AlicloudRedisInstanceBuilder) WithIpRange(ipRangeName string) *AlicloudRedisInstanceBuilder {
 	b.AlicloudRedisInstance.Spec.IpRange.Name = ipRangeName
 	return b
@@ -63,5 +70,15 @@ func (b *AlicloudRedisInstanceBuilder) WithAuthSecretExtraData(extraData map[str
 		b.AlicloudRedisInstance.Spec.AuthSecret = &RedisAuthSecretSpec{}
 	}
 	b.AlicloudRedisInstance.Spec.AuthSecret.ExtraData = extraData
+	return b
+}
+
+func (b *AlicloudRedisInstanceBuilder) WithAuthSecret(name string, labels, annotations, extraData map[string]string) *AlicloudRedisInstanceBuilder {
+	b.AlicloudRedisInstance.Spec.AuthSecret = &RedisAuthSecretSpec{
+		Name:        name,
+		Labels:      labels,
+		Annotations: annotations,
+		ExtraData:   extraData,
+	}
 	return b
 }

@@ -90,6 +90,8 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisinstances.
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisclusters.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 
 # AliCloud UI
+# Note: AliCloud Redis UI extensions (Busola forms) are not yet designed.
+# Once designed, add alicloudredisinstances_ui.yaml and alicloudredisclusters_ui.yaml here.
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 
 

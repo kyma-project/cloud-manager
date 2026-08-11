@@ -28,7 +28,9 @@ import (
 // cluster instance. See AlicloudRedisInstance for standard (non-sharded) HA.
 type AlicloudRedisClusterSpec struct {
 	// +optional
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf),message="IpRange is immutable."
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
+	// omitempty is required: without it an unset IpRange serialises as {"name":""}, which combined
+	// with the self==oldSelf XValidation permanently locks IpRange to the empty-string on creation.
 	IpRange IpRangeRef `json:"ipRange,omitempty"`
 
 	// RedisTier defines per-shard capacity.
@@ -50,14 +52,15 @@ type AlicloudRedisClusterSpec struct {
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1
-	// +kubebuilder:validation:XValidation:rule=(self == 0),message="replicasPerShard must be 0; all current redisTier values use proxy-based classes that do not support read replicas."
+	// +kubebuilder:validation:XValidation:rule=(self == 0), message="replicasPerShard must be 0; all current redisTier values use proxy-based classes that do not support read replicas."
 	ReplicasPerShard int32 `json:"replicasPerShard,omitempty"`
 
 	// EngineVersion is the Redis engine version. Immutable after creation.
+	// +optional
 	// +kubebuilder:default="5.0"
 	// +kubebuilder:validation:Enum="5.0";"6.0";"7.0"
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf),message="engineVersion is immutable."
-	EngineVersion string `json:"engineVersion"`
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="engineVersion is immutable."
+	EngineVersion string `json:"engineVersion,omitempty"`
 
 	// Parameters are passed to the AliCloud instance as runtime configuration.
 	// +optional

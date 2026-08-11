@@ -14,6 +14,13 @@ type AlicloudRedisClusterBuilder struct {
 	AlicloudRedisCluster AlicloudRedisCluster
 }
 
+func (b *AlicloudRedisClusterBuilder) Reset() *AlicloudRedisClusterBuilder {
+	b.AlicloudRedisCluster = AlicloudRedisCluster{
+		Spec: AlicloudRedisClusterSpec{},
+	}
+	return b
+}
+
 func (b *AlicloudRedisClusterBuilder) WithIpRange(ipRangeName string) *AlicloudRedisClusterBuilder {
 	b.AlicloudRedisCluster.Spec.IpRange.Name = ipRangeName
 	return b
@@ -73,5 +80,15 @@ func (b *AlicloudRedisClusterBuilder) WithAuthSecretExtraData(extraData map[stri
 		b.AlicloudRedisCluster.Spec.AuthSecret = &RedisAuthSecretSpec{}
 	}
 	b.AlicloudRedisCluster.Spec.AuthSecret.ExtraData = extraData
+	return b
+}
+
+func (b *AlicloudRedisClusterBuilder) WithAuthSecret(name string, labels, annotations, extraData map[string]string) *AlicloudRedisClusterBuilder {
+	b.AlicloudRedisCluster.Spec.AuthSecret = &RedisAuthSecretSpec{
+		Name:        name,
+		Labels:      labels,
+		Annotations: annotations,
+		ExtraData:   extraData,
+	}
 	return b
 }

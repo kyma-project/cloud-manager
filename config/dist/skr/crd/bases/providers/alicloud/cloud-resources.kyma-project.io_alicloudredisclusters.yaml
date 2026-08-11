@@ -86,6 +86,9 @@ spec:
                     - message: engineVersion is immutable.
                       rule: (self == oldSelf)
                 ipRange:
+                  description: |-
+                    omitempty is required: without it an unset IpRange serialises as {"name":""}, which combined
+                    with the self==oldSelf XValidation permanently locks IpRange to the empty-string on creation.
                   properties:
                     name:
                       type: string
@@ -132,7 +135,6 @@ spec:
                   minimum: 1
                   type: integer
               required:
-                - engineVersion
                 - redisTier
                 - shardCount
               type: object

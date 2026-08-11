@@ -6,44 +6,38 @@ import (
 )
 
 type testAlicloudRedisInstanceBuilder struct {
-	instance cloudresourcesv1beta1.AlicloudRedisInstance
+	*cloudresourcesv1beta1.AlicloudRedisInstanceBuilder
 }
 
 func newTestAlicloudRedisInstanceBuilder() *testAlicloudRedisInstanceBuilder {
 	return &testAlicloudRedisInstanceBuilder{
-		instance: cloudresourcesv1beta1.AlicloudRedisInstance{
-			Spec: cloudresourcesv1beta1.AlicloudRedisInstanceSpec{
-				RedisTier:     cloudresourcesv1beta1.AlicloudRedisTierS1,
-				EngineVersion: "5.0",
-			},
-		},
+		AlicloudRedisInstanceBuilder: cloudresourcesv1beta1.NewAlicloudRedisInstanceBuilder().
+			WithRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS1).
+			WithEngineVersion("5.0"),
 	}
 }
 
 func (b *testAlicloudRedisInstanceBuilder) Build() *cloudresourcesv1beta1.AlicloudRedisInstance {
-	return &b.instance
+	return &b.AlicloudRedisInstance
 }
 
 func (b *testAlicloudRedisInstanceBuilder) WithRedisTier(redisTier cloudresourcesv1beta1.AlicloudRedisTier) *testAlicloudRedisInstanceBuilder {
-	b.instance.Spec.RedisTier = redisTier
+	b.AlicloudRedisInstanceBuilder.WithRedisTier(redisTier)
 	return b
 }
 
 func (b *testAlicloudRedisInstanceBuilder) WithIpRange(ipRangeName string) *testAlicloudRedisInstanceBuilder {
-	b.instance.Spec.IpRange.Name = ipRangeName
+	b.AlicloudRedisInstanceBuilder.WithIpRange(ipRangeName)
 	return b
 }
 
 func (b *testAlicloudRedisInstanceBuilder) WithEngineVersion(engineVersion string) *testAlicloudRedisInstanceBuilder {
-	b.instance.Spec.EngineVersion = engineVersion
+	b.AlicloudRedisInstanceBuilder.WithEngineVersion(engineVersion)
 	return b
 }
 
 func (b *testAlicloudRedisInstanceBuilder) WithAuthSecretName(name string) *testAlicloudRedisInstanceBuilder {
-	if b.instance.Spec.AuthSecret == nil {
-		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
-	}
-	b.instance.Spec.AuthSecret.Name = name
+	b.AlicloudRedisInstanceBuilder.WithAuthSecretName(name)
 	return b
 }
 
