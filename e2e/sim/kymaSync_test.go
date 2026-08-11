@@ -26,6 +26,7 @@ var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 			changedKcpStatus: false,
 			removedModules:   nil,
 			expectedStatus:   nil,
+			kcpNotInSkrSpec:  nil,
 		},
 		{
 			title:            "first module added and processing",
@@ -41,6 +42,7 @@ var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 			expectedStatus: []operatorv1beta2.ModuleStatus{
 				{Name: "aaa", State: operatorshared.StateProcessing},
 			},
+			kcpNotInSkrSpec: nil,
 		},
 		{
 			title:   "first module added and processed",
@@ -60,6 +62,7 @@ var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 			expectedStatus: []operatorv1beta2.ModuleStatus{
 				{Name: "aaa", State: operatorshared.StateReady},
 			},
+			kcpNotInSkrSpec: nil,
 		},
 		{
 			title:   "first module processed, second module added and processing",
@@ -80,6 +83,7 @@ var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 				{Name: "aaa", State: operatorshared.StateReady},
 				{Name: "bbb", State: operatorshared.StateProcessing},
 			},
+			kcpNotInSkrSpec: nil,
 		},
 		{
 			title:   "first module processed, second module added and processed",
@@ -102,8 +106,12 @@ var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 				{Name: "aaa", State: operatorshared.StateReady},
 				{Name: "bbb", State: operatorshared.StateReady},
 			},
+			kcpNotInSkrSpec: nil,
 		},
 		{
+			// Mid-removal processing: bbb is being removed (in status, not in spec). KCP status
+			// mirrors SKR status and still lists bbb=Processing. Divergence is expected here —
+			// the gate correctly requeues while the genuine removal is in progress.
 			title:   "first module is ready, remove second ready module and processing",
 			skrSpec: []string{"aaa"},
 			skrStatus: []operatorv1beta2.ModuleStatus{
@@ -124,8 +132,11 @@ var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 				{Name: "aaa", State: operatorshared.StateReady},
 				{Name: "bbb", State: operatorshared.StateProcessing},
 			},
+			kcpNotInSkrSpec: []string{"bbb"},
 		},
 		{
+			// Resolved removal: bbb processed→Ready causes it to be stripped from both statuses.
+			// KCP status ends clean ([aaa]). No divergence → no requeue.
 			title:   "first module is ready, removed second module and processed",
 			skrSpec: []string{"aaa"},
 			skrStatus: []operatorv1beta2.ModuleStatus{
@@ -145,13 +156,13 @@ var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 			expectedStatus: []operatorv1beta2.ModuleStatus{
 				{Name: "aaa", State: operatorshared.StateReady},
 			},
+			kcpNotInSkrSpec: nil,
 		},
 		{
-			// Stale-read shape: the SKR spec no longer lists the module (it was
-			// removed) but a stale cache read still shows it in SKR status. Once
-			// the reconcile resolves the removal (Processed with Ready), the
-			// module must be gone from BOTH SKR and KCP status - otherwise a
-			// lagging reconcile can strand it in KCP status (the sim flake).
+			// Stale-read shape: SKR spec no longer lists the module (removed) but a stale cache
+			// read still shows it in SKR status. Once resolved (Processed Ready), the module is
+			// gone from both statuses. KCP status ends empty → no divergence → no requeue.
+			// This is the exact shape that stranded KCP in the flake, now confirmed to converge.
 			title:   "sole module removed from spec, resolved and dropped from both statuses",
 			skrSpec: nil,
 			skrStatus: []operatorv1beta2.ModuleStatus{
@@ -167,6 +178,53 @@ var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 			changedKcpStatus: true,
 			removedModules:   []string{"cloud-manager"},
 			expectedStatus:   nil,
+			kcpNotInSkrSpec:  nil,
+		},
+		{
+			// Stale re-mirror, unresolved: SKR spec is empty (module removed) but the stale
+			// cache still shows cloud-manager=Processing in SKR status, which gets mirrored
+			// onto KCP status. No Processed() call this cycle → module stays in KCP status.
+			// Divergence is non-empty → the gate requeues. This is the exact strand shape;
+			// asserts the gate would prevent KCP from being permanently stranded.
+			title:   "stale re-mirror unresolved: module absent from spec but present in KCP status",
+			skrSpec: nil,
+			skrStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "cloud-manager", State: operatorshared.StateProcessing},
+			},
+			kcpSpec: nil,
+			kcpStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "cloud-manager", State: operatorshared.StateProcessing},
+			},
+			processed:        nil,
+			changedSkrStatus: true,
+			changedKcpSpec:   false,
+			changedKcpStatus: true,
+			removedModules:   []string{"cloud-manager"},
+			expectedStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "cloud-manager", State: operatorshared.StateProcessing},
+			},
+			kcpNotInSkrSpec: []string{"cloud-manager"},
+		},
+		{
+			// Steady-state active module: spec and status both list aaa=Ready. No divergence.
+			title:   "steady-state active module: no divergence",
+			skrSpec: []string{"aaa"},
+			skrStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+			},
+			kcpSpec: []string{"aaa"},
+			kcpStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+			},
+			processed:        nil,
+			changedSkrStatus: false,
+			changedKcpSpec:   false,
+			changedKcpStatus: false,
+			removedModules:   nil,
+			expectedStatus: []operatorv1beta2.ModuleStatus{
+				{Name: "aaa", State: operatorshared.StateReady},
+			},
+			kcpNotInSkrSpec: nil,
 		},
 	}
 
@@ -234,6 +292,10 @@ var _ = Describe("Feature: SKR/KCP Kyma sync and outcome", func() {
 				Expect(outcome.IsActive(moduleName)).To(BeTrue(), fmt.Sprintf("Module %s should be active", moduleName))
 			}
 
+			// check KcpModulesNotInSkrSpec (convergence gate)
+			Expect(outcome.KcpModulesNotInSkrSpec()).To(ConsistOf(util.ToAnySlice(tc.kcpNotInSkrSpec)...),
+				"KCP-status-not-in-SKR-spec divergence set")
+
 		})
 
 	}
@@ -251,6 +313,7 @@ type syncTestCase struct {
 	changedKcpStatus bool
 	removedModules   []string
 	expectedStatus   []operatorv1beta2.ModuleStatus
+	kcpNotInSkrSpec  []string
 }
 
 func (tc syncTestCase) skrKyma() *operatorv1beta2.Kyma {

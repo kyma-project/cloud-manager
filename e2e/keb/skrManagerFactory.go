@@ -15,9 +15,12 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
+	toolscache "k8s.io/client-go/tools/cache"
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
@@ -88,6 +91,17 @@ func (f *defaultSkrManagerFactory) CreateSkrManager(ctx context.Context, runtime
 			Cache: &client.CacheOptions{
 				Unstructured: true,
 			},
+		},
+		Cache: cache.Options{
+			DefaultWatchErrorHandler: func(ctx context.Context, r *toolscache.Reflector, err error) {
+				if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+					return
+				}
+				toolscache.DefaultWatchErrorHandler(ctx, r, err)
+			},
+		},
+		Controller: config.Controller{
+			CacheSyncTimeout: 30 * time.Second,
 		},
 		Logger: options.logger.WithName(fmt.Sprintf("skr-%s", runtimeID)),
 	})
