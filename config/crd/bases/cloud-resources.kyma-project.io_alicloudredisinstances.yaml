@@ -87,8 +87,8 @@ spec:
                       rule: (self == oldSelf)
                 ipRange:
                   description: |-
-                    omitempty is required: without it an unset IpRange serialises as {"name":""}, which combined
-                    with the self==oldSelf XValidation permanently locks IpRange to the empty-string on creation.
+                    IpRange references the IpRange resource used for private connectivity.
+                    If omitted, the SKR controller selects the default IpRange.
                   properties:
                     name:
                       type: string

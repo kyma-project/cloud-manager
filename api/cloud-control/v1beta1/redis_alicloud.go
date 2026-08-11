@@ -37,7 +37,7 @@ type RedisInstanceAlicloud struct {
 	// +optional
 	// +kubebuilder:default="5.0"
 	// +kubebuilder:validation:Enum="5.0";"6.0";"7.0"
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf),message="engineVersion is immutable."
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="engineVersion is immutable."
 	EngineVersion string `json:"engineVersion"`
 
 	// ReadOnlyCount: 0 = S tier (no read replica), 1 = P tier (one read replica).
@@ -73,7 +73,7 @@ type RedisClusterAlicloud struct {
 	// +optional
 	// +kubebuilder:default="5.0"
 	// +kubebuilder:validation:Enum="5.0";"6.0";"7.0"
-	// +kubebuilder:validation:XValidation:rule=(self == oldSelf),message="engineVersion is immutable."
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="engineVersion is immutable."
 	EngineVersion string `json:"engineVersion"`
 
 	// ShardCount is the number of data shards in the cluster.
@@ -84,7 +84,7 @@ type RedisClusterAlicloud struct {
 
 	// ReplicasPerShard is the number of read-only replicas per shard. Not
 	// applicable to proxy-based sharding classes (redis.logic.sharding.*),
-	// which always have ReadOnlyCount=0. For non-proxy classes, 0 = no replica,
+	// which always have replicasPerShard=0. For non-proxy classes, 0 = no replica,
 	// 1 = one read-only replica per shard.
 	// +optional
 	// +kubebuilder:default=0

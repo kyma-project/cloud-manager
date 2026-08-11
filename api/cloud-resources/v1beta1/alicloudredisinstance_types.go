@@ -27,11 +27,13 @@ import (
 // An AlicloudRedisInstance provisions a standard (non-sharded) HA AliCloud
 // r-kvstore instance. See AlicloudRedisCluster for sharded clusters.
 type AlicloudRedisInstanceSpec struct {
+	// IpRange references the IpRange resource used for private connectivity.
+	// If omitted, the SKR controller selects the default IpRange.
 	// +optional
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
-	// omitempty is required: without it an unset IpRange serialises as {"name":""}, which combined
-	// with the self==oldSelf XValidation permanently locks IpRange to the empty-string on creation.
 	IpRange IpRangeRef `json:"ipRange,omitempty"`
+	// Note: omitempty above is required. Without it an unset IpRange serialises as {"name":""},
+	// which combined with the self==oldSelf XValidation permanently locks IpRange to empty-string.
 
 	// RedisTier defines service and capacity tier.
 	// S = standard HA (master+replica, no read-only replica).

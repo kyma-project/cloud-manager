@@ -52,6 +52,14 @@ func (b *testAlicloudRedisClusterBuilder) WithAuthSecretName(name string) *testA
 	return b
 }
 
+func newTestAlicloudRedisClusterBuilderNoDefaults() *testAlicloudRedisClusterBuilder {
+	return &testAlicloudRedisClusterBuilder{
+		AlicloudRedisClusterBuilder: cloudresourcesv1beta1.NewAlicloudRedisClusterBuilder().
+			WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC3).
+			WithShardCount(2),
+	}
+}
+
 var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 
 	Context("Scenario: redisTier enum validation", func() {
@@ -73,6 +81,17 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 		)
 	})
 
+	Context("Scenario: redisTier mutability", func() {
+
+		canChangeSkr(
+			"AlicloudRedisCluster redisTier can be changed",
+			newTestAlicloudRedisClusterBuilder().WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC3),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
+				b.(*testAlicloudRedisClusterBuilder).WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC5)
+			},
+		)
+	})
+
 	Context("Scenario: shardCount validation", func() {
 
 		canNotCreateSkr(
@@ -89,6 +108,11 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 	})
 
 	Context("Scenario: engineVersion enum validation", func() {
+
+		canCreateSkr(
+			"AlicloudRedisCluster can be created without engineVersion (server-side default applied)",
+			newTestAlicloudRedisClusterBuilderNoDefaults(),
+		)
 
 		canNotCreateSkr(
 			"AlicloudRedisCluster cannot be created with invalid engineVersion",

@@ -92,7 +92,7 @@ spec:
                         description: |-
                           ReplicasPerShard is the number of read-only replicas per shard. Not
                           applicable to proxy-based sharding classes (redis.logic.sharding.*),
-                          which always have ReadOnlyCount=0. For non-proxy classes, 0 = no replica,
+                          which always have replicasPerShard=0. For non-proxy classes, 0 = no replica,
                           1 = one read-only replica per shard.
                         format: int32
                         maximum: 1

@@ -41,6 +41,13 @@ func (b *testAlicloudRedisInstanceBuilder) WithAuthSecretName(name string) *test
 	return b
 }
 
+func newTestAlicloudRedisInstanceBuilderNoDefaults() *testAlicloudRedisInstanceBuilder {
+	return &testAlicloudRedisInstanceBuilder{
+		AlicloudRedisInstanceBuilder: cloudresourcesv1beta1.NewAlicloudRedisInstanceBuilder().
+			WithRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS1),
+	}
+}
+
 var _ = Describe("Feature: SKR AlicloudRedisInstance", Ordered, func() {
 
 	Context("Scenario: redisTier enum validation", func() {
@@ -62,7 +69,31 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", Ordered, func() {
 		)
 	})
 
+	Context("Scenario: redisTier mutability", func() {
+
+		canChangeSkr(
+			"AlicloudRedisInstance redisTier can be changed within S tier",
+			newTestAlicloudRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS1),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisInstance]) {
+				b.(*testAlicloudRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS3)
+			},
+		)
+
+		canChangeSkr(
+			"AlicloudRedisInstance redisTier can be changed from S to P tier",
+			newTestAlicloudRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS1),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisInstance]) {
+				b.(*testAlicloudRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.AlicloudRedisTierP1)
+			},
+		)
+	})
+
 	Context("Scenario: engineVersion enum validation", func() {
+
+		canCreateSkr(
+			"AlicloudRedisInstance can be created without engineVersion (server-side default applied)",
+			newTestAlicloudRedisInstanceBuilderNoDefaults(),
+		)
 
 		canNotCreateSkr(
 			"AlicloudRedisInstance cannot be created with invalid engineVersion",
