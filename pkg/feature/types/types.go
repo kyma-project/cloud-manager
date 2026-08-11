@@ -33,8 +33,8 @@ const (
 	FeaturePeering               FeatureName = "peering"
 	FeatureRedis                 FeatureName = "redis"
 	FeatureRedisCluster          FeatureName = "rediscluster"
-	FeatureAlicloudRedisInstance FeatureName = "alicloudRedisInstance"
 	FeatureAlicloudRedisCluster  FeatureName = "alicloudRedisCluster"
+	FeatureAlicloudRedisInstance FeatureName = "alicloudRedisInstance"
 	FeatureAzureManagedRedis     FeatureName = "azureManagedRedis"
 	FeatureVpcDnsLink            FeatureName = "vpcdnslink"
 )
