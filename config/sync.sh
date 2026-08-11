@@ -89,7 +89,10 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml          
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisinstances.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisclusters.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 
-# ============= OpenStack ================
+# AliCloud UI
+cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+
+
 
 # OpenStack
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml       $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
@@ -104,14 +107,6 @@ cp $SCRIPT_DIR/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnf
 cp $SCRIPT_DIR/ui-extensions/sapnfsvolumesnapshots/cloud-resources.kyma-project.io_sapnfsvolumesnapshots_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 cp $SCRIPT_DIR/ui-extensions/sapnfsvolumesnapshotrestores/cloud-resources.kyma-project.io_sapnfsvolumesnapshotrestores_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 cp $SCRIPT_DIR/ui-extensions/sapnfsvolumesnapshotschedules/cloud-resources.kyma-project.io_sapnfsvolumesnapshotschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
-
-# ============= AliCloud ================
-
-# AliCloud
-cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml       $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
-
-# AliCloud UI
-cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 
 echo "CRD resources are copied to ./dist kcp and skr dirs"
 echo "Note that no files are removed - you must remove them manually"

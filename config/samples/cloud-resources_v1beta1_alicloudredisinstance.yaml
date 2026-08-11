@@ -13,6 +13,6 @@ spec:
   redisTier: "S1"
 
   # optional fields
-  engineVersion: "7.0"
+  engineVersion: "5.0"
   parameters:
     maxmemory-policy: volatile-lru

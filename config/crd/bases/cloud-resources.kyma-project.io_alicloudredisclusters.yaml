@@ -132,6 +132,7 @@ spec:
                   minimum: 1
                   type: integer
               required:
+                - engineVersion
                 - redisTier
                 - shardCount
               type: object

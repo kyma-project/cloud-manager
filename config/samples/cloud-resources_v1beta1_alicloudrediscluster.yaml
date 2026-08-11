@@ -14,6 +14,6 @@ spec:
   shardCount: 3
 
   # optional fields
-  engineVersion: "7.0"
+  engineVersion: "5.0"
   parameters:
     maxmemory-policy: volatile-lru

@@ -115,6 +115,9 @@ func (c *alicloudClient) DescribeVSwitch(ctx context.Context, vSwitchId string) 
 	}, nil
 }
 
+// DescribeVSwitchesByName returns vSwitches matching the given name in the given VPC.
+// This fetches only one page (default page size ≤50); it is used exclusively for
+// deterministically-named recovery lookups where at most one result is expected.
 func (c *alicloudClient) DescribeVSwitchesByName(ctx context.Context, vpcId, name string) ([]VSwitchInfo, error) {
 	req := &vpc.DescribeVSwitchesRequest{
 		RegionId:    new(c.region),

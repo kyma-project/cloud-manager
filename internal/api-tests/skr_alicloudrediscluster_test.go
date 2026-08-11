@@ -45,6 +45,11 @@ func (b *testAlicloudRedisClusterBuilder) WithReplicasPerShard(replicasPerShard 
 	return b
 }
 
+func (b *testAlicloudRedisClusterBuilder) WithShardCount(shardCount int32) *testAlicloudRedisClusterBuilder {
+	b.instance.Spec.ShardCount = shardCount
+	return b
+}
+
 func (b *testAlicloudRedisClusterBuilder) WithAuthSecretName(name string) *testAlicloudRedisClusterBuilder {
 	if b.instance.Spec.AuthSecret == nil {
 		b.instance.Spec.AuthSecret = &cloudresourcesv1beta1.RedisAuthSecretSpec{}
@@ -70,6 +75,30 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 		canNotCreateSkr(
 			"AlicloudRedisCluster cannot be created with invalid redisTier",
 			newTestAlicloudRedisClusterBuilder().WithRedisTier("C1"),
+			"",
+		)
+	})
+
+	Context("Scenario: shardCount validation", func() {
+
+		canNotCreateSkr(
+			"AlicloudRedisCluster cannot be created with shardCount=0",
+			newTestAlicloudRedisClusterBuilder().WithShardCount(0),
+			"",
+		)
+
+		canNotCreateSkr(
+			"AlicloudRedisCluster cannot be created with shardCount=33",
+			newTestAlicloudRedisClusterBuilder().WithShardCount(33),
+			"",
+		)
+	})
+
+	Context("Scenario: engineVersion enum validation", func() {
+
+		canNotCreateSkr(
+			"AlicloudRedisCluster cannot be created with invalid engineVersion",
+			newTestAlicloudRedisClusterBuilder().WithEngineVersion("8.0"),
 			"",
 		)
 	})

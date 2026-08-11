@@ -68,6 +68,15 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", Ordered, func() {
 		)
 	})
 
+	Context("Scenario: engineVersion enum validation", func() {
+
+		canNotCreateSkr(
+			"AlicloudRedisInstance cannot be created with invalid engineVersion",
+			newTestAlicloudRedisInstanceBuilder().WithEngineVersion("8.0"),
+			"",
+		)
+	})
+
 	Context("Scenario: engineVersion immutability", func() {
 
 		canNotChangeSkr(
