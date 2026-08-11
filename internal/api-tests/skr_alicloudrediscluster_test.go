@@ -13,8 +13,9 @@ func newTestAlicloudRedisClusterBuilder() *testAlicloudRedisClusterBuilder {
 	return &testAlicloudRedisClusterBuilder{
 		instance: cloudresourcesv1beta1.AlicloudRedisCluster{
 			Spec: cloudresourcesv1beta1.AlicloudRedisClusterSpec{
-				RedisTier:  cloudresourcesv1beta1.AlicloudRedisClusterTierC3,
-				ShardCount: 2,
+				RedisTier:     cloudresourcesv1beta1.AlicloudRedisClusterTierC3,
+				ShardCount:    2,
+				EngineVersion: "5.0",
 			},
 		},
 	}
