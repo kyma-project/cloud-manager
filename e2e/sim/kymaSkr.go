@@ -18,6 +18,7 @@ import (
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -373,15 +374,15 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
-	// If any module was resolved as removed this cycle, requeue once more as a
-	// backstop. Module removal is only fully applied on the cm==nil path, and a
-	// subsequent watch-triggered reconcile can run against a stale SKR cache
-	// read that still lists the module - re-mirroring it onto KCP status - after
-	// which the caches settle with no further watch event to correct it (the sim
-	// flake). The extra reconcile re-asserts the removal against a caught-up
-	// cache. Once SKR spec and status no longer list the module, modulesToRemove
-	// is empty and this returns without requeue, so it cannot loop indefinitely.
-	if len(outcome.AllRemovedModules()) > 0 {
+	// Self-correcting convergence backstop. KCP status is a mirror of cache-lagged SKR status;
+	// a stale reconcile can re-mirror an already-removed module onto KCP. The old backstop
+	// gated on AllRemovedModules() (SKR-status-minus-SKR-spec) drained to empty once the module
+	// left SKR status, so the final stale-driven reconcile returned without requeue and stranded
+	// KCP dirty (the sim flake). Gate instead on whether the KCP status we just wrote still lists
+	// a module absent from the SKR spec (authoritative desired state). Terminates: once KCP
+	// status contains only spec modules the slice is empty; the cm==nil path removes the module
+	// and re-patches clean each pass, so convergence is monotonic.
+	if len(outcome.KcpModulesNotInSkrSpec()) > 0 {
 		return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
 	}
 
@@ -392,5 +393,11 @@ func (r *simKymaSkr) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(fmt.Sprintf("kyma-skr-%s", r.runtimeID)).
 		For(&operatorv1beta2.Kyma{}).
+		Watches(
+			&cloudresourcesv1beta1.CloudResources{},
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
+				return []reconcile.Request{{NamespacedName: types.NamespacedName{Namespace: "kyma-system", Name: "default"}}}
+			}),
+		).
 		Complete(r)
 }
