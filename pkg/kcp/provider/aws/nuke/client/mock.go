@@ -243,5 +243,5 @@ func (m *mockClient) DeleteCertificate(ctx context.Context, arn string) error {
 		return nil
 	}
 
-	return fmt.Errorf("Certificate not found")
+	return fmt.Errorf("certificate not found")
 }

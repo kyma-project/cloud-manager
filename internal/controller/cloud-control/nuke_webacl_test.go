@@ -135,11 +135,7 @@ var _ = Describe("Feature: Nuke AWS WebACL", func() {
 
 				_, _, err := awsRegion.GetWebACL(infra.Ctx(), *webAcl.Name, *webAcl.ARN, wafv2types.ScopeRegional)
 
-				if awsmeta.IsNotFound(err) {
-					return true
-				}
-
-				return false
+				return awsmeta.IsNotFound(err)
 
 			}).Should(BeTrue())
 		})
