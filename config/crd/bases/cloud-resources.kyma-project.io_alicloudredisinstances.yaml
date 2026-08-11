@@ -117,6 +117,7 @@ spec:
                     - P5
                   type: string
               required:
+                - engineVersion
                 - redisTier
               type: object
             status:
