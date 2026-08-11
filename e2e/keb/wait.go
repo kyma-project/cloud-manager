@@ -220,7 +220,7 @@ outerLoop:
 				for _, x := range arr {
 					if x.RuntimeID == runtimeID {
 						xx := x
-						id = &xx
+						id = new(xx)
 						break
 					}
 				}
