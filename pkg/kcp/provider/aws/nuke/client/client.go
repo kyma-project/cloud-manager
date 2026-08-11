@@ -42,25 +42,25 @@ func NukeProvider(
 	certificateProvider awsclient.SkrClientProvider[awscertificateclient.Client],
 ) awsclient.SkrClientProvider[NukeClient] {
 	return func(ctx context.Context, account, region, key, secret, role string) (NukeClient, error) {
-		backup, err := backupProvider(ctx, account, region, key, secret, role)
+		backupClient, err := backupProvider(ctx, account, region, key, secret, role)
 		if err != nil {
 			return nil, err
 		}
 
-		webAcl, err := webAclProvider(ctx, account, region, key, secret, role)
+		webAclClient, err := webAclProvider(ctx, account, region, key, secret, role)
 		if err != nil {
 			return nil, err
 		}
 
-		cert, err := certificateProvider(ctx, account, region, key, secret, role)
+		certificateClient, err := certificateProvider(ctx, account, region, key, secret, role)
 		if err != nil {
 			return nil, err
 		}
 
 		return &client{
-			backupClient:      backup,
-			webAclClient:      webAcl,
-			certificateClient: cert,
+			backupClient:      backupClient,
+			webAclClient:      webAclClient,
+			certificateClient: certificateClient,
 		}, nil
 	}
 }
