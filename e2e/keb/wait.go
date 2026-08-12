@@ -26,15 +26,17 @@ type WaitOption interface {
 }
 
 type waitOptions struct {
-	runtimeId        string
-	alias            string
-	timeout          time.Duration
-	interval         time.Duration
-	progressCallback func(WaitProgress)
-	logger           logr.Logger
-	errorDuration    time.Duration
-	sleeper          util.Sleeper
-	nowFunc          func() time.Time
+	runtimeId             string
+	alias                 string
+	timeout               time.Duration
+	interval              time.Duration
+	progressCallback      func(WaitProgress)
+	logger                logr.Logger
+	errorDuration         time.Duration
+	terminalErrorDuration time.Duration
+	terminalRetryLimit    int
+	sleeper               util.Sleeper
+	nowFunc               func() time.Time
 }
 
 func (o *waitOptions) validate() error {
@@ -53,6 +55,12 @@ func (o *waitOptions) validate() error {
 	}
 	if o.errorDuration == 0 {
 		o.errorDuration = 10 * time.Minute
+	}
+	if o.terminalErrorDuration == 0 {
+		o.terminalErrorDuration = 5 * time.Minute
+	}
+	if o.terminalRetryLimit == 0 {
+		o.terminalRetryLimit = 3
 	}
 	if o.sleeper == nil {
 		o.sleeper = util.SleeperFunc(util.RealSleeperFunc)
@@ -109,10 +117,17 @@ var defaultWaitOptions = []WaitOption{
 	WithInterval(5 * time.Second),
 	WithProgressCallback(func(WaitProgress) {}),
 	WithErrorDuration(10 * time.Minute),
+	WithTerminalErrorDuration(5 * time.Minute),
 	WithSleeperFunc(util.RealSleeperFunc),
 }
 
-func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOption) error {
+// WaitHandler combines listing instances with the ability to force-retry a failed shoot.
+type WaitHandler interface {
+	InstanceLister
+	ShootRetrier
+}
+
+func WaitCompleted(ctx context.Context, handler WaitHandler, opts ...WaitOption) error {
 	options := &waitOptions{}
 	for _, o := range append(append([]WaitOption{}, defaultWaitOptions...), opts...) {
 		o.ApplyOnWait(options)
@@ -125,6 +140,11 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 
 	// tracks the first time a transient error was seen per runtimeID
 	errorFirstSeen := map[string]time.Time{}
+
+	// tracks terminal shoot errors: first detection, retry count, and last retry time
+	terminalErrorFirstSeen := map[string]time.Time{}
+	terminalRetryCount := map[string]int{}
+	lastRetryAt := map[string]time.Time{}
 
 	// map wait options to list options
 	var listOpts []ListOption
@@ -141,7 +161,7 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 
 outerLoop:
 	for {
-		arr, err := lister.List(ctx, listOpts...)
+		arr, err := handler.List(ctx, listOpts...)
 		if apierrors.IsNotFound(err) || meta.IsNoMatchError(err) {
 			break
 		}
@@ -190,10 +210,29 @@ outerLoop:
 
 		// process instances in error state
 		for _, id := range withErr {
-			// terminal or user-caused errors: fail immediately — no point waiting
 			if id.HasTerminalShootError() {
-				loopErr = fmt.Errorf("instance %s %s has terminal shoot error: %q\n%s", id.Alias, id.RuntimeID, id.Message, id.ShootInfo())
-				break outerLoop
+				// record first detection
+				if _, seen := terminalErrorFirstSeen[id.RuntimeID]; !seen {
+					terminalErrorFirstSeen[id.RuntimeID] = options.nowFunc()
+				}
+				// bounded, debounced retry
+				if terminalRetryCount[id.RuntimeID] < options.terminalRetryLimit {
+					last, retried := lastRetryAt[id.RuntimeID]
+					if !retried || options.nowFunc().Sub(last) >= options.interval {
+						if retryErr := handler.ForceShootRetry(ctx, id.RuntimeID); retryErr != nil {
+							options.logger.Error(retryErr, "ForceShootRetry failed", "runtimeID", id.RuntimeID)
+						}
+						terminalRetryCount[id.RuntimeID]++
+						lastRetryAt[id.RuntimeID] = options.nowFunc()
+						options.logger.Info("forced shoot retry", "runtimeID", id.RuntimeID, "attempt", terminalRetryCount[id.RuntimeID])
+					}
+				}
+				// fail once the tolerance window is exhausted
+				if options.nowFunc().Sub(terminalErrorFirstSeen[id.RuntimeID]) > options.terminalErrorDuration {
+					loopErr = fmt.Errorf("instance %s %s has terminal shoot error: %q\n%s", id.Alias, id.RuntimeID, id.Message, id.ShootInfo())
+					break outerLoop
+				}
+				continue
 			}
 			// transient error: record when we first saw it
 			if _, seen := errorFirstSeen[id.RuntimeID]; !seen {
@@ -201,7 +240,7 @@ outerLoop:
 			}
 		}
 
-		// clear recovered instances from the error tracker
+		// clear recovered instances from all error trackers
 		withErrSet := make(map[string]bool, len(withErr))
 		for _, id := range withErr {
 			withErrSet[id.RuntimeID] = true
@@ -209,6 +248,13 @@ outerLoop:
 		for runtimeID := range errorFirstSeen {
 			if !withErrSet[runtimeID] {
 				delete(errorFirstSeen, runtimeID)
+			}
+		}
+		for runtimeID := range terminalErrorFirstSeen {
+			if !withErrSet[runtimeID] {
+				delete(terminalErrorFirstSeen, runtimeID)
+				delete(terminalRetryCount, runtimeID)
+				delete(lastRetryAt, runtimeID)
 			}
 		}
 
