@@ -8,4 +8,5 @@ type RedisOptions struct {
 	CA          bool
 	Version     string
 	ClusterMode bool
+	Retry       int // number of extra attempts on failure (0 = no retry)
 }
