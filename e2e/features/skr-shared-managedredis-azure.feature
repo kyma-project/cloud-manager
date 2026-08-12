@@ -29,10 +29,11 @@ Feature: AzureManagedRedis feature
     And eventually "secret.data.authString" is ok
 
     And Redis "PING" gives "PONG" with:
-      | Host | Secret | ${redis.metadata.name} | host       |
-      | Port | Secret | ${redis.metadata.name} | port       |
-      | Auth | Secret | ${redis.metadata.name} | authString |
-      | TLS  | True   |                        |            |
+      | Host  | Secret | ${redis.metadata.name} | host       |
+      | Port  | Secret | ${redis.metadata.name} | port       |
+      | Auth  | Secret | ${redis.metadata.name} | authString |
+      | TLS   | True   |                        |            |
+      | Retry | 5      |                        |            |
 
     When resource "redis" is deleted
 
@@ -75,6 +76,7 @@ Feature: AzureManagedRedis feature
       | Auth        | Secret | ${redis.metadata.name} | authString |
       | TLS         | True   |                        |            |
       | ClusterMode | True   |                        |            |
+      | Retry       | 5      |                        |            |
 
     When resource "redis" is deleted
 

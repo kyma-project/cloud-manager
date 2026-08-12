@@ -938,6 +938,12 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 				return ctx, fmt.Errorf("invalid ClusterMode value, expected true/false: %w", err)
 			}
 			opts.ClusterMode = b
+		case "Retry":
+			n, err := strconv.Atoi(row.Cells[1].Value)
+			if err != nil {
+				return ctx, fmt.Errorf("invalid Retry value, expected integer: %w", err)
+			}
+			opts.Retry = n
 		default:
 			return ctx, fmt.Errorf("invalid value indicator %q", row.Cells[0].Value)
 		} // switch row[0]
@@ -973,7 +979,19 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 
 	command += " " + cmd
 
-	scriptLines = append(scriptLines, command)
+	if opts.Retry > 0 {
+		scriptLines = append(scriptLines,
+			fmt.Sprintf("for i in $(seq 1 %d); do", opts.Retry+1),
+			fmt.Sprintf("  %s && exit 0", command),
+			"  echo \"redis-cli attempt $i failed, retrying in 10s...\"",
+			"  sleep 10",
+			"done",
+			fmt.Sprintf("echo \"all %d redis-cli attempts failed\"", opts.Retry+1),
+			"exit 1",
+		)
+	} else {
+		scriptLines = append(scriptLines, command)
+	}
 
 	if opts.Version == "" {
 		opts.Version = "latest"
