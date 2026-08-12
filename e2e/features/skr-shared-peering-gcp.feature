@@ -35,7 +35,7 @@ Feature: GcpVpcPeering feature
 
     And HTTP operation succeeds:
       | Url            | http://${tf.instance_ip_address}|
-      | ExpectedOutput | GCP VPC Peering is working!     |
+      | ExpectedOutput | Welcome to nginx!               |
       | Retry          | 10                              |
 
     When resource "peering" is deleted
