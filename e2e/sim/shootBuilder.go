@@ -174,9 +174,9 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		for i, zone := range rt.Spec.Shoot.Provider.Workers[0].Zones {
 			zones = append(zones, gardeneraws.Zone{
 				Name:     zone,
-				Internal: zoneRanges[i*3+0].CIDR().String(),
-				Public:   zoneRanges[i*3+1].CIDR().String(),
-				Workers:  zoneRanges[i*3+2].CIDR().String(),
+				Internal: new(zoneRanges[i*3+0].CIDR().String()),
+				Public:   new(zoneRanges[i*3+1].CIDR().String()),
+				Workers:  new(zoneRanges[i*3+2].CIDR().String()),
 			})
 		}
 
