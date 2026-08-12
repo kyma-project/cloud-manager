@@ -166,6 +166,22 @@ func (o WithErrorDuration) ApplyOnWait(opt *waitOptions) {
 	opt.errorDuration = time.Duration(o)
 }
 
+// WithTerminalErrorDuration ===========================================================================
+
+type WithTerminalErrorDuration time.Duration
+
+func (o WithTerminalErrorDuration) ApplyOnWait(opt *waitOptions) {
+	opt.terminalErrorDuration = time.Duration(o)
+}
+
+// WithTerminalRetryLimit ===========================================================================
+
+type WithTerminalRetryLimit int
+
+func (o WithTerminalRetryLimit) ApplyOnWait(opt *waitOptions) {
+	opt.terminalRetryLimit = int(o)
+}
+
 // WithNowFunc ===========================================================================
 
 type WithNowFunc struct {

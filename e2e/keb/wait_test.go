@@ -36,6 +36,7 @@ func TestWait(t *testing.T) {
 		}
 
 		errorDuration := 5 * time.Second
+		terminalErrorDuration := 5 * time.Second
 
 		testCases := []struct {
 			title         string
@@ -107,7 +108,7 @@ func TestWait(t *testing.T) {
 				}(),
 			},
 			{
-				// user error code: HasTerminalShootError() → fast-fail immediately
+				// user error code: tolerates until window, then fails
 				title: "terminal user error code",
 				changes: []IdChange{
 					NewIdChange(0, ChState(infrastructuremanagerv1.RuntimeStatePending)),
@@ -118,10 +119,13 @@ func TestWait(t *testing.T) {
 				},
 				errMsg:        `instance alias runtime-id has terminal shoot error: "quota exceeded"`,
 				listCallCount: 5,
-				nowFunc:       fixedNow(),
+				nowFunc: func() func() time.Time {
+					now, _ := fakeNowAfter(0, terminalErrorDuration+time.Second)
+					return now
+				}(),
 			},
 			{
-				// terminal LastOperation.State == Failed: fast-fail immediately
+				// terminal LastOperation.State == Failed: tolerates until window, then fails
 				title: "terminal last operation failed",
 				changes: []IdChange{
 					NewIdChange(0, ChState(infrastructuremanagerv1.RuntimeStatePending)),
@@ -132,7 +136,10 @@ func TestWait(t *testing.T) {
 				},
 				errMsg:        `instance alias runtime-id has terminal shoot error: "gardener gave up"`,
 				listCallCount: 5,
-				nowFunc:       fixedNow(),
+				nowFunc: func() func() time.Time {
+					now, _ := fakeNowAfter(0, terminalErrorDuration+time.Second)
+					return now
+				}(),
 			},
 			{
 				// rate limit code only: transient, should tolerate
@@ -149,6 +156,39 @@ func TestWait(t *testing.T) {
 				errMsg:        "",
 				listCallCount: 15,
 				nowFunc:       fixedNow(),
+			},
+			{
+				// terminal error recovers after forced retry: Failed → Pending → Ready within window
+				title: "terminal error recovers after retry",
+				changes: []IdChange{
+					NewIdChange(0, ChState(infrastructuremanagerv1.RuntimeStatePending)),
+					NewIdChange(5, ChState(infrastructuremanagerv1.RuntimeStateFailed), ChMessage("subnet not found"),
+						ChShootLastOperation(&gardenertypes.LastOperation{
+							State: gardenertypes.LastOperationStateFailed,
+						})),
+					NewIdChange(8, ChState(infrastructuremanagerv1.RuntimeStatePending), ChMessage(""), ChShootLastOperation(nil)),
+					NewIdChange(15, ChState(infrastructuremanagerv1.RuntimeStateReady), ChProvisioned(true)),
+				},
+				errMsg:        "",
+				listCallCount: 15,
+				nowFunc:       fixedNow(),
+			},
+			{
+				// terminal error persists past window with retries exhausted → fail
+				title: "terminal error persists past window",
+				changes: []IdChange{
+					NewIdChange(0, ChState(infrastructuremanagerv1.RuntimeStatePending)),
+					NewIdChange(5, ChState(infrastructuremanagerv1.RuntimeStateFailed), ChMessage("subnet not found"),
+						ChShootLastOperation(&gardenertypes.LastOperation{
+							State: gardenertypes.LastOperationStateFailed,
+						})),
+				},
+				errMsg:        `instance alias runtime-id has terminal shoot error: "subnet not found"`,
+				listCallCount: 5,
+				nowFunc: func() func() time.Time {
+					now, _ := fakeNowAfter(0, terminalErrorDuration+time.Second)
+					return now
+				}(),
 			},
 
 			// delete ============================
@@ -197,6 +237,7 @@ func TestWait(t *testing.T) {
 				opts := []WaitOption{
 					WithRuntime(id.RuntimeID),
 					WithErrorDuration(errorDuration),
+					WithTerminalErrorDuration(terminalErrorDuration),
 					WithNowFunc{fn: tc.nowFunc},
 					WithSleeperFunc(func(_ context.Context, _ time.Duration) {}),
 				}

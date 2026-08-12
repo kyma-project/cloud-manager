@@ -8,6 +8,7 @@ import (
 	"time"
 
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenerconstants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
@@ -37,6 +38,10 @@ type InstanceLister interface {
 	List(ctx context.Context, opts ...ListOption) ([]InstanceDetails, error)
 }
 
+type ShootRetrier interface {
+	ForceShootRetry(ctx context.Context, runtimeId string) error
+}
+
 type Keb interface {
 	SkrManagerFactory
 
@@ -53,6 +58,8 @@ type Keb interface {
 	GetInstanceKubeconfig(ctx context.Context, runtimeID string) ([]byte, time.Time, error)
 	CreateInstanceClient(ctx context.Context, runtimeID string) (client.Client, error)
 	RenewInstanceKubeconfig(ctx context.Context, runtimeID string) error
+
+	ForceShootRetry(ctx context.Context, runtimeId string) error
 }
 
 var _ InstanceLister = (Keb)(nil)
@@ -633,5 +640,43 @@ func (k *defaultKeb) RenewInstanceKubeconfig(ctx context.Context, runtimeID stri
 		return fmt.Errorf("error patching GardenerCluster expires-in annotation: %w", err)
 	}
 
+	return nil
+}
+
+func (k *defaultKeb) ForceShootRetry(ctx context.Context, runtimeId string) error {
+	rt := &infrastructuremanagerv1.Runtime{}
+	err := k.kcpClient.Get(ctx, client.ObjectKey{Namespace: k.config.KcpNamespace, Name: runtimeId}, rt)
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error getting runtime %q: %w", runtimeId, err)
+	}
+
+	shoot := &gardenerapicore.Shoot{}
+	err = k.gardenClient.Get(ctx, types.NamespacedName{
+		Namespace: k.config.GardenNamespace,
+		Name:      rt.Spec.Shoot.Name,
+	}, shoot)
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error getting shoot %q: %w", rt.Spec.Shoot.Name, err)
+	}
+
+	if !commongardener.IsTerminalShootLastOperation(shoot.Status.LastOperation) {
+		return nil
+	}
+
+	_, err = composed.PatchObjMergeAnnotation(
+		ctx,
+		gardenerconstants.GardenerOperation,
+		gardenerconstants.ShootOperationRetry,
+		shoot, k.gardenClient,
+	)
+	if err != nil {
+		return fmt.Errorf("error annotating shoot %q for retry: %w", rt.Spec.Shoot.Name, err)
+	}
 	return nil
 }

@@ -53,7 +53,7 @@ var cmdInstanceCreate = &cobra.Command{
 
 		if cmdInstanceCreateOptions.waitDone {
 			fmt.Printf("Waiting for instance to be ready with timeout of %s...\n", cmdInstanceCreateOptions.timeout)
-			opts := []e2ekeb.WaitOption{e2ekeb.WithAlias(id.Alias), e2ekeb.WithTimeout(cmdInstanceCreateOptions.timeout), e2ekeb.WithErrorDuration(cmdInstanceCreateOptions.timeout)}
+			opts := []e2ekeb.WaitOption{e2ekeb.WithAlias(id.Alias), e2ekeb.WithTimeout(cmdInstanceCreateOptions.timeout), e2ekeb.WithErrorDuration(cmdInstanceCreateOptions.timeout), e2ekeb.WithTerminalErrorDuration(5 * time.Minute)}
 			if verbose {
 				opts = append(opts, e2ekeb.WaitProgressPrint())
 			}

@@ -109,9 +109,17 @@ func ChShootLastOperation(v *gardenertypes.LastOperation) IdChangeOption {
 // InstanceListerMock ========================================================
 
 type InstanceListerMock struct {
-	items         []*TestableInstanceDetails
-	listCallCount int
-	cb            func(int) error
+	items              []*TestableInstanceDetails
+	listCallCount      int
+	cb                 func(int) error
+	forceRetryCount    int
+	forceRetryRuntimes []string
+}
+
+func (il *InstanceListerMock) ForceShootRetry(_ context.Context, runtimeId string) error {
+	il.forceRetryCount++
+	il.forceRetryRuntimes = append(il.forceRetryRuntimes, runtimeId)
+	return nil
 }
 
 func (il *InstanceListerMock) Add(ids ...*TestableInstanceDetails) *InstanceListerMock {
