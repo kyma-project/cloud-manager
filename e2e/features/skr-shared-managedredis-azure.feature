@@ -33,7 +33,7 @@ Feature: AzureManagedRedis feature
       | Port  | Secret | ${redis.metadata.name} | port       |
       | Auth  | Secret | ${redis.metadata.name} | authString |
       | TLS   | True   |                        |            |
-      | Retry | 5      |                        |            |
+      | Retry | 10     |                        |            |
 
     When resource "redis" is deleted
 
@@ -76,7 +76,7 @@ Feature: AzureManagedRedis feature
       | Auth        | Secret | ${redis.metadata.name} | authString |
       | TLS         | True   |                        |            |
       | ClusterMode | True   |                        |            |
-      | Retry       | 5      |                        |            |
+      | Retry       | 10     |                        |            |
 
     When resource "redis" is deleted
 
