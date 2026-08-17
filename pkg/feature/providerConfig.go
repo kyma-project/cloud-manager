@@ -40,11 +40,11 @@ func (p *providerConfig) IntVariation(ctx context.Context, flagKey string, defau
 	if res.Type == gjson.Null {
 		return defaultValue
 	}
-	v, err := strconv.ParseInt(res.String(), 10, 64)
+	v, err := strconv.Atoi(res.String())
 	if err != nil {
 		return defaultValue
 	}
-	return int(v)
+	return v
 }
 
 func (p *providerConfig) Float64Variation(ctx context.Context, flagKey string, defaultValue float64) float64 {
