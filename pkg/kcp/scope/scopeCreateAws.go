@@ -61,9 +61,9 @@ func scopeCreateAws(ctx context.Context, st composed.State) (error, context.Cont
 						Zones: pie.Map(infra.Networks.Zones, func(z gardenerawsapi.Zone) cloudcontrolv1beta1.AwsZone {
 							return cloudcontrolv1beta1.AwsZone{
 								Name:     z.Name,
-								Internal: z.Internal,
-								Public:   z.Public,
-								Workers:  z.Workers,
+								Internal: ptr.Deref(z.Internal, ""),
+								Public:   ptr.Deref(z.Public, ""),
+								Workers:  ptr.Deref(z.Workers, ""),
 							}
 						}),
 					},
