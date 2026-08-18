@@ -3,8 +3,10 @@ package client
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/config"
+	azuremetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/metrics"
 )
 
 type CredentialOptionsBuilder struct {
@@ -53,5 +55,9 @@ func (b *OptionsBuilder) WithAuxiliaryTenants(auxiliaryTenants []string) *Option
 }
 
 func (b *OptionsBuilder) Build() *arm.ClientOptions {
+	if b.options == nil {
+		b.options = &arm.ClientOptions{}
+	}
+	b.options.PerRetryPolicies = []policy.Policy{azuremetrics.NewMetricsPolicy()}
 	return b.options
 }
