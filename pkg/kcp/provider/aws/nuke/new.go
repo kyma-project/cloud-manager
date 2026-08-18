@@ -3,8 +3,10 @@ package nuke
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -30,10 +32,23 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"awsNuke",
 			createAwsClient,
-			loadVault,
-			loadNfsBackups,
+			composed.If(
+				feature.FFNukeBackupsAws.Predicate(),
+				// NFS Backups
+				loadVault,
+				loadNfsBackups,
+				providerResourceStatusDiscovered,
+				deleteNfsBackup,
+			),
+			// WebACLs (always runs when AWS nuke is enabled)
+			loadWebAcls,
 			providerResourceStatusDiscovered,
-			deleteNfsBackup,
+			deleteWebAcls,
+			// Certificates (always runs when AWS nuke is enabled)
+			loadCertificates,
+			providerResourceStatusDiscovered,
+			deleteCertificates,
+			// Status tracking (applies to all resource types)
 			providerResourceStatusDeleting,
 			providerResourceStatusDeleted,
 			checkIfAllProviderResourcesDeleted,
