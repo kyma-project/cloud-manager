@@ -52,7 +52,7 @@ require (
 	github.com/gardener/gardener-extension-provider-azure v1.62.1
 	github.com/gardener/gardener-extension-provider-gcp v1.53.4
 	github.com/gardener/gardener-extension-provider-openstack v1.57.0
-	github.com/gardener/gardener/pkg/apis v1.148.2
+	github.com/gardener/gardener/pkg/apis v1.149.0
 	github.com/go-logr/logr v1.4.4
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.31.0
@@ -156,7 +156,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/gnostic-models v0.7.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/pprof v0.0.0-20260402051712-545e8a4df936 // indirect
+	github.com/google/pprof v0.0.0-20260604005048-7023385849c0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.20 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
