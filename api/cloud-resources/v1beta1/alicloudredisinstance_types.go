@@ -98,7 +98,7 @@ func (in *AlicloudRedisInstance) GetObjectMeta() *metav1.ObjectMeta {
 }
 
 func (in *AlicloudRedisInstance) SpecificToFeature() featuretypes.FeatureName {
-	return featuretypes.FeatureAlicloudRedisInstance
+	return featuretypes.FeatureRedis
 }
 
 func (in *AlicloudRedisInstance) SpecificToProviders() []string {

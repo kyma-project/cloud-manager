@@ -23,12 +23,12 @@ apiDisabled:
       query: feature == "azureManagedRedis"
       variation: disabled
 
-    - name: Disable AlicloudRedisInstance
-      query: feature == "alicloudRedisInstance"
+    - name: Disable Redis on AliCloud
+      query: feature == "redis" and provider == "alicloud"
       variation: disabled
 
-    - name: Disable AlicloudRedisCluster
-      query: feature == "alicloudRedisCluster"
+    - name: Disable RedisCluster on AliCloud
+      query: feature == "rediscluster" and provider == "alicloud"
       variation: disabled
 
     - name: Disable all on trial
@@ -94,19 +94,5 @@ alicloud:
     - name: Enable for AliCloud provider
       query: provider == "alicloud"
       variation: enabled
-  defaultRule:
-    variation: disabled
-
-alicloudRedisInstance:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: disabled
-
-alicloudRedisCluster:
-  variations:
-    enabled: true
-    disabled: false
   defaultRule:
     variation: disabled
