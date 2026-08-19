@@ -4,30 +4,29 @@ package v1beta1
 // The tier letter+number encodes the underlying AliCloud r-kvstore instance
 // class and read-only replica count:
 //
-//	S1 →  1 GB  redis.master.small.default,           ReadOnlyCount=0
-//	S2 →  2 GB  redis.master.mid.default,              ReadOnlyCount=0
-//	S3 →  4 GB  redis.master.stand.default,            ReadOnlyCount=0
-//	S4 →  8 GB  redis.master.large.default,            ReadOnlyCount=0
-//	S5 → 16 GB  redis.master.2xlarge.default,          ReadOnlyCount=0
+//	S1 →  1 GB  redis.master.small.default,              ReadOnlyCount=0
+//	S2 →  2 GB  redis.master.mid.default,                ReadOnlyCount=0
+//	S3 →  4 GB  redis.master.stand.default,              ReadOnlyCount=0
+//	S4 →  8 GB  redis.master.large.default,              ReadOnlyCount=0
+//	S5 → 16 GB  redis.master.2xlarge.default,            ReadOnlyCount=0
 //	            standard HA (master+replica), 80k QPS, engine 5.0
 //
-//	P1 →  1 GB  redis.amber.master.small.multithread,  ReadOnlyCount=1
-//	P2 →  2 GB  redis.amber.master.mid.multithread,    ReadOnlyCount=1
-//	P3 →  4 GB  redis.amber.master.stand.multithread,  ReadOnlyCount=1
-//	P4 →  8 GB  redis.amber.master.large.multithread,  ReadOnlyCount=1
-//	P5 → 16 GB  redis.amber.master.2xlarge.multithread,ReadOnlyCount=1
+//	P1 →  4 GB  redis.amber.master.stand.multithread,    ReadOnlyCount=1
+//	P2 →  8 GB  redis.amber.master.large.multithread,    ReadOnlyCount=1
+//	P3 → 16 GB  redis.amber.master.2xlarge.multithread,  ReadOnlyCount=1
+//	P4 → 32 GB  redis.amber.master.4xlarge.multithread,  ReadOnlyCount=1
+//	P5 → 64 GB  redis.amber.master.8xlarge.multithread,  ReadOnlyCount=1
 //	            enterprise HA (master+replica+read-only replica), 240k QPS, engine 5.0
 //
-// Note: AliCloud P tiers start at 1 GB, whereas on AWS (P1=6 GB), GCP (P1=5 GB),
-// and Azure (P1=6 GB) the P tier starts at a higher memory baseline. This is an
-// AliCloud platform constraint — the smallest amber.master class available in
-// international regions is 1 GB.
+// P tiers start at 4 GB (stand class) to align with the cross-provider P tier
+// baseline: AWS P1=6.38 GB, GCP P1=5 GB, Azure P1=6 GB. The closest available
+// AliCloud amber.master class below that baseline is 4 GB (stand).
 //
 // Both class families are available in all AliCloud international regions.
 // Engine version is constrained to "5.0" — local-disk and amber-multithread
 // classes do not support 6.0 or 7.0 in international regions.
 //
-// Both letter (S↔P) and number (1..5) are mutable via ModifyInstanceSpec; no
+// Both letter (S↔P) and number are mutable via ModifyInstanceSpec; no
 // recreation is required. EngineVersion is immutable after creation.
 //
 // The tier→InstanceClass mapping lives in pkg/skr/alicloudredisinstance/util.go.
