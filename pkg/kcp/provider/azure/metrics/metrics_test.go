@@ -287,3 +287,50 @@ func TestMetricsPolicyRegionFromLroPolling(t *testing.T) {
 		"GET /subscriptions/{id}/providers/Microsoft.Cache/locations/{id}/asyncOperations/{id}",
 		"200", "westeurope", "sub-lro"))
 }
+
+func TestRegionContextRoundTrip(t *testing.T) {
+	ctx := RegionIntoContext(context.Background(), "westeurope")
+	assert.Equal(t, "westeurope", RegionFromContext(ctx))
+}
+
+func TestRegionFromContextEmptyWhenAbsent(t *testing.T) {
+	assert.Equal(t, "", RegionFromContext(context.Background()))
+}
+
+// The reconciler injects region into the context because ARM resource paths
+// carry no region; the policy must label the call with it.
+func TestMetricsPolicyRegionFromContext(t *testing.T) {
+	metrics.CloudProviderCallCount.Reset()
+
+	pl := newMetricsTestPipeline(&fakeTransport{statusCode: http.StatusOK, body: "{}"})
+	ctx := RegionIntoContext(context.Background(), "eastus")
+	req, err := runtime.NewRequest(ctx, http.MethodGet,
+		"https://management.azure.com/subscriptions/sub-ctx/resourceGroups/rg-1/providers/Microsoft.Network/virtualNetworks/vnet-1")
+	assert.NoError(t, err)
+
+	_, err = pl.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, float64(1), metricValue(
+		"GET /subscriptions/{id}/resourceGroups/{id}/providers/Microsoft.Network/virtualNetworks/{id}",
+		"200", "eastus", "sub-ctx"))
+}
+
+// The context region wins over the url-parsed one so a single label is used per
+// logical call regardless of whether it is a resource call or an LRO poll.
+func TestMetricsPolicyContextRegionOverridesPath(t *testing.T) {
+	metrics.CloudProviderCallCount.Reset()
+
+	pl := newMetricsTestPipeline(&fakeTransport{statusCode: http.StatusOK, body: `{"status":"Succeeded"}`})
+	ctx := RegionIntoContext(context.Background(), "eastus")
+	req, err := runtime.NewRequest(ctx, http.MethodGet,
+		"https://management.azure.com/subscriptions/sub-lro/providers/Microsoft.Cache/locations/westeurope/asyncOperations/op-1")
+	assert.NoError(t, err)
+
+	_, err = pl.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, float64(1), metricValue(
+		"GET /subscriptions/{id}/providers/Microsoft.Cache/locations/{id}/asyncOperations/{id}",
+		"200", "eastus", "sub-lro"))
+}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
+	azuremetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/metrics"
 )
 
 // New returns an Action that will provision and deprovision resource in the cloud.
@@ -34,6 +35,7 @@ func New(stateFactory StateFactory) composed.Action {
 		if err != nil {
 			return err, ctx
 		}
+		ctx = azuremetrics.RegionIntoContext(ctx, state.Scope().Spec.Region)
 		return composed.ComposeActions(
 			"azureIpRange",
 			namesDetermine,

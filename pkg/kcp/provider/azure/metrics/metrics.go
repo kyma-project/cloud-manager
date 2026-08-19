@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -11,6 +12,25 @@ import (
 )
 
 const pathPlaceholder = "{id}"
+
+type regionCtxKey struct{}
+
+// RegionIntoContext returns a context carrying the Azure region, so the metrics
+// policy can label calls with a region even though ARM resource paths do not
+// contain one (only LRO/location-scoped urls do). Injected at the provider flow
+// entry points from scope.Spec.Region.
+func RegionIntoContext(ctx context.Context, region string) context.Context {
+	return context.WithValue(ctx, regionCtxKey{}, region)
+}
+
+// RegionFromContext returns the Azure region injected by RegionIntoContext, or
+// an empty string when none was set.
+func RegionFromContext(ctx context.Context) string {
+	if region, ok := ctx.Value(regionCtxKey{}).(string); ok {
+		return region
+	}
+	return ""
+}
 
 // metricsPolicy counts Azure API calls in the CloudProviderCallCount metric.
 // It is injected as a PerRetryPolicy, so it runs below the SDK retry policy and
@@ -38,7 +58,16 @@ func (p *metricsPolicy) Do(req *policy.Request) (*http.Response, error) {
 		responseCode = resp.StatusCode
 	}
 
-	sanitizedPath, region, subscription := parseAzureRequestPath(req.Raw().URL.Path)
+	sanitizedPath, urlRegion, subscription := parseAzureRequestPath(req.Raw().URL.Path)
+
+	// Prefer the region injected into the context by the reconciler, since ARM
+	// resource paths carry a region only on LRO/location-scoped urls. Fall back
+	// to the url-parsed region so those calls still get labeled when no region
+	// was injected.
+	region := RegionFromContext(req.Raw().Context())
+	if region == "" {
+		region = urlRegion
+	}
 
 	metrics.CloudProviderCallCount.WithLabelValues(
 		metrics.CloudProviderAzure,

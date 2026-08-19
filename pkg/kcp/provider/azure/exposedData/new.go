@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azuremetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/metrics"
 	scopetypes "github.com/kyma-project/cloud-manager/pkg/kcp/scope/types"
 )
 
@@ -23,6 +24,7 @@ func New(sf StateFactory) composed.Action {
 		if err != nil {
 			return err, ctx
 		}
+		ctx = azuremetrics.RegionIntoContext(ctx, scopeState.ObjAsScope().Spec.Region)
 
 		return composed.ComposeActionsNoName(
 			kcpNetworkVerify,
