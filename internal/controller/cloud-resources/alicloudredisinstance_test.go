@@ -245,7 +245,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance,
 					NewObjActions(),
-					HavingFieldValue("redis.amber.master.mid.multithread", "spec", "instance", "alicloud", "instanceClass"),
+					HavingFieldValue("redis.amber.master.large.multithread", "spec", "instance", "alicloud", "instanceClass"),
 					HavingFieldValue(int32(1), "spec", "instance", "alicloud", "readOnlyCount"),
 				).Should(Succeed())
 		})

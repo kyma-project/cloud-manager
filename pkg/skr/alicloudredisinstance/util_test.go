@@ -19,11 +19,11 @@ func TestRedisTierToInstanceClassAndReadOnlyCount(t *testing.T) {
 		{cloudresourcesv1beta1.AlicloudRedisTierS3, "redis.master.stand.default", 0, false},
 		{cloudresourcesv1beta1.AlicloudRedisTierS4, "redis.master.large.default", 0, false},
 		{cloudresourcesv1beta1.AlicloudRedisTierS5, "redis.master.2xlarge.default", 0, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP1, "redis.amber.master.small.multithread", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP2, "redis.amber.master.mid.multithread", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP3, "redis.amber.master.stand.multithread", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP4, "redis.amber.master.large.multithread", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP5, "redis.amber.master.2xlarge.multithread", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP1, "redis.amber.master.stand.multithread", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP2, "redis.amber.master.large.multithread", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP3, "redis.amber.master.2xlarge.multithread", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP4, "redis.amber.master.4xlarge.multithread", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP5, "redis.amber.master.8xlarge.multithread", 1, false},
 		{"unknown", "", 0, true},
 	}
 
