@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
@@ -114,6 +115,9 @@ func (c *alicloudClient) DescribeVSwitch(ctx context.Context, vSwitchId string) 
 	}, nil
 }
 
+// DescribeVSwitchesByName returns vSwitches matching the given name in the given VPC.
+// This fetches only one page (default page size ≤50); it is used exclusively for
+// deterministically-named recovery lookups where at most one result is expected.
 func (c *alicloudClient) DescribeVSwitchesByName(ctx context.Context, vpcId, name string) ([]VSwitchInfo, error) {
 	req := &vpc.DescribeVSwitchesRequest{
 		RegionId:    new(c.region),
@@ -204,18 +208,25 @@ func (c *alicloudClient) DescribeZones(ctx context.Context) ([]string, error) {
 }
 
 func (c *alicloudClient) DescribeVSwitchesByVpcId(ctx context.Context, vpcId string) ([]VSwitchInfo, error) {
-	req := &vpc.DescribeVSwitchesRequest{
-		RegionId: new(c.region),
-		VpcId:    new(vpcId),
-	}
-
-	resp, err := c.vpcClient.DescribeVSwitches(req)
-	if err != nil {
-		return nil, fmt.Errorf("error describing alicloud vswitches for vpc %s: %w", vpcId, err)
-	}
-
 	var result []VSwitchInfo
-	if resp.Body != nil && resp.Body.VSwitches != nil {
+	var pageNumber int32 = 1
+	const pageSize int32 = 50
+	for {
+		req := &vpc.DescribeVSwitchesRequest{
+			RegionId:   new(c.region),
+			VpcId:      new(vpcId),
+			PageNumber: new(pageNumber),
+			PageSize:   new(pageSize),
+		}
+
+		resp, err := c.vpcClient.DescribeVSwitches(req)
+		if err != nil {
+			return nil, fmt.Errorf("error describing alicloud vswitches for vpc %s: %w", vpcId, err)
+		}
+
+		if resp.Body == nil || resp.Body.VSwitches == nil {
+			break
+		}
 		for _, v := range resp.Body.VSwitches.VSwitch {
 			result = append(result, VSwitchInfo{
 				VSwitchId:   tea.StringValue(v.VSwitchId),
@@ -226,8 +237,11 @@ func (c *alicloudClient) DescribeVSwitchesByVpcId(ctx context.Context, vpcId str
 				Status:      tea.StringValue(v.Status),
 			})
 		}
+		if int32(len(resp.Body.VSwitches.VSwitch)) < pageSize {
+			break
+		}
+		pageNumber++
 	}
-
 	return result, nil
 }
 
@@ -285,4 +299,24 @@ func (c *alicloudClient) UnassociateVpcCidrBlock(ctx context.Context, vpcId, cid
 	}
 
 	return nil
+}
+
+// IsCidrInUseErr returns true when AliCloud rejects disassociation because the
+// CIDR block is still referenced by at least one vSwitch.
+func IsCidrInUseErr(err error) bool {
+	var sdkErr *tea.SDKError
+	if errors.As(err, &sdkErr) && sdkErr.Code != nil {
+		return tea.StringValue(sdkErr.Code) == "OperationFailed.CidrInUse"
+	}
+	return false
+}
+
+// IsVSwitchCidrOverlapErr returns true when AliCloud rejects a CreateVSwitch
+// call because the requested CIDR block overlaps with an existing vSwitch.
+func IsVSwitchCidrOverlapErr(err error) bool {
+	var sdkErr *tea.SDKError
+	if errors.As(err, &sdkErr) && sdkErr.Code != nil {
+		return tea.StringValue(sdkErr.Code) == "InvalidCidrBlock.Overlapped"
+	}
+	return false
 }

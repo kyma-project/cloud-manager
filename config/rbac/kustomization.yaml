@@ -40,6 +40,10 @@ resources:
 - cloud-control_gcpsubnet_viewer_role.yaml
 - cloud-resources_awsrediscluster_editor_role.yaml
 - cloud-resources_awsrediscluster_viewer_role.yaml
+- cloud-resources_alicloudredisinstance_editor_role.yaml
+- cloud-resources_alicloudredisinstance_viewer_role.yaml
+- cloud-resources_alicloudrediscluster_editor_role.yaml
+- cloud-resources_alicloudrediscluster_viewer_role.yaml
 - cloud-resources_azurerwxvolumerestore_editor_role.yaml
 - cloud-resources_azurerwxvolumerestore_viewer_role.yaml
 - cloud-resources_azurerwxvolumebackup_editor_role.yaml

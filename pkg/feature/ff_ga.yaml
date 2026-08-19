@@ -23,6 +23,14 @@ apiDisabled:
       query: feature == "azureManagedRedis"
       variation: disabled
 
+    - name: Disable Redis on AliCloud
+      query: feature == "redis" and provider == "alicloud"
+      variation: disabled
+
+    - name: Disable RedisCluster on AliCloud
+      query: feature == "rediscluster" and provider == "alicloud"
+      variation: disabled
+
     - name: Disable all on trial
       query: brokerPlan == "trial"
       variation: disabled

@@ -26,14 +26,15 @@ import (
 
 // Error reasons
 const (
-	ReasonCidrCanNotChange               = "CidrCanNotChange"
-	ReasonCidrCanNotSplit                = "CidrCanNotSplit"
-	ReasonCidrAssociationFailed          = "CidrAssociationFailed"
-	ReasonCidrAllocationFailed           = "CidrAllocationFailed"
-	ReasonVpcNotFound                    = "VpcNotFound"
-	ReasonShootAndVpcMismatch            = "ShootAndVpcMismatch"
-	ReasonFailedExtendingVpcAddressSpace = "FailedExtendingVpcAddressSpace"
-	ReasonInvalidIpRangeReference        = "InvalidIpRangeReference"
+	ReasonCidrCanNotChange                    = "CidrCanNotChange"
+	ReasonCidrCanNotSplit                     = "CidrCanNotSplit"
+	ReasonCidrAssociationFailed               = "CidrAssociationFailed"
+	ReasonCidrAllocationFailed                = "CidrAllocationFailed"
+	ReasonVpcNotFound                         = "VpcNotFound"
+	ReasonShootAndVpcMismatch                 = "ShootAndVpcMismatch"
+	ReasonFailedExtendingVpcAddressSpace      = "FailedExtendingVpcAddressSpace"
+	ReasonFailedDisassociatingVpcAddressSpace = "FailedDisassociatingVpcAddressSpace"
+	ReasonInvalidIpRangeReference             = "InvalidIpRangeReference"
 )
 
 const (
