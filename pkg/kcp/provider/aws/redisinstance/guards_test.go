@@ -261,8 +261,26 @@ func TestWaitElastiCacheAvailable_Available(t *testing.T) {
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_AVAILABLE)),
 	}, nil)
+	state.memberClusters = []elasticachetypes.CacheCluster{{}}
 	err, _ := waitElastiCacheAvailable(context.Background(), state)
-	assert.Nil(t, err, "waitElastiCacheAvailable must proceed (nil) when RG is AVAILABLE")
+	assert.Nil(t, err, "waitElastiCacheAvailable must proceed (nil) when RG is AVAILABLE with member clusters")
+}
+
+// available but zero member clusters is an unrecoverable inconsistency -
+// surface a terminal error rather than proceed to operate on nothing.
+func TestWaitElastiCacheAvailable_AvailableButNoMembersErrors(t *testing.T) {
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(string(awsmeta.ElastiCache_AVAILABLE)),
+	}, nil)
+	state.memberClusters = nil
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+	assert.Equal(t, composed.StopAndForget, err,
+		"waitElastiCacheAvailable must StopAndForget when AVAILABLE but no member clusters")
+	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State,
+		"RedisInstance must be set to StateError when AVAILABLE but no member clusters")
+	cond := meta.FindStatusCondition(state.ObjAsRedisInstance().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.NotNil(t, cond, "Error condition must be set")
+	assert.Equal(t, cloudcontrolv1beta1.ReasonCloudProviderError, cond.Reason)
 }
 
 func TestWaitElastiCacheAvailable_NonTerminalStatesRequeue(t *testing.T) {
@@ -304,4 +322,36 @@ func TestWaitElastiCacheAvailable_CreateFailedSurfacesError(t *testing.T) {
 		"condition message must stay abstract and not leak cloud provider internals")
 	assert.NotContains(t, cond.Message, string(awsmeta.ElastiCache_CREATE_FAILED),
 		"condition message must not expose the raw AWS replication group status")
+}
+
+// loadMemberClusters must continue (not error) on an empty member list so
+// waitElastiCacheAvailable can decide readiness/terminal state.
+func TestLoadMemberClusters_NoMembersDefersToWait(t *testing.T) {
+	stub := newElastiCacheStub()
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status:         ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
+		MemberClusters: nil,
+	}, nil)
+	state.awsClient = stub
+
+	err, _ := loadMemberClusters(context.Background(), state)
+
+	assert.Nil(t, err, "loadMemberClusters must continue (nil) on an empty member list; waitElastiCacheAvailable owns state handling")
+	assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State,
+		"loadMemberClusters must not set a terminal error state")
+}
+
+// modifyPreferredMaintenanceWindow must skip (nil), not error, when there are
+// no member clusters to modify.
+func TestModifyPreferredMaintenanceWindow_NoMembersSkips(t *testing.T) {
+	stub := newElastiCacheStub()
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status:         ptr.To(string(awsmeta.ElastiCache_AVAILABLE)),
+		MemberClusters: nil,
+	}, nil)
+	state.awsClient = stub
+
+	err, _ := modifyPreferredMaintenanceWindow(context.Background(), state)
+
+	assert.Nil(t, err, "modifyPreferredMaintenanceWindow must skip (nil) when there are no member clusters")
 }

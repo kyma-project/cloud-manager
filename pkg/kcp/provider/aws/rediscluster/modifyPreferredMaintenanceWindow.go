@@ -2,7 +2,6 @@ package rediscluster
 
 import (
 	"context"
-	"errors"
 
 	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 
@@ -33,8 +32,10 @@ func modifyPreferredMaintenanceWindow(ctx context.Context, st composed.State) (e
 		elastiCacheClusters = append(elastiCacheClusters, clusters...)
 	}
 
+	// No members means no nodes to modify; not an error.
 	if len(elastiCacheClusters) < 1 {
-		return composed.LogErrorAndReturn(errors.New("no replication group clusters found"), "no replication group clusters found", composed.StopWithRequeueDelay(5*util.Timing.T10000ms()), ctx)
+		logger.Info("Replication group has no member clusters; skipping preferred maintenance window modification")
+		return nil, ctx
 	}
 
 	currentPreferredMaintenanceWindow := ptr.Deref(elastiCacheClusters[0].PreferredMaintenanceWindow, "")
