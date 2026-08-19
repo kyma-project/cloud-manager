@@ -45,10 +45,6 @@ type RedisInstanceAlicloud struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1
 	ReadOnlyCount int32 `json:"readOnlyCount"`
-
-	// Parameters are passed to the AliCloud instance as runtime configuration.
-	// +optional
-	Parameters map[string]string `json:"parameters,omitempty"`
 }
 
 // RedisClusterAlicloud describes an AliCloud r-kvstore sharded cloud-native
@@ -91,8 +87,4 @@ type RedisClusterAlicloud struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1
 	ReplicasPerShard int32 `json:"replicasPerShard"`
-
-	// Parameters are passed to the AliCloud instance as runtime configuration.
-	// +optional
-	Parameters map[string]string `json:"parameters,omitempty"`
 }

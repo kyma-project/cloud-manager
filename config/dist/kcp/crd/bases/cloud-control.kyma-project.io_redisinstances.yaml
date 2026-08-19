@@ -80,12 +80,6 @@ spec:
                           rule: (self == oldSelf)
                       instanceClass:
                         type: string
-                      parameters:
-                        additionalProperties:
-                          type: string
-                        description: Parameters are passed to the AliCloud instance
-                          as runtime configuration.
-                        type: object
                       readOnlyCount:
                         default: 0
                         description: 'ReadOnlyCount: 0 = S tier (no read replica),

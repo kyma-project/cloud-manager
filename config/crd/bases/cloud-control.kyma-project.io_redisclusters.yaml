@@ -81,12 +81,6 @@ spec:
                           rule: (self == oldSelf)
                       instanceClass:
                         type: string
-                      parameters:
-                        additionalProperties:
-                          type: string
-                        description: Parameters are passed to the AliCloud instance
-                          as runtime configuration.
-                        type: object
                       replicasPerShard:
                         default: 0
                         description: |-

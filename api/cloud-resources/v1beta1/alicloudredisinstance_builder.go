@@ -36,11 +36,6 @@ func (b *AlicloudRedisInstanceBuilder) WithEngineVersion(engineVersion string) *
 	return b
 }
 
-func (b *AlicloudRedisInstanceBuilder) WithParameters(parameters map[string]string) *AlicloudRedisInstanceBuilder {
-	b.AlicloudRedisInstance.Spec.Parameters = parameters
-	return b
-}
-
 func (b *AlicloudRedisInstanceBuilder) WithAuthSecretName(name string) *AlicloudRedisInstanceBuilder {
 	if b.AlicloudRedisInstance.Spec.AuthSecret == nil {
 		b.AlicloudRedisInstance.Spec.AuthSecret = &RedisAuthSecretSpec{}

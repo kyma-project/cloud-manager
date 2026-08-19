@@ -98,11 +98,6 @@ spec:
                   x-kubernetes-validations:
                     - message: IpRange is immutable.
                       rule: (self == oldSelf)
-                parameters:
-                  additionalProperties:
-                    type: string
-                  description: Parameters are passed to the AliCloud instance as runtime configuration.
-                  type: object
                 redisTier:
                   description: |-
                     RedisTier defines service and capacity tier.

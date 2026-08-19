@@ -64,10 +64,6 @@ type AlicloudRedisClusterSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="engineVersion is immutable."
 	EngineVersion string `json:"engineVersion,omitempty"`
 
-	// Parameters are passed to the AliCloud instance as runtime configuration.
-	// +optional
-	Parameters map[string]string `json:"parameters,omitempty"`
-
 	// +optional
 	AuthSecret *RedisAuthSecretSpec `json:"authSecret,omitempty"`
 }
