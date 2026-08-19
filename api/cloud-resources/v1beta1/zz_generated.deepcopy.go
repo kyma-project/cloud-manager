@@ -89,13 +89,6 @@ func (in *AlicloudRedisClusterList) DeepCopyObject() runtime.Object {
 func (in *AlicloudRedisClusterSpec) DeepCopyInto(out *AlicloudRedisClusterSpec) {
 	*out = *in
 	out.IpRange = in.IpRange
-	if in.Parameters != nil {
-		in, out := &in.Parameters, &out.Parameters
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
-	}
 	if in.AuthSecret != nil {
 		in, out := &in.AuthSecret, &out.AuthSecret
 		*out = new(RedisAuthSecretSpec)
@@ -198,13 +191,6 @@ func (in *AlicloudRedisInstanceList) DeepCopyObject() runtime.Object {
 func (in *AlicloudRedisInstanceSpec) DeepCopyInto(out *AlicloudRedisInstanceSpec) {
 	*out = *in
 	out.IpRange = in.IpRange
-	if in.Parameters != nil {
-		in, out := &in.Parameters, &out.Parameters
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
-	}
 	if in.AuthSecret != nil {
 		in, out := &in.AuthSecret, &out.AuthSecret
 		*out = new(RedisAuthSecretSpec)
