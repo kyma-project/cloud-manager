@@ -76,15 +76,7 @@ func (r *redisClusterReconciler) newAction() composed.Action {
 					nil,
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsrediscluster.New(r.awsStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurerediscluster.New(r.azureStateFactory)),
-					composed.NewCase(
-						composed.All(
-							statewithscope.AlicloudProviderPredicate,
-							func(ctx context.Context, st composed.State) bool {
-								return feature.AlicloudRedisCluster.Value(ctx)
-							},
-						),
-						alicloudrediscluster.New(r.alicloudStateFactory),
-					),
+					composed.NewCase(statewithscope.AlicloudProviderPredicate, alicloudrediscluster.New(r.alicloudStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

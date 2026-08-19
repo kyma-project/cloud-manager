@@ -80,15 +80,7 @@ func (r *redisInstanceReconciler) newAction() composed.Action {
 					composed.NewCase(statewithscope.GcpProviderPredicate, gcpredisinstance.New(r.gcpStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azureredisinstance.New(r.azureStateFactory)),
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsredisinstance.New(r.awsStateFactory)),
-					composed.NewCase(
-						composed.All(
-							statewithscope.AlicloudProviderPredicate,
-							func(ctx context.Context, st composed.State) bool {
-								return feature.AlicloudRedisInstance.Value(ctx)
-							},
-						),
-						alicloudredisinstance.New(r.alicloudStateFactory),
-					),
+					composed.NewCase(statewithscope.AlicloudProviderPredicate, alicloudredisinstance.New(r.alicloudStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},
