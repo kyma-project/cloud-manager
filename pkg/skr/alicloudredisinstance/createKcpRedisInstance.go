@@ -69,7 +69,6 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 					InstanceClass: instanceClass,
 					EngineVersion: alicloudRedisInstance.Spec.EngineVersion,
 					ReadOnlyCount: readOnlyCount,
-					Parameters:    alicloudRedisInstance.Spec.Parameters,
 				},
 			},
 		},

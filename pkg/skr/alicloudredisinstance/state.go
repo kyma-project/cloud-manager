@@ -2,7 +2,6 @@ package alicloudredisinstance
 
 import (
 	"context"
-	"maps"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -102,7 +101,6 @@ func (s *State) ShouldModifyKcp() bool {
 	isInstanceClassDifferent := s.KcpRedisInstance.Spec.Instance.Alicloud.InstanceClass != instanceClass
 	isReadOnlyCountDifferent := s.KcpRedisInstance.Spec.Instance.Alicloud.ReadOnlyCount != readOnlyCount
 
-	return !maps.Equal(s.KcpRedisInstance.Spec.Instance.Alicloud.Parameters, alicloudRedisInstance.Spec.Parameters) ||
-		isInstanceClassDifferent ||
+	return isInstanceClassDifferent ||
 		isReadOnlyCountDifferent
 }

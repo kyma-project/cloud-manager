@@ -63,22 +63,6 @@ func WithKcpAlicloudRedisReadOnlyCount(readOnlyCount int32) ObjAction {
 	}
 }
 
-func WithKcpAlicloudRedisParameters(parameters map[string]string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudcontrolv1beta1.RedisInstance); ok {
-				x.Spec.Instance.Alicloud.Parameters = parameters
-				return
-			}
-			if x, ok := obj.(*cloudcontrolv1beta1.RedisCluster); ok {
-				x.Spec.Instance.Alicloud.Parameters = parameters
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithKcpAlicloudRedisParameters", obj))
-		},
-	}
-}
-
 // ======================== KCP RedisCluster (Alicloud) ========================
 
 func WithRedisClusterAlicloud() ObjAction {
@@ -164,18 +148,6 @@ func WithAlicloudRedisInstanceEngineVersion(engineVersion string) ObjAction {
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAlicloudRedisInstanceEngineVersion", obj))
-		},
-	}
-}
-
-func WithAlicloudRedisInstanceParameters(parameters map[string]string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.AlicloudRedisInstance); ok {
-				x.Spec.Parameters = parameters
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithAlicloudRedisInstanceParameters", obj))
 		},
 	}
 }
@@ -310,18 +282,6 @@ func WithAlicloudRedisClusterEngineVersion(engineVersion string) ObjAction {
 				return
 			}
 			panic(fmt.Errorf("unhandled type %T in WithAlicloudRedisClusterEngineVersion", obj))
-		},
-	}
-}
-
-func WithAlicloudRedisClusterParameters(parameters map[string]string) ObjAction {
-	return &objAction{
-		f: func(obj client.Object) {
-			if x, ok := obj.(*cloudresourcesv1beta1.AlicloudRedisCluster); ok {
-				x.Spec.Parameters = parameters
-				return
-			}
-			panic(fmt.Errorf("unhandled type %T in WithAlicloudRedisClusterParameters", obj))
 		},
 	}
 }

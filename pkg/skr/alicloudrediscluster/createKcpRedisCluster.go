@@ -70,7 +70,6 @@ func createKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 					EngineVersion:    alicloudRedisCluster.Spec.EngineVersion,
 					ShardCount:       alicloudRedisCluster.Spec.ShardCount,
 					ReplicasPerShard: alicloudRedisCluster.Spec.ReplicasPerShard,
-					Parameters:       alicloudRedisCluster.Spec.Parameters,
 				},
 			},
 		},

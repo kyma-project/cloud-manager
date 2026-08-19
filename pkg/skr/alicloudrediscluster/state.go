@@ -2,7 +2,6 @@ package alicloudrediscluster
 
 import (
 	"context"
-	"maps"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -107,8 +106,7 @@ func (s *State) ShouldModifyKcp() bool {
 	isShardCountDifferent := s.KcpRedisCluster.Spec.Instance.Alicloud.ShardCount != alicloudRedisCluster.Spec.ShardCount
 	isReplicasPerShardDifferent := s.KcpRedisCluster.Spec.Instance.Alicloud.ReplicasPerShard != alicloudRedisCluster.Spec.ReplicasPerShard
 
-	return !maps.Equal(s.KcpRedisCluster.Spec.Instance.Alicloud.Parameters, alicloudRedisCluster.Spec.Parameters) ||
-		isInstanceClassDifferent ||
+	return isInstanceClassDifferent ||
 		isShardCountDifferent ||
 		isReplicasPerShardDifferent
 }

@@ -58,7 +58,6 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 	// so this is always 0 in practice. The field is wired through to KCP so that
 	// non-proxy tiers (redis.shard.*.ce) can use it when they become available via SKR.
 	state.KcpRedisCluster.Spec.Instance.Alicloud.ReplicasPerShard = alicloudRedisCluster.Spec.ReplicasPerShard
-	state.KcpRedisCluster.Spec.Instance.Alicloud.Parameters = alicloudRedisCluster.Spec.Parameters
 
 	err = state.KcpCluster.K8sClient().Update(ctx, state.KcpRedisCluster)
 	if err != nil {

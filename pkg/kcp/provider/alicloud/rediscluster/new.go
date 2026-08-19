@@ -54,7 +54,6 @@ func New(stateFactory StateFactory) composed.Action {
 					waitRedisAvailable,
 					modifyShardCount,
 					waitRedisAvailable,
-					modifyParameters,
 					// Re-check SSL after modify steps: AliCloud may disable SSL during a
 					// class or shard-count change; restoring it here avoids waiting for
 					// the next reconcile cycle.
