@@ -259,10 +259,7 @@ func StartEx(opts StartOptions) (Infra, error) {
 
 	util.SetSpeedyTimingForTests()
 
-	// Tests use ff_edge.yaml so that all in-development features (AliCloud Redis,
-	// etc.) are enabled by default and exercise the full reconciler surface.
-	ffEdgePath := filepath.Join(projectRoot, "pkg", "feature", "ff_edge.yaml")
-	if err := feature.Initialize(infra.Ctx(), composed.LoggerFromCtx(infra.Ctx()).WithName("ff"), feature.WithFile(ffEdgePath)); err != nil {
+	if err := feature.Initialize(infra.Ctx(), composed.LoggerFromCtx(infra.Ctx()).WithName("ff")); err != nil {
 		return nil, fmt.Errorf("error initializing features: %w", err)
 	}
 
