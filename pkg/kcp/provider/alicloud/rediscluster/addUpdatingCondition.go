@@ -34,12 +34,12 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 			}).
 			SuccessErrorNil().
 			ErrorLogMessage("Error adding Updating condition to AliCloud RedisCluster").
-			Run(ctx, st)
+			Run(ctx, state)
 	}
 
 	return composed.UpdateStatus(kcp).
 		RemoveConditions(cloudcontrolv1beta1.ConditionTypeUpdating).
 		SuccessErrorNil().
 		ErrorLogMessage("Error removing Updating condition from AliCloud RedisCluster").
-		Run(ctx, st)
+		Run(ctx, state)
 }

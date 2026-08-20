@@ -49,6 +49,9 @@ func getAuthSecretAnnotations(alicloudRedis *cloudresourcesv1beta1.AlicloudRedis
 }
 
 func getAuthSecretBaseData(kcpRedis *cloudcontrolv1beta1.RedisCluster) map[string][]byte {
+	if kcpRedis == nil {
+		return map[string][]byte{}
+	}
 	result := map[string][]byte{}
 
 	if len(kcpRedis.Status.DiscoveryEndpoint) > 0 {
