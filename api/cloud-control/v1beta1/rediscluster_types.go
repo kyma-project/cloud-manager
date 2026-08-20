@@ -152,7 +152,7 @@ type RedisClusterStatus struct {
 
 	// The reconciled replicas per shard.
 	// +optional
-	ReplicasPerShard int32 `json:"replicasPerShard,omitempty"`
+	ReplicasPerShard int32 `json:"replicasPerShard"`
 
 	// +optional
 	State StatusState `json:"state,omitempty"`
