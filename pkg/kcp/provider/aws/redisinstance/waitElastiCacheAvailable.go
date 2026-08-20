@@ -56,31 +56,12 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 			Run(ctx, st)
 	}
 
-	if cacheState == awsmeta.ElastiCache_AVAILABLE {
-		// Available with no member clusters is an unrecoverable inconsistency
-		// (an available replication group always has nodes) - surface an error
-		// rather than proceed to operate on nothing.
-		if len(state.memberClusters) == 0 {
-			redisInstance := st.Obj().(*cloudcontrolv1beta1.RedisInstance)
-			logger.Error(
-				fmt.Errorf("replication group is %q but has no member clusters", cacheState),
-				"ElastiCache replication group has no member clusters",
-			)
-			redisInstance.Status.State = cloudcontrolv1beta1.StateError
-			return composed.UpdateStatus(redisInstance).
-				SetExclusiveConditions(metav1.Condition{
-					Type:    cloudcontrolv1beta1.ConditionTypeError,
-					Status:  metav1.ConditionTrue,
-					Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
-					Message: "Failed to provision RedisInstance",
-				}).
-				SuccessError(composed.StopAndForget).
-				SuccessLogMsg("RedisInstance is available but has no member clusters").
-				Run(ctx, st)
-		}
+	if state.IsReplicationGroupAvailable() {
 		return nil, ctx
 	}
 
+	// Available-but-no-members-yet is a transient eventual-consistency window, not
+	// a terminal state - requeue and let the members appear.
 	logger.Info("Redis instance is not ready yet, requeueing with delay")
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }
