@@ -25,7 +25,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
-	alicloud "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud"
 	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
