@@ -34,7 +34,7 @@ func fetchApsaraDBCACertFromURL(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("fetching ApsaraDB CA chain: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("ApsaraDB CA chain fetch returned HTTP %d", resp.StatusCode)
 	}
@@ -55,7 +55,7 @@ func fetchApsaraDBCACertFromURL(ctx context.Context) (string, error) {
 			if err != nil {
 				return "", fmt.Errorf("opening %s in ApsaraDB CA zip: %w", f.Name, err)
 			}
-			defer rc.Close()
+			defer func() { _ = rc.Close() }()
 			pem, err := io.ReadAll(rc)
 			if err != nil {
 				return "", fmt.Errorf("reading %s from ApsaraDB CA zip: %w", f.Name, err)

@@ -6,7 +6,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	alicloud "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

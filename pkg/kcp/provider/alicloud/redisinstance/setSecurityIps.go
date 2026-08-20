@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	alicloud "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
