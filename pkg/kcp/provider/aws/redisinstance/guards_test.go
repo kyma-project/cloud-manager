@@ -266,21 +266,24 @@ func TestWaitElastiCacheAvailable_Available(t *testing.T) {
 	assert.Nil(t, err, "waitElastiCacheAvailable must proceed (nil) when RG is AVAILABLE with member clusters")
 }
 
-// available but zero member clusters is an unrecoverable inconsistency -
-// surface a terminal error rather than proceed to operate on nothing.
-func TestWaitElastiCacheAvailable_AvailableButNoMembersErrors(t *testing.T) {
+// available but zero member clusters is a normal eventual-consistency window
+// during provisioning - requeue and wait for the members to appear rather than
+// terminating (an AVAILABLE replication group's members become visible shortly
+// after its status flips).
+func TestWaitElastiCacheAvailable_AvailableButNoMembersRequeues(t *testing.T) {
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_AVAILABLE)),
 	}, nil)
 	state.memberClusters = nil
 	err, _ := waitElastiCacheAvailable(context.Background(), state)
-	assert.Equal(t, composed.StopAndForget, err,
-		"waitElastiCacheAvailable must StopAndForget when AVAILABLE but no member clusters")
-	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State,
-		"RedisInstance must be set to StateError when AVAILABLE but no member clusters")
+	assert.NotNil(t, err,
+		"waitElastiCacheAvailable must requeue (non-nil) when AVAILABLE but no member clusters yet")
+	assert.NotEqual(t, composed.StopAndForget, err,
+		"waitElastiCacheAvailable must not terminate; member clusters should appear on a later reconcile")
+	assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State,
+		"RedisInstance must not be set to StateError while member clusters are not yet visible")
 	cond := meta.FindStatusCondition(state.ObjAsRedisInstance().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
-	assert.NotNil(t, cond, "Error condition must be set")
-	assert.Equal(t, cloudcontrolv1beta1.ReasonCloudProviderError, cond.Reason)
+	assert.Nil(t, cond, "Error condition must not be set for a transient no-members state")
 }
 
 func TestWaitElastiCacheAvailable_NonTerminalStatesRequeue(t *testing.T) {

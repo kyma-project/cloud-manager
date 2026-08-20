@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/redisinstance/types"
 	"k8s.io/utils/ptr"
@@ -214,6 +215,20 @@ func (s *State) GetUpgradeParamGroupName() string {
 	}
 
 	return paramGroupName
+}
+
+// IsReplicationGroupAvailable reports whether the replication group is ready to
+// operate on: status AVAILABLE and member clusters visible. Members not yet
+// visible on an AVAILABLE group is a transient provisioning window, not a
+// terminal state.
+func (s *State) IsReplicationGroupAvailable() bool {
+	if s.elastiCacheReplicationGroup == nil {
+		return false
+	}
+	if ptr.Deref(s.elastiCacheReplicationGroup.Status, "") != awsmeta.ElastiCache_AVAILABLE {
+		return false
+	}
+	return len(s.memberClusters) > 0
 }
 
 // GetProvisionedMachineType returns the provisioned machine type from the AWS ElastiCache Replication Group
