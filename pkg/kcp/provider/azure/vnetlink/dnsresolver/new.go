@@ -5,6 +5,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azuremetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/metrics"
 )
 
 func New(dnsResolverStateFactory StateFactory) composed.Action {
@@ -14,6 +15,7 @@ func New(dnsResolverStateFactory StateFactory) composed.Action {
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Failed to bootstrap VNetLink DNS resolver state", composed.StopAndForget, ctx)
 		}
+		ctx = azuremetrics.RegionIntoContext(ctx, state.Scope().Spec.Region)
 
 		return composed.ComposeActions(
 			"azureVNetLinkDnsResolver",

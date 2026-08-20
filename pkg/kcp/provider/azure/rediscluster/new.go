@@ -9,6 +9,7 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azuremetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/metrics"
 )
 
 func New(stateFactory StateFactory) composed.Action {
@@ -31,6 +32,7 @@ func New(stateFactory StateFactory) composed.Action {
 				SuccessLogMsg(fmt.Sprintf("Error creating new Azure RedisCluster state: %s", err)).
 				Run(ctx, st)
 		}
+		ctx = azuremetrics.RegionIntoContext(ctx, state.Scope().Spec.Region)
 
 		return composed.ComposeActions(
 			"azureRedisCluster",

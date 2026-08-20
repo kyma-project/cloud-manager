@@ -14,6 +14,7 @@ import (
 	kcpcommonaction "github.com/kyma-project/cloud-manager/pkg/kcp/commonAction"
 	azureclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/client"
 	azuremanagedredisclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/managedredis/client"
+	azuremetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/metrics"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -63,6 +64,8 @@ func (r *managedRedisReconciler) newAction() composed.Action {
 		feature.LoadFeatureContextFromObj(&cloudcontrolv1beta1.AzureManagedRedis{}),
 		kcpcommonaction.New(),
 		func(ctx context.Context, st composed.State) (error, context.Context) {
+			state := newState(st.(kcpcommonaction.State))
+			ctx = azuremetrics.RegionIntoContext(ctx, state.VpcNetwork().Spec.Region)
 			return composed.ComposeActionsNoName(
 				actions.AddCommonFinalizer(),
 				initAzureClient(r.clientProvider),
@@ -105,7 +108,7 @@ func (r *managedRedisReconciler) newAction() composed.Action {
 						composed.StopAndForgetAction,
 					),
 				),
-			)(ctx, newState(st.(kcpcommonaction.State)))
+			)(ctx, state)
 		},
 	)
 }

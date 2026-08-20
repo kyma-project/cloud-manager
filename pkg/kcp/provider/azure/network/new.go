@@ -5,6 +5,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	networktypes "github.com/kyma-project/cloud-manager/pkg/kcp/network/types"
+	azuremetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/metrics"
 )
 
 func New(stateFactory StateFactory) composed.Action {
@@ -16,6 +17,7 @@ func New(stateFactory StateFactory) composed.Action {
 			logger.Error(err, "Error creating Azure network state")
 			return composed.StopAndForget, nil
 		}
+		ctx = azuremetrics.RegionIntoContext(ctx, state.Scope().Spec.Region)
 
 		return composed.ComposeActions(
 			"azureNetwork",
