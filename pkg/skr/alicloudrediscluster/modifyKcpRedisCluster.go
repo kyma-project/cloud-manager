@@ -30,7 +30,7 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 		return nil, ctx
 	}
 
-	instanceClass, err := redisTierToInstanceClass(alicloudRedisCluster.Spec.RedisTier)
+	instanceClass, err := redisTierToInstanceClass(alicloudRedisCluster.Spec.RedisTier, alicloudRedisCluster.Spec.ShardCount)
 	if err != nil {
 		errMsg := "failed to map redisTier to instanceClass"
 		logger.Error(err, errMsg, "redisTier", alicloudRedisCluster.Spec.RedisTier)
@@ -54,10 +54,9 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 	}
 	state.KcpRedisCluster.Spec.Instance.Alicloud.InstanceClass = instanceClass
 	state.KcpRedisCluster.Spec.Instance.Alicloud.ShardCount = alicloudRedisCluster.Spec.ShardCount
-	// EngineVersion is not updated here — it is immutable after creation (XValidation self==oldSelf).
-	// ReplicasPerShard: the SKR CEL rule currently enforces 0, so this is always 0 in practice.
-	// The field is wired through to KCP for future use when independent replica configuration
-	// becomes available for the current cluster class family.
+	// ReplicasPerShard: the SKR CEL rule currently enforces 0 for all proxy-based tiers,
+	// so this is always 0 in practice. The field is wired through to KCP so that
+	// non-proxy tiers (redis.shard.*.ce) can use it when they become available via SKR.
 	state.KcpRedisCluster.Spec.Instance.Alicloud.ReplicasPerShard = alicloudRedisCluster.Spec.ReplicasPerShard
 
 	err = state.KcpCluster.K8sClient().Update(ctx, state.KcpRedisCluster)
