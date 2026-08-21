@@ -32,6 +32,7 @@ resources:
 - bases/cloud-resources.kyma-project.io_awsredisclusters.yaml
 - bases/cloud-resources.kyma-project.io_alicloudredisinstances.yaml
 - bases/cloud-resources.kyma-project.io_alicloudredisclusters.yaml
+- bases/cloud-resources.kyma-project.io_alicloudnfsvolumes.yaml
 - bases/cloud-control.kyma-project.io_gcpsubnets.yaml
 - bases/cloud-control.kyma-project.io_gcpredisclusters.yaml
 - bases/cloud-resources.kyma-project.io_gcpsubnets.yaml
