@@ -54,7 +54,7 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	//If it still not time to run, reconcile with delay
-	if timeLeft := GetRemainingTimeFromNow(&nextRunTime); timeLeft > 0 {
+	if timeLeft := state.Scheduler.GetRemainingTime(nextRunTime); timeLeft > 0 {
 		logger.WithValues("BackupSchedule", schedule.GetName()).Info(fmt.Sprintf("Next Run in : %d seconds", timeLeft))
 		return composed.StopWithRequeueDelay(timeLeft), nil
 	}
@@ -74,7 +74,7 @@ func evaluateNextRun(ctx context.Context, st composed.State) (error, context.Con
 
 		//If we still have some time to reach the actual nextRunTime, reconcile with delay.
 		//It may happen if we used tolerance when comparing.
-		if timeLeft := GetRemainingTimeFromNowWithTolerance(&nextRunTime, 0); timeLeft > 0 {
+		if timeLeft := state.Scheduler.GetRemainingTimeWithTolerance(nextRunTime, 0); timeLeft > 0 {
 			logger.WithValues("BackupSchedule", schedule.GetName()).Info(
 				fmt.Sprintf("Run already completed for %s. Requeueing with delay : %d seconds", nextRunTime, timeLeft))
 			return composed.StopWithRequeueDelay(timeLeft), nil
