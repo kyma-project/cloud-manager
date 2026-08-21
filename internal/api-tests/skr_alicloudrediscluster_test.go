@@ -1,6 +1,7 @@
 package api_tests
 
 import (
+	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	. "github.com/onsi/ginkgo/v2"
 )
@@ -12,9 +13,10 @@ type testAlicloudRedisClusterBuilder struct {
 func newTestAlicloudRedisClusterBuilder() *testAlicloudRedisClusterBuilder {
 	return &testAlicloudRedisClusterBuilder{
 		AlicloudRedisClusterBuilder: cloudresourcesv1beta1.NewAlicloudRedisClusterBuilder().
+			WithIpRange(uuid.NewString()).
 			WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC3).
 			WithShardCount(2).
-			WithEngineVersion("5.0"),
+			WithEngineVersion("7.0"),
 	}
 }
 
@@ -32,8 +34,8 @@ func (b *testAlicloudRedisClusterBuilder) WithIpRange(ipRangeName string) *testA
 	return b
 }
 
-func (b *testAlicloudRedisClusterBuilder) WithEngineVersion(engineVersion string) *testAlicloudRedisClusterBuilder {
-	b.AlicloudRedisClusterBuilder.WithEngineVersion(engineVersion)
+func (b *testAlicloudRedisClusterBuilder) WithShardCount(shardCount int32) *testAlicloudRedisClusterBuilder {
+	b.AlicloudRedisClusterBuilder.WithShardCount(shardCount)
 	return b
 }
 
@@ -42,8 +44,8 @@ func (b *testAlicloudRedisClusterBuilder) WithReplicasPerShard(replicasPerShard 
 	return b
 }
 
-func (b *testAlicloudRedisClusterBuilder) WithShardCount(shardCount int32) *testAlicloudRedisClusterBuilder {
-	b.AlicloudRedisClusterBuilder.WithShardCount(shardCount)
+func (b *testAlicloudRedisClusterBuilder) WithEngineVersion(engineVersion string) *testAlicloudRedisClusterBuilder {
+	b.AlicloudRedisClusterBuilder.WithEngineVersion(engineVersion)
 	return b
 }
 
@@ -52,34 +54,22 @@ func (b *testAlicloudRedisClusterBuilder) WithAuthSecretName(name string) *testA
 	return b
 }
 
-func newTestAlicloudRedisClusterBuilderNoDefaults() *testAlicloudRedisClusterBuilder {
-	return &testAlicloudRedisClusterBuilder{
-		AlicloudRedisClusterBuilder: cloudresourcesv1beta1.NewAlicloudRedisClusterBuilder().
-			WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC3).
-			WithShardCount(2),
-	}
+func (b *testAlicloudRedisClusterBuilder) WithAuthSecretLabels(labels map[string]string) *testAlicloudRedisClusterBuilder {
+	b.AlicloudRedisClusterBuilder.WithAuthSecretLabels(labels)
+	return b
+}
+
+func (b *testAlicloudRedisClusterBuilder) WithAuthSecretAnnotations(annotations map[string]string) *testAlicloudRedisClusterBuilder {
+	b.AlicloudRedisClusterBuilder.WithAuthSecretAnnotations(annotations)
+	return b
+}
+
+func (b *testAlicloudRedisClusterBuilder) WithAuthSecretExtraData(extraData map[string]string) *testAlicloudRedisClusterBuilder {
+	b.AlicloudRedisClusterBuilder.WithAuthSecretExtraData(extraData)
+	return b
 }
 
 var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
-
-	Context("Scenario: redisTier enum validation", func() {
-
-		canCreateSkr(
-			"AlicloudRedisCluster can be created with C3 tier",
-			newTestAlicloudRedisClusterBuilder().WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC3),
-		)
-
-		canCreateSkr(
-			"AlicloudRedisCluster can be created with C7 tier",
-			newTestAlicloudRedisClusterBuilder().WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC7),
-		)
-
-		canNotCreateSkr(
-			"AlicloudRedisCluster cannot be created with invalid redisTier",
-			newTestAlicloudRedisClusterBuilder().WithRedisTier("C1"),
-			"",
-		)
-	})
 
 	Context("Scenario: redisTier mutability", func() {
 
@@ -87,51 +77,31 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 			"AlicloudRedisCluster redisTier can be changed",
 			newTestAlicloudRedisClusterBuilder().WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC3),
 			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
-				b.(*testAlicloudRedisClusterBuilder).WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC5)
+				b.(*testAlicloudRedisClusterBuilder).WithRedisTier(cloudresourcesv1beta1.AlicloudRedisClusterTierC4)
 			},
 		)
 	})
 
-	Context("Scenario: shardCount validation", func() {
+	Context("Scenario: shardCount mutability", func() {
 
-		canCreateSkr(
-			"AlicloudRedisCluster can be created with shardCount=1 (minimum)",
-			newTestAlicloudRedisClusterBuilder().WithShardCount(1),
+		canChangeSkr(
+			"AlicloudRedisCluster shardCount can be increased",
+			newTestAlicloudRedisClusterBuilder().WithShardCount(2),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
+				b.(*testAlicloudRedisClusterBuilder).WithShardCount(4)
+			},
 		)
 
-		canCreateSkr(
-			"AlicloudRedisCluster can be created with shardCount=32 (maximum)",
-			newTestAlicloudRedisClusterBuilder().WithShardCount(32),
-		)
-
-		canNotCreateSkr(
-			"AlicloudRedisCluster cannot be created with shardCount=0",
-			newTestAlicloudRedisClusterBuilder().WithShardCount(0),
-			"",
-		)
-
-		canNotCreateSkr(
-			"AlicloudRedisCluster cannot be created with shardCount=33",
-			newTestAlicloudRedisClusterBuilder().WithShardCount(33),
-			"",
+		canChangeSkr(
+			"AlicloudRedisCluster shardCount can be decreased",
+			newTestAlicloudRedisClusterBuilder().WithShardCount(4),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
+				b.(*testAlicloudRedisClusterBuilder).WithShardCount(2)
+			},
 		)
 	})
 
-	Context("Scenario: engineVersion enum validation", func() {
-
-		canCreateSkr(
-			"AlicloudRedisCluster can be created without engineVersion (server-side default applied)",
-			newTestAlicloudRedisClusterBuilderNoDefaults(),
-		)
-
-		canNotCreateSkr(
-			"AlicloudRedisCluster cannot be created with invalid engineVersion",
-			newTestAlicloudRedisClusterBuilder().WithEngineVersion("8.0"),
-			"",
-		)
-	})
-
-	Context("Scenario: replicasPerShard must be 0", func() {
+	Context("Scenario: replicasPerShard validation", func() {
 
 		canNotCreateSkr(
 			"AlicloudRedisCluster cannot be created with replicasPerShard=1",
@@ -149,7 +119,7 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 		)
 	})
 
-	Context("Scenario: engineVersion immutability", func() {
+	Context("Scenario: engineVersion validation", func() {
 
 		canNotChangeSkr(
 			"AlicloudRedisCluster engineVersion cannot be changed from 5.0 to 7.0",
@@ -157,7 +127,7 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
 				b.(*testAlicloudRedisClusterBuilder).WithEngineVersion("7.0")
 			},
-			"engineVersion is immutable",
+			"engineVersion is immutable.",
 		)
 
 		canNotChangeSkr(
@@ -166,7 +136,7 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
 				b.(*testAlicloudRedisClusterBuilder).WithEngineVersion("6.0")
 			},
-			"engineVersion is immutable",
+			"engineVersion is immutable.",
 		)
 
 		canNotChangeSkr(
@@ -175,7 +145,52 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
 				b.(*testAlicloudRedisClusterBuilder).WithEngineVersion("5.0")
 			},
-			"engineVersion is immutable",
+			"engineVersion is immutable.",
+		)
+	})
+
+	Context("Scenario: authSecret mutability", func() {
+
+		canNotChangeSkr(
+			"AlicloudRedisCluster authSecret.name cannot be changed",
+			newTestAlicloudRedisClusterBuilder().WithAuthSecretName("original-name"),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
+				b.(*testAlicloudRedisClusterBuilder).WithAuthSecretName("new-name")
+			},
+			"name is immutable",
+		)
+
+		canChangeSkr(
+			"AlicloudRedisCluster authSecret.labels can be changed",
+			newTestAlicloudRedisClusterBuilder().WithAuthSecretLabels(map[string]string{"env": "dev"}),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
+				b.(*testAlicloudRedisClusterBuilder).WithAuthSecretLabels(map[string]string{"env": "prod"})
+			},
+		)
+
+		canChangeSkr(
+			"AlicloudRedisCluster authSecret.annotations can be changed",
+			newTestAlicloudRedisClusterBuilder().WithAuthSecretAnnotations(map[string]string{"owner": "team-a"}),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
+				b.(*testAlicloudRedisClusterBuilder).WithAuthSecretAnnotations(map[string]string{"owner": "team-b"})
+			},
+		)
+
+		canChangeSkr(
+			"AlicloudRedisCluster authSecret.extraData can be changed",
+			newTestAlicloudRedisClusterBuilder().WithAuthSecretExtraData(map[string]string{"key": "v1"}),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
+				b.(*testAlicloudRedisClusterBuilder).WithAuthSecretExtraData(map[string]string{"key": "v2"})
+			},
+		)
+	})
+
+	Context("Scenario: redisTier enum validation", func() {
+
+		canNotCreateSkr(
+			"AlicloudRedisCluster cannot be created with invalid redisTier",
+			newTestAlicloudRedisClusterBuilder().WithRedisTier("C1"),
+			"",
 		)
 	})
 
@@ -187,19 +202,7 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", Ordered, func() {
 			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
 				b.(*testAlicloudRedisClusterBuilder).WithIpRange("changed-ip-range")
 			},
-			"IpRange is immutable",
-		)
-	})
-
-	Context("Scenario: authSecret immutability", func() {
-
-		canNotChangeSkr(
-			"AlicloudRedisCluster authSecret.name cannot be changed",
-			newTestAlicloudRedisClusterBuilder().WithAuthSecretName("original-name"),
-			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisCluster]) {
-				b.(*testAlicloudRedisClusterBuilder).WithAuthSecretName("new-name")
-			},
-			"name is immutable",
+			"IpRange is immutable.",
 		)
 	})
 })

@@ -143,6 +143,9 @@ var _ = BeforeSuite(func() {
 	// AlicloudRedisInstance
 	Expect(SetupAlicloudRedisInstanceReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// AlicloudRedisCluster
+	Expect(SetupAlicloudRedisClusterReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 	// NfsBackupSchedule
 	Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env, testFakeClock)).NotTo(HaveOccurred())
 
