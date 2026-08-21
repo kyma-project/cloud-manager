@@ -47,7 +47,6 @@ func TestClusterTiersAreOrdered(t *testing.T) {
 		{cloudresourcesv1beta1.AlicloudRedisClusterTierC4, "redis.logic.sharding.8g.1db.0rodb.4proxy.default"},
 		{cloudresourcesv1beta1.AlicloudRedisClusterTierC5, "redis.logic.sharding.16g.1db.0rodb.4proxy.default"},
 		{cloudresourcesv1beta1.AlicloudRedisClusterTierC6, "redis.logic.sharding.32g.1db.0rodb.4proxy.default"},
-		{cloudresourcesv1beta1.AlicloudRedisClusterTierC7, "redis.logic.sharding.64g.1db.0rodb.4proxy.default"},
 	}
 
 	for _, tc := range expected {

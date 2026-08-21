@@ -54,7 +54,6 @@ func modifyKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 	}
 	state.KcpRedisCluster.Spec.Instance.Alicloud.InstanceClass = instanceClass
 	state.KcpRedisCluster.Spec.Instance.Alicloud.ShardCount = alicloudRedisCluster.Spec.ShardCount
-	// EngineVersion is not updated here — it is immutable after creation (XValidation self==oldSelf).
 	// ReplicasPerShard: the SKR CEL rule currently enforces 0 for all proxy-based tiers,
 	// so this is always 0 in practice. The field is wired through to KCP so that
 	// non-proxy tiers (redis.shard.*.ce) can use it when they become available via SKR.
