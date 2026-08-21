@@ -17,7 +17,7 @@ func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.
 		return nil, ctx
 	}
 	switch state.instance.InstanceStatus {
-	case alicloudclient.InstanceStatusNormal:
+	case alicloudclient.InstanceStatusNormal, alicloudclient.InstanceStatusReleased:
 		return nil, ctx
 	case alicloudclient.InstanceStatusCreating, alicloudclient.InstanceStatusChanging,
 		alicloudclient.InstanceStatusSSLModifying:

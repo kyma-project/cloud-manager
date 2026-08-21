@@ -11,16 +11,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// waitRedisAvailable polls the instance status until it reaches Normal. While
-// Creating, Changing, or SSLModifying (transient post-create SSL configuration),
-// the reconciler requeues. Any other terminal state surfaces an Error condition.
 func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.instance == nil {
 		return nil, ctx
 	}
 	switch state.instance.InstanceStatus {
-	case alicloudclient.InstanceStatusNormal:
+	case alicloudclient.InstanceStatusNormal, alicloudclient.InstanceStatusReleased:
 		return nil, ctx
 	case alicloudclient.InstanceStatusCreating, alicloudclient.InstanceStatusChanging,
 		alicloudclient.InstanceStatusSSLModifying:
