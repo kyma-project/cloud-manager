@@ -38,8 +38,9 @@ type AlicloudRedisInstanceSpec struct {
 	// RedisTier defines service and capacity tier.
 	// S = standard HA (master+replica, no read-only replica).
 	// P = premium HA (master+replica + 1 read-only replica).
-	// Both letter and number are mutable via ModifyInstanceSpec.
+	// Only the capacity number is mutable; the service letter (S↔P) is immutable after creation.
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P')), message="Service tier cannot be changed within redisTier. Only capacity tier can be changed."
 	RedisTier AlicloudRedisTier `json:"redisTier"`
 
 	// EngineVersion is the Redis engine version. Immutable after creation.

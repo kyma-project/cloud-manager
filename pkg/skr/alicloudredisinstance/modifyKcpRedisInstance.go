@@ -54,6 +54,7 @@ func modifyKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	}
 	state.KcpRedisInstance.Spec.Instance.Alicloud.InstanceClass = instanceClass
 	state.KcpRedisInstance.Spec.Instance.Alicloud.ReadOnlyCount = readOnlyCount
+	// EngineVersion is not updated here — it is immutable after creation (XValidation self==oldSelf).
 
 	err = state.KcpCluster.K8sClient().Update(ctx, state.KcpRedisInstance)
 	if err != nil {

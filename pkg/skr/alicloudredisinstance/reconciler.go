@@ -63,7 +63,7 @@ func (r *reconciler) newAction() composed.Action {
 
 		// delete / create+update ================================================================
 		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
-			composed.ComposeActionsNoName(
+			composed.ComposeActions("alicloudRedisInstance-create",
 				actions.AddCommonFinalizer(),
 				createKcpRedisInstance,
 				waitKcpStatusUpdate,
@@ -74,7 +74,7 @@ func (r *reconciler) newAction() composed.Action {
 				loadAuthSecret,
 				modifyAuthSecret,
 			),
-			composed.ComposeActionsNoName(
+			composed.ComposeActions("alicloudRedisInstance-delete",
 				removeAuthSecretFinalizer,
 				deleteAuthSecret,
 				waitAuthSecretDeleted,

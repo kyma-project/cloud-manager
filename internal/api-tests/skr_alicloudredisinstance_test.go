@@ -78,20 +78,22 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", Ordered, func() {
 			},
 		)
 
-		canChangeSkr(
-			"AlicloudRedisInstance redisTier can be changed from S to P (S↔P mutable per design decision 4)",
+		canNotChangeSkr(
+			"AlicloudRedisInstance redisTier cannot be changed from S to P (cross-tier forbidden)",
 			newTestAlicloudRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS1),
 			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisInstance]) {
 				b.(*testAlicloudRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.AlicloudRedisTierP1)
 			},
+			"Service tier cannot be changed within redisTier. Only capacity tier can be changed.",
 		)
 
-		canChangeSkr(
-			"AlicloudRedisInstance redisTier can be changed from P to S",
+		canNotChangeSkr(
+			"AlicloudRedisInstance redisTier cannot be changed from P to S (cross-tier forbidden)",
 			newTestAlicloudRedisInstanceBuilder().WithRedisTier(cloudresourcesv1beta1.AlicloudRedisTierP3),
 			func(b Builder[*cloudresourcesv1beta1.AlicloudRedisInstance]) {
 				b.(*testAlicloudRedisInstanceBuilder).WithRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS3)
 			},
+			"Service tier cannot be changed within redisTier. Only capacity tier can be changed.",
 		)
 	})
 

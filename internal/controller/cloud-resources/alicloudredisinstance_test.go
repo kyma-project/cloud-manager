@@ -159,7 +159,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 		})
 	})
 
-	It("Scenario: SKR AlicloudRedisInstance redisTier is changed (S→P upgrade)", func() {
+	It("Scenario: SKR AlicloudRedisInstance redisTier is changed within S tier (S1→S3)", func() {
 
 		skrIpRangeName := uuid.NewString()
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
@@ -230,23 +230,23 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 				).Should(Succeed())
 		})
 
-		By("When redisTier is changed to P2", func() {
+		By("When redisTier is changed to S3 (within-tier capacity upgrade)", func() {
 			Eventually(func() error {
 				if err := infra.SKR().Client().Get(infra.Ctx(),
 					client.ObjectKeyFromObject(alicloudRedisInstance), alicloudRedisInstance); err != nil {
 					return err
 				}
-				alicloudRedisInstance.Spec.RedisTier = cloudresourcesv1beta1.AlicloudRedisTierP2
+				alicloudRedisInstance.Spec.RedisTier = cloudresourcesv1beta1.AlicloudRedisTierS3
 				return infra.SKR().Client().Update(infra.Ctx(), alicloudRedisInstance)
 			}).Should(Succeed())
 		})
 
-		By("Then KCP RedisInstance spec is updated with P2 instanceClass and readOnlyCount=1", func() {
+		By("Then KCP RedisInstance spec is updated with S3 instanceClass and readOnlyCount=0", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance,
 					NewObjActions(),
-					HavingFieldValue("redis.amber.master.large.multithread", "spec", "instance", "alicloud", "instanceClass"),
-					HavingFieldValue(int32(1), "spec", "instance", "alicloud", "readOnlyCount"),
+					HavingFieldValue("redis.master.stand.default", "spec", "instance", "alicloud", "instanceClass"),
+					HavingFieldValue(int32(0), "spec", "instance", "alicloud", "readOnlyCount"),
 				).Should(Succeed())
 		})
 
