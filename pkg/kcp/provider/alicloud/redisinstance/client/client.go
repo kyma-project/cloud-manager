@@ -200,11 +200,12 @@ func IsProxyClusterClass(instanceClass string) bool {
 // avoid an infinite modify loop.
 //
 // Affected families (confirmed via live API testing):
-//   - tair.rdb.*:                         DRAM-based HA, ReadOnlyCount absent
-//   - redis.amber.master.*.multithread:   enterprise HA, ReadOnlyCount absent
+//   - tair.rdb.*: DRAM-based HA, ReadOnlyCount absent
+//
+// Note: redis.master.*.cloud (cloud-disk) and redis.master.*.default (local-disk)
+// both support ReadOnlyCount correctly — they are NOT in this list.
 func IsReadOnlyCountUnsupported(instanceClass string) bool {
-	return strings.HasPrefix(instanceClass, "tair.rdb.") ||
-		strings.HasPrefix(instanceClass, "redis.amber.master.")
+	return strings.HasPrefix(instanceClass, "tair.rdb.")
 }
 
 // ClientProvider is the standard cloud-manager credential/region-scoped
@@ -247,14 +248,11 @@ type alicloudRedisClient struct {
 }
 
 // CreateInstance provisions a new r-kvstore instance. The instance
-// architecture (standard vs cluster) is entirely determined by
-// opts.InstanceClass:
-//   - redis.master.*.cloud              → standard HA (cloud-disk, all engine versions)
-//   - redis.master.*.default            → standard HA (local-disk, 5.0 and 6.0 only)
-//   - redis.amber.master.*.multithread  → enterprise standard HA
+// architecture is determined by opts.InstanceClass:
+//   - redis.master.*.cloud              → standard HA (cloud-disk, engines 5.0/6.0/7.0)
+//   - redis.master.*.default            → standard HA (local-disk, engines 5.0/6.0 only)
 //   - tair.rdb.*                        → DRAM-based HA
 //   - redis.logic.sharding.*            → proxy-based cluster (ShardCount encoded in class name)
-//   - redis.amber.logic.sharding.*      → enterprise proxy-based cluster
 //   - redis.shard.*.ce                  → non-proxy cloud-native cluster (separate ShardCount)
 func (c *alicloudRedisClient) CreateInstance(ctx context.Context, opts CreateInstanceOptions) (string, error) {
 	req := &rkvstore.CreateInstanceRequest{

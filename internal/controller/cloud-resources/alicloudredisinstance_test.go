@@ -58,7 +58,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 					WithName(alicloudRedisInstanceName),
 					WithIpRange(skrIpRange.Name),
 					WithAlicloudRedisInstanceRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS1),
-					WithAlicloudRedisInstanceEngineVersion("5.0"),
+					WithAlicloudRedisInstanceEngineVersion("7.0"),
 					WithAlicloudRedisInstanceAuthSecretName(authSecretName),
 					WithAlicloudRedisInstanceAuthSecretLabels(authSecretLabels),
 					WithAlicloudRedisInstanceAuthSecretAnnotations(authSecretAnnotations),
@@ -87,7 +87,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 
 			By("And spec.instance.alicloud matches SKR tier")
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud).NotTo(BeNil())
-			Expect(kcpRedisInstance.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.master.small.default"))
+			Expect(kcpRedisInstance.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.master.small.cloud"))
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud.ReadOnlyCount).To(Equal(int32(0)))
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud.EngineVersion).To(Equal("5.0"))
 		})
@@ -191,7 +191,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 					WithName(alicloudRedisInstanceName),
 					WithIpRange(skrIpRange.Name),
 					WithAlicloudRedisInstanceRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS1),
-					WithAlicloudRedisInstanceEngineVersion("5.0"),
+					WithAlicloudRedisInstanceEngineVersion("7.0"),
 				).Should(Succeed())
 		})
 
@@ -209,7 +209,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 					NewObjActions(WithName(alicloudRedisInstance.Status.Id)),
 				).Should(Succeed())
 
-			Expect(kcpRedisInstance.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.master.small.default"))
+			Expect(kcpRedisInstance.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.master.small.cloud"))
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud.ReadOnlyCount).To(Equal(int32(0)))
 		})
 
@@ -245,7 +245,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance,
 					NewObjActions(),
-					HavingFieldValue("redis.master.stand.default", "spec", "instance", "alicloud", "instanceClass"),
+					HavingFieldValue("redis.master.stand.cloud", "spec", "instance", "alicloud", "instanceClass"),
 					HavingFieldValue(int32(0), "spec", "instance", "alicloud", "readOnlyCount"),
 				).Should(Succeed())
 		})
@@ -297,7 +297,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 					WithName(alicloudRedisInstanceName),
 					WithIpRange(skrIpRange.Name),
 					WithAlicloudRedisInstanceRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS1),
-					WithAlicloudRedisInstanceEngineVersion("5.0"),
+					WithAlicloudRedisInstanceEngineVersion("7.0"),
 				).Should(Succeed())
 		})
 
