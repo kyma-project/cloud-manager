@@ -89,7 +89,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud).NotTo(BeNil())
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.master.small.cloud"))
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud.ReadOnlyCount).To(Equal(int32(0)))
-			Expect(kcpRedisInstance.Spec.Instance.Alicloud.EngineVersion).To(Equal("5.0"))
+			Expect(kcpRedisInstance.Spec.Instance.Alicloud.EngineVersion).To(Equal("7.0"))
 		})
 
 		kcpPrimaryEndpoint := "r-test123.redis.rds.aliyuncs.com:6379"
