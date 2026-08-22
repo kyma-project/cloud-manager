@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.1
+    cloud-resources.kyma-project.io/version: v0.0.2
   name: alicloudredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -75,7 +75,7 @@ spec:
                           rule: self == '' || oldSelf == '' || self == oldSelf
                   type: object
                 engineVersion:
-                  default: "5.0"
+                  default: "7.0"
                   description: EngineVersion is the Redis engine version. Immutable after creation.
                   enum:
                     - "5.0"
@@ -103,7 +103,7 @@ spec:
                     RedisTier defines service and capacity tier.
                     S = standard HA (master+replica, no read-only replica).
                     P = premium HA (master+replica + 1 read-only replica).
-                    Both letter and number are mutable via ModifyInstanceSpec.
+                    Only the capacity number is mutable; the service letter (S↔P) is immutable after creation.
                   enum:
                     - S1
                     - S2
@@ -116,6 +116,9 @@ spec:
                     - P4
                     - P5
                   type: string
+                  x-kubernetes-validations:
+                    - message: Service tier cannot be changed within redisTier. Only capacity tier can be changed.
+                      rule: (self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P'))
               required:
                 - redisTier
               type: object
