@@ -83,6 +83,7 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - alicloudnfsvolumes
   - awsnfsVolumeRestores
   - awsnfsbackupschedules
   - awsnfsvolumebackups
@@ -124,6 +125,7 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - alicloudnfsvolumes/finalizers
   - awsnfsVolumeRestores/finalizers
   - awsnfsbackupschedules/finalizers
   - awsnfsvolumebackups/finalizers
@@ -159,6 +161,7 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - alicloudnfsvolumes/status
   - awsnfsVolumeRestores/status
   - awsnfsbackupschedules/status
   - awsnfsvolumebackups/status

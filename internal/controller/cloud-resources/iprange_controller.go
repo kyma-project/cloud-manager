@@ -71,6 +71,16 @@ func SetupIpRangeReconciler(reg skrruntime.SkrRegistry) error {
 		}
 		return []string{nfsVol.Spec.IpRange.Name}
 	})
+	reg.IndexField(&cloudresourcesv1beta1.AlicloudNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
+		nfsVol, ok := object.(*cloudresourcesv1beta1.AlicloudNfsVolume)
+		if !ok {
+			return []string{}
+		}
+		if nfsVol.Spec.IpRange.Name == "" {
+			return []string{"default"}
+		}
+		return []string{nfsVol.Spec.IpRange.Name}
+	})
 	reg.IndexField(&cloudresourcesv1beta1.GcpNfsVolume{}, cloudresourcesv1beta1.IpRangeField, func(object client.Object) []string {
 		nfsVol, ok := object.(*cloudresourcesv1beta1.GcpNfsVolume)
 		if !ok {
