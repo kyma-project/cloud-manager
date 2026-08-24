@@ -40,6 +40,7 @@ import (
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
 	alicloudnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance/client"
+	alicloudredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
 	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
 
@@ -459,6 +460,7 @@ func main() {
 		gcpredisinstanceclient.NewMemorystoreClientProvider(gcpClients),
 		azureredisinstanceclient.NewClientProvider(),
 		awsclient.NewElastiCacheClientProvider(),
+		alicloudredisinstanceclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisInstance")

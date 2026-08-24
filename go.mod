@@ -3,7 +3,7 @@ module github.com/kyma-project/cloud-manager
 go 1.26.6
 
 require (
-	cloud.google.com/go/auth v0.23.1
+	cloud.google.com/go/auth v0.23.2
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
 	cloud.google.com/go/compute v1.66.0
 	cloud.google.com/go/filestore v1.16.0
@@ -28,20 +28,21 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.8.1
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
 	github.com/alibabacloud-go/nas-20170626/v3 v3.5.2
+	github.com/alibabacloud-go/r-kvstore-20150101/v7 v7.5.1
 	github.com/alibabacloud-go/tea v1.5.3
 	github.com/alibabacloud-go/vpc-20160428/v6 v6.16.0
-	github.com/aws/aws-sdk-go-v2 v1.43.5
-	github.com/aws/aws-sdk-go-v2/config v1.32.36
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.35
-	github.com/aws/aws-sdk-go-v2/service/backup v1.60.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.321.1
-	github.com/aws/aws-sdk-go-v2/service/efs v1.44.5
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.56.5
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.44.5
-	github.com/aws/aws-sdk-go-v2/service/sts v1.45.5
-	github.com/aws/smithy-go v1.27.7
+	github.com/aws/aws-sdk-go-v2 v1.43.7
+	github.com/aws/aws-sdk-go-v2/config v1.32.38
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.37
+	github.com/aws/aws-sdk-go-v2/service/backup v1.60.3
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.322.0
+	github.com/aws/aws-sdk-go-v2/service/efs v1.44.7
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.56.7
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.44.7
+	github.com/aws/aws-sdk-go-v2/service/sts v1.45.7
+	github.com/aws/smithy-go v1.27.8
 	github.com/cucumber/godog v0.16.0
-	github.com/cucumber/messages/go/v34 v34.2.0
+	github.com/cucumber/messages/go/v34 v34.2.1
 	github.com/dop251/goja v0.0.0-20251008123653-cf18d89f3cf6
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.19.0
@@ -52,7 +53,7 @@ require (
 	github.com/gardener/gardener-extension-provider-azure v1.62.1
 	github.com/gardener/gardener-extension-provider-gcp v1.53.4
 	github.com/gardener/gardener-extension-provider-openstack v1.57.0
-	github.com/gardener/gardener/pkg/apis v1.149.0
+	github.com/gardener/gardener/pkg/apis v1.149.3
 	github.com/go-logr/logr v1.4.4
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.31.0
@@ -83,13 +84,13 @@ require (
 	google.golang.org/api v0.293.0
 	google.golang.org/genproto v0.0.0-20260519071638-aa98bba5eb94
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260807164820-c8921c73eeea
-	google.golang.org/grpc v1.83.0
+	google.golang.org/grpc v1.83.1
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.36.3
-	k8s.io/apiextensions-apiserver v0.36.3
-	k8s.io/apimachinery v0.36.3
-	k8s.io/client-go v0.36.3
+	k8s.io/api v0.36.4
+	k8s.io/apiextensions-apiserver v0.36.4
+	k8s.io/apimachinery v0.36.4
+	k8s.io/client-go v0.36.4
 	k8s.io/klog/v2 v2.140.0
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3
 	sigs.k8s.io/controller-runtime v0.24.1
@@ -112,15 +113,15 @@ require (
 	github.com/alibabacloud-go/tea-utils/v2 v2.0.9 // indirect
 	github.com/aliyun/credentials-go v1.4.5 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.36 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.36 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.36 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.37 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.16 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.36 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.5.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.33.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.5 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.38 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.38 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.38 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.39 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.38 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.5.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.33.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -208,7 +209,7 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	k8s.io/component-base v0.36.3 // indirect
+	k8s.io/component-base v0.36.4 // indirect
 	k8s.io/kube-openapi v0.0.0-20260603220949-865597e52e25 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
