@@ -84,7 +84,9 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
 			kcp.Spec.Instance.Alicloud.ReadOnlyCount,
 		)
-		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenInput)))[:32]
+		// SHA256 is used here as an idempotency token for the AliCloud CreateInstance
+		// API, not for password storage or authentication — false positive for CWE-916.
+		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenInput)))[:32] //nolint:gosec
 
 		opts := alicloudclient.CreateInstanceOptions{
 			InstanceName:  kcp.Name,
