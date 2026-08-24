@@ -35,6 +35,7 @@ type NfsConfig interface {
 	AddRouter(id, name string, ipAddresses ...string) *routers.Router
 	SetShareStatus(id, status string)
 	SetSnapshotStatus(id, status string)
+	DeleteNetworkWithSubnets(ctx context.Context, routerId, networkId string) error
 }
 
 func newMainStore() *mainStore {
@@ -299,6 +300,25 @@ func (s *mainStore) DeleteNetwork(ctx context.Context, id string) error {
 }
 
 // NetworkClient high level derived methods --------------------------------------------
+
+// DeleteNetworkWithSubnets deletes every subnet in the network (detaching each from
+// the router) and then the network - simulating an out-of-band teardown. DeleteNetwork
+// rejects a network that still has subnets, so they must go first.
+func (s *mainStore) DeleteNetworkWithSubnets(ctx context.Context, routerId, networkId string) error {
+	subnetList, err := s.ListSubnetsByNetworkId(ctx, networkId)
+	if err != nil {
+		return err
+	}
+	for _, sn := range subnetList {
+		if err := s.RemoveSubnetFromRouter(ctx, routerId, sn.ID); err != nil {
+			return err
+		}
+		if err := s.DeleteSubnet(ctx, sn.ID); err != nil {
+			return err
+		}
+	}
+	return s.DeleteNetwork(ctx, networkId)
+}
 
 func (s *mainStore) ListInternalNetworksByName(ctx context.Context, name string) ([]networks.Network, error) {
 	return s.ListNetworks(ctx, networks.ListOpts{Name: name})

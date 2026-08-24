@@ -20,6 +20,10 @@ func networkLoad(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	if net == nil {
+		if composed.MarkedForDeletionPredicate(ctx, state) {
+			logger.Info("Openstack network for IpRange already gone during deletion, nothing to clean up")
+			return nil, ctx
+		}
 		logger.Error(errors.New("no network"), "Openstack network for IpRange not found")
 		state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 		return composed.PatchStatus(state.ObjAsIpRange()).
