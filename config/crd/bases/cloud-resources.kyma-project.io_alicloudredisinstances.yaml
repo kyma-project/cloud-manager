@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.0.3
   name: alicloudredisinstances.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -104,6 +104,9 @@ spec:
                     S = standard HA (master+replica, no read-only replica).
                     P = premium HA (master+replica + 1 read-only replica).
                     Only the capacity number is mutable; the service letter (S↔P) is immutable after creation.
+                    When scaling down, AliCloud requires: new capacity × 0.8 > currently used memory.
+                    If this condition is not met, the scale-down is rejected and the original tier is retained.
+                    See: https://www.alibabacloud.com/help/en/redis/user-guide/change-the-instance-specification#h3-mem-usage
                   enum:
                     - S1
                     - S2
