@@ -84,6 +84,7 @@ rules:
   - cloud-resources.kyma-project.io
   resources:
   - alicloudnfsvolumes
+  - alicloudredisinstances
   - awsnfsVolumeRestores
   - awsnfsbackupschedules
   - awsnfsvolumebackups
@@ -126,6 +127,7 @@ rules:
   - cloud-resources.kyma-project.io
   resources:
   - alicloudnfsvolumes/finalizers
+  - alicloudredisinstances/finalizers
   - awsnfsVolumeRestores/finalizers
   - awsnfsbackupschedules/finalizers
   - awsnfsvolumebackups/finalizers
@@ -162,6 +164,7 @@ rules:
   - cloud-resources.kyma-project.io
   resources:
   - alicloudnfsvolumes/status
+  - alicloudredisinstances/status
   - awsnfsVolumeRestores/status
   - awsnfsbackupschedules/status
   - awsnfsvolumebackups/status

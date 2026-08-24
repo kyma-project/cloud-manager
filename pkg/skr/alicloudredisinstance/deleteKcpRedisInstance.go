@@ -1,0 +1,55 @@
+package alicloudredisinstance
+
+import (
+	"context"
+	"fmt"
+
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+func deleteKcpRedisInstance(ctx context.Context, st composed.State) (error, context.Context) {
+	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
+
+	if state.KcpRedisInstance == nil {
+		return nil, ctx
+	}
+
+	if composed.IsMarkedForDeletion(state.KcpRedisInstance) {
+		return nil, ctx
+	}
+
+	redisInstance := state.ObjAsAlicloudRedisInstance()
+
+	err, ctx := composed.UpdateStatus(redisInstance).
+		SetCondition(metav1.Condition{
+			Type:    cloudresourcesv1beta1.ConditionTypeDeleting,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudresourcesv1beta1.ConditionReasonDeletingInstance,
+			Message: fmt.Sprintf("Deleting RedisInstance %s", state.Name()),
+		}).
+		ErrorLogMessage("Error setting ConditionReasonDeletingInstance condition on AlicloudRedisInstance").
+		SuccessErrorNil().
+		FailedError(composed.StopWithRequeue).
+		Run(ctx, state)
+	if err != nil {
+		return err, ctx
+	}
+
+	logger.Info("Deleting KCP RedisInstance for AlicloudRedisInstance")
+
+	err = state.KcpCluster.K8sClient().Delete(ctx, state.KcpRedisInstance)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error deleting KCP RedisInstance for AlicloudRedisInstance", composed.StopWithRequeue, ctx)
+	}
+
+	redisInstance.Status.State = cloudresourcesv1beta1.StateDeleting
+	err = state.UpdateObjStatus(ctx)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Failed status update on AlicloudRedisInstance", composed.StopWithRequeue, ctx)
+	}
+
+	return nil, ctx
+}

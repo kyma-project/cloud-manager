@@ -38,13 +38,17 @@ type AlicloudRedisInstanceSpec struct {
 	// RedisTier defines service and capacity tier.
 	// S = standard HA (master+replica, no read-only replica).
 	// P = premium HA (master+replica + 1 read-only replica).
-	// Both letter and number are mutable via ModifyInstanceSpec.
+	// Only the capacity number is mutable; the service letter (S↔P) is immutable after creation.
+	// When scaling down, AliCloud requires: new capacity × 0.8 > currently used memory.
+	// If this condition is not met, the scale-down is rejected and the original tier is retained.
+	// See: https://www.alibabacloud.com/help/en/redis/user-guide/change-the-instance-specification#h3-mem-usage
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule=(self.startsWith('S') && oldSelf.startsWith('S') || self.startsWith('P') && oldSelf.startsWith('P')), message="Service tier cannot be changed within redisTier. Only capacity tier can be changed."
 	RedisTier AlicloudRedisTier `json:"redisTier"`
 
 	// EngineVersion is the Redis engine version. Immutable after creation.
 	// +optional
-	// +kubebuilder:default="5.0"
+	// +kubebuilder:default="7.0"
 	// +kubebuilder:validation:Enum="5.0";"6.0";"7.0"
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="engineVersion is immutable."
 	EngineVersion string `json:"engineVersion,omitempty"`
