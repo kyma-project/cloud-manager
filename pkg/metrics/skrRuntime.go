@@ -62,7 +62,7 @@ var (
 	SkrLooperConnectPhaseSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "cloud_manager_skr_looper_connect_phase_seconds",
 		Help:    "Duration of each SKR connect phase (create_manager, skr_readiness, installer, pre_start, start) per kyma name and timeout outcome",
-		Buckets: []float64{1, 2, 5, 10, 20, 30, 60, 120, 300},
+		Buckets: []float64{0.25, 0.5, 1, 1.5, 2, 2.5, 3, 5, 7, 10, 30, 120, 600},
 	}, []string{"phase", "kyma", "timeout"})
 
 	// SkrLooperConnectTotalSeconds measures the total wall-clock time for one SKR connect.
@@ -70,7 +70,7 @@ var (
 	SkrLooperConnectTotalSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "cloud_manager_skr_looper_connect_total_seconds",
 		Help:    "Total duration of one SKR connect (pre-amble + Start) per kyma name and timeout outcome",
-		Buckets: []float64{1, 2, 5, 10, 20, 30, 60, 120, 300},
+		Buckets: []float64{5, 10, 12, 14, 16, 18, 20, 30, 60, 120, 600},
 	}, []string{"kyma", "timeout"})
 )
 
