@@ -262,10 +262,22 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 						},
 					),
 				).Should(Succeed())
+			// Touch the SKR object to trigger a reconcile so updateStatus picks up the KCP Updating condition.
+			Eventually(func() error {
+				if err := infra.SKR().Client().Get(infra.Ctx(),
+					client.ObjectKeyFromObject(alicloudRedisInstance), alicloudRedisInstance); err != nil {
+					return err
+				}
+				if alicloudRedisInstance.Annotations == nil {
+					alicloudRedisInstance.Annotations = map[string]string{}
+				}
+				alicloudRedisInstance.Annotations["cloud-manager.kyma-project.io/test-reconcile"] = "trigger"
+				return infra.SKR().Client().Update(infra.Ctx(), alicloudRedisInstance)
+			}).Should(Succeed())
 		})
 
 		By("Then SKR AlicloudRedisInstance reflects StateUpdating", func() {
-			Eventually(LoadAndCheck, "10s").
+			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeUpdating),
