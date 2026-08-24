@@ -256,6 +256,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolume")
 		os.Exit(1)
 	}
+	if err = cloudresourcescontroller.SetupAlicloudNfsVolumeReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AlicloudNfsVolume")
+		os.Exit(1)
+	}
 	if err = cloudresourcescontroller.SetupGcpNfsVolumeReconciler(skrRegistry, gcpnfsbackupclientv2.NewFileBackupClientProvider(gcpClients)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolume")
 		os.Exit(1)
