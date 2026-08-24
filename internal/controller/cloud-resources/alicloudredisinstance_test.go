@@ -159,7 +159,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 		})
 	})
 
-	It("Scenario: SKR AlicloudRedisInstance redisTier is changed within S tier (S1→S3)", func() {
+	It("Scenario: SKR AlicloudRedisInstance redisTier is changed and Updating condition is propagated", func() {
 
 		skrIpRangeName := uuid.NewString()
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
@@ -241,7 +241,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 			}).Should(Succeed())
 		})
 
-		By("Then KCP RedisInstance spec is updated with S3 instanceClass and readOnlyCount=0", func() {
+		By("Then KCP RedisInstance spec is updated with S3 instanceClass", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance,
 					NewObjActions(),
@@ -250,73 +250,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 				).Should(Succeed())
 		})
 
-		// DELETE
-
-		By("When AlicloudRedisInstance is deleted", func() {
-			Eventually(Delete).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisInstance).
-				Should(Succeed())
-		})
-
-		By("Then SKR AlicloudRedisInstance does not exist", func() {
-			Eventually(IsDeleted).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisInstance).
-				Should(Succeed())
-		})
-	})
-
-	It("Scenario: SKR AlicloudRedisInstance reflects Updating condition from KCP", func() {
-
-		skrIpRangeName := uuid.NewString()
-		skrIpRange := &cloudresourcesv1beta1.IpRange{}
-		skrIpRangeId := uuid.NewString()
-
-		By("And Given SKR IpRange exists", func() {
-			skriprange.Ignore.AddName(skrIpRangeName)
-			Eventually(CreateSkrIpRange).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
-					WithName(skrIpRangeName),
-				).Should(Succeed())
-		})
-
-		By("And Given SKR IpRange has Ready condition", func() {
-			Eventually(UpdateStatus).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange,
-					WithSkrIpRangeStatusCidr(skrIpRange.Spec.Cidr),
-					WithSkrIpRangeStatusId(skrIpRangeId),
-					WithConditions(SkrReadyCondition()),
-				).Should(Succeed())
-		})
-
-		alicloudRedisInstanceName := uuid.NewString()
-		alicloudRedisInstance := &cloudresourcesv1beta1.AlicloudRedisInstance{}
-
-		By("When AlicloudRedisInstance is created", func() {
-			Eventually(CreateAlicloudRedisInstance).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisInstance,
-					WithName(alicloudRedisInstanceName),
-					WithIpRange(skrIpRange.Name),
-					WithAlicloudRedisInstanceRedisTier(cloudresourcesv1beta1.AlicloudRedisTierS1),
-					WithAlicloudRedisInstanceEngineVersion("7.0"),
-				).Should(Succeed())
-		})
-
-		kcpRedisInstance := &cloudcontrolv1beta1.RedisInstance{}
-
-		By("Then KCP RedisInstance is created", func() {
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisInstance,
-					NewObjActions(),
-					HavingFieldSet("status", "id"),
-				).Should(Succeed())
-
-			Eventually(LoadAndCheck).
-				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance,
-					NewObjActions(WithName(alicloudRedisInstance.Status.Id)),
-				).Should(Succeed())
-		})
-
-		By("When KCP RedisInstance has Updating condition (alongside Ready)", func() {
+		By("When KCP RedisInstance has Updating condition (KCP reconciler modifying instance)", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance,
 					WithConditions(
@@ -340,16 +274,16 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 				).Should(Succeed())
 		})
 
-		By("When KCP RedisInstance transitions to Ready", func() {
+		By("When KCP RedisInstance transitions back to Ready", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance,
-					WithRedisInstancePrimaryEndpoint("r-updating-test.redis.rds.aliyuncs.com:6379"),
+					WithRedisInstancePrimaryEndpoint("r-modify-test.redis.rds.aliyuncs.com:6379"),
 					WithRedisInstanceAuthString(uuid.NewString()),
 					WithConditions(KcpReadyCondition()),
 				).Should(Succeed())
 		})
 
-		By("Then SKR AlicloudRedisInstance transitions to Ready and Updating condition is removed", func() {
+		By("Then SKR AlicloudRedisInstance is Ready and Updating condition is removed", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisInstance,
 					NewObjActions(),
