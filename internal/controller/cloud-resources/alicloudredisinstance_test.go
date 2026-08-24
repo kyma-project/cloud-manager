@@ -286,7 +286,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 		})
 
 		By("Then SKR AlicloudRedisInstance reflects StateUpdating", func() {
-			Eventually(LoadAndCheck, "10s").
+			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisInstance,
 					NewObjActions(),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeUpdating),
