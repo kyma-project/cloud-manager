@@ -105,10 +105,10 @@ func (c *redisClusterClientView) ModifyInstanceSSL(ctx context.Context, instance
 	return c.modifyInstanceSSL(ctx, instanceId, enable)
 }
 
-func (c *redisClusterClientView) AddShardingNode(ctx context.Context, instanceId string, targetShardCount int32) error {
-	return c.addShardingNode(ctx, instanceId, targetShardCount)
+func (c *redisClusterClientView) AddShardingNode(ctx context.Context, instanceId string, countToAdd int32) error {
+	return c.addShardingNode(ctx, instanceId, countToAdd)
 }
 
-func (c *redisClusterClientView) DeleteShardingNode(ctx context.Context, instanceId string, targetShardCount int32) error {
-	return c.deleteShardingNode(ctx, instanceId, targetShardCount)
+func (c *redisClusterClientView) DeleteShardingNode(ctx context.Context, instanceId string, countToRemove int32) error {
+	return c.deleteShardingNode(ctx, instanceId, countToRemove)
 }
