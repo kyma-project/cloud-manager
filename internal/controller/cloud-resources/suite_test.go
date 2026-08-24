@@ -137,6 +137,9 @@ var _ = BeforeSuite(func() {
 	// AzureManagedRedis
 	Expect(SetupAzureManagedRedisReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// AlicloudRedisInstance
+	Expect(SetupAlicloudRedisInstanceReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 	// NfsBackupSchedule
 	Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env, testFakeClock)).NotTo(HaveOccurred())
 
