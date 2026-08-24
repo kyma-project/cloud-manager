@@ -38,3 +38,4 @@ yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.3"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_azuremanagedredis.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisinstances.yaml
 yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisclusters.yaml
+yq -i '.metadata.annotations."cloud-resources.kyma-project.io/version" = "v0.0.1"' $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudnfsvolumes.yaml

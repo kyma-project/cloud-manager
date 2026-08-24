@@ -44,6 +44,8 @@ resources:
 - cloud-resources_alicloudredisinstance_viewer_role.yaml
 - cloud-resources_alicloudrediscluster_editor_role.yaml
 - cloud-resources_alicloudrediscluster_viewer_role.yaml
+- cloud-resources_alicloudnfsvolume_editor_role.yaml
+- cloud-resources_alicloudnfsvolume_viewer_role.yaml
 - cloud-resources_azurerwxvolumerestore_editor_role.yaml
 - cloud-resources_azurerwxvolumerestore_viewer_role.yaml
 - cloud-resources_azurerwxvolumebackup_editor_role.yaml
