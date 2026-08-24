@@ -16,14 +16,14 @@ func TestRedisTierToInstanceClassAndReadOnlyCount(t *testing.T) {
 	}{
 		{cloudresourcesv1beta1.AlicloudRedisTierS1, "redis.master.small.cloud", 0, false},
 		{cloudresourcesv1beta1.AlicloudRedisTierS2, "redis.master.mid.cloud", 0, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierS3, "redis.master.stand.cloud", 0, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierS4, "redis.master.large.cloud", 0, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierS5, "redis.master.2xlarge.cloud", 0, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP1, "redis.master.stand.cloud", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP2, "redis.master.large.cloud", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP3, "redis.master.2xlarge.cloud", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP4, "redis.master.4xlarge.cloud", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP5, "redis.master.8xlarge.cloud", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierS3, "redis.master.large.cloud", 0, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierS4, "redis.master.2xlarge.cloud", 0, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierS5, "redis.master.4xlarge.cloud", 0, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP1, "redis.master.large.cloud", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP2, "redis.master.2xlarge.cloud", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP3, "redis.master.4xlarge.cloud", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP4, "redis.master.8xlarge.cloud", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP5, "redis.master.16xlarge.cloud", 1, false},
 		{"unknown", "", 0, true},
 	}
 

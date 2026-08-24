@@ -1,26 +1,25 @@
 package v1beta1
 
 // AlicloudRedisTier defines the Kyma service tier for an AlicloudRedisInstance.
-// The tier letter+number encodes the underlying AliCloud r-kvstore instance
-// class and read-only replica count. All classes use the cloud-disk family
-// (redis.master.*.cloud) which supports engine versions 5.0, 6.0, and 7.0.
+// All classes use the cloud-disk family (redis.master.*.cloud) which supports
+// engine versions 5.0, 6.0, and 7.0.
 //
-//	S1 →  1 GB  redis.master.small.cloud,    ReadOnlyCount=0
-//	S2 →  2 GB  redis.master.mid.cloud,      ReadOnlyCount=0
-//	S3 →  4 GB  redis.master.stand.cloud,    ReadOnlyCount=0
-//	S4 →  8 GB  redis.master.large.cloud,    ReadOnlyCount=0
-//	S5 → 16 GB  redis.master.2xlarge.cloud,  ReadOnlyCount=0
-//	            standard HA (master+replica), no read-only replica
+// The `stand` (4 GB) AliCloud class has no cross-provider equivalent and is
+// skipped so that S3-S5 align with GCP/AWS/Azure baselines:
 //
-//	P1 →  4 GB  redis.master.stand.cloud,    ReadOnlyCount=1
-//	P2 →  8 GB  redis.master.large.cloud,    ReadOnlyCount=1
-//	P3 → 16 GB  redis.master.2xlarge.cloud,  ReadOnlyCount=1
-//	P4 → 32 GB  redis.master.4xlarge.cloud,  ReadOnlyCount=1
-//	P5 → 64 GB  redis.master.8xlarge.cloud,  ReadOnlyCount=1
-//	            standard HA + 1 read-only replica
+//	S1 →   1 GB  redis.master.small.cloud
+//	S2 →   2 GB  redis.master.mid.cloud
+//	S3 →   8 GB  redis.master.large.cloud
+//	S4 →  16 GB  redis.master.2xlarge.cloud
+//	S5 →  32 GB  redis.master.4xlarge.cloud
+//	             standard HA (master+replica), no read-only replica
 //
-// P tiers start at 4 GB to align with the cross-provider P tier baseline:
-// AWS P1=6.38 GB, GCP P1=5 GB, Azure P1=6 GB.
+//	P1 →   8 GB  redis.master.large.cloud
+//	P2 →  16 GB  redis.master.2xlarge.cloud
+//	P3 →  32 GB  redis.master.4xlarge.cloud
+//	P4 →  64 GB  redis.master.8xlarge.cloud
+//	P5 → 128 GB  redis.master.16xlarge.cloud
+//	             standard HA + 1 read-only replica
 //
 // Only the capacity number is mutable; the service letter (S↔P) is immutable
 // after creation. EngineVersion is immutable after creation.
