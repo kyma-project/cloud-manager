@@ -117,7 +117,7 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 		})
 	})
 
-	It("Scenario: KCP AliCloud RedisCluster fields are updated", func() {
+	It("Scenario: KCP AliCloud RedisCluster shard count is scaled up", func() {
 
 		alicloudAccount := infra.AlicloudMock().NewAccount()
 		defer alicloudAccount.Delete()
@@ -159,29 +159,35 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 
 		redisCluster := &cloudcontrolv1beta1.RedisCluster{}
 
-		By("And Given RedisCluster is created with shardCount=3 replicasPerShard=1", func() {
+		By("And Given RedisCluster is created", func() {
 			Eventually(CreateRedisCluster).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					WithName(name),
-					WithRemoteRef("skr-alicloud-cluster-update"),
+					WithRemoteRef("skr-alicloud-cluster-scale"),
 					WithIpRange(kcpIpRangeName),
 					WithScope(name),
 					WithRedisClusterAlicloud(),
 					WithKcpAlicloudRedisClusterInstanceClass("redis.shard.large.ce"),
 					WithKcpAlicloudRedisEngineVersion("7.0"),
 					WithKcpAlicloudRedisClusterShardCount(3),
-					WithKcpAlicloudRedisClusterReplicasPerShard(1),
 				).Should(Succeed())
 		})
 
 		alicloudMock := alicloudAccount.Region(scope.Spec.Region)
 
-		By("And Given RedisCluster is Ready", func() {
+		By("And Given RedisCluster gets its ID", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					NewObjActions(),
 					HavingFieldSet("status", "id"),
 				).Should(Succeed())
+		})
+
+		By("And Given AliCloud Redis is Normal", func() {
+			alicloudMock.TransitionAllToNormal()
+		})
+
+		By("And Given RedisCluster is Ready", func() {
 			Eventually(func() error {
 				alicloudMock.TransitionAllToNormal()
 				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
@@ -203,7 +209,9 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 			}).Should(Succeed())
 		})
 
-		By("Then RedisCluster is Ready with shardCount=6", func() {
+		By("Then AliCloud transitions to Changing and back to Normal", func() {
+			// Drive TransitionAllToNormal inside Eventually so it fires after
+			// AddShardingNode has been called and the mock entry is Changing.
 			Eventually(func() error {
 				alicloudMock.TransitionAllToNormal()
 				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
@@ -212,28 +220,102 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 					HavingState("Ready"),
 					HavingFieldValue(int32(6), "status", "shardCount"),
 				)
-			}).Should(Succeed())
+			}).Should(Succeed(), "expected RedisCluster to reach Ready with shardCount=6")
 		})
 
-		By("When shard count is decreased to 4", func() {
-			Eventually(func() error {
-				if err := infra.KCP().Client().Get(infra.Ctx(),
-					client.ObjectKeyFromObject(redisCluster), redisCluster); err != nil {
-					return err
-				}
-				redisCluster.Spec.Instance.Alicloud.ShardCount = 4
-				return infra.KCP().Client().Update(infra.Ctx(), redisCluster)
-			}).Should(Succeed())
+		// DELETE
+
+		By("When RedisCluster is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster).
+				Should(Succeed())
 		})
 
-		By("Then RedisCluster is Ready with shardCount=4", func() {
+		By("Then RedisCluster does not exist", func() {
+			Eventually(IsDeleted, 5*time.Second).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: KCP AliCloud RedisCluster replicasPerShard drift is reconciled", func() {
+
+		alicloudAccount := infra.AlicloudMock().NewAccount()
+		defer alicloudAccount.Delete()
+
+		name := "c9d0e1f2-a3b4-5678-cdef-678901234567"
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			kcpscope.Ignore.AddName(name)
+			Eventually(CreateScopeAlicloud).
+				WithArguments(infra.Ctx(), infra, scope, alicloudAccount.Credentials().AccessKeyId, WithName(name)).
+				Should(Succeed())
+		})
+
+		kcpIpRangeName := "d0e1f2a3-b4c5-6789-def0-789012345678"
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+		kcpiprange.Ignore.AddName(kcpIpRangeName)
+
+		By("And Given KCP IPRange exists", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithName(kcpIpRangeName),
+					WithScope(scope.Name),
+				).Should(Succeed())
+		})
+
+		By("And Given KCP IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
+					WithKcpIpRangeStatusVpcId("vpc-alicloud-test-05"),
+					WithKcpIpRangeStatusSubnets(cloudcontrolv1beta1.IpRangeSubnet{
+						Id:   "vsw-alicloud-test-05",
+						Zone: "cn-hangzhou-a",
+					}),
+					WithConditions(KcpReadyCondition()),
+				).Should(Succeed())
+		})
+
+		redisCluster := &cloudcontrolv1beta1.RedisCluster{}
+
+		By("And Given RedisCluster is created with replicasPerShard=1", func() {
+			Eventually(CreateRedisCluster).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+					WithName(name),
+					WithRemoteRef("skr-alicloud-cluster-replica-drift"),
+					WithIpRange(kcpIpRangeName),
+					WithScope(name),
+					WithRedisClusterAlicloud(),
+					WithKcpAlicloudRedisClusterInstanceClass("redis.shard.large.ce"),
+					WithKcpAlicloudRedisEngineVersion("7.0"),
+					WithKcpAlicloudRedisClusterShardCount(2),
+					WithKcpAlicloudRedisClusterReplicasPerShard(1),
+				).Should(Succeed())
+		})
+
+		alicloudMock := alicloudAccount.Region(scope.Spec.Region)
+
+		By("And Given RedisCluster gets its ID", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+					NewObjActions(),
+					HavingFieldSet("status", "id"),
+				).Should(Succeed())
+		})
+
+		By("And Given AliCloud Redis is Normal", func() {
+			alicloudMock.TransitionAllToNormal()
+		})
+
+		By("And Given RedisCluster is Ready", func() {
 			Eventually(func() error {
 				alicloudMock.TransitionAllToNormal()
 				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
 					NewObjActions(),
 					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
 					HavingState("Ready"),
-					HavingFieldValue(int32(4), "status", "shardCount"),
 				)
 			}).Should(Succeed())
 		})
@@ -249,7 +331,7 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 			}).Should(Succeed())
 		})
 
-		By("Then RedisCluster is Ready with replicasPerShard=0", func() {
+		By("Then AliCloud transitions to Changing and back to Normal with updated replicasPerShard", func() {
 			Eventually(func() error {
 				alicloudMock.TransitionAllToNormal()
 				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
@@ -258,7 +340,250 @@ var _ = Describe("Feature: KCP AliCloud RedisCluster", func() {
 					HavingState("Ready"),
 					HavingFieldValue(int32(0), "status", "replicasPerShard"),
 				)
+			}).Should(Succeed(), "expected RedisCluster to reach Ready with replicasPerShard=0")
+		})
+
+		// DELETE
+
+		By("When RedisCluster is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster).
+				Should(Succeed())
+		})
+
+		By("Then RedisCluster does not exist", func() {
+			Eventually(IsDeleted, 5*time.Second).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: KCP AliCloud RedisCluster SSL is re-enabled after spec change resets it", func() {
+
+		alicloudAccount := infra.AlicloudMock().NewAccount()
+		defer alicloudAccount.Delete()
+
+		name := "d1e2f3a4-b5c6-7890-defa-890123456789"
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			kcpscope.Ignore.AddName(name)
+			Eventually(CreateScopeAlicloud).
+				WithArguments(infra.Ctx(), infra, scope, alicloudAccount.Credentials().AccessKeyId, WithName(name)).
+				Should(Succeed())
+		})
+
+		kcpIpRangeName := "e2f3a4b5-c6d7-8901-efab-901234567890"
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+		kcpiprange.Ignore.AddName(kcpIpRangeName)
+
+		By("And Given KCP IPRange exists", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithName(kcpIpRangeName),
+					WithScope(scope.Name),
+				).Should(Succeed())
+		})
+
+		By("And Given KCP IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
+					WithKcpIpRangeStatusVpcId("vpc-alicloud-test-06"),
+					WithKcpIpRangeStatusSubnets(cloudcontrolv1beta1.IpRangeSubnet{
+						Id:   "vsw-alicloud-test-06",
+						Zone: "cn-hangzhou-a",
+					}),
+					WithConditions(KcpReadyCondition()),
+				).Should(Succeed())
+		})
+
+		redisCluster := &cloudcontrolv1beta1.RedisCluster{}
+
+		By("And Given RedisCluster is created", func() {
+			Eventually(CreateRedisCluster).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+					WithName(name),
+					WithRemoteRef("skr-alicloud-cluster-ssl-restore"),
+					WithIpRange(kcpIpRangeName),
+					WithScope(name),
+					WithRedisClusterAlicloud(),
+					WithKcpAlicloudRedisClusterInstanceClass("redis.shard.large.ce"),
+					WithKcpAlicloudRedisEngineVersion("7.0"),
+					WithKcpAlicloudRedisClusterShardCount(2),
+				).Should(Succeed())
+		})
+
+		alicloudMock := alicloudAccount.Region(scope.Spec.Region)
+
+		By("And Given RedisCluster is Ready with SSL enabled", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+					NewObjActions(),
+					HavingFieldSet("status", "id"),
+				).Should(Succeed())
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+					HavingState("Ready"),
+				)
 			}).Should(Succeed())
+			entry := alicloudMock.GetRedisCluster(redisCluster.Status.Id)
+			Expect(entry).NotTo(BeNil())
+			Expect(entry.SslEnabled).To(BeTrue(), "SSL should be enabled after initial provisioning")
+		})
+
+		By("When AliCloud resets SSL during a spec change (simulated)", func() {
+			entry := alicloudMock.GetRedisCluster(redisCluster.Status.Id)
+			Expect(entry).NotTo(BeNil())
+			entry.SslEnabled = false
+		})
+
+		By("When a spec change triggers reconcile", func() {
+			Eventually(func() error {
+				if err := infra.KCP().Client().Get(infra.Ctx(),
+					client.ObjectKeyFromObject(redisCluster), redisCluster); err != nil {
+					return err
+				}
+				redisCluster.Spec.Instance.Alicloud.ShardCount = 3
+				return infra.KCP().Client().Update(infra.Ctx(), redisCluster)
+			}).Should(Succeed())
+		})
+
+		By("Then SSL is re-enabled and RedisCluster returns to Ready", func() {
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+					HavingState("Ready"),
+					HavingFieldValue(int32(3), "status", "shardCount"),
+				)
+			}).Should(Succeed(), "expected RedisCluster to reach Ready with shardCount=3")
+			entry := alicloudMock.GetRedisCluster(redisCluster.Status.Id)
+			Expect(entry).NotTo(BeNil())
+			Expect(entry.SslEnabled).To(BeTrue(), "SSL should be re-enabled after reconcile")
+		})
+
+		// DELETE
+
+		By("When RedisCluster is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster).
+				Should(Succeed())
+		})
+
+		By("Then RedisCluster does not exist", func() {
+			Eventually(IsDeleted, 5*time.Second).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: KCP AliCloud RedisCluster shard count is scaled down", func() {
+
+		alicloudAccount := infra.AlicloudMock().NewAccount()
+		defer alicloudAccount.Delete()
+
+		name := "c1d2e3f4-a5b6-7890-cdef-012345678901"
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			kcpscope.Ignore.AddName(name)
+			Eventually(CreateScopeAlicloud).
+				WithArguments(infra.Ctx(), infra, scope, alicloudAccount.Credentials().AccessKeyId, WithName(name)).
+				Should(Succeed())
+		})
+
+		kcpIpRangeName := "d2e3f4a5-b6c7-8901-defa-123456789012"
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+		kcpiprange.Ignore.AddName(kcpIpRangeName)
+
+		By("And Given KCP IPRange exists", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithName(kcpIpRangeName),
+					WithScope(scope.Name),
+				).Should(Succeed())
+		})
+
+		By("And Given KCP IpRange has Ready condition", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithKcpIpRangeStatusCidr(kcpIpRange.Spec.Cidr),
+					WithKcpIpRangeStatusVpcId("vpc-alicloud-test-08"),
+					WithKcpIpRangeStatusSubnets(cloudcontrolv1beta1.IpRangeSubnet{
+						Id:   "vsw-alicloud-test-08",
+						Zone: "cn-hangzhou-a",
+					}),
+					WithConditions(KcpReadyCondition()),
+				).Should(Succeed())
+		})
+
+		redisCluster := &cloudcontrolv1beta1.RedisCluster{}
+
+		By("And Given RedisCluster is created with 4 shards", func() {
+			Eventually(CreateRedisCluster).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+					WithName(name),
+					WithRemoteRef("skr-alicloud-cluster-scale-down"),
+					WithIpRange(kcpIpRangeName),
+					WithScope(name),
+					WithRedisClusterAlicloud(),
+					WithKcpAlicloudRedisClusterInstanceClass("redis.shard.large.ce"),
+					WithKcpAlicloudRedisEngineVersion("7.0"),
+					WithKcpAlicloudRedisClusterShardCount(4),
+				).Should(Succeed())
+		})
+
+		alicloudMock := alicloudAccount.Region(scope.Spec.Region)
+
+		By("And Given RedisCluster gets its ID", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), redisCluster,
+					NewObjActions(),
+					HavingFieldSet("status", "id"),
+				).Should(Succeed())
+		})
+
+		By("And Given AliCloud Redis is Normal", func() {
+			alicloudMock.TransitionAllToNormal()
+		})
+
+		By("And Given RedisCluster is Ready", func() {
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+					HavingState("Ready"),
+				)
+			}).Should(Succeed())
+		})
+
+		By("When shard count is decreased to 2", func() {
+			Eventually(func() error {
+				if err := infra.KCP().Client().Get(infra.Ctx(),
+					client.ObjectKeyFromObject(redisCluster), redisCluster); err != nil {
+					return err
+				}
+				redisCluster.Spec.Instance.Alicloud.ShardCount = 2
+				return infra.KCP().Client().Update(infra.Ctx(), redisCluster)
+			}).Should(Succeed())
+		})
+
+		By("Then AliCloud transitions to Changing and back to Normal with reduced shard count", func() {
+			Eventually(func() error {
+				alicloudMock.TransitionAllToNormal()
+				return LoadAndCheck(infra.Ctx(), infra.KCP().Client(), redisCluster,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+					HavingState("Ready"),
+					HavingFieldValue(int32(2), "status", "shardCount"),
+				)
+			}).Should(Succeed(), "expected RedisCluster to reach Ready with shardCount=2")
 		})
 
 		// DELETE
