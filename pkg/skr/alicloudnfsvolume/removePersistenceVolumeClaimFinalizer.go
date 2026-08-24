@@ -12,11 +12,11 @@ import (
 func removePersistenceVolumeClaimFinalizer(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
-	if !composed.IsMarkedForDeletion(state.PVC) {
+	if state.PVC == nil {
 		return nil, nil
 	}
 
-	if state.PVC == nil {
+	if !composed.IsMarkedForDeletion(state.PVC) {
 		return nil, nil
 	}
 

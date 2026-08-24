@@ -22,11 +22,11 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 		)
 	}
 
-	kcpNfsInstnace := &cloudcontrolv1beta1.NfsInstance{}
+	kcpNfsInstance := &cloudcontrolv1beta1.NfsInstance{}
 	err := state.KcpCluster.K8sClient().Get(ctx, types.NamespacedName{
 		Namespace: state.KymaRef.Namespace,
 		Name:      state.ObjAsAlicloudNfsVolume().Status.Id,
-	}, kcpNfsInstnace)
+	}, kcpNfsInstance)
 	if apierrors.IsNotFound(err) {
 		state.KcpNfsInstance = nil
 		logger.Info("KCP NfsInstance does not exist")
@@ -36,7 +36,7 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 		return composed.LogErrorAndReturn(err, "Error loading KCP NfsInstance", composed.StopWithRequeue, ctx)
 	}
 
-	state.KcpNfsInstance = kcpNfsInstnace
+	state.KcpNfsInstance = kcpNfsInstance
 
 	return nil, nil
 }
