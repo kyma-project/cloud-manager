@@ -254,7 +254,6 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 			Eventually(UpdateStatus).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance,
 					WithConditions(
-						KcpReadyCondition(),
 						metav1.Condition{
 							Type:    cloudcontrolv1beta1.ConditionTypeUpdating,
 							Status:  metav1.ConditionTrue,
