@@ -1,0 +1,97 @@
+package alicloudnfsvolume
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/kyma-project/cloud-manager/pkg/util"
+	ctrl "sigs.k8s.io/controller-runtime"
+
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"github.com/kyma-project/cloud-manager/pkg/skr/common/defaultiprange"
+	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+)
+
+func NewReconcilerFactory() skrruntime.ReconcilerFactory {
+	return &reconcilerFactory{}
+}
+
+type reconcilerFactory struct {
+}
+
+func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
+	return &reconciler{
+		factory: newStateFactory(
+			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
+			args.ScopeProvider,
+			composed.NewStateClusterFromCluster(args.KcpCluster),
+		),
+	}
+}
+
+type reconciler struct {
+	factory *stateFactory
+}
+
+func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	if Ignore.ShouldIgnoreKey(request) {
+		return ctrl.Result{}, nil
+	}
+
+	state, err := r.factory.NewState(ctx, request)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating AlicloudNfsVolume state: %w", err)
+	}
+	action := r.newAction()
+
+	return composed.Handling().
+		WithMetrics("alicloudnfsvolume", util.RequestObjToString(request)).
+		WithNoLog().
+		Handle(action(ctx, state))
+}
+
+func (r *reconciler) newAction() composed.Action {
+	return composed.ComposeActions(
+		"crAlicloudNfsVolumeMain",
+		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.AlicloudNfsVolume{}),
+		composed.LoadObj,
+		composed.ComposeActions(
+			"crAlicloudNfsVolumeValidateSpec",
+			validatePersistentVolume, validatePersistentVolumeClaim,
+		),
+		defaultiprange.New(),
+
+		loadVolume,
+		sanitizeReleasedVolume,
+		loadPersistentVolumeClaim,
+		addFinalizer,
+		updateId,
+		loadKcpNfsInstance,
+		createKcpNfsInstance,
+		updateStatus,
+		createVolume,
+		createPersistentVolumeClaim,
+		requeueWaitKcpStatus,
+		stopIfNotBeingDeleted,
+
+		// this below executes only when marked for deletion
+
+		removePersistenceVolumeClaimFinalizer,
+		deletePVC,
+		waitPVCDeleted,
+
+		removePersistenceVolumeFinalizer,
+		deletePv,
+		waitPvDeleted,
+
+		deleteKcpNfsInstance,
+		waitKcpNfsInstanceDeleted,
+
+		removeFinalizer,
+
+		composed.StopAndForgetAction,
+	)
+}

@@ -101,6 +101,9 @@ var _ = BeforeSuite(func() {
 	// AwsNfsVolume
 	Expect(SetupAwsNfsVolumeReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// AlicloudNfsVolume
+	Expect(SetupAlicloudNfsVolumeReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 	// SapNfsVolume
 	Expect(SetupSapNfsVolumeReconciler(infra.Registry())).
 		NotTo(HaveOccurred())

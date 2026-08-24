@@ -1,0 +1,64 @@
+package alicloudnfsvolume
+
+import (
+	"context"
+	"github.com/kyma-project/cloud-manager/api"
+
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+func createVolume(ctx context.Context, st composed.State) (error, context.Context) {
+	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
+
+	if composed.MarkedForDeletionPredicate(ctx, state) {
+		return nil, nil
+	}
+	if state.Volume != nil {
+		logger.Info("PersistentVolume for AlicloudNfsVolume already exists")
+		return nil, nil
+	}
+
+	kcpCondReady := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
+	if kcpCondReady == nil {
+		// not yet ready, PV will be created only once KCP NfsInstance is ready
+		return nil, nil
+	}
+
+	pv := &corev1.PersistentVolume{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:   state.Obj().GetNamespace(),
+			Name:        getVolumeName(state.ObjAsAlicloudNfsVolume()),
+			Labels:      getVolumeLabels(state.ObjAsAlicloudNfsVolume()),
+			Annotations: getVolumeAnnotations(state.ObjAsAlicloudNfsVolume()),
+			Finalizers: []string{
+				api.CommonFinalizerDeletionHook,
+			},
+		},
+		Spec: corev1.PersistentVolumeSpec{
+			Capacity: corev1.ResourceList{
+				"storage": state.ObjAsAlicloudNfsVolume().Spec.Capacity,
+			},
+			PersistentVolumeSource: corev1.PersistentVolumeSource{
+				NFS: &corev1.NFSVolumeSource{
+					Server:   state.ObjAsAlicloudNfsVolume().Status.Server,
+					Path:     "/",
+					ReadOnly: false,
+				},
+			},
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteMany},
+		},
+	}
+	err := state.Cluster().K8sClient().Create(ctx, pv)
+	if err != nil {
+		return composed.LogErrorAndReturn(err, "Error creating PV for AlicloudNfsVolume", composed.StopWithRequeue, ctx)
+	}
+
+	logger.Info("PV for AlicloudNfsVolume created")
+
+	return nil, nil
+}
