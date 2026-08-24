@@ -74,4 +74,25 @@ var _ = Describe("Feature: SKR AlicloudNfsVolume", Ordered, func() {
 		)
 	})
 
+	Context("Scenario: Immutability", func() {
+
+		canNotChangeSkr(
+			"AlicloudNfsVolume IpRange is immutable",
+			newTestAlicloudNfsVolumeBuilder().WithIpRange("original-iprange"),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudNfsVolume]) {
+				b.(*testAlicloudNfsVolumeBuilder).WithIpRange("other-iprange")
+			},
+			"IpRange is immutable",
+		)
+
+		canNotChangeSkr(
+			"AlicloudNfsVolume StorageType is immutable",
+			newTestAlicloudNfsVolumeBuilder().WithStorageType(cloudresourcesv1beta1.AlicloudNfsStorageTypePerformance),
+			func(b Builder[*cloudresourcesv1beta1.AlicloudNfsVolume]) {
+				b.(*testAlicloudNfsVolumeBuilder).WithStorageType(cloudresourcesv1beta1.AlicloudNfsStorageTypeCapacity)
+			},
+			"StorageType is immutable",
+		)
+	})
+
 })

@@ -40,8 +40,11 @@ const (
 // AlicloudNfsVolumeSpec defines the desired state of AlicloudNfsVolume
 type AlicloudNfsVolumeSpec struct {
 
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="IpRange is immutable."
 	// +optional
-	IpRange IpRangeRef `json:"ipRange"`
+	IpRange IpRangeRef `json:"ipRange,omitempty"`
+	// Note: omitempty above is required. Without it an unset IpRange serialises as {"name":""},
+	// which combined with the self==oldSelf XValidation permanently locks IpRange to empty-string.
 
 	// Capacity sizes the created PersistentVolume/PersistentVolumeClaim. AliCloud
 	// NAS Performance/Capacity file systems are elastic (no provisioned size), so
@@ -49,6 +52,7 @@ type AlicloudNfsVolumeSpec struct {
 	// +kubebuilder:validation:Required
 	Capacity resource.Quantity `json:"capacity"`
 
+	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="StorageType is immutable."
 	// +kubebuilder:default=Performance
 	StorageType AlicloudNfsStorageType `json:"storageType,omitempty"`
 
