@@ -24,17 +24,16 @@ import (
 )
 
 // Client extends the standard-instance Client with cluster-only sharding
-// operations. Both AddShardingNode and DeleteShardingNode accept the target
-// ShardCount (absolute, not delta) - the SDK computes the required
-// add/remove count internally.
+// operations. AddShardingNode and DeleteShardingNode accept a delta (the number
+// of shards to add or remove), which is what the AliCloud SDK expects.
 type Client interface {
 	instanceclient.Client
 
-	// AddShardingNode grows the cluster to the given target shard count.
-	AddShardingNode(ctx context.Context, instanceId string, targetShardCount int32) error
+	// AddShardingNode adds countToAdd shards to the cluster.
+	AddShardingNode(ctx context.Context, instanceId string, countToAdd int32) error
 
-	// DeleteShardingNode shrinks the cluster to the given target shard count.
-	DeleteShardingNode(ctx context.Context, instanceId string, targetShardCount int32) error
+	// DeleteShardingNode removes countToRemove shards from the cluster.
+	DeleteShardingNode(ctx context.Context, instanceId string, countToRemove int32) error
 }
 
 // ClientProvider mirrors the credential/region-scoped constructor signature
@@ -73,10 +72,10 @@ type alicloudRedisClusterClient struct {
 	region string
 }
 
-func (c *alicloudRedisClusterClient) AddShardingNode(ctx context.Context, instanceId string, targetShardCount int32) error {
+func (c *alicloudRedisClusterClient) AddShardingNode(ctx context.Context, instanceId string, countToAdd int32) error {
 	req := &rkvstore.AddShardingNodeRequest{
 		InstanceId: new(instanceId),
-		ShardCount: new(targetShardCount),
+		ShardCount: new(countToAdd),
 	}
 	if _, err := c.c.AddShardingNode(req); err != nil {
 		return fmt.Errorf("error adding sharding node to alicloud r-kvstore cluster %s: %w", instanceId, err)
@@ -84,10 +83,10 @@ func (c *alicloudRedisClusterClient) AddShardingNode(ctx context.Context, instan
 	return nil
 }
 
-func (c *alicloudRedisClusterClient) DeleteShardingNode(ctx context.Context, instanceId string, targetShardCount int32) error {
+func (c *alicloudRedisClusterClient) DeleteShardingNode(ctx context.Context, instanceId string, countToRemove int32) error {
 	req := &rkvstore.DeleteShardingNodeRequest{
 		InstanceId: new(instanceId),
-		ShardCount: new(targetShardCount),
+		ShardCount: new(countToRemove),
 	}
 	if _, err := c.c.DeleteShardingNode(req); err != nil {
 		return fmt.Errorf("error deleting sharding node from alicloud r-kvstore cluster %s: %w", instanceId, err)
