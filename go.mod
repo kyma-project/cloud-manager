@@ -53,7 +53,7 @@ require (
 	github.com/gardener/gardener-extension-provider-azure v1.62.1
 	github.com/gardener/gardener-extension-provider-gcp v1.53.4
 	github.com/gardener/gardener-extension-provider-openstack v1.57.0
-	github.com/gardener/gardener/pkg/apis v1.149.0
+	github.com/gardener/gardener/pkg/apis v1.149.3
 	github.com/go-logr/logr v1.4.4
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.31.0
