@@ -61,7 +61,6 @@ func modifyInstanceClass(ctx context.Context, st composed.State) (error, context
 	// Use the observed class to decide whether replicas are tunable: the instance
 	// may still be on its old (proxy) class if a tier change is in progress.
 	replicasDrift := !alicloudclient.IsProxyClusterClass(observedClass) &&
-		!alicloudclient.IsReadOnlyCountUnsupported(observedClass) &&
 		desiredReplicas != state.instance.ReadOnlyCount
 	if !classDrift && !replicasDrift {
 		return nil, ctx

@@ -16,12 +16,25 @@ import (
 
 func createRedis(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
+	logger := composed.LoggerFromCtx(ctx)
 
 	if state.instance != nil {
 		return nil, ctx
 	}
 
 	kcp := state.ObjAsRedisCluster()
+	if kcp.Spec.Instance.Alicloud == nil {
+		return composed.LogErrorAndReturn(
+			fmt.Errorf("spec.instance.alicloud is nil"),
+			"AliCloud rediscluster without alicloud provider spec",
+			composed.StopAndForget, ctx)
+	}
+	if state.IpRange() == nil {
+		return composed.LogErrorAndReturn(
+			fmt.Errorf("ipRange is nil"),
+			"AliCloud rediscluster requires resolved IpRange",
+			composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
+	}
 
 	var vSwitchIds []string
 	for _, sn := range state.IpRange().Status.Subnets {
@@ -50,43 +63,23 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		}
 	}
 
-	meta.RemoveStatusCondition(kcp.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
-
-	instanceId, lastErr, allZonesFailed := tryCreateClusterInVSwitches(ctx, state, vSwitchIds, password)
-
-	if lastErr != nil {
-		return handleClusterCreateError(ctx, state, lastErr, allZonesFailed)
-	}
-
-	kcp.Status.Id = instanceId
-	if err := state.UpdateObjStatus(ctx); err != nil {
-		return composed.LogErrorAndReturn(err,
-			"Error persisting new AliCloud r-kvstore cluster instance ID",
-			composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
-	}
-
-	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
-}
-
-// tryCreateClusterInVSwitches tries each vSwitch in turn and returns the new instance ID,
-// the last error (nil on success), and whether every zone rejected the request.
-func tryCreateClusterInVSwitches(ctx context.Context, state *State, vSwitchIds []string, password string) (string, error, bool) {
-	logger := composed.LoggerFromCtx(ctx)
-	kcp := state.ObjAsRedisCluster()
-
+	// Try each vSwitch in turn. Some instance classes are only available in
+	// specific zones; AliCloud returns InvalidvSwitchId when the zone does not
+	// support the requested class.
 	var instanceId string
 	var lastErr error
 	allZonesFailed := true
-
 	for _, vSwitchId := range vSwitchIds {
-		// "v5" suffix rotates tokens away from v4 tokens that included password.
-		// Different shard/replica configs must not share a token.
-		tokenInput := fmt.Sprintf("%s%s%s%d%dv5",
-			string(kcp.UID),
+		// "v4" suffix rotates tokens away from v3 tokens that omitted ShardCount
+		// and ReplicasPerShard. Different shard/replica configs must not share a token.
+		tokenInput := fmt.Sprintf("%s%s%s%s%d%dv4",
+			string(kcp.UID), password,
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
 			kcp.Spec.Instance.Alicloud.ShardCount,
 			kcp.Spec.Instance.Alicloud.ReplicasPerShard,
 		)
+		// SHA256 is used here as an idempotency token for the AliCloud CreateInstance
+		// API, not for password storage or authentication — false positive for CWE-916.
 		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenInput)))[:32] //nolint:gosec
 
 		opts := alicloudclient.CreateInstanceOptions{
@@ -100,53 +93,57 @@ func tryCreateClusterInVSwitches(ctx context.Context, state *State, vSwitchIds [
 			ReadOnlyCount: kcp.Spec.Instance.Alicloud.ReplicasPerShard,
 			Token:         tokenHash,
 		}
-
 		var err error
 		instanceId, err = state.client.CreateInstance(ctx, opts)
 		if err == nil {
-			return instanceId, nil, false
+			lastErr = nil
+			allZonesFailed = false
+			break
 		}
 		lastErr = err
 		if alicloudclient.IsVSwitchZoneErr(err) {
-			logger.Info("AliCloud r-kvstore cluster: vSwitch zone not supported, trying next",
-				"vSwitchId", vSwitchId, "instanceClass", kcp.Spec.Instance.Alicloud.InstanceClass)
+			logger.Info("AliCloud r-kvstore cluster: vSwitch zone not supported, trying next", "vSwitchId", vSwitchId, "instanceClass", kcp.Spec.Instance.Alicloud.InstanceClass)
 			continue
 		}
 		allZonesFailed = false
 		break
 	}
 
-	return "", lastErr, allZonesFailed
-}
+	if lastErr != nil {
+		err := lastErr
+		logger.Error(err, "Error creating AliCloud r-kvstore cluster instance")
+		meta.SetStatusCondition(kcp.Conditions(), metav1.Condition{
+			Type:    cloudcontrolv1beta1.ConditionTypeError,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisCluster,
+			Message: fmt.Sprintf("Failed creating AlicloudRedisCluster: %s", err),
+		})
+		if updErr := state.UpdateObjStatus(ctx); updErr != nil {
+			return composed.LogErrorAndReturn(updErr,
+				"Error updating RedisCluster status after failed CreateInstance",
+				composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+		}
+		if allZonesFailed {
+			return composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx
+		}
+		if alicloudclient.IsPermanentError(err) {
+			if alicloudclient.IsPasswordErr(err) {
+				kcp.Status.AuthString = ""
+				if updErr := state.UpdateObjStatus(ctx); updErr != nil {
+					logger.Error(updErr, "Error clearing invalid password from status")
+				}
+			}
+			return composed.StopAndForget, ctx
+		}
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+	}
 
-// handleClusterCreateError dispatches a CreateInstance error to the appropriate reconciler response.
-func handleClusterCreateError(ctx context.Context, state *State, err error, allZonesFailed bool) (error, context.Context) {
-	logger := composed.LoggerFromCtx(ctx)
-	kcp := state.ObjAsRedisCluster()
-
-	logger.Error(err, "Error creating AliCloud r-kvstore cluster instance")
-	meta.SetStatusCondition(kcp.Conditions(), metav1.Condition{
-		Type:    cloudcontrolv1beta1.ConditionTypeError,
-		Status:  metav1.ConditionTrue,
-		Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisCluster,
-		Message: fmt.Sprintf("Failed creating AlicloudRedisCluster: %s", err),
-	})
-	if updErr := state.UpdateObjStatus(ctx); updErr != nil {
-		return composed.LogErrorAndReturn(updErr,
-			"Error updating RedisCluster status after failed CreateInstance",
+	kcp.Status.Id = instanceId
+	if err := state.UpdateObjStatus(ctx); err != nil {
+		return composed.LogErrorAndReturn(err,
+			"Error persisting new AliCloud r-kvstore cluster instance ID",
 			composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
-	if allZonesFailed {
-		return composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx
-	}
-	if alicloudclient.IsPermanentError(err) {
-		if alicloudclient.IsPasswordErr(err) {
-			kcp.Status.AuthString = ""
-			if updErr := state.UpdateObjStatus(ctx); updErr != nil {
-				logger.Error(updErr, "Error clearing invalid password from status")
-			}
-		}
-		return composed.StopAndForget, ctx
-	}
-	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+
+	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 }
