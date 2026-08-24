@@ -3,7 +3,7 @@ module github.com/kyma-project/cloud-manager
 go 1.26.6
 
 require (
-	cloud.google.com/go/auth v0.23.1
+	cloud.google.com/go/auth v0.23.2
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
 	cloud.google.com/go/compute v1.66.0
 	cloud.google.com/go/filestore v1.16.0
@@ -84,7 +84,7 @@ require (
 	google.golang.org/api v0.293.0
 	google.golang.org/genproto v0.0.0-20260519071638-aa98bba5eb94
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260807164820-c8921c73eeea
-	google.golang.org/grpc v1.83.0
+	google.golang.org/grpc v1.83.1
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.36.4
