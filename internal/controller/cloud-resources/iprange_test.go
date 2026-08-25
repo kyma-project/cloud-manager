@@ -153,6 +153,9 @@ var _ = Describe("Feature: SKR IpRange", func() {
 				Eventually(Delete).
 					WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 					Should(SucceedIgnoreNotFound(), "failed deleting SKR IpRange to clean up")
+				Eventually(IsDeleted).
+					WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+					Should(Succeed(), "SKR IpRange was not fully deleted during cleanup")
 			})
 		})
 	}
