@@ -82,7 +82,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^eventually timeout is "([^"]*)"$`, eventuallyTimeoutIs)
 
-	ctx.Step(`^there is shared SKR with "(AWS|Azure|GCP|OpenStack)" provider$`, thereIsSharedSKRWithProvider)
+	ctx.Step(`^there is shared SKR with "(AWS|Azure|GCP|OpenStack|AliCloud)" provider$`, thereIsSharedSKRWithProvider)
 
 	ctx.Step(`^module "([^"]*)" is active`, moduleIsActive)
 	ctx.Step(`^module "([^"]*)" is active`, moduleIsNotActive)
