@@ -428,6 +428,17 @@ var providerRegions = map[cloudcontrolv1beta1.ProviderType]map[string][]string{
 			"eu-de-1d",
 		},
 	},
+
+	// AliCloud region/zone naming for ap-northeast-1 (Tokyo).
+	// Zones MUST match the alicloud CloudProfile: ap-northeast-1 has 1a/1c/1d (NO 1b).
+	// Builder requires >= 3 zones.
+	cloudcontrolv1beta1.ProviderAlicloud: {
+		"ap-northeast-1": {
+			"ap-northeast-1a",
+			"ap-northeast-1c",
+			"ap-northeast-1d",
+		},
+	},
 }
 
 var machineTypes = map[cloudcontrolv1beta1.ProviderType][]string{
@@ -435,12 +446,16 @@ var machineTypes = map[cloudcontrolv1beta1.ProviderType][]string{
 	cloudcontrolv1beta1.ProviderGCP:       {"n2-standard-2"},
 	cloudcontrolv1beta1.ProviderAzure:     {"Standard_D2s_v5", "Standard_D4s_v5"},
 	cloudcontrolv1beta1.ProviderOpenStack: {"g_c2_m8"},
+	// Confirm the machine type is offered by your Gardener AliCloud CloudProfile
+	// AND available in the selected zones (ECS types are not offered in every zone).
+	cloudcontrolv1beta1.ProviderAlicloud: {"ecs.c9i.xlarge"},
 }
 
 var volumeTypes = map[cloudcontrolv1beta1.ProviderType]string{
-	cloudcontrolv1beta1.ProviderAws:   "gp3",
-	cloudcontrolv1beta1.ProviderGCP:   "pd-balanced",
-	cloudcontrolv1beta1.ProviderAzure: "StandardSSD_LRS",
+	cloudcontrolv1beta1.ProviderAws:      "gp3",
+	cloudcontrolv1beta1.ProviderGCP:      "pd-balanced",
+	cloudcontrolv1beta1.ProviderAzure:    "StandardSSD_LRS",
+	cloudcontrolv1beta1.ProviderAlicloud: "cloud_essd",
 	// nothing for ccee
 	//cloudcontrolv1beta1.ProviderOpenStack: "",
 }
