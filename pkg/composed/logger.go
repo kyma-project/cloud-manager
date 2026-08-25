@@ -40,5 +40,11 @@ func LogWarning(ctx context.Context, msg string, keysAndValues ...any) {
 	}
 	// WithCallDepth(1) skips this frame so `caller` points at the call site;
 	// relies on LogFilterSink forwarding WithCallDepth. Pinned by TestLogWarningAttributesToCallSite.
-	LoggerFromCtx(ctx).WithCallDepth(1).GetSink().Info(warnLevel, msg, keysAndValues...)
+	sink := LoggerFromCtx(ctx).WithCallDepth(1).GetSink()
+	if sink == nil {
+		// zero-value or Discard logger — Logger.Info would no-op; the direct
+		// sink call would panic, so guard what Logger.Info guards for us.
+		return
+	}
+	sink.Info(warnLevel, msg, keysAndValues...)
 }

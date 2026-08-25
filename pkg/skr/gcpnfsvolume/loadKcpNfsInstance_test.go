@@ -25,29 +25,29 @@ import (
 )
 
 const (
-	lkniKyma = "skr"
-	lkniNs   = "test"
-	lkniVol  = "vol"
+	testKyma = "skr"
+	testNs   = "test"
+	testVol  = "vol"
 )
 
-func lkniInstance(name string) *cloudcontrolv1beta1.NfsInstance {
+func newTestNfsInstance(name string) *cloudcontrolv1beta1.NfsInstance {
 	return &cloudcontrolv1beta1.NfsInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: lkniNs,
+			Namespace: testNs,
 			Labels: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        lkniKyma,
-				cloudcontrolv1beta1.LabelRemoteName:      lkniVol,
-				cloudcontrolv1beta1.LabelRemoteNamespace: lkniNs,
+				cloudcontrolv1beta1.LabelKymaName:        testKyma,
+				cloudcontrolv1beta1.LabelRemoteName:      testVol,
+				cloudcontrolv1beta1.LabelRemoteNamespace: testNs,
 			},
 		},
 	}
 }
 
-// lkniState builds a gcpnfsvolume State whose KCP cluster is seeded with the given
+// newTestLoadState builds a gcpnfsvolume State whose KCP cluster is seeded with the given
 // NfsInstances, plus a ctx carrying an observer-backed logger (through the production
 // LogFilterSink chain) and the recorder.
-func lkniState(t *testing.T, listErr error, instances ...*cloudcontrolv1beta1.NfsInstance) (context.Context, *State, *observer.ObservedLogs) {
+func newTestLoadState(t *testing.T, listErr error, instances ...*cloudcontrolv1beta1.NfsInstance) (context.Context, *State, *observer.ObservedLogs) {
 	t.Helper()
 
 	kcpBuilder := fake.NewClientBuilder().WithScheme(commonscheme.KcpScheme)
@@ -65,17 +65,17 @@ func lkniState(t *testing.T, listErr error, instances ...*cloudcontrolv1beta1.Nf
 	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 	vol := &cloudresourcesv1beta1.GcpNfsVolume{
-		ObjectMeta: metav1.ObjectMeta{Name: lkniVol, Namespace: lkniNs},
+		ObjectMeta: metav1.ObjectMeta{Name: testVol, Namespace: testNs},
 	}
 	skrClient := fake.NewClientBuilder().WithScheme(commonscheme.SkrScheme).WithObjects(vol).Build()
 	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)
 
 	baseState := composed.NewStateFactory(skrCluster).NewState(
-		types.NamespacedName{Name: lkniVol, Namespace: lkniNs}, vol)
+		types.NamespacedName{Name: testVol, Namespace: testNs}, vol)
 
 	state := &State{
 		State:      baseState,
-		KymaRef:    klog.ObjectRef{Name: lkniKyma, Namespace: lkniNs},
+		KymaRef:    klog.ObjectRef{Name: testKyma, Namespace: testNs},
 		KcpCluster: kcpCluster,
 	}
 
@@ -87,7 +87,7 @@ func lkniState(t *testing.T, listErr error, instances ...*cloudcontrolv1beta1.Nf
 }
 
 func TestLoadKcpNfsInstanceZeroMatch(t *testing.T) {
-	ctx, state, logs := lkniState(t, nil)
+	ctx, state, logs := newTestLoadState(t, nil)
 
 	err, _ := loadKcpNfsInstance(ctx, state)
 
@@ -97,7 +97,7 @@ func TestLoadKcpNfsInstanceZeroMatch(t *testing.T) {
 }
 
 func TestLoadKcpNfsInstanceOneMatch(t *testing.T) {
-	ctx, state, logs := lkniState(t, nil, lkniInstance("only-instance"))
+	ctx, state, logs := newTestLoadState(t, nil, newTestNfsInstance("only-instance"))
 
 	err, _ := loadKcpNfsInstance(ctx, state)
 
@@ -108,7 +108,7 @@ func TestLoadKcpNfsInstanceOneMatch(t *testing.T) {
 }
 
 func TestLoadKcpNfsInstanceMultipleMatchWarnsAndSelectsFirst(t *testing.T) {
-	ctx, state, logs := lkniState(t, nil, lkniInstance("bbb-instance"), lkniInstance("aaa-instance"))
+	ctx, state, logs := newTestLoadState(t, nil, newTestNfsInstance("bbb-instance"), newTestNfsInstance("aaa-instance"))
 
 	err, _ := loadKcpNfsInstance(ctx, state)
 
@@ -126,7 +126,7 @@ func TestLoadKcpNfsInstanceMultipleMatchWarnsAndSelectsFirst(t *testing.T) {
 }
 
 func TestLoadKcpNfsInstanceListError(t *testing.T) {
-	ctx, state, logs := lkniState(t, errors.New("boom"))
+	ctx, state, logs := newTestLoadState(t, errors.New("boom"))
 
 	err, _ := loadKcpNfsInstance(ctx, state)
 

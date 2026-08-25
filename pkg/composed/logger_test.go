@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -71,4 +72,14 @@ func TestLogWarningLoggerlessContextDoesNotPanic(t *testing.T) {
 	assert.NotPanics(t, func() {
 		LogWarning(context.Background(), "no logger set")
 	})
+}
+
+func TestLogWarningNilSinkLoggerDoesNotPanic(t *testing.T) {
+	// A zero-value logr.Logger and logr.Discard() both have a nil sink; calling
+	// GetSink().Info directly would panic without the guard.
+	for _, l := range []logr.Logger{{}, logr.Discard()} {
+		assert.NotPanics(t, func() {
+			LogWarning(LoggerIntoCtx(context.Background(), l), "nil sink")
+		})
+	}
 }

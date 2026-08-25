@@ -13,6 +13,8 @@ type LogFilterSink struct {
 	failedWaitingForInformerToSync *regexp.Regexp
 }
 
+var _ logr.CallDepthLogSink = (*LogFilterSink)(nil)
+
 func NewLogFilterSink(inner logr.LogSink) *LogFilterSink {
 	return &LogFilterSink{
 		inner:                          inner,
