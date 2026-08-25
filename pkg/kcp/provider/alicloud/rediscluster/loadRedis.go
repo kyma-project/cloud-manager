@@ -47,6 +47,18 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 				SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 				Run(ctx, state)
 		}
+		// nil means the API returned an empty list (instance gone); Released means the
+		// delete completed but the entry still lingers. Both are effectively NotFound.
+		if info == nil || info.InstanceStatus == alicloudclient.InstanceStatusReleased {
+			logger.Info("AliCloud r-kvstore cluster is gone, clearing stale ID", "instanceId", instanceId)
+			state.ObjAsRedisCluster().Status.Id = ""
+			if updErr := state.UpdateObjStatus(ctx); updErr != nil {
+				return composed.LogErrorAndReturn(updErr,
+					"Error clearing stale AliCloud r-kvstore cluster instance ID after Release",
+					composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+			}
+			return nil, ctx
+		}
 		state.instance = info
 		return nil, ctx
 	}

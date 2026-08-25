@@ -38,8 +38,11 @@ type RedisInstanceConfig interface {
 type RedisClusterConfig interface {
 	AddRedisCluster(instanceId, instanceClass, engineVersion, status string, shardCount int32) *RedisClusterEntry
 	SetRedisClusterError(instanceId string, err error)
-	// GetRedisCluster returns the stored entry for instanceId, or nil if not found.
+	// GetRedisCluster returns the stored entry or nil. Do not mutate concurrently with
+	// the reconciler; use SetRedisCluster instead.
 	GetRedisCluster(instanceId string) *RedisClusterEntry
+	// SetRedisCluster mutates the entry under the store lock. Safe for concurrent use.
+	SetRedisCluster(instanceId string, mutate func(*RedisClusterEntry))
 }
 
 // Configs aggregates all test-side seeding interfaces.

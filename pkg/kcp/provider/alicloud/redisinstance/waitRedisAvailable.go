@@ -17,12 +17,16 @@ func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.
 		return nil, ctx
 	}
 	switch state.instance.InstanceStatus {
-	case alicloudclient.InstanceStatusNormal, alicloudclient.InstanceStatusReleased:
+	case alicloudclient.InstanceStatusNormal:
 		return nil, ctx
 	case alicloudclient.InstanceStatusCreating, alicloudclient.InstanceStatusChanging,
 		alicloudclient.InstanceStatusSSLModifying:
 		state.instance = nil
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
+	case alicloudclient.InstanceStatusReleased:
+		// Externally deleted; re-fetch on next reconcile so loadRedis can clear the stale ID.
+		state.instance = nil
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	default:
 		kcp := state.ObjAsRedisInstance()
 		return composed.UpdateStatus(kcp).

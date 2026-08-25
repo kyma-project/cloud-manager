@@ -25,8 +25,10 @@ func modifyShardCount(ctx context.Context, st composed.State) (error, context.Co
 	desired := kcp.Spec.Instance.Alicloud.ShardCount
 	current := state.instance.ShardCount
 
-	// current == 0 means the API has not yet surfaced the shard count (the field
-	// is omitted until the cluster is fully Normal). Don't act on unknown state.
+	// current == 0 has two meanings: the API hasn't surfaced the count yet (instance
+	// still Creating), or the class is proxy-based (redis.logic.sharding.*) where
+	// ShardCount is encoded in the class name and never returned by DescribeInstance.
+	// In both cases skip — proxy shard changes are handled by modifyInstanceClass.
 	if current == 0 || desired == current {
 		return nil, ctx
 	}

@@ -389,12 +389,14 @@ func (s *redisStore) deleteInstance(ctx context.Context, instanceId string) erro
 	if err, ok := s.clusterErrors[instanceId]; ok {
 		return err
 	}
-	if _, ok := s.instances[instanceId]; ok {
-		delete(s.instances, instanceId)
+	// Mirror the real API: a deleted instance lingers as Released before returning 404,
+	// so Released code paths in loadRedis and waitRedisAvailable are exercisable.
+	if e, ok := s.instances[instanceId]; ok {
+		e.InstanceStatus = redisinstance.InstanceStatusReleased
 		return nil
 	}
-	if _, ok := s.clusters[instanceId]; ok {
-		delete(s.clusters, instanceId)
+	if e, ok := s.clusters[instanceId]; ok {
+		e.InstanceStatus = redisinstance.InstanceStatusReleased
 		return nil
 	}
 	return fmt.Errorf("instance %s not found", instanceId)

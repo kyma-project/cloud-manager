@@ -68,6 +68,8 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		}
 	}
 
+	meta.RemoveStatusCondition(kcp.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
+
 	// Try each vSwitch in turn. Some instance classes are only available in
 	// specific zones; AliCloud returns InvalidvSwitchId when the zone does not
 	// support the requested class. Iterating all subnets lets the reconciler

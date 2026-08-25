@@ -15,9 +15,6 @@ func deleteRedis(ctx context.Context, st composed.State) (error, context.Context
 	if state.instance == nil {
 		return nil, ctx
 	}
-	if state.instance.InstanceStatus == alicloudclient.InstanceStatusReleased {
-		return nil, ctx
-	}
 	// waitRedisAvailable in the delete pipeline guarantees Normal status on entry.
 
 	if err := state.client.DeleteInstance(ctx, state.instance.InstanceId); err != nil {

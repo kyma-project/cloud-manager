@@ -63,6 +63,8 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		}
 	}
 
+	meta.RemoveStatusCondition(kcp.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
+
 	// Try each vSwitch in turn. Some instance classes are only available in
 	// specific zones; AliCloud returns InvalidvSwitchId when the zone does not
 	// support the requested class.
@@ -70,8 +72,8 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	var lastErr error
 	allZonesFailed := true
 	for _, vSwitchId := range vSwitchIds {
-		// "v4" suffix rotates tokens away from v3 tokens that omitted ShardCount
-		// and ReplicasPerShard. Different shard/replica configs must not share a token.
+		// Token includes ShardCount and ReplicasPerShard so that different cluster
+		// configurations cannot share an idempotency token.
 		tokenInput := fmt.Sprintf("%s%s%s%s%d%dv4",
 			string(kcp.UID), password,
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
