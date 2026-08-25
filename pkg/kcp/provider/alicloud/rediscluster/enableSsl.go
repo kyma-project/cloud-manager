@@ -12,6 +12,10 @@ import (
 // default; this action calls ModifyInstanceSSL and requeues — the instance
 // transitions to SSLModifying, and waitRedisAvailable (next pipeline step)
 // gates further progress until it returns to Normal.
+//
+// Note: the AliCloud CreateInstance API has no SSL parameter — SSL can only
+// be toggled post-creation via ModifyInstanceSSL. The brief window between
+// instance creation and this action completing is therefore unavoidable.
 func enableSsl(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 

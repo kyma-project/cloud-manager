@@ -23,18 +23,6 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	}
 
 	kcp := state.ObjAsRedisCluster()
-	if kcp.Spec.Instance.Alicloud == nil {
-		return composed.LogErrorAndReturn(
-			fmt.Errorf("spec.instance.alicloud is nil"),
-			"AliCloud rediscluster without alicloud provider spec",
-			composed.StopAndForget, ctx)
-	}
-	if state.IpRange() == nil {
-		return composed.LogErrorAndReturn(
-			fmt.Errorf("ipRange is nil"),
-			"AliCloud rediscluster requires resolved IpRange",
-			composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
-	}
 
 	var vSwitchIds []string
 	for _, sn := range state.IpRange().Status.Subnets {
