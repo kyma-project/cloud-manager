@@ -193,10 +193,14 @@ var _ = Describe("Feature: SKR AlicloudNfsVolume", func() {
 				Should(Succeed())
 		})
 
-		// CleanUp
-		Eventually(Delete).
-			WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
-			Should(Succeed())
+		By("// cleanup: delete SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
 	})
 
 })

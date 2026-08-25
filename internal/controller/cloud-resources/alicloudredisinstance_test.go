@@ -157,6 +157,15 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), authSecret).
 				Should(Succeed())
 		})
+
+		By("// cleanup: delete SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
 	})
 
 	It("Scenario: SKR AlicloudRedisInstance redisTier is changed and Updating condition is propagated", func() {
@@ -314,6 +323,15 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 		By("Then SKR AlicloudRedisInstance does not exist", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisInstance).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())
 		})
 	})
