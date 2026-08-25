@@ -16,7 +16,7 @@ Feature: AliCloud NfsVolume feature
   @skr @alicloud @nfs
   Scenario: AlicloudNfsVolume scenario
 
-    Given there is shared SKR with "alicloud" provider
+    Given there is shared SKR with "AliCloud" provider
 
     And resource declaration:
       | Alias | Kind                  | ApiVersion                              | Name                       | Namespace |
