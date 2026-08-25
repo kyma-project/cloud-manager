@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
@@ -49,7 +50,7 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 					}
 
 					lll.Error(err, "Error deleting remote route")
-					return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
+					return nil, ctx
 				}
 
 				lll.Info("Remote route deleted")
