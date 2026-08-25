@@ -35,21 +35,24 @@ func New(sf StateFactory) composed.Action {
 
 		return composed.ComposeActionsNoName(
 			networkLoad,
-			routerLoad,
-			subnetLoad,
-			routerSubnetLoad,
 			composed.If(
-				composed.NotMarkedForDeletionPredicate,
-				// create/update
-				subnetCreate,
-				routerSubnetAdd,
-				statusPatch,
-			),
-			composed.If(
-				composed.MarkedForDeletionPredicate,
-				// delete
-				routerSubnetRemove,
-				subnetDelete,
+				networkExistsPredicate,
+				routerLoad,
+				subnetLoad,
+				routerSubnetLoad,
+				composed.If(
+					composed.NotMarkedForDeletionPredicate,
+					// create/update
+					subnetCreate,
+					routerSubnetAdd,
+					statusPatch,
+				),
+				composed.If(
+					composed.MarkedForDeletionPredicate,
+					// delete
+					routerSubnetRemove,
+					subnetDelete,
+				),
 			),
 		)(ctx, state)
 	}
