@@ -51,16 +51,17 @@ func deleteCertificate(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	// If deletion succeeded and we had a DeleteWhileUsed condition, remove it
-	// Following pattern from pkg/kcp/subscription/statusSaveOnDelete.go
 	if cert.Status.State == cloudresourcesv1beta1.ReasonDeleteWhileUsed {
 		logger.Info("Certificate is no longer in use, removing DeleteWhileUsed condition")
-		return composed.NewStatusPatcherComposed(cert).
+		err, _ := composed.NewStatusPatcherComposed(cert).
 			MutateStatus(func(c *cloudresourcesv1beta1.AwsCertificate) {
 				c.RemoveStatusDeleteWhileUsed()
 			}).
-			OnSuccess(composed.Continue).
 			OnFailure(composed.Log("Failed to remove DeleteWhileUsed condition")).
 			Run(ctx, state.Cluster().K8sClient())
+		if err != nil {
+			return err, ctx
+		}
 	}
 
 	logger.Info("Certificate deleted from ACM successfully")
