@@ -39,6 +39,10 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 				return nil, ctx
 			}
 			logger.Error(err, "Error describing AliCloud r-kvstore instance")
+			result := composed.StopWithRequeueDelay(util.Timing.T60000ms())
+			if alicloudclient.IsPermanentError(err) {
+				result = composed.StopAndForget
+			}
 			return composed.UpdateStatus(state.ObjAsRedisInstance()).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
@@ -47,7 +51,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 					Message: fmt.Sprintf("Failed loading AlicloudRedis: %s", err),
 				}).
 				ErrorLogMessage("Error updating RedisInstance status after failed DescribeInstance").
-				SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
+				SuccessError(result).
 				Run(ctx, state)
 		}
 		// Released means AliCloud has finished deleting the instance; treat it the same as NotFound.
@@ -70,6 +74,19 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 	info, err := state.client.DescribeInstanceByName(ctx, state.ObjAsRedisInstance().Name)
 	if err != nil {
 		logger.Error(err, "Error searching AliCloud r-kvstore instance by name")
+		if alicloudclient.IsPermanentError(err) {
+			kcp := state.ObjAsRedisInstance()
+			return composed.UpdateStatus(kcp).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudcontrolv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisInstance,
+					Message: fmt.Sprintf("Failed loading AlicloudRedis: %s", err),
+				}).
+				ErrorLogMessage("Error updating RedisInstance status after permanent DescribeInstanceByName error").
+				SuccessError(composed.StopAndForget).
+				Run(ctx, state)
+		}
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 	}
 	if info != nil {
