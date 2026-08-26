@@ -12,6 +12,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	alicloudrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/rediscluster"
 	awsrediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/rediscluster"
 	azurerediscluster "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/rediscluster"
 
@@ -27,8 +28,9 @@ type redisClusterReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	awsStateFactory   awsrediscluster.StateFactory
-	azureStateFactory azurerediscluster.StateFactory
+	awsStateFactory      awsrediscluster.StateFactory
+	azureStateFactory    azurerediscluster.StateFactory
+	alicloudStateFactory alicloudrediscluster.StateFactory
 }
 
 func NewRedisClusterReconciler(
@@ -36,12 +38,14 @@ func NewRedisClusterReconciler(
 	focalStateFactory focal.StateFactory,
 	awsStateFactory awsrediscluster.StateFactory,
 	azureStateFactory azurerediscluster.StateFactory,
+	alicloudStateFactory alicloudrediscluster.StateFactory,
 ) RedisClusterReconciler {
 	return &redisClusterReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
+		alicloudStateFactory: alicloudStateFactory,
 	}
 }
 
@@ -72,6 +76,7 @@ func (r *redisClusterReconciler) newAction() composed.Action {
 					nil,
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsrediscluster.New(r.awsStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurerediscluster.New(r.azureStateFactory)),
+					composed.NewCase(statewithscope.AlicloudProviderPredicate, alicloudrediscluster.New(r.alicloudStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

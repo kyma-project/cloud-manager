@@ -1,4 +1,4 @@
-package redisinstance
+package rediscluster
 
 import (
 	"context"
@@ -28,15 +28,15 @@ func waitRedisAvailable(ctx context.Context, st composed.State) (error, context.
 		state.instance = nil
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	default:
-		kcp := state.ObjAsRedisInstance()
+		kcp := state.ObjAsRedisCluster()
 		return composed.UpdateStatus(kcp).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisInstance,
-				Message: fmt.Sprintf("AliCloud r-kvstore instance in unexpected state: %s", state.instance.InstanceStatus),
+				Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisCluster,
+				Message: fmt.Sprintf("AliCloud r-kvstore cluster instance in unexpected state: %s", state.instance.InstanceStatus),
 			}).
-			ErrorLogMessage("Error updating KCP RedisInstance status for unexpected AliCloud state").
+			ErrorLogMessage("Error updating KCP RedisCluster status for unexpected AliCloud state").
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
 			Run(ctx, state)
 	}

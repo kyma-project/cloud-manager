@@ -1,4 +1,4 @@
-package redisinstance
+package rediscluster
 
 import (
 	"context"
@@ -11,9 +11,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// loadRedis fetches the r-kvstore instance state via DescribeInstance.
-// If the KCP RedisInstance has no Status.Id yet, falls back to a name-based
-// search to recover from crash-after-create-before-status-write scenarios.
 func loadRedis(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
@@ -22,41 +19,42 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 		return nil, ctx
 	}
 
-	instanceId := state.ObjAsRedisInstance().Status.Id
+	instanceId := state.ObjAsRedisCluster().Status.Id
 	if instanceId != "" {
 		info, err := state.client.DescribeInstance(ctx, instanceId)
 		if err != nil {
 			if alicloudclient.IsNotFoundErr(err) {
 				// Instance no longer exists on AliCloud - clear the stale ID so the
 				// create path can re-provision (or delete path can skip cleanly).
-				logger.Info("AliCloud r-kvstore instance not found, clearing stale ID", "instanceId", instanceId)
-				state.ObjAsRedisInstance().Status.Id = ""
+				logger.Info("AliCloud r-kvstore cluster not found, clearing stale ID", "instanceId", instanceId)
+				state.ObjAsRedisCluster().Status.Id = ""
 				if updErr := state.UpdateObjStatus(ctx); updErr != nil {
 					return composed.LogErrorAndReturn(updErr,
-						"Error clearing stale AliCloud r-kvstore instance ID",
+						"Error clearing stale AliCloud r-kvstore cluster instance ID",
 						composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 				}
 				return nil, ctx
 			}
-			logger.Error(err, "Error describing AliCloud r-kvstore instance")
-			return composed.UpdateStatus(state.ObjAsRedisInstance()).
+			logger.Error(err, "Error describing AliCloud r-kvstore cluster instance")
+			return composed.UpdateStatus(state.ObjAsRedisCluster()).
 				SetExclusiveConditions(metav1.Condition{
 					Type:    cloudcontrolv1beta1.ConditionTypeError,
 					Status:  metav1.ConditionTrue,
-					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisInstance,
-					Message: fmt.Sprintf("Failed loading AlicloudRedis: %s", err),
+					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisCluster,
+					Message: fmt.Sprintf("Failed loading AlicloudRedisCluster: %s", err),
 				}).
-				ErrorLogMessage("Error updating RedisInstance status after failed DescribeInstance").
+				ErrorLogMessage("Error updating RedisCluster status after failed DescribeInstance").
 				SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
 				Run(ctx, state)
 		}
-		// Released means AliCloud has finished deleting the instance; treat it the same as NotFound.
-		if info != nil && info.InstanceStatus == alicloudclient.InstanceStatusReleased {
-			logger.Info("AliCloud r-kvstore instance is Released, clearing stale ID", "instanceId", instanceId)
-			state.ObjAsRedisInstance().Status.Id = ""
+		// nil means the API returned an empty list (instance gone); Released means the
+		// delete completed but the entry still lingers. Both are effectively NotFound.
+		if info == nil || info.InstanceStatus == alicloudclient.InstanceStatusReleased {
+			logger.Info("AliCloud r-kvstore cluster is gone, clearing stale ID", "instanceId", instanceId)
+			state.ObjAsRedisCluster().Status.Id = ""
 			if updErr := state.UpdateObjStatus(ctx); updErr != nil {
 				return composed.LogErrorAndReturn(updErr,
-					"Error clearing stale AliCloud r-kvstore instance ID after Release",
+					"Error clearing stale AliCloud r-kvstore cluster instance ID after Release",
 					composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 			}
 			return nil, ctx
@@ -67,9 +65,9 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 
 	// No Status.Id yet - search by name to recover a previously created instance
 	// whose ID was not persisted (crash between CreateInstance and status write).
-	info, err := state.client.DescribeInstanceByName(ctx, state.ObjAsRedisInstance().Name)
+	info, err := state.client.DescribeInstanceByName(ctx, state.ObjAsRedisCluster().Name)
 	if err != nil {
-		logger.Error(err, "Error searching AliCloud r-kvstore instance by name")
+		logger.Error(err, "Error searching AliCloud r-kvstore cluster instance by name")
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 	}
 	if info != nil {
@@ -77,15 +75,15 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 		// happens to share the name (possible under eventual consistency during
 		// name reuse after deletion).
 		if state.IpRange() != nil && state.IpRange().Status.VpcId != "" && info.VpcId != state.IpRange().Status.VpcId {
-			logger.Info("Name-matched AliCloud r-kvstore instance belongs to a different VPC, ignoring",
+			logger.Info("Name-matched AliCloud r-kvstore cluster belongs to a different VPC, ignoring",
 				"instanceId", info.InstanceId, "instanceVpc", info.VpcId, "expectedVpc", state.IpRange().Status.VpcId)
 			return nil, ctx
 		}
-		logger.Info("Recovered AliCloud r-kvstore instance by name", "instanceId", info.InstanceId)
-		state.ObjAsRedisInstance().Status.Id = info.InstanceId
+		logger.Info("Recovered AliCloud r-kvstore cluster instance by name", "instanceId", info.InstanceId)
+		state.ObjAsRedisCluster().Status.Id = info.InstanceId
 		if updErr := state.PatchObjStatus(ctx); updErr != nil {
 			return composed.LogErrorAndReturn(updErr,
-				"Error persisting recovered AliCloud r-kvstore instance ID",
+				"Error persisting recovered AliCloud r-kvstore cluster instance ID",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 		}
 		state.instance = info

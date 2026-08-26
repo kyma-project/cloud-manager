@@ -389,12 +389,14 @@ func (s *redisStore) deleteInstance(ctx context.Context, instanceId string) erro
 	if err, ok := s.clusterErrors[instanceId]; ok {
 		return err
 	}
-	if _, ok := s.instances[instanceId]; ok {
-		delete(s.instances, instanceId)
+	// Mirror the real API: a deleted instance lingers as Released before returning 404,
+	// so Released code paths in loadRedis and waitRedisAvailable are exercisable.
+	if e, ok := s.instances[instanceId]; ok {
+		e.InstanceStatus = redisinstance.InstanceStatusReleased
 		return nil
 	}
-	if _, ok := s.clusters[instanceId]; ok {
-		delete(s.clusters, instanceId)
+	if e, ok := s.clusters[instanceId]; ok {
+		e.InstanceStatus = redisinstance.InstanceStatusReleased
 		return nil
 	}
 	return fmt.Errorf("instance %s not found", instanceId)
@@ -484,9 +486,9 @@ func (s *redisStore) describeSecurityIps(_ context.Context, instanceId string) (
 	return "", fmt.Errorf("instance %s not found", instanceId)
 }
 
-// === Cluster-client ops (add/delete shards, absolute target) ================
+// === Cluster-client ops (add/delete shards, delta) ===========================
 
-func (s *redisStore) addShardingNode(ctx context.Context, instanceId string, targetShardCount int32) error {
+func (s *redisStore) addShardingNode(ctx context.Context, instanceId string, countToAdd int32) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -499,15 +501,15 @@ func (s *redisStore) addShardingNode(ctx context.Context, instanceId string, tar
 	if e == nil {
 		return fmt.Errorf("cluster %s not found", instanceId)
 	}
-	if targetShardCount <= e.ShardCount {
-		return fmt.Errorf("target shard count %d must be greater than current %d", targetShardCount, e.ShardCount)
+	if countToAdd <= 0 {
+		return fmt.Errorf("countToAdd must be > 0, got %d", countToAdd)
 	}
-	e.ShardCount = targetShardCount
+	e.ShardCount += countToAdd
 	e.InstanceStatus = redisinstance.InstanceStatusChanging
 	return nil
 }
 
-func (s *redisStore) deleteShardingNode(ctx context.Context, instanceId string, targetShardCount int32) error {
+func (s *redisStore) deleteShardingNode(ctx context.Context, instanceId string, countToRemove int32) error {
 	if isContextCanceled(ctx) {
 		return context.Canceled
 	}
@@ -520,13 +522,13 @@ func (s *redisStore) deleteShardingNode(ctx context.Context, instanceId string, 
 	if e == nil {
 		return fmt.Errorf("cluster %s not found", instanceId)
 	}
-	if targetShardCount >= e.ShardCount {
-		return fmt.Errorf("target shard count %d must be less than current %d", targetShardCount, e.ShardCount)
+	if countToRemove <= 0 {
+		return fmt.Errorf("countToRemove must be > 0, got %d", countToRemove)
 	}
-	if targetShardCount < 1 {
-		return fmt.Errorf("target shard count must be >= 1")
+	if e.ShardCount-countToRemove < 1 {
+		return fmt.Errorf("cannot remove %d shards from cluster with %d shards", countToRemove, e.ShardCount)
 	}
-	e.ShardCount = targetShardCount
+	e.ShardCount -= countToRemove
 	e.InstanceStatus = redisinstance.InstanceStatusChanging
 	return nil
 }

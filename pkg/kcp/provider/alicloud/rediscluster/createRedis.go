@@ -1,4 +1,4 @@
-package redisinstance
+package rediscluster
 
 import (
 	"context"
@@ -14,9 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// createRedis provisions a new r-kvstore instance if one does not yet exist.
-// The password is generated here and stored immediately on Status.AuthString
-// because AliCloud never returns it after CreateInstance (design decision 6).
 func createRedis(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
@@ -25,9 +22,8 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		return nil, ctx
 	}
 
-	kcp := state.ObjAsRedisInstance()
+	kcp := state.ObjAsRedisCluster()
 
-	// Collect candidate vSwitch IDs from all IpRange subnets.
 	var vSwitchIds []string
 	for _, sn := range state.IpRange().Status.Subnets {
 		if sn.Id != "" {
@@ -37,21 +33,20 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	if len(vSwitchIds) == 0 {
 		return composed.LogErrorAndReturn(
 			fmt.Errorf("no vSwitch found in IpRange subnets"),
-			"AliCloud redisinstance IpRange has no vSwitch",
+			"AliCloud rediscluster IpRange has no vSwitch",
 			composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
 	}
 
 	// Generate password before CreateInstance - AliCloud never returns it after.
 	// Persist it before calling CreateInstance so a crash after the API call but
-	// before status write does not lose the password on the next retry (the
-	// idempotency Token returns the same instance; we must not regenerate).
+	// before status write does not lose the password on the next retry.
 	password := kcp.Status.AuthString
 	if password == "" {
 		password = alicloud.GeneratePassword()
 		kcp.Status.AuthString = password
 		if err := state.UpdateObjStatus(ctx); err != nil {
 			return composed.LogErrorAndReturn(err,
-				"Error persisting AliCloud r-kvstore instance auth string before create",
+				"Error persisting AliCloud r-kvstore cluster auth string before create",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 		}
 	}
@@ -60,19 +55,18 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 
 	// Try each vSwitch in turn. Some instance classes are only available in
 	// specific zones; AliCloud returns InvalidvSwitchId when the zone does not
-	// support the requested class. Iterating all subnets lets the reconciler
-	// find a compatible zone without requiring the user to specify one.
+	// support the requested class.
 	var instanceId string
 	var lastErr error
 	allZonesFailed := true
 	for _, vSwitchId := range vSwitchIds {
-		// "v2" suffix rotates tokens away from v1 tokens that omitted ReadOnlyCount.
-		// Different ReadOnlyCount values must not share a token — AliCloud would
-		// return the existing instance without applying the new replica count.
-		tokenInput := fmt.Sprintf("%s%s%s%s%dv2",
+		// Token includes ShardCount and ReplicasPerShard so that different cluster
+		// configurations cannot share an idempotency token.
+		tokenInput := fmt.Sprintf("%s%s%s%s%d%dv4",
 			string(kcp.UID), password,
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
-			kcp.Spec.Instance.Alicloud.ReadOnlyCount,
+			kcp.Spec.Instance.Alicloud.ShardCount,
+			kcp.Spec.Instance.Alicloud.ReplicasPerShard,
 		)
 		// SHA256 is used here as an idempotency token for the AliCloud CreateInstance
 		// API, not for password storage or authentication — false positive for CWE-916.
@@ -85,7 +79,8 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 			VpcId:         state.IpRange().Status.VpcId,
 			VSwitchId:     vSwitchId,
 			Password:      password,
-			ReadOnlyCount: kcp.Spec.Instance.Alicloud.ReadOnlyCount,
+			ShardCount:    kcp.Spec.Instance.Alicloud.ShardCount,
+			ReadOnlyCount: kcp.Spec.Instance.Alicloud.ReplicasPerShard,
 			Token:         tokenHash,
 		}
 		var err error
@@ -97,36 +92,32 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 		}
 		lastErr = err
 		if alicloudclient.IsVSwitchZoneErr(err) {
-			logger.Info("AliCloud r-kvstore: vSwitch zone not supported for instance class, trying next", "vSwitchId", vSwitchId, "instanceClass", kcp.Spec.Instance.Alicloud.InstanceClass)
+			logger.Info("AliCloud r-kvstore cluster: vSwitch zone not supported, trying next", "vSwitchId", vSwitchId, "instanceClass", kcp.Spec.Instance.Alicloud.InstanceClass)
 			continue
 		}
-		// Non-zone error - stop iterating and handle below.
 		allZonesFailed = false
 		break
 	}
 
 	if lastErr != nil {
 		err := lastErr
-		logger.Error(err, "Error creating AliCloud r-kvstore instance")
+		logger.Error(err, "Error creating AliCloud r-kvstore cluster instance")
 		meta.SetStatusCondition(kcp.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
-			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisInstance,
-			Message: fmt.Sprintf("Failed creating AlicloudRedis: %s", err),
+			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisCluster,
+			Message: fmt.Sprintf("Failed creating AlicloudRedisCluster: %s", err),
 		})
 		if updErr := state.UpdateObjStatus(ctx); updErr != nil {
 			return composed.LogErrorAndReturn(updErr,
-				"Error updating RedisInstance status after failed CreateInstance",
+				"Error updating RedisCluster status after failed CreateInstance",
 				composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 		}
-		// When every zone rejected the instance class, don't give up permanently -
-		// the user may add subnets in a compatible zone later.
 		if allZonesFailed {
 			return composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx
 		}
 		if alicloudclient.IsPermanentError(err) {
 			if alicloudclient.IsPasswordErr(err) {
-				// Clear authString so the next reconcile generates a fresh password.
 				kcp.Status.AuthString = ""
 				if updErr := state.UpdateObjStatus(ctx); updErr != nil {
 					logger.Error(updErr, "Error clearing invalid password from status")
@@ -140,7 +131,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	kcp.Status.Id = instanceId
 	if err := state.UpdateObjStatus(ctx); err != nil {
 		return composed.LogErrorAndReturn(err,
-			"Error persisting new AliCloud r-kvstore instance ID",
+			"Error persisting new AliCloud r-kvstore cluster instance ID",
 			composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 
