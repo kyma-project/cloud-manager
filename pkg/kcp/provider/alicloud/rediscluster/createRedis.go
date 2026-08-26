@@ -70,16 +70,14 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	var lastErr error
 	allZonesFailed := true
 	for _, vSwitchId := range vSwitchIds {
-		// "v4" suffix rotates tokens away from v3 tokens that omitted ShardCount
-		// and ReplicasPerShard. Different shard/replica configs must not share a token.
-		tokenInput := fmt.Sprintf("%s%s%s%s%d%dv4",
-			string(kcp.UID), password,
+		// "v5" suffix rotates tokens away from v4 tokens that included password.
+		// Different shard/replica configs must not share a token.
+		tokenInput := fmt.Sprintf("%s%s%s%d%dv5",
+			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
 			kcp.Spec.Instance.Alicloud.ShardCount,
 			kcp.Spec.Instance.Alicloud.ReplicasPerShard,
 		)
-		// SHA256 is used here as an idempotency token for the AliCloud CreateInstance
-		// API, not for password storage or authentication — false positive for CWE-916.
 		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenInput)))[:32] //nolint:gosec
 
 		opts := alicloudclient.CreateInstanceOptions{
