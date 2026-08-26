@@ -113,6 +113,8 @@ func redisTierToInstanceClass(tier cloudresourcesv1beta1.AlicloudRedisClusterTie
 // "redis.logic.sharding.4g.4db.0rodb.8proxy.default".
 // Keep in sync with proxyShardTokensRe in
 // pkg/kcp/provider/alicloud/rediscluster/modifyInstanceClass.go.
+// The prefix check in proxyClassTierKey mirrors alicloudclient.IsProxyClusterClass;
+// if a new proxy prefix is added there, add it here too.
 var skrProxyShardTokensRe = regexp.MustCompile(`\.\d+db\.0rodb\.\d+proxy\.`)
 
 // proxyClassTierKey strips the shard-count and proxy-count tokens from a
