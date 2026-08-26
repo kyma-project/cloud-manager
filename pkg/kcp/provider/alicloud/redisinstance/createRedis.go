@@ -66,16 +66,14 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	var lastErr error
 	allZonesFailed := true
 	for _, vSwitchId := range vSwitchIds {
-		// "v2" suffix rotates tokens away from v1 tokens that omitted ReadOnlyCount.
+		// "v3" suffix rotates tokens away from v2 tokens that included password.
 		// Different ReadOnlyCount values must not share a token — AliCloud would
 		// return the existing instance without applying the new replica count.
-		tokenInput := fmt.Sprintf("%s%s%s%s%dv2",
-			string(kcp.UID), password,
+		tokenInput := fmt.Sprintf("%s%s%s%dv3",
+			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
 			kcp.Spec.Instance.Alicloud.ReadOnlyCount,
 		)
-		// SHA256 is used here as an idempotency token for the AliCloud CreateInstance
-		// API, not for password storage or authentication — false positive for CWE-916.
 		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenInput)))[:32] //nolint:gosec
 
 		opts := alicloudclient.CreateInstanceOptions{
