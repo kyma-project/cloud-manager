@@ -62,6 +62,9 @@ runs:
           - name: gardener-sc-learn
             provider: gcp
             isDefault: true
+          - name: sap-phx-alicloud-dev-cloud-manager
+            provider: alicloud
+            isDefault: true
         networkOwner: gardener
         oidcClientId: $OIDC_CLIENT_ID
         oidcIssuerUrl: $OIDC_ISSUER_URL
@@ -90,6 +93,9 @@ runs:
             OS_APPLICATION_CREDENTIAL_ID: applicationCredentialID
             OS_APPLICATION_CREDENTIAL_NAME: applicationCredentialName
             OS_APPLICATION_CREDENTIAL_SECRET: applicationCredentialSecret
+          cm-e2e-default-alicloud:
+            ALICLOUD_ACCESS_KEY: accessKeyID
+            ALICLOUD_SECRET_KEY: accessKeySecret
         EOF
 
     - name: List directory
