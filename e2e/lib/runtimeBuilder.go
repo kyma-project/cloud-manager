@@ -228,10 +228,11 @@ func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType,
 			},
 			MaxSurge:       new(intstr.FromInt32(3)),
 			MaxUnavailable: new(intstr.FromInt32(0)),
-			Minimum:        3,
-			Maximum:        20,
-			Volume:         vol,
-			Zones:          zones,
+			// Minimum=1/Maximum=3: intentionally small for cost efficiency in e2e; all providers work fine with 1–3 nodes.
+			Minimum: 1,
+			Maximum: 3,
+			Volume:  vol,
+			Zones:   zones,
 		},
 	}
 	return b
@@ -429,14 +430,26 @@ var providerRegions = map[cloudcontrolv1beta1.ProviderType]map[string][]string{
 		},
 	},
 
-	// AliCloud region/zone naming for ap-northeast-1 (Tokyo).
-	// Zones MUST match the alicloud CloudProfile: ap-northeast-1 has 1a/1c/1d (NO 1b).
-	// Builder requires >= 3 zones.
 	cloudcontrolv1beta1.ProviderAlicloud: {
+		"eu-central-1": {
+			"eu-central-1a",
+			"eu-central-1b",
+			"eu-central-1c",
+		},
+		"ap-southeast-1": {
+			"ap-southeast-1a",
+			"ap-southeast-1b",
+			"ap-southeast-1c",
+		},
 		"ap-northeast-1": {
 			"ap-northeast-1a",
+			"ap-northeast-1b",
 			"ap-northeast-1c",
-			"ap-northeast-1d",
+		},
+		"ap-southeast-5": {
+			"ap-southeast-5a",
+			"ap-southeast-5b",
+			"ap-southeast-5c",
 		},
 	},
 }
@@ -446,9 +459,9 @@ var machineTypes = map[cloudcontrolv1beta1.ProviderType][]string{
 	cloudcontrolv1beta1.ProviderGCP:       {"n2-standard-2"},
 	cloudcontrolv1beta1.ProviderAzure:     {"Standard_D2s_v5", "Standard_D4s_v5"},
 	cloudcontrolv1beta1.ProviderOpenStack: {"g_c2_m8"},
-	// Confirm the machine type is offered by your Gardener AliCloud CloudProfile
-	// AND available in the selected zones (ECS types are not offered in every zone).
-	cloudcontrolv1beta1.ProviderAlicloud: {"ecs.c9i.xlarge"},
+	cloudcontrolv1beta1.ProviderAlicloud: {
+		"ecs.c9i.large",
+	},
 }
 
 var volumeTypes = map[cloudcontrolv1beta1.ProviderType]string{

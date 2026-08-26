@@ -1,0 +1,45 @@
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "r-kvstore:AddShardingNode",
+        "r-kvstore:CreateInstance",
+        "r-kvstore:DeleteInstance",
+        "r-kvstore:DeleteShardingNode",
+        "r-kvstore:DescribeInstanceAttribute",
+        "r-kvstore:DescribeInstanceSSL",
+        "r-kvstore:DescribeInstances",
+        "r-kvstore:DescribeSecurityIps",
+        "r-kvstore:ModifyInstanceConfig",
+        "r-kvstore:ModifyInstanceSpec",
+        "r-kvstore:ModifyInstanceSSL",
+        "r-kvstore:ModifySecurityIps",
+        "r-kvstore:ResetAccountPassword",
+        "vpc:AssociateVpcCidrBlock",
+        "vpc:CreateVSwitch",
+        "vpc:CreateVpc",
+        "vpc:DeleteVSwitch",
+        "vpc:DeleteVpc",
+        "vpc:DescribeVpcAttribute",
+        "vpc:DescribeVSwitches",
+        "vpc:DescribeVpcs",
+        "vpc:DescribeZones",
+        "vpc:UnassociateVpcCidrBlock",
+        "nas:CreateAccessGroup",
+        "nas:CreateAccessRule",
+        "nas:CreateFileSystem",
+        "nas:CreateMountTarget",
+        "nas:DeleteAccessGroup",
+        "nas:DeleteFileSystem",
+        "nas:DeleteMountTarget",
+        "nas:DescribeAccessGroups",
+        "nas:DescribeAccessRules",
+        "nas:DescribeFileSystems",
+        "nas:DescribeMountTargets"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

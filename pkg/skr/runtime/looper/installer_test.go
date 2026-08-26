@@ -80,7 +80,6 @@ func TestInstaller(t *testing.T) {
 			//{"azurerwxvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"azurerediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"azureredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
-			// TODO(amr): enable Busola entries once the Busola form is designed for Azure Managed Redis.
 			//{"azuremanagedredis.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"azurevpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"azurevpcdnslink.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
@@ -131,6 +130,8 @@ func TestInstaller(t *testing.T) {
 
 	t.Run("alicloud", func(t *testing.T) {
 		run(context.Background(), t, cloudcontrolv1beta1.ProviderAlicloud, []SkrStatusTestCase{
+			{"alicloudrediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"alicloudredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
 			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			{"alicloudredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
