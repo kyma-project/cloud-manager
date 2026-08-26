@@ -25,8 +25,9 @@ would need.
 You can specify the `storageType` Alibaba Cloud NAS configuration option, but it is optional and defaults to
 `Performance`.
 
-By default, the created PV and PVC have the same name as the AlicloudNfsVolume resource, but you can optionally
-specify their names, labels and annotations if needed. If PV or PVC already exists with a name equal to the one
+By default, the created PVC has the same name as the AlicloudNfsVolume resource, while the created PV is named
+after the resource's `status.id`. You can optionally specify their names, labels and annotations if needed.
+If PV or PVC already exists with a name equal to the one
 being created, the provisioned Alibaba Cloud NAS remains and the AlicloudNfsVolume is put into the `Error` state.
 
 ## Specification <!-- {docsify-ignore} -->
@@ -42,7 +43,7 @@ This table lists the parameters of the given resource together with their descri
 | **capacity** (required)     | quantity            | Maximum capacity of the volume. For example: 1300, 800M, 900Mi, 10G, 100Gi, 1T, 10Ti... To learn more, read about [K8S quantity](https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/quantity/ ':target=_blank') |
 | **storageType**             | string              | The Alibaba Cloud NAS storage type. One of `Performance`, `Capacity`, `Premium`. Defaults to `Performance`. Immutable.                                                                                                              |
 | **volume**                  | object              | The PersistentVolume options. Optional.                                                                                                                                                                                             |
-| **volume.name**             | string              | The PersistentVolume name. Optional. Defaults to the name of the AlicloudNfsVolume resource.                                                                                                                                        |
+| **volume.name**             | string              | The PersistentVolume name. Optional. Defaults to the resource's `status.id`.                                                                                                                                                        |
 | **volume.labels**           | map\[string\]string | The PersistentVolume labels. Optional. Defaults to nil.                                                                                                                                                                             |
 | **volume.annotations**      | map\[string\]string | The PersistentVolume annotations. Optional. Defaults to nil.                                                                                                                                                                        |
 | **volumeClaim**             | object              | The PersistentVolumeClaim options. Optional.                                                                                                                                                                                        |
@@ -54,9 +55,9 @@ This table lists the parameters of the given resource together with their descri
 
 | Parameter                         | Type       | Description                                                                                                                                                                          |
 |-----------------------------------|------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **state** (required)              | string     | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Error`, `Warning`, or `Deleting`.                                                  |
+| **state** (required)              | string     | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Creating`, `Error`, or `Deleting`.                                                 |
+| **id**                            | string     | The unique identifier of the AlicloudNfsVolume. It is also used as the name of the created PersistentVolume.                                                                         |
 | **server**                        | string     | The Alibaba Cloud NAS mount target domain that the created PersistentVolume connects to.                                                                                            |
-| **capacity**                      | quantity   | Provides the combined size of all data on the underlying NAS. This is a dynamic value that changes as volume is used and, therefore, gets updated frequently to reflect the changes. |
 | **conditions**                    | \[\]object | Represents the current state of the CR's conditions.                                                                                                                                |
 | **conditions.lastTransitionTime** | string     | Defines the date of the last condition status change.                                                                                                                               |
 | **conditions.message**            | string     | Provides more details about the condition status change.                                                                                                                            |
@@ -74,7 +75,7 @@ kind: AlicloudNfsVolume
 metadata:
   name: my-vol
 spec:
-  capacity: 10T
+  capacity: 20Gi
 ---
 apiVersion: v1
 kind: Pod

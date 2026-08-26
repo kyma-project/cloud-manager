@@ -27,7 +27,7 @@ You have the Cloud Manager module added.
    metadata:
      name: my-vol
    spec:
-     capacity: 100G
+     capacity: 20G
    EOF
    ```
   
@@ -54,7 +54,7 @@ You have the Cloud Manager module added.
 
    ```console
    NAME       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                    STORAGECLASS
-   {PV_NAME}  100G       RWX            Retain           Bound    {NAMESPACE_NAME}/my-vol               
+   {PV_NAME}  20G        RWX            Retain           Bound    {NAMESPACE_NAME}/my-vol               
    ```
 
    Note the `RWX` access mode, which allows the volume to be readable and writable from multiple workloads, and the `Bound` status, which means the PersistentVolumeClaim claims that this PV has been created.
@@ -69,7 +69,7 @@ You have the Cloud Manager module added.
 
    ```console
    NAME     STATUS   VOLUME     CAPACITY   ACCESS MODES   STORAGECLASS 
-   my-vol   Bound    {PV_NAME}  100G       RWX                         
+   my-vol   Bound    {PV_NAME}  20G        RWX                         
    ```
 
    Similarly to PV, note the `RWX` access mode and the `Bound` status.
