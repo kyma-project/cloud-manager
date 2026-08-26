@@ -165,6 +165,12 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), authSecret).
 				Should(Succeed())
 		})
+
+		By("// cleanup: Delete SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
 	})
 
 	It("Scenario: SKR AlicloudRedisCluster redisTier is changed", func() {
@@ -289,6 +295,12 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", func() {
 				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisCluster).
 				Should(Succeed())
 		})
+
+		By("// cleanup: Delete SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
+				Should(Succeed())
+		})
 	})
 
 	It("Scenario: SKR AlicloudRedisCluster reflects Updating condition from KCP", func() {
@@ -396,6 +408,12 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", func() {
 		By("Then SKR AlicloudRedisCluster does not exist", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisCluster).
+				Should(Succeed())
+		})
+
+		By("// cleanup: Delete SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())
 		})
 	})
@@ -520,6 +538,12 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", func() {
 		By("Then SKR AlicloudRedisCluster does not exist", func() {
 			Eventually(IsDeleted).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), alicloudRedisCluster).
+				Should(Succeed())
+		})
+
+		By("// cleanup: Delete SKR IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), skrIpRange).
 				Should(Succeed())
 		})
 	})
