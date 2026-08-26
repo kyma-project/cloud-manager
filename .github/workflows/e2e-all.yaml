@@ -20,6 +20,11 @@ on:
         required: false
         default: true
         description: GCP
+      alicloud:
+        type: boolean
+        required: false
+        default: true
+        description: AliCloud
       tags:
         type: string
         required: false
@@ -72,9 +77,21 @@ jobs:
       feature_flags: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
       debug: ${{ inputs.debug || true }}
 
+  alicloud:
+    if: ${{ github.event_name == 'schedule' || inputs.alicloud }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/e2e-tests.yaml
+    secrets: inherit
+    with:
+      provider: alicloud
+      tags: ${{ inputs.tags }}
+      feature_flags: ${{ inputs.feature_flags || './pkg/feature/ff_edge.yaml' }}
+      debug: ${{ inputs.debug || true }}
+
   notify:
     name: Notify Slack
-    needs: [aws, azure, gcp]
+    needs: [aws, azure, gcp, alicloud]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -117,6 +134,7 @@ jobs:
           echo "aws_dur=$(compute_duration 'test aws' '${{ needs.aws.result }}')" >> "$GITHUB_OUTPUT"
           echo "azure_dur=$(compute_duration 'test azure' '${{ needs.azure.result }}')" >> "$GITHUB_OUTPUT"
           echo "gcp_dur=$(compute_duration 'test gcp' '${{ needs.gcp.result }}')" >> "$GITHUB_OUTPUT"
+          echo "alicloud_dur=$(compute_duration 'test alicloud' '${{ needs.alicloud.result }}')" >> "$GITHUB_OUTPUT"
 
       - name: Format start time
         id: start_time
@@ -131,4 +149,4 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "CloudManager E2E test run https://github.com/kyma-project/cloud-manager/actions/runs/${{ github.run_id }} started at ${{ steps.start_time.outputs.value }}\n* AWS ${{ steps.durations.outputs.aws_dur }} ${{ needs.aws.result == 'success' && ':white_check_mark:' || needs.aws.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* Azure ${{ steps.durations.outputs.azure_dur }} ${{ needs.azure.result == 'success' && ':white_check_mark:' || needs.azure.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* GCP ${{ steps.durations.outputs.gcp_dur }} ${{ needs.gcp.result == 'success' && ':white_check_mark:' || needs.gcp.result == 'skipped' && ':white_check_mark:' || ':x:' }}"
+            text: "CloudManager E2E test run https://github.com/kyma-project/cloud-manager/actions/runs/${{ github.run_id }} started at ${{ steps.start_time.outputs.value }}\n* AWS ${{ steps.durations.outputs.aws_dur }} ${{ needs.aws.result == 'success' && ':white_check_mark:' || needs.aws.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* Azure ${{ steps.durations.outputs.azure_dur }} ${{ needs.azure.result == 'success' && ':white_check_mark:' || needs.azure.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* GCP ${{ steps.durations.outputs.gcp_dur }} ${{ needs.gcp.result == 'success' && ':white_check_mark:' || needs.gcp.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* AliCloud ${{ steps.durations.outputs.alicloud_dur }} ${{ needs.alicloud.result == 'success' && ':white_check_mark:' || needs.alicloud.result == 'skipped' && ':white_check_mark:' || ':x:' }}"

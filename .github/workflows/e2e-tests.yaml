@@ -21,6 +21,7 @@ on:
           - aws
           - azure
           - gcp
+          - alicloud
         description: Cloud provider
       tags:
         type: string
