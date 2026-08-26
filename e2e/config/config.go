@@ -70,9 +70,11 @@ func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byt
 		return fmt.Errorf("error getting gardener raw client config: %w", err)
 	}
 
-	if len(rawConfig.CurrentContext) > 0 {
-		if rawConfig.Contexts[rawConfig.CurrentContext].Namespace != "" {
-			c.GardenNamespace = rawConfig.Contexts[rawConfig.CurrentContext].Namespace
+	if c.GardenNamespace == "" {
+		if len(rawConfig.CurrentContext) > 0 {
+			if rawConfig.Contexts[rawConfig.CurrentContext].Namespace != "" {
+				c.GardenNamespace = rawConfig.Contexts[rawConfig.CurrentContext].Namespace
+			}
 		}
 	}
 	if c.GardenNamespace == "" {
@@ -80,6 +82,39 @@ func (c *ConfigType) SetGardenNamespaceFromKubeconfigBytes(gardenKubeBytes []byt
 	}
 
 	return nil
+}
+
+// PatchKubeconfigWithNamespace returns kubeconfig bytes with the current context's namespace
+// replaced by c.GardenNamespace. This ensures that CM reads the correct garden namespace
+// from the gardener-credentials secret regardless of what the original kubeconfig context specifies.
+func (c *ConfigType) PatchKubeconfigWithNamespace(gardenKubeBytes []byte) ([]byte, error) {
+	if c.GardenNamespace == "" {
+		return gardenKubeBytes, nil
+	}
+
+	oc, err := clientcmd.NewClientConfigFromBytes(gardenKubeBytes)
+	if err != nil {
+		return nil, fmt.Errorf("error creating gardener client config: %w", err)
+	}
+
+	rawConfig, err := oc.RawConfig()
+	if err != nil {
+		return nil, fmt.Errorf("error getting gardener raw client config: %w", err)
+	}
+
+	if len(rawConfig.CurrentContext) > 0 {
+		if ctx, ok := rawConfig.Contexts[rawConfig.CurrentContext]; ok {
+			ctx.Namespace = c.GardenNamespace
+			rawConfig.Contexts[rawConfig.CurrentContext] = ctx
+		}
+	}
+
+	patched, err := clientcmd.Write(rawConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error writing patched kubeconfig: %w", err)
+	}
+
+	return patched, nil
 }
 
 func (c *ConfigType) CreateGardenClient() (client.Client, error) {

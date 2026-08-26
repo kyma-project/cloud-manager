@@ -75,6 +75,12 @@ func InitializeKcp(ctx context.Context, kcpClient client.Client, config *e2econf
 		return fmt.Errorf("failed to set garden kubeconfig: %w", err)
 	}
 
+	// Patch the kubeconfig so CM reads the correct garden namespace from the secret
+	kubeBytes, err = config.PatchKubeconfigWithNamespace(kubeBytes)
+	if err != nil {
+		return fmt.Errorf("failed to patch garden kubeconfig namespace: %w", err)
+	}
+
 	secret = &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: config.KcpNamespace,
