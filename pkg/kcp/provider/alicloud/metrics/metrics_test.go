@@ -3,6 +3,7 @@ package metrics
 import (
 	"context"
 	"errors"
+	"maps"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -89,9 +90,7 @@ func TestMethodLabel(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			request, err := http.NewRequest(tc.httpMethod, tc.url, nil)
 			assert.NoError(t, err)
-			for key, values := range tc.header {
-				request.Header[key] = values
-			}
+			maps.Copy(request.Header, tc.header)
 
 			assert.Equal(t, tc.expectedLabel, methodLabel(request, request.URL.Host))
 		})
