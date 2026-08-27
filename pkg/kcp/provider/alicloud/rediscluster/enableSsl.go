@@ -9,13 +9,8 @@ import (
 
 // enableSsl ensures that SSL/TLS encryption is enabled on the AliCloud
 // r-kvstore cluster. AliCloud instances are created with SSL disabled by
-// default; this action calls ModifyInstanceSSL and requeues — the instance
-// transitions to SSLModifying, and waitRedisAvailable (next pipeline step)
-// gates further progress until it returns to Normal.
-//
-// Note: the AliCloud CreateInstance API has no SSL parameter — SSL can only
-// be toggled post-creation via ModifyInstanceSSL. The brief window between
-// instance creation and this action completing is therefore unavoidable.
+// default; this action enables it and waits for the async operation to
+// complete by requeueing when the instance is not yet in Normal status.
 func enableSsl(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 

@@ -12,6 +12,8 @@ import (
 // proxyShardTokensRe matches the shard-count and proxy-count tokens embedded in
 // proxy class names, e.g. ".4db.0rodb.8proxy." in
 // "redis.logic.sharding.4g.4db.0rodb.8proxy.default".
+// Keep in sync with skrProxyShardTokensRe in
+// pkg/skr/alicloudrediscluster/util.go.
 var proxyShardTokensRe = regexp.MustCompile(`\.\d+db\.0rodb\.\d+proxy\.`)
 
 // proxyClassTierKey returns a canonical key for a proxy class that omits the
