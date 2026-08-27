@@ -6,6 +6,7 @@ import (
 
 	nfsinstancetypes "github.com/kyma-project/cloud-manager/pkg/kcp/nfsinstance/types"
 	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
+	alicloudmetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/metrics"
 	alicloudnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance/client"
 )
 
@@ -39,6 +40,8 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState nfsinstanc
 	accessKeyId := alicloudconfig.AlicloudConfig.AccessKeyId
 	accessKeySecret := alicloudconfig.AlicloudConfig.AccessKeySecret
 	region := nfsInstanceState.Scope().Spec.Region
+
+	ctx = alicloudmetrics.AccountIdIntoContext(ctx, alicloudmetrics.AccountIdFromScope(nfsInstanceState.Scope()))
 
 	c, err := f.clientProvider(ctx, region, accessKeyId, accessKeySecret)
 	if err != nil {

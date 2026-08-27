@@ -8,6 +8,7 @@ import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	"github.com/alibabacloud-go/tea/tea"
 	vpc "github.com/alibabacloud-go/vpc-20160428/v6/client"
+	alicloudmetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/metrics"
 )
 
 type VSwitchInfo struct {
@@ -54,6 +55,7 @@ func NewClientProvider() ClientProvider {
 			RegionId:        new(region),
 		}
 		config.Endpoint = new(fmt.Sprintf("vpc.%s.aliyuncs.com", region))
+		config.HttpClient = alicloudmetrics.NewMetricsHTTPClient(region, alicloudmetrics.AccountIdFromContext(ctx))
 
 		vpcClient, err := vpc.NewClient(config)
 		if err != nil {

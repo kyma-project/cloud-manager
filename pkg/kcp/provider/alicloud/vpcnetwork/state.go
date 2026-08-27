@@ -7,6 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
+	alicloudmetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/metrics"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
 	vpcnetworktypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork/types"
 )
@@ -39,6 +40,8 @@ func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.S
 	logger := composed.LoggerFromCtx(ctx)
 	logger = logger.WithValues("alicloudRegion", region)
 	ctx = composed.LoggerIntoCtx(ctx, logger)
+
+	ctx = alicloudmetrics.AccountIdIntoContext(ctx, alicloudmetrics.AccountIdFromSubscription(baseState.Subscription()))
 
 	c, err := f.clientProvider(ctx, region, accessKeyId, accessKeySecret)
 	if err != nil {
