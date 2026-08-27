@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	CloudProviderAWS   = "aws"
-	CloudProviderGCP   = "gcp"
-	CloudProviderAzure = "azure"
+	CloudProviderAWS      = "aws"
+	CloudProviderGCP      = "gcp"
+	CloudProviderAzure    = "azure"
+	CloudProviderAliCloud = "alicloud"
 )
 
 var (

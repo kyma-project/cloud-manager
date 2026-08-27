@@ -7,6 +7,7 @@ import (
 	iprangetypes "github.com/kyma-project/cloud-manager/pkg/kcp/iprange/types"
 	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
+	alicloudmetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/metrics"
 )
 
 type State struct {
@@ -38,6 +39,8 @@ func (f *stateFactory) NewState(ctx context.Context, ipRangeState iprangetypes.S
 	accessKeyId := alicloudconfig.AlicloudConfig.AccessKeyId
 	accessKeySecret := alicloudconfig.AlicloudConfig.AccessKeySecret
 	region := ipRangeState.Scope().Spec.Region
+
+	ctx = alicloudmetrics.AccountIdIntoContext(ctx, alicloudmetrics.AccountIdFromScope(ipRangeState.Scope()))
 
 	c, err := f.clientProvider(ctx, region, accessKeyId, accessKeySecret)
 	if err != nil {

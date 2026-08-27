@@ -8,6 +8,7 @@ import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	nas "github.com/alibabacloud-go/nas-20170626/v3/client"
 	"github.com/alibabacloud-go/tea/tea"
+	alicloudmetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/metrics"
 )
 
 // FileSystemInfo is a provider-agnostic view of an AliCloud NAS file system.
@@ -71,6 +72,7 @@ func NewClientProvider() ClientProvider {
 			RegionId:        new(region),
 		}
 		config.Endpoint = new(fmt.Sprintf("nas.%s.aliyuncs.com", region))
+		config.HttpClient = alicloudmetrics.NewMetricsHTTPClient(region, alicloudmetrics.AccountIdFromContext(ctx))
 
 		nasClient, err := nas.NewClient(config)
 		if err != nil {
