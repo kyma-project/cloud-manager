@@ -14,16 +14,16 @@ func TestRedisTierToInstanceClassAndReadOnlyCount(t *testing.T) {
 		expectedReadOnlyCount int32
 		expectError           bool
 	}{
-		{cloudresourcesv1beta1.AlicloudRedisTierS1, "redis.master.small.cloud", 0, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierS2, "redis.master.mid.cloud", 0, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierS3, "redis.master.large.cloud", 0, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierS4, "redis.master.2xlarge.cloud", 0, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierS5, "redis.master.4xlarge.cloud", 0, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP1, "redis.master.large.cloud", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP2, "redis.master.2xlarge.cloud", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP3, "redis.master.4xlarge.cloud", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP4, "redis.master.8xlarge.cloud", 1, false},
-		{cloudresourcesv1beta1.AlicloudRedisTierP5, "redis.master.16xlarge.cloud", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierS1, "tair.rdb.1g", 0, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierS2, "tair.rdb.2g", 0, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierS3, "tair.rdb.4g", 0, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierS4, "tair.rdb.8g", 0, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierS5, "tair.rdb.16g", 0, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP1, "tair.rdb.4g", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP2, "tair.rdb.8g", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP3, "tair.rdb.16g", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP4, "tair.rdb.32g", 1, false},
+		{cloudresourcesv1beta1.AlicloudRedisTierP5, "tair.rdb.64g", 1, false},
 		{"unknown", "", 0, true},
 	}
 
@@ -62,8 +62,8 @@ func TestPTiersUseReadOnlyReplica(t *testing.T) {
 		assert.NoError(t, err)
 		pClass, pCount, err := redisTierToInstanceClassAndReadOnlyCount(pTiers[i])
 		assert.NoError(t, err)
-		assert.Contains(t, sClass, "redis.master.", "S%d should use redis.master.* cloud-disk class", i+1)
-		assert.Contains(t, pClass, "redis.master.", "P%d should use redis.master.* cloud-disk class", i+1)
+		assert.Contains(t, sClass, "tair.rdb.", "S%d should use tair.rdb.* cloud-disk class", i+1)
+		assert.Contains(t, pClass, "tair.rdb.", "P%d should use tair.rdb.* cloud-disk class", i+1)
 		assert.Equal(t, int32(0), sCount, "S%d should have readOnlyCount=0", i+1)
 		assert.Equal(t, int32(1), pCount, "P%d should have readOnlyCount=1 (read replica)", i+1)
 	}

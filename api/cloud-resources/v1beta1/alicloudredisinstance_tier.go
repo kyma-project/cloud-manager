@@ -1,24 +1,24 @@
 package v1beta1
 
 // AlicloudRedisTier defines the Kyma service tier for an AlicloudRedisInstance.
-// All classes use the cloud-disk family (redis.master.*.cloud) which supports
+// All classes use the Tair cloud-disk family (tair.rdb.*g) which supports
 // engine versions 5.0, 6.0, and 7.0.
 //
 // The `stand` (4 GB) AliCloud class has no cross-provider equivalent and is
 // skipped so that S3-S5 align with GCP/AWS/Azure baselines:
 //
-//	S1 →   1 GB  redis.master.small.cloud
-//	S2 →   2 GB  redis.master.mid.cloud
-//	S3 →   8 GB  redis.master.large.cloud
-//	S4 →  16 GB  redis.master.2xlarge.cloud
-//	S5 →  32 GB  redis.master.4xlarge.cloud
+//	S1 →   1 GB  tair.rdb.1g
+//	S2 →   2 GB  tair.rdb.2g
+//	S3 →   4 GB  tair.rdb.4g
+//	S4 →   8 GB  tair.rdb.8g
+//	S5 →  16 GB  tair.rdb.16g
 //	             standard HA (master+replica), no read-only replica
 //
-//	P1 →   8 GB  redis.master.large.cloud
-//	P2 →  16 GB  redis.master.2xlarge.cloud
-//	P3 →  32 GB  redis.master.4xlarge.cloud
-//	P4 →  64 GB  redis.master.8xlarge.cloud
-//	P5 → 128 GB  redis.master.16xlarge.cloud
+//	P1 →   4 GB  tair.rdb.4g
+//	P2 →   8 GB  tair.rdb.8g
+//	P3 →  16 GB  tair.rdb.16g
+//	P4 →  32 GB  tair.rdb.32g
+//	P5 →  64 GB  tair.rdb.64g
 //	             standard HA + 1 read-only replica
 //
 // Only the capacity number is mutable; the service letter (S↔P) is immutable
