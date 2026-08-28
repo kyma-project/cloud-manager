@@ -19,8 +19,6 @@ Feature: AlicloudRedisInstance feature
       spec:
         redisTier: S1
         engineVersion: "7.0"
-        parameters:
-          maxmemory-policy: volatile-lru
       """
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
