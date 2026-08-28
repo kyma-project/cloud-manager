@@ -105,7 +105,7 @@ var alicloudRedisClusterTierMemoryGbMap = map[cloudresourcesv1beta1.AlicloudRedi
 	cloudresourcesv1beta1.AlicloudRedisClusterTierC7: 16,
 }
 
-func redisTierToInstanceClass(tier cloudresourcesv1beta1.AlicloudRedisClusterTier, _ int32) (string, error) {
+func redisTierToInstanceClass(tier cloudresourcesv1beta1.AlicloudRedisClusterTier) (string, error) {
 	class, exists := alicloudRedisClusterTierClassMap[tier]
 	if !exists {
 		return "", errors.New("unknown redis cluster tier")

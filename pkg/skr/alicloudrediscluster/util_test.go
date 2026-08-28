@@ -23,7 +23,7 @@ func TestRedisTierToInstanceClass(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(string(tt.tier), func(t *testing.T) {
-			instanceClass, err := redisTierToInstanceClass(tt.tier, 0)
+			instanceClass, err := redisTierToInstanceClass(tt.tier)
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {
@@ -47,7 +47,7 @@ func TestClusterTiersAreOrdered(t *testing.T) {
 	}
 
 	for _, tc := range expected {
-		got, err := redisTierToInstanceClass(tc.tier, 0)
+		got, err := redisTierToInstanceClass(tc.tier)
 		assert.NoError(t, err)
 		assert.Equal(t, tc.class, got, "tier %s", tc.tier)
 	}
