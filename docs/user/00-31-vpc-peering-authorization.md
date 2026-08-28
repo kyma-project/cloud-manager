@@ -10,10 +10,11 @@ For cross-account access in Amazon Web Services, Cloud Manager uses `AssumeRole`
 
 Use the following table to identify the Cloud Manager principal. Then, perform the required actions.
 
-| BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Principal                                      |
-|------------------------------------|----------------------------------------|--------------------------------------------------------------|
-| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | `arn:aws:iam::194230256199:user/cloud-manager-peering-stage` |
-| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `arn:aws:iam::194230256199:user/cloud-manager-peering-prod`  |
+| BTP Cockpit URL                      | Kyma Dashboard URL                     | Cloud Manager Principal                                           |
+|--------------------------------------|----------------------------------------|-------------------------------------------------------------------|
+| https://canary.cockpit.btp.int.sap   | https://dashboard.stage.kyma.cloud.sap | `arn:aws:iam::194230256199:user/cloud-manager-peering-stage`      |
+| https://emea.cockpit.btp.cloud.sap   | https://dashboard.kyma.cloud.sap       | `arn:aws:iam::194230256199:user/cloud-manager-peering-prod`       |
+| https://cockpit.canary.scp.sapns2.us |                                        | `arn:aws-us-gov:iam::306124193223:user/cloud-manager-vpc-peering` |
 <!-- The stage landscape is visible only in the Internal DRAFT version of Help Portal docs. The stage landscape is not part of the Cloud Production version of Help Portal docs -->
 
 1. Create a new role named **CloudManagerPeeringRole** with a trust policy that allows the Cloud Manager principal to assume the role:
