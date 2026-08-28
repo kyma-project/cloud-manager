@@ -48,7 +48,7 @@ createPolicy() {
     local versions
     versions=$(aliyun ram ListPolicyVersions --PolicyType Custom --PolicyName "$policy_name" \
       | jq -r '.PolicyVersions.PolicyVersion[] | select(.IsDefaultVersion == false) | .VersionId' \
-      | sort | awk 'NR<=length-3')
+      | sort | awk '{l[NR]=$0} END{for(i=1;i<=NR-3;i++) print l[i]}')
     for v in $versions; do
       log "Deleting old policy version $v..."
       aliyun ram DeletePolicyVersion --PolicyName "$policy_name" --VersionId "$v" > /dev/null
