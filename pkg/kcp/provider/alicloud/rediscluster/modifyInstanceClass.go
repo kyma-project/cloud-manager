@@ -3,6 +3,7 @@ package rediscluster
 import (
 	"context"
 	"regexp"
+	"strings"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	alicloudclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
@@ -27,6 +28,20 @@ func proxyClassTierKey(class string) string {
 	return proxyShardTokensRe.ReplaceAllLiteralString(class, ".<N>db.0rodb.<N>proxy.")
 }
 
+// ceClusterClassKey normalises cloud-native cluster class names so that input
+// aliases (redis.shard.*.ce) compare equal to the canonical name AliCloud
+// returns in DescribeInstanceAttribute (redis.cluster.sharding.common.ce).
+// ModifyInstanceSpec accepts the aliases and changes the per-shard memory, but
+// the instance always reports the single canonical name — without this
+// normalisation the drift check would always fire and fail with
+// InstanceClassDoesNotChange.
+func ceClusterClassKey(class string) string {
+	if strings.HasPrefix(class, "redis.shard.") && strings.HasSuffix(class, ".ce") {
+		return "redis.cluster.sharding.common.ce"
+	}
+	return class
+}
+
 // modifyInstanceClass issues ModifyInstanceSpec if the desired InstanceClass
 // drifts from the observed state in a way that requires an API call.
 //
@@ -37,9 +52,11 @@ func proxyClassTierKey(class string) string {
 // actual shard count change is handled exclusively by modifyShardCount. Only
 // tier-level drift (different memory size) warrants a ModifyInstanceSpec call.
 //
-// The replica-drift guard uses the observed class (state.instance.InstanceClass)
-// rather than the desired class because the instance may still be running on the
-// old (proxy) class during an in-flight tier change.
+// For cloud-native classes (redis.shard.*.ce), AliCloud resolves all size
+// aliases to a single canonical name (redis.cluster.sharding.common.ce) in
+// DescribeInstanceAttribute. ceClusterClassKey normalises both sides so that
+// the per-size aliases compare equal to the resolved name unless the desired
+// tier genuinely differs.
 func modifyInstanceClass(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.instance == nil {
@@ -53,13 +70,12 @@ func modifyInstanceClass(ctx context.Context, st composed.State) (error, context
 	observedClass := state.instance.InstanceClass
 	desiredReplicas := kcp.Spec.Instance.Alicloud.ReplicasPerShard
 
-	// For proxy classes, compare tier keys (strip the shard-count token).
-	// A difference in the embedded shard count alone does not need ModifyInstanceSpec;
-	// modifyShardCount handles it via AddShardingNode/DeleteShardingNode.
-	classDrift := desiredClass != "" && proxyClassTierKey(desiredClass) != proxyClassTierKey(observedClass)
+	// Normalise both sides: strip proxy shard-count tokens, and map ce-cluster
+	// aliases to the single canonical resolved name.
+	classDrift := desiredClass != "" &&
+		ceClusterClassKey(proxyClassTierKey(desiredClass)) != ceClusterClassKey(proxyClassTierKey(observedClass))
 
-	// Use the observed class to decide whether replicas are tunable: the instance
-	// may still be on its old (proxy) class if a tier change is in progress.
+	// Use the observed class to decide whether replicas are tunable.
 	replicasDrift := !alicloudclient.IsProxyClusterClass(observedClass) &&
 		!alicloudclient.IsReadOnlyCountUnsupported(observedClass) &&
 		desiredReplicas != state.instance.ReadOnlyCount

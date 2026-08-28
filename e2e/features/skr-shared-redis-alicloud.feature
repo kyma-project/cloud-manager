@@ -18,7 +18,7 @@ Feature: AlicloudRedisInstance feature
       kind: AlicloudRedisInstance
       spec:
         redisTier: S1
-        engineVersion: "5.0"
+        engineVersion: "7.0"
         parameters:
           maxmemory-policy: volatile-lru
       """

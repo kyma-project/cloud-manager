@@ -2,9 +2,7 @@ package alicloudrediscluster
 
 import (
 	"errors"
-	"fmt"
 	"maps"
-	"regexp"
 	"strings"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -86,44 +84,31 @@ func parseAuthSecretExtraData(extraDataTemplates map[string]string, authSecretBa
 	return util.ParseTemplatesMapToBytesMap(extraDataTemplates, baseDataStringMap)
 }
 
-// alicloudRedisClusterTierMemoryGbMap maps each tier to its per-shard memory in GB.
-// All AliCloud international regions use proxy-based sharding
-// (redis.logic.sharding.*). The instance class is constructed dynamically in
-// redisTierToInstanceClass because the proxy count is encoded in the class name
-// alongside the shard count.
-var alicloudRedisClusterTierMemoryGbMap = map[cloudresourcesv1beta1.AlicloudRedisClusterTier]int32{
-	cloudresourcesv1beta1.AlicloudRedisClusterTierC3: 4,
-	cloudresourcesv1beta1.AlicloudRedisClusterTierC4: 8,
-	cloudresourcesv1beta1.AlicloudRedisClusterTierC5: 16,
-	cloudresourcesv1beta1.AlicloudRedisClusterTierC6: 32,
-	cloudresourcesv1beta1.AlicloudRedisClusterTierC7: 64,
+// alicloudRedisClusterTierClassMap maps each tier to its redis.shard.*.ce class.
+// redis.shard.*.ce is the cloud-native cluster family supporting engine 7.0.
+// ShardCount is passed separately — it is not encoded in the class name.
+// Per-shard memory: small=1GB, mid=2GB, large=4GB, 2xlarge=8GB, 4xlarge=16GB.
+var alicloudRedisClusterTierClassMap = map[cloudresourcesv1beta1.AlicloudRedisClusterTier]string{
+	cloudresourcesv1beta1.AlicloudRedisClusterTierC3: "redis.shard.small.ce",
+	cloudresourcesv1beta1.AlicloudRedisClusterTierC4: "redis.shard.mid.ce",
+	cloudresourcesv1beta1.AlicloudRedisClusterTierC5: "redis.shard.large.ce",
+	cloudresourcesv1beta1.AlicloudRedisClusterTierC6: "redis.shard.2xlarge.ce",
+	cloudresourcesv1beta1.AlicloudRedisClusterTierC7: "redis.shard.4xlarge.ce",
 }
 
-func redisTierToInstanceClass(tier cloudresourcesv1beta1.AlicloudRedisClusterTier, shardCount int32) (string, error) {
-	memGb, exists := alicloudRedisClusterTierMemoryGbMap[tier]
+// alicloudRedisClusterTierMemoryGbMap keeps per-shard memory for SKR status/display purposes.
+var alicloudRedisClusterTierMemoryGbMap = map[cloudresourcesv1beta1.AlicloudRedisClusterTier]int32{
+	cloudresourcesv1beta1.AlicloudRedisClusterTierC3: 1,
+	cloudresourcesv1beta1.AlicloudRedisClusterTierC4: 2,
+	cloudresourcesv1beta1.AlicloudRedisClusterTierC5: 4,
+	cloudresourcesv1beta1.AlicloudRedisClusterTierC6: 8,
+	cloudresourcesv1beta1.AlicloudRedisClusterTierC7: 16,
+}
+
+func redisTierToInstanceClass(tier cloudresourcesv1beta1.AlicloudRedisClusterTier, _ int32) (string, error) {
+	class, exists := alicloudRedisClusterTierClassMap[tier]
 	if !exists {
 		return "", errors.New("unknown redis cluster tier")
 	}
-	proxyCount := max(shardCount, 4)
-	return fmt.Sprintf("redis.logic.sharding.%dg.%ddb.0rodb.%dproxy.default", memGb, shardCount, proxyCount), nil
-}
-
-// skrProxyShardTokensRe matches the shard-count and proxy-count tokens in
-// proxy class names, e.g. ".4db.0rodb.8proxy." in
-// "redis.logic.sharding.4g.4db.0rodb.8proxy.default".
-// Keep in sync with proxyShardTokensRe in
-// pkg/kcp/provider/alicloud/rediscluster/modifyInstanceClass.go.
-// The prefix check in proxyClassTierKey mirrors alicloudclient.IsProxyClusterClass;
-// if a new proxy prefix is added there, add it here too.
-var skrProxyShardTokensRe = regexp.MustCompile(`\.\d+db\.0rodb\.\d+proxy\.`)
-
-// proxyClassTierKey strips the shard-count and proxy-count tokens from a
-// proxy class name so that classes that differ only in shardCount compare as
-// equal. Non-proxy class strings are returned unchanged.
-func proxyClassTierKey(class string) string {
-	if !strings.HasPrefix(class, "redis.logic.sharding.") &&
-		!strings.HasPrefix(class, "redis.amber.logic.sharding.") {
-		return class
-	}
-	return skrProxyShardTokensRe.ReplaceAllLiteralString(class, ".<N>db.0rodb.<N>proxy.")
+	return class, nil
 }
