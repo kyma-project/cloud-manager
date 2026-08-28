@@ -17,6 +17,7 @@ func TestRedisTierToInstanceClass(t *testing.T) {
 		{cloudresourcesv1beta1.AlicloudRedisClusterTierC4, "redis.shard.mid.ce", false},
 		{cloudresourcesv1beta1.AlicloudRedisClusterTierC5, "redis.shard.large.ce", false},
 		{cloudresourcesv1beta1.AlicloudRedisClusterTierC6, "redis.shard.2xlarge.ce", false},
+		{cloudresourcesv1beta1.AlicloudRedisClusterTierC7, "redis.shard.4xlarge.ce", false},
 		{"unknown", "", true},
 	}
 

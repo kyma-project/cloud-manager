@@ -21,8 +21,6 @@ Feature: AlicloudRedisCluster feature
         shardCount: 4
         replicasPerShard: 0
         engineVersion: "7.0"
-        parameters:
-          maxmemory-policy: volatile-lru
       """
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
