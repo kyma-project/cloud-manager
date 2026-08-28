@@ -87,7 +87,7 @@ func (s *State) GetAuthSecretData() map[string][]byte {
 func (s *State) ShouldModifyKcp() bool {
 	alicloudRedisCluster := s.ObjAsAlicloudRedisCluster()
 
-	instanceClass, err := redisTierToInstanceClass(alicloudRedisCluster.Spec.RedisTier, alicloudRedisCluster.Spec.ShardCount)
+	instanceClass, err := redisTierToInstanceClass(alicloudRedisCluster.Spec.RedisTier)
 	if err != nil {
 		// Unknown tier — trigger a KCP modify so the reconciler surfaces the error
 		// rather than silently skipping the drift check.
