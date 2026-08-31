@@ -12,7 +12,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -123,10 +122,8 @@ func CreateKymaCR(ctx context.Context, infra testinfra.Infra, kymaCR *unstructur
 	// Kubeconfig secret
 	{
 		secret := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: kymaCR.GetNamespace(),
-				Name:      fmt.Sprintf("kubeconfig-%s", kymaCR.GetName()),
-			},
+			Namespace: kymaCR.GetNamespace(),
+			Name:      fmt.Sprintf("kubeconfig-%s", kymaCR.GetName()),
 		}
 		err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(secret), secret)
 		if client.IgnoreNotFound(err) != nil {

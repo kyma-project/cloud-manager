@@ -147,15 +147,11 @@ func (in *SapNfsVolumeSnapshotRestore) SpecificToProviders() []string {
 
 func (in *SapNfsVolumeSnapshotRestore) CloneForPatchStatus() client.Object {
 	result := &SapNfsVolumeSnapshotRestore{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "SapNfsVolumeSnapshotRestore",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "SapNfsVolumeSnapshotRestore",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 	if result.Status.Conditions == nil {
 		result.Status.Conditions = []metav1.Condition{}

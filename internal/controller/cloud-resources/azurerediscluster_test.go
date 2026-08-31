@@ -29,8 +29,8 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		tier := cloudresourcesv1beta1.AzureRedisTierC4
 		var shardCount int32 = 2
 		var replicaCount int32 = 4
-		azureRedisClusterRedisConfigs := cloudresourcesv1beta1.RedisClusterAzureConfigs{}
-		azureRedisClusterRedisConfigs.MaxClients = "5"
+		azureRedisClusterRedisConfigs := cloudresourcesv1beta1.RedisClusterAzureConfigs{
+			MaxClients: "5"}
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 		skriprange.Ignore.AddName("default")
@@ -222,8 +222,8 @@ var _ = Describe("Feature: SKR AzureRedisCluster", func() {
 		azureRedisCluster := &cloudresourcesv1beta1.AzureRedisCluster{}
 		redisVersion := "6.0"
 		tier := cloudresourcesv1beta1.AzureRedisTierC4
-		azureRedisClusterRedisConfigs := cloudresourcesv1beta1.RedisClusterAzureConfigs{}
-		azureRedisClusterRedisConfigs.MaxClients = "5"
+		azureRedisClusterRedisConfigs := cloudresourcesv1beta1.RedisClusterAzureConfigs{
+			MaxClients: "5"}
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 		skriprange.Ignore.AddName("default")

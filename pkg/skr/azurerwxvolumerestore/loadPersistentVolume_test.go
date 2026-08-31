@@ -12,7 +12,6 @@ import (
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -28,10 +27,8 @@ func TestLoadPersistentVolume(t *testing.T) {
 		var pv *corev1.PersistentVolume
 
 		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-scope",
-				Namespace: "test-ns",
-			},
+			Name:      "test-scope",
+			Namespace: "test-ns",
 			Spec: cloudcontrolv1beta1.ScopeSpec{
 				Scope: cloudcontrolv1beta1.ScopeInfo{
 					Azure: &cloudcontrolv1beta1.AzureScope{
@@ -57,10 +54,8 @@ func TestLoadPersistentVolume(t *testing.T) {
 
 		setupTest := func(withPv bool, pvStatus corev1.PersistentVolumePhase) {
 			azureRwxVolumeRestore = &cloudresourcesv1beta1.AzureRwxVolumeRestore{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-azure-restore",
-					Namespace: "test-ns-2",
-				},
+				Name:      "test-azure-restore",
+				Namespace: "test-ns-2",
 				Spec: cloudresourcesv1beta1.AzureRwxVolumeRestoreSpec{
 
 					Destination: cloudresourcesv1beta1.PvcSource{
@@ -81,9 +76,7 @@ func TestLoadPersistentVolume(t *testing.T) {
 			var fakeClient client.WithWatch
 			if withPv {
 				pv = &corev1.PersistentVolume{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test-azure-restore-pv",
-					},
+					Name: "test-azure-restore-pv",
 					Status: corev1.PersistentVolumeStatus{
 						Phase: pvStatus,
 					},
@@ -113,12 +106,10 @@ func TestLoadPersistentVolume(t *testing.T) {
 
 			state = createEmptyState(k8sClient, azureRwxVolumeRestore)
 			pvc := &corev1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-azure-restore-pvc",
-					Namespace: "test-ns",
-					Annotations: map[string]string{
-						"volume.kubernetes.io/storage-provisioner": "file.csi.azure.com",
-					},
+				Name:      "test-azure-restore-pvc",
+				Namespace: "test-ns",
+				Annotations: map[string]string{
+					"volume.kubernetes.io/storage-provisioner": "file.csi.azure.com",
 				},
 				Spec: corev1.PersistentVolumeClaimSpec{
 					VolumeName: "test-azure-restore-pv",

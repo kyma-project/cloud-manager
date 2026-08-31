@@ -13,8 +13,8 @@ import (
 
 func InitializeTestSuite(gdCtx *godog.TestSuiteContext) {
 	gdCtx.BeforeSuite(func() {
-		opts := zap.Options{}
-		opts.Development = true
+		opts := zap.Options{
+			Development: true}
 		logger := zap.New(zap.UseFlagOptions(&opts))
 		ctrl.SetLogger(logger)
 
