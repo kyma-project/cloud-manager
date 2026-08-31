@@ -36,20 +36,19 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 				return nil, ctx
 			}
 			logger.Error(err, "Error describing AliCloud r-kvstore cluster instance")
-			result := composed.StopWithRequeueDelay(util.Timing.T60000ms())
 			if alicloudclient.IsPermanentError(err) {
-				result = composed.StopAndForget
+				return composed.UpdateStatus(state.ObjAsRedisCluster()).
+					SetExclusiveConditions(metav1.Condition{
+						Type:    cloudcontrolv1beta1.ConditionTypeError,
+						Status:  metav1.ConditionTrue,
+						Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisCluster,
+						Message: fmt.Sprintf("Failed loading AlicloudRedisCluster: %s", err),
+					}).
+					ErrorLogMessage("Error updating RedisCluster status after failed DescribeInstance").
+					SuccessError(composed.StopAndForget).
+					Run(ctx, state)
 			}
-			return composed.UpdateStatus(state.ObjAsRedisCluster()).
-				SetExclusiveConditions(metav1.Condition{
-					Type:    cloudcontrolv1beta1.ConditionTypeError,
-					Status:  metav1.ConditionTrue,
-					Reason:  cloudcontrolv1beta1.ReasonFailedCreatingRedisCluster,
-					Message: fmt.Sprintf("Failed loading AlicloudRedisCluster: %s", err),
-				}).
-				ErrorLogMessage("Error updating RedisCluster status after failed DescribeInstance").
-				SuccessError(result).
-				Run(ctx, state)
+			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 		}
 		// Released means AliCloud has finished deleting the instance; treat it the same as NotFound.
 		if info != nil && info.InstanceStatus == alicloudclient.InstanceStatusReleased {
