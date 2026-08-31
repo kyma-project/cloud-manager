@@ -45,7 +45,7 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 						Message: fmt.Sprintf("Failed loading AlicloudRedisCluster: %s", err),
 					}).
 					ErrorLogMessage("Error updating RedisCluster status after failed DescribeInstance").
-					SuccessError(composed.StopAndForget).
+					SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
 					Run(ctx, state)
 			}
 			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
