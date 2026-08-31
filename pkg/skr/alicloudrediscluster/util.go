@@ -96,15 +96,6 @@ var alicloudRedisClusterTierClassMap = map[cloudresourcesv1beta1.AlicloudRedisCl
 	cloudresourcesv1beta1.AlicloudRedisClusterTierC7: "redis.shard.4xlarge.ce",
 }
 
-// alicloudRedisClusterTierMemoryGbMap keeps per-shard memory for SKR status/display purposes.
-var alicloudRedisClusterTierMemoryGbMap = map[cloudresourcesv1beta1.AlicloudRedisClusterTier]int32{
-	cloudresourcesv1beta1.AlicloudRedisClusterTierC3: 1,
-	cloudresourcesv1beta1.AlicloudRedisClusterTierC4: 2,
-	cloudresourcesv1beta1.AlicloudRedisClusterTierC5: 4,
-	cloudresourcesv1beta1.AlicloudRedisClusterTierC6: 8,
-	cloudresourcesv1beta1.AlicloudRedisClusterTierC7: 16,
-}
-
 func redisTierToInstanceClass(tier cloudresourcesv1beta1.AlicloudRedisClusterTier) (string, error) {
 	class, exists := alicloudRedisClusterTierClassMap[tier]
 	if !exists {
