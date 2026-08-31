@@ -261,37 +261,42 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 			},
 		}
 	case "alicloud":
-		nodesRange := cidr.ParseNoError(rt.Spec.Shoot.Networking.Nodes)
-		zoneRanges, err := nodesRange.SubNetting(cidr.MethodSubnetNum, 16)
-		if err != nil {
-			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("failed to subnet nodes CIDR %s: %w", rt.Spec.Shoot.Networking.Nodes, err))
+		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
+			nodesRange := cidr.ParseNoError(rt.Spec.Shoot.Networking.Nodes)
+			zoneRanges, err := nodesRange.SubNetting(cidr.MethodSubnetNum, 16)
+			if err != nil {
+				b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("failed to subnet nodes CIDR %s: %w", rt.Spec.Shoot.Networking.Nodes, err))
+				return b
+			}
+			var aliZones []gardeneralicloud.Zone
+			for i, zone := range rt.Spec.Shoot.Provider.Workers[0].Zones {
+				aliZones = append(aliZones, gardeneralicloud.Zone{
+					Name:    zone,
+					Workers: zoneRanges[i].CIDR().String(),
+				})
+			}
+
+			ic := &gardeneralicloud.InfrastructureConfig{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: gardeneralicloud.SchemeGroupVersion.String(),
+					Kind:       "InfrastructureConfig",
+				},
+				Networks: gardeneralicloud.Networks{
+					VPC:   gardeneralicloud.VPC{CIDR: new(rt.Spec.Shoot.Networking.Nodes)},
+					Zones: aliZones,
+				},
+			}
+			infrastructureConfig.Object = ic
+
+			controlPlaneConfig.Object = &gardeneralicloud.ControlPlaneConfig{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: gardeneralicloud.SchemeGroupVersion.String(),
+					Kind:       "ControlPlaneConfig",
+				},
+			}
+		} else {
+			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for AliCloud", b.config.NetworkOwner))
 			return b
-		}
-		var aliZones []gardeneralicloud.Zone
-		for i, zone := range rt.Spec.Shoot.Provider.Workers[0].Zones {
-			aliZones = append(aliZones, gardeneralicloud.Zone{
-				Name:    zone,
-				Workers: zoneRanges[i].CIDR().String(),
-			})
-		}
-
-		ic := &gardeneralicloud.InfrastructureConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardeneralicloud.SchemeGroupVersion.String(),
-				Kind:       "InfrastructureConfig",
-			},
-			Networks: gardeneralicloud.Networks{
-				VPC:   gardeneralicloud.VPC{CIDR: new(rt.Spec.Shoot.Networking.Nodes)},
-				Zones: aliZones,
-			},
-		}
-		infrastructureConfig.Object = ic
-
-		controlPlaneConfig.Object = &gardeneralicloud.ControlPlaneConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardeneralicloud.SchemeGroupVersion.String(),
-				Kind:       "ControlPlaneConfig",
-			},
 		}
 
 	case "openstack":

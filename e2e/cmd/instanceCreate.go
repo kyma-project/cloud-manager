@@ -37,6 +37,7 @@ var cmdInstanceCreate = &cobra.Command{
 		}
 
 		var id *e2ekeb.InstanceDetails
+		reused := false
 
 		if cmdInstanceCreateOptions.reuse {
 			existing, err := keb.List(rootCtx, e2ekeb.WithAlias(cmdInstanceCreateOptions.alias))
@@ -46,6 +47,7 @@ var cmdInstanceCreate = &cobra.Command{
 			if len(existing) > 0 {
 				fmt.Printf("Reusing existing instance with alias %q (runtimeID: %s)\n", cmdInstanceCreateOptions.alias, existing[0].RuntimeID)
 				id = &existing[0]
+				reused = true
 			}
 		}
 
@@ -67,7 +69,11 @@ var cmdInstanceCreate = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("error marshalling instance details to yaml: %w", err)
 		}
-		fmt.Println("Instance created:")
+		if reused {
+			fmt.Println("Instance reused:")
+		} else {
+			fmt.Println("Instance created:")
+		}
 		fmt.Println(string(b))
 
 		if cmdInstanceCreateOptions.waitDone {
