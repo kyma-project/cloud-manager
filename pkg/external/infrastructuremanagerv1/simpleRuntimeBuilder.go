@@ -5,7 +5,6 @@ import (
 
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func NewSimpleRuntimeBuilder() *SimpleRuntimeBuilder {
@@ -14,17 +13,15 @@ func NewSimpleRuntimeBuilder() *SimpleRuntimeBuilder {
 	secretBindingName := ""
 	return &SimpleRuntimeBuilder{
 		Obj: &Runtime{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-				Labels: map[string]string{
-					cloudcontrolv1beta1.LabelRuntimeId:            name,
-					cloudcontrolv1beta1.LabelScopeGlobalAccountId: "6329e93d-591f-4b1e-83ed-3dc6f9f426d7",
-					cloudcontrolv1beta1.LabelScopeSubaccountId:    "f6d42db7-1195-4ff5-9787-0edb471c75cb",
-					cloudcontrolv1beta1.LabelScopeShootName:       shootName,
-					cloudcontrolv1beta1.LabelKymaName:             name,
-					//cloudcontrolv1beta1.LabelScopeBrokerPlanName:  "aws", // required!!!
-					cloudcontrolv1beta1.LabelScopeRegion: "eu-west-1",
-				},
+			Name: name,
+			Labels: map[string]string{
+				cloudcontrolv1beta1.LabelRuntimeId:            name,
+				cloudcontrolv1beta1.LabelScopeGlobalAccountId: "6329e93d-591f-4b1e-83ed-3dc6f9f426d7",
+				cloudcontrolv1beta1.LabelScopeSubaccountId:    "f6d42db7-1195-4ff5-9787-0edb471c75cb",
+				cloudcontrolv1beta1.LabelScopeShootName:       shootName,
+				cloudcontrolv1beta1.LabelKymaName:             name,
+				//cloudcontrolv1beta1.LabelScopeBrokerPlanName:  "aws", // required!!!
+				cloudcontrolv1beta1.LabelScopeRegion: "eu-west-1",
 			},
 			Spec: RuntimeSpec{
 				Security: Security{

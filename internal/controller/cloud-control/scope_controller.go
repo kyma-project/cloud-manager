@@ -21,7 +21,6 @@ import (
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -115,10 +114,8 @@ func (r *ScopeReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager
 func (r *ScopeReconciler) mapRequestsFromGardenerClusterCR(_ context.Context, gcObj client.Object) []reconcile.Request {
 	return []reconcile.Request{
 		{
-			NamespacedName: types.NamespacedName{
-				Namespace: gcObj.GetNamespace(),
-				Name:      gcObj.GetName(),
-			},
+			Namespace: gcObj.GetNamespace(),
+			Name:      gcObj.GetName(),
 		},
 	}
 }

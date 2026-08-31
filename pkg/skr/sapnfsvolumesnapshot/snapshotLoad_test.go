@@ -10,7 +10,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -56,7 +55,7 @@ func TestSnapshotLoad(t *testing.T) {
 
 		setupTest := func() {
 			obj = &cloudresourcesv1beta1.SapNfsVolumeSnapshot{
-				ObjectMeta: metav1.ObjectMeta{Name: "snap-1", Namespace: "test"},
+				Name: "snap-1", Namespace: "test",
 				Status: cloudresourcesv1beta1.SapNfsVolumeSnapshotStatus{
 					Id:      "abc-123",
 					ShareId: "share-789",

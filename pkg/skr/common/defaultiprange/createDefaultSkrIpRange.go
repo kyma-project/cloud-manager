@@ -5,7 +5,6 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func createDefaultSkrIpRange(ctx context.Context, st composed.State) (error, context.Context) {
@@ -21,16 +20,14 @@ func createDefaultSkrIpRange(ctx context.Context, st composed.State) (error, con
 	}
 
 	skrIpRange := &cloudresourcesv1beta1.IpRange{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "default",
-			Labels: map[string]string{
-				"app.kubernetes.io/name":       "default-iprange",
-				"app.kubernetes.io/instance":   "default",
-				"app.kubernetes.io/version":    "1.0.0",
-				"app.kubernetes.io/component":  "cloud-manager",
-				"app.kubernetes.io/part-of":    "kyma",
-				"app.kubernetes.io/managed-by": "cloud-manager",
-			},
+		Name: "default",
+		Labels: map[string]string{
+			"app.kubernetes.io/name":       "default-iprange",
+			"app.kubernetes.io/instance":   "default",
+			"app.kubernetes.io/version":    "1.0.0",
+			"app.kubernetes.io/component":  "cloud-manager",
+			"app.kubernetes.io/part-of":    "kyma",
+			"app.kubernetes.io/managed-by": "cloud-manager",
 		},
 	}
 

@@ -18,7 +18,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -63,14 +62,12 @@ func debugWait(ctx context.Context, suffix string) (context.Context, error) {
 	}
 
 	cm := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: world.Config().SkrNamespace,
-			Name:      name,
-			Annotations: map[string]string{
-				e2elib.AliasLabel:             alias,
-				e2elib.ScenarioNameAnnotation: session.GetScenarioName(),
-				e2elib.StepNameAnnotation:     session.GetStepName(),
-			},
+		Namespace: world.Config().SkrNamespace,
+		Name:      name,
+		Annotations: map[string]string{
+			e2elib.AliasLabel:             alias,
+			e2elib.ScenarioNameAnnotation: session.GetScenarioName(),
+			e2elib.StepNameAnnotation:     session.GetStepName(),
 		},
 	}
 	err = session.CurrentCluster().GetClient().Create(ctx, cm)

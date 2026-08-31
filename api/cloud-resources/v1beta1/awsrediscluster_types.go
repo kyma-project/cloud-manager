@@ -146,15 +146,11 @@ func (in *AwsRedisCluster) SetState(v string) {
 
 func (in *AwsRedisCluster) CloneForPatchStatus() client.Object {
 	return &AwsRedisCluster{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "AwsRedisCluster",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "AwsRedisCluster",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 }
 

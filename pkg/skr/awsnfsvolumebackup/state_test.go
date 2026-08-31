@@ -23,10 +23,8 @@ import (
 var scopeProvider = scopeprovider.Always("test", "skr")
 
 var scope = cloudcontrolv1beta1.Scope{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "skr",
-		Namespace: "test",
-	},
+	Name:      "skr",
+	Namespace: "test",
 	Spec: cloudcontrolv1beta1.ScopeSpec{
 		Provider: "aws",
 		Region:   client.MockAwsRegion,
@@ -40,10 +38,8 @@ var scope = cloudcontrolv1beta1.Scope{
 }
 
 var awsNfsInstance = cloudcontrolv1beta1.NfsInstance{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "test-aws-nfs-instance",
-		Namespace: "test",
-	},
+	Name:      "test-aws-nfs-instance",
+	Namespace: "test",
 	Spec: cloudcontrolv1beta1.NfsInstanceSpec{
 		RemoteRef: cloudcontrolv1beta1.RemoteRef{
 			Name:      "test-aws-nfs-volume",
@@ -62,10 +58,8 @@ var awsNfsInstance = cloudcontrolv1beta1.NfsInstance{
 }
 
 var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "test-aws-nfs-volume",
-		Namespace: "test",
-	},
+	Name:      "test-aws-nfs-volume",
+	Namespace: "test",
 	Spec: cloudresourcesv1beta1.AwsNfsVolumeSpec{
 		IpRange: cloudresourcesv1beta1.IpRangeRef{
 			Name: "test-aws-ip-range",
@@ -86,10 +80,8 @@ var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
 	},
 }
 var awsNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "test-aws-nfs-volume-backup",
-		Namespace: "test",
-	},
+	Name:      "test-aws-nfs-volume-backup",
+	Namespace: "test",
 	Spec: cloudresourcesv1beta1.AwsNfsVolumeBackupSpec{
 		Source: cloudresourcesv1beta1.AwsNfsVolumeBackupSource{
 			Volume: cloudresourcesv1beta1.VolumeRef{
@@ -114,12 +106,10 @@ var awsNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
 }
 
 var deletingAwsNfsVolumeBackup = cloudresourcesv1beta1.AwsNfsVolumeBackup{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:              "test-aws-nfs-volume-restore",
-		Namespace:         "test",
-		DeletionTimestamp: &metav1.Time{Time: time.Now()},
-		Finalizers:        []string{api.CommonFinalizerDeletionHook},
-	},
+	Name:              "test-aws-nfs-volume-restore",
+	Namespace:         "test",
+	DeletionTimestamp: &metav1.Time{Time: time.Now()},
+	Finalizers:        []string{api.CommonFinalizerDeletionHook},
 	Spec: cloudresourcesv1beta1.AwsNfsVolumeBackupSpec{
 		Source: cloudresourcesv1beta1.AwsNfsVolumeBackupSource{
 			Volume: cloudresourcesv1beta1.VolumeRef{

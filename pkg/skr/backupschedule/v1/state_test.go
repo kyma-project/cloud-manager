@@ -22,10 +22,8 @@ import (
 var kymaRef = scopeprovider.Always("test", "skr")
 
 var gcpScope = cloudcontrolv1beta1.Scope{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "skr",
-		Namespace: "test",
-	},
+	Name:      "skr",
+	Namespace: "test",
 	Spec: cloudcontrolv1beta1.ScopeSpec{
 		Provider: "gcp",
 		Scope: cloudcontrolv1beta1.ScopeInfo{
@@ -38,10 +36,8 @@ var gcpScope = cloudcontrolv1beta1.Scope{
 }
 
 var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "test-gcp-nfs-volume",
-		Namespace: "test",
-	},
+	Name:      "test-gcp-nfs-volume",
+	Namespace: "test",
 	Spec: cloudresourcesv1beta1.GcpNfsVolumeSpec{
 		IpRange: cloudresourcesv1beta1.IpRangeRef{
 			Name: "test-gcp-ip-range",
@@ -67,10 +63,8 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 }
 
 var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "test-aws-nfs-volume",
-		Namespace: "test",
-	},
+	Name:      "test-aws-nfs-volume",
+	Namespace: "test",
 	Spec: cloudresourcesv1beta1.AwsNfsVolumeSpec{
 		IpRange: cloudresourcesv1beta1.IpRangeRef{
 			Name: "test-ip-range",
@@ -91,10 +85,8 @@ var awsNfsVolume = cloudresourcesv1beta1.AwsNfsVolume{
 }
 
 var gcpNfsBackupSchedule = cloudresourcesv1beta1.GcpNfsBackupSchedule{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "test-nfs-backup-schedule",
-		Namespace: "test",
-	},
+	Name:      "test-nfs-backup-schedule",
+	Namespace: "test",
 	Spec: cloudresourcesv1beta1.GcpNfsBackupScheduleSpec{
 		NfsVolumeRef: corev1.ObjectReference{
 			Name:      "test-gcp-nfs-volume",
@@ -142,12 +134,10 @@ var gcpBackup2 = &cloudresourcesv1beta1.GcpNfsVolumeBackup{
 }
 
 var deletingGcpBackupSchedule = cloudresourcesv1beta1.GcpNfsBackupSchedule{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:              "test-nfs-backup-schedule",
-		Namespace:         "test",
-		DeletionTimestamp: &metav1.Time{Time: time.Now()},
-		Finalizers:        []string{api.CommonFinalizerDeletionHook},
-	},
+	Name:              "test-nfs-backup-schedule",
+	Namespace:         "test",
+	DeletionTimestamp: &metav1.Time{Time: time.Now()},
+	Finalizers:        []string{api.CommonFinalizerDeletionHook},
 	Spec: cloudresourcesv1beta1.GcpNfsBackupScheduleSpec{
 		NfsVolumeRef: corev1.ObjectReference{
 			Name:      "test-gcp-nfs-volume",

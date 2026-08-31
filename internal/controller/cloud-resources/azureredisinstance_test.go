@@ -25,8 +25,8 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
 		redisVersion := "6.0"
 		tier := cloudresourcesv1beta1.AzureRedisTierP4
-		azureRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceAzureConfigs{}
-		azureRedisInstanceRedisConfigs.MaxClients = "5"
+		azureRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceAzureConfigs{
+			MaxClients: "5"}
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 		skriprange.Ignore.AddName("default")
@@ -215,8 +215,8 @@ var _ = Describe("Feature: SKR AzureRedisInstance", func() {
 		azureRedisInstance := &cloudresourcesv1beta1.AzureRedisInstance{}
 		redisVersion := "6.0"
 		tier := cloudresourcesv1beta1.AzureRedisTierP2
-		azureRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceAzureConfigs{}
-		azureRedisInstanceRedisConfigs.MaxClients = "5"
+		azureRedisInstanceRedisConfigs := cloudresourcesv1beta1.RedisInstanceAzureConfigs{
+			MaxClients: "5"}
 		skrIpRange := &cloudresourcesv1beta1.IpRange{}
 
 		skriprange.Ignore.AddName("default")

@@ -140,8 +140,7 @@ type Client interface {
 // succeed on retry - specifically 4xx responses other than 429 (rate limit).
 // Callers should use StopAndForget for permanent errors instead of requeueing.
 func IsPermanentError(err error) bool {
-	var sdkErr *tea.SDKError
-	if errors.As(err, &sdkErr) {
+	if sdkErr, ok := errors.AsType[*tea.SDKError](err); ok {
 		if sdkErr.StatusCode == nil {
 			return false
 		}

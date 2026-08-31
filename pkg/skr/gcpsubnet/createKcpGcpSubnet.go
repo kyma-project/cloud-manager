@@ -7,7 +7,6 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -22,16 +21,14 @@ func createKcpGcpSubnet(ctx context.Context, st composed.State) (error, context.
 	gcpSubnet := state.ObjAsGcpSubnet()
 
 	state.KcpGcpSubnet = &cloudcontrolv1beta1.GcpSubnet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      gcpSubnet.Status.Id,
-			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
-				common.LabelKymaModule: common.FieldOwner,
-			},
-			Annotations: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:   state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName: gcpSubnet.Name,
-			},
+		Name:      gcpSubnet.Status.Id,
+		Namespace: state.KymaRef.Namespace,
+		Labels: map[string]string{
+			common.LabelKymaModule: common.FieldOwner,
+		},
+		Annotations: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:   state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName: gcpSubnet.Name,
 		},
 		Spec: cloudcontrolv1beta1.GcpSubnetSpec{
 			RemoteRef: cloudcontrolv1beta1.RemoteRef{

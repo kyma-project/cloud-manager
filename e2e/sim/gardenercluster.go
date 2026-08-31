@@ -97,10 +97,8 @@ func (r *simGardenerCluster) Reconcile(ctx context.Context, request reconcile.Re
 	if err != nil {
 		// not found, create it
 		kubeSecret = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: gc.Spec.Kubeconfig.Secret.Namespace,
-				Name:      gc.Spec.Kubeconfig.Secret.Name,
-			},
+			Namespace: gc.Spec.Kubeconfig.Secret.Namespace,
+			Name:      gc.Spec.Kubeconfig.Secret.Name,
 			StringData: map[string]string{
 				"config": string(kubeConfigBytes),
 			},

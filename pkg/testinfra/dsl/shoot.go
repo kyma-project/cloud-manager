@@ -16,7 +16,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -26,10 +25,8 @@ import (
 
 func CreateGardenerCredentials(ctx context.Context, infra testinfra.Infra) error {
 	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: infra.KCP().Namespace(),
-			Name:      "gardener-credentials",
-		},
+		Namespace: infra.KCP().Namespace(),
+		Name:      "gardener-credentials",
 	}
 	err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(secret), secret)
 	if client.IgnoreNotFound(err) != nil {
@@ -88,10 +85,8 @@ func CreateShootAws(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 				Type: string(cloudcontrolv1beta1.ProviderAws),
 				InfrastructureConfig: &runtime.RawExtension{
 					Object: &gardenerawsapi.InfrastructureConfig{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "InfrastructureConfig",
-							APIVersion: "aws.provider.extensions.gardener.cloud/v1alpha1",
-						},
+						Kind:       "InfrastructureConfig",
+						APIVersion: "aws.provider.extensions.gardener.cloud/v1alpha1",
 						Networks: gardenerawsapi.Networks{
 							VPC: gardenerawsapi.VPC{
 								CIDR: new("10.180.0.0/16"),
@@ -222,10 +217,8 @@ func CreateShootAlicloud(ctx context.Context, infra testinfra.Infra, shoot *gard
 			Type: string(cloudcontrolv1beta1.ProviderAlicloud),
 			InfrastructureConfig: &runtime.RawExtension{
 				Object: &gardeneraliclouddapi.InfrastructureConfig{
-					TypeMeta: metav1.TypeMeta{
-						Kind:       "InfrastructureConfig",
-						APIVersion: "alicloud.provider.extensions.gardener.cloud/v1alpha1",
-					},
+					Kind:       "InfrastructureConfig",
+					APIVersion: "alicloud.provider.extensions.gardener.cloud/v1alpha1",
 					Networks: gardeneraliclouddapi.Networks{
 						VPC: gardeneraliclouddapi.VPC{
 							CIDR: new("10.180.0.0/16"),
@@ -276,10 +269,8 @@ func CreateShootGcp(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 	// KCP Gardener-credentials secret
 	{
 		secret := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: infra.KCP().Namespace(),
-				Name:      "gardener-credentials",
-			},
+			Namespace: infra.KCP().Namespace(),
+			Name:      "gardener-credentials",
 		}
 		err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(secret), secret)
 		if client.IgnoreNotFound(err) != nil {
@@ -378,10 +369,8 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 	// KCP Gardener-credentials secret
 	{
 		secret := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: infra.KCP().Namespace(),
-				Name:      "gardener-credentials",
-			},
+			Namespace: infra.KCP().Namespace(),
+			Name:      "gardener-credentials",
 		}
 		err := infra.KCP().Client().Get(ctx, client.ObjectKeyFromObject(secret), secret)
 		if client.IgnoreNotFound(err) != nil {
@@ -432,10 +421,8 @@ func CreateShootAzure(ctx context.Context, infra testinfra.Infra, shoot *gardene
 				Type: string(cloudcontrolv1beta1.ProviderAzure),
 				InfrastructureConfig: &runtime.RawExtension{
 					Object: &gardenerazureapi.InfrastructureConfig{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "InfrastructureConfig",
-							APIVersion: "azure.provider.extensions.gardener.cloud/v1alpha1",
-						},
+						Kind:       "InfrastructureConfig",
+						APIVersion: "azure.provider.extensions.gardener.cloud/v1alpha1",
 						Networks: gardenerazureapi.NetworkConfig{
 							VNet: gardenerazureapi.VNet{
 								CIDR: new("10.250.0.0/22"),
@@ -551,10 +538,8 @@ func CreateShootSap(ctx context.Context, infra testinfra.Infra, shoot *gardenera
 				Type: string(cloudcontrolv1beta1.ProviderOpenStack),
 				InfrastructureConfig: &runtime.RawExtension{
 					Object: &gardeneropenstackapi.InfrastructureConfig{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "InfrastructureConfig",
-							APIVersion: "openstack.provider.extensions.gardener.cloud/v1alpha1",
-						},
+						Kind:             "InfrastructureConfig",
+						APIVersion:       "openstack.provider.extensions.gardener.cloud/v1alpha1",
 						FloatingPoolName: "FloatingIP-external-kyma-01",
 						Networks: gardeneropenstackapi.Networks{
 							Workers: "10.250.0.0/16",
