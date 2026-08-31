@@ -185,9 +185,9 @@ var _ = Describe("Feature: KCP AliCloud RedisInstance", func() {
 			// Use a 403 SDK error so IsPermanentError() returns true and the
 			// reconciler surfaces StateError rather than silently requeueing.
 			alicloudMock.SetRedisInstanceError(redisInstance.Status.Id, &tea.SDKError{
-				StatusCode: new(403),
-				Code:       new("Forbidden.RAM"),
-				Message:    new("simulated permanent AliCloud API failure"),
+				StatusCode: tea.Int(403),
+				Code:       tea.String("Forbidden.RAM"),
+				Message:    tea.String("simulated permanent AliCloud API failure"),
 			})
 		})
 
