@@ -75,16 +75,6 @@ func InitializeKcp(ctx context.Context, kcpClient client.Client, config *e2econf
 		return fmt.Errorf("failed to set garden kubeconfig: %w", err)
 	}
 
-	// CM derives the garden namespace to watch from the context namespace inside
-	// the gardener-credentials secret. The kubeconfig file on disk may have a
-	// different context namespace (e.g. "garden-kyma-dev") than the one we want
-	// CM to use (config.GardenNamespace, e.g. "garden-spm-test01"). Patching the
-	// bytes before storing them keeps CM pointed at the correct namespace.
-	kubeBytes, err = config.PatchKubeconfigWithNamespace(kubeBytes)
-	if err != nil {
-		return fmt.Errorf("failed to patch garden kubeconfig namespace: %w", err)
-	}
-
 	secret = &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: config.KcpNamespace,
