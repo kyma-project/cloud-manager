@@ -228,11 +228,10 @@ func (b *RuntimeBuilder) WithProvider(provider cloudcontrolv1beta1.ProviderType,
 			},
 			MaxSurge:       new(intstr.FromInt32(3)),
 			MaxUnavailable: new(intstr.FromInt32(0)),
-			// Minimum=1/Maximum=3: intentionally small for cost efficiency in e2e; all providers work fine with 1–3 nodes.
-			Minimum: 1,
-			Maximum: 3,
-			Volume:  vol,
-			Zones:   zones,
+			Minimum:        3,
+			Maximum:        20,
+			Volume:         vol,
+			Zones:          zones,
 		},
 	}
 	return b
