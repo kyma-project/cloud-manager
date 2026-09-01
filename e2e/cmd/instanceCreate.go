@@ -17,7 +17,6 @@ type cmdInstanceCreateOptionsType struct {
 	waitDone            bool
 	timeout             time.Duration
 	shootCreatedTimeout time.Duration
-	reuse               bool
 }
 
 var cmdInstanceCreateOptions cmdInstanceCreateOptionsType
@@ -36,44 +35,22 @@ var cmdInstanceCreate = &cobra.Command{
 			return fmt.Errorf("failed to create keb: %w", err)
 		}
 
-		var id *e2ekeb.InstanceDetails
-		reused := false
-
-		if cmdInstanceCreateOptions.reuse {
-			existing, err := keb.List(rootCtx, e2ekeb.WithAlias(cmdInstanceCreateOptions.alias))
-			if err != nil {
-				return fmt.Errorf("error listing instances: %w", err)
-			}
-			if len(existing) > 0 {
-				fmt.Printf("Reusing existing instance with alias %q (runtimeID: %s)\n", cmdInstanceCreateOptions.alias, existing[0].RuntimeID)
-				id = &existing[0]
-				reused = true
-			}
-		}
-
-		if id == nil {
-			created, err := keb.CreateInstance(rootCtx,
-				e2ekeb.WithAlias(cmdInstanceCreateOptions.alias),
-				e2ekeb.WithGlobalAccount(uuid.NewString()),
-				e2ekeb.WithSubAccount(uuid.NewString()),
-				e2ekeb.WithProvider(pt),
-				e2ekeb.WithTimeout(cmdInstanceCreateOptions.shootCreatedTimeout),
-			)
-			if err != nil {
-				return fmt.Errorf("error creating instance: %w", err)
-			}
-			id = &created
+		id, err := keb.CreateInstance(rootCtx,
+			e2ekeb.WithAlias(cmdInstanceCreateOptions.alias),
+			e2ekeb.WithGlobalAccount(uuid.NewString()),
+			e2ekeb.WithSubAccount(uuid.NewString()),
+			e2ekeb.WithProvider(pt),
+			e2ekeb.WithTimeout(cmdInstanceCreateOptions.shootCreatedTimeout),
+		)
+		if err != nil {
+			return fmt.Errorf("error creating instance: %w", err)
 		}
 
 		b, err := yaml.Marshal(id)
 		if err != nil {
 			return fmt.Errorf("error marshalling instance details to yaml: %w", err)
 		}
-		if reused {
-			fmt.Println("Instance reused:")
-		} else {
-			fmt.Println("Instance created:")
-		}
+		fmt.Println("Instance created:")
 		fmt.Println(string(b))
 
 		if cmdInstanceCreateOptions.waitDone {
@@ -99,7 +76,6 @@ func init() {
 	cmdInstanceCreate.Flags().BoolVarP(&cmdInstanceCreateOptions.waitDone, "wait", "w", false, "Wait for instance to be ready before exiting")
 	cmdInstanceCreate.Flags().DurationVarP(&cmdInstanceCreateOptions.timeout, "timeout", "t", 900*time.Second, "Timeout for waiting for instance to become ready")
 	cmdInstanceCreate.Flags().DurationVarP(&cmdInstanceCreateOptions.shootCreatedTimeout, "shoot-created-timeout", "s", 60*time.Second, "Timeout for waiting for the shoot object to appear in Garden after create")
-	cmdInstanceCreate.Flags().BoolVar(&cmdInstanceCreateOptions.reuse, "reuse", false, "Reuse existing instance with the same alias instead of creating a new one")
 
 	_ = cmdInstanceCreate.MarkFlagRequired("alias")
 	_ = cmdInstanceCreate.MarkFlagRequired("provider")
