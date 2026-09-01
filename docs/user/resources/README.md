@@ -96,6 +96,10 @@ The `azureredisinstance.cloud-resources.kyma-project.io` CRD describes the Micro
 
 The `azuremanagedredis.cloud-resources.kyma-project.io` CRD describes the Azure Managed Redis (Microsoft.Cache/redisEnterprise) cluster. For more information, see [AzureManagedRedis Custom Resource](./04-40-32-azure-managed-redis.md).
 
+### AlicloudRedisInstance CR [**Beta feature**]
+
+The `alicloudredisinstance.cloud-resources.kyma-project.io` CRD describes the Alibaba Cloud ApsaraDB for Redis (Tair) instance. For more information, see [AlicloudRedisInstance Custom Resource](./04-40-50-alicloud-redis-instance.md).
+
 ## Redis Cluster Resources
 
 ### AwsRedisCluster CR [**Beta feature**]
@@ -113,6 +117,10 @@ The `gcpsubnet.cloud-resources.kyma-project.io` CRD  specifies the VPC Network S
 ### AzureRedisCluster CR [**Beta feature**]
 
 The `azurerediscluster.cloud-resources.kyma-project.io` CRD describes the Microsoft Azure Cache for Redis cluster. For more information, see [AzureRedisCluster Custom Resource](./04-50-30-azure-redis-cluster.md).
+
+### AlicloudRedisCluster CR [**Beta feature**]
+
+The `alicloudrediscluster.cloud-resources.kyma-project.io` CRD describes the Alibaba Cloud ApsaraDB for Redis cluster (proxy-based sharded) instance. For more information, see [AlicloudRedisCluster Custom Resource](./04-50-40-alicloud-redis-cluster.md).
 
 
 ## VPC DNS Link Resources

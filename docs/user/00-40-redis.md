@@ -16,8 +16,9 @@ The Cloud Manager module supports the Redis feature of the following cloud provi
 * Amazon Web Services [Amazon ElastiCashe for Redis OSS](https://aws.amazon.com/elasticache/redis)
 * Google Cloud [Memorystore](https://cloud.google.com/memorystore?hl=en)
 * Microsoft Azure [Azure Cache for Redis](https://azure.microsoft.com/en-us/products/cache)
+* Alibaba Cloud [ApsaraDB for Redis (Tair)](https://www.alibabacloud.com/help/en/redis/) [**Beta feature**]
 
-You can configure Cloud Manager's Redis instances using a dedicated Redis instance custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely AwsRedisInstance CR, GcpRedisInstance CR, or AzureRedisInstance CR. For more information, see [Redis Resources](./resources/README.md#redis-resources).
+You can configure Cloud Manager's Redis instances using a dedicated Redis instance custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely AwsRedisInstance CR, GcpRedisInstance CR, AzureRedisInstance CR, or AlicloudRedisInstance CR. For more information, see [Redis Resources](./resources/README.md#redis-resources).
 
 ### Tiers
 
@@ -32,7 +33,7 @@ To instantiate Redis, an IpRange CR must exist in the Kyma cluster. IpRange defi
 
 ## Lifecycle
 
-AwsRedisInstance, GcpRedisInstance, and AzureRedisInstance are namespace-level CRs. Once you create any of the Redis resources, the following resources are also created automatically:
+AwsRedisInstance, GcpRedisInstance, AzureRedisInstance, and AlicloudRedisInstance are namespace-level CRs. Once you create any of the Redis resources, the following resources are also created automatically:
 
 * IpRange CR
   * IpRange is a cluster-level CR.
@@ -48,5 +49,6 @@ AwsRedisInstance, GcpRedisInstance, and AzureRedisInstance are namespace-level C
 * [Using AwsRedisInstance Custom Resources](./tutorials/01-40-10-aws-redis-instance.md)
 * [Using GcpRedisInstance Custom Resources](./tutorials/01-40-20-gcp-redis-instance.md)
 * [Using AzureRedisInstance Custom Resources](./tutorials/01-40-30-azure-redis-instance.md)
+* [Using AlicloudRedisInstance Custom Resources](./tutorials/01-40-40-alicloud-redis-instance.md)
 * [Cloud Manager Resources: Redis](./resources/README.md#redis-resources)
 * [Calculation with the Cloud Manager Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/commercial-information-sap-btp-kyma-runtime?state=DRAFT&version=Internal#calculation-with-the-cloud-manager-module)
