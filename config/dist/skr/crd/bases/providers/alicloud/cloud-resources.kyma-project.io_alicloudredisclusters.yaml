@@ -75,7 +75,7 @@ spec:
                           rule: self == '' || oldSelf == '' || self == oldSelf
                   type: object
                 engineVersion:
-                  default: "5.0"
+                  default: "7.0"
                   description: EngineVersion is the Redis engine version. Immutable after creation.
                   enum:
                     - "5.0"
