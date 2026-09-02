@@ -47,19 +47,19 @@ type AlicloudRedisClusterSpec struct {
 	ShardCount int32 `json:"shardCount"`
 
 	// ReplicasPerShard is the number of read-only replicas per shard.
-	// All tiers currently exposed via redisTier map to proxy-based classes
-	// (redis.logic.sharding.*), which always have ReadOnlyCount=0. This field
-	// is reserved for future non-proxy tiers; it must be 0 for all current tiers.
+	// All current redisTier values map to cloud-native cluster classes (redis.shard.*.ce)
+	// where independent read-replica configuration is not yet enabled. This field
+	// is reserved for future use; it must be 0 for all current tiers.
 	// +optional
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1
-	// +kubebuilder:validation:XValidation:rule=(self == 0), message="replicasPerShard must be 0; all current redisTier values use proxy-based classes that do not support read replicas."
+	// +kubebuilder:validation:XValidation:rule=(self == 0), message="replicasPerShard must be 0; independent read-replica configuration is not yet enabled for the current redisTier values."
 	ReplicasPerShard int32 `json:"replicasPerShard,omitempty"`
 
 	// EngineVersion is the Redis engine version. Immutable after creation.
 	// +optional
-	// +kubebuilder:default="5.0"
+	// +kubebuilder:default="7.0"
 	// +kubebuilder:validation:Enum="5.0";"6.0";"7.0"
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="engineVersion is immutable."
 	EngineVersion string `json:"engineVersion,omitempty"`

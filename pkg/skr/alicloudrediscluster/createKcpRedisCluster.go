@@ -21,7 +21,7 @@ func createKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 
 	alicloudRedisCluster := state.ObjAsAlicloudRedisCluster()
 
-	instanceClass, err := redisTierToInstanceClass(alicloudRedisCluster.Spec.RedisTier, alicloudRedisCluster.Spec.ShardCount)
+	instanceClass, err := redisTierToInstanceClass(alicloudRedisCluster.Spec.RedisTier)
 	if err != nil {
 		errMsg := "failed to map redisTier to instanceClass"
 		logger.Error(err, errMsg, "redisTier", alicloudRedisCluster.Spec.RedisTier)

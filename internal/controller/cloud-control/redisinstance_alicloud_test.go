@@ -1,9 +1,9 @@
 package cloudcontrol
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/alibabacloud-go/tea/tea"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -181,8 +181,14 @@ var _ = Describe("Feature: KCP AliCloud RedisInstance", func() {
 				).Should(Succeed())
 		})
 
-		By("When AliCloud returns an error on describe", func() {
-			alicloudMock.SetRedisInstanceError(redisInstance.Status.Id, fmt.Errorf("simulated AliCloud API failure"))
+		By("When AliCloud returns a permanent error on describe", func() {
+			// Use a 403 SDK error so IsPermanentError() returns true and the
+			// reconciler surfaces StateError rather than silently requeueing.
+			alicloudMock.SetRedisInstanceError(redisInstance.Status.Id, &tea.SDKError{
+				StatusCode: new(403),
+				Code:       new("Forbidden.RAM"),
+				Message:    new("simulated permanent AliCloud API failure"),
+			})
 		})
 
 		By("Then RedisInstance has Error condition", func() {

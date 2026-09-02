@@ -63,11 +63,10 @@ type RedisClusterAlicloud struct {
 	// +kubebuilder:validation:Required
 	InstanceClass string `json:"instanceClass"`
 
-	// EngineVersion is set at creation and is immutable. Defaults to "5.0" for
-	// cluster instances (proxy-based sharding classes are available on engine 5.0
-	// in all AliCloud international regions).
+	// EngineVersion is set at creation and is immutable. Defaults to "7.0" —
+	// the minimum version required by the redis.shard.*.ce cloud-native cluster family.
 	// +optional
-	// +kubebuilder:default="5.0"
+	// +kubebuilder:default="7.0"
 	// +kubebuilder:validation:Enum="5.0";"6.0";"7.0"
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="engineVersion is immutable."
 	EngineVersion string `json:"engineVersion"`
