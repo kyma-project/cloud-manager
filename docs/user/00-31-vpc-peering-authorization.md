@@ -14,7 +14,7 @@ Use the following table to identify the Cloud Manager principal. Then, perform t
 |--------------------------------------|----------------------------------------------|-------------------------------------------------------------------|
 | https://canary.cockpit.btp.int.sap   | https://dashboard.stage.kyma.cloud.sap       | `arn:aws:iam::194230256199:user/cloud-manager-peering-stage`      |
 | https://emea.cockpit.btp.cloud.sap   | https://dashboard.kyma.cloud.sap             | `arn:aws:iam::194230256199:user/cloud-manager-peering-prod`       |
-| https://cockpit.canary.scp.sapns2.us[^1]| https://dashboard.canary.us50.kyma.cloud.sap[^1] | `arn:aws-us-gov:iam::306124193223:user/cloud-manager-vpc-peering`[^1] |
+| [https://cockpit.canary.scp.sapns2.us](https://cockpit.canary.scp.sapns2.us)[^1]| [https://dashboard.canary.us50.kyma.cloud.sap](https://dashboard.canary.us50.kyma.cloud.sap)[^1] | `arn:aws-us-gov:iam::306124193223:user/cloud-manager-vpc-peering`[^1] |
 
 [^1]: Relevant only for the Government Cloud (US) region.
 
