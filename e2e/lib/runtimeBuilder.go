@@ -458,7 +458,7 @@ var machineTypes = map[cloudcontrolv1beta1.ProviderType][]string{
 	cloudcontrolv1beta1.ProviderGCP:       {"n2-standard-2"},
 	cloudcontrolv1beta1.ProviderAzure:     {"Standard_D2s_v5", "Standard_D4s_v5"},
 	cloudcontrolv1beta1.ProviderOpenStack: {"g_c2_m8"},
-	cloudcontrolv1beta1.ProviderAlicloud: {"ecs.c9i.large"},
+	cloudcontrolv1beta1.ProviderAlicloud:  {"ecs.c9i.large"},
 }
 
 var volumeTypes = map[cloudcontrolv1beta1.ProviderType]string{
