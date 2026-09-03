@@ -12,11 +12,10 @@ import (
 )
 
 type cmdInstanceCreateOptionsType struct {
-	alias               string
-	provider            string
-	waitDone            bool
-	timeout             time.Duration
-	shootCreatedTimeout time.Duration
+	alias    string
+	provider string
+	waitDone bool
+	timeout  time.Duration
 }
 
 var cmdInstanceCreateOptions cmdInstanceCreateOptionsType
@@ -40,7 +39,6 @@ var cmdInstanceCreate = &cobra.Command{
 			e2ekeb.WithGlobalAccount(uuid.NewString()),
 			e2ekeb.WithSubAccount(uuid.NewString()),
 			e2ekeb.WithProvider(pt),
-			e2ekeb.WithTimeout(cmdInstanceCreateOptions.shootCreatedTimeout),
 		)
 		if err != nil {
 			return fmt.Errorf("error creating instance: %w", err)
@@ -75,7 +73,6 @@ func init() {
 	cmdInstanceCreate.Flags().StringVarP(&cmdInstanceCreateOptions.provider, "provider", "p", "", "Provider name for the instance")
 	cmdInstanceCreate.Flags().BoolVarP(&cmdInstanceCreateOptions.waitDone, "wait", "w", false, "Wait for instance to be ready before exiting")
 	cmdInstanceCreate.Flags().DurationVarP(&cmdInstanceCreateOptions.timeout, "timeout", "t", 900*time.Second, "Timeout for waiting for instance to become ready")
-	cmdInstanceCreate.Flags().DurationVarP(&cmdInstanceCreateOptions.shootCreatedTimeout, "shoot-created-timeout", "s", 60*time.Second, "Timeout for waiting for the shoot object to appear in Garden after create")
 
 	_ = cmdInstanceCreate.MarkFlagRequired("alias")
 	_ = cmdInstanceCreate.MarkFlagRequired("provider")
