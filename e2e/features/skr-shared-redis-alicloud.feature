@@ -27,10 +27,10 @@ Feature: AlicloudRedisInstance feature
 
     And "findConditionTrue(redis, 'Ready')" is ok
 
-    And eventually "secret.data.host" is ok
-    And eventually "secret.data.port" is ok
-    And eventually "secret.data.authString" is ok
-    And eventually "secret.data['CaCert.pem']" is ok
+    And "secret.data.host" is ok
+    And "secret.data.port" is ok
+    And "secret.data.authString" is ok
+    And "secret.data['CaCert.pem']" is ok
 
     And Redis "PING" gives "PONG" with:
       | Host | Secret | ${redis.metadata.name} | host       |
