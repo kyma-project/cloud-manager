@@ -260,6 +260,36 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 				Kind:       "ControlPlaneConfig",
 			},
 		}
+	case "openstack":
+		ic := &gardeneraopenstack.InfrastructureConfig{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: gardeneraopenstack.SchemeGroupVersion.String(),
+				Kind:       "InfrastructureConfig",
+			},
+			FloatingPoolName:       sapconfig.SapConfig.FloatingPoolNetwork, // "FloatingIP-external-kyma-01",
+			FloatingPoolSubnetName: new(sapconfig.SapConfig.FloatingPoolSubnet),
+		}
+		if len(sapconfig.SapConfig.FloatingPoolSubnet) < 1 {
+			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("no FloatingPoolSubnet specified in config"))
+		}
+
+		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
+			ic.Networks.Workers = rt.Spec.Shoot.Networking.Nodes
+		} else {
+			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for OpenStack", b.config.NetworkOwner))
+			return b
+		}
+
+		infrastructureConfig.Object = ic
+
+		controlPlaneConfig.Object = &gardeneraopenstack.ControlPlaneConfig{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: gardeneraopenstack.SchemeGroupVersion.String(),
+				Kind:       "ControlPlaneConfig",
+			},
+			LoadBalancerProvider: "f5",
+		}
+
 	case "alicloud":
 		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
 			nodesRange := cidr.ParseNoError(rt.Spec.Shoot.Networking.Nodes)
@@ -297,36 +327,6 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		} else {
 			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for AliCloud", b.config.NetworkOwner))
 			return b
-		}
-
-	case "openstack":
-		ic := &gardeneraopenstack.InfrastructureConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardeneraopenstack.SchemeGroupVersion.String(),
-				Kind:       "InfrastructureConfig",
-			},
-			FloatingPoolName:       sapconfig.SapConfig.FloatingPoolNetwork, // "FloatingIP-external-kyma-01",
-			FloatingPoolSubnetName: new(sapconfig.SapConfig.FloatingPoolSubnet),
-		}
-		if len(sapconfig.SapConfig.FloatingPoolSubnet) < 1 {
-			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("no FloatingPoolSubnet specified in config"))
-		}
-
-		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
-			ic.Networks.Workers = rt.Spec.Shoot.Networking.Nodes
-		} else {
-			b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("network owner %q is not supported for OpenStack", b.config.NetworkOwner))
-			return b
-		}
-
-		infrastructureConfig.Object = ic
-
-		controlPlaneConfig.Object = &gardeneraopenstack.ControlPlaneConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardeneraopenstack.SchemeGroupVersion.String(),
-				Kind:       "ControlPlaneConfig",
-			},
-			LoadBalancerProvider: "f5",
 		}
 	}
 
