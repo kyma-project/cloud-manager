@@ -9,7 +9,6 @@ import (
 	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/aws/smithy-go"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/utils/ptr"
 )
 
 type secretsManagerApiFake struct {
@@ -32,7 +31,7 @@ func (f *secretsManagerApiFake) DeleteSecret(_ context.Context, _ *secretsmanage
 
 func scheduledForDeletionErr() error {
 	return &secretsmanagertypes.InvalidRequestException{
-		Message: ptr.To("You can't perform this operation on the secret because it was marked for deletion."),
+		Message: new("You can't perform this operation on the secret because it was marked for deletion."),
 	}
 }
 
@@ -61,7 +60,7 @@ func TestGetAuthTokenSecretValue(t *testing.T) {
 	})
 
 	t.Run("propagates unrelated InvalidRequestException", func(t *testing.T) {
-		getErr := &secretsmanagertypes.InvalidRequestException{Message: ptr.To("some other invalid request")}
+		getErr := &secretsmanagertypes.InvalidRequestException{Message: new("some other invalid request")}
 		c := &elastiCacheClient{secretsManagerSvc: &secretsManagerApiFake{getErr: getErr}}
 		_, err := c.GetAuthTokenSecretValue(context.Background(), "name")
 		assert.ErrorIs(t, err, getErr)
