@@ -5,7 +5,7 @@ Feature: AzureRedisInstance feature
 
     Given there is shared SKR with "Azure" provider
 
-    Given eventually timeout is 20m
+    Given eventually timeout is "20m"
 
     And resource declaration:
       | Alias  | Kind               | ApiVersion                              | Name                         | Namespace |
