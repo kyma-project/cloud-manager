@@ -2,6 +2,7 @@ Feature: GcpVpcPeering feature
 
   @skr @gcp @peering
   Scenario: GcpVpcPeering scenario
+    Given eventually timeout is "20m"
 
     Given there is shared SKR with "GCP" provider
 
