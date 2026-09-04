@@ -2,6 +2,7 @@ Feature: AzureVpcPeering feature
 
   @skr @azure @peering
   Scenario: AzureVpcPeering with dynamically allocated target scenario
+    Given eventually timeout is "20m"
 
     Given there is shared SKR with "Azure" provider
 
