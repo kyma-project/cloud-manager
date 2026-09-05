@@ -1,0 +1,74 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+        - name: configuration
+          widget: Panel
+          source: spec
+          children:
+            - widget: ResourceRef
+              source: secretRef
+              name: spec.secretRef
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: state
+              name: status.state
+            - widget: Labels
+              source: arn
+              name: status.arn
+            - widget: Labels
+              source: expirationDate
+              name: status.expirationDate
+  form: |
+    - path: metadata.name
+      name: metadata.name
+      widget: Text
+      required: true
+    - path: spec.secretRef
+      name: spec.secretRef
+      widget: ResourceRef
+      required: true
+      resource:
+        kind: Secret
+        version: v1
+  general: |
+    resource:
+        kind: AwsCertificate
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: awscertificates
+    name: AWS Certificates
+    scope: cluster
+    category: Security
+    icon: locked
+    description: >-
+        AWS Certificate Manager (ACM) certificates for secure communications
+  list: |
+    - source: status.state
+      name: status.state
+      sort: true
+    - source: status.expirationDate
+      name: status.expirationDate
+      sort: true
+  translations: |
+    en:
+      metadata.name: Name
+      spec.secretRef: Secret Reference
+      status.state: State
+      status.arn: ARN
+      status.expirationDate: Expiration Date
+      configuration: Configuration
+      status: Status
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: awscertificates-ui.operator.kyma-project.io
+  namespace: kyma-system

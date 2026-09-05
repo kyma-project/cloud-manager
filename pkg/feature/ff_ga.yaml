@@ -19,6 +19,14 @@ apiDisabled:
       query: feature == "vpcdnslink"
       variation: disabled
 
+    - name: Disable WAF
+      query: feature == "waf"
+      variation: disabled
+
+    - name: Disable Certificate
+      query: feature == "certificate"
+      variation: disabled
+
     - name: Disable AzureManagedRedis
       query: feature == "azureManagedRedis"
       variation: disabled

@@ -1,0 +1,6 @@
+- source: status.state
+  name: status.state
+  sort: true
+- source: status.capacity
+  name: status.capacity
+  sort: true

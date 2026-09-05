@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kyma-system
+configMapGenerator:
+  - name: awscertificates-ui.operator.kyma-project.io
+    files:
+      - general
+      - form
+      - list
+      - details
+      - translations
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    busola.io/extension: "resource"
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
