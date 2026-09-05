@@ -8,18 +8,14 @@ import (
 
 func NewNotFoundError(msg string) error {
 	return &gophercloud.ErrUnexpectedResponseCode{
-		BaseError: gophercloud.BaseError{
-			Info: msg,
-		},
+		Info:   msg,
 		Actual: http.StatusNotFound,
 	}
 }
 
 func NewBadRequestError(msg string) error {
 	return &gophercloud.ErrUnexpectedResponseCode{
-		BaseError: gophercloud.BaseError{
-			Info: msg,
-		},
+		Info:   msg,
 		Actual: http.StatusBadRequest,
 	}
 }

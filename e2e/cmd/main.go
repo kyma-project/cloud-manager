@@ -24,8 +24,8 @@ var cmdRoot = &cobra.Command{
 	Use:   "e2e",
 	Short: "E2E command tool",
 	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-		opts := zap.Options{}
-		opts.Development = true
+		opts := zap.Options{
+			Development: true}
 		rootLogger = zap.New(zap.UseFlagOptions(&opts))
 		ctrl.SetLogger(rootLogger)
 

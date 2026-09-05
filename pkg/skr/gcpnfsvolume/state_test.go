@@ -29,10 +29,8 @@ var kymaRef = klog.ObjectRef{
 }
 
 var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "test-gcp-nfs-volume",
-		Namespace: "test",
-	},
+	Name:      "test-gcp-nfs-volume",
+	Namespace: "test",
 	Spec: cloudresourcesv1beta1.GcpNfsVolumeSpec{
 		IpRange: cloudresourcesv1beta1.IpRangeRef{
 			Name: "test-gcp-ip-range",
@@ -59,15 +57,13 @@ var gcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 }
 
 var deletedGcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "deleted-gcp-nfs-volume",
-		Namespace: "test",
-		DeletionTimestamp: &metav1.Time{
-			Time: time.Now(),
-		},
-		Finalizers: []string{"test-finalizer"},
+	Name:      "deleted-gcp-nfs-volume",
+	Namespace: "test",
+	DeletionTimestamp: &metav1.Time{
+		Time: time.Now(),
 	},
-	Spec: cloudresourcesv1beta1.GcpNfsVolumeSpec{},
+	Finalizers: []string{"test-finalizer"},
+	Spec:       cloudresourcesv1beta1.GcpNfsVolumeSpec{},
 	Status: cloudresourcesv1beta1.GcpNfsVolumeStatus{
 		Id:         "to-delete-gcp-nfs-instance",
 		Hosts:      []string{"10.20.30.4"},
@@ -77,14 +73,12 @@ var deletedGcpNfsVolume = cloudresourcesv1beta1.GcpNfsVolume{
 }
 
 var pvDeletingGcpNfsVolume = corev1.PersistentVolume{
-	ObjectMeta: metav1.ObjectMeta{
-		Name: fmt.Sprintf("%s--%s", deletedGcpNfsVolume.Namespace, deletedGcpNfsVolume.Name),
-		Labels: map[string]string{
-			cloudresourcesv1beta1.LabelNfsVolName: deletedGcpNfsVolume.Name,
-			cloudresourcesv1beta1.LabelNfsVolNS:   deletedGcpNfsVolume.Namespace,
-		},
-		Finalizers: []string{"kubernetes.io/pv-protection"},
+	Name: fmt.Sprintf("%s--%s", deletedGcpNfsVolume.Namespace, deletedGcpNfsVolume.Name),
+	Labels: map[string]string{
+		cloudresourcesv1beta1.LabelNfsVolName: deletedGcpNfsVolume.Name,
+		cloudresourcesv1beta1.LabelNfsVolNS:   deletedGcpNfsVolume.Namespace,
 	},
+	Finalizers: []string{"kubernetes.io/pv-protection"},
 	Spec: corev1.PersistentVolumeSpec{
 		Capacity: nil,
 		PersistentVolumeSource: corev1.PersistentVolumeSource{
@@ -101,10 +95,8 @@ var pvDeletingGcpNfsVolume = corev1.PersistentVolume{
 }
 
 var kcpScope = cloudcontrolv1beta1.Scope{
-	ObjectMeta: metav1.ObjectMeta{
-		Namespace: kymaRef.Namespace,
-		Name:      kymaRef.Name,
-	},
+	Namespace: kymaRef.Namespace,
+	Name:      kymaRef.Name,
 	Spec: cloudcontrolv1beta1.ScopeSpec{
 		KymaName:  kymaRef.Name,
 		ShootName: kymaRef.Namespace,
@@ -130,14 +122,12 @@ var kcpScope = cloudcontrolv1beta1.Scope{
 }
 
 var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      gcpNfsVolume.Status.Id,
-		Namespace: kymaRef.Namespace,
-		Labels: map[string]string{
-			cloudcontrolv1beta1.LabelKymaName:        kymaRef.Name,
-			cloudcontrolv1beta1.LabelRemoteName:      gcpNfsVolume.Name,
-			cloudcontrolv1beta1.LabelRemoteNamespace: gcpNfsVolume.Namespace,
-		},
+	Name:      gcpNfsVolume.Status.Id,
+	Namespace: kymaRef.Namespace,
+	Labels: map[string]string{
+		cloudcontrolv1beta1.LabelKymaName:        kymaRef.Name,
+		cloudcontrolv1beta1.LabelRemoteName:      gcpNfsVolume.Name,
+		cloudcontrolv1beta1.LabelRemoteNamespace: gcpNfsVolume.Namespace,
 	},
 	Spec: cloudcontrolv1beta1.NfsInstanceSpec{
 		RemoteRef: cloudcontrolv1beta1.RemoteRef{
@@ -178,16 +168,14 @@ var gcpNfsInstance = cloudcontrolv1beta1.NfsInstance{
 }
 
 var gcpNfsInstanceToDelete = cloudcontrolv1beta1.NfsInstance{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "to-delete-gcp-nfs-instance",
-		Namespace: kymaRef.Namespace,
-		Labels: map[string]string{
-			cloudcontrolv1beta1.LabelKymaName:        kymaRef.Name,
-			cloudcontrolv1beta1.LabelRemoteName:      "deleted-gcp-nfs-volume",
-			cloudcontrolv1beta1.LabelRemoteNamespace: "test",
-		},
-		Finalizers: []string{api.CommonFinalizerDeletionHook},
+	Name:      "to-delete-gcp-nfs-instance",
+	Namespace: kymaRef.Namespace,
+	Labels: map[string]string{
+		cloudcontrolv1beta1.LabelKymaName:        kymaRef.Name,
+		cloudcontrolv1beta1.LabelRemoteName:      "deleted-gcp-nfs-volume",
+		cloudcontrolv1beta1.LabelRemoteNamespace: "test",
 	},
+	Finalizers: []string{api.CommonFinalizerDeletionHook},
 	Spec: cloudcontrolv1beta1.NfsInstanceSpec{
 		RemoteRef: cloudcontrolv1beta1.RemoteRef{
 			Namespace: "test",

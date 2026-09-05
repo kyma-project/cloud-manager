@@ -30,7 +30,6 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -158,10 +157,8 @@ func StartEx(opts StartOptions) (Infra, error) {
 		cluster.ClusterEnv = ce
 
 		err = cluster.client.Create(context.Background(), &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "default",
-				Name:      "cm-info",
-			},
+			Namespace: "default",
+			Name:      "cm-info",
 			Data: map[string]string{
 				"caller":      opts.CallerId,
 				"clusterType": string(name),

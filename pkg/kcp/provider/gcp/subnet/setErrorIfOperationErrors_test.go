@@ -41,10 +41,8 @@ func newTestState(gcpSubnet *cloudcontrolv1beta1.GcpSubnet) *State {
 
 func newGcpSubnet() *cloudcontrolv1beta1.GcpSubnet {
 	return &cloudcontrolv1beta1.GcpSubnet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-subnet",
-			Namespace: "kcp-system",
-		},
+		Name:      "test-subnet",
+		Namespace: "kcp-system",
 	}
 }
 

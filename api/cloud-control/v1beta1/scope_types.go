@@ -288,15 +288,11 @@ func (in *Scope) GetObjectMeta() *metav1.ObjectMeta {
 
 func (in *Scope) CloneForPatchStatus() client.Object {
 	result := &Scope{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Scope",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "Scope",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 	if result.Status.GcpOperations == nil {
 		result.Status.GcpOperations = []string{}

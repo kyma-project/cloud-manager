@@ -41,17 +41,15 @@ func createKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 	}
 
 	state.KcpRedisCluster = &cloudcontrolv1beta1.RedisCluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      azureRedisCluster.Status.Id,
-			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
-				common.LabelKymaModule: common.FieldOwner,
-			},
-			Annotations: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      azureRedisCluster.Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: azureRedisCluster.Namespace,
-			},
+		Name:      azureRedisCluster.Status.Id,
+		Namespace: state.KymaRef.Namespace,
+		Labels: map[string]string{
+			common.LabelKymaModule: common.FieldOwner,
+		},
+		Annotations: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      azureRedisCluster.Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: azureRedisCluster.Namespace,
 		},
 		Spec: cloudcontrolv1beta1.RedisClusterSpec{
 			RemoteRef: cloudcontrolv1beta1.RemoteRef{

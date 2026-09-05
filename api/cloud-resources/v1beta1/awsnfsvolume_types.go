@@ -140,15 +140,11 @@ func (in *AwsNfsVolume) SetState(v string) {
 
 func (in *AwsNfsVolume) CloneForPatchStatus() client.Object {
 	return &AwsNfsVolume{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "AwsNfsVolume",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "AwsNfsVolume",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 }
 

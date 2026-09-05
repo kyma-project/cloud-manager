@@ -20,22 +20,16 @@ func TestCheckQuota_Sort(t *testing.T) {
 	list := &cloudresourcesv1beta1.IpRangeList{
 		Items: []cloudresourcesv1beta1.IpRange{
 			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:              "newer",
-					CreationTimestamp: mustParseTime("2024-05-20T10:20:30Z"),
-				},
+				Name:              "newer",
+				CreationTimestamp: mustParseTime("2024-05-20T10:20:30Z"),
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:              "older",
-					CreationTimestamp: mustParseTime("2024-05-05T10:20:30Z"),
-				},
+				Name:              "older",
+				CreationTimestamp: mustParseTime("2024-05-05T10:20:30Z"),
 			},
 			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:              "mid",
-					CreationTimestamp: mustParseTime("2024-05-10T10:20:30Z"),
-				},
+				Name:              "mid",
+				CreationTimestamp: mustParseTime("2024-05-10T10:20:30Z"),
 			},
 		},
 	}

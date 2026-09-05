@@ -9,7 +9,6 @@ import (
 	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -39,9 +38,7 @@ func exposedDataSaveToSkr(ctx context.Context, st composed.State) (error, contex
 	}
 	if err != nil {
 		ns = &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "kyma-system",
-			},
+			Name: "kyma-system",
 		}
 		err = skrClient.Create(ctx, ns)
 		if ctrlclient.IgnoreAlreadyExists(err) != nil {
@@ -58,10 +55,8 @@ func exposedDataSaveToSkr(ctx context.Context, st composed.State) (error, contex
 	err = skrClient.Get(ctx, cmName, cm)
 	if apierrors.IsNotFound(err) {
 		cm = &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: cmName.Namespace,
-				Name:      cmName.Name,
-			},
+			Namespace: cmName.Namespace,
+			Name:      cmName.Name,
 		}
 	} else if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading SKR ConfigMap", composed.StopWithRequeue, ctx)

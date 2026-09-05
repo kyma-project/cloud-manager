@@ -299,10 +299,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		if cm == nil {
 			logger.Info("Creating default CloudResources")
 			cm = &cloudresourcesv1beta1.CloudResources{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "kyma-system",
-					Name:      "default",
-				},
+				Namespace: "kyma-system",
+				Name:      "default",
 			}
 			err = r.skr.Create(ctx, cm)
 			if client.IgnoreAlreadyExists(err) != nil {
@@ -396,7 +394,7 @@ func (r *simKymaSkr) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(
 			&cloudresourcesv1beta1.CloudResources{},
 			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
-				return []reconcile.Request{{NamespacedName: types.NamespacedName{Namespace: "kyma-system", Name: "default"}}}
+				return []reconcile.Request{{Namespace: "kyma-system", Name: "default"}}
 			}),
 		).
 		Complete(r)

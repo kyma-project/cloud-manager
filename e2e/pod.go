@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -38,10 +37,8 @@ func NewPodBuilder(name, namespace, image string) PodBuilder {
 	b := &podBuilder{
 		extraResources: make(map[string]client.Object),
 		pod: &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: namespace,
-				Name:      name,
-			},
+			Namespace: namespace,
+			Name:      name,
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
@@ -212,10 +209,8 @@ set -e
 	return func(bb PodBuilder) {
 		name := bb.Pod().Name
 		cm := &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: bb.Pod().Namespace,
-				Name:      name,
-			},
+			Namespace: bb.Pod().Namespace,
+			Name:      name,
 			Data: map[string]string{
 				fmt.Sprintf("%s.sh", name): fmt.Sprintf(scriptTemplate, strings.Join(scriptLines, "\n")),
 			},
@@ -254,10 +249,8 @@ func PodWithEnvFromSecret(envVarName string, secretName string, key string) PodD
 			Name: envVarName,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: secretName,
-					},
-					Key: key,
+					Name: secretName,
+					Key:  key,
 				},
 			},
 		})
@@ -270,10 +263,8 @@ func PodWithEnvFromConfigMap(envVarName string, configMapName string, key string
 			Name: envVarName,
 			ValueFrom: &corev1.EnvVarSource{
 				ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: configMapName,
-					},
-					Key: key,
+					Name: configMapName,
+					Key:  key,
 				},
 			},
 		})
@@ -294,13 +285,9 @@ func PodWithMountFromConfigMap(configMapName string, volumeName string, mountPat
 	return func(bb PodBuilder) {
 		bb.Pod().Spec.Volumes = append(bb.Pod().Spec.Volumes, corev1.Volume{
 			Name: volumeName,
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: configMapName,
-					},
-					DefaultMode: defaultMode,
-				},
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				Name:        configMapName,
+				DefaultMode: defaultMode,
 			},
 		})
 		bb.Pod().Spec.Containers[0].VolumeMounts = append(bb.Pod().Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
@@ -320,10 +307,8 @@ func PodWithMountFromSecret(secretName string, volumeName string, mountPath stri
 	return func(bb PodBuilder) {
 		bb.Pod().Spec.Volumes = append(bb.Pod().Spec.Volumes, corev1.Volume{
 			Name: volumeName,
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: secretName,
-				},
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: secretName,
 			},
 		})
 		bb.Pod().Spec.Containers[0].VolumeMounts = append(bb.Pod().Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
@@ -343,10 +328,8 @@ func PodWithMountFromPVC(pvcName string, volumeName string, mountPath string) Po
 	return func(bb PodBuilder) {
 		bb.Pod().Spec.Volumes = append(bb.Pod().Spec.Volumes, corev1.Volume{
 			Name: volumeName,
-			VolumeSource: corev1.VolumeSource{
-				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: pvcName,
-				},
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: pvcName,
 			},
 		})
 		bb.Pod().Spec.Containers[0].VolumeMounts = append(bb.Pod().Spec.Containers[0].VolumeMounts, corev1.VolumeMount{

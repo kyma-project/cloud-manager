@@ -46,13 +46,11 @@ func createBackup(ctx context.Context, st composed.State) (error, context.Contex
 	gcpSchedule := state.ObjAsGcpNfsBackupSchedule()
 
 	backup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: schedule.GetNamespace(),
-			Labels: map[string]string{
-				cloudresourcesv1beta1.LabelScheduleName:      schedule.GetName(),
-				cloudresourcesv1beta1.LabelScheduleNamespace: schedule.GetNamespace(),
-			},
+		Name:      name,
+		Namespace: schedule.GetNamespace(),
+		Labels: map[string]string{
+			cloudresourcesv1beta1.LabelScheduleName:      schedule.GetName(),
+			cloudresourcesv1beta1.LabelScheduleNamespace: schedule.GetNamespace(),
 		},
 		Spec: cloudresourcesv1beta1.GcpNfsVolumeBackupSpec{
 			Location: gcpSchedule.Spec.Location,

@@ -130,15 +130,11 @@ func (in *AlicloudRedisCluster) SetState(v string) {
 
 func (in *AlicloudRedisCluster) CloneForPatchStatus() client.Object {
 	return &AlicloudRedisCluster{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "AlicloudRedisCluster",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "AlicloudRedisCluster",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 }
 

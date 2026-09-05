@@ -13,7 +13,6 @@ import (
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -30,10 +29,8 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 		var k8sClient client.WithWatch
 
 		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-scope",
-				Namespace: "test-ns",
-			},
+			Name:      "test-scope",
+			Namespace: "test-ns",
 			Spec: cloudcontrolv1beta1.ScopeSpec{
 				Scope: cloudcontrolv1beta1.ScopeInfo{
 					Azure: &cloudcontrolv1beta1.AzureScope{
@@ -59,10 +56,8 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 
 		setupTest := func(withPvc bool, pvcStatus corev1.PersistentVolumeClaimPhase) {
 			azureRwxVolumeRestore = &cloudresourcesv1beta1.AzureRwxVolumeRestore{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-azure-restore",
-					Namespace: "test-ns-2",
-				},
+				Name:      "test-azure-restore",
+				Namespace: "test-ns-2",
 				Spec: cloudresourcesv1beta1.AzureRwxVolumeRestoreSpec{
 
 					Destination: cloudresourcesv1beta1.PvcSource{
@@ -83,12 +78,10 @@ func TestLoadPersistentVolumeClaim(t *testing.T) {
 			var fakeClient client.WithWatch
 			if withPvc {
 				pvc = &corev1.PersistentVolumeClaim{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "test-azure-restore-pvc",
-						Namespace: "test-ns",
-						Annotations: map[string]string{
-							"volume.kubernetes.io/storage-provisioner": "file.csi.azure.com",
-						},
+					Name:      "test-azure-restore-pvc",
+					Namespace: "test-ns",
+					Annotations: map[string]string{
+						"volume.kubernetes.io/storage-provisioner": "file.csi.azure.com",
 					},
 					Status: corev1.PersistentVolumeClaimStatus{
 						Phase: pvcStatus,

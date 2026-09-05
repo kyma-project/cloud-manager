@@ -5,7 +5,6 @@ import (
 	"fmt"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -22,10 +21,8 @@ func kymaPeeringCreate(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	peering := &cloudcontrolv1beta1.VpcPeering{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: state.ObjAsIpRange().Namespace,
-			Name:      state.Scope().Name,
-		},
+		Namespace: state.ObjAsIpRange().Namespace,
+		Name:      state.Scope().Name,
 		Spec: cloudcontrolv1beta1.VpcPeeringSpec{
 			RemoteRef: cloudcontrolv1beta1.RemoteRef{
 				Namespace: "none",
