@@ -30,11 +30,13 @@ export default [
     { text: 'SapNfsVolumeSnapshot Custom Resource', link: './resources/04-20-51-sap-nfs-volume-snapshot' },
     { text: 'SapNfsVolumeSnapshotSchedule Custom Resource', link: './resources/04-20-52-sap-nfs-volume-snapshot-schedule' },
     { text: 'SapNfsVolumeSnapshotRestore Custom Resource', link: './resources/04-20-53-sap-nfs-volume-snapshot-restore' },
+    { text: 'AlicloudNfsVolume Custom Resource', link: './resources/04-20-30-alicloud-nfs-volume' },
     { text: 'AzureVpcDnsLink Custom Resource', link: './resources/04-40-40-azure-vpc-dns-link' }
     ] },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Using NFS in Amazon Web Services', link: './tutorials/01-20-10-aws-nfs-volume' },
     { text: 'Using NFS in Google Cloud', link: './tutorials/01-20-20-gcp-nfs-volume' },
+    { text: 'Using NFS in Alibaba Cloud', link: './tutorials/01-20-30-alicloud-nfs-volume' },
     { text: 'Creating VPC Peering in Amazon Web Services', link: './tutorials/01-30-10-aws-vpc-peering' },
     { text: 'Creating VPC Peering in Google Cloud', link: './tutorials/01-30-20-gcp-vpc-peering' },
     { text: 'Creating VPC Peering in Microsoft Azure', link: './tutorials/01-30-30-azure-vpc-peering' },
