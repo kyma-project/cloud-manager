@@ -17,8 +17,9 @@ The Cloud Manager module supports the Redis cluster feature of the following clo
 * Amazon Web Services [Amazon ElastiCashe for Redis OSS](https://aws.amazon.com/elasticache/redis)
 * Google Cloud [Memorystore](https://cloud.google.com/memorystore?hl=en)
 * Microsoft Azure [Azure Cache for Redis](https://azure.microsoft.com/en-us/products/cache)
+* Alibaba Cloud [ApsaraDB for Redis](https://www.alibabacloud.com/help/en/redis/)
 
-You can configure Cloud Manager's Redis clusters using a dedicated Redis cluster custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely AwsRedisCluster CR, GcpRedisCluster CR, or AzureRedisCluster CR. For more information, see [Redis Resources](./resources/README.md#redis-cluster-resources).
+You can configure Cloud Manager's Redis clusters using a dedicated Redis cluster custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely AwsRedisCluster CR, GcpRedisCluster CR, AzureRedisCluster CR, or AlicloudRedisCluster CR. For more information, see [Redis Resources](./resources/README.md#redis-cluster-resources).
 
 ### Tiers
 
@@ -26,12 +27,12 @@ Depending on the cloud provider, you can choose between several tiers. Cloud Man
 
 ## Prerequisites
 
-* For Amazon Web Service and Microsoft Azure, an IpRange CR must exist in the Kyma cluster. IpRange defines network address space reserved for your cloud provider's Redis resources. If you don't create the IpRange CR manually, Cloud Manager creates a default IpRange CR with the default address space and Classless Inter-Domain Routing(CIDR) selected. For more information, see [IpRange Custom Resoucre](./resources/04-10-iprange.md).
+* For Amazon Web Service, Microsoft Azure, and Alibaba Cloud, an IpRange CR must exist in the Kyma cluster. IpRange defines network address space reserved for your cloud provider's Redis resources. If you don't create the IpRange CR manually, Cloud Manager creates a default IpRange CR with the default address space and Classless Inter-Domain Routing(CIDR) selected. For more information, see [IpRange Custom Resoucre](./resources/04-10-iprange.md).
 * For Google Cloud, a GcpSubnet CR must exist in the Kyma cluster. GcpSubnet specifies the VPC Network Subnet. Once needed, the resource is automatically created with the hardcoded CIDR. For most use cases, this automatic allocation is sufficient. For more information, see [GcpSubnet Custom Resource](./resources/04-50-21-gcp-subnet.md).
 
 ## Lifecycle
 
-AwsRedisCluster, GcpRedisCluster, and AzureRedisCluster are namespace-level CRs. When you create any of the Redis cluster resources, the following resources are also created automatically:
+AwsRedisCluster, GcpRedisCluster, AzureRedisCluster, and AlicloudRedisCluster are namespace-level CRs. When you create any of the Redis cluster resources, the following resources are also created automatically:
 
 * IpRange CR / GcpSubnet
   * IpRange and GcpSubnet are cluster-level CRs.
@@ -47,5 +48,6 @@ AwsRedisCluster, GcpRedisCluster, and AzureRedisCluster are namespace-level CRs.
 * [Using AwsRedisCluster Custom Resources](./tutorials/01-50-10-aws-redis-cluster.md)
 * [Using GcpRedisCluster Custom Resources](./tutorials/01-50-20-gcp-redis-cluster.md)
 * [Using AzureRedisCluster Custom Resources](./tutorials//01-50-30-azure-redis-cluster.md)
+* [Using AlicloudRedisCluster Custom Resources](./tutorials/01-50-40-alicloud-redis-cluster.md)
 * [Cloud Manager Resources: Redis Cluster](./resources/README.md#redis-cluster-resources)
 * [Calculation with the Cloud Manager Module](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/commercial-information-sap-btp-kyma-runtime?state=DRAFT&version=Internal#calculation-with-the-cloud-manager-module)
