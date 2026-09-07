@@ -10,10 +10,13 @@ For cross-account access in Amazon Web Services, Cloud Manager uses `AssumeRole`
 
 Use the following table to identify the Cloud Manager principal. Then, perform the required actions.
 
-| BTP Cockpit URL                      | Kyma Dashboard URL                           | Cloud Manager Principal                                           |
-|--------------------------------------|----------------------------------------------|-------------------------------------------------------------------|
-| https://canary.cockpit.btp.int.sap   | https://dashboard.stage.kyma.cloud.sap       | `arn:aws:iam::194230256199:user/cloud-manager-peering-stage`      |
-| https://emea.cockpit.btp.cloud.sap   | https://dashboard.kyma.cloud.sap             | `arn:aws:iam::194230256199:user/cloud-manager-peering-prod`       |
+| Landscape   |  Cloud Manager Principal                                              |
+|-------------|-----------------------------------------------------------------------|
+| Stage       | `arn:aws:iam::194230256199:user/cloud-manager-peering-stage`          |
+| Production  | `arn:aws:iam::194230256199:user/cloud-manager-peering-prod`           |
+| US50 Canary | `arn:aws-us-gov:iam::306124193223:user/cloud-manager-vpc-peering`[^1] | 
+
+[^1]: Relevant only for the Government Cloud (US) region.
 
 
 <!-- The stage landscape is visible only in the Internal DRAFT version of Help Portal docs. The stage landscape is not part of the Cloud Production version of Help Portal docs -->
@@ -79,10 +82,10 @@ For more information, see the official Google Cloud documentation on how to [cre
 
 Use the following table to identify the correct Cloud Manager service account:
 
-| BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Account                                          |
-|------------------------------------|----------------------------------------|------------------------------------------------------------------------|
-| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | `cloud-manager-peering@sap-ti-dx-kyma-mps-stage.iam.gserviceaccount.com` |
-| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | `cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com`  |
+| Landscape  | Cloud Manager Service Account                                            |
+|------------|--------------------------------------------------------------------------|
+| Stage      | `cloud-manager-peering@sap-ti-dx-kyma-mps-stage.iam.gserviceaccount.com` |
+| Production | `cloud-manager-peering@sap-ti-dx-kyma-mps-prod.iam.gserviceaccount.com`  |
 <!-- The stage landscape is visible only in the Internal DRAFT version of Help Portal docs. The stage landscape is not part of the Cloud Production version of Help Portal docs -->
 
 With the service account, you can authorize the Cloud Manager module in the remote project.
@@ -92,10 +95,10 @@ For more information, see the official Google Cloud documentation on how to [gra
 
 To authorize Cloud Manager in the remote subscription, Microsoft Azure requires specifying the service principal. Use the following table to identify the Cloud Manager service principal. Then, perform the required actions.
 
-| BTP Cockpit URL                    | Kyma Dashboard URL                     | Cloud Manager Service Principal  | Cloud Manager Application (Client) ID |
-|------------------------------------|----------------------------------------|----------------------------------|---------------------------------------|
-| https://canary.cockpit.btp.int.sap | https://dashboard.stage.kyma.cloud.sap | kyma-cloud-manager-peering-stage | 8e08320c-7e81-42bd-9eee-e5dae04cadf0  |
-| https://emea.cockpit.btp.cloud.sap | https://dashboard.kyma.cloud.sap       | kyma-cloud-manager-peering-prod  | 202aa655-369d-4fe7-bbbc-d033d96a687e  |
+| Landscape  | Cloud Manager Service Principal  | Cloud Manager Application (Client) ID |
+|------------|----------------------------------|---------------------------------------|
+| Stage      | kyma-cloud-manager-peering-stage | 8e08320c-7e81-42bd-9eee-e5dae04cadf0  |
+| Production | kyma-cloud-manager-peering-prod  | 202aa655-369d-4fe7-bbbc-d033d96a687e  |
 
 1. Verify if the Cloud Manager service principal exists in your tenant.
 2. **Optional:** If the service principal doesn't exist, create one for the Cloud Manager application in your tenant.
