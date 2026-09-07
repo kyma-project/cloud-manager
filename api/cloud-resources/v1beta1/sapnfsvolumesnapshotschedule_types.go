@@ -340,15 +340,11 @@ func (sc *SapNfsVolumeSnapshotSchedule) SetBackupCount(count int) {
 
 func (sc *SapNfsVolumeSnapshotSchedule) CloneForPatchStatus() client.Object {
 	return &SapNfsVolumeSnapshotSchedule{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "SapNfsVolumeSnapshotSchedule",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: sc.Namespace,
-			Name:      sc.Name,
-		},
-		Status: sc.Status,
+		Kind:       "SapNfsVolumeSnapshotSchedule",
+		APIVersion: GroupVersion.String(),
+		Namespace:  sc.Namespace,
+		Name:       sc.Name,
+		Status:     sc.Status,
 	}
 }
 

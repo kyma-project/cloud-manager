@@ -41,17 +41,15 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	}
 
 	state.KcpRedisInstance = &cloudcontrolv1beta1.RedisInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      alicloudRedisInstance.Status.Id,
-			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
-				common.LabelKymaModule: common.FieldOwner,
-			},
-			Annotations: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      alicloudRedisInstance.Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: alicloudRedisInstance.Namespace,
-			},
+		Name:      alicloudRedisInstance.Status.Id,
+		Namespace: state.KymaRef.Namespace,
+		Labels: map[string]string{
+			common.LabelKymaModule: common.FieldOwner,
+		},
+		Annotations: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      alicloudRedisInstance.Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: alicloudRedisInstance.Namespace,
 		},
 		Spec: cloudcontrolv1beta1.RedisInstanceSpec{
 			RemoteRef: cloudcontrolv1beta1.RemoteRef{

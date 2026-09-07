@@ -12,7 +12,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -37,10 +36,8 @@ var _ = Describe("Feature: SKR AwsNfsBackupSchedule", func() {
 		scope := &cloudcontrolv1beta1.Scope{}
 		backupSchedule := &cloudresourcesv1beta1.AwsNfsBackupSchedule{}
 		existingBackup := &cloudresourcesv1beta1.AwsNfsVolumeBackup{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      existingBackupName,
-				Namespace: DefaultSkrNamespace,
-			},
+			Name:      existingBackupName,
+			Namespace: DefaultSkrNamespace,
 			Spec: cloudresourcesv1beta1.AwsNfsVolumeBackupSpec{
 				Source: cloudresourcesv1beta1.AwsNfsVolumeBackupSource{
 					Volume: cloudresourcesv1beta1.VolumeRef{

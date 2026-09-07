@@ -144,10 +144,8 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 	switch rt.Spec.Shoot.Provider.Type {
 	case "gcp":
 		ic := &gardenergcp.InfrastructureConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardenergcp.SchemeGroupVersion.String(),
-				Kind:       "InfrastructureConfig",
-			},
+			APIVersion: gardenergcp.SchemeGroupVersion.String(),
+			Kind:       "InfrastructureConfig",
 		}
 		if b.config.NetworkOwner == e2econfig.NetworkOwnerGardener {
 			ic.Networks.Workers = rt.Spec.Shoot.Networking.Nodes
@@ -158,11 +156,9 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		infrastructureConfig.Object = ic
 
 		controlPlaneConfig.Object = &gardenergcp.ControlPlaneConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardenergcp.SchemeGroupVersion.String(),
-				Kind:       "ControlPlaneConfig",
-			},
-			Zone: rt.Spec.Shoot.Provider.Workers[0].Zones[0],
+			APIVersion: gardenergcp.SchemeGroupVersion.String(),
+			Kind:       "ControlPlaneConfig",
+			Zone:       rt.Spec.Shoot.Provider.Workers[0].Zones[0],
 		}
 	case "aws":
 		nodesRange := cidr.ParseNoError(rt.Spec.Shoot.Networking.Nodes)
@@ -182,10 +178,8 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		}
 
 		ic := &gardeneraws.InfrastructureConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardeneraws.SchemeGroupVersion.String(),
-				Kind:       "InfrastructureConfig",
-			},
+			APIVersion: gardeneraws.SchemeGroupVersion.String(),
+			Kind:       "InfrastructureConfig",
 			Networks: gardeneraws.Networks{
 				Zones: zones,
 			},
@@ -201,10 +195,8 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		infrastructureConfig.Object = ic
 
 		controlPlaneConfig.Object = &gardeneraws.ControlPlaneConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardeneraws.SchemeGroupVersion.String(),
-				Kind:       "ControlPlaneConfig",
-			},
+			APIVersion: gardeneraws.SchemeGroupVersion.String(),
+			Kind:       "ControlPlaneConfig",
 			CloudControllerManager: &gardeneraws.CloudControllerManagerConfig{
 				UseCustomRouteController: new(true),
 			},
@@ -235,10 +227,8 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		}
 
 		ic := &gardenerazure.InfrastructureConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardenerazure.SchemeGroupVersion.String(),
-				Kind:       "InfrastructureConfig",
-			},
+			APIVersion: gardenerazure.SchemeGroupVersion.String(),
+			Kind:       "InfrastructureConfig",
 			Networks: gardenerazure.NetworkConfig{
 				Zones: zones,
 			},
@@ -255,17 +245,13 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		infrastructureConfig.Object = ic
 
 		controlPlaneConfig.Object = &gardenerazure.ControlPlaneConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardenerazure.SchemeGroupVersion.String(),
-				Kind:       "ControlPlaneConfig",
-			},
+			APIVersion: gardenerazure.SchemeGroupVersion.String(),
+			Kind:       "ControlPlaneConfig",
 		}
 	case "openstack":
 		ic := &gardeneraopenstack.InfrastructureConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardeneraopenstack.SchemeGroupVersion.String(),
-				Kind:       "InfrastructureConfig",
-			},
+			APIVersion:             gardeneraopenstack.SchemeGroupVersion.String(),
+			Kind:                   "InfrastructureConfig",
 			FloatingPoolName:       sapconfig.SapConfig.FloatingPoolNetwork, // "FloatingIP-external-kyma-01",
 			FloatingPoolSubnetName: new(sapconfig.SapConfig.FloatingPoolSubnet),
 		}
@@ -283,10 +269,8 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		infrastructureConfig.Object = ic
 
 		controlPlaneConfig.Object = &gardeneraopenstack.ControlPlaneConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardeneraopenstack.SchemeGroupVersion.String(),
-				Kind:       "ControlPlaneConfig",
-			},
+			APIVersion:           gardeneraopenstack.SchemeGroupVersion.String(),
+			Kind:                 "ControlPlaneConfig",
 			LoadBalancerProvider: "f5",
 		}
 	case "alicloud":
@@ -308,10 +292,8 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		}
 
 		ic := &gardeneralicloud.InfrastructureConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardeneralicloud.SchemeGroupVersion.String(),
-				Kind:       "InfrastructureConfig",
-			},
+			APIVersion: gardeneralicloud.SchemeGroupVersion.String(),
+			Kind:       "InfrastructureConfig",
 			Networks: gardeneralicloud.Networks{
 				Zones: zones,
 			},
@@ -327,10 +309,8 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		infrastructureConfig.Object = ic
 
 		controlPlaneConfig.Object = &gardeneralicloud.ControlPlaneConfig{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: gardeneralicloud.SchemeGroupVersion.String(),
-				Kind:       "ControlPlaneConfig",
-			},
+			APIVersion: gardeneralicloud.SchemeGroupVersion.String(),
+			Kind:       "ControlPlaneConfig",
 		}
 	}
 

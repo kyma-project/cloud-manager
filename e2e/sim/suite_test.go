@@ -14,7 +14,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"go.uber.org/zap/zapcore"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/clock"
 	clocktesting "k8s.io/utils/clock/testing"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -111,9 +110,7 @@ var _ = BeforeSuite(func() {
 	By("creating garden namespace")
 	// create garden namespace
 	err = infra.Garden().Client().Create(infra.Ctx(), &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: config.GardenNamespace,
-		},
+		Name: config.GardenNamespace,
 	})
 	Expect(client.IgnoreAlreadyExists(err)).NotTo(HaveOccurred(), "failed to create garden namespace")
 

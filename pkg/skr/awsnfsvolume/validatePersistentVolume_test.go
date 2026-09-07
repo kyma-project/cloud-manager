@@ -36,20 +36,16 @@ func TestValidatePersistentVolume(t *testing.T) {
 
 		setupTest := func() {
 			awsNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-awsnfsvol",
-					Namespace: "test-ns",
-				},
+				Name:      "test-awsnfsvol",
+				Namespace: "test-ns",
 				Status: cloudresourcesv1beta1.AwsNfsVolumeStatus{
 					Id: "2b0d615e-7ea2-41e1-88c7-447ca3e34cd5",
 				},
 			}
 
 			pv = &corev1.PersistentVolume{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:   awsNfsVolume.Status.Id,
-					Labels: getVolumeLabels(awsNfsVolume),
-				},
+				Name:   awsNfsVolume.Status.Id,
+				Labels: getVolumeLabels(awsNfsVolume),
 			}
 
 			fakeClient := fake.NewClientBuilder().

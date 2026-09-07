@@ -49,16 +49,14 @@ func IsErrorRetryable(err error) bool {
 }
 
 func AsApiError(err error) smithy.APIError {
-	var apiError smithy.APIError
-	if errors.As(err, &apiError) {
+	if apiError, ok := errors.AsType[smithy.APIError](err); ok {
 		return apiError
 	}
 	return nil
 }
 
 func GetErrorMessage(err error, def string) (string, bool) {
-	var apiError smithy.APIError
-	if errors.As(err, &apiError) {
+	if apiError, ok := errors.AsType[smithy.APIError](err); ok {
 		switch apiError.ErrorCode() {
 		case UnauthorizedOperation:
 			return "Not authorized to perform this operation.", true
@@ -73,24 +71,21 @@ func GetErrorMessage(err error, def string) (string, bool) {
 }
 
 func IsAccessDenied(err error) bool {
-	var apiError smithy.APIError
-	if errors.As(err, &apiError) {
+	if apiError, ok := errors.AsType[smithy.APIError](err); ok {
 		return apiError.ErrorCode() == AccessDenied
 	}
 	return false
 }
 
 func IsUnauthorized(err error) bool {
-	var apiError smithy.APIError
-	if errors.As(err, &apiError) {
+	if apiError, ok := errors.AsType[smithy.APIError](err); ok {
 		return apiError.ErrorCode() == UnauthorizedOperation
 	}
 	return false
 }
 
 func IsRouteNotSupported(err error) bool {
-	var apiError smithy.APIError
-	if errors.As(err, &apiError) {
+	if apiError, ok := errors.AsType[smithy.APIError](err); ok {
 		return apiError.ErrorCode() == RouteNotSupported
 	}
 	return false
@@ -112,16 +107,14 @@ var notFoundErrorCodes = map[string]struct{}{
 
 func IsNotFound(err error) bool {
 	if err != nil {
-		var apiErr smithy.APIError
-		if errors.As(err, &apiErr) {
+		if apiErr, ok := errors.AsType[smithy.APIError](err); ok {
 			_, listed := notFoundErrorCodes[apiErr.ErrorCode()]
 			if listed {
 				return true
 			}
 		}
 
-		var respErr *smithyhttp.ResponseError
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*smithyhttp.ResponseError](err); ok {
 			return respErr.HTTPStatusCode() == http.StatusNotFound
 		}
 	}

@@ -33,10 +33,8 @@ func resourcesLoad(ctx context.Context, st composed.State) (error, context.Conte
 			continue
 		}
 		list := &metav1.PartialObjectMetadataList{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       gvk.Kind,
-				APIVersion: gvk.GroupVersion().String(),
-			},
+			Kind:       gvk.Kind,
+			APIVersion: gvk.GroupVersion().String(),
 		}
 
 		err := state.Cluster().K8sClient().List(

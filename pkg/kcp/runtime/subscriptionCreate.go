@@ -7,7 +7,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func subscriptionCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -18,13 +17,11 @@ func subscriptionCreate(ctx context.Context, st composed.State) (error, context.
 	}
 
 	subscription := &cloudcontrolv1beta1.Subscription{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: state.Obj().GetNamespace(),
-			Name:      state.ObjAsRuntime().Spec.Shoot.SecretBindingName,
-			Labels: map[string]string{
-				cloudcontrolv1beta1.SubscriptionLabelBindingName: state.ObjAsRuntime().Spec.Shoot.SecretBindingName,
-				cloudcontrolv1beta1.LabelScopeProvider:           state.ObjAsRuntime().Spec.Shoot.Provider.Type,
-			},
+		Namespace: state.Obj().GetNamespace(),
+		Name:      state.ObjAsRuntime().Spec.Shoot.SecretBindingName,
+		Labels: map[string]string{
+			cloudcontrolv1beta1.SubscriptionLabelBindingName: state.ObjAsRuntime().Spec.Shoot.SecretBindingName,
+			cloudcontrolv1beta1.LabelScopeProvider:           state.ObjAsRuntime().Spec.Shoot.Provider.Type,
 		},
 		Spec: cloudcontrolv1beta1.SubscriptionSpec{
 			Details: cloudcontrolv1beta1.SubscriptionDetails{

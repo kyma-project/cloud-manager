@@ -197,15 +197,11 @@ func (in *VpcPeering) SetState(v string) {
 
 func (in *VpcPeering) CloneForPatchStatus() client.Object {
 	return &VpcPeering{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "VpcPeering",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "VpcPeering",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 }
 

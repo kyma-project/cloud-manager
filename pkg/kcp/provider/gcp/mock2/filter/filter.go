@@ -421,7 +421,7 @@ func envOptionsFromStruct(v any) ([]cel.EnvOption, map[string]string, error) {
 		name := f.Name
 		tag := f.Tag.Get("json")
 		if tag != "" {
-			jsonName := strings.Split(tag, ",")[0]
+			jsonName, _, _ := strings.Cut(tag, ",")
 			if jsonName == "-" {
 				continue
 			}

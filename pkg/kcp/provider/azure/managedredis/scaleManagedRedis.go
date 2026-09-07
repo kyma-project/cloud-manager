@@ -93,8 +93,7 @@ func scaleManagedRedis(ctx context.Context, st composed.State) (error, context.C
 
 	err = state.client.UpdateCluster(ctx, state.resourceGroupName, obj.Name, update)
 	if err != nil {
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 			// Azure returns 400 "busy undergoing system maintenance" shortly after
 			// provisioning completes — treat as transient, not a permanent error.
 			if strings.Contains(respErr.Error(), "busy undergoing system maintenance") {

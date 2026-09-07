@@ -114,15 +114,11 @@ func (in *AzureVNetLink) SetState(v string) {
 
 func (in *AzureVNetLink) CloneForPatchStatus() client.Object {
 	return &AzureVNetLink{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "AzureVNetLink",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "AzureVNetLink",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 }
 

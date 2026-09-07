@@ -8,9 +8,7 @@ import (
 
 func NewNotFoundError(msg string) error {
 	result := &gophercloud.ErrUnexpectedResponseCode{
-		BaseError: gophercloud.BaseError{
-			Info: msg,
-		},
+		Info:     msg,
 		Expected: []int{http.StatusOK},
 		Actual:   http.StatusNotFound,
 	}

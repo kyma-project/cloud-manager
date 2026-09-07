@@ -8,7 +8,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func createVolume(ctx context.Context, st composed.State) (error, context.Context) {
@@ -30,14 +29,12 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	pv := &corev1.PersistentVolume{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace:   state.Obj().GetNamespace(),
-			Name:        getVolumeName(state.ObjAsAlicloudNfsVolume()),
-			Labels:      getVolumeLabels(state.ObjAsAlicloudNfsVolume()),
-			Annotations: getVolumeAnnotations(state.ObjAsAlicloudNfsVolume()),
-			Finalizers: []string{
-				api.CommonFinalizerDeletionHook,
-			},
+		Namespace:   state.Obj().GetNamespace(),
+		Name:        getVolumeName(state.ObjAsAlicloudNfsVolume()),
+		Labels:      getVolumeLabels(state.ObjAsAlicloudNfsVolume()),
+		Annotations: getVolumeAnnotations(state.ObjAsAlicloudNfsVolume()),
+		Finalizers: []string{
+			api.CommonFinalizerDeletionHook,
 		},
 		Spec: corev1.PersistentVolumeSpec{
 			Capacity: corev1.ResourceList{

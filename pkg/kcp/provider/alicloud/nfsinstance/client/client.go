@@ -107,8 +107,7 @@ func isFileSystemNotFound(err error) bool {
 
 // isSdkErrorWithCode reports whether err is an AliCloud SDK error with the given Code.
 func isSdkErrorWithCode(err error, code string) bool {
-	var sdkErr *tea.SDKError
-	if errors.As(err, &sdkErr) {
+	if sdkErr, ok := errors.AsType[*tea.SDKError](err); ok {
 		return tea.StringValue(sdkErr.Code) == code
 	}
 	return false

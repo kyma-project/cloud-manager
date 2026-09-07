@@ -152,10 +152,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 	It("Scenario: KCP RedisInstance GCP with IpRange can be created", func() {
 		var err error
 		obj := &cloudcontrolv1beta1.RedisInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      uuid.NewString(),
-				Namespace: infra.KCP().Namespace(),
-			},
+			Name:      uuid.NewString(),
+			Namespace: infra.KCP().Namespace(),
 			Spec: cloudcontrolv1beta1.RedisInstanceSpec{
 				RemoteRef: cloudcontrolv1beta1.RemoteRef{
 					Name:      uuid.NewString(),
@@ -186,10 +184,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 	It("Scenario: KCP RedisInstance GCP without IpRange can not be created", func() {
 		var err error
 		obj := &cloudcontrolv1beta1.RedisInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      uuid.NewString(),
-				Namespace: infra.KCP().Namespace(),
-			},
+			Name:      uuid.NewString(),
+			Namespace: infra.KCP().Namespace(),
 			Spec: cloudcontrolv1beta1.RedisInstanceSpec{
 				RemoteRef: cloudcontrolv1beta1.RemoteRef{
 					Name:      uuid.NewString(),
@@ -220,10 +216,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 	It("Scenario: KCP RedisInstance AWS with IpRange can be created", func() {
 		var err error
 		obj := &cloudcontrolv1beta1.RedisInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      uuid.NewString(),
-				Namespace: infra.KCP().Namespace(),
-			},
+			Name:      uuid.NewString(),
+			Namespace: infra.KCP().Namespace(),
 			Spec: cloudcontrolv1beta1.RedisInstanceSpec{
 				RemoteRef: cloudcontrolv1beta1.RemoteRef{
 					Name:      uuid.NewString(),
@@ -254,10 +248,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 	It("Scenario: KCP RedisInstance AWS without IpRange can not be created", func() {
 		var err error
 		obj := &cloudcontrolv1beta1.RedisInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      uuid.NewString(),
-				Namespace: infra.KCP().Namespace(),
-			},
+			Name:      uuid.NewString(),
+			Namespace: infra.KCP().Namespace(),
 			Spec: cloudcontrolv1beta1.RedisInstanceSpec{
 				RemoteRef: cloudcontrolv1beta1.RemoteRef{
 					Name:      uuid.NewString(),
@@ -288,10 +280,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 	It("Scenario: KCP RedisInstance Azure with IpRange can be created", func() {
 		var err error
 		obj := &cloudcontrolv1beta1.RedisInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      uuid.NewString(),
-				Namespace: infra.KCP().Namespace(),
-			},
+			Name:      uuid.NewString(),
+			Namespace: infra.KCP().Namespace(),
 			Spec: cloudcontrolv1beta1.RedisInstanceSpec{
 				RemoteRef: cloudcontrolv1beta1.RemoteRef{
 					Name:      uuid.NewString(),
@@ -322,10 +312,8 @@ var _ = Describe("Feature: KCP RedisInstance", func() {
 	It("Scenario: KCP RedisInstance Azure without IpRange can not be created", func() {
 		var err error
 		obj := &cloudcontrolv1beta1.RedisInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      uuid.NewString(),
-				Namespace: infra.KCP().Namespace(),
-			},
+			Name:      uuid.NewString(),
+			Namespace: infra.KCP().Namespace(),
 			Spec: cloudcontrolv1beta1.RedisInstanceSpec{
 				RemoteRef: cloudcontrolv1beta1.RemoteRef{
 					Name:      uuid.NewString(),

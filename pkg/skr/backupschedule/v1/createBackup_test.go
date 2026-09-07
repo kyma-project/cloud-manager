@@ -160,10 +160,8 @@ func (s *createBackupSuite) TestCreateGcpBackupFailure() {
 	bkupName := fmt.Sprintf("%s-%d-%s", obj.Name, index, state.nextRunTime.UTC().Format("20060102-150405"))
 	//Create backup with the same name to simulate failure
 	bkup := &v1beta1.GcpNfsVolumeBackup{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      bkupName,
-			Namespace: gcpNfsBackupSchedule.Namespace,
-		},
+		Name:      bkupName,
+		Namespace: gcpNfsBackupSchedule.Namespace,
 		Spec: v1beta1.GcpNfsVolumeBackupSpec{
 			Source: v1beta1.GcpNfsVolumeBackupSource{
 				Volume: v1beta1.GcpNfsVolumeRef{

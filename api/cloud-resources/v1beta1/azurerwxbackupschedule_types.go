@@ -319,14 +319,10 @@ func init() {
 
 func (sc *AzureRwxBackupSchedule) CloneForPatchStatus() client.Object {
 	return &AzureRwxBackupSchedule{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "AzureRwxBackupSchedule",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: sc.Namespace,
-			Name:      sc.Name,
-		},
-		Status: sc.Status,
+		Kind:       "AzureRwxBackupSchedule",
+		APIVersion: GroupVersion.String(),
+		Namespace:  sc.Namespace,
+		Name:       sc.Name,
+		Status:     sc.Status,
 	}
 }

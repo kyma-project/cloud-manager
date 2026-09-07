@@ -81,8 +81,8 @@ func TestCyclicWorkerReschedules(t *testing.T) {
 	fakeClock := clocktesting.NewFakeClock(time.Now())
 	col := newTestCollection(fakeClock)
 
-	var calls int64
-	l := newTestLooper(col, func(_ int, _ string) { atomic.AddInt64(&calls, 1) })
+	var calls atomic.Int64
+	l := newTestLooper(col, func(_ int, _ string) { calls.Add(1) })
 
 	col.cyclicQueue.Add("k")
 
@@ -93,7 +93,7 @@ func TestCyclicWorkerReschedules(t *testing.T) {
 			col.cyclicQueue.AddAfter(kymaName, l.cyclicMinInterval)
 		}
 	}, col.cyclicQueue.Add))
-	assert.Equal(t, int64(1), atomic.LoadInt64(&calls))
+	assert.Equal(t, int64(1), calls.Load())
 
 	// not dispatchable yet
 	assert.Never(t, func() bool { return col.cyclicQueue.Len() > 0 }, 200*time.Millisecond, 20*time.Millisecond)
@@ -114,8 +114,8 @@ func TestNotificationWorkerFifoDrainDoesNotTouchCyclic(t *testing.T) {
 	fakeClock := clocktesting.NewFakeClock(time.Now())
 	col := newTestCollection(fakeClock)
 
-	var calls int64
-	l := newTestLooper(col, func(_ int, _ string) { atomic.AddInt64(&calls, 1) })
+	var calls atomic.Int64
+	l := newTestLooper(col, func(_ int, _ string) { calls.Add(1) })
 
 	// Seed the cyclic queue with a fixed order; "k" sits behind others waiting its turn.
 	col.cyclicQueue.Add("a")
@@ -126,7 +126,7 @@ func TestNotificationWorkerFifoDrainDoesNotTouchCyclic(t *testing.T) {
 	// Process the notification for "k" with the PRODUCTION notification callbacks:
 	// reAdd is a no-op and onConflict drops — neither touches the cyclic queue.
 	require.False(t, l.processOne(0, col.notifQueue, "notification", func(string) {}, func(string) {}))
-	assert.Equal(t, int64(1), atomic.LoadInt64(&calls))
+	assert.Equal(t, int64(1), calls.Load())
 
 	// FIFO drain: the notification queue is empty (no self re-add).
 	assert.Equal(t, 0, col.notifQueue.Len())

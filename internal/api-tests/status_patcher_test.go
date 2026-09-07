@@ -6,7 +6,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -14,10 +13,8 @@ var _ = Describe("Feature: Status Patcher", func() {
 
 	createObj := func() (*cloudcontrolv1beta1.Subscription, error) {
 		obj := &cloudcontrolv1beta1.Subscription{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: infra.KCP().Namespace(),
-				Name:      uuid.NewString(),
-			},
+			Namespace: infra.KCP().Namespace(),
+			Name:      uuid.NewString(),
 			Spec: cloudcontrolv1beta1.SubscriptionSpec{
 				Details: cloudcontrolv1beta1.SubscriptionDetails{
 					Garden: &cloudcontrolv1beta1.SubscriptionGarden{

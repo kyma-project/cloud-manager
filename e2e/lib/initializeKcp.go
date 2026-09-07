@@ -11,7 +11,6 @@ import (
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -44,10 +43,8 @@ func InitializeKcp(ctx context.Context, kcpClient client.Client, config *e2econf
 
 	// gardener credentials
 	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: config.KcpNamespace,
-			Name:      "gardener-credentials",
-		},
+		Namespace: config.KcpNamespace,
+		Name:      "gardener-credentials",
 	}
 
 	err = kcpClient.Get(ctx, client.ObjectKeyFromObject(secret), secret)
@@ -76,10 +73,8 @@ func InitializeKcp(ctx context.Context, kcpClient client.Client, config *e2econf
 	}
 
 	secret = &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: config.KcpNamespace,
-			Name:      "gardener-credentials",
-		},
+		Namespace: config.KcpNamespace,
+		Name:      "gardener-credentials",
 		Data: map[string][]byte{
 			"kubeconfig": kubeBytes,
 		},
@@ -105,10 +100,8 @@ func InitializeKcp(ctx context.Context, kcpClient client.Client, config *e2econf
 		if err != nil {
 			// subscription does not exist
 			subscription = &cloudcontrolv1beta1.Subscription{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: config.KcpNamespace,
-					Name:      name,
-				},
+				Namespace: config.KcpNamespace,
+				Name:      name,
 				Spec: cloudcontrolv1beta1.SubscriptionSpec{
 					Details: cloudcontrolv1beta1.SubscriptionDetails{
 						Garden: &cloudcontrolv1beta1.SubscriptionGarden{

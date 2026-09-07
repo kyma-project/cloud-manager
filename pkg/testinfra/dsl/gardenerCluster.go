@@ -9,7 +9,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -82,10 +81,8 @@ func CreateGardenerClusterCR(ctx context.Context, infra testinfra.Infra, gardene
 	}
 
 	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      givenSummary.Name,
-			Namespace: givenSummary.Namespace,
-		},
+		Name:      givenSummary.Name,
+		Namespace: givenSummary.Namespace,
 	}
 	b, err := kubeconfigToBytes(restConfigToKubeconfig(infra.SKR().Cfg()))
 	if err != nil {

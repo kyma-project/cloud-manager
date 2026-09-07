@@ -6,7 +6,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func kcpNfsInstanceCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -21,14 +20,12 @@ func kcpNfsInstanceCreate(ctx context.Context, st composed.State) (error, contex
 	}
 
 	state.KcpNfsInstance = &cloudcontrolv1beta1.NfsInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      state.ObjAsSapNfsVolume().Status.Id,
-			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      state.ObjAsSapNfsVolume().Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: state.ObjAsSapNfsVolume().Namespace,
-			},
+		Name:      state.ObjAsSapNfsVolume().Status.Id,
+		Namespace: state.KymaRef.Namespace,
+		Labels: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      state.ObjAsSapNfsVolume().Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: state.ObjAsSapNfsVolume().Namespace,
 		},
 		Spec: cloudcontrolv1beta1.NfsInstanceSpec{
 			IpRange: cloudcontrolv1beta1.IpRangeRef{

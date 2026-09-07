@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestEvaluator(t *testing.T) {
@@ -15,9 +14,7 @@ func TestEvaluator(t *testing.T) {
 		handleOne := newClusterEvaluationHandleFake("one")
 		handleOne.declare("cmOne", "cmOne", "")
 		handleOne.setObj("cmOne", &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "cmOne",
-			},
+			Name: "cmOne",
 			Data: map[string]string{
 				"alias": "cmOne",
 			},
@@ -78,9 +75,7 @@ func TestEvaluator(t *testing.T) {
 
 		// when cmOne is set
 		handleOne.setObj("cmOne", &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "cmOne",
-			},
+			Name: "cmOne",
 			Data: map[string]string{
 				"cmTwoName": "cmTwo",
 			},

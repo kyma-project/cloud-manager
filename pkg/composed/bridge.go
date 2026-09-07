@@ -94,7 +94,7 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 	if IsStopWithRequeue(err) {
 		//logger.Info("Reconciliation finished with requeue")
 		result = ReconciliationLabelRequeue
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: time.Millisecond}, nil
 	}
 	if IsStopWithRequeueDelay(err) {
 		var ed *stopWithRequeueDelay

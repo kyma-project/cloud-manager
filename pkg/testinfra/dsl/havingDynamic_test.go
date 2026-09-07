@@ -60,9 +60,7 @@ func TestHavingFieldValue(t *testing.T) {
 	t.Run("works with metav1.Time as string", func(t *testing.T) {
 		tm := metav1.Time{Time: util.Must(time.Parse(time.RFC3339, "2026-04-08T08:18:27Z"))}
 		obj := &cloudcontrolv1beta1.NfsInstance{
-			ObjectMeta: metav1.ObjectMeta{
-				CreationTimestamp: tm,
-			},
+			CreationTimestamp: tm,
 		}
 		assert.NoError(t, HavingFieldValue("2026-04-08T08:18:27Z", "metadata", "creationTimestamp")(obj))
 		assert.Error(t, HavingFieldValue("2001-01-01T01:01:01Z", "status", "capacity")(obj))

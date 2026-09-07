@@ -6,7 +6,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func networkReferenceKymaCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -17,10 +16,8 @@ func networkReferenceKymaCreate(ctx context.Context, st composed.State) (error, 
 	}
 
 	kymaNet := &cloudcontrolv1beta1.Network{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      common.KcpNetworkKymaCommonName(state.ObjAsScope().Name),
-			Namespace: state.ObjAsScope().Namespace,
-		},
+		Name:      common.KcpNetworkKymaCommonName(state.ObjAsScope().Name),
+		Namespace: state.ObjAsScope().Namespace,
 		Spec: cloudcontrolv1beta1.NetworkSpec{
 			Type: cloudcontrolv1beta1.NetworkTypeKyma,
 			Scope: cloudcontrolv1beta1.ScopeRef{

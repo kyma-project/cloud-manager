@@ -28,10 +28,8 @@ func TestStartAzureRestore(t *testing.T) {
 		var k8sClient client.WithWatch
 
 		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-scope",
-				Namespace: "test-ns",
-			},
+			Name:      "test-scope",
+			Namespace: "test-ns",
 			Spec: cloudcontrolv1beta1.ScopeSpec{
 				Scope: cloudcontrolv1beta1.ScopeInfo{
 					Azure: &cloudcontrolv1beta1.AzureScope{
@@ -56,10 +54,8 @@ func TestStartAzureRestore(t *testing.T) {
 		}
 		setupTest := func(withObj bool, backupRecoveryPointId string, backupStorageAccountPath string) {
 			scope := &cloudcontrolv1beta1.Scope{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-scope",
-					Namespace: "test-ns",
-				},
+				Name:      "test-scope",
+				Namespace: "test-ns",
 				Spec: cloudcontrolv1beta1.ScopeSpec{
 					Scope: cloudcontrolv1beta1.ScopeInfo{
 						Azure: &cloudcontrolv1beta1.AzureScope{
@@ -69,11 +65,9 @@ func TestStartAzureRestore(t *testing.T) {
 				},
 			}
 			azureRwxVolumeBackup := &cloudresourcesv1beta1.AzureRwxVolumeBackup{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-azure-restore-backup",
-					Namespace: "test-ns",
-				},
-				Status: cloudresourcesv1beta1.AzureRwxVolumeBackupStatus{},
+				Name:      "test-azure-restore-backup",
+				Namespace: "test-ns",
+				Status:    cloudresourcesv1beta1.AzureRwxVolumeBackupStatus{},
 			}
 			azureRwxVolumeBackup.Status.RecoveryPointId = backupRecoveryPointId
 			azureRwxVolumeBackup.Status.StorageAccountPath = backupStorageAccountPath
@@ -82,10 +76,8 @@ func TestStartAzureRestore(t *testing.T) {
 				Time: startTime,
 			}
 			azureRwxVolumeRestore = &cloudresourcesv1beta1.AzureRwxVolumeRestore{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-azure-restore",
-					Namespace: "test-ns-2",
-				},
+				Name:      "test-azure-restore",
+				Namespace: "test-ns-2",
 				Spec: cloudresourcesv1beta1.AzureRwxVolumeRestoreSpec{
 
 					Destination: cloudresourcesv1beta1.PvcSource{
