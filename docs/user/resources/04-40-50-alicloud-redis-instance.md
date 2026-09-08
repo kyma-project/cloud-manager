@@ -65,7 +65,7 @@ This table lists the parameters of AlicloudRedisInstance, together with their de
 
 ## Auth Secret Details
 
-The following table lists the meaningful parameters of the auth Secret:
+The following table lists the parameters of the auth Secret:
 
 | Parameter                 | Type   | Description                                                                                                |
 | ------------------------- | ------ | --------------------------------------------------------------------------------------------------------- |
