@@ -1,0 +1,10 @@
+resource:
+    kind: WafPolicy
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: wafpolicies
+name: WAF Policies
+scope: cluster
+category: Security
+description: >-
+    Web Application Firewall (WAF) policies for protecting web applications
