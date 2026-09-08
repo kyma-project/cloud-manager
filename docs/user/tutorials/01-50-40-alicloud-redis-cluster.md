@@ -81,4 +81,4 @@ This example showcases how to instantiate a Redis cluster, connect a Pod to it, 
    redis-cli -h $HOST -p $PORT -a $AUTH_STRING --tls --cacert /mnt/CaCert.pem -c PING
    ```
 
-   You should receive `PONG` back from the server.
+   If successful, you receive `PONG` back from the server.
