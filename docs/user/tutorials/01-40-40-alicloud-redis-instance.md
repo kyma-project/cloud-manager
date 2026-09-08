@@ -3,7 +3,7 @@
 > [!WARNING]
 > This is a beta feature available only per request for SAP-internal teams.
 
-The Cloud Manager module offers an AlicloudRedisInstance Custom Resource Definition (CRD). When you apply an AlicloudRedisInstance custom resource (CR), it creates an Alibaba Cloud ApsaraDB for Redis (Tair) instance that is reachable within your Kubernetes cluster network.
+The Cloud Manager module offers an AlicloudRedisInstance CustomResourceDefinition (CRD). When you apply an AlicloudRedisInstance custom resource (CR), it creates an Alibaba Cloud ApsaraDB for Redis (Tair) instance that is reachable within your Kubernetes cluster network.
 
 ## Prerequisites  <!-- {docsify-ignore} -->
 
