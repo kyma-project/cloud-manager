@@ -160,4 +160,4 @@ This example showcases how to instantiate Redis by using most of the spec fields
    redis-cli -h $HOST -p $PORT -a $AUTH_STRING --tls --cacert /mnt/CaCert.pem PING
    ```
 
-   You should receive `PONG` back from the server.
+   If successful, you receive `PONG` back from the server.
