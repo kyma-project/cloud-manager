@@ -69,7 +69,7 @@ The following table lists the parameters of the auth Secret:
 
 | Parameter                 | Type   | Description                                                                                                |
 | ------------------------- | ------ | --------------------------------------------------------------------------------------------------------- |
-| **.metadata.name**        | string | Name of the auth Secret. It shares the name with the AlicloudRedisInstance unless `authSecret.name` is set. |
+| **.metadata.name**        | string | Name of the auth Secret. It shares the name with the AlicloudRedisInstance unless **authSecret.name** is set. |
 | **.metadata.labels**      | object | Specified custom labels (if any).                                                                         |
 | **.metadata.annotations** | object | Specified custom annotations (if any).                                                                    |
 | **.data.host**            | string | Primary connection host.                                                                                  |
