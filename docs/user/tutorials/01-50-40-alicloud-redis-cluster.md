@@ -31,7 +31,7 @@ This example showcases how to instantiate a Redis cluster, connect a Pod to it, 
    kubectl wait --for=condition=Ready alicloudrediscluster/alicloudrediscluster-simple-example --timeout=1200s
    ```
 
-3. Instantiate the redis-cli Pod.
+3. Instantiate the `redis-cli` Pod.
 
    ```yaml
    apiVersion: v1
