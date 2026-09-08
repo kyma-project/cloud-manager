@@ -2,6 +2,7 @@ package nuke
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
@@ -31,6 +32,7 @@ func providerResourceStatusDeleted(ctx context.Context, st composed.State) (erro
 
 	return composed.PatchStatus(state.ObjAsNuke()).
 		ErrorLogMessage("Error patching KCP Nuke status with deleted provider resources").
+		SuccessLogMsg("Successfully patched status with deleted provider resources").
 		SuccessErrorNil().
 		Run(ctx, state)
 }

@@ -3,7 +3,9 @@ package nuke
 import (
 	"context"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/service/backup/types"
+	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
@@ -18,7 +20,7 @@ type StateFactory interface {
 }
 
 func NewStateFactory(
-	awsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient],
+	awsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeClient],
 	env abstractions.Environment) StateFactory {
 	return stateFactory{
 		awsClientProvider: awsClientProvider,
@@ -27,7 +29,7 @@ func NewStateFactory(
 }
 
 type stateFactory struct {
-	awsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient]
+	awsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeClient]
 	env               abstractions.Environment
 }
 
@@ -44,9 +46,9 @@ type State struct {
 	ProviderResources []*nuketypes.ProviderResourceKindState
 
 	vault             *types.BackupVaultListMember
-	awsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient]
+	awsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeClient]
 	env               abstractions.Environment
-	awsClient         awsnukeclient.NukeNfsBackupClient
+	awsClient         awsnukeclient.NukeClient
 }
 
 type AwsBackup struct {
@@ -61,6 +63,19 @@ func (b AwsBackup) GetObject() any {
 	return b
 }
 
+type WafPolicyResource struct {
+	Summary wafv2types.WebACLSummary
+	Detail  *wafv2types.WebACL // loaded when needed for lock token
+}
+
+func (r WafPolicyResource) GetId() string {
+	return ptr.Deref(r.Summary.ARN, "")
+}
+
+func (r WafPolicyResource) GetObject() any {
+	return r
+}
+
 type ProviderNukeStatus struct {
 	v1beta1.NukeStatus
 }
@@ -71,4 +86,14 @@ func (s *State) GetVaultName() string {
 
 func (s *State) GetAccountId() string {
 	return s.Scope().Spec.Scope.Aws.AccountId
+}
+
+// Helper function to check if a WAFv2 tag exists with the expected value
+func hasTag(tags []wafv2types.Tag, key, value string) bool {
+	for _, tag := range tags {
+		if ptr.Deref(tag.Key, "") == key && ptr.Deref(tag.Value, "") == value {
+			return true
+		}
+	}
+	return false
 }

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-
 	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/aws/smithy-go"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -105,6 +105,7 @@ var notFoundErrorCodes = map[string]struct{}{
 	(&elasticachetypes.CacheSubnetGroupNotFoundFault{}).ErrorCode(): {},
 	(&elasticachetypes.CacheClusterNotFoundFault{}).ErrorCode():     {},
 	(&secretsmanagertypes.ResourceNotFoundException{}).ErrorCode():  {},
+	(&wafv2types.WAFNonexistentItemException{}).ErrorCode():         {},
 	"InvalidVpcPeeringConnectionID.NotFound":                        {},
 	"InvalidVpcID.NotFound":                                         {},
 	"InvalidRoute.NotFound":                                         {},

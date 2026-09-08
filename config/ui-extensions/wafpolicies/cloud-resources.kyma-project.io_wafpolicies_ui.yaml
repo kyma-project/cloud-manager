@@ -1,0 +1,69 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+        - name: configuration
+          widget: Panel
+          source: spec
+          children:
+            - widget: CodeViewer
+              source: data
+              name: spec.data
+              language: json
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: state
+              name: status.state
+            - widget: Labels
+              source: arn
+              name: status.arn
+            - widget: Labels
+              source: capacity
+              name: status.capacity
+  form: |
+    - path: spec.data
+      name: spec.data
+      widget: CodeEditor
+      language: "'plaintext'"
+      required: true
+  general: |
+    resource:
+        kind: WafPolicy
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: wafpolicies
+    name: WAF Policies
+    scope: cluster
+    category: Security
+    description: >-
+        Web Application Firewall (WAF) policies for protecting web applications
+  list: |
+    - source: status.state
+      name: status.state
+      sort: true
+    - source: status.arn
+      name: status.arn
+    - source: status.capacity
+      name: status.capacity
+      sort: true
+  translations: |
+    en:
+      spec.data: WebACL Configuration (JSON)
+      status.state: State
+      status.arn: ARN
+      status.capacity: Capacity
+      configuration: Configuration
+      status: Status
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: wafpolicies-ui.operator.kyma-project.io
+  namespace: kyma-system

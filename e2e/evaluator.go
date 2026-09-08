@@ -20,6 +20,8 @@ type EvaluatorBuilder struct {
 
 func NewEvaluatorBuilder() *EvaluatorBuilder {
 	vm := goja.New()
+	scenarioId := strings.ReplaceAll(uuid.New().String(), "-", "")[:7]
+	util.MustVoid(vm.GlobalObject().Set("scenarioId", scenarioId))
 	vm.SetFieldNameMapper(goja.TagFieldNameMapper("json", true))
 	util.MustVoid(vm.GlobalObject().Set("id", func(fc goja.FunctionCall, r *goja.Runtime) goja.Value {
 		length := 7

@@ -27,7 +27,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud"
 	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
-	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
@@ -176,7 +175,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.ActiveSkrCollection(),
 		infra.GcpMock2().NfsBackupV2Provider(),
-		awsnukeclient.Mock(),
+		infra.AwsMock().NukeProvider(),
 		azurenukeclient.NukeProvider(infra.AzureMock().StorageProvider()),
 		env,
 	)).To(Succeed())

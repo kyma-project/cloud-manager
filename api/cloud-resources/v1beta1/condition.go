@@ -76,3 +76,10 @@ const (
 const (
 	ReasonSubnetNotFound = "SubnetNotFound"
 )
+
+const (
+	ReasonProviderError   = "ProviderError"
+	ReasonReady           = "Ready"
+	ReasonProcessing      = "Processing"
+	ReasonDeleteWhileUsed = "DeleteWhileUsed"
+)
