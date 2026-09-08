@@ -1,0 +1,71 @@
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: WafPolicy
+metadata:
+  name: my-webacl
+spec:
+  data: |
+    {
+      "DefaultAction": {
+        "Allow": {}
+      },
+      "Rules": [
+        {
+          "Name": "RateLimitRule",
+          "Priority": 1,
+          "Statement": {
+            "RateBasedStatement": {
+              "Limit": 2000,
+              "AggregateKeyType": "IP"
+            }
+          },
+          "Action": {
+            "Block": {}
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "RateLimitRule"
+          }
+        },
+        {
+          "Name": "GeoBlockRule",
+          "Priority": 2,
+          "Statement": {
+            "GeoMatchStatement": {
+              "CountryCodes": ["CN", "RU", "KP"]
+            }
+          },
+          "Action": {
+            "Block": {}
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "GeoBlockRule"
+          }
+        },
+        {
+          "Name": "SQLiProtection",
+          "Priority": 3,
+          "Statement": {
+            "ManagedRuleGroupStatement": {
+              "VendorName": "AWS",
+              "Name": "AWSManagedRulesSQLiRuleSet"
+            }
+          },
+          "OverrideAction": {
+            "None": {}
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "SQLiProtection"
+          }
+        }
+      ],
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "my-webacl"
+      }
+    }

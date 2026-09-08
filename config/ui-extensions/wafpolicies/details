@@ -1,0 +1,22 @@
+body:
+    - name: configuration
+      widget: Panel
+      source: spec
+      children:
+        - widget: CodeViewer
+          source: data
+          name: spec.data
+          language: json
+    - name: status
+      widget: Panel
+      source: status
+      children:
+        - widget: Labels
+          source: state
+          name: status.state
+        - widget: Labels
+          source: arn
+          name: status.arn
+        - widget: Labels
+          source: capacity
+          name: status.capacity

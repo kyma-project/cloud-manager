@@ -1,0 +1,5 @@
+- path: spec.data
+  name: spec.data
+  widget: CodeEditor
+  language: "'plaintext'"
+  required: true
