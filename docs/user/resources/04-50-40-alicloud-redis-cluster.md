@@ -4,7 +4,7 @@
 > This is a beta feature available only per request for SAP-internal teams.
 
 The `alicloudrediscluster.cloud-resources.kyma-project.io` is a namespace-scoped custom resource (CR).
-It describes the Alibaba Cloud [ApsaraDB for Redis](https://www.alibabacloud.com/help/en/redis/) instance running in cluster (proxy-based sharded) architecture.
+It describes the Alibaba Cloud [ApsaraDB for Redis](https://www.alibabacloud.com/help/en/redis/) instance running in a cluster (proxy-based sharded) architecture.
 Once the cluster is provisioned, a Kubernetes Secret with endpoint and credential details is created in the same namespace. By default, the Secret has the same name as the AlicloudRedisCluster.
 
 The cluster requires an IP range, allocated from an [IpRange CR](./04-10-iprange.md). If you don't reference one, the default IpRange is used. If the default IpRange doesn't exist, it is created. Create a non-default IpRange only when you need to control network segments to avoid range conflicts.
