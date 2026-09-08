@@ -15,7 +15,7 @@ When creating AlicloudRedisInstance, only the `redisTier` field is mandatory. It
 
 In-transit encryption is always enabled. Communication with the Redis instance requires a certificate. You can find it in the Secret at the **.data.CaCert.pem** path.
 
-Authentication is always enabled. A generated password is provided in the Secret on the `.data.authString` path.
+Authentication is always enabled. A generated password is provided in the Secret at the **.data.authString** path.
 
 ## Persistence
 
