@@ -55,7 +55,7 @@ This table lists the parameters of AlicloudRedisCluster, together with their des
 
 ## Auth Secret Details
 
-The following table lists the meaningful parameters of the auth Secret:
+The following table lists the parameters of the auth Secret:
 
 | Parameter                   | Type   | Description                                                                                                  |
 | --------------------------- | ------ | ----------------------------------------------------------------------------------------------------------- |
