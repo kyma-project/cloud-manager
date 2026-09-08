@@ -13,7 +13,7 @@ Use the following table to identify the Cloud Manager principal. Then, perform t
 | BTP Cockpit URL                      | Kyma Dashboard URL                           | Cloud Manager Principal                                           |
 |--------------------------------------|----------------------------------------------|-------------------------------------------------------------------|
 | https://canary.cockpit.btp.int.sap   | https://dashboard.stage.kyma.cloud.sap       | `arn:aws:iam::194230256199:user/cloud-manager-peering-stage`      |
-| https://emea.cockpit.btp.cloud.sap   | https://dashboard.kyma.cloud.s
+| https://emea.cockpit.btp.cloud.sap   | https://dashboard.kyma.cloud.sap             | `arn:aws:iam::194230256199:user/cloud-manager-peering-prod`       |
 
 <!-- The stage landscape is visible only in the Internal DRAFT version of Help Portal docs. The stage landscape is not part of the Cloud Production version of Help Portal docs -->
 
