@@ -51,7 +51,7 @@ This table lists the parameters of AlicloudRedisCluster, together with their des
 | **authSecret.name**        | string | Optional. Auth Secret name.                                                                                                                                                                                       |
 | **authSecret.labels**      | object | Optional. Auth Secret labels. Keys and values must be strings.                                                                                                                                                   |
 | **authSecret.annotations** | object | Optional. Auth Secret annotations. Keys and values must be strings.                                                                                                                                              |
-| **authSecret.extraData**   | object | Optional. Additional Secret Data entries. Keys and values must be a string. Allows users to define additional data fields that will be present in the Secret. The well-known data fields can be used as templates. The templating follows the [Golang templating syntax](https://pkg.go.dev/text/template). |
+| **authSecret.extraData**   | object | Optional. Allows you to define additional data fields that will be present in the Secret. The well-known data fields can be used as templates. The templating follows the [Golang templating syntax](https://pkg.go.dev/text/template). Keys and values must be strings. |
 
 ## Auth Secret Details
 
