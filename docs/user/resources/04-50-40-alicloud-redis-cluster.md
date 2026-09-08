@@ -21,7 +21,7 @@ Authentication is always enabled. A generated password is provided in the Secret
 
 ## Persistence
 
-Persistence is not supported. Data is not written to durable storage (i.e., data at rest).
+Persistence is not supported. Data is not written to durable storage (for example, data at rest).
 
 ## Redis Tiers
 
