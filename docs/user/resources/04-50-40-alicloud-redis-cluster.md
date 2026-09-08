@@ -9,9 +9,9 @@ Once the cluster is provisioned, a Kubernetes Secret with endpoint and credentia
 
 The cluster requires an IP range, allocated from an [IpRange CR](./04-10-iprange.md). If you don't reference one, the default IpRange is used. If the default IpRange doesn't exist, it is created. Create a non-default IpRange only when you need to control network segments to avoid range conflicts.
 
-When creating AlicloudRedisCluster, the `redisTier` and `shardCount` fields are mandatory. `redisTier` sets the per-shard capacity; `shardCount` sets the number of data shards and can be changed after creation. Optionally, you can set `engineVersion` and `authSecret`.
+When creating AlicloudRedisCluster, the **redisTier** and **shardCount** fields are mandatory. **redisTier** sets the per-shard capacity, and **shardCount** sets the number of data shards and can be changed after creation. Optionally, you can set **engineVersion** and **authSecret**.
 
-The AliCloud instance class is derived from `redisTier` and `shardCount` at creation time. It cannot be changed afterwards, except by scaling `shardCount`.
+The AliCloud instance class is derived from **redisTier** and **shardCount** fields at creation time. You cannot change it afterward, except by scaling **shardCount**.
 
 ## In-transit Encryption
 
