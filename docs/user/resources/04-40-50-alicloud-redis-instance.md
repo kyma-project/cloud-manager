@@ -7,7 +7,7 @@ The `alicloudredisinstance.cloud-resources.kyma-project.io` is a namespace-scope
 It describes the Alibaba Cloud [ApsaraDB for Redis (Tair)](https://www.alibabacloud.com/help/en/redis/) instance.
 Once the instance is provisioned, a Kubernetes Secret with endpoint and credential details is created in the same namespace. By default, the Secret has the same name as the AlicloudRedisInstance.
 
-The instance requires an IP range, allocated from an [IpRange CR](./04-10-iprange.md). If you do not reference one, the default IpRange is used and created if it does not exist. Create a non-default IpRange only when you need to control network segments to avoid range conflicts.
+The instance requires an IP range, allocated from an [IpRange CR](./04-10-iprange.md). If you don't reference one, the default IpRange is used. If the default IpRange doesn't exist, it is created. Create a non-default IpRange only when you need to control network segments to avoid range conflicts.
 
 When creating AlicloudRedisInstance, only the `redisTier` field is mandatory. It selects both the service tier (**Standard** or **Premium**) and the memory capacity. Optionally, you can set `engineVersion` and `authSecret`.
 
