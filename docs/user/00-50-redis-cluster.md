@@ -17,7 +17,7 @@ The Cloud Manager module supports the Redis cluster feature of the following clo
 * Amazon Web Services [Amazon ElastiCashe for Redis OSS](https://aws.amazon.com/elasticache/redis)
 * Google Cloud [Memorystore](https://cloud.google.com/memorystore?hl=en)
 * Microsoft Azure [Azure Cache for Redis](https://azure.microsoft.com/en-us/products/cache)
-* Alibaba Cloud [ApsaraDB for Redis](https://www.alibabacloud.com/help/en/redis/)
+* Alibaba Cloud [ApsaraDB for Redis](https://www.alibabacloud.com/help/en/redis/) [**Beta feature**]
 
 You can configure Cloud Manager's Redis clusters using a dedicated Redis cluster custom resource (CR) corresponding with the cloud provider for your Kyma cluster, namely AwsRedisCluster CR, GcpRedisCluster CR, AzureRedisCluster CR, or AlicloudRedisCluster CR. For more information, see [Redis Resources](./resources/README.md#redis-cluster-resources).
 

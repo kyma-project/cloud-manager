@@ -32,7 +32,7 @@ This example showcases how to instantiate Redis using only the required fields, 
    kubectl wait --for=condition=Ready alicloudredisinstance/alicloudredisinstance-simple-example --timeout=1200s
    ```
 
-3. Instantiate the redis-cli Pod.
+3. Instantiate the `redis-cli` Pod.
 
    ```yaml
    apiVersion: v1

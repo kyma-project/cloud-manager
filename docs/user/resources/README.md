@@ -120,7 +120,7 @@ The `azurerediscluster.cloud-resources.kyma-project.io` CRD describes the Micros
 
 ### AlicloudRedisCluster CR [**Beta feature**]
 
-The `alicloudrediscluster.cloud-resources.kyma-project.io` CRD describes the Alibaba Cloud ApsaraDB for Redis cluster (proxy-based sharded) instance. For more information, see [AlicloudRedisCluster Custom Resource](./04-50-40-alicloud-redis-cluster.md).
+The `alicloudrediscluster.cloud-resources.kyma-project.io` CRD describes the Alibaba Cloud ApsaraDB for Redis cloud-native cluster (CE) instance. For more information, see [AlicloudRedisCluster Custom Resource](./04-50-40-alicloud-redis-cluster.md).
 
 
 ## VPC DNS Link Resources
