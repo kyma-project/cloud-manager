@@ -28,6 +28,7 @@ type FeatureName = string
 const (
 	FeatureUnknown FeatureName = "unknown"
 
+	FeatureCertificate       FeatureName = "certificate"
 	FeatureNfs               FeatureName = "nfs"
 	FeatureNfsBackup         FeatureName = "nfsBackup"
 	FeaturePeering           FeatureName = "peering"
@@ -35,6 +36,7 @@ const (
 	FeatureRedisCluster      FeatureName = "rediscluster"
 	FeatureAzureManagedRedis FeatureName = "azureManagedRedis"
 	FeatureVpcDnsLink        FeatureName = "vpcdnslink"
+	FeatureWAF               FeatureName = "waf"
 )
 
 type PlaneName = string

@@ -79,10 +79,7 @@ func (r *nukeReconciler) newAction() composed.Action {
 				gcpnuke.New(r.gcpStateFactory),
 			),
 			composed.If(
-				composed.All(
-					feature.FFNukeBackupsAws.Predicate(),
-					statewithscope.AwsProviderPredicate,
-				),
+				statewithscope.AwsProviderPredicate,
 				awsnuke.New(r.awsStateFactory),
 			),
 			composed.If(

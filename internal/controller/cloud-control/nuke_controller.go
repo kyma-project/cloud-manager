@@ -26,7 +26,7 @@ func SetupNukeReconciler(
 	kcpManager manager.Manager,
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	gcpFileBackupClientProvider gcpclient.GcpClientProvider[gcpnfsbackupclientv2.FileBackupClient],
-	awsNukeNfsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeNfsBackupClient],
+	awsNukeNfsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeClient],
 	azureNukeRwxClientProvider azureclient.ClientProvider[azurenukeclient.NukeRwxBackupClient],
 	env abstractions.Environment,
 ) error {
