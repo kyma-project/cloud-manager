@@ -15,7 +15,7 @@ The AliCloud instance class is derived from **redisTier** and **shardCount** fie
 
 ## In-transit Encryption
 
-In-transit encryption is always enabled. Communication with the Redis cluster requires a certificate. The certificate can be found in the Secret on the `.data.CaCert.pem` path.
+In-transit encryption is always enabled. Communication with the Redis cluster requires a certificate. You can find it in the Secret at the **.data.CaCert.pem** path.
 
 Authentication is always enabled. A generated password is provided in the Secret on the `.data.authString` path.
 
