@@ -19,10 +19,12 @@ Browse the Cloud Manager tutorials to learn how to create and use cloud resource
   * [Using AwsRedisInstance Custom Resources](./01-40-10-aws-redis-instance.md)
   * [Using GcpRedisInstance Custom Resources](./01-40-20-gcp-redis-instance.md)
   * [Using AzureRedisInstance Custom Resources](./01-40-30-azure-redis-instance.md)
+  * [Using AlicloudRedisInstance Custom Resources](./01-40-40-alicloud-redis-instance.md) [**Beta feature**]
 * Redis Cluster
   * [Using AwsRedisCluster Custom Resources](./01-50-10-aws-redis-cluster.md) [**Beta feature**]
   * [Using GcpRedisCluster Custom Resources](./01-50-20-gcp-redis-cluster.md) [**Beta feature**]
   * [Using AzureRedisCluster Custom Resources](./01-50-30-azure-redis-cluster.md) [**Beta feature**]
+  * [Using AlicloudRedisCluster Custom Resources](./01-50-40-alicloud-redis-cluster.md) [**Beta feature**]
 * VPC DNS Link
   * [Linking Your Kyma Network to Microsoft Azure Private DNS Zone](01-60-10-azure-dns-zone-vpc-link.md) [**Beta feature**]
   * [Linking Your Kyma Network to Microsoft Azure DNS Private Resolver](01-60-20-azure-dns-resolver-vpc-link.md) [**Beta feature**]
