@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 )
 
 func createWebAcl(ctx context.Context, st composed.State) (error, context.Context) {
@@ -25,13 +26,15 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 	// Parse JSON from spec.data directly into AWS SDK CreateWebACLInput
 	var input wafv2.CreateWebACLInput
 	err := json.Unmarshal([]byte(webAcl.Spec.Data), &input)
-
 	if err != nil {
+		// JSON unmarshal error is always a configuration error (user must fix spec.data)
+		logger.Error(err, "Invalid JSON in spec.data")
 		return composed.NewStatusPatcherComposed(webAcl).
 			MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
-				acl.SetStatusProviderError(err.Error())
+				acl.SetStatusConfigurationError("Invalid JSON in spec.data: " + err.Error())
 			}).
-			OnSuccess(composed.Requeue).
+			OnSuccess(composed.Forget).
+			OnStatusChanged(composed.Log("WafPolicy ConfigurationError")).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
@@ -44,20 +47,43 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Create WebACL
 	err = state.awsClient.CreateWebACL(ctx, &input)
-	if err != nil {
-		logger.Error(err, "Error creating WebACL")
+	if err == nil {
+		// WebACL created successfully - requeue to reload full details in next loop
+		logger.Info("AWS WebACL created successfully, requeuing to reload")
+		return composed.StopWithRequeue, ctx
+	}
 
+	// Handle AWS API errors
+	logger.Error(err, "Error creating WebACL")
+
+	// User-actionable configuration errors (invalid rules, permissions, etc)
+	if isConfigurationError(err) {
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
+				acl.SetStatusConfigurationError(err.Error())
+			}).
+			OnSuccess(composed.Forget).
+			OnStatusChanged(composed.Log("WafPolicy ConfigurationError")).
+			Run(ctx, state.Cluster().K8sClient())
+	}
+
+	// Retryable errors (throttling, temporary issues)
+	if awsmeta.IsErrorRetryable(err) {
 		return composed.NewStatusPatcherComposed(webAcl).
 			MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
 				acl.SetStatusProviderError(err.Error())
 			}).
 			OnSuccess(composed.Requeue).
-			OnStatusChanged(composed.Log("WafPolicy ProviderError")).
+			OnStatusChanged(composed.Log("WafPolicy Error (retryable)")).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	// WebACL created successfully - requeue to reload full details in next loop
-	logger.Info("AWS WebACL created successfully, requeuing to reload")
-
-	return composed.StopWithRequeue, ctx
+	// Terminal non-retryable errors
+	return composed.NewStatusPatcherComposed(webAcl).
+		MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
+			acl.SetStatusFailure(err.Error())
+		}).
+		OnSuccess(composed.Forget).
+		OnStatusChanged(composed.Log("WafPolicy Failure")).
+		Run(ctx, state.Cluster().K8sClient())
 }

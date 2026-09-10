@@ -18,7 +18,7 @@ spec:
   scope: Cluster
   versions:
     - additionalPrinterColumns:
-        - jsonPath: .status.state
+        - jsonPath: .status.conditions[?(@.type=='Ready')].reason
           name: State
           type: string
         - jsonPath: .status.capacity
@@ -161,13 +161,8 @@ spec:
                   x-kubernetes-list-map-keys:
                     - type
                   x-kubernetes-list-type: map
-                observedGeneration:
-                  format: int64
-                  type: integer
                 providerId:
                   description: ProviderId is the provider-specific resource identifier (e.g., AWS ARN, Azure Resource ID)
-                  type: string
-                state:
                   type: string
               type: object
           required:
