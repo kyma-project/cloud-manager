@@ -126,7 +126,7 @@ var _ = Describe("WafPolicy Controller", func() {
 					infra.SKR().Client(),
 					awsWebAcl,
 					NewObjActions(),
-					HavingState("Ready"),
+					HavingState("Available"),
 				).
 				Should(Succeed())
 		})

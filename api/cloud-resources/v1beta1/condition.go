@@ -78,8 +78,11 @@ const (
 )
 
 const (
-	ReasonProviderError   = "ProviderError"
-	ReasonReady           = "Ready"
-	ReasonProcessing      = "Processing"
-	ReasonDeleteWhileUsed = "DeleteWhileUsed"
+	ReasonProviderError      = "ProviderError"
+	ReasonAvailable          = "Available"
+	ReasonError              = "Error"
+	ReasonConfigurationError = "ConfigurationError"
+	ReasonFailure            = "Failure"
+	ReasonProcessing         = "Processing"
+	ReasonDeleteWhileUsed    = "DeleteWhileUsed"
 )

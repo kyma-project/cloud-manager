@@ -7,6 +7,7 @@ import (
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	"k8s.io/apimachinery/pkg/api/meta"
 )
 
 func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Context) {
@@ -54,50 +55,75 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Delete WebACL
 	err := state.awsClient.DeleteWebACL(ctx, webAcl.Name, id, scope, state.lockToken)
-	if err != nil {
-		// If not found, consider it deleted
-		if awsmeta.IsNotFound(err) {
-			logger.Info("WebACL not found in AWS, considering as deleted")
-			return nil, ctx
-		}
 
-		// If WebACL is still associated with resources, set DeleteWhileUsed condition
-		if isWebAclAssociatedError(err) {
-			logger.Error(err, "WebACL is still associated with AWS resources, cannot delete")
-			return composed.NewStatusPatcherComposed(webAcl).
-				MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
-					acl.SetStatusDeleteWhileUsed("WebACL is still associated with AWS resources. Remove all associations before deleting.")
-				}).
-				OnSuccess(composed.Requeue).
-				OnStatusChanged(composed.Log("WafPolicy DeleteWhileUsed")).
-				Run(ctx, state.Cluster().K8sClient())
-		}
+	// If not found, consider it deleted
+	if awsmeta.IsNotFound(err) {
+		logger.Info("WebACL not found in AWS, considering as deleted")
+		return nil, ctx
+	}
 
-		logger.Error(err, "Error deleting WebACL")
-
+	// If WebACL is still associated with resources, set DeleteWhileUsed condition
+	if isWebAclAssociatedError(err) {
+		logger.Error(err, "WebACL is still associated with AWS resources, cannot delete")
 		return composed.NewStatusPatcherComposed(webAcl).
 			MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
-				acl.SetStatusProviderError(err.Error())
+				acl.SetStatusDeleteWhileUsed("WebACL is still associated with AWS resources. Remove all associations before deleting.")
 			}).
 			OnSuccess(composed.Requeue).
-			OnStatusChanged(composed.Log("WafPolicy ProviderError")).
+			OnStatusChanged(composed.Log("WafPolicy DeleteWhileUsed")).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	// If deletion succeeded and we had a DeleteWhileUsed condition, remove it
-	if webAcl.Status.State == cloudresourcesv1beta1.ReasonDeleteWhileUsed {
-		logger.Info("WebACL is no longer associated, removing DeleteWhileUsed condition")
+	// Handle other errors
+	if err != nil {
+		logger.Error(err, "Error deleting WebACL")
+
+		// Configuration errors (permissions, invalid state)
+		if isConfigurationError(err) {
+			return composed.NewStatusPatcherComposed(webAcl).
+				MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
+					acl.SetStatusConfigurationError(err.Error())
+				}).
+				OnSuccess(composed.Forget).
+				OnStatusChanged(composed.Log("WafPolicy ConfigurationError")).
+				Run(ctx, state.Cluster().K8sClient())
+		}
+
+		// Retryable errors (throttling, temporary issues)
+		if awsmeta.IsErrorRetryable(err) {
+			return composed.NewStatusPatcherComposed(webAcl).
+				MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
+					acl.SetStatusProviderError(err.Error())
+				}).
+				OnSuccess(composed.Requeue).
+				OnStatusChanged(composed.Log("WafPolicy Error (retryable)")).
+				Run(ctx, state.Cluster().K8sClient())
+		}
+
+		// Terminal non-retryable errors
+		return composed.NewStatusPatcherComposed(webAcl).
+			MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
+				acl.SetStatusFailure(err.Error())
+			}).
+			OnSuccess(composed.Forget).
+			OnStatusChanged(composed.Log("WafPolicy Failure")).
+			Run(ctx, state.Cluster().K8sClient())
+	}
+
+	// Deletion succeeded - if we had a DeleteWhileUsed reason, clear it
+	readyCondition := meta.FindStatusCondition(webAcl.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
+	if readyCondition != nil && readyCondition.Reason == cloudresourcesv1beta1.ReasonDeleteWhileUsed {
+		logger.Info("WebACL is no longer associated, clearing DeleteWhileUsed state")
 		return composed.NewStatusPatcherComposed(webAcl).
 			MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
 				acl.RemoveStatusDeleteWhileUsed()
 			}).
 			OnSuccess(composed.Continue).
-			OnFailure(composed.Log("Failed to remove DeleteWhileUsed condition")).
+			OnFailure(composed.Log("Failed to clear DeleteWhileUsed state")).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
 	logger.Info("WebACL deleted successfully")
-
 	return nil, ctx
 }
 
