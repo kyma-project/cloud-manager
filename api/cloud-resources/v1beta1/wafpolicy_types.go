@@ -80,17 +80,12 @@ type WafPolicyStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
-
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
-
-	// +optional
-	State string `json:"state,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
-// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].reason"
 // +kubebuilder:printcolumn:name="Capacity",type="integer",JSONPath=".status.capacity"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
@@ -111,11 +106,16 @@ type WafPolicy struct {
 }
 
 func (in *WafPolicy) ObservedGeneration() int64 {
-	return in.Status.ObservedGeneration
+	readyCondition := meta.FindStatusCondition(in.Status.Conditions, ConditionTypeReady)
+	if readyCondition == nil {
+		return 0
+	}
+	return readyCondition.ObservedGeneration
 }
 
 func (in *WafPolicy) SetObservedGeneration(i int64) {
-	in.Status.ObservedGeneration = i
+	// ObservedGeneration is managed through the Ready condition
+	// This method is kept for interface compatibility but does nothing
 }
 
 func (in *WafPolicy) GetStatus() any {
@@ -123,32 +123,49 @@ func (in *WafPolicy) GetStatus() any {
 }
 
 func (in *WafPolicy) SetStatusProviderError(msg string) {
-	in.Status.State = ReasonProviderError
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionUnknown,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonError,
+		Message:            msg,
+	})
+}
+
+func (in *WafPolicy) SetStatusConfigurationError(msg string) {
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
 		ObservedGeneration: in.Generation,
-		Reason:             ReasonProviderError,
+		Reason:             ReasonConfigurationError,
+		Message:            msg,
+	})
+}
+
+func (in *WafPolicy) SetStatusFailure(msg string) {
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonFailure,
 		Message:            msg,
 	})
 }
 
 func (in *WafPolicy) SetStatusReady() {
-	in.Status.State = StateReady
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionTrue,
 		ObservedGeneration: in.Generation,
-		Reason:             ReasonReady,
-		Message:            ReasonReady,
+		Reason:             ReasonAvailable,
+		Message:            ReasonAvailable,
 	})
 }
 
 func (in *WafPolicy) SetStatusProcessing() {
-	in.Status.State = StateProcessing
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
-		Status:             metav1.ConditionFalse,
+		Status:             metav1.ConditionUnknown,
 		ObservedGeneration: in.Generation,
 		Reason:             ReasonProcessing,
 		Message:            ReasonProcessing,
@@ -156,19 +173,18 @@ func (in *WafPolicy) SetStatusProcessing() {
 }
 
 func (in *WafPolicy) SetStatusDeleteWhileUsed(msg string) {
-	in.Status.State = ReasonDeleteWhileUsed
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
-		Type:               ConditionTypeDeleteWhileUsed,
-		Status:             metav1.ConditionTrue,
-		ObservedGeneration: in.Status.ObservedGeneration,
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
 		Reason:             ReasonDeleteWhileUsed,
 		Message:            msg,
 	})
 }
 
 func (in *WafPolicy) RemoveStatusDeleteWhileUsed() {
-	in.Status.State = StateDeleting
-	meta.RemoveStatusCondition(&in.Status.Conditions, ConditionTypeDeleteWhileUsed)
+	// When DeleteWhileUsed is cleared, set back to Processing to continue deletion
+	in.SetStatusProcessing()
 }
 
 func (in *WafPolicy) Conditions() *[]metav1.Condition { return &in.Status.Conditions }
@@ -184,11 +200,16 @@ func (in *WafPolicy) SpecificToProviders() []string {
 }
 
 func (in *WafPolicy) State() string {
-	return in.Status.State
+	readyCondition := meta.FindStatusCondition(in.Status.Conditions, ConditionTypeReady)
+	if readyCondition == nil {
+		return ""
+	}
+	return readyCondition.Reason
 }
 
 func (in *WafPolicy) SetState(v string) {
-	in.Status.State = v
+	// State is now derived from Ready condition reason
+	// This method is kept for interface compatibility but does nothing
 }
 
 // +kubebuilder:object:root=true
