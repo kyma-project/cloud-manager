@@ -59,7 +59,7 @@ runs:
           - name: svc-btp-kyma-phoenix-dev
             provider: azure
             isDefault: true
-          - name: gardener-sc-learn
+          - name: gardener-kyma-phx
             provider: gcp
             isDefault: true
           - name: sap-phx-alicloud-dev-cloud-manager
