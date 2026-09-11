@@ -15,11 +15,11 @@ data:
           source: status
           children:
             - widget: Labels
-              source: state
-              name: status.state
-            - widget: Labels
-              source: arn
-              name: status.arn
+              source: providerId
+              name: status.providerId
+            - widget: Conditions
+              source: conditions
+              name: status.conditions
   form: |
     - path: spec.data
       name: spec.data
@@ -38,16 +38,13 @@ data:
     description: >-
         Web Application Firewall (WAF) policies for protecting web applications
   list: |
-    - source: status.state
-      name: status.state
-      sort: true
-    - source: status.arn
-      name: status.arn
+    - source: status.providerId
+      name: status.providerId
   translations: |
     en:
       spec.data: WebACL Configuration (JSON)
-      status.state: State
-      status.arn: ARN
+      status.providerId: Provider ID
+      status.conditions: Status Conditions
       configuration: Configuration
       status: Status
 kind: ConfigMap
