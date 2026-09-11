@@ -24,11 +24,14 @@ import (
 
 // WafPolicySpec defines the desired state of WafPolicy
 type WafPolicySpec struct {
-	// Data contains the complete WebACL configuration in AWS API JSON format.
-	// This should match the structure of AWS WAFv2 CreateWebACLInput/UpdateWebACLInput
-	// excluding the Name and Scope fields which are set automatically.
+	// Data contains the provider-specific WAF policy configuration.
+	// The structure and format depend on the cloud provider specified in the Scope resource.
 	//
-	// The JSON should include:
+	// AWS (supported):
+	// AWS WAFv2 WebACL configuration in JSON format, matching the structure of
+	// CreateWebACLInput/UpdateWebACLInput, excluding Name and Scope fields (set automatically).
+	//
+	// Required fields:
 	// - DefaultAction: {"Allow": {}} or {"Block": {}}
 	// - Rules: array of rule definitions
 	// - VisibilityConfig: CloudWatch metrics configuration
@@ -60,6 +63,8 @@ type WafPolicySpec struct {
 	// }
 	//
 	// See: https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateWebACL.html
+	//
+	// The configuration is validated by the provider's API during reconciliation.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Data string `json:"data"`
