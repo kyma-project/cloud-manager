@@ -11,6 +11,7 @@ import (
 	alicloudredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/rediscluster/client"
 	alicloudredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
+	alicloudvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering/client"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
@@ -134,6 +135,14 @@ func (s *server) RedisClusterClientProvider() alicloudredisclusterclient.ClientP
 			return nil, ErrInvalidCredentials
 		}
 		return a.Region(region).RedisClusterClient(), nil
+	}
+}
+
+func (s *server) VpcPeeringClientProvider() alicloudvpcpeeringclient.ClientProvider {
+	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (alicloudvpcpeeringclient.Client, error) {
+		// VPC peering mock not yet fully implemented; controller tests for AliCloud peering are a future step.
+		// Return an error rather than nil so callers fail explicitly rather than panicking on nil dereference.
+		return nil, errors.New("alicloud mock: VpcPeeringClient not implemented")
 	}
 }
 
