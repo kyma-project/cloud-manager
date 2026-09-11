@@ -6,7 +6,6 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
-	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
@@ -80,7 +79,7 @@ func (r *reconciler) newState(ctx context.Context, request reconcile.Request) (*
 		return nil, err
 	}
 
-	return &State{State: scopeState}, nil
+	return newState(scopeState).(*State), nil
 }
 
 func (r *reconciler) newAction() composed.Action {
@@ -88,37 +87,16 @@ func (r *reconciler) newAction() composed.Action {
 		"crWafPolicyMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.WafPolicy{}),
 		commonscope.LoadObjWithScope(),
-		composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
-			composed.ComposeActions(
-				"wafPolicy-create",
-				actions.AddCommonFinalizer(),
-				statusInitial,
-				// Branch to provider-specific implementation
-				composed.BuildSwitchAction(
-					"providerSwitch",
-					nil,
-					composed.NewCase(
-						awsProviderPredicate,
-						r.awsProviderAction(),
-					),
-					// Future providers (Azure, GCP) will be added here
-				),
+		statusInitial,
+		// Branch to provider-specific implementation
+		composed.BuildSwitchAction(
+			"providerSwitch",
+			nil,
+			composed.NewCase(
+				awsProviderPredicate,
+				r.awsProviderAction(),
 			),
-			composed.ComposeActions(
-				"wafPolicy-delete",
-				// Branch to provider-specific implementation
-				composed.BuildSwitchAction(
-					"providerSwitch",
-					nil,
-					composed.NewCase(
-						awsProviderPredicate,
-						r.awsProviderAction(),
-					),
-					// Future providers (Azure, GCP) will be added here
-				),
-				actions.RemoveCommonFinalizer(),
-				composed.StopAndForgetAction,
-			),
+			// Future providers (Azure, GCP) will be added here
 		),
 		composed.StopAndForgetAction,
 	)
