@@ -12,11 +12,8 @@ body:
       source: status
       children:
         - widget: Labels
-          source: state
-          name: status.state
-        - widget: Labels
-          source: arn
-          name: status.arn
-        - widget: Labels
-          source: capacity
-          name: status.capacity
+          source: providerId
+          name: status.providerId
+        - widget: Conditions
+          source: conditions
+          name: status.conditions
