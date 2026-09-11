@@ -1,7 +1,6 @@
 en:
   spec.data: WebACL Configuration (JSON)
-  status.state: State
-  status.arn: ARN
-  status.capacity: Capacity
+  status.providerId: Provider ID
+  status.conditions: Status Conditions
   configuration: Configuration
   status: Status

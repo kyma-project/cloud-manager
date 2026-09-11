@@ -1,8 +1,2 @@
-- source: status.state
-  name: status.state
-  sort: true
-- source: status.arn
-  name: status.arn
-- source: status.capacity
-  name: status.capacity
-  sort: true
+- source: status.providerId
+  name: status.providerId
