@@ -11,3 +11,12 @@ func New() composed.Action {
 		waitScopeReady,
 	)
 }
+
+func LoadObjWithScope() composed.Action {
+	return composed.ComposeActions(
+		"skrCommonScope",
+		composed.LoadObj,
+		loadScope,
+		waitScopeReady,
+	)
+}

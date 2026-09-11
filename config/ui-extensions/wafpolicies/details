@@ -1,0 +1,19 @@
+body:
+    - name: configuration
+      widget: Panel
+      source: spec
+      children:
+        - widget: CodeViewer
+          source: data
+          name: spec.data
+          language: json
+    - name: status
+      widget: Panel
+      source: status
+      children:
+        - widget: Labels
+          source: providerId
+          name: status.providerId
+        - widget: Conditions
+          source: conditions
+          name: status.conditions
