@@ -70,7 +70,7 @@ type VpcPeeringSpec struct {
 	Details *VpcPeeringDetails `json:"details,omitempty"`
 }
 
-// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="Peering details are immutable."
+// +kubebuilder:validation:XValidation:rule=(self.localNetwork == oldSelf.localNetwork && self.remoteNetwork == oldSelf.remoteNetwork && ((!has(self.peeringName) && !has(oldSelf.peeringName)) || (has(self.peeringName) && has(oldSelf.peeringName) && self.peeringName == oldSelf.peeringName)) && ((!has(self.localPeeringName) && !has(oldSelf.localPeeringName)) || (has(self.localPeeringName) && has(oldSelf.localPeeringName) && self.localPeeringName == oldSelf.localPeeringName)) && ((!has(self.importCustomRoutes) && !has(oldSelf.importCustomRoutes)) || (has(self.importCustomRoutes) && has(oldSelf.importCustomRoutes) && self.importCustomRoutes == oldSelf.importCustomRoutes)) && ((!has(self.useRemoteGateway) && !has(oldSelf.useRemoteGateway)) || (has(self.useRemoteGateway) && has(oldSelf.useRemoteGateway) && self.useRemoteGateway == oldSelf.useRemoteGateway)) && ((!has(self.deleteRemotePeering) && !has(oldSelf.deleteRemotePeering)) || (has(self.deleteRemotePeering) && has(oldSelf.deleteRemotePeering) && self.deleteRemotePeering == oldSelf.deleteRemotePeering)) && ((!has(self.remoteRouteTableUpdateStrategy) && !has(oldSelf.remoteRouteTableUpdateStrategy)) || (has(self.remoteRouteTableUpdateStrategy) && has(oldSelf.remoteRouteTableUpdateStrategy) && self.remoteRouteTableUpdateStrategy == oldSelf.remoteRouteTableUpdateStrategy))), message="Peering details are immutable (except bandwidth)."
 type VpcPeeringDetails struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:XValidation:rule=(self.name != ""), message="Local network name is required."
@@ -93,6 +93,10 @@ type VpcPeeringDetails struct {
 	// +kubebuilder:default:=AUTO
 	// +kubebuilder:validation:Enum=AUTO;NONE;MATCHED;UNMATCHED
 	RemoteRouteTableUpdateStrategy AwsRouteTableUpdateStrategy `json:"remoteRouteTableUpdateStrategy,omitempty"`
+
+	// Bandwidth for cross-region peering in Mbit/s. 0 means provider default.
+	// +optional
+	Bandwidth int32 `json:"bandwidth,omitempty"`
 }
 
 // +kubebuilder:validation:MinProperties=1
