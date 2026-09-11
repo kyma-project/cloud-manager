@@ -3,6 +3,7 @@ package wafpolicy
 import (
 	"context"
 
+	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -19,6 +20,7 @@ func New(stateFactory StateFactory) composed.Action {
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
 					"awsWafPolicy-create",
+					actions.AddCommonFinalizer(),
 					createWebAcl,
 					checkUpdateNeeded,
 					updateWebAcl,
@@ -27,6 +29,7 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"awsWafPolicy-delete",
 					deleteWebAcl,
+					actions.RemoveCommonFinalizer(),
 				),
 			),
 		)(ctx, state)
