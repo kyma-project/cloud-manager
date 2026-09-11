@@ -19,7 +19,6 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	return composed.NewStatusPatcherComposed(webAcl).
 		MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
 			acl.Status.ProviderId = ptr.Deref(state.awsWebAcl.ARN, "")
-			acl.Status.Capacity = state.awsWebAcl.Capacity
 			acl.SetStatusReady()
 		}).
 		OnStatusChanged(
