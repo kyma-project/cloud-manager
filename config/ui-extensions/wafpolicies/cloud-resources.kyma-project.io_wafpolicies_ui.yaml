@@ -20,9 +20,6 @@ data:
             - widget: Labels
               source: arn
               name: status.arn
-            - widget: Labels
-              source: capacity
-              name: status.capacity
   form: |
     - path: spec.data
       name: spec.data
@@ -46,15 +43,11 @@ data:
       sort: true
     - source: status.arn
       name: status.arn
-    - source: status.capacity
-      name: status.capacity
-      sort: true
   translations: |
     en:
       spec.data: WebACL Configuration (JSON)
       status.state: State
       status.arn: ARN
-      status.capacity: Capacity
       configuration: Configuration
       status: Status
 kind: ConfigMap

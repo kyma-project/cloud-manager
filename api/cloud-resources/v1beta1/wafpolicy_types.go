@@ -71,10 +71,6 @@ type WafPolicyStatus struct {
 	// +optional
 	ProviderId string `json:"providerId,omitempty"`
 
-	// Capacity units consumed by the WAF policy
-	// +optional
-	Capacity int64 `json:"capacity,omitempty"`
-
 	// List of status conditions to indicate the status of a WafPolicy.
 	// +optional
 	// +listType=map
@@ -86,7 +82,6 @@ type WafPolicyStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].reason"
-// +kubebuilder:printcolumn:name="Capacity",type="integer",JSONPath=".status.capacity"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // WafPolicy is the Schema for the wafpolicies API

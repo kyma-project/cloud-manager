@@ -21,9 +21,6 @@ spec:
         - jsonPath: .status.conditions[?(@.type=='Ready')].reason
           name: State
           type: string
-        - jsonPath: .status.capacity
-          name: Capacity
-          type: integer
         - jsonPath: .metadata.creationTimestamp
           name: Age
           type: date
@@ -98,10 +95,6 @@ spec:
             status:
               description: status defines the observed state of WafPolicy
               properties:
-                capacity:
-                  description: Capacity units consumed by the WAF policy
-                  format: int64
-                  type: integer
                 conditions:
                   description: List of status conditions to indicate the status of a WafPolicy.
                   items:
