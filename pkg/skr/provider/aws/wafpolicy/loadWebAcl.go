@@ -37,7 +37,6 @@ func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context)
 	if foundId == "" {
 		logger.Info("WebACL not found in AWS, will recreate")
 		webAcl.Status.ProviderId = ""
-		webAcl.Status.Capacity = 0
 		state.awsWebAcl = nil
 		return nil, ctx
 	}
@@ -49,7 +48,6 @@ func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context)
 		if awsmeta.IsNotFound(err) {
 			logger.Info("WebACL not found in AWS, will recreate")
 			webAcl.Status.ProviderId = ""
-			webAcl.Status.Capacity = 0
 			state.awsWebAcl = nil
 			return nil, ctx
 		}
