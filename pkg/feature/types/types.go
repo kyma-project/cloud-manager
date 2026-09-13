@@ -28,6 +28,8 @@ type FeatureName = string
 const (
 	FeatureUnknown FeatureName = "unknown"
 
+	// Make sure to update the ../README.md file when adding new features here!!!!
+
 	FeatureNfs               FeatureName = "nfs"
 	FeatureNfsBackup         FeatureName = "nfsBackup"
 	FeaturePeering           FeatureName = "peering"
