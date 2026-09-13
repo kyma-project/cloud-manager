@@ -64,6 +64,10 @@ The `sapnfsvolumesnapshotschedule.cloud-resources.kyma-project.io` CRD describes
 
 The `sapnfsvolumesnapshotrestore.cloud-resources.kyma-project.io` CRD describes the restore of an SapNfsVolumeSnapshot to either an existing or a new SapNfsVolume. For more information, see [SapNfsVolumeSnapshotRestore Custom Resource](./04-20-53-sap-nfs-volume-snapshot-restore.md).
 
+### AlicloudNfsVolume CR [**Beta feature**]
+
+The `alicloudnfsvolume.cloud-resources.kyma-project.io` CRD describes the Alibaba Cloud NAS (Network Attached Storage) file system that can be used as a ReadWriteMany (RWX) volume in the cluster. For more information, see [AlicloudNfsVolume Custom Resource](./04-20-30-alicloud-nfs-volume.md).
+
 ## VPC Peering Resources
 
 ### AwsVpcPeering CR

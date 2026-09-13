@@ -11,6 +11,7 @@ Browse the Cloud Manager tutorials to learn how to create and use cloud resource
   * [Backing Up NFS Volumes in Google Cloud](./01-20-21-gcp-nfs-volume-backup.md) [**Beta feature**]
   * [Creating Scheduled Automatic NFS Volume Backups in Google Cloud](./01-20-22-gcp-scheduled-nfs-backup.md) [**Beta feature**]
   * [Restoring NFS Volume Backups in Google Cloud](./01-20-23-gcp-nfs-volume-restore.md) [**Beta feature**]
+  * [Using NFS in Alibaba Cloud](./01-20-30-alicloud-nfs-volume.md) [**Beta feature**]
 * VPC Peering
   * [Creating VPC Peering in Amazon Web Services](./01-30-10-aws-vpc-peering.md)
   * [Creating VPC Peering in Google Cloud](./01-30-20-gcp-vpc-peering.md)
