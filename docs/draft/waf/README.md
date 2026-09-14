@@ -359,8 +359,7 @@ spec:
           "Statement": {
             "ManagedRuleGroupStatement": {
               "VendorName": "AWS",
-              "Name": "AWSManagedRulesAmazonIpReputationList",
-              "Version": null
+              "Name": "AWSManagedRulesAmazonIpReputationList"
             }
           },
           "OverrideAction": {
@@ -395,7 +394,7 @@ spec:
       "VisibilityConfig": {
         "SampledRequestsEnabled": true,
         "CloudWatchMetricsEnabled": true,
-        "MetricName": "DefaultRuleSetEquivalent"
+        "MetricName": "ExampleWebACLMetric"
       }
     }
 status:
