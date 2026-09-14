@@ -297,28 +297,105 @@ spec:
       },
       "Rules": [
         {
-          "Name": "RateLimitRule",
+          "Name": "AWSManagedRulesCommonRuleSet",
           "Priority": 1,
           "Statement": {
-            "RateBasedStatement": {
-              "Limit": 100,
-              "AggregateKeyType": "IP"
+            "ManagedRuleGroupStatement": {
+              "VendorName": "AWS",
+              "Name": "AWSManagedRulesCommonRuleSet",
+              "Version": null
             }
           },
-          "Action": {
-            "Block": {}
+          "OverrideAction": {
+            "None": {}
           },
           "VisibilityConfig": {
             "SampledRequestsEnabled": true,
             "CloudWatchMetricsEnabled": true,
-            "MetricName": "RateLimitRuleMetric"
+            "MetricName": "AWSManagedRulesCommonRuleSetMetric"
+          }
+        },
+        {
+          "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+          "Priority": 2,
+          "Statement": {
+            "ManagedRuleGroupStatement": {
+              "VendorName": "AWS",
+              "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+              "Version": null
+            }
+          },
+          "OverrideAction": {
+            "None": {}
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "AWSManagedRulesKnownBadInputsRuleSetMetric"
+          }
+        },
+        {
+          "Name": "AWSManagedRulesSQLiRuleSet",
+          "Priority": 3,
+          "Statement": {
+            "ManagedRuleGroupStatement": {
+              "VendorName": "AWS",
+              "Name": "AWSManagedRulesSQLiRuleSet",
+              "Version": null
+            }
+          },
+          "OverrideAction": {
+            "None": {}
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "AWSManagedRulesSQLiRuleSetMetric"
+          }
+        },
+        {
+          "Name": "AWSManagedRulesAmazonIpReputationList",
+          "Priority": 4,
+          "Statement": {
+            "ManagedRuleGroupStatement": {
+              "VendorName": "AWS",
+              "Name": "AWSManagedRulesAmazonIpReputationList",
+              "Version": null
+            }
+          },
+          "OverrideAction": {
+            "None": {}
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "AWSManagedRulesAmazonIpReputationListMetric"
+          }
+        },
+        {
+          "Name": "AWSManagedRulesAnonymousIpList",
+          "Priority": 5,
+          "Statement": {
+            "ManagedRuleGroupStatement": {
+              "VendorName": "AWS",
+              "Name": "AWSManagedRulesAnonymousIpList",
+              "Version": null
+            }
+          },
+          "OverrideAction": {
+            "None": {}
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "AWSManagedRulesAnonymousIpListMetric"
           }
         }
       ],
       "VisibilityConfig": {
         "SampledRequestsEnabled": true,
         "CloudWatchMetricsEnabled": true,
-        "MetricName": "ExampleWebACLMetric"
+        "MetricName": "DefaultRuleSetEquivalent"
       }
     }
 status:
