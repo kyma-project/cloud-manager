@@ -5,7 +5,7 @@ go 1.26.6
 require (
 	cloud.google.com/go/auth v0.23.2
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/compute v1.67.0
+	cloud.google.com/go/compute v1.68.0
 	cloud.google.com/go/filestore v1.16.0
 	cloud.google.com/go/longrunning v1.2.0
 	cloud.google.com/go/networkconnectivity v1.28.0
