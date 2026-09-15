@@ -33,7 +33,11 @@ func waitKcpStatusUpdate(ctx context.Context, st composed.State) (error, context
 	}
 
 	if hasReady {
-		if state.KcpRedisCluster.Status.DiscoveryEndpoint == "" {
+		hasUpdating := meta.FindStatusCondition(conditions, cloudcontrolv1beta1.ConditionTypeUpdating) != nil
+		// Only gate on DiscoveryEndpoint during the initial create path (no Updating
+		// condition). During an update the endpoint is already set from a prior Ready
+		// cycle, so blocking here would prevent the Updating condition from propagating.
+		if !hasUpdating && state.KcpRedisCluster.Status.DiscoveryEndpoint == "" {
 			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 		}
 		return nil, ctx
