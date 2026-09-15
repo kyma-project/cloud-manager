@@ -328,8 +328,7 @@ func (c *elastiCacheClient) CreateAuthTokenSecret(ctx context.Context, secretNam
 	})
 
 	// secret already exists (eventual consistency re-run) - desired outcome
-	var resourceExists *secretsmanagertypes.ResourceExistsException
-	if errors.As(err, &resourceExists) {
+	if _, ok := errors.AsType[*secretsmanagertypes.ResourceExistsException](err); ok {
 		return nil
 	}
 

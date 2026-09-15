@@ -28,10 +28,8 @@ func TestFindAzureRestoreJob(t *testing.T) {
 		var k8sClient client.WithWatch
 
 		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-scope",
-				Namespace: "test-ns",
-			},
+			Name:      "test-scope",
+			Namespace: "test-ns",
 			Spec: cloudcontrolv1beta1.ScopeSpec{
 				Scope: cloudcontrolv1beta1.ScopeInfo{
 					Azure: &cloudcontrolv1beta1.AzureScope{
@@ -57,11 +55,9 @@ func TestFindAzureRestoreJob(t *testing.T) {
 
 		setupTest := func(withObj bool, backupWithRecoveryPointId bool) {
 			azureRwxVolumeBackup := &cloudresourcesv1beta1.AzureRwxVolumeBackup{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-azure-restore-backup",
-					Namespace: "test-ns",
-				},
-				Status: cloudresourcesv1beta1.AzureRwxVolumeBackupStatus{},
+				Name:      "test-azure-restore-backup",
+				Namespace: "test-ns",
+				Status:    cloudresourcesv1beta1.AzureRwxVolumeBackupStatus{},
 			}
 			if backupWithRecoveryPointId {
 				azureRwxVolumeBackup.Status.RecoveryPointId = "/subscriptions/3f1d2fbd-117a-4742-8bde-6edbcdee6a04/resourceGroups/rg-test/providers/Microsoft.RecoveryServices/vaults/v-test/backupFabrics/Azure/protectionContainers/StorageContainer;Storage;test;testsa/protectedItems/AzureFileShare;2DAC3CBDBBD863B2292F25490DC0794F35AAA4C27890D5DCA82B0A33E9596217/recoveryPoints/5639661428710522320"
@@ -71,10 +67,8 @@ func TestFindAzureRestoreJob(t *testing.T) {
 				Time: startTime,
 			}
 			azureRwxVolumeRestore = &cloudresourcesv1beta1.AzureRwxVolumeRestore{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-azure-restore",
-					Namespace: "test-ns-2",
-				},
+				Name:      "test-azure-restore",
+				Namespace: "test-ns-2",
 				Spec: cloudresourcesv1beta1.AzureRwxVolumeRestoreSpec{
 
 					Destination: cloudresourcesv1beta1.PvcSource{

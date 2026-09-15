@@ -234,8 +234,7 @@ func extractStatusCode(err error) int {
 		return 200
 	}
 
-	var apiErr *googleapi.Error
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*googleapi.Error](err); ok {
 		return apiErr.Code
 	}
 
