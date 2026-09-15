@@ -42,17 +42,13 @@ func restoreNewVolume(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	newVolume := &cloudresourcesv1beta1.SapNfsVolume{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "SapNfsVolume",
-			APIVersion: cloudresourcesv1beta1.GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        newVolTemplate.Metadata.Name,
-			Namespace:   ns,
-			Labels:      newVolTemplate.Metadata.Labels,
-			Annotations: newVolTemplate.Metadata.Annotations,
-		},
-		Spec: spec,
+		Kind:        "SapNfsVolume",
+		APIVersion:  cloudresourcesv1beta1.GroupVersion.String(),
+		Name:        newVolTemplate.Metadata.Name,
+		Namespace:   ns,
+		Labels:      newVolTemplate.Metadata.Labels,
+		Annotations: newVolTemplate.Metadata.Annotations,
+		Spec:        spec,
 	}
 
 	err = state.SkrCluster.K8sClient().Create(ctx, newVolume)

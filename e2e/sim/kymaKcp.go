@@ -194,9 +194,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 	if ns == nil {
 		ns = &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "kyma-system",
-			},
+			Name: "kyma-system",
 		}
 		logger.Info("Creating kyma-system namespace")
 		err = mi.mngr.GetClient().Create(ctx, ns)
@@ -277,13 +275,11 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	if skrKyma == nil {
 		skrKyma = &operatorv1beta2.Kyma{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "kyma-system",
-				Name:      "default",
-				Labels:    kcpKyma.Labels,
-				Finalizers: []string{
-					api.CommonFinalizerDeletionHook,
-				},
+			Namespace: "kyma-system",
+			Name:      "default",
+			Labels:    kcpKyma.Labels,
+			Finalizers: []string{
+				api.CommonFinalizerDeletionHook,
 			},
 			Spec: operatorv1beta2.KymaSpec{
 				Channel: operatorv1beta2.DefaultChannel,

@@ -190,14 +190,10 @@ func init() {
 
 func (in *GcpNfsVolumeBackup) CloneForPatchStatus() client.Object {
 	return &GcpNfsVolumeBackup{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "GcpNfsVolumeBackup",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "GcpNfsVolumeBackup",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 }

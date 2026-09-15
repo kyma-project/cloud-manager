@@ -36,9 +36,7 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 			awsNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{}
 
 			pv = &corev1.PersistentVolume{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "test-pv",
-				},
+				Name: "test-pv",
 				Spec: corev1.PersistentVolumeSpec{
 					ClaimRef: &corev1.ObjectReference{
 						UID: "013d3f5e-e780-4979-a5b9-a740aae7187c",

@@ -16,7 +16,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -32,14 +31,12 @@ const (
 
 func newTestNfsInstance(name string) *cloudcontrolv1beta1.NfsInstance {
 	return &cloudcontrolv1beta1.NfsInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: testNs,
-			Labels: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        testKyma,
-				cloudcontrolv1beta1.LabelRemoteName:      testVol,
-				cloudcontrolv1beta1.LabelRemoteNamespace: testNs,
-			},
+		Name:      name,
+		Namespace: testNs,
+		Labels: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        testKyma,
+			cloudcontrolv1beta1.LabelRemoteName:      testVol,
+			cloudcontrolv1beta1.LabelRemoteNamespace: testNs,
 		},
 	}
 }
@@ -65,7 +62,7 @@ func newTestLoadState(t *testing.T, listErr error, instances ...*cloudcontrolv1b
 	kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
 	vol := &cloudresourcesv1beta1.GcpNfsVolume{
-		ObjectMeta: metav1.ObjectMeta{Name: testVol, Namespace: testNs},
+		Name: testVol, Namespace: testNs,
 	}
 	skrClient := fake.NewClientBuilder().WithScheme(commonscheme.SkrScheme).WithObjects(vol).Build()
 	skrCluster := composed.NewStateCluster(skrClient, skrClient, nil, commonscheme.SkrScheme)

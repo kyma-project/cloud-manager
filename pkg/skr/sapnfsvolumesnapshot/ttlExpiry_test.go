@@ -26,11 +26,9 @@ func TestTTLExpiry(t *testing.T) {
 		setupTest := func() {
 			fakeClock = clocktesting.NewFakeClock(time.Now())
 			obj = &cloudresourcesv1beta1.SapNfsVolumeSnapshot{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:              "snap-1",
-					Namespace:         "test",
-					CreationTimestamp: metav1.Time{Time: time.Now().Add(-1 * time.Hour)},
-				},
+				Name:              "snap-1",
+				Namespace:         "test",
+				CreationTimestamp: metav1.Time{Time: time.Now().Add(-1 * time.Hour)},
 				Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotSpec{
 					SourceVolume:    corev1.ObjectReference{Name: "vol-1"},
 					DeleteAfterDays: 7,
