@@ -1,36 +1,68 @@
 # Pattern 3: Normalize Status, Keep Provider Spec
 
-**Origin:**
-- Crossplane Managed Resources · [crossplane/crossplane — managed-resources.md](https://github.com/crossplane/crossplane/blob/main/docs/concepts/managed-resources.md)
-- Kubernetes StorageClass `parameters` → PV `spec` (provisioner normalizes)
-
-**What it solves:** Provider-specific sizing vocabulary in spec is correct — the user must choose the provider's tier or instance type. But the controller normalizes output to provider-neutral status fields so workloads can consume connection details without provider knowledge.
+Provider-specific sizing vocabulary in spec is correct — the user must choose the provider's tier or instance type. The controller normalizes output to provider-neutral status fields so workloads can consume connection details without provider knowledge.
 
 ---
 
-## Reference example
+## Where This Pattern Comes From
 
-**Crossplane RDS — provider-specific spec, neutral status:**
+### Crossplane Managed Resources
+**Repo:** [crossplane/crossplane](https://github.com/crossplane/crossplane)
+**Key file:** [`docs/concepts/managed-resources.md`](https://github.com/crossplane/crossplane/blob/main/docs/concepts/managed-resources.md)
+
+Managed Resources mirror the cloud API in spec. The controller populates `status.atProvider` with normalized output fields (endpoint, port, ARN) that workloads consume without knowing the provider.
+
 ```yaml
-# User spec: AWS-specific
 kind: RDSInstance
 spec:
   forProvider:
-    dbInstanceClass: db.t3.micro    # AWS instance class — user must know this
+    dbInstanceClass: db.t3.micro    # AWS-specific — user must choose this
+    engine: postgres
+    engineVersion: "14"
 
-# Status: normalized by controller
 status:
   atProvider:
     endpoint: "my-db.abc123.us-east-1.rds.amazonaws.com"
-    port: 5432
-    # workload reads endpoint+port — same fields regardless of AWS/GCP/Azure
+    port: 5432                       # same field name regardless of AWS/GCP/Azure
 ```
+
+**Lesson for CM:** Keep provider-specific sizing in spec (user must choose). Map to neutral output fields in status. CM already does this correctly for Redis tiers — `status.memorySizeGb`, `status.replicaCount`, `status.primaryEndpoint` are normalized across all providers.
 
 ---
 
-## Cloud Manager — Redis status normalization (already correct)
+### Kubernetes StorageClass → PersistentVolume
+**Repo:** [kubernetes/api](https://github.com/kubernetes/api)
+**Key file:** [`storage/v1/types.go`](https://github.com/kubernetes/api/blob/master/storage/v1/types.go)
 
-CM already does this correctly for Redis tiers and sizing:
+`StorageClass.parameters` carries provider-specific config (IOPS, encryption, disk type). The provisioned `PV` exposes neutral fields (`capacity`, `accessModes`, `volumeMode`) regardless of which provisioner created it.
+
+```yaml
+# StorageClass — provider-specific input
+kind: StorageClass
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  iops: "3000"              # AWS-specific
+
+---
+# PV — normalized output, same shape for all provisioners
+kind: PersistentVolume
+spec:
+  capacity:
+    storage: 10Gi           # neutral
+  accessModes: [ReadWriteOnce]
+  csi:
+    driver: ebs.csi.aws.com
+    volumeHandle: "vol-0a1b2c3d"
+```
+
+**Lesson for CM:** The same normalization applies to Redis: provider-specific tier in spec, neutral `memorySizeGb` in status.
+
+---
+
+## How Cloud Manager Uses This Pattern
+
+**Redis status normalization — already correct:**
 
 ```yaml
 kind: GcpRedisInstance
@@ -40,7 +72,7 @@ spec:
 status:
   memorySizeGb: 6               # neutral — same field on all providers
   replicaCount: 1               # neutral
-  primaryEndpoint: "10.0.0.5:6379"  # neutral
+  primaryEndpoint: "10.0.0.5:6379"   # neutral
   authString: "secret"          # neutral
 ```
 
@@ -48,9 +80,11 @@ No change needed here.
 
 ---
 
-## Cloud Manager — Redis version field naming (needs fix)
+## Applying to CM CRD Families
 
-The version concept is the same user decision on every provider — which Redis engine version to run. The field name and value format differ across providers for no reason.
+### Redis — engineVersion field name
+
+The version concept is the same user decision on every provider. The field name and value format differ across providers for no reason.
 
 **Before:**
 ```yaml
@@ -66,7 +100,7 @@ spec:
 ---
 kind: AzureRedisInstance
 spec:
-  redisVersion: "6.0"           # dotted numeric — same format as AWS but different field name
+  redisVersion: "6.0"           # dotted numeric — different field name from AWS
 ```
 
 **After:**
@@ -89,9 +123,9 @@ spec:
 
 ---
 
-## Cloud Manager — replicasPerShard vs replicasPerPrimary (needs fix)
+### Redis Cluster — replicasPerShard field name
 
-Same concept — how many read replicas per shard — with different field names on Azure.
+Same concept — read replicas per shard — with a different field name on Azure only.
 
 **Before:**
 ```yaml

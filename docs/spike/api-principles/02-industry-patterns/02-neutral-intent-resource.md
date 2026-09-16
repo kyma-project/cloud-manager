@@ -1,38 +1,52 @@
 # Pattern 2: Neutral Intent Resource
 
-**Origin:**
-- Kubernetes Storage — `PersistentVolumeClaim` · [k8s.io/api/core/v1/types.go](https://github.com/kubernetes/api/blob/master/core/v1/types.go#L533)
-- Gardener External DNS — `DNSEntry` · [gardener/external-dns-management](https://github.com/gardener/external-dns-management/blob/master/pkg/apis/dns/v1alpha1/dnsentry.go)
-
-**What it solves:** User expresses *what* they need in provider-neutral vocabulary. The controller routes to the right backend at runtime. The user never writes a provider name or provider-specific units.
+The user expresses *what* they need using concepts they already know. The controller routes to the right provider at runtime. No provider name or provider-specific unit appears in the user-facing spec.
 
 ---
 
-## Reference examples
+## Where This Pattern Comes From
 
-**Kubernetes PVC — no storage backend mentioned:**
+### Kubernetes PersistentVolumeClaim
+**Repo:** [kubernetes/api](https://github.com/kubernetes/api)
+**Key file:** [`core/v1/types.go`](https://github.com/kubernetes/api/blob/master/core/v1/types.go#L533)
+
+`PVC` expresses what the user needs (`storage: 10Gi`, `ReadWriteOnce`). `StorageClass` names the provisioner. The PV is the provisioned result owned by the controller. The user never writes `ebs.csi.aws.com`, `pd.csi.storage.gke.io`, or `disk.csi.azure.com`.
+
 ```yaml
 kind: PersistentVolumeClaim
 spec:
   accessModes: [ReadWriteOnce]
   resources:
     requests:
-      storage: 10Gi        # k8s Quantity — same field on EBS, GCP PD, Azure Disk
+      storage: 10Gi       # k8s Quantity — same field on EBS, GCP PD, Azure Disk
   storageClassName: standard
 ```
 
-**Gardener DNSEntry — no DNS provider mentioned:**
+**Lesson for CM:** `capacity` is a user concept. `capacityGb: 1024` is a GCP Filestore API unit. The controller converts — the user spec does not carry the provider's unit.
+
+---
+
+### Gardener External DNS — DNSEntry
+**Repo:** [gardener/external-dns-management](https://github.com/gardener/external-dns-management)
+**Key file:** [`pkg/apis/dns/v1alpha1/dnsentry.go`](https://github.com/gardener/external-dns-management/blob/master/pkg/apis/dns/v1alpha1/dnsentry.go)
+
+`DNSEntry` has only `dnsName`, `ttl`, and `targets`. The controller matches the domain against `DNSProvider.spec.domains.include` at runtime. The user is completely oblivious to whether Route53, Cloud DNS, or Azure DNS handles the record.
+
 ```yaml
 kind: DNSEntry
 spec:
   dnsName: "my-service.example.com"
   ttl: 120
-  targets: ["1.2.3.4"]    # same fields regardless of Route53, Cloud DNS, or Azure DNS
+  targets: ["1.2.3.4"]    # same fields regardless of Route53, Cloud DNS, Azure DNS
 ```
+
+**Lesson for CM:** `IpRange` already follows this pattern exactly. One neutral `cidr` field, provider routing at runtime. This is the target shape for any CM resource where the user decision is the same across providers.
 
 ---
 
-## Cloud Manager — IpRange (already correct)
+## How Cloud Manager Uses This Pattern
+
+**`IpRange` — already correct:**
 
 ```yaml
 kind: IpRange
@@ -44,9 +58,11 @@ No change needed. `IpRange` is the ideal expression of this pattern in CM.
 
 ---
 
-## Cloud Manager — NfsVolume capacity (needs fix)
+## Applying to CM CRD Families
 
-`capacity` expresses the same user decision on every provider — how much storage. GCP and SAP leak their API's integer unit into the user spec instead of using the k8s Quantity that every other storage resource in Kubernetes uses.
+### NfsVolume — capacity field
+
+`capacity` expresses the same user decision on every provider: how much storage. GCP and SAP leak the integer unit their cloud API expects into user spec, breaking the pattern.
 
 **Before:**
 ```yaml
@@ -84,4 +100,4 @@ spec:
   capacity: "1Ti"           # unchanged
 ```
 
-User learns one field name and one unit from standard PVC/StorageClass documentation, and it works on every provider.
+User learns one field name and one unit from PVC documentation and it works on every provider.
