@@ -61,21 +61,25 @@ AzureConfig *runtime.RawExtension `json:"azure,omitempty"`
 ```
 
 ```yaml
-kind: WafPolicy
+# Generic example — provider-specific payload fields, each schemaless
+kind: SomeResource
 spec:
-  targetRef:
-    name: my-gateway
-  ruleConfig:                      # schemaless — any structure, provider validates
-    managed:
+  # Strongly typed common fields
+  name: "my-resource"
+  region: "us-east-1"
+
+  # Per-provider schemaless payload — provider validates content
+  aws:                               # accepts any JSON structure
+    managedRuleGroups:
       - vendorName: AWS
         name: AWSManagedRulesCommonRuleSet
-    custom:
-      - name: block-sqli
-        action: Block
-        statement:
-          sqliMatchStatement:
-            fieldToMatch:
-              body: {}
+  gcp:                               # accepts any JSON structure
+    preconfiguredRules:
+      - id: "sqli-v33-stable"
+  azure:                             # accepts any JSON structure
+    managedRuleSets:
+      - ruleSetType: OWASP
+        ruleSetVersion: "3.2"
 ```
 
 **Lesson for CM:** `runtime.RawExtension` (schemaless) is the right escape hatch when the payload is structured but provider-versioned and cannot be represented as a static CRD schema without frequent breaking changes.

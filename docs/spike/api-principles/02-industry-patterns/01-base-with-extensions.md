@@ -149,7 +149,7 @@ spec:
 ---
 kind: AwsRedisInstance
 spec:
-  redisTier: "S1"                  # AWS: 0.5 GB — different capacity than GCP S1
+  redisTier: "S1"                  # AWS S1 — different capacity mapping than GCP S1
   engineVersion: "7.0"             # different field name from GCP
   parameters:                       # different field name from GCP
     maxmemory-policy: volatile-lru
