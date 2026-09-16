@@ -1,10 +1,21 @@
 # Industry Patterns — Applied to Cloud Manager CRD API
 
-Each pattern below includes: where it comes from, what it solves, and a concrete before/after showing how applying it would change a Cloud Manager CRD.
+Each pattern includes: where it comes from, what it solves, and a concrete before/after for a Cloud Manager CRD.
+
+## Patterns
+
+| # | Pattern | Applies to |
+|---|---------|------------|
+| [1](./01-base-with-extensions.md) | **Common base + provider-specific extensions** | All CM CRD families |
+| 2 | Neutral intent resource | IpRange (already correct), NfsVolume capacity |
+| 3 | Normalize status, keep provider spec | Redis version/replicas field naming |
+| 4 | Provider-specific resource (ACK pattern) | VpcPeering (correct as-is) |
+| 5 | Typed provider sub-struct | Redis config map field naming |
+| 6 | Portable container with unstructured payload | Future WafPolicy rules |
 
 ---
 
-## Pattern 1: Neutral Intent Resource
+## Pattern 2: Neutral Intent Resource
 
 **Origin:** Kubernetes Storage (`PersistentVolumeClaim`) · [k8s.io/api/core/v1](https://github.com/kubernetes/api/blob/master/core/v1/types.go#L533)
 and Gardener DNS (`DNSEntry`) · [gardener/external-dns-management](https://github.com/gardener/external-dns-management/blob/master/pkg/apis/dns/v1alpha1/dnsentry.go)

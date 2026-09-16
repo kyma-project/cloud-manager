@@ -9,3 +9,4 @@
 # 2) Industry patterns
 
 - [overview](./02-industry-patterns/overview.md)
+- [Pattern 1: Common base + provider-specific extensions](./02-industry-patterns/01-base-with-extensions.md)
