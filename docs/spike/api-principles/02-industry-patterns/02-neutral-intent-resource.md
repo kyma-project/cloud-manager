@@ -79,6 +79,11 @@ spec:
 kind: AwsNfsVolume
 spec:
   capacity: "1Ti"           # k8s Quantity — correct
+
+---
+kind: AlicloudNfsVolume
+spec:
+  capacity: "20Gi"          # k8s Quantity — already correct
 ```
 
 **After:**
@@ -98,6 +103,11 @@ spec:
 kind: AwsNfsVolume
 spec:
   capacity: "1Ti"           # unchanged
+
+---
+kind: AlicloudNfsVolume
+spec:
+  capacity: "20Gi"          # unchanged
 ```
 
 User learns one field name and one unit from PVC documentation and it works on every provider.

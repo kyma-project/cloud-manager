@@ -10,7 +10,7 @@ This pattern describes the *structural mechanism* for housing provider-specific 
 
 ### Crossplane Provider — forProvider typed sub-struct
 **Repo:** [crossplane-contrib/provider-aws](https://github.com/crossplane-contrib/provider-aws)
-**Key file:** [`apis/elasticache/v1beta1/replicationgroup_types.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/elasticache/v1beta1/replicationgroup_types.go)
+**Key file:** [`apis/cache/v1beta1/replicationgroup_types.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/cache/v1beta1/replicationgroup_types.go)
 
 Each Crossplane provider's Managed Resource has a `spec.forProvider` sub-struct that is typed to the provider's API. The sub-struct has full CRD schema validation — not a `map[string]interface{}`. The controller reads exactly these fields and calls the provider API.
 
@@ -87,25 +87,24 @@ No change needed at the KCP layer. The sub-struct mechanism is correct.
 
 ## Applying to CM CRD Families
 
-### KCP RedisCluster — authString is a contract output field that must always be set
+### KCP NfsInstance — provider sub-struct consistency
 
-The status contract between the KCP provider action pipeline and the SKR reconciler requires `authString` to be populated before the SKR can create the auth secret. This is currently enforced in `waitKcpStatusUpdate` by checking `DiscoveryEndpoint` is non-empty, but the `authString` check is only in `updateStatus`. The contract should be explicit in both directions.
-
-**Current state:**
-```yaml
-# KCP RedisCluster status — contract fields
-status:
-  discoveryEndpoint: "r-cluster.redis.rds.aliyuncs.com:6379"   # checked in waitKcpStatusUpdate
-  authString: "secret"    # checked in updateStatus, but not in waitKcpStatusUpdate
-  caCert: "..."
-```
-
-**Improvement:** `waitKcpStatusUpdate` should gate on both `DiscoveryEndpoint` and `AuthString` being non-empty before the SKR proceeds to create the auth secret — making the contract explicit rather than split across two action steps.
+KCP `RedisInstance` and `RedisCluster` use typed provider sub-structs correctly (`spec.instance.gcp`, `spec.instance.aws`, etc.) with `MaxProperties=1`. KCP `NfsInstance` should follow the same structure. This makes the internal contract explicit and applies the same pattern uniformly across all KCP resource types.
 
 ```yaml
-# After — explicit contract: SKR only proceeds when all connection fields are populated
-status:
-  discoveryEndpoint: "r-cluster.redis.rds.aliyuncs.com:6379"
-  authString: "secret"    # required before waitKcpStatusUpdate passes
-  caCert: "..."           # required before waitKcpStatusUpdate passes
+# KCP NfsInstance — should mirror RedisInstance's structure
+kind: NfsInstance
+spec:
+  scope:
+    name: my-scope
+  ipRange:
+    name: my-iprange
+  instance:                        # typed discriminated union, MaxProperties=1
+    gcp:
+      tier: "BASIC_HDD"
+      fileShareName: "vol1"
+      capacityGb: 1024
+    # aws: / azure: / alicloud: / openStack: mutually exclusive
 ```
+
+This is a KCP-internal change. SKR users are not affected.

@@ -135,7 +135,7 @@ The rule: fields where **the user decision is the same** across providers belong
 ```yaml
 kind: GcpRedisInstance
 spec:
-  redisTier: "S1"                  # GCP Standard tier, 1GB
+  redisTier: "S1"                  # GCP: 1 GB Standard
   redisVersion: "REDIS_7_0"        # GCP-specific field name and value format
   redisConfigs:                     # GCP-specific field name
     maxmemory-policy: volatile-lru
@@ -148,7 +148,7 @@ spec:
 ---
 kind: AwsRedisInstance
 spec:
-  redisTier: "S1"                  # AWS S1 — different capacity from GCP S1
+  redisTier: "S1"                  # AWS: 0.5 GB — different capacity than GCP S1
   engineVersion: "7.0"             # different field name from GCP
   parameters:                       # different field name from GCP
     maxmemory-policy: volatile-lru
@@ -165,7 +165,7 @@ spec:
 ```yaml
 kind: GcpRedisInstance
 spec:
-  redisTier: "S1"
+  redisTier: "S1"                  # stays GCP-specific (capacity meaning differs per provider)
   engineVersion: "7.0"             # was: redisVersion: "REDIS_7_0"
   parameters:                       # was: redisConfigs
     maxmemory-policy: volatile-lru
@@ -178,7 +178,7 @@ spec:
 ---
 kind: AwsRedisInstance
 spec:
-  redisTier: "S1"
+  redisTier: "S1"                  # stays AWS-specific (capacity meaning differs per provider)
   engineVersion: "7.0"             # unchanged — was already correct
   parameters:                       # unchanged — was already correct
     maxmemory-policy: volatile-lru
@@ -305,9 +305,9 @@ spec:
 
 ### VpcPeering
 
-**No changes.** All three resources (`AwsVpcPeering`, `GcpVpcPeering`, `AzureVpcPeering`) correctly use the ACK/ASO pattern — provider-specific resource per provider — because the underlying concepts (identity model, routing strategy, remote VPC identification) differ structurally, not just terminologically.
+**No changes.** All three resources correctly use Pattern 4 (provider-specific resource) because the peering identity model, routing strategy, and remote VPC identification differ structurally across providers.
 
-The only shared field (`deleteRemotePeering`) is already present on all three. This is the right design.
+Two fields are shared: `deleteRemotePeering` (all three) and `remotePeeringName` (GCP and Azure — AWS auto-assigns this). Both are already present and consistent. No changes needed.
 
 ---
 

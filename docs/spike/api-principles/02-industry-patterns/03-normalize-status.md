@@ -10,9 +10,9 @@ This is distinct from Pattern 1 (base+extensions structure) — it applies speci
 
 ### Crossplane Provider AWS — engineVersion normalization
 **Repo:** [crossplane-contrib/provider-aws](https://github.com/crossplane-contrib/provider-aws)
-**Key file:** [`pkg/controller/elasticache/replicationgroup/setup.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/pkg/controller/elasticache/replicationgroup/setup.go)
+**Key file:** [`apis/cache/v1beta1/replicationgroup_types.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/cache/v1beta1/replicationgroup_types.go)
 
-In Crossplane, when a Composition maps a neutral Claim field to a provider Managed Resource, the *mapping* — including value transformation — lives in the Composition, not in the CRD field name. A user writing `engineVersion: "7.0"` always writes the same field name regardless of whether the underlying provider calls it `engineVersion`, `redisVersion`, or `REDIS_7_0`.
+In Crossplane, a Composition maps a neutral Claim field to a provider Managed Resource. The *mapping* — including value transformation — lives in the Composition, not in the CRD field name. The user writing `engineVersion: "7.0"` always writes the same field name regardless of whether the underlying provider calls it `engineVersion`, `redisVersion`, or `REDIS_7_0`.
 
 ```yaml
 # User writes once (Claim):
@@ -128,8 +128,24 @@ spec:
 
 ---
 
-### NfsVolume — status normalization gap
+### NfsVolume — status capacity field missing
 
-NfsVolume currently does not normalize capacity in status the way Redis normalizes `memorySizeGb`. Each provider reports capacity differently or not at all in status. Consistent with this pattern, status should expose `capacity` as a k8s Quantity regardless of which provider fulfilled it.
+NfsVolume has no normalized `capacity` field in status. Redis normalizes `memorySizeGb` — the same discipline should apply to NFS.
 
-This is a smaller gap than the spec field naming issues above, but applying the pattern consistently means status follows the same rules as spec.
+**Before (no capacity in status):**
+```yaml
+kind: GcpNfsVolume
+status:
+  id: "projects/my-project/locations/us-east1/instances/my-nfs"
+  state: Ready
+  # no capacity field — consumer cannot read back what was provisioned
+```
+
+**After:**
+```yaml
+kind: GcpNfsVolume
+status:
+  id: "projects/my-project/locations/us-east1/instances/my-nfs"
+  state: Ready
+  capacity: "1Ti"           # normalized k8s Quantity — same field on all providers
+                            # controller converts from provider's integer GiB value

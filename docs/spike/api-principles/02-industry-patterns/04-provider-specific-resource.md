@@ -7,8 +7,8 @@ When cloud concepts differ structurally across providers — not just in vocabul
 ## Where This Pattern Comes From
 
 ### AWS Controllers for Kubernetes (ACK)
-**Repo:** [aws-controllers-k8s/community](https://github.com/aws-controllers-k8s/community)
-**Example:** [`services/elasticache`](https://github.com/aws-controllers-k8s/elasticache-controller)
+**Repo:** [aws-controllers-k8s/elasticache-controller](https://github.com/aws-controllers-k8s/elasticache-controller)
+**Key file:** [`apis/v1alpha1/replication_group.go`](https://github.com/aws-controllers-k8s/elasticache-controller/blob/main/apis/v1alpha1/replication_group.go)
 
 CRD fields mirror the AWS API directly. No abstraction. Maximum completeness, zero portability. Users who know AWS write exactly the fields AWS expects.
 
@@ -88,11 +88,11 @@ spec:
 
 ## Applying to CM CRD Families
 
-### VpcPeering — no changes needed
+### VpcPeering — remotePeeringName validation consistency
 
-A hypothetical unified `VpcPeering` with a `provider` discriminator would make `remoteAccountId`, `remoteProject`, and `remoteTenant` all present in the schema with two out of three always empty — a strictly worse API. Provider-specific resources are the correct choice here.
+The resources are correct as-is. One minor improvement: `remotePeeringName` exists on both GCP and Azure with different validation constraints (GCP: 1–63 chars, lowercase alphanumeric+hyphens; Azure: 1–80 chars, word characters and hyphens). The field name is already consistent — but the CEL validation rules could reference this shared origin in their error messages to make the difference explicit to users.
 
----
+No structural change needed.
 
 ## When to Use This Pattern vs. Pattern 1
 
