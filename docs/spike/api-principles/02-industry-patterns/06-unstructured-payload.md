@@ -46,10 +46,18 @@ parameters:                        # different keys — Azure-specific, no CRD s
 For structured but provider-versioned payloads that cannot be captured in a static CRD schema (e.g. policy documents, rule sets with nested objects), `x-kubernetes-preserve-unknown-fields: true` allows arbitrary structure at a given path while keeping the rest of the spec typed.
 
 ```go
-// In CRD type definition:
+// In CRD type definition — one schemaless field per provider:
 // +kubebuilder:pruning:PreserveUnknownFields
 // +kubebuilder:validation:Schemaless
-RuleConfig *runtime.RawExtension `json:"ruleConfig,omitempty"`
+AwsConfig *runtime.RawExtension `json:"aws,omitempty"`
+
+// +kubebuilder:pruning:PreserveUnknownFields
+// +kubebuilder:validation:Schemaless
+GcpConfig *runtime.RawExtension `json:"gcp,omitempty"`
+
+// +kubebuilder:pruning:PreserveUnknownFields
+// +kubebuilder:validation:Schemaless
+AzureConfig *runtime.RawExtension `json:"azure,omitempty"`
 ```
 
 ```yaml
@@ -109,19 +117,18 @@ spec:
       requestsPerMinute: 1000
 
   # Unstructured per-provider rule payload — provider validates content
-  # +kubebuilder:pruning:PreserveUnknownFields
-  providerConfig:
-    aws:                          # schemaless — AWS WAF JSON passed through
-      managedRuleGroups:
-        - vendorName: AWS
-          name: AWSManagedRulesCommonRuleSet
-    gcp:                          # schemaless — Cloud Armor JSON passed through
-      preconfiguredWafRules:
-        - id: "sqli-v33-stable"
-    azure:                        # schemaless — Azure WAF JSON passed through
-      managedRuleSets:
-        - ruleSetType: OWASP
-          ruleSetVersion: "3.2"
+  # Each field is a separate runtime.RawExtension (schemaless)
+  aws:                          # schemaless — AWS WAF JSON passed through
+    managedRuleGroups:
+      - vendorName: AWS
+        name: AWSManagedRulesCommonRuleSet
+  gcp:                          # schemaless — Cloud Armor JSON passed through
+    preconfiguredWafRules:
+      - id: "sqli-v33-stable"
+  azure:                        # schemaless — Azure WAF JSON passed through
+    managedRuleSets:
+      - ruleSetType: OWASP
+        ruleSetVersion: "3.2"
 ```
 
 ---

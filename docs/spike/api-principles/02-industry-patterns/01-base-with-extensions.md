@@ -136,7 +136,7 @@ The rule: fields where **the user decision is the same** across providers belong
 ```yaml
 kind: GcpRedisInstance
 spec:
-  redisTier: "S1"                  # GCP: 1 GB Standard
+  redisTier: "S1"                  # GCP S1 — provider-native tier name
   redisVersion: "REDIS_7_0"        # GCP-specific field name and value format
   redisConfigs:                     # GCP-specific field name
     maxmemory-policy: volatile-lru
@@ -227,6 +227,11 @@ spec:
 kind: AwsNfsVolume
 spec:
   capacity: "1Ti"             # k8s Quantity — correct pattern
+
+---
+kind: AlicloudNfsVolume
+spec:
+  capacity: "20Gi"            # k8s Quantity — already correct
 ```
 
 **After:**
@@ -244,6 +249,11 @@ spec:
 kind: AwsNfsVolume
 spec:
   capacity: "1Ti"             # unchanged
+
+---
+kind: AlicloudNfsVolume
+spec:
+  capacity: "20Gi"            # unchanged
 ```
 
 #### Fields that stay provider-specific
@@ -384,7 +394,7 @@ The three separate kinds remain. This is not a unification — it is structural 
 
 | CRD family | Changes | Stays provider-specific |
 |------------|---------|------------------------|
-| Redis Instance + Cluster | Unify `engineVersion`, `parameters`, `replicasPerShard` field names | `redisTier`, maintenance windows, Azure typed config shape |
+| Redis Instance + Cluster | Unify `engineVersion`, `parameters`, `replicasPerShard` field names; rename Azure `redisConfiguration` → `parameters` (proposed) | `redisTier`, maintenance windows |
 | NfsVolume | Unify `capacity` to k8s `resource.Quantity` | Tier/performance/fileShareName fields, sourceBackup |
 | Backup / Restore / Schedule | Unify `source.volume` reference shape | Azure PVC source, SAP snapshot terminology, GCP `accessibleFrom` |
 | VpcPeering | Move provider fields under named extension key (`azure:`, `gcp:`, `aws:`) | Remote VPC identity, routing, cross-account/tenant fields |

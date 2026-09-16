@@ -47,7 +47,7 @@ The Kubernetes API conventions require that fields representing the same concept
 ```yaml
 kind: GcpRedisInstance
 spec:
-  redisTier: "P1"               # GCP-specific — correct, user must choose this
+  redisTier: "S1"               # GCP-specific tier — correct, user must choose this
 
 status:
   memorySizeGb: 6               # neutral — same field on all providers
