@@ -305,17 +305,77 @@ spec:
 
 ### VpcPeering
 
-**No changes.** All three resources correctly use Pattern 4 (provider-specific resource) because the peering identity model, routing strategy, and remote VPC identification differ structurally across providers.
+The three resources keep separate kinds (Pattern 4 — provider-specific resource is correct). But within each resource the base fields currently sit flat alongside provider-specific fields with no structural separation. Applying the base+extension principle makes the shared intent visible.
 
-Two fields are shared: `deleteRemotePeering` (all three) and `remotePeeringName` (GCP and Azure — AWS auto-assigns this). Both are already present and consistent. No changes needed.
+**Shared fields across all three (base):**
+- `deleteRemotePeering` — identical semantics on AWS, GCP, Azure
+- `remotePeeringName` — same concept on GCP and Azure; AWS auto-assigns (not present)
+
+**Provider-specific fields (extension):**
+- AWS: `remoteVpcId`, `remoteRegion`, `remoteAccountId`, `remoteRouteTableUpdateStrategy`
+- GCP: `remoteVpc`, `remoteProject`, `importCustomRoutes`
+- Azure: `remoteVnet`, `remoteTenant`, `useRemoteGateway`
+
+Azure shows the split most clearly — two base-concept fields alongside three Azure-specific fields:
+
+**Before (flat — no structural separation):**
+```yaml
+kind: AzureVpcPeering
+spec:
+  remotePeeringName: "my-peering"
+  remoteVnet: "/subscriptions/.../virtualNetworks/my-vnet"
+  deleteRemotePeering: true
+  remoteTenant: "00000000-..."
+  useRemoteGateway: false
+```
+
+**After (base fields at top level, provider extension under named key):**
+```yaml
+kind: AzureVpcPeering
+spec:
+  # base — shared concept with GCP
+  remotePeeringName: "my-peering"
+  deleteRemotePeering: true
+  # Azure-specific extension
+  azure:
+    remoteVnet: "/subscriptions/.../virtualNetworks/my-vnet"
+    remoteTenant: "00000000-..."
+    useRemoteGateway: false
+
+---
+kind: GcpVpcPeering
+spec:
+  # base — shared concept with Azure
+  remotePeeringName: "my-peering"
+  deleteRemotePeering: true
+  # GCP-specific extension
+  gcp:
+    remoteVpc: "my-remote-vpc"
+    remoteProject: "my-gcp-project"
+    importCustomRoutes: false
+
+---
+kind: AwsVpcPeering
+spec:
+  # base — deleteRemotePeering only (AWS auto-assigns remotePeeringName)
+  deleteRemotePeering: true
+  # AWS-specific extension
+  aws:
+    remoteVpcId: "vpc-0a1b2c3d4e5f"
+    remoteRegion: "us-east-1"
+    remoteAccountId: "123456789012"
+    remoteRouteTableUpdateStrategy: "AUTO"
+```
+
+The three separate kinds remain. This is not a unification — it is structural clarity within each resource so users immediately see which fields are conceptually shared and which are provider-specific.
 
 ---
 
 ### IpRange
 
-**No changes.** `IpRange` is already the ideal expression of this pattern: one neutral field (`cidr`), provider routing handled at runtime by the controller. It is the Gardener DNS model applied to network ranges.
+**No changes.** `IpRange` is already the ideal expression of this pattern: one neutral field (`cidr`), provider routing handled at runtime by the controller.
 
-`GcpSubnet` is a documented exception — GCP Redis Cluster requires Private Service Connect, a different network construct from the Private Service Access IP range used by all other features. The exception is justified and should remain documented as such.
+`GcpSubnet` is a documented exception — GCP Redis Cluster requires Private Service Connect, a different network construct from the Private Service Access IP range used by all other features.
 
 ---
 
@@ -326,5 +386,5 @@ Two fields are shared: `deleteRemotePeering` (all three) and `remotePeeringName`
 | Redis Instance + Cluster | Unify `engineVersion`, `parameters`, `replicasPerShard` field names | `redisTier`, maintenance windows, Azure typed config shape |
 | NfsVolume | Unify `capacity` to k8s `resource.Quantity` | Tier/performance/fileShareName fields, sourceBackup |
 | Backup / Restore / Schedule | Unify `source.volume` reference shape | Azure PVC source, SAP snapshot terminology, GCP `accessibleFrom` |
-| VpcPeering | No changes | Entire spec is correctly provider-specific |
+| VpcPeering | Move provider fields under named extension key (`azure:`, `gcp:`, `aws:`) | Remote VPC identity, routing, cross-account/tenant fields |
 | IpRange | No changes | Already the ideal neutral resource |
