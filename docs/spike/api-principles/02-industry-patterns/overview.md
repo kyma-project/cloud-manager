@@ -1,118 +1,356 @@
-# Industry Patterns for Separating User Intent from Provider Implementation
+# Industry Patterns — Applied to Cloud Manager CRD API
 
-## Pattern Taxonomy
-
-| Pattern | How it separates intent | User sees provider? | Portability |
-|---------|------------------------|---------------------|-------------|
-| **PVC / StorageClass / PV** | User writes intent (`capacity`, `accessMode`); StorageClass carries opaque `parameters` for provisioner | No — picks class name | High within cluster |
-| **Gardener DNS** | `DNSEntry` has only `dnsName`, `ttl`, `targets`; controller matches domain to `DNSProvider` at runtime | No — fully oblivious | High — automatic routing |
-| **Gateway API** | 3-tier role split: GatewayClass → Gateway → HTTPRoute; `parametersRef` is the provider escape hatch | Yes — picks `gatewayClassName` | Medium (conformance-dependent) |
-| **Crossplane** | XRD defines user schema; Composition maps fields to provider CRD via patches/transforms | Optional | Very high |
-| **Cluster API** | Abstract `Cluster` holds `infrastructureRef` pointing to provider-specific `AWSCluster` | Yes — must create both objects | Low at manifest level |
-| **ACK / ASO** | No separation; CRD mirrors the cloud API directly | Entirely | Zero |
+Each pattern below includes: where it comes from, what it solves, and a concrete before/after showing how applying it would change a Cloud Manager CRD.
 
 ---
 
-## Key Lessons per Pattern
+## Pattern 1: Neutral Intent Resource
 
-### PVC / StorageClass / PV
+**Origin:** Kubernetes Storage (`PersistentVolumeClaim`) · [k8s.io/api/core/v1](https://github.com/kubernetes/api/blob/master/core/v1/types.go#L533)
+and Gardener DNS (`DNSEntry`) · [gardener/external-dns-management](https://github.com/gardener/external-dns-management/blob/master/pkg/apis/dns/v1alpha1/dnsentry.go)
 
-The canonical Kubernetes split: `PVC` expresses *what* (`10Gi`, `ReadWriteOnce`), `StorageClass` names the provisioner and carries opaque `parameters`, `PV` is the provisioned result owned by the controller.
+**What it solves:** User expresses *what* they need in provider-neutral vocabulary. The controller routes to the right backend at runtime. The user never writes a provider name.
 
-**What Cloud Manager can take from it:**
-- User-facing spec carries intent (capacity, access mode, version). Provider-specific sizing vocabulary (`db.t3.micro`, `BASIC_HDD`) belongs in the controller mapping, not in the user spec.
-- The `parameters: map[string]string` escape hatch is valid for provider-specific config that cannot be abstracted — but it sacrifices CRD-level validation.
+**PVC example (Kubernetes):**
+```yaml
+# User writes this — no mention of AWS EBS, GCP PD, or Azure Disk
+kind: PersistentVolumeClaim
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+```
 
-**Limit:** Opaque `parameters` break schema validation and make the API undiscoverable. Cloud Manager's typed provider sub-structs in KCP (`instance.gcp`, `instance.aws`) are strictly better here.
+**Gardener DNSEntry example:**
+```yaml
+# User writes this — no mention of Route53, Cloud DNS, or Azure DNS
+kind: DNSEntry
+spec:
+  dnsName: "my-service.example.com"
+  ttl: 120
+  targets: ["1.2.3.4"]
+```
+
+**Cloud Manager today — `IpRange` already follows this pattern correctly:**
+```yaml
+# Works on AWS, GCP, Azure, Alicloud, OpenStack — user writes nothing provider-specific
+kind: IpRange
+spec:
+  cidr: "10.250.0.0/22"
+```
+
+**Cloud Manager today — `NfsVolume` partially follows it but breaks on capacity units:**
+
+*Before (inconsistent):*
+```yaml
+# GCP and SAP use integer capacityGb
+kind: GcpNfsVolume
+spec:
+  capacityGb: 1024        # integer, GCP API unit
+
+---
+# AWS and Alicloud use Kubernetes Quantity
+kind: AwsNfsVolume
+spec:
+  capacity: "1Ti"         # Kubernetes resource.Quantity
+```
+
+*After (pattern applied — Kubernetes Quantity everywhere, controller converts):*
+```yaml
+kind: GcpNfsVolume
+spec:
+  capacity: "1Ti"         # same field name, same type as every other K8s storage resource
+
+kind: AwsNfsVolume
+spec:
+  capacity: "1Ti"         # unchanged — already correct
+
+kind: SapNfsVolume
+spec:
+  capacity: "100Gi"       # was: capacityGb: 100
+```
+
+The controller converts `capacity` to the integer GiB value the cloud API expects. Users learn one field name from PVC documentation and it works everywhere.
 
 ---
 
-### Gardener DNS
+## Pattern 2: Normalize Status, Keep Provider Spec
 
-`DNSEntry` carries only `dnsName`, `ttl`, `targets` — no provider field at all. The controller matches the domain against `DNSProvider.spec.domains.include` at runtime and routes to Route53, Cloud DNS, or Azure DNS transparently.
+**Origin:** Crossplane Managed Resources · [crossplane/crossplane](https://github.com/crossplane/crossplane/blob/main/docs/concepts/managed-resources.md)
+and Kubernetes StorageClass `parameters` → PV `spec`
 
-**What Cloud Manager can take from it:**
-- `IpRange` already follows this pattern: one neutral `cidr` field, provider routing handled internally. This is the target shape for any resource where the user's decision is genuinely identical across providers.
-- Implicit routing only works when provider domain ownership is non-overlapping. Cloud Manager's runtime binding (Kyma cluster scope determines provider) is the equivalent mechanism.
+**What it solves:** Provider-specific sizing vocabulary in spec (the user must choose the provider's unit), but the controller maps it to neutral output fields in status that workloads can consume without provider knowledge.
 
-**Limit:** Provider-specific routing policies (latency-based, geolocation) cannot be expressed in the neutral resource — they require provider-specific extension or a separate resource.
+**Crossplane example — user writes provider-specific, status is normalized:**
+```yaml
+# User spec: provider-specific
+kind: RDSInstance
+spec:
+  forProvider:
+    dbInstanceClass: db.t3.micro     # AWS-specific instance class
+
+# Status: normalized by controller
+status:
+  atProvider:
+    endpoint: "my-db.abc123.us-east-1.rds.amazonaws.com"
+    port: 5432
+```
+
+**Cloud Manager today — Redis already does this correctly:**
+```yaml
+# User spec: provider-specific tier (correct — user must choose)
+kind: GcpRedisInstance
+spec:
+  redisTier: "P1"          # GCP tier name — user needs to know this
+
+# Status: normalized (correct — workload reads neutral fields)
+status:
+  memorySizeGb: 6
+  replicaCount: 1
+  primaryEndpoint: "10.0.0.5:6379"
+  authString: "secret"
+```
+
+**Where Cloud Manager breaks this pattern — version field naming:**
+
+*Before (inconsistent — same user decision, three different field names and value formats):*
+```yaml
+kind: AwsRedisInstance
+spec:
+  engineVersion: "7.0"        # dotted numeric
+
+kind: GcpRedisInstance
+spec:
+  redisVersion: "REDIS_7_0"   # GCP enum constant
+
+kind: AzureRedisInstance
+spec:
+  redisVersion: "6.0"         # dotted numeric, different field name from AWS
+```
+
+*After (pattern applied — one field name, controller maps to provider format):*
+```yaml
+kind: AwsRedisInstance
+spec:
+  engineVersion: "7.0"        # unchanged
+
+kind: GcpRedisInstance
+spec:
+  engineVersion: "7.0"        # was: redisVersion: "REDIS_7_0"
+                               # controller maps "7.0" → "REDIS_7_0" internally
+
+kind: AzureRedisInstance
+spec:
+  engineVersion: "7.0"        # was: redisVersion: "6.0"
+```
+
+**Where Cloud Manager breaks this pattern — replica field naming in clusters:**
+
+*Before (same concept, different names):*
+```yaml
+kind: AwsRedisCluster
+spec:
+  replicasPerShard: 1      # AWS, GCP, Alicloud
+
+kind: AzureRedisCluster
+spec:
+  replicasPerPrimary: 1    # Azure only — same concept
+```
+
+*After:*
+```yaml
+kind: AzureRedisCluster
+spec:
+  replicasPerShard: 1      # unified — controller maps to Azure's replicasPerPrimary
+```
 
 ---
 
-### Gateway API
+## Pattern 3: Provider-Specific Resource (ACK / ASO pattern)
 
-Three-tier role split where each tier is owned by a different persona: GatewayClass (infrastructure operator) → Gateway (cluster operator) → HTTPRoute (application developer). `GatewayClass.spec.parametersRef` is the provider-specific escape hatch for the infrastructure tier.
+**Origin:** AWS Controllers for Kubernetes (ACK) · [aws-controllers-k8s/community](https://github.com/aws-controllers-k8s/community)
+and Azure Service Operator (ASO) · [Azure/azure-service-operator](https://github.com/Azure/azure-service-operator)
 
-**What Cloud Manager can take from it:**
-- Role separation maps cleanly onto Cloud Manager's architecture: the Kyma module operator owns the infrastructure binding (equivalent to GatewayClass), the SKR resource is owned by the application developer, and the KCP resource is the platform-side intermediary.
-- The `parametersRef` pattern — a typed reference to a provider-specific config object — is worth considering for resources where the user legitimately needs to tune provider behavior without Cloud Manager having to enumerate every option.
+**What it solves:** When concepts differ structurally across providers — not just in vocabulary — forcing a portable wrapper either drops fidelity or produces a union type where most fields are meaningless for any given provider. Provider-specific resources are the honest answer.
 
-**Limit:** `parametersRef` immediately breaks portability for any consumer that sets it. It is an escape valve, not a first-class pattern.
+**ACK example — no abstraction, CRD mirrors cloud API:**
+```yaml
+kind: ElasticacheReplicationGroup    # AWS-specific kind
+spec:
+  replicationGroupID: my-redis
+  replicationGroupDescription: "my cluster"
+  cacheNodeType: cache.r6g.large     # AWS instance type
+  numNodeGroups: 3                   # AWS term for shards
+  replicasPerNodeGroup: 1
+```
 
----
+**Cloud Manager — VpcPeering correctly uses this pattern:**
 
-### Crossplane
+```yaml
+# Three separate resources — not a design flaw, a deliberate choice
+kind: AwsVpcPeering
+spec:
+  remoteVpcId: "vpc-0a1b2c3d"
+  remoteRegion: "us-east-1"
+  remoteAccountId: "123456789012"     # cross-account identity — no GCP/Azure equivalent
+  remoteRouteTableUpdateStrategy: "AUTO"  # AWS route propagation concept
 
-Five-layer model: XRD (schema) → Composition (field mapping) → XR (platform resource) → Claim (user namespaced resource) → Managed Resource (provider CRD mirroring cloud API).
+kind: GcpVpcPeering
+spec:
+  remoteVpc: "my-remote-vpc"
+  remoteProject: "my-gcp-project"     # GCP project — no AWS/Azure equivalent
+  importCustomRoutes: false
 
-The Composition maps `spec.size: small/medium/large` to `spec.instanceType: db.t3.micro` at the Composition layer — in YAML, not compiled code.
+kind: AzureVpcPeering
+spec:
+  remoteVnet: "/subscriptions/.../virtualNetworks/my-vnet"   # ARM resource ID
+  remoteTenant: "00000000-..."        # cross-tenant AAD — no AWS/GCP equivalent
+  useRemoteGateway: false
+```
 
-**Where Cloud Manager sits:**
-Cloud Manager is Crossplane without the XRD/Composition layer. The SKR resource is the Claim, the KCP resource is the XR, and the provider action pipelines in Go are the Composition logic — compiled rather than declarative. The provider sub-structs (`instance.gcp`, `instance.aws`) in KCP are the Managed Resource fields.
+These are correct as-is. A hypothetical `VpcPeering` with a `provider` field and a union spec would produce a resource where `remoteAccountId` only makes sense on AWS, `remoteProject` only on GCP, and `remoteTenant` only on Azure — a worse API with more confusion, not less.
 
-**What Cloud Manager can take from it:**
-- The Composition principle: user-facing spec carries neutral concepts; the mapping to provider vocabulary is the controller's responsibility, not the user's.
-- Applied to Cloud Manager: `engineVersion: "7.0"` is the user concept. `REDIS_7_0` is the GCP API vocabulary. The mapping belongs in the action pipeline, not in the CRD field value.
-
-**Advantage over Crossplane:** Go pipelines are type-safe, testable, and easier to reason about than YAML patch chains. They cannot be reconfigured at runtime without a redeploy — which is a correct and deliberate constraint for a product operator.
-
-**Limit of pure Crossplane:** Patch-based Compositions are verbose for complex logic; Composition Functions (arbitrary code) are required for anything non-trivial, at which point the YAML abstraction is no longer cheaper than Go.
-
----
-
-### Cluster API
-
-`Cluster` holds `spec.infrastructureRef` pointing to a provider-specific `AWSCluster`. The two objects communicate through a defined status contract: the provider controller watches `AWSCluster` and sets `status.ready: true` when provisioning is complete. CAPI core orchestrates lifecycle without knowing the cloud provider.
-
-**What Cloud Manager can take from it:**
-- The SKR → KCP relationship is structurally identical: the SKR resource is the abstract `Cluster`, the KCP resource is the `AWSCluster`, and they communicate through a status contract. Cloud Manager improves on CAPI by managing the second object internally rather than requiring the user to create it.
-- The explicit status contract between layers (a defined set of fields the provider must populate before the orchestrator proceeds) is the right model for Cloud Manager's `waitKcpStatusUpdate` gates.
-
-**Limit:** In CAPI, the user creates both objects — portability requires replacing the entire provider object. Cloud Manager avoids this by generating the KCP object from the SKR spec.
-
----
-
-### ACK / ASO
-
-No abstraction. CRD fields mirror the cloud API. Maximum completeness, zero portability. The right choice when users already know the cloud API, full feature surface matters more than portability, and there is no multi-cloud abstraction goal.
-
-**When Cloud Manager uses this correctly:**
-- `AwsVpcPeering`, `GcpVpcPeering`, `AzureVpcPeering` — the underlying peering mechanism, identity model, and routing options differ structurally across providers. A portable wrapper would either drop fidelity or produce a union type where most fields are irrelevant on any given provider. Provider-specific resources are the right call here.
+**When to apply this pattern vs. Pattern 1:**
+- Apply Pattern 1 when the user decision is the same across providers (capacity, version, auth).
+- Apply Pattern 3 when the user decision is inherently provider-specific (peering identity model, network attachment type, routing strategy).
 
 ---
 
-## Core Dimensions
+## Pattern 4: Typed Provider Sub-Struct (Crossplane Composition pattern)
 
-**Abstraction degree**
-None (ACK) → Class-based (StorageClass) → Schema-mapped (Crossplane) → Implicit routing (Gardener DNS)
+**Origin:** Crossplane Composite Resources · [crossplane/crossplane](https://github.com/crossplane/crossplane/blob/main/docs/concepts/composite-resources.md)
+and Cluster API infrastructure provider split · [kubernetes-sigs/cluster-api](https://github.com/kubernetes-sigs/cluster-api/blob/main/docs/book/src/developer/providers/cluster-infrastructure.md)
 
-**Who owns the mapping**
-Compiled code (ACK, Cloud Manager) · Declarative YAML patches (Crossplane) · Opaque provisioner parameters (StorageClass) · Domain-matching algorithm (Gardener DNS)
+**What it solves:** When the resource envelope is shared (create, reference, lifecycle, status contract) but some configuration is provider-specific, a typed `spec.instance.<provider>` sub-struct keeps the user-facing resource tidy while surfacing only relevant fields per provider.
 
-**Single-object vs. multi-object**
-One object (ACK) → Two paired objects (CAPI) → Three layers (PVC + StorageClass + PV) → Five layers (Crossplane)
+**Crossplane example — neutral Claim, provider detail in Composition:**
+```yaml
+# User writes (Claim — neutral):
+kind: XPostgreSQLInstance
+spec:
+  parameters:
+    storageGB: 20
+    version: "14"
 
-**Design-time vs. runtime binding**
-CAPI and Crossplane bind provider at manifest-authoring time. Gardener DNS and StorageClass dynamic provisioning bind at runtime from cluster configuration. Cloud Manager uses runtime binding: the Kyma cluster's provider scope determines which action pipeline runs.
+# Composition maps to provider-specific Managed Resource (internal, not user-facing):
+# storageGB: 20 → spec.forProvider.allocatedStorage: 20 (AWS RDS)
+# version: "14" → spec.forProvider.engineVersion: "14.9" (AWS RDS)
+```
+
+**Cloud Manager — KCP already uses this pattern correctly:**
+```yaml
+# KCP RedisInstance — envelope is shared, provider detail is in sub-struct
+kind: RedisInstance
+spec:
+  instance:
+    gcp:
+      memorySizeGb: 6
+      tier: "STANDARD_HA"
+      redisVersion: "REDIS_7_0"
+    # aws:, azure:, alicloud: are mutually exclusive alternatives
+```
+
+**Cloud Manager — where this pattern should be extended to config maps:**
+
+Redis config is freeform on AWS/GCP but typed on Azure. Currently Azure `redisConfiguration` is a typed struct — which is correct — but the field *name* differs from `parameters` (AWS) and `redisConfigs` (GCP).
+
+*Before:*
+```yaml
+kind: AwsRedisInstance
+spec:
+  parameters:
+    maxmemory-policy: volatile-lru    # freeform map
+
+kind: GcpRedisInstance
+spec:
+  redisConfigs:
+    maxmemory-policy: volatile-lru    # freeform map, different name
+
+kind: AzureRedisInstance
+spec:
+  redisConfiguration:
+    maxmemory-policy: "volatile-lru"  # typed struct, different name again
+```
+
+*After (unified field name, structural difference stays):*
+```yaml
+kind: AwsRedisInstance
+spec:
+  parameters:                         # unchanged
+    maxmemory-policy: volatile-lru
+
+kind: GcpRedisInstance
+spec:
+  parameters:                         # was: redisConfigs
+    maxmemory-policy: volatile-lru
+
+kind: AzureRedisInstance
+spec:
+  parameters:                         # was: redisConfiguration — struct shape preserved,
+    maxmemory-policy: "volatile-lru"  # only field name changes
+```
 
 ---
 
-## Decision Guide
+## Pattern 5: Portable Container with Unstructured Payload
 
-| User decision is the same across providers? | Model |
-|---------------------------------------------|-------|
-| Yes, and the controller can route silently | Provider-neutral resource (Gardener DNS pattern) — `IpRange` |
-| Yes, but provider-specific config is sometimes needed | Provider-neutral spec + typed provider sub-struct in KCP (Crossplane Claim pattern) |
-| No — concepts differ structurally | Provider-specific resource per provider (ACK pattern) — VpcPeering |
-| Envelope is neutral, but payload content is not | Portable container + unstructured `data` escape hatch |
-| Provider detail can be derived from user input | Derive internally; omit from spec |
+**Origin:** Kubernetes `ConfigMap` / `Secret` (`data: map[string]string`) and
+StorageClass `parameters: map[string]string` · [k8s.io/api/storage/v1](https://github.com/kubernetes/api/blob/master/storage/v1/types.go)
+
+**What it solves:** When the resource envelope is provider-neutral (create, reference, lifecycle) but the payload content — rule sets, policies, scripts — has no meaningful cross-provider representation. An unstructured `data` field hands off validation to the provider while keeping the CM resource shape consistent.
+
+**StorageClass example:**
+```yaml
+kind: StorageClass
+provisioner: ebs.csi.aws.com
+parameters:                    # opaque — provisioner validates, not Kubernetes
+  type: gp3
+  iops: "3000"
+  encrypted: "true"
+```
+
+**Cloud Manager — future WAF resource (clean test case):**
+
+WAF rule sets are provider-native and content-rich. An AWS `AWSManagedRulesCommonRuleSet` has no direct structural equivalent on GCP or Azure. Forcing a portable schema would require either a lowest-common-denominator set of toggles or a large union with mostly-empty fields.
+
+*Proposed shape using this pattern:*
+```yaml
+kind: WafPolicy
+spec:
+  targetRef:
+    name: my-gateway            # what to protect (provider-neutral reference)
+  # Common portable toggles (intersection of all providers):
+  rules:
+    owaspTop10: true
+    rateLimit:
+      requestsPerMinute: 1000
+  # Provider-specific payload — content validated by cloud provider, not CM:
+  instance:
+    aws:
+      managedRuleGroups:
+        - vendorName: AWS
+          name: AWSManagedRulesCommonRuleSet
+    gcp:
+      preconfiguredRules:
+        - OWASP-CRS
+    azure:
+      managedRuleSets:
+        - ruleSetType: OWASP
+          ruleSetVersion: "3.2"
+```
+
+This keeps the CM envelope consistent and the shared config validated by CRD schema, while allowing each provider's native rule format without a false abstraction.
+
+---
+
+## Summary: Pattern → CM CRD family mapping
+
+| Pattern | Source | Apply to |
+|---------|--------|----------|
+| Neutral intent resource | PVC, Gardener DNSEntry | `NfsVolume` capacity field (unify to k8s Quantity) |
+| Normalize status, keep provider spec | Crossplane Managed Resources | Redis `engineVersion` and `replicasPerShard` naming (unify field names, map internally) |
+| Provider-specific resource | ACK / ASO | `VpcPeering` — correct as-is, no change |
+| Typed provider sub-struct | Crossplane Composition, Cluster API | Redis `parameters` field name (unify name, keep structural differences) |
+| Portable container + unstructured payload | StorageClass `parameters` | Future `WafPolicy` rule configuration |
