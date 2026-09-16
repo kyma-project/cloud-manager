@@ -103,8 +103,9 @@ spec:
     gcp:
       tier: "BASIC_HDD"
       fileShareName: "vol1"
-      capacityGb: 1024
+      capacityGb: 1024             # KCP-internal: integer GiB, matches Filestore API
+                                   # SKR layer converts from k8s Quantity (Pattern 2)
     # aws: / azure: / alicloud: / openStack: mutually exclusive
 ```
 
-This is a KCP-internal change. SKR users are not affected.
+This is a KCP-internal change. SKR users always write `capacity: "1Ti"` (k8s Quantity) on the SKR resource; the controller converts to `capacityGb` when creating the KCP object.

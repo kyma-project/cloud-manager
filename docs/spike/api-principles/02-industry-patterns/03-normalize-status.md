@@ -149,3 +149,4 @@ status:
   state: Ready
   capacity: "1Ti"           # normalized k8s Quantity — same field on all providers
                             # controller converts from provider's integer GiB value
+```

@@ -92,7 +92,9 @@ spec:
 
 The resources are correct as-is. One minor improvement: `remotePeeringName` exists on both GCP and Azure with different validation constraints (GCP: 1–63 chars, lowercase alphanumeric+hyphens; Azure: 1–80 chars, word characters and hyphens). The field name is already consistent — but the CEL validation rules could reference this shared origin in their error messages to make the difference explicit to users.
 
-No structural change needed.
+For the structural improvement proposal — moving provider-specific fields under a named extension key (`azure:`, `gcp:`, `aws:`) while keeping base fields at top level — see [Pattern 1 — VpcPeering section](./01-base-with-extensions.md#vpcpeering).
+
+---
 
 ## When to Use This Pattern vs. Pattern 1
 

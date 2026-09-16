@@ -41,6 +41,7 @@ parameters:                        # different keys — Azure-specific, no CRD s
 ### Kubernetes CRD — x-kubernetes-preserve-unknown-fields
 **Repo:** [kubernetes/kubernetes](https://github.com/kubernetes/kubernetes)
 **Key file:** [`staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1/types_jsonschema.go`](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1/types_jsonschema.go)
+**Kubebuilder marker docs:** [`book.kubebuilder.io — markers/crd-validation`](https://book.kubebuilder.io/reference/markers/crd-validation)
 
 For structured but provider-versioned payloads that cannot be captured in a static CRD schema (e.g. policy documents, rule sets with nested objects), `x-kubernetes-preserve-unknown-fields: true` allows arbitrary structure at a given path while keeping the rest of the spec typed.
 
@@ -100,6 +101,8 @@ The right shape: strongly typed envelope for what is universal (`targetRef`, com
 kind: WafPolicy
 spec:
   # Strongly typed envelope — validated by CM CRD
+  # Note: targetRef (what to protect) is omitted here — the attachment model
+  # differs structurally per provider and requires a separate design decision.
   rules:
     owaspTop10: true              # toggle — all providers support this concept
     rateLimit:
@@ -120,8 +123,6 @@ spec:
         - ruleSetType: OWASP
           ruleSetVersion: "3.2"
 ```
-
-Note: the `targetRef` attachment problem (AWS attaches to ALB ARN, GCP to backend service, Azure has two different WAF resource types) is not addressed here. It requires a prior decision about how CM models traffic entry points and is out of scope for this pattern.
 
 ---
 

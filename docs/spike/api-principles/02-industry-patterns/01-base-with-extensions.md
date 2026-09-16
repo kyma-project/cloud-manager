@@ -91,6 +91,7 @@ CM already implements this pattern at the KCP layer. The KCP `RedisInstance` has
 
 ```yaml
 # KCP RedisInstance — base fields + provider extension (discriminated union)
+# Current code: api/cloud-control/v1beta1/redisinstance_types.go
 kind: RedisInstance                    # cloud-control API group
 spec:
   scope:
@@ -101,7 +102,7 @@ spec:
     gcp:                               # extension — only one of gcp/aws/azure/alicloud
       memorySizeGb: 6
       tier: "STANDARD_HA"
-      redisVersion: "REDIS_7_0"
+      redisVersion: "REDIS_7_0"        # KCP-internal: uses GCP API value directly
 
 status:
   memorySizeGb: 6                      # normalized — same field regardless of provider
@@ -109,7 +110,7 @@ status:
   primaryEndpoint: "10.0.0.5:6379"    # normalized
 ```
 
-**The problem is at the SKR layer.** The user-facing resources (`GcpRedisInstance`, `AwsRedisInstance`, etc.) apply this pattern inconsistently: some fields that belong in the base (same concept, same user decision) are expressed differently per provider.
+**The problem is at the SKR layer.** The KCP layer correctly uses provider vocabulary internally (`redisVersion: "REDIS_7_0"`). The SKR layer should expose the neutral concept (`engineVersion: "7.0"`) and let the controller translate. Currently the SKR layer leaks provider vocabulary into the user-facing spec on some resources.
 
 ---
 
@@ -196,7 +197,7 @@ spec:
 - `redisTier` — tier names encode provider-native sizing units (S1–S8 GCP, C1–C8 AWS clusters, P1–P5 Azure). The capacity per tier differs between providers even when the letter+number matches. Mapping to `size: small/medium/large` would lose fidelity.
 - AWS `autoMinorVersionUpgrade`, `preferredMaintenanceWindow` — no GCP/Azure/Alicloud equivalent
 - GCP `maintenancePolicy.dayOfWeek` — GCP-specific structured shape, no equivalent
-- Azure `parameters` (renamed from `redisConfiguration`) — Azure's API validates a defined set of config keys server-side; the field is renamed to be consistent but the controller still validates allowed keys against Azure's schema before calling the API
+- Azure `parameters` (renamed from `redisConfiguration`) — **proposed change**: Azure's API validates a defined set of config keys server-side; renaming the field makes it consistent with AWS/GCP while the controller still validates allowed keys against Azure's schema before calling the API
 - Alicloud `engineVersion` immutability — Alicloud does not allow version upgrade after creation; this is a provider constraint reflected in the CRD validation rule, not a field name change
 
 ---
