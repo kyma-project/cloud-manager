@@ -39,6 +39,7 @@ func (r *kymaReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 func (r *kymaReconciler) newAction() composed.Action {
 	return composed.ComposeActionsNoName(
 		composed.LoadObj,
+		kymaRemoveStaleCloudManagerFinalizer,
 		kymaFindModuleState,
 		scopeLoad,
 
