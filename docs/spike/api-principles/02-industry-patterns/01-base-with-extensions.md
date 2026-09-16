@@ -135,7 +135,7 @@ The rule: fields where **the user decision is the same** across providers belong
 ```yaml
 kind: GcpRedisInstance
 spec:
-  redisTier: "P1"
+  redisTier: "S1"                  # GCP Standard tier, 1GB
   redisVersion: "REDIS_7_0"        # GCP-specific field name and value format
   redisConfigs:                     # GCP-specific field name
     maxmemory-policy: volatile-lru
@@ -148,7 +148,7 @@ spec:
 ---
 kind: AwsRedisInstance
 spec:
-  redisTier: "P1"
+  redisTier: "S1"                  # AWS S1 — different capacity from GCP S1
   engineVersion: "7.0"             # different field name from GCP
   parameters:                       # different field name from GCP
     maxmemory-policy: volatile-lru
@@ -165,7 +165,7 @@ spec:
 ```yaml
 kind: GcpRedisInstance
 spec:
-  redisTier: "P1"
+  redisTier: "S1"
   engineVersion: "7.0"             # was: redisVersion: "REDIS_7_0"
   parameters:                       # was: redisConfigs
     maxmemory-policy: volatile-lru
@@ -178,7 +178,7 @@ spec:
 ---
 kind: AwsRedisInstance
 spec:
-  redisTier: "P1"
+  redisTier: "S1"
   engineVersion: "7.0"             # unchanged — was already correct
   parameters:                       # unchanged — was already correct
     maxmemory-policy: volatile-lru
@@ -193,11 +193,11 @@ spec:
 
 #### Fields that stay provider-specific (user decision genuinely differs)
 
-- `redisTier` — tier names encode provider-native sizing units (S1–S8 GCP, C1–C8 AWS clusters, P1–P5 Azure). Mapping to `size: small/medium/large` would lose fidelity.
+- `redisTier` — tier names encode provider-native sizing units (S1–S8 GCP, C1–C8 AWS clusters, P1–P5 Azure). The capacity per tier differs between providers even when the letter+number matches. Mapping to `size: small/medium/large` would lose fidelity.
 - AWS `autoMinorVersionUpgrade`, `preferredMaintenanceWindow` — no GCP/Azure/Alicloud equivalent
 - GCP `maintenancePolicy.dayOfWeek` — GCP-specific structured shape, no equivalent
-- Azure `redisConfiguration` typed struct — Azure's API exposes a defined field set; freeform `map[string]string` would bypass Azure-side validation
-- Alicloud `engineVersion` immutability — Alicloud does not allow version upgrade after creation; this is a provider constraint reflected in the CRD validation rule, not a field change
+- Azure `parameters` (renamed from `redisConfiguration`) — Azure's API validates a defined set of config keys server-side; the field is renamed to be consistent but the controller still validates allowed keys against Azure's schema before calling the API
+- Alicloud `engineVersion` immutability — Alicloud does not allow version upgrade after creation; this is a provider constraint reflected in the CRD validation rule, not a field name change
 
 ---
 

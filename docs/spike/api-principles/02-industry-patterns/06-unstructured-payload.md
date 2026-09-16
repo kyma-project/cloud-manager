@@ -36,23 +36,25 @@ parameters:                        # different keys — Azure-specific
 
 ---
 
-### Kubernetes ConfigMap / Secret
-**Repo:** [kubernetes/api](https://github.com/kubernetes/api)
-**Key file:** [`core/v1/types.go`](https://github.com/kubernetes/api/blob/master/core/v1/types.go#L5671)
+### Kubernetes Gateway API — parametersRef escape hatch
+**Repo:** [kubernetes-sigs/gateway-api](https://github.com/kubernetes-sigs/gateway-api)
+**Key file:** [`apis/v1/gatewayclass_types.go`](https://github.com/kubernetes-sigs/gateway-api/blob/main/apis/v1/gatewayclass_types.go)
 
-`ConfigMap` and `Secret` have a neutral envelope (name, namespace, labels) and an opaque `data: map[string]string` payload. The content is arbitrary — the consumer validates it, not Kubernetes.
+`GatewayClass` carries the common structure. `spec.parametersRef` is an optional typed pointer to a provider-specific config object. The base fields (listeners, routes) are strongly typed; the provider-specific config is in the referenced object and validated by the controller, not by the base CRD schema.
 
 ```yaml
-kind: ConfigMap
-metadata:
-  name: my-config               # neutral envelope
-data:                           # opaque — any key-value content
-  redis.conf: |
-    maxmemory-policy volatile-lru
-    activedefrag yes
+kind: GatewayClass
+spec:
+  controllerName: "example.com/nginx-controller"
+  parametersRef:                     # optional — points to provider-specific config
+    group: "gateway.example.com"
+    kind: "NginxGatewayConfig"       # typed reference, not map[string]string
+    name: "nginx-params"
 ```
 
-**Lesson for CM:** When the payload is consumer-specific and content-rich (e.g. WAF rule sets, firewall policies), an opaque `data` field with consumer-side validation is the right escape valve over forcing a false abstraction.
+The provider-specific object (`NginxGatewayConfig`) has its own schema validated by its own CRD. The base `GatewayClass` does not need to know the shape of its parameters.
+
+**Lesson for CM:** When most users don't need provider-specific tuning but expert users must reach it, an optional typed reference to a provider-specific config object is better than embedding the payload in the base resource. The reference keeps the base clean; the referenced object has full CRD schema validation.
 
 ---
 
@@ -84,7 +86,10 @@ kind: WafPolicy
 spec:
   # Portable envelope — strongly typed, validated by CM CRD
   targetRef:
-    name: my-gateway              # what to protect — provider-neutral
+    name: my-gateway              # what to protect — requires a prior Gateway abstraction
+                                   # decision; AWS attaches to ALB ARN, GCP to backend
+                                   # service, Azure has two different WAF resource types.
+                                   # targetRef is a placeholder until that decision is made.
   rules:
     owaspTop10: true              # toggle — all providers support this concept
     rateLimit:

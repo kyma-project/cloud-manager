@@ -1,82 +1,61 @@
-# Pattern 3: Normalize Status, Keep Provider Spec
+# Pattern 3: Consistent Field Naming for Shared Concepts
 
-Provider-specific sizing vocabulary in spec is correct — the user must choose the provider's tier or instance type. The controller normalizes output to provider-neutral status fields so workloads can consume connection details without provider knowledge.
+When the same user decision exists across all providers, the field name must be identical across all provider-specific resources. Value formats that differ between providers are mapped by the controller, not exposed to the user.
+
+This is distinct from Pattern 1 (base+extensions structure) — it applies specifically within provider-specific SKR resources where the field *name* diverges even though the *concept* is the same.
 
 ---
 
 ## Where This Pattern Comes From
 
-### Crossplane Managed Resources
-**Repo:** [crossplane/crossplane](https://github.com/crossplane/crossplane)
-**Key file:** [`docs/concepts/managed-resources.md`](https://github.com/crossplane/crossplane/blob/main/docs/concepts/managed-resources.md)
+### Crossplane Provider AWS — engineVersion normalization
+**Repo:** [crossplane-contrib/provider-aws](https://github.com/crossplane-contrib/provider-aws)
+**Key file:** [`pkg/controller/elasticache/replicationgroup/setup.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/pkg/controller/elasticache/replicationgroup/setup.go)
 
-Managed Resources mirror the cloud API in spec. The controller populates `status.atProvider` with normalized output fields (endpoint, port, ARN) that workloads consume without knowing the provider.
+In Crossplane, when a Composition maps a neutral Claim field to a provider Managed Resource, the *mapping* — including value transformation — lives in the Composition, not in the CRD field name. A user writing `engineVersion: "7.0"` always writes the same field name regardless of whether the underlying provider calls it `engineVersion`, `redisVersion`, or `REDIS_7_0`.
 
 ```yaml
-kind: RDSInstance
+# User writes once (Claim):
 spec:
-  forProvider:
-    dbInstanceClass: db.t3.micro    # AWS-specific — user must choose this
-    engine: postgres
-    engineVersion: "14"
+  engineVersion: "7.0"          # always this field name
 
-status:
-  atProvider:
-    endpoint: "my-db.abc123.us-east-1.rds.amazonaws.com"
-    port: 5432                       # same field name regardless of AWS/GCP/Azure
+# Composition maps to GCP (internal):
+# engineVersion: "7.0" → redisVersion: "REDIS_7_0"
+
+# Composition maps to AWS (internal):
+# engineVersion: "7.0" → engineVersion: "7.0"  (passthrough)
 ```
 
-**Lesson for CM:** Keep provider-specific sizing in spec (user must choose). Map to neutral output fields in status. CM already does this correctly for Redis tiers — `status.memorySizeGb`, `status.replicaCount`, `status.primaryEndpoint` are normalized across all providers.
+**Lesson for CM:** The field name the user writes is the contract. The mapping to the provider's vocabulary is the controller's job. CM's Go action pipelines can do this mapping as well as Crossplane's YAML patches — the difference is that CM currently does not consistently apply it at the SKR level.
 
 ---
 
-### Kubernetes StorageClass → PersistentVolume
-**Repo:** [kubernetes/api](https://github.com/kubernetes/api)
-**Key file:** [`storage/v1/types.go`](https://github.com/kubernetes/api/blob/master/storage/v1/types.go)
+### Kubernetes API conventions — consistent field naming
+**Repo:** [kubernetes/community](https://github.com/kubernetes/community)
+**Key file:** [`contributors/devel/sig-architecture/api-conventions.md`](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#naming-conventions)
 
-`StorageClass.parameters` carries provider-specific config (IOPS, encryption, disk type). The provisioned `PV` exposes neutral fields (`capacity`, `accessModes`, `volumeMode`) regardless of which provisioner created it.
+The Kubernetes API conventions require that fields representing the same concept use the same name across all resource types. `spec.replicas` means replicas everywhere. `spec.selector` means selector everywhere. This is the baseline convention CM's SKR API should follow for cross-provider fields.
 
-```yaml
-# StorageClass — provider-specific input
-kind: StorageClass
-provisioner: ebs.csi.aws.com
-parameters:
-  type: gp3
-  iops: "3000"              # AWS-specific
-
----
-# PV — normalized output, same shape for all provisioners
-kind: PersistentVolume
-spec:
-  capacity:
-    storage: 10Gi           # neutral
-  accessModes: [ReadWriteOnce]
-  csi:
-    driver: ebs.csi.aws.com
-    volumeHandle: "vol-0a1b2c3d"
-```
-
-**Lesson for CM:** The same normalization applies to Redis: provider-specific tier in spec, neutral `memorySizeGb` in status.
+**Lesson for CM:** `replicasPerShard` should mean the same thing everywhere. Using `replicasPerPrimary` on Azure for the same concept breaks this convention without any justification.
 
 ---
 
 ## How Cloud Manager Uses This Pattern
 
-**Redis status normalization — already correct:**
+**Redis status normalization — already correct (do not change):**
 
 ```yaml
 kind: GcpRedisInstance
 spec:
-  redisTier: "P1"               # GCP-specific — user must choose this
+  redisTier: "P1"               # GCP-specific — correct, user must choose this
 
 status:
   memorySizeGb: 6               # neutral — same field on all providers
-  replicaCount: 1               # neutral
-  primaryEndpoint: "10.0.0.5:6379"   # neutral
-  authString: "secret"          # neutral
+  replicaCount: 1               # neutral — same field on all providers
+  primaryEndpoint: "10.0.0.5:6379"   # neutral — same field on all providers
 ```
 
-No change needed here.
+The pattern is already applied correctly in status. The gap is in spec field naming.
 
 ---
 
@@ -84,7 +63,7 @@ No change needed here.
 
 ### Redis — engineVersion field name
 
-The version concept is the same user decision on every provider. The field name and value format differ across providers for no reason.
+The version concept is identical across all providers — which Redis engine version to run. The field name and value format differ across providers for no reason.
 
 **Before:**
 ```yaml
@@ -144,5 +123,13 @@ spec:
 kind: AzureRedisCluster
 spec:
   replicasPerShard: 1           # was: replicasPerPrimary
-                                 # controller maps to Azure's replicasPerPrimary internally
+                                 # controller maps to Azure API's replicasPerPrimary internally
 ```
+
+---
+
+### NfsVolume — status normalization gap
+
+NfsVolume currently does not normalize capacity in status the way Redis normalizes `memorySizeGb`. Each provider reports capacity differently or not at all in status. Consistent with this pattern, status should expose `capacity` as a k8s Quantity regardless of which provider fulfilled it.
+
+This is a smaller gap than the spec field naming issues above, but applying the pattern consistently means status follows the same rules as spec.
