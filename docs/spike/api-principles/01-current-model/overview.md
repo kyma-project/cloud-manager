@@ -46,13 +46,41 @@ spec:
 </tr>
 </table>
 
-**Differences across providers:**
-- `IpRange` is provider-neutral — the same `cidr` field works on AWS, GCP, Azure, Alicloud, and OpenStack.
-- `GcpSubnet` is GCP-only. It exists because GCP Redis Cluster requires a dedicated subnet for Private Service Connect, which is a different network construct from the Private Service Access IP range used by Filestore and Memorystore.
+### Unification 
 
-**Differences across features:**
-- `IpRange` is referenced by NFS volumes and Redis instances/clusters across all providers (except `GcpRedisCluster`, which uses `GcpSubnet` instead).
-- `GcpSubnet` is referenced only by `GcpRedisCluster`. Once GcpRedisCluster reaches GA, GcpSubnet is planned to move to an "undefined" feature gate.
+No shape differences. Future demand for various types can be encapsulated within the class/type attribute that determines the reconciliation algorithm and APIs used.
+
+**Portable intent**
+
+> 💡Pattern taken from core Kubernetes resources like Service.type and Secret.type indicating a predefined enumerable set of possible values.
+
+```yaml
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: IpRange
+metadata:
+  name: my-iprange
+  # cluster-scoped, no namespace
+spec:
+  cidr: "10.250.0.0/22"
+  type: <ip-range-type>
+```
+
+Types:
+- aws/shared-subnet
+- azure/shared-subnet
+- azure/app-gateway-subnet
+- gcp/psa
+- gcp/psc-redis
+- sap/shared-subnet
+- alicloud/shared-subnet
+
+### Technical note ⚠️
+
+IpRange and GcpSubnet carry significant network reconfiguration pre-requisites that are hidden from the user, and their outcomes are the foundation for all other network bound resources (NFS, Redis, WAF, DNS...). Problem is lack of user exposed address space configuration. For some providers their reconciliation is extremely complex, constrained and cardinality sensitive. Deeper grooming required!
+
+### Honestly what we get 🎁
+
+Two kinds of same shape collapsed into one kind brings UI/API simplification, but on technical side it brings additional entanglement of unrelated functionality leveraged with all networking unresolved issues.
 
 ---
 
@@ -66,7 +94,7 @@ VpcPeering connects the Kyma cluster's VPC to a customer-owned VPC in the same c
 <th>AzureVpcPeering</th>
 <th>GcpVpcPeering</th>
 </tr>
-<tr>
+<tr style="vertical-align: top;">
 <td>
 
 ```yaml
@@ -136,12 +164,85 @@ spec:
 </tr>
 </table>
 
-**Differences across providers:**
-- All three are fully provider-specific with no shared fields beyond `deleteRemotePeering`.
-- AWS uniquely requires `remoteAccountId` (cross-account identity) and adds `remoteRouteTableUpdateStrategy` to control route-table propagation.
-- GCP uniquely requires `remoteProject` and adds `importCustomRoutes` to control whether the Kyma side imports custom routes from the peer.
-- Azure uniquely adds `remoteTenant` (cross-tenant / cross-subscription peering) and `useRemoteGateway`.
-- The remote VPC is identified differently: AWS by opaque `remoteVpcId`; GCP by human-readable `remoteVpc` name plus `remoteProject`; Azure by a full ARM resource ID string in `remoteVnet`.
+### Unification
+
+The remote VPC identifier can be collapsed into a single composite string representation specific to cloud provider:
+- AWS - `arn:aws:ec2:us-east-1:123456789012:vpc/vpc-1234567890abcdef0`
+- Azure - already in use - `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet`
+- GCP - `projects/my-project/global/networks/my-net`
+
+**⚠️ Risk** providers not having a specific standard resource identifier where we must define **own custom format**.
+
+**Provider specific configuration** can be externalized into separate shapes, probably inlined since it makes not much sense to template it.
+
+<table>
+<tr>
+<th>AwsVpcPeering</th>
+<th>AzureVpcPeering</th>
+<th>GcpVpcPeering</th>
+</tr>
+<tr>
+<td>
+
+```yaml
+apiVersion: aws.cloud-resources.kyma-project.io/v1beta1
+kind: VpcPeeringConfig
+spec:
+  # Immutable. Enum: AUTO, NONE, MATCHED, UNMATCHED
+  remoteRouteTableUpdateStrategy: "AUTO"
+```
+
+</td>
+<td>
+
+```yaml
+apiVersion: azure.cloud-resources.kyma-project.io/v1beta1
+kind: VpcPeeringConfig
+spec:
+  # Required. Immutable. Max 80 chars.
+  remotePeeringName: "my-peering"
+  # Optional. Immutable. Default false.
+  useRemoteGateway: false
+```
+
+</td>
+<td>
+
+```yaml
+apiVersion: gcp.cloud-resources.kyma-project.io/v1beta1
+kind: VpcPeeringConfig
+spec:
+  # Required. Immutable. 1-63 chars, lowercase alphanumeric+hyphens.
+  remotePeeringName: "my-peering"
+  # Immutable. Default false.
+  importCustomRoutes: false
+```
+
+</td>
+</tr>
+</table>
+
+**Portable intent** with inlined provider specific config.
+
+> 💡 Pattern taken from Gardener Shoot inlined InfrastructureConfig, ControlPlaneConfig...
+
+```yaml
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: VpcPeering
+spec:
+  # Remote VPC Network identifier to peer with
+  remoteId: "provider-specific-resource-id-containing-all-relevant-attributes"
+  # Whether to delete the remote side of the peering on delete.
+  deleteRemotePeering: true
+  config:
+    apiVersion: aws|azure|gcp.cloud-resources.kyma-project.io/v1beta1
+    kind: VpcPeeringConfig
+    spec: # ... varies across providers, see above for scheme
+```
+
+### Honestly what we get 🎁
+
+N shapes replaces by N+1 shapes, where each CR still has all the fields it had before just in slightly different syntax. Technically neutral.
 
 ---
 
@@ -156,7 +257,7 @@ NfsVolume provisions a managed NFS file system and exposes it as a Kubernetes Pe
 <th>AlicloudNfsVolume</th>
 <th>SapNfsVolume (OpenStack)</th>
 </tr>
-<tr>
+<tr style="vertical-align: top;">
 <td>
 
 ```yaml
@@ -311,15 +412,127 @@ spec:
 </tr>
 </table>
 
-**Differences across providers:**
-- **Capacity type:** AWS and Alicloud use Kubernetes `resource.Quantity` (e.g. `"10Gi"`); GCP and SAP/OpenStack use an integer `capacityGb` field.
-- **AWS** has `performanceMode` and `throughput` — EFS-specific I/O performance knobs not present on any other provider.
-- **GCP** has `tier` (BASIC_HDD/BASIC_SSD/ZONAL/REGIONAL), `fileShareName` (the export path within the instance), and `sourceBackup` — allowing creation of a volume directly from an existing backup without a separate Restore object.
-- **Alicloud** NAS is elastic: the `capacity` value controls only the PV/PVC claim size and is not propagated to the cloud provider (no provisioned quota).
-- **SAP/OpenStack** has `dataSource.snapshot` for creating a volume from a Manila snapshot at creation time, analogous to GCP's `sourceBackup`.
-- **Azure** has no NfsVolume resource — Backup & Restore works directly with raw Kubernetes PVCs.
+### Unification
+
+The common fields that can stay in the portable intent resource:
+- ipRange
+- volume
+- volumeClaim
+
+Some have restore related source field that can bound to the typed resource.
+
+**Provider specific configuration** can be extracted into own types.
+
+<table>
+<tr>
+<th>AwsVpcPeering</th>
+<th>AzureVpcPeering</th>
+<th>AlicloudNfsVolume</th>
+<th>SapNfsVolume</th>
+</tr>
+<tr>
+<td>
+
+```yaml
+apiVersion: aws.cloud-resources.kyma-project.io/v1beta1
+kind: NfsConfig
+spec:
+  # Default: generalPurpose. Enum: generalPurpose, maxIO.
+  performanceMode: "generalPurpose"
+  # Default: bursting. Enum: bursting, elastic.
+  throughput: "bursting"
+```
+
+</td>
+<td>
+
+```yaml
+apiVersion: azure.cloud-resources.kyma-project.io/v1beta1
+kind: NfsConfig
+spec:
+  # Enum: BASIC_HDD, BASIC_SSD, ZONAL, REGIONAL.
+  tier: "BASIC_HDD"
+  # Capacity in GiB. Default: 2560. Valid ranges depend on tier.
+  capacityGb: 1024
+
+```
+
+</td>
+<td>
+
+```yaml
+apiVersion: alicloud.cloud-resources.kyma-project.io/v1beta1
+kind: NfsConfig
+spec:
+  # Enum: Performance, Capacity, Premium.
+  storageType: "Performance"
+```
+
+</td>
+<td>
+
+```yaml
+apiVersion: sap.cloud-resources.kyma-project.io/v1beta1
+kind: NfsConfig
+spec:
+  # Required. Integer GiB (not Kubernetes quantity). Must be > 0.
+  capacityGb: 100
+```
+
+</td>
+</tr>
+</table>
+
+**Portable intent** with inlined provider specific config.
+
+> 💡 Pattern taken from Gardener Shoot inlined InfrastructureConfig, ControlPlaneConfig...
+
+```yaml
+apiVersion: cloud-resources.kyma-project.io/v1beta1
+kind: NfsVolume
+metadata:
+  name: my-volume
+  namespace: kyma-system
+spec:
+  # Optional. Immutable.
+  ipRange:
+    name: my-iprange
+  
+  config:
+    apiVersion: aws|gcp|alicloud|sap.cloud-resources.kyma-project.io/v1beta1
+    kind: NfsConfig
+    spec: # ... varies across providers, see above for scheme
+    
+  # Optional. Controls the PersistentVolume name and labels.
+  volume:
+    name: "my-pv"
+    labels:
+      app: my-app
+    annotations:
+      custom/annotation: "value"
+      
+  # Optional. Controls the PersistentVolumeClaim name and labels.
+  volumeClaim:
+    name: "my-pvc"
+    labels:
+      app: my-app
+    annotations:
+      custom/annotation: "value"
+
+  # Optional. Specified when created from backup/snapshot
+  source:
+    apiVersion: cloud-resources.kyma-project.io/v1beta1
+    kind: Backup|Snapshot
+    namespace: some-namespace
+    name: my-backup
+```
+
+### Honestly what we get 🎁
+
+N shapes replaces by N+1 shapes, where each CR still has all the fields it had before just in slightly different syntax. Technically neutral.
 
 ---
+
 
 ## Redis
 
@@ -337,7 +550,7 @@ Cloud Manager provides managed Redis for both single-node HA instances (`*RedisI
 <th>AlicloudRedisCluster</th>
 <th>AzureManagedRedis</th>
 </tr>
-<tr>
+<tr style="vertical-align: top;">
 <td>
 
 ```yaml
