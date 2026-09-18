@@ -18,6 +18,8 @@ Carry significant network reconfiguration pre-requisites that are hidden from th
 
 If risk of custom remote VPC identifier for providers not having standard format is accepted, then a non-empty portable intent resource `VpcPeering` can be defined with separate per provider `VpcPeeringConfig`.
 
+**⚠️ Risk** providers not having a specific standard resource identifier where we must define **own custom format**. Otherwise, the remote VPC identifier moves to the provider specific configuration and portable intent resource remains empty, which doesn't make much sense.
+
 [Details](./01-current-model/overview.md#vpcpeering)
 
 
