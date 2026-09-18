@@ -52,7 +52,7 @@ No shape differences. Future demand for various types can be encapsulated within
 
 **Portable intent**
 
-> 💡Pattern taken from core Kubernetes resources like Service.type and Secret.type indicating a predefined enumerable set of possible values.
+> 💡Pattern taken from core Kubernetes resources like Service.type and Secret.type indicating a predefined enumerable set of possible values, without additional configuration.
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -80,7 +80,7 @@ IpRange and GcpSubnet carry significant network reconfiguration pre-requisites t
 
 ### Honestly what we get 🎁
 
-Two kinds of same shape collapsed into one kind brings UI/API simplification, but on technical side it brings additional entanglement of unrelated functionality leveraged with all networking unresolved issues.
+Two kinds of same shape collapsed into one kind brings UI/API simplification, but on technical side it brings additional entanglement of unrelated functionality leveraged with all networking functional debt.
 
 ---
 
@@ -173,13 +173,15 @@ The remote VPC identifier can be collapsed into a single composite string repres
 
 **⚠️ Risk** providers not having a specific standard resource identifier where we must define **own custom format**.
 
-**Provider specific configuration** can be externalized into separate shapes, probably inlined since it makes not much sense to template it.
+**Otherwise**, the remote VPC identifier moves to the provider specific configuration and portable intent resource remains empty, which doesn't make much sense.
+
+**Provider specific configuration** can be externalized into separate shapes.
 
 <table>
 <tr>
-<th>AwsVpcPeering</th>
-<th>AzureVpcPeering</th>
-<th>GcpVpcPeering</th>
+<th>Aws VpcPeeringConfig</th>
+<th>Azure VpcPeeringConfig</th>
+<th>Gcp VpcPeeringConfig</th>
 </tr>
 <tr>
 <td>
@@ -187,6 +189,9 @@ The remote VPC identifier can be collapsed into a single composite string repres
 ```yaml
 apiVersion: aws.cloud-resources.kyma-project.io/v1beta1
 kind: VpcPeeringConfig
+metadata:
+  name: my-vpcpeering-config
+  # cluster-scoped, no namespace
 spec:
   # Immutable. Enum: AUTO, NONE, MATCHED, UNMATCHED
   remoteRouteTableUpdateStrategy: "AUTO"
@@ -198,6 +203,9 @@ spec:
 ```yaml
 apiVersion: azure.cloud-resources.kyma-project.io/v1beta1
 kind: VpcPeeringConfig
+metadata:
+  name: my-vpcpeering-config
+  # cluster-scoped, no namespace
 spec:
   # Required. Immutable. Max 80 chars.
   remotePeeringName: "my-peering"
@@ -211,6 +219,9 @@ spec:
 ```yaml
 apiVersion: gcp.cloud-resources.kyma-project.io/v1beta1
 kind: VpcPeeringConfig
+metadata:
+  name: my-vpcpeering-config
+  # cluster-scoped, no namespace
 spec:
   # Required. Immutable. 1-63 chars, lowercase alphanumeric+hyphens.
   remotePeeringName: "my-peering"
@@ -224,25 +235,31 @@ spec:
 
 **Portable intent** with inlined provider specific config.
 
-> 💡 Pattern taken from Gardener Shoot inlined InfrastructureConfig, ControlPlaneConfig...
+> 💡 Pattern taken from Kubernetes ObjectReference like Event involvedObject, or Pod spec.volumes[*].configMap
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: VpcPeering
+metadata:
+  name: my-vpcpeering-config
+  # cluster-scoped, no namespace
 spec:
-  # Remote VPC Network identifier to peer with
+  # Required. Remote VPC Network identifier to peer with
   remoteId: "provider-specific-resource-id-containing-all-relevant-attributes"
-  # Whether to delete the remote side of the peering on delete.
+
+  # Default: false. Whether to delete the remote side of the peering on delete.
   deleteRemotePeering: true
+
+  # Required
   config:
     apiVersion: aws|azure|gcp.cloud-resources.kyma-project.io/v1beta1
     kind: VpcPeeringConfig
-    spec: # ... varies across providers, see above for scheme
+    name: my-vpcpeering-config
 ```
 
 ### Honestly what we get 🎁
 
-N shapes replaces by N+1 shapes, where each CR still has all the fields it had before just in slightly different syntax. Technically neutral.
+N shapes replaces by N+1 shapes, where each CR still has all the fields it had before just in slightly different syntax. Must decide how it's driven by feature flags.
 
 ---
 
@@ -265,7 +282,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AwsNfsVolume
 metadata:
   name: my-volume
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional. Immutable.
   ipRange:
@@ -300,7 +317,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: GcpNfsVolume
 metadata:
   name: my-volume
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional. Immutable.
   ipRange:
@@ -343,7 +360,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AlicloudNfsVolume
 metadata:
   name: my-volume
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional. Immutable.
   ipRange:
@@ -379,7 +396,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: SapNfsVolume
 metadata:
   name: my-volume
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional.
   ipRange:
@@ -425,10 +442,10 @@ Some have restore related source field that can bound to the typed resource.
 
 <table>
 <tr>
-<th>AwsVpcPeering</th>
-<th>AzureVpcPeering</th>
-<th>AlicloudNfsVolume</th>
-<th>SapNfsVolume</th>
+<th>Aws NfsConfig</th>
+<th>Azure NfsConfig</th>
+<th>Alicloud NfsConfig</th>
+<th>Sap NfsConfig</th>
 </tr>
 <tr>
 <td>
@@ -485,23 +502,25 @@ spec:
 
 **Portable intent** with inlined provider specific config.
 
-> 💡 Pattern taken from Gardener Shoot inlined InfrastructureConfig, ControlPlaneConfig...
+> 💡 Pattern taken from Kubernetes ObjectReference like Event involvedObject, or Pod spec.volumes[*].configMap
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: NfsVolume
 metadata:
   name: my-volume
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional. Immutable.
   ipRange:
     name: my-iprange
   
+  # Required
   config:
     apiVersion: aws|gcp|alicloud|sap.cloud-resources.kyma-project.io/v1beta1
     kind: NfsConfig
-    spec: # ... varies across providers, see above for scheme
+    name: my-nfs-config
+    namespace: my-ns
     
   # Optional. Controls the PersistentVolume name and labels.
   volume:
@@ -529,7 +548,7 @@ spec:
 
 ### Honestly what we get 🎁
 
-N shapes replaces by N+1 shapes, where each CR still has all the fields it had before just in slightly different syntax. Technically neutral.
+N shapes replaces by N+1 shapes, where each CR still has all the fields it had before just in slightly different syntax. Must decide how it's driven by feature flags (ie Azure doesn't have NFS at all).
 
 ---
 
@@ -558,7 +577,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AwsRedisInstance
 metadata:
   name: my-redis
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional.
   ipRange:
@@ -597,7 +616,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: GcpRedisInstance
 metadata:
   name: my-redis
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional.
   ipRange:
@@ -639,7 +658,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AzureRedisInstance
 metadata:
   name: my-redis
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional.
   ipRange:
@@ -673,7 +692,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AlicloudRedisInstance
 metadata:
   name: my-redis
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional. Immutable.
   ipRange:
@@ -701,7 +720,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AwsRedisCluster
 metadata:
   name: my-redis-cluster
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional.
   ipRange:
@@ -742,7 +761,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: GcpRedisCluster
 metadata:
   name: my-redis-cluster
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional. References a GcpSubnet object,
   # NOT an IpRange — the only SKR resource that
@@ -776,7 +795,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AzureRedisCluster
 metadata:
   name: my-redis-cluster
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional.
   ipRange:
@@ -815,7 +834,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AlicloudRedisCluster
 metadata:
   name: my-redis-cluster
-  namespace: kyma-system
+  namespace: my-ns
 spec:
   # Optional. Immutable.
   ipRange:
@@ -848,7 +867,7 @@ apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: AzureManagedRedis
 metadata:
   name: my-redis
-  namespace: kyma-system
+  namespace: my-ns
   # Different Azure product: Azure Managed Redis
   # (Enterprise tier), NOT Azure Cache for Redis.
 spec:
@@ -874,406 +893,257 @@ spec:
 </tr>
 </table>
 
-**Differences across providers:**
-- **Version field naming is inconsistent:** AWS and Alicloud use `engineVersion` with dotted numeric values (e.g. `"7.0"`, `"6.x"`); GCP uses `redisVersion` with underscore-prefixed enum values (e.g. `"REDIS_7_0"`); Azure uses `redisVersion` with short numeric strings (e.g. `"6.0"`, `"6"`).
-- **Configuration field shape differs:** AWS uses `parameters` (freeform `map[string]string`); GCP uses `redisConfigs` (freeform `map[string]string`); Azure uses `redisConfiguration` — a typed struct with named fields, making it impossible to pass an unrecognised config key.
-- **Immutability rules differ:** Azure `redisConfiguration` and `redisVersion` are immutable after creation; all other providers allow in-place upgrades (version upgrade-only, not downgrade).
-- **Maintenance window:** AWS uses a freeform string (`"sun:23:00-mon:01:30"`); GCP uses a structured object (`maintenancePolicy.dayOfWeek`); Azure and Alicloud have no maintenance window field.
-- **Auth toggle:** AWS and GCP expose an explicit `authEnabled` boolean. Azure and Alicloud always require authentication — there is no toggle.
+### Unification
 
-**Differences across features (Instance vs Cluster):**
-- Cluster adds `shardCount` and either `replicasPerShard` (AWS, GCP, Alicloud) or `replicasPerPrimary` (Azure) — an inconsistency in naming for the same concept.
-- `GcpRedisCluster` uniquely uses `subnet` (a `GcpSubnetRef`) instead of `ipRange` (an `IpRangeRef`) for private networking — the only SKR resource in the entire API that does not use `IpRange`.
-- `AzureManagedRedis` maps to a different Azure product (Azure Managed Redis / Enterprise) from `AzureRedisInstance` (Azure Cache for Redis / OSS). The tier letter encodes both the product and the clustering mode: S = single-node non-HA, P = HA, C = HA sharded OSSCluster. This product distinction has no parallel in the other providers.
-- Alicloud Cluster's `replicasPerShard` must be `0` — read-replica configuration is not yet enabled for the current cloud-native CE cluster SKUs, so the field is effectively reserved.
+The common fields that can stay in the portable intent resource:
+- ipRange
+- authSecret
 
----
-
-## Backup & Restore
-
-Cloud Manager provides NFS volume backup, restore, and scheduling across providers. The three sub-families (one-time backup, restore, scheduled backup) are shown in separate tables. Note that Azure has no `NfsVolume` resource, so its backup resources operate on raw Kubernetes PVCs, and SAP/OpenStack uses "snapshot" terminology throughout.
-
-### One-Time Backup
+**Provider specific configuration** can be externalized into separate shapes.
 
 <table>
 <tr>
-<th>AwsNfsVolumeBackup</th>
-<th>GcpNfsVolumeBackup</th>
-<th>AzureRwxVolumeBackup</th>
-<th>SapNfsVolumeSnapshot (OpenStack)</th>
+<th>AwsRedisInstance</th>
+<th>GcpRedisInstance</th>
+<th>AzureRedisInstance</th>
+<th>AlicloudRedisInstance</th>
+<th>AwsRedisCluster</th>
+<th>GcpRedisCluster</th>
+<th>AzureRedisCluster</th>
+<th>AlicloudRedisCluster</th>
+<th>AzureManagedRedis</th>
 </tr>
-<tr>
+<tr style="vertical-align: top;">
 <td>
 
 ```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: AwsNfsVolumeBackup
-metadata:
-  name: my-backup
-  namespace: kyma-system
+apiVersion: aws.cloud-resources.kyma-project.io/v1beta1
+kind: RedisInstanceConfig
 spec:
-  # Required. References a Cloud Manager AwsNfsVolume.
-  source:
-    volume:
-      name: "my-volume"
-      namespace: "kyma-system"  # optional
-  # Optional. AWS Backup Vault lifecycle policy.
-  # Both fields are immutable after creation.
-  lifecycle:
-    # Days until backup is deleted.
-    deleteAfterDays: 365
-    # Days until backup moves to cold storage.
-    # deleteAfterDays must be >= this + 90.
-    moveToColdStorageAfterDays: 30
-  # Optional. Immutable. AWS Region for backup storage.
-  # Defaults to the source volume's region.
-  location: "us-east-1"
+  # Required. S1-S7 or P1-P6.
+  # Service letter (S/P) immutable; only capacity number is mutable.
+  redisTier: "S1"
+  # Default: "7.0". Enum: "6.x", "7.0", "7.1".
+  # Upgrade-only (cannot downgrade).
+  engineVersion: "7.0"
+  # Default: false.
+  autoMinorVersionUpgrade: false
+  # Optional. Format: ddd:hh24:mi-ddd:hh24:mi
+  preferredMaintenanceWindow: "sun:23:00-mon:01:30"
+  # Optional. Freeform Redis config map.
+  parameters:
+    maxmemory-policy: volatile-lru
+    activedefrag: "yes"
 ```
 
 </td>
 <td>
 
 ```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: GcpNfsVolumeBackup
-metadata:
-  name: my-backup
-  namespace: kyma-system
+apiVersion: gcp.cloud-resources.kyma-project.io/v1beta1
+kind: RedisInstanceConfig
 spec:
-  # Required. Immutable. References a Cloud Manager GcpNfsVolume.
-  source:
-    volume:
-      name: "my-volume"
-      namespace: "kyma-system"  # optional
-  # Optional. Immutable. GCP region for backup storage.
-  # Defaults to the source volume's region.
-  location: "us-west1"
-  # Optional. Cross-cluster access control.
-  # List of shootNames or subaccountIds, or ["all"] for global access.
-  # Max 10 entries. "all" cannot be combined with other values.
-  accessibleFrom:
-    - "all"
+  # Required. S1-S8 or P1-P6. Service letter (S/P) immutable.
+  redisTier: "P1"
+  # Default: "REDIS_7_0". 
+  # Enum: REDIS_6_X, REDIS_7_0, REDIS_7_2.
+  # Upgrade-only (cannot downgrade).
+  redisVersion: "REDIS_7_0"
+  # Optional. Freeform Redis config map.
+  redisConfigs:
+    maxmemory-policy: volatile-lru
+    activedefrag: "yes"
+  # Optional. Structured maintenance window.
+  maintenancePolicy:
+    dayOfWeek:
+      day: "SATURDAY"
+      startTime:
+        hours: 15
+        minutes: 45
 ```
 
 </td>
 <td>
 
 ```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: AzureRwxVolumeBackup
-metadata:
-  name: my-backup
-  namespace: kyma-system
-  # Azure has no NfsVolume resource — backs a raw PVC directly.
+apiVersion: azure.cloud-resources.kyma-project.io/v1beta1
+kind: RedisInstanceConfig
 spec:
-  # Required. Immutable. References a Kubernetes PVC.
-  source:
-    pvc:
-      name: "my-pvc"
-      namespace: "kyma-system"  # optional
-  # Optional. Azure region for backup storage.
-  location: "westeurope"
+  # Required. P1-P5 or S1-S5.
+  redisTier: "P1"
+  # Default: "6.0". Immutable after creation.
+  redisVersion: "6.0"
+  # Optional. Immutable after creation. Typed struct (not freeform map).
+  redisConfiguration:
+    maxclients: "8"
+    maxfragmentationmemory-reserved: "50"
+    maxmemory-delta: "50"
+    maxmemory-policy: "volatile-lru"
+    maxmemory-reserved: "50"
+    notify-keyspace-events: ""
 ```
 
 </td>
 <td>
 
 ```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: SapNfsVolumeSnapshot
-metadata:
-  name: my-snapshot
-  namespace: kyma-system
-  # OpenStack/CCEE uses "snapshot" terminology
-  # instead of "backup".
+apiVersion: alicloud.cloud-resources.kyma-project.io/v1beta1
+kind: RedisInstanceConfig
 spec:
-  # Required. Immutable. References a SapNfsVolume.
-  sourceVolume:
-    name: "my-volume"
-    namespace: "kyma-system"  # optional
-  # Optional. Days after which the snapshot is auto-deleted.
-  # 0 = no automatic deletion.
-  deleteAfterDays: 90
+  # Required. S1-S5 or P1-P5.
+  # Service letter (S/P) immutable.
+  redisTier: "S1"
+  # Default: "7.0". Enum: "5.0", "6.0", "7.0".
+  # Immutable after creation (unlike AWS/GCP).
+  engineVersion: "7.0"
+```
+
+</td>
+<td>
+
+```yaml
+apiVersion: aws.cloud-resources.kyma-project.io/v1beta1
+kind: RedisClusterConfig
+spec:
+  # Required. C1-C8.
+  redisTier: "C1"
+  # Required. 1-500 shards.
+  shardCount: 3
+  # Default: 1. Range: 0-5.
+  replicasPerShard: 1
+  # Default: "7.0". Enum: "6.x", "7.0", "7.1".
+  # Upgrade-only.
+  engineVersion: "7.0"
+  # Default: false.
+  autoMinorVersionUpgrade: false
+  # Optional. Format: ddd:hh24:mi-ddd:hh24:mi
+  preferredMaintenanceWindow: "sun:23:00-mon:01:30"
+  # Optional. Freeform Redis config map.
+  parameters:
+    maxmemory-policy: volatile-lru
+    activedefrag: "yes"
+```
+
+</td>
+<td>
+
+```yaml
+apiVersion: gcp.cloud-resources.kyma-project.io/v1beta1
+kind: RedisClusterConfig
+spec:
+  # Required. Enum: C1, C3, C4, C6.
+  redisTier: "C3"
+  # Required. Min: 1.
+  # Max depends on replicasPerShard: 250/125/83.
+  shardCount: 5
+  # Default: 1. Range: 0-2.
+  replicasPerShard: 1
+  # Optional. Freeform Redis config map.
+  redisConfigs:
+    maxmemory-policy: volatile-lru
+```
+
+</td>
+<td>
+
+```yaml
+apiVersion: azure.cloud-resources.kyma-project.io/v1beta1
+kind: RedisCluster
+spec:
+  # Required. Enum: C3, C4, C5, C6, C7.
+  redisTier: "C3"
+  # Optional. Range: 0-10.
+  shardCount: 3
+  # Optional. Immutable. Range: 0-10.
+  replicasPerPrimary: 1
+  # Optional. (Azure uses "replicasPerPrimary",
+  # not "replicasPerShard" like other providers.)
+  redisVersion: "6"
+  # Optional. Immutable after creation. Typed struct.
+  redisConfiguration:
+    maxclients: "8"
+    maxfragmentationmemory-reserved: "50"
+    maxmemory-delta: "50"
+    maxmemory-policy: "volatile-lru"
+    maxmemory-reserved: "50"
+    notify-keyspace-events: ""
+```
+
+</td>
+<td>
+
+```yaml
+apiVersion: alicloud.cloud-resources.kyma-project.io/v1beta1
+kind: RedisClusterConfig
+spec:
+  # Required. Enum: C3, C4, C5, C6, C7.
+  # Each tier sets per-shard memory.
+  redisTier: "C3"
+  # Required. Range: 1-32.
+  shardCount: 4
+  # Must be 0. Read-replica config not yet
+  # enabled for current tier SKUs.
+  replicasPerShard: 0
+  # Default: "7.0". Enum: "5.0", "6.0", "7.0".
+  # Immutable after creation.
+  engineVersion: "7.0"
+```
+
+</td>
+<td>
+
+```yaml
+apiVersion: azure.cloud-resources.kyma-project.io/v1beta1
+kind: ManagedRedisConfig
+spec:
+  # Required. S1-S5, P1-P5, or C3-C7.
+  # Family letter is immutable:
+  #   S = Balanced non-HA EnterpriseCluster (dev)
+  #   P = ComputeOptimized HA EnterpriseCluster
+  #   C = ComputeOptimized HA OSSCluster (sharded)
+  redisTier: "P1"
 ```
 
 </td>
 </tr>
 </table>
 
-### Restore
 
-<table>
-<tr>
-<th>AwsNfsVolumeRestore</th>
-<th>GcpNfsVolumeRestore</th>
-<th>AzureRwxVolumeRestore</th>
-<th>SapNfsVolumeSnapshotRestore (OpenStack)</th>
-</tr>
-<tr>
-<td>
+**Portable intent** resource:
+
+> 💡 Pattern taken from Kubernetes ObjectReference like Event involvedObject, or Pod spec.volumes[*].configMap
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: AwsNfsVolumeRestore
+kind: Redis
 metadata:
-  name: my-restore
-  namespace: kyma-system
+  name: my-redis
+  namespace: some-ns
 spec:
-  # Required. AWS restores to a subdirectory
-  # (aws-backup-restore_*/...), not in-place.
-  source:
-    backup:
-      name: "my-backup"
-      namespace: "kyma-system"  # optional
-```
-
-</td>
-<td>
-
-```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: GcpNfsVolumeRestore
-metadata:
-  name: my-restore
-  namespace: kyma-system
-spec:
-  # Required. Immutable.
-  # Use either backup (object ref) or backupUrl (raw GCP URI).
-  source:
-    backup:
-      name: "my-backup"
-      namespace: "kyma-system"
-    # Alternative to backup (mutually exclusive):
-    # backupUrl: "us-west1/my-backup-id"
-  # Required. Immutable. Target volume to restore into.
-  destination:
-    volume:
-      name: "my-volume"
-      namespace: "kyma-system"  # optional
-```
-
-</td>
-<td>
-
-```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: AzureRwxVolumeRestore
-metadata:
-  name: my-restore
-  namespace: kyma-system
-spec:
-  # Required. Immutable.
-  source:
-    backup:
-      name: "my-backup"
-      namespace: "kyma-system"  # optional
-  # Required. Immutable. Target PVC to restore into.
-  destination:
-    pvc:
-      name: "my-pvc"
-      namespace: "kyma-system"  # optional
-```
-
-</td>
-<td>
-
-```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: SapNfsVolumeSnapshotRestore
-metadata:
-  name: my-restore
-  namespace: kyma-system
-spec:
-  # Required. Immutable.
-  sourceSnapshot:
-    name: "my-snapshot"
-    namespace: "kyma-system"  # optional
-  # Required. Immutable. Exactly one of the two modes below.
-  destination:
-    # Mode 1: In-place revert of an existing volume.
-    # The snapshot must be the most recent one for the volume.
-    existingVolume:
-      name: "my-volume"
-      namespace: "kyma-system"
-    # Mode 2: Create a new SapNfsVolume from the snapshot.
-    # (mutually exclusive with existingVolume)
-    # newVolume:
-    #   metadata:
-    #     name: "my-new-volume"
-    #     namespace: "kyma-system"
-    #   spec:
-    #     capacityGb: 100
-    #     ipRange:
-    #       name: my-iprange
-```
-
-</td>
-</tr>
-</table>
-
-### Scheduled Backup
-
-<table>
-<tr>
-<th>AwsNfsBackupSchedule</th>
-<th>GcpNfsBackupSchedule</th>
-<th>AzureRwxBackupSchedule</th>
-<th>SapNfsVolumeSnapshotSchedule (OpenStack)</th>
-</tr>
-<tr>
-<td>
-
-```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: AwsNfsBackupSchedule
-metadata:
-  name: my-schedule
-  namespace: kyma-system
-spec:
-  # Required. References the AwsNfsVolume to back up.
-  nfsVolumeRef:
-    name: "my-volume"
-    namespace: "kyma-system"  # optional
-  # Optional. AWS region for backup storage.
-  location: "us-east-1"
-  # Optional cron expression. If absent, one-shot backup.
-  schedule: "0 2 * * *"
-  # Optional. Prefix for generated backup names.
-  prefix: "my-backup"
-  # Optional. Schedule start/end bounds.
-  startTime: "2025-01-01T00:00:00Z"
-  endTime: "2026-01-01T00:00:00Z"
-  # Retention and cascade controls.
-  maxRetentionDays: 30      # default: 375
-  maxReadyBackups: 10       # default: 100
-  maxFailedBackups: 3       # default: 5
-  suspend: false            # default: false
-  # If true, deletes all child backups when schedule is deleted.
-  deleteCascade: true       # default: false
-```
-
-</td>
-<td>
-
-```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: GcpNfsBackupSchedule
-metadata:
-  name: my-schedule
-  namespace: kyma-system
-spec:
-  # Required. References the GcpNfsVolume to back up.
-  nfsVolumeRef:
-    name: "my-volume"
-    namespace: "kyma-system"  # optional
-  # Optional. GCP region for backup storage.
-  location: "us-west1"
-  # Optional cron expression. If absent, one-shot backup.
-  schedule: "0 2 * * *"
-  # Optional. Prefix for generated backup names.
-  prefix: "my-backup"
-  # Optional. Schedule start/end bounds.
-  startTime: "2025-01-01T00:00:00Z"
-  endTime: "2026-01-01T00:00:00Z"
-  # Retention and cascade controls.
-  maxRetentionDays: 30      # default: 375
-  maxReadyBackups: 10       # default: 100
-  maxFailedBackups: 3       # default: 5
-  suspend: false            # default: false
-  deleteCascade: true       # default: false
-  # Optional. Cross-cluster access for scheduled backups.
-  accessibleFrom:
-    - "all"
-```
-
-</td>
-<td>
-
-```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: AzureRwxBackupSchedule
-metadata:
-  name: my-schedule
-  namespace: kyma-system
-spec:
-  # Required. References the PVC to back up.
-  # (Azure uses pvcRef, not nfsVolumeRef)
-  pvcRef:
-    name: "my-pvc"
-    namespace: "kyma-system"  # optional
-  # Optional. Azure region for backup storage.
-  location: "westeurope"
-  # Optional cron expression. If absent, one-shot backup.
-  schedule: "0 2 * * *"
-  # Optional. Prefix for generated backup names.
-  prefix: "my-backup"
-  # Optional. Schedule start/end bounds.
-  startTime: "2025-01-01T00:00:00Z"
-  endTime: "2026-01-01T00:00:00Z"
-  # Retention and cascade controls.
-  maxRetentionDays: 30      # default: 375
-  maxReadyBackups: 10       # default: 100
-  maxFailedBackups: 3       # default: 5
-  suspend: false            # default: false
-  deleteCascade: true       # default: false
-```
-
-</td>
-<td>
-
-```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: SapNfsVolumeSnapshotSchedule
-metadata:
-  name: my-schedule
-  namespace: kyma-system
-  # OpenStack schedule — the source volume is
-  # specified inside the snapshot template.
-spec:
-  # Optional cron expression. If absent, one-shot snapshot.
-  schedule: "0 2 * * *"
-  # Optional. Prefix for generated snapshot names.
-  prefix: "my-snapshot"
-  # Optional. Schedule start/end bounds.
-  startTime: "2025-01-01T00:00:00Z"
-  endTime: "2026-01-01T00:00:00Z"
-  # Retention and cascade controls.
-  maxRetentionDays: 90      # default: 375
-  maxReadySnapshots: 10     # default: 50
-  maxFailedSnapshots: 3     # default: 5
-  suspend: false            # default: false
-  deleteCascade: true       # default: false
-  # Template for each generated SapNfsVolumeSnapshot.
-  template:
+  # Optional.
+  ipRange:
+    name: my-iprange
+  
+  # Optional. Controls the generated connection secret.
+  authSecret:
+    name: "my-redis-auth"
     labels:
       app: my-app
     annotations:
       custom/annotation: "value"
-    spec:
-      sourceVolume:
-        name: "my-volume"
-        namespace: "kyma-system"
-      deleteAfterDays: 90
+  
+  # Required
+  config:
+    apiVersion: aws|azure|gcp|alicloud|sap.cloud-resources.kyma-project.io/v1beta1
+    kind: RedisConfig|RedisClusterConfig|ManagedRedisConfig
+    name: my-redis-config
+    namespace: my-ns
 ```
 
-</td>
-</tr>
-</table>
+### Honestly what we get 🎁
 
-**Differences across providers:**
-- **Source reference model:** AWS and GCP reference a Cloud Manager `NfsVolume` object (`source.volume.name`); Azure references a raw Kubernetes PVC (`source.pvc.name`) — there is no `AzureNfsVolume`; SAP/OpenStack uses `sourceVolume` (a Kubernetes `ObjectReference`).
-- **Terminology:** SAP/OpenStack uses "snapshot" throughout instead of "backup", reflecting Manila's snapshot API.
-- **Cross-cluster access:** GCP Backup uniquely adds `accessibleFrom` — a list of shoot names or subaccount IDs that may restore the backup, enabling cross-cluster backup sharing. No other provider has this field.
-- **Discovery resource:** GCP uniquely has a companion `GcpNfsVolumeBackupDiscovery` cluster-scoped resource (see Other Resources) that the controller populates with available backup URIs, useful for cross-cluster restore workflows.
-- **Lifecycle/TTL:** AWS Backup uniquely has a `lifecycle` field (cold storage transition + deletion rules), which maps to AWS Backup Vault lifecycle policies.
-- **Create-from-backup at volume creation:** GCP NfsVolume supports `sourceBackup`/`sourceBackupUrl` directly in the volume spec, so a new volume can be pre-populated from a backup without a separate Restore object. SAP/OpenStack has the analogous `dataSource.snapshot`. AWS and Azure have no equivalent shortcut.
-- **Restore destination modes:** SAP/OpenStack Restore uniquely supports two modes: `existingVolume` (in-place revert — requires the snapshot to be the most recent) and `newVolume` (creates a new `SapNfsVolume` from the snapshot).
-- **Schedule source field:** AWS, GCP, and Azure schedule the source via a top-level reference field (`nfsVolumeRef` / `pvcRef`); SAP/OpenStack embeds the source inside a `template.spec.sourceVolume` field.
+N shapes replaces by N+1 shapes, where each CR still has all the fields it had before just in slightly different syntax. Must decide how it's driven by feature flags.
 
-**Differences across features (Backup vs Restore vs Schedule):**
-- Schedule adds cron scheduling (`schedule`), time bounds (`startTime`, `endTime`), and retention controls (`maxRetentionDays`, `maxReadyBackups`/`maxReadySnapshots`, `maxFailedBackups`/`maxFailedSnapshots`, `deleteCascade`, `suspend`).
-- Schedule references the source volume/PVC directly; the controller creates individual Backup objects for each triggered run.
-- Restore is a one-shot, fire-and-forget operation — it has no scheduling or retention fields.
 
 ---
 
@@ -1284,6 +1154,8 @@ The following resources were found in `api/cloud-resources/v1beta1/` but do not 
 ### AzureVpcDnsLink
 
 Azure-only. Links a customer DNS zone (Azure Private DNS Zone or DNS Resolver Ruleset) to the Kyma VNet. This complements `AzureVpcPeering`: after a VNet is peered, DNS names for private endpoints in the peer network still need to resolve inside the Kyma cluster's VNet. `AzureVpcDnsLink` establishes that DNS resolution bridge. It is not a VPC peering resource and has no equivalent on AWS or GCP.
+
+**Lack of related resources from other providers dot not provide ground for the comparison**.
 
 <table>
 <tr>
@@ -1318,36 +1190,11 @@ spec:
 </tr>
 </table>
 
-### GcpNfsVolumeBackupDiscovery
-
-GCP-only. Cluster-scoped, empty spec. The controller populates `status.availableBackups` with metadata for all GCP Filestore backups accessible from this shoot (across all namespaces and, if configured, cross-cluster backups). Consumers read this resource to discover backup URIs before constructing a `GcpNfsVolumeRestore`. This is a read-only discovery resource — users create it empty and the controller fills in the status.
-
-<table>
-<tr>
-<th>GcpNfsVolumeBackupDiscovery</th>
-</tr>
-<tr>
-<td>
-
-```yaml
-apiVersion: cloud-resources.kyma-project.io/v1beta1
-kind: GcpNfsVolumeBackupDiscovery
-metadata:
-  name: my-backup-discovery
-  # cluster-scoped, no namespace
-spec: {}
-  # No spec fields. Controller populates status.availableBackups
-  # with: uri, location, shootName, backupName, backupNamespace,
-  # volumeName, volumeNamespace, creationTime.
-```
-
-</td>
-</tr>
-</table>
-
 ### CloudResources
 
 Operator module CR — one per cluster, created by the Kyma module operator. This is not a cloud resource; it holds module-level status (state, served flag, conditions). End users do not create or manage this object.
+
+**Required by KLM, must remain**.
 
 <table>
 <tr>
@@ -1372,3 +1219,5 @@ spec: {}
 </td>
 </tr>
 </table>
+
+[Other excluded resources](./excluded.md)
