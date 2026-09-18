@@ -16,7 +16,10 @@ Use pre-deployed WafPolicy presets:
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
 kind: AppLoadBalancer
 spec:
-  backend: {kind: Service, name: my-service, namespace: default}
+  backend:
+    kind: Service
+    name: my-service
+    namespace: default
   policy:
     kind: WafPolicy
     name: owasp-moderate
