@@ -315,18 +315,16 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 	if gc == nil {
 
 		gc = &infrastructuremanagerv1.GardenerCluster{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: rt.Namespace,
-				Name:      rt.Name,
-				Labels: map[string]string{
-					cloudcontrolv1beta1.LabelScopeGlobalAccountId: rt.Labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId],
-					cloudcontrolv1beta1.LabelScopeSubaccountId:    rt.Labels[cloudcontrolv1beta1.LabelScopeSubaccountId],
-					cloudcontrolv1beta1.LabelScopeShootName:       shoot.Name,
-					cloudcontrolv1beta1.LabelScopeRegion:          rt.Labels[cloudcontrolv1beta1.LabelScopeRegion],
-					cloudcontrolv1beta1.LabelScopeBrokerPlanName:  rt.Labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName],
-					cloudcontrolv1beta1.LabelScopeProvider:        rt.Labels[cloudcontrolv1beta1.LabelScopeProvider],
-					cloudcontrolv1beta1.LabelRuntimeId:            rt.Name,
-				},
+			Namespace: rt.Namespace,
+			Name:      rt.Name,
+			Labels: map[string]string{
+				cloudcontrolv1beta1.LabelScopeGlobalAccountId: rt.Labels[cloudcontrolv1beta1.LabelScopeGlobalAccountId],
+				cloudcontrolv1beta1.LabelScopeSubaccountId:    rt.Labels[cloudcontrolv1beta1.LabelScopeSubaccountId],
+				cloudcontrolv1beta1.LabelScopeShootName:       shoot.Name,
+				cloudcontrolv1beta1.LabelScopeRegion:          rt.Labels[cloudcontrolv1beta1.LabelScopeRegion],
+				cloudcontrolv1beta1.LabelScopeBrokerPlanName:  rt.Labels[cloudcontrolv1beta1.LabelScopeBrokerPlanName],
+				cloudcontrolv1beta1.LabelScopeProvider:        rt.Labels[cloudcontrolv1beta1.LabelScopeProvider],
+				cloudcontrolv1beta1.LabelRuntimeId:            rt.Name,
 			},
 			Spec: infrastructuremanagerv1.GardenerClusterSpec{
 				Shoot: infrastructuremanagerv1.Shoot{
@@ -359,13 +357,11 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 
 	if kyma == nil {
 		kyma = &operatorv1beta2.Kyma{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: rt.Namespace,
-				Name:      rt.Name,
-				Labels:    rt.Labels,
-				Finalizers: []string{
-					api.CommonFinalizerDeletionHook,
-				},
+			Namespace: rt.Namespace,
+			Name:      rt.Name,
+			Labels:    rt.Labels,
+			Finalizers: []string{
+				api.CommonFinalizerDeletionHook,
 			},
 			Spec: operatorv1beta2.KymaSpec{
 				Channel: operatorv1beta2.DefaultChannel,
