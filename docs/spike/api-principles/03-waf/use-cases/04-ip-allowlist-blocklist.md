@@ -59,7 +59,7 @@ allowlist:
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
-kind: WafPolicy
+kind: WafConfiguration
 metadata:
   name: ip-access-control-policy
 spec:
@@ -169,7 +169,7 @@ spec:
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
-kind: WafPolicy
+kind: WafConfiguration
 metadata:
   name: ip-access-control-policy-v2
 spec:

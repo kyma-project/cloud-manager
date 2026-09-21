@@ -59,7 +59,7 @@ action: block
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
-kind: WafPolicy
+kind: WafConfiguration
 metadata:
   name: admin-protection-policy
 spec:

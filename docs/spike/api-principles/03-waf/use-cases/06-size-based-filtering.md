@@ -54,7 +54,7 @@ reason: "Prevent slowloris and header smuggling attacks"
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
-kind: WafPolicy
+kind: WafConfiguration
 metadata:
   name: size-based-policy
 spec:

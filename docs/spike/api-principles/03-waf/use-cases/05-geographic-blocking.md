@@ -54,7 +54,7 @@ reason: "Admin operations only from US headquarters"
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
-kind: WafPolicy
+kind: WafConfiguration
 metadata:
   name: geographic-policy
 spec:
@@ -157,7 +157,7 @@ spec:
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
-kind: WafPolicy
+kind: WafConfiguration
 metadata:
   name: geographic-policy-v2
 spec:

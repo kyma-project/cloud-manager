@@ -27,7 +27,7 @@
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
-kind: WafPolicy
+kind: WafConfiguration
 metadata:
   name: tiered-rate-limit-policy
 spec:
