@@ -58,9 +58,9 @@ kind: WafConfiguration
 metadata:
   name: geographic-policy
 spec:
-  managedRuleGroups:
-    - type: CoreRuleSet
-      action: block
+  # Start from preset that includes managed rules
+  basePolicyRef:
+    name: owasp-moderate
   
   customRules:
     # Scenario A: EU-only service
@@ -232,7 +232,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "AllowEUOnly"
       }
@@ -251,7 +251,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "BlockNonEU"
       }
@@ -266,7 +266,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "BlockHighRiskCountries"
       }
@@ -295,7 +295,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "USApiOnlyUS"
       }

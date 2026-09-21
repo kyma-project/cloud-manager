@@ -2,11 +2,11 @@
 
 ## User Story
 
-"As a platform operator, I want to enable OWASP CoreRuleSet in block mode globally, but change rule 942100 to count mode because it triggers false positives for our application."
+"As a platform operator, I want to enable OWASP protection in block mode globally, but change specific rules to count mode because they trigger false positives for our application."
 
 ## Requirements
 
-1. Enable managed rule groups (e.g., OWASP CoreRuleSet)
+1. Start from managed rule groups (via WafPolicy preset or custom)
 2. Set default action to block
 3. Override specific rule IDs to different action (e.g., count)
 4. Override applies to ALL requests (no conditions)
@@ -19,23 +19,26 @@ kind: WafConfiguration
 metadata:
   name: production-policy
 spec:
-  managedRuleGroups:
-    - type: CoreRuleSet
-      action: block
-    - type: SQLInjectionProtection
-      action: block
+  # Start from base policy that includes managed rules
+  basePolicyRef:
+    name: owasp-moderate
   
   # Unconditional rule overrides
   ruleOverrides:
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "942100"
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet  # AWS-specific name
+      ruleId: "SizeRestrictions_BODY"  # AWS rule name
       action: count
-      reason: "False positives on legitimate GraphQL queries"
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "920280"
+      reason: "False positives on legitimate file uploads"
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet
+      ruleId: "GenericRFI_BODY"  # AWS rule name
       action: count
-      reason: "Testing for false positives"
+      reason: "Testing for false positives on API endpoints"
 ```
+
+**Note:** `managedRuleGroup` field uses **provider-specific** names:
+- AWS: `AWSManagedRulesCommonRuleSet`, `AWSManagedRulesSQLiRuleSet`
+- Azure: `Microsoft_DefaultRuleSet`, `Microsoft_BotManagerRuleSet`
+- GCP: `owasp-crs-v030301-id`, `sqli-v33-stable`
 
 ## Provider Capability Check
 
@@ -76,7 +79,7 @@ spec:
       },
       "OverrideAction": {"None": {}},
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "CommonRuleSet"
       }
@@ -92,7 +95,7 @@ spec:
       },
       "OverrideAction": {"None": {}},
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "SQLiRuleSet"
       }
@@ -222,7 +225,7 @@ spec:
 **Degradation Strategy:**
 - If ANY rule in a managed rule group has `action: count` override → entire rule set in `preview: true`
 - Cannot selectively override individual rules
-- Status should report: "GCP Cloud Armor does not support individual rule overrides; entire CoreRuleSet in preview mode"
+- Status should report: "GCP Cloud Armor does not support individual rule overrides; entire [ruleset-id] in preview mode"
 
 ---
 
@@ -245,11 +248,16 @@ spec:
 ```yaml
 spec:
   ruleOverrides:
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "942100"
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet  # Provider-specific name
+      ruleId: "SizeRestrictions_BODY"  # AWS-specific rule name
       action: count
-      reason: "False positives on GraphQL queries"
+      reason: "False positives on file uploads"
 ```
+
+**Note:** Both `managedRuleGroup` and `ruleId` use **provider-specific** names:
+- AWS rule names: `SizeRestrictions_BODY`, `GenericRFI_BODY`, `CrossSiteScripting_BODY`
+- Azure rule IDs: `942100`, `942200`, `920280` (OWASP CRS IDs)
+- GCP: Limited to rule-set level (no individual rule IDs)
 
 **Rationale:**
 - AWS and Azure support this perfectly (2 out of 3 providers)
@@ -263,17 +271,17 @@ Report actual applied behavior in status:
 ```yaml
 status:
   appliedRuleOverrides:
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "942100"
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet
+      ruleId: "SizeRestrictions_BODY"
       action: count
       appliedStrategy: "native"  # AWS, Azure
       
     # GCP would report:
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "942100"
+    - managedRuleGroup: owasp-crs-v030301-id
+      ruleId: "942100"  # User attempted Azure/OWASP rule ID
       action: count
       appliedStrategy: "degraded-ruleset-preview"
-      message: "GCP Cloud Armor does not support individual rule overrides; entire CoreRuleSet in preview mode"
+      message: "GCP Cloud Armor does not support individual rule overrides; entire owasp-crs ruleset in preview mode"
 ```
 
 ### Implementation Notes
@@ -288,7 +296,7 @@ status:
 
 | Test Case | AWS | Azure | GCP | Expected Behavior |
 |-----------|-----|-------|-----|-------------------|
-| Override single rule to count | ✅ Rule level | ✅ Rule level | ⚠️ Rule set preview | Rule 942100 → count (AWS/Azure), entire set → preview (GCP) |
+| Override single rule to count | ✅ Rule level | ✅ Rule level | ⚠️ Rule set preview | AWS: SizeRestrictions_BODY → count, Azure: 942100 → Log, GCP: entire set → preview |
 | Override multiple rules to count | ✅ Multiple rules | ✅ Multiple rules | ⚠️ Rule set preview | All specified rules → count (AWS/Azure), entire set → preview (GCP) |
 | Override rule to allow | ✅ Rule disabled | ✅ Rule disabled | ⚠️ Rule set preview | Rule bypassed (AWS/Azure), entire set → preview (GCP) |
 | No overrides | ✅ Default action | ✅ Default action | ✅ Default action | All rules follow managedRuleGroup action |

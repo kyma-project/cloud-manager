@@ -58,11 +58,9 @@ kind: WafConfiguration
 metadata:
   name: size-based-policy
 spec:
-  managedRuleGroups:
-    - type: CoreRuleSet
-      action: block
-    - type: SQLInjectionProtection
-      action: block
+  # Start from preset that includes managed rules
+  basePolicyRef:
+    name: owasp-moderate
   
   # Global size limits (applied to all requests)
   sizeLimits:
@@ -191,7 +189,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "HealthCheckNoBody"
       }
@@ -223,7 +221,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "AdminSmallBody"
       }
@@ -255,7 +253,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "GraphQLModerateBody"
       }
@@ -273,7 +271,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "BlockLongQueryStrings"
       }
@@ -291,7 +289,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "BlockLongURIs"
       }

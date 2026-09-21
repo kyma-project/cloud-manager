@@ -66,7 +66,7 @@ WebACL
       },
       "OverrideAction": {"None": {}},
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "CommonRuleSet"
       }
@@ -82,7 +82,7 @@ WebACL
       },
       "OverrideAction": {"None": {}},
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "SQLiRuleSet"
       }
@@ -299,9 +299,10 @@ SecurityPolicy
 ```yaml
 spec:
   managedRuleGroups:
-    - type: CoreRuleSet
+
+    - name: CoreRuleSet
       action: block
-    - type: SQLInjectionProtection
+    - name: SQLInjectionProtection
       action: count
 ```
 
@@ -359,9 +360,10 @@ spec:
 **Good: Decision-focused, structure-agnostic**
 ```yaml
 managedRuleGroups:
-  - type: CoreRuleSet
+
+  - name: CoreRuleSet
     action: block
-  - type: SQLInjectionProtection
+  - name: SQLInjectionProtection
     action: count
 ```
 
@@ -370,7 +372,7 @@ managedRuleGroups:
 rules:  # ← Leaks AWS concept of "Rules"
   - statement:
       managedRuleGroup:
-        type: CoreRuleSet
+        name: CoreRuleSet
 ```
 
 ### 2. Reconcilers Handle Structure Translation
@@ -415,7 +417,8 @@ metadata:
   name: my-policy
 spec:
   managedRuleGroups:
-    - type: CoreRuleSet
+
+    - name: CoreRuleSet
       action: block
   
   classifications:
@@ -529,7 +532,8 @@ spec:
 ✅ **Current design is correct:**
 ```yaml
 managedRuleGroups:
-  - type: CoreRuleSet
+
+  - name: CoreRuleSet
 ```
 
 ❌ **Don't introduce AWS nesting:**
@@ -537,7 +541,7 @@ managedRuleGroups:
 rules:
   - statement:
       managedRuleGroup:
-        type: CoreRuleSet
+        name: CoreRuleSet
 ```
 
 ### 2. Document Structure Translation

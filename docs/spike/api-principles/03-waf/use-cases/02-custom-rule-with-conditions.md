@@ -63,12 +63,9 @@ kind: WafConfiguration
 metadata:
   name: admin-protection-policy
 spec:
-  # Enable managed rules globally
-  managedRuleGroups:
-    - type: CoreRuleSet
-      action: block
-    - type: SQLInjectionProtection
-      action: block
+  # Start from preset that includes managed rules
+  basePolicyRef:
+    name: owasp-moderate
   
   # Custom rules for specific threats
   customRules:
@@ -187,7 +184,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "BlockDebugHeaderOnAdmin"
       }
@@ -229,7 +226,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "BlockForwardedHeaderOnAdminLogin"
       }
@@ -289,7 +286,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "BlockScannerUserAgent"
       }
@@ -305,7 +302,7 @@ spec:
       },
       "OverrideAction": {"None": {}},
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "CommonRuleSet"
       }
@@ -613,17 +610,16 @@ spec:
 **Example combining both:**
 ```yaml
 spec:
-  # Managed rules for baseline protection
-  managedRuleGroups:
-    - type: CoreRuleSet
-      action: block
+  # Start from preset that includes managed rules
+  basePolicyRef:
+    name: owasp-moderate
   
   # Tune managed rules for false positives (unconditional)
   ruleOverrides:
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "942100"
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet  # AWS-specific name
+      ruleId: "GenericRFI_BODY"  # AWS-specific rule name
       action: count
-      reason: "Known false positive on GraphQL queries"
+      reason: "Known false positive on API endpoints with URL parameters"
   
   # Custom rules for specific threats and conditional bypasses
   customRules:

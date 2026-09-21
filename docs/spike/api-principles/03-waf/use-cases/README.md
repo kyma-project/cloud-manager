@@ -16,15 +16,16 @@ These files validate:
 
 ## Use Case Index
 
-| Use Case | AWS | Azure | GCP | Phase 2 Feature |
-|----------|-----|-------|-----|-----------------|
-| [01. Unconditional Rule Override](01-unconditional-rule-override.md) | ✅ Perfect | ✅ Perfect | ⚠️ Limited | `ruleOverrides` |
-| [02. Custom Rule with Conditions](02-custom-rule-with-conditions.md) | ✅ Native | ✅ Native | ✅ Native | `customRules` ⭐ |
-| [03. Rate Limiting with Path Thresholds](03-rate-limiting-with-path-thresholds.md) | ✅ Native | ✅ Native | ✅ Native | `customRules` with rate limit |
-| [04. IP Allowlist/Blocklist](04-ip-allowlist-blocklist.md) | ✅ Native | ✅ Native | ✅ Native | `customRules` |
-| [05. Geographic Blocking](05-geographic-blocking.md) | ✅ Native | ❌ Limited | ✅ Native | Phase 2.2+ `geoBlocking` |
-| [06. Size-Based Filtering](06-size-based-filtering.md) | ✅ Native | ✅ Native | ⚠️ Limited | Phase 2.2 `sizeLimits` |
-| [07. Bot Protection](07-bot-protection.md) | ✅ Native | ✅ Native | ✅ Native | `managedRuleGroups.BotProtection` |
+| Use Case | AWS | Azure | GCP |
+|----------|-----|-------|-----|
+| [00. Specify Managed Rules](00-specify-managed-rules.md) | ✅ Perfect | ✅ Perfect | ✅ Perfect |
+| [01. Unconditional Rule Override](01-unconditional-rule-override.md) | ✅ Perfect | ✅ Perfect | ⚠️ Limited |
+| [02. Custom Rule with Conditions](02-custom-rule-with-conditions.md) | ✅ Native | ✅ Native | ✅ Native |
+| [03. Rate Limiting with Path Thresholds](03-rate-limiting-with-path-thresholds.md) | ✅ Native | ✅ Native | ✅ Native |
+| [04. IP Allowlist/Blocklist](04-ip-allowlist-blocklist.md) | ✅ Native | ✅ Native | ✅ Native |
+| [05. Geographic Blocking](05-geographic-blocking.md) | ✅ Native | ❌ Limited | ✅ Native |
+| [06. Size-Based Filtering](06-size-based-filtering.md) | ✅ Native | ✅ Native | ⚠️ Limited |
+| [07. Bot Protection](07-bot-protection.md) | ✅ Native | ✅ Native | ✅ Native |
 
 ---
 
@@ -32,17 +33,20 @@ These files validate:
 
 ### Phase 2.1 Features (Validated ✅)
 
-**Supported across all 3 providers:**
-- ✅ Unconditional rule overrides (`ruleOverrides`)
-- ✅ Custom rules with conditions (`customRules`) ⭐ Most portable feature
-- ✅ Path, header, IP, method conditions
-- ✅ Rate limiting with conditions
-- ✅ Bot protection via managed rules
+**Core portable features:**
+- ✅ Unconditional rule overrides (`ruleOverrides`) - tune managed rules for false positives
+- ✅ Custom rules with conditions (`customRules`) ⭐ Most portable feature - path/header/IP-based protection
+
+**Deferred (too complex for portable abstraction):**
+- ⚠️ Managed rule groups (`managedRuleGroups`) - provider naming/structure too different
+  - Use Case 00 documents why this is deferred
+  - Phase 1 WafPolicy presets already solve this with provider-specific JSON
 
 **Implementation notes:**
 - AWS has best native support (nested conditions, full boolean logic)
 - Azure supports AND-only conditions (flat structure)
 - GCP uses CEL expressions (most flexible syntax)
+- Azure applies WAF mode globally (all rule sets in Prevention or Detection)
 
 ### Phase 2.2 Features (Requires Further Analysis ⚠️)
 

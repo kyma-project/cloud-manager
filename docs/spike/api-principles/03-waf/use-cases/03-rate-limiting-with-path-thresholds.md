@@ -31,9 +31,9 @@ kind: WafConfiguration
 metadata:
   name: tiered-rate-limit-policy
 spec:
-  managedRuleGroups:
-    - type: CoreRuleSet
-      action: block
+  # Start from preset that includes managed rules
+  basePolicyRef:
+    name: owasp-moderate
   
   customRules:
     - name: health-check-no-rate-limit

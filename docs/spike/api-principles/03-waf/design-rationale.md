@@ -28,8 +28,8 @@ Provider-specific cloud resources (AWS WAFv2, Azure Front Door WAF, GCP Cloud Ar
 
 This gives you:
 
-1. **Simple for simple cases**: "I just want basic OWASP protection" → reference predefined WafPolicy preset (Phase 1)
-2. **Preset customization**: Use WafConfiguration with `preset` + `ruleOverrides` + `customRules` (Phase 2)
+1. **Simple for simple cases**: "I just want basic OWASP protection" → reference predefined WafPolicy (Phase 1)
+2. **Base policy customization**: Use WafConfiguration with `basePolicyRef` + `ruleOverrides` + `customRules` (Phase 2)
 3. **Portable and expressive**: Write WafConfiguration with portable `customRules` for path-based protection
 4. **Honest about provider differences**: WafPolicy is explicitly provider-specific (`spec.data` field with raw JSON)
 5. **Clear escape hatch**: Advanced users write WafPolicy directly
@@ -61,8 +61,9 @@ kind: WafConfiguration
 metadata:
   name: my-config
 spec:
-  # Optional: Start from a preset
-  preset: owasp-moderate  # basic | moderate | strict
+  # Optional: Start from a base policy (pre-deployed or custom)
+  basePolicyRef:
+    name: owasp-moderate  # Can reference owasp-basic, owasp-moderate, owasp-strict, or custom policy
   
   # Simple rule overrides (unconditional)
   ruleOverrides:
@@ -105,11 +106,11 @@ status:
     apiVersion: cloud-resources.kyma-project.io/v1beta1
     kind: WafPolicy
     name: my-config-wafpolicy
-  observedGeneration: 1
   conditions:
     - type: Ready
       status: True
       reason: PolicyGenerated
+      observedGeneration: 1
 ```
 
 ### WafPolicy (Provider-Specific Passthrough)
@@ -142,11 +143,11 @@ spec:
 
 status:
   providerId: "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/..."
-  observedGeneration: 1
   conditions:
     - type: Ready
       status: True
       reason: Available
+      observedGeneration: 1
 ```
 
 ---
@@ -186,7 +187,7 @@ spec:
 
 ## The Three Usage Patterns
 
-### Pattern 1: Use WafPolicy Preset as-is (Phase 1 - Simplest)
+### Pattern 1: Use WafPolicy as-is (Phase 1 - Simplest)
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
@@ -194,10 +195,10 @@ kind: AppLoadBalancer
 spec:
   policy:
     kind: WafPolicy
-    name: owasp-moderate  # Pre-deployed WafPolicy preset
+    name: owasp-moderate  # Pre-deployed WafPolicy
 ```
 
-### Pattern 2: WafConfiguration with Preset + Overrides (Phase 2 - Most Common) ⭐
+### Pattern 2: WafConfiguration with Base Policy + Overrides (Phase 2 - Most Common) ⭐
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
@@ -205,7 +206,8 @@ kind: WafConfiguration
 metadata:
   name: my-config
 spec:
-  preset: owasp-moderate  # Start from WafPolicy preset
+  basePolicyRef:
+    name: owasp-moderate  # Reference pre-deployed WafPolicy
   
   # Add rule overrides (unconditional)
   ruleOverrides:
@@ -292,7 +294,7 @@ These exist in the cluster but:
 The controller:
 1. Reads `WafConfiguration` spec
 2. Detects provider (from cluster context)
-3. Loads base WafPolicy if `spec.preset` or `spec.basePolicyRef` is set
+3. Loads base WafPolicy if `spec.basePolicyRef` is set
 4. Parses base WafPolicy `spec.data` (provider-specific JSON)
 5. Applies `ruleOverrides` (unconditional changes to managed rules)
 6. Translates `customRules` to provider-specific format:
@@ -323,7 +325,8 @@ kind: WafConfiguration
 metadata:
   name: my-config
 spec:
-  preset: owasp-moderate
+  basePolicyRef:
+    name: owasp-moderate
   customRules:
     - name: health-check-bypass
       priority: 10
@@ -361,7 +364,7 @@ spec:
             }
           },
           "VisibilityConfig": {
-            "SampledRequestsEnabled": true,
+            "SampledRequestsEnabled": false,
             "CloudWatchMetricsEnabled": true,
             "MetricName": "HealthCheckBypass"
           }
@@ -389,7 +392,7 @@ spec:
 ✅ **WafPolicy for provider-specific passthrough** - Expert users  
 ✅ **SKR controller translates WafConfiguration → WafPolicy**  
 ✅ **KCP remote reconcilers provision WafPolicy → Cloud resources in SKR's account**  
-✅ **Pre-deployed presets** (not provisioned until used)  
+✅ **Pre-deployed base policies** (not provisioned until used)  
 ✅ **AppLoadBalancer can reference either** kind  
 ✅ **No `spec.data` in WafConfiguration** - keeps it clean  
 ✅ **No portable fields in WafPolicy** - keeps it simple  
@@ -400,14 +403,14 @@ spec:
 ## Open Questions for Implementation
 
 1. **Preset storage format**: 
-   - Ship as WafPolicy resources (one per provider per preset)?
+   - Ship as WafPolicy resources (one per provider per level)?
    - Or controller code with provider detection logic?
    - **Recommendation**: Ship as WafPolicy resources with labels (inspectable, upgradeable)
 
 2. **Version management**:
-   - How do we version presets (owasp-moderate-v1, owasp-moderate-v2)?
+   - How do we version base policies (owasp-moderate-v1, owasp-moderate-v2)?
    - Immutable once created? Auto-upgrade with Cloud Manager releases?
-   - **Recommendation**: Immutable presets, version in name, document upgrade path
+   - **Recommendation**: Immutable policies, version in name, document upgrade path
 
 3. **Translation logic location**:
    - In WafConfiguration controller? (tight coupling)
@@ -456,7 +459,7 @@ But not everything needs it:
 Cloud Manager adds value through:
 1. **Standardized lifecycle management** (Ready/Error conditions, observedGeneration)
 2. **Common integration points** (`AppLoadBalancer` → `WafConfiguration`/`WafPolicy` reference)
-3. **Curated presets** for simple cases (owasp-basic, owasp-moderate, owasp-strict)
+3. **Curated base policies** for simple cases (owasp-basic, owasp-moderate, owasp-strict)
 4. **Portable intent** via `WafConfiguration` (managedRuleGroups, classifications, conditions)
 5. **Clear escape hatches** via `WafPolicy` for full provider control
 6. **Honesty about provider differences** (no fake portability)

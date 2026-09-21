@@ -63,24 +63,9 @@ kind: WafConfiguration
 metadata:
   name: bot-protection-policy
 spec:
-  # Managed bot protection rule group
-  managedRuleGroups:
-    - type: CoreRuleSet
-      action: block
-    
-    - type: BotProtection
-      action: block
-      botProtection:
-        level: standard  # minimal | standard | strict
-        allowVerifiedBots: true
-        verifiedBots:
-          - GoogleBot
-          - BingBot
-          - Slackbot
-        blockCategories:
-          - scraper
-          - attack_tool
-          - spam_bot
+  # Start from preset that includes managed rules
+  basePolicyRef:
+    name: owasp-moderate
   
   # Custom bot detection rules
   customRules:
@@ -232,7 +217,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "AllowSearchEngineBots"
       }
@@ -264,7 +249,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "BlockScraperBots"
       }
@@ -293,7 +278,7 @@ spec:
       },
       "OverrideAction": {"None": {}},
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "BotControlRuleSet"
       }
@@ -333,7 +318,7 @@ spec:
         }
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "LoginBotChallenge"
       }
@@ -574,9 +559,9 @@ spec:
 
 ```yaml
 spec:
-  managedRuleGroups:
-    - type: BotProtection
-      action: block
+  # Start from preset that includes managed rules
+  basePolicyRef:
+    name: owasp-moderate
       botProtection:
         level: standard  # minimal | standard | strict
         allowVerifiedBots: true
@@ -606,7 +591,7 @@ spec:
 ```yaml
 status:
   appliedManagedRuleGroups:
-    - type: BotProtection
+    - name: AWSManagedRulesBotControlRuleSet
       appliedStrategy: "native"
       message: "Using AWS Bot Control Rule Set (TARGETED level) with verified bot allowlist"
 ```
@@ -621,7 +606,7 @@ status:
       message: "Azure Bot Manager provides basic bot detection. For advanced bot protection (bot score, verified bots, CAPTCHA), consider Azure Front Door Premium or application-level bot management."
   
   appliedManagedRuleGroups:
-    - type: BotProtection
+    - name: Microsoft_BotManagerRuleSet
       appliedStrategy: "basic"
       message: "Using Microsoft Bot Manager Rule Set (basic detection only)"
 ```
@@ -630,7 +615,7 @@ status:
 ```yaml
 status:
   appliedManagedRuleGroups:
-    - type: BotProtection
+    - name: cve-canary
       appliedStrategy: "native"
       message: "Using preconfigured bot-defense WAF rule + reCAPTCHA Enterprise challenges"
 ```
@@ -656,9 +641,9 @@ customRules:
 
 ### Phase 2: Managed Bot Protection
 ```yaml
-managedRuleGroups:
-  - type: BotProtection
-    action: block
+  # Start from preset that includes managed rules
+  basePolicyRef:
+    name: owasp-moderate
 ```
 **Works on:** AWS ✅ (excellent), Azure ⚠️ (basic), GCP ✅ (good)
 

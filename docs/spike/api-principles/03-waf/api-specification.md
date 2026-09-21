@@ -47,12 +47,12 @@ spec:
 
 status:
   providerId: "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/..."
-  observedGeneration: 1
   conditions:
     - type: Ready
       status: False
       reason: NotUsed
       message: "Not provisioned until referenced by AppLoadBalancer"
+      observedGeneration: 1
 ```
 
 ### Pre-deployed WafPolicy Presets
@@ -173,29 +173,23 @@ kind: WafConfiguration
 metadata:
   name: my-config
 spec:
-  # Option 1: Start from named preset (simple)
-  preset: owasp-moderate
-  
-  # OR Option 2: Start from any WafPolicy (flexible)
+  # Reference base WafPolicy (pre-deployed or custom)
   basePolicyRef:
-    name: my-company-standard
-  
-  # OR Option 3: No base - define everything yourself (advanced)
-  # If neither preset nor basePolicyRef is specified, start from scratch
+    name: owasp-moderate  # Can reference pre-deployed WafPolicy or custom one
   
   # --- Everything below overrides/extends the base ---
   
   # Optional: Override specific rules from base (unconditional)
   ruleOverrides:
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "942100"  # Provider-specific rule ID
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet  # AWS (Azure: Microsoft_DefaultRuleSet, GCP: owasp-crs-v030301-id)
+      ruleId: "SizeRestrictions_BODY"  # AWS rule name (Azure: "942100", GCP: not supported)
       action: count     # Change to detection mode
-      reason: "Testing for false positives on GraphQL API"
+      reason: "Testing for false positives on file uploads"
     
-    - managedRuleGroup: SQLInjectionProtection
-      ruleId: "942200"
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet  # AWS-specific managed rule group
+      ruleId: "GenericRFI_BODY"  # AWS rule name (Azure: "931130", GCP: not supported)
       action: allow  # Disable specific rule
-      reason: "Known false positive on search endpoint"
+      reason: "Known false positive on API endpoints"
   
   # Optional: Custom rules with conditions (universal support)
   customRules:
@@ -243,12 +237,12 @@ status:
     kind: WafPolicy
     name: my-config-wafpolicy
   
-  observedGeneration: 1
   conditions:
     - type: Ready
       status: True
       reason: PolicyGenerated
       message: "Generated WafPolicy my-config-wafpolicy from preset owasp-moderate with 2 rule overrides, 3 custom rules"
+      observedGeneration: 1
 ```
 
 ### How WafConfiguration Translation Works
@@ -257,16 +251,15 @@ status:
 
 ```
 1. Controller reads base WafPolicy
-   - If preset: "owasp-moderate" → reads kyma-system/owasp-moderate
-   - If basePolicyRef: reads specified policy
+   - If basePolicyRef: reads specified policy (can be pre-deployed like owasp-moderate or custom)
    - If neither: starts with empty base
 
 2. Parse base spec.data (provider-specific JSON)
 
 3. Apply WafConfiguration changes on top:
-   - ruleOverrides: Change specific rule actions (unconditional)
-   - customRules: Add new rules with conditions
-   - Future fields: sizeLimits, managedRuleGroups, etc.
+   - ruleOverrides: Change specific rule actions (Phase 2.1)
+   - customRules: Add new rules with conditions (Phase 2.1)
+   - Future fields: sizeLimits, geoBlocking, etc. (Phase 2.2+)
 
 4. Generate new WafPolicy with merged result:
    - Name: <wafconfig-name>-wafpolicy
@@ -278,10 +271,10 @@ status:
 
 **Controller logic**:
 
-1. Load base WafPolicy (from preset or basePolicyRef)
+1. Load base WafPolicy (from basePolicyRef, which may point to pre-deployed policy like owasp-moderate)
 2. Parse base spec.data (provider-specific JSON)
-3. Apply ruleOverrides (unconditional changes to managed rules)
-4. Add customRules (new rules with conditions)
+3. Apply ruleOverrides (tune individual rules - Phase 2.1)
+4. Add customRules (new rules with conditions - Phase 2.1)
 5. Generate new WafPolicy with merged result
 6. Set owner references for lifecycle management
 
@@ -313,18 +306,19 @@ spec:
 
 ### Phase 2 Usage Patterns
 
-**Pattern 1: Preset with simple overrides (most common)**
+**Pattern 1: Base policy with simple overrides (most common)**
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
 kind: WafConfiguration
 metadata:
   name: my-app-waf
 spec:
-  preset: owasp-moderate
+  basePolicyRef:
+    name: owasp-moderate
   
   ruleOverrides:
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "942100"
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet  # AWS (Azure: Microsoft_DefaultRuleSet, GCP: owasp-crs-v030301-id)
+      ruleId: "SizeRestrictions_BODY"  # AWS rule name (Azure: "942100", GCP: not supported)
       action: count
   
   customRules:
@@ -347,8 +341,8 @@ spec:
     name: company-standard-waf
   
   ruleOverrides:
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "942100"
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet  # AWS (Azure: Microsoft_DefaultRuleSet, GCP: owasp-crs-v030301-id)
+      ruleId: "GenericRFI_BODY"  # AWS rule name (Azure: "931130", GCP: not supported)
       action: count
 ```
 
@@ -359,22 +353,15 @@ kind: WafConfiguration
 metadata:
   name: my-custom-waf
 spec:
-  # No preset, no basePolicyRef - define everything
+  # No basePolicyRef - define everything yourself
   
-  # Future Phase 2.1+ fields when managedRuleGroups are portable:
-  # managedRuleGroups:
-  #   - type: CoreRuleSet
-  #     action: block
-  #   - type: SQLInjectionProtection
-  #     action: block
+  # Phase 2.1+ fields:
+  ruleOverrides: [...]        # Tune individual rules
+  customRules: [...]          # Add custom protection
   
-  customRules:
-    - name: custom-protection
-      priority: 100
-      action: block
-      conditions:
-        path:
-          prefix: "/api"
+  # Phase 2.2+ fields:
+  # sizeLimits: {...}
+  # geoBlocking: {...}
 ```
 
 ### Validation Rules
@@ -382,13 +369,9 @@ spec:
 **CEL validation** ensures correct usage:
 
 ```yaml
-# Can't have both preset and basePolicyRef
-- rule: "!(has(self.preset) && has(self.basePolicyRef))"
-  message: "Cannot specify both preset and basePolicyRef"
-
-# ruleOverrides requires a base (preset or basePolicyRef)
-- rule: "!has(self.ruleOverrides) || has(self.preset) || has(self.basePolicyRef)"
-  message: "ruleOverrides requires preset or basePolicyRef to override"
+# ruleOverrides requires a base (basePolicyRef)
+- rule: "!has(self.ruleOverrides) || has(self.basePolicyRef)"
+  message: "ruleOverrides requires basePolicyRef to override"
 
 # customRules priority must be unique
 - rule: "self.customRules.all(r1, self.customRules.all(r2, r1.name == r2.name || r1.priority != r2.priority))"
@@ -397,12 +380,12 @@ spec:
 
 ### Phase 2 Benefits
 
-✅ **Preset + customization** - Start from proven base, tweak as needed  
-✅ **Preset upgrades** - When preset updates, regenerate includes updates  
-✅ **No duplication** - Don't copy full preset, just specify changes  
+✅ **Base policy + customization** - Start from proven base, tweak as needed  
+✅ **Base policy upgrades** - When base policy updates, regenerate includes updates  
+✅ **No duplication** - Don't copy full policy, just specify changes  
 ✅ **Future-proof** - New fields add on top without breaking existing configs  
 ✅ **Backward compatible** - Phase 1 WafPolicy references keep working  
-✅ **Flexible base** - Can use preset, custom policy, or start from scratch  
+✅ **Flexible base** - Can use pre-deployed policy, custom policy, or start from scratch  
 ✅ **Clear semantics** - "Base + my changes = result"  
 ✅ **Universal custom rules** - customRules work perfectly on all providers  
 
@@ -544,18 +527,28 @@ Before adding WafConfiguration:
 
 ---
 
-## Future Evolution (Phase 2.2+)
+## Future Evolution (Phase 2.1+)
 
 WafConfiguration can grow with new portable fields:
 
-**Phase 2.2**:
-- `managedRuleGroups` - Portable managed rule group selection (when pattern is validated)
-- `sizeLimits` - Request size constraints
+**Phase 2.1** (Ready to implement):
+- `ruleOverrides` - Unconditional changes to managed rules ✅ Validated
+- `customRules` - Add new rules with conditions ✅ Validated (universal support)
 
-**Phase 2.3**:
-- `geoBlocking` - Geographic restrictions
+**Phase 2.2+**:
+- `sizeLimits` - Request size constraints
+- `geoBlocking` - Geographic restrictions (with Azure limitations)
 - `timeBasedRules` - Time-based activation
 - Advanced rate limiting with custom keys
+
+**NOT PLANNED for portable API:**
+- ❌ `managedRuleGroups` - Providers have completely different offerings
+  - AWS: `AWSManagedRulesCommonRuleSet`, `AWSManagedRulesSQLiRuleSet`
+  - Azure: `Microsoft_DefaultRuleSet` (includes multiple protections)
+  - GCP: `owasp-crs-v030301-id`, `sqli-v33-stable`
+  - Different names, different bundling, different versioning
+  - **Solution**: Phase 1 WafPolicy presets already include provider-specific managed rules
+  - See [use-cases/00-specify-managed-rules.md](use-cases/00-specify-managed-rules.md) for details
 
 All added fields follow the same pattern: **Base + additions = Generated WafPolicy**
 
@@ -575,7 +568,7 @@ policy:
   name: owasp-moderate
 ```
 
-**Option 2: Migrate to WafConfiguration with preset**
+**Option 2: Migrate to WafConfiguration with base policy reference**
 ```yaml
 # Before (Phase 1)
 policy:
@@ -589,24 +582,26 @@ kind: WafConfiguration
 metadata:
   name: my-config
 spec:
-  preset: owasp-moderate
+  basePolicyRef:
+    name: owasp-moderate
 ---
 policy:
   kind: WafConfiguration
   name: my-config
 ```
 
-**Option 3: Add overrides and custom rules to preset**
+**Option 3: Add overrides and custom rules to base policy**
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
 kind: WafConfiguration
 metadata:
   name: my-config
 spec:
-  preset: owasp-moderate
+  basePolicyRef:
+    name: owasp-moderate
   ruleOverrides:
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "942100"
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet  # AWS (Azure: Microsoft_DefaultRuleSet, GCP: owasp-crs-v030301-id)
+      ruleId: "SizeRestrictions_BODY"  # AWS rule name (Azure: "942100", GCP: not supported)
       action: count
   customRules:
     - name: health-bypass
@@ -634,9 +629,9 @@ policy:
 - Proven pattern (Terraform/Crossplane)
 
 **WafConfiguration (Portable Intent)**:
-- Preset-based starting point
+- Base policy starting point (pre-deployed or custom)
 - Targeted overrides without full JSON
-- Automatic preset upgrades
+- Automatic base policy upgrades
 - Future-proof extensibility
 
 **Both Coexist**:

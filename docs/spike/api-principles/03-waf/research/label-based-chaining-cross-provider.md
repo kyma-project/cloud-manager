@@ -102,7 +102,7 @@ AWS WAFv2 has **comprehensive label-based chaining support** introduced specific
         }
       ],
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "TrustedSourceLabeling"
       }
@@ -124,7 +124,7 @@ AWS WAFv2 has **comprehensive label-based chaining support** introduced specific
         "Block": {}
       },
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "RateLimitWithBypass"
       }
@@ -150,7 +150,7 @@ AWS WAFv2 has **comprehensive label-based chaining support** introduced specific
       },
       "OverrideAction": {"None": {}},
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "SQLiWithBypass"
       }
@@ -176,7 +176,7 @@ AWS WAFv2 has **comprehensive label-based chaining support** introduced specific
       },
       "OverrideAction": {"None": {}},
       "VisibilityConfig": {
-        "SampledRequestsEnabled": true,
+        "SampledRequestsEnabled": false,
         "CloudWatchMetricsEnabled": true,
         "MetricName": "CoreRuleSetWithBypass"
       }
@@ -432,11 +432,12 @@ metadata:
   name: label-chaining-example
 spec:
   managedRuleGroups:
-    - type: CoreRuleSet
+
+    - name: CoreRuleSet
       action: block
-    - type: SQLInjectionProtection
+    - name: SQLInjectionProtection
       action: block
-    - type: RateLimit
+    - name: RateLimit
       action: block
       requestsPerMinute: 100
   
@@ -590,13 +591,14 @@ metadata:
   name: comprehensive-with-classifications
 spec:
   managedRuleGroups:
-    - type: CoreRuleSet
+
+    - name: CoreRuleSet
       action: block
-    - type: SQLInjectionProtection
+    - name: SQLInjectionProtection
       action: block
     - type: CrossSiteScripting
       action: block
-    - type: RateLimit
+    - name: RateLimit
       action: block
       requestsPerMinute: 100
   

@@ -63,11 +63,9 @@ kind: WafConfiguration
 metadata:
   name: ip-access-control-policy
 spec:
-  managedRuleGroups:
-    - type: CoreRuleSet
-      action: block
-    - type: SQLInjectionProtection
-      action: block
+  # Start from preset that includes managed rules
+  basePolicyRef:
+    name: owasp-moderate
   
   # Custom rules for IP-based access control
   customRules:
@@ -270,7 +268,7 @@ spec:
           }
         },
         "VisibilityConfig": {
-          "SampledRequestsEnabled": true,
+          "SampledRequestsEnabled": false,
           "CloudWatchMetricsEnabled": true,
           "MetricName": "AllowInternalNetwork"
         }
@@ -285,7 +283,7 @@ spec:
           }
         },
         "VisibilityConfig": {
-          "SampledRequestsEnabled": true,
+          "SampledRequestsEnabled": false,
           "CloudWatchMetricsEnabled": true,
           "MetricName": "BlockKnownThreats"
         }
@@ -314,7 +312,7 @@ spec:
           }
         },
         "VisibilityConfig": {
-          "SampledRequestsEnabled": true,
+          "SampledRequestsEnabled": false,
           "CloudWatchMetricsEnabled": true,
           "MetricName": "AdminAccessControl"
         }
@@ -332,7 +330,7 @@ spec:
           }
         },
         "VisibilityConfig": {
-          "SampledRequestsEnabled": true,
+          "SampledRequestsEnabled": false,
           "CloudWatchMetricsEnabled": true,
           "MetricName": "BlockAdminFromPublic"
         }

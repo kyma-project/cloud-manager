@@ -27,7 +27,7 @@ spec:
 
 ### For Developers (Phase 2)
 
-Customize presets with WafConfiguration:
+Customize base policies with WafConfiguration:
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
@@ -35,7 +35,8 @@ kind: WafConfiguration
 metadata:
   name: my-config
 spec:
-  preset: owasp-moderate
+  basePolicyRef:
+    name: owasp-moderate
   ruleOverrides:
     - managedRuleGroup: CoreRuleSet
       ruleId: "942100"
