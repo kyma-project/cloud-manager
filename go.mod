@@ -28,9 +28,12 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.8.1
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
 	github.com/alibabacloud-go/nas-20170626/v3 v3.5.2
+	github.com/alibabacloud-go/openapi-util v0.1.1
 	github.com/alibabacloud-go/r-kvstore-20150101/v7 v7.5.1
 	github.com/alibabacloud-go/tea v1.5.3
+	github.com/alibabacloud-go/tea-utils/v2 v2.0.9
 	github.com/alibabacloud-go/vpc-20160428/v6 v6.16.0
+	github.com/aliyun/credentials-go v1.4.5
 	github.com/aws/aws-sdk-go-v2 v1.47.0
 	github.com/aws/aws-sdk-go-v2/config v1.33.5
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.5
@@ -110,9 +113,6 @@ require (
 	github.com/alibabacloud-go/alibabacloud-gateway-spi v0.0.5 // indirect
 	github.com/alibabacloud-go/debug v1.0.1 // indirect
 	github.com/alibabacloud-go/endpoint-util v1.1.0 // indirect
-	github.com/alibabacloud-go/openapi-util v0.1.1 // indirect
-	github.com/alibabacloud-go/tea-utils/v2 v2.0.9 // indirect
-	github.com/aliyun/credentials-go v1.4.5 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.3 // indirect

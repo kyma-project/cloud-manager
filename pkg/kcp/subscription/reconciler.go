@@ -20,11 +20,13 @@ type SubscriptionReconciler interface {
 func New(
 	mgr manager.Manager,
 	awsStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AwsStsClient],
+	alicloudStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AlicloudStsClient],
 ) SubscriptionReconciler {
 	return &subscriptionReconciler{
 		stateFactory: NewStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr)),
 			awsStsClientProvider,
+			alicloudStsClientProvider,
 		),
 	}
 }

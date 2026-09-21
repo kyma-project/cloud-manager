@@ -6,6 +6,9 @@ import (
 	alicloudredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/rediscluster/client"
 	alicloudredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 )
 
 // VpcConfig is the test-side seeding API for VPCs and vSwitches.
@@ -91,6 +94,12 @@ type Providers interface {
 	NfsInstanceClientProvider() alicloudnfsinstanceclient.ClientProvider
 	RedisInstanceClientProvider() alicloudredisinstanceclient.ClientProvider
 	RedisClusterClientProvider() alicloudredisclusterclient.ClientProvider
+	// ScopeGardenProvider yields the STS client the scope reconciler uses to
+	// resolve the account id via GetCallerIdentity.
+	ScopeGardenProvider() awsclient.GardenClientProvider[scopeclient.AlicloudStsClient]
+	// SubscriptionGardenProvider yields the STS client the subscription reconciler
+	// uses to resolve the account id via GetCallerIdentity.
+	SubscriptionGardenProvider() awsclient.GardenClientProvider[subscriptionclient.AlicloudStsClient]
 }
 
 // Server is the top-level mock - owns accounts and yields providers.

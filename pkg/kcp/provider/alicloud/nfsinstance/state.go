@@ -8,6 +8,7 @@ import (
 	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	alicloudmetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/metrics"
 	alicloudnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance/client"
+	alicloudutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/util"
 )
 
 type State struct {
@@ -41,9 +42,13 @@ func (f *stateFactory) NewState(ctx context.Context, nfsInstanceState nfsinstanc
 	accessKeySecret := alicloudconfig.AlicloudConfig.AccessKeySecret
 	region := nfsInstanceState.Scope().Spec.Region
 
-	ctx = alicloudmetrics.AccountIdIntoContext(ctx, alicloudmetrics.AccountIdFromScope(nfsInstanceState.Scope()))
+	accountId := alicloudmetrics.AccountIdFromScope(nfsInstanceState.Scope())
+	if accountId == "" {
+		return nil, fmt.Errorf("scope %q for AliCloud NfsInstance has no account id", nfsInstanceState.Scope().Name)
+	}
+	ctx = alicloudmetrics.AccountIdIntoContext(ctx, accountId)
 
-	c, err := f.clientProvider(ctx, region, accessKeyId, accessKeySecret)
+	c, err := f.clientProvider(ctx, region, accessKeyId, accessKeySecret, alicloudutil.RoleArnDefault(accountId))
 	if err != nil {
 		return nil, fmt.Errorf("error creating alicloud nfsinstance client: %w", err)
 	}

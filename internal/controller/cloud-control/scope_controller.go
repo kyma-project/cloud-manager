@@ -34,6 +34,7 @@ func SetupScopeReconciler(
 	ctx context.Context,
 	kcpManager manager.Manager,
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
+	alicloudStsClientProvider awsclient.GardenClientProvider[scopeclient.AlicloudStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 	awsClientProvider awsclient.SkrClientProvider[awsexposeddataclient.Client],
@@ -45,6 +46,7 @@ func SetupScopeReconciler(
 		kcpscope.New(
 			kcpManager,
 			awsStsClientProvider,
+			alicloudStsClientProvider,
 			activeSkrCollection,
 			gcpServiceUsageClientProvider,
 			awsexposeddata.NewStateFactory(awsClientProvider),
