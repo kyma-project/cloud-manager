@@ -21,6 +21,17 @@ initRoleFilePeering() {
   return 0
 }
 
+initRoleFileRemotePeering() {
+  local default_value=$1
+  ROLE_FILE_REMOTE_PEERING="${ROLE_FILE_REMOTE_PEERING:-$default_value}"
+  case $ROLE_FILE_REMOTE_PEERING in (/*) : ;; (*) ROLE_FILE_REMOTE_PEERING="${SCRIPT_DIR}/${ROLE_FILE_REMOTE_PEERING}" ;; esac
+  if [[ ! -f "$ROLE_FILE_REMOTE_PEERING" ]]; then
+    echo "ROLE_FILE_REMOTE_PEERING $ROLE_FILE_REMOTE_PEERING not found"
+    exit 1
+  fi
+  return 0
+}
+
 initSANameDefault() {
   local default_value=$1
   SA_NAME_DEFAULT="${SA_NAME_DEFAULT:-$default_value}"
@@ -45,6 +56,12 @@ initRoleNamePeering() {
   return 0
 }
 
+initRoleNameRemotePeering() {
+  local default_value=$1
+  ROLE_NAME_REMOTE_PEERING="${ROLE_NAME_REMOTE_PEERING:-$default_value}"
+  return 0
+}
+
 # GCP Specific
 
 gcpValidateProject() {
@@ -62,12 +79,14 @@ gcpInit() {
 
   initRoleFileDefault '../../docs/contributor/permissions/gcp/gcp_default.yaml'
   initRoleFilePeering '../../docs/contributor/permissions/gcp/gcp_peering.yaml'
+  initRoleFileRemotePeering '../../docs/contributor/permissions/gcp/gcp_remote_peering.yaml'
 
   initSANameDefault 'cloud-manager-e2e'
   initSANamePeering 'cloud-manager-peering-e2e'
 
   initRoleNameDefault 'cloud_manager_e2e'
   initRoleNamePeering 'cloud_manager_peering_e2e'
+  initRoleNameRemotePeering 'cloud_manager_remote_peering_e2e'
 
   echo "GCP_PROJECT=$GCP_PROJECT"
   echo "SA_NAME_DEFAULT=$SA_NAME_DEFAULT"
@@ -76,6 +95,7 @@ gcpInit() {
   echo "SA_NAME_PEERING=$SA_NAME_PEERING"
   echo "ROLE_NAME_PEERING=$ROLE_NAME_PEERING"
   echo "ROLE_FILE_PEERING=$ROLE_FILE_PEERING"
+  echo "ROLE_FILE_REMOTE_PEERING=$ROLE_FILE_REMOTE_PEERING"
   echo ""
 
   return 0

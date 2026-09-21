@@ -87,7 +87,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 
 			By("And spec.instance.alicloud matches SKR tier")
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud).NotTo(BeNil())
-			Expect(kcpRedisInstance.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.master.small.cloud"))
+			Expect(kcpRedisInstance.Spec.Instance.Alicloud.InstanceClass).To(Equal("tair.rdb.1g"))
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud.ReadOnlyCount).To(Equal(int32(0)))
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud.EngineVersion).To(Equal("7.0"))
 		})
@@ -218,7 +218,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 					NewObjActions(WithName(alicloudRedisInstance.Status.Id)),
 				).Should(Succeed())
 
-			Expect(kcpRedisInstance.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.master.small.cloud"))
+			Expect(kcpRedisInstance.Spec.Instance.Alicloud.InstanceClass).To(Equal("tair.rdb.1g"))
 			Expect(kcpRedisInstance.Spec.Instance.Alicloud.ReadOnlyCount).To(Equal(int32(0)))
 		})
 
@@ -254,7 +254,7 @@ var _ = Describe("Feature: SKR AlicloudRedisInstance", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisInstance,
 					NewObjActions(),
-					HavingFieldValue("redis.master.large.cloud", "spec", "instance", "alicloud", "instanceClass"),
+					HavingFieldValue("tair.rdb.4g", "spec", "instance", "alicloud", "instanceClass"),
 					HavingFieldValue(int32(0), "spec", "instance", "alicloud", "readOnlyCount"),
 				).Should(Succeed())
 		})

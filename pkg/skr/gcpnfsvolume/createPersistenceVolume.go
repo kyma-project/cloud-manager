@@ -12,7 +12,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func createPersistenceVolume(ctx context.Context, st composed.State) (error, context.Context) {
@@ -49,13 +48,11 @@ func createPersistenceVolume(ctx context.Context, st composed.State) (error, con
 
 	//Construct a PV Object
 	pv := &corev1.PersistentVolume{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        getVolumeName(nfsVolume),
-			Labels:      getVolumeLabels(nfsVolume),
-			Annotations: getVolumeAnnotations(nfsVolume),
-			Finalizers: []string{
-				api.CommonFinalizerDeletionHook,
-			},
+		Name:        getVolumeName(nfsVolume),
+		Labels:      getVolumeLabels(nfsVolume),
+		Annotations: getVolumeAnnotations(nfsVolume),
+		Finalizers: []string{
+			api.CommonFinalizerDeletionHook,
 		},
 		Spec: corev1.PersistentVolumeSpec{
 			Capacity: corev1.ResourceList{

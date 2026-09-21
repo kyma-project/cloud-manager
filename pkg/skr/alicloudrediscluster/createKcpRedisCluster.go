@@ -21,7 +21,7 @@ func createKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 
 	alicloudRedisCluster := state.ObjAsAlicloudRedisCluster()
 
-	instanceClass, err := redisTierToInstanceClass(alicloudRedisCluster.Spec.RedisTier, alicloudRedisCluster.Spec.ShardCount)
+	instanceClass, err := redisTierToInstanceClass(alicloudRedisCluster.Spec.RedisTier)
 	if err != nil {
 		errMsg := "failed to map redisTier to instanceClass"
 		logger.Error(err, errMsg, "redisTier", alicloudRedisCluster.Spec.RedisTier)
@@ -41,17 +41,15 @@ func createKcpRedisCluster(ctx context.Context, st composed.State) (error, conte
 	}
 
 	state.KcpRedisCluster = &cloudcontrolv1beta1.RedisCluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      alicloudRedisCluster.Status.Id,
-			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
-				common.LabelKymaModule: common.FieldOwner,
-			},
-			Annotations: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      alicloudRedisCluster.Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: alicloudRedisCluster.Namespace,
-			},
+		Name:      alicloudRedisCluster.Status.Id,
+		Namespace: state.KymaRef.Namespace,
+		Labels: map[string]string{
+			common.LabelKymaModule: common.FieldOwner,
+		},
+		Annotations: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      alicloudRedisCluster.Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: alicloudRedisCluster.Namespace,
 		},
 		Spec: cloudcontrolv1beta1.RedisClusterSpec{
 			RemoteRef: cloudcontrolv1beta1.RemoteRef{

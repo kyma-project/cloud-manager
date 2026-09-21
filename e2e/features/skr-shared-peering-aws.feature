@@ -2,6 +2,7 @@ Feature: AwsVpcPeering feature
 
   @skr @aws @peering
   Scenario: AwsVpcPeering scenario
+    Given eventually timeout is "20m"
 
     Given there is shared SKR with "AWS" provider
 

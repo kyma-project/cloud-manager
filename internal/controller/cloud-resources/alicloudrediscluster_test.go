@@ -88,7 +88,7 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", func() {
 
 			By("And spec.instance.alicloud matches SKR tier")
 			Expect(kcpRedisCluster.Spec.Instance.Alicloud).NotTo(BeNil())
-			Expect(kcpRedisCluster.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.logic.sharding.4g.3db.0rodb.4proxy.default"))
+			Expect(kcpRedisCluster.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.shard.small.ce"))
 			Expect(kcpRedisCluster.Spec.Instance.Alicloud.ShardCount).To(Equal(int32(3)))
 			Expect(kcpRedisCluster.Spec.Instance.Alicloud.EngineVersion).To(Equal("7.0"))
 			Expect(kcpRedisCluster.Spec.Instance.Alicloud.ReplicasPerShard).To(Equal(int32(0)))
@@ -226,7 +226,7 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", func() {
 					NewObjActions(WithName(alicloudRedisCluster.Status.Id)),
 				).Should(Succeed())
 
-			Expect(kcpRedisCluster.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.logic.sharding.4g.2db.0rodb.4proxy.default"))
+			Expect(kcpRedisCluster.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.shard.small.ce"))
 			Expect(kcpRedisCluster.Spec.Instance.Alicloud.ShardCount).To(Equal(int32(2)))
 		})
 
@@ -262,7 +262,7 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisCluster,
 					NewObjActions(),
-					HavingFieldValue("redis.logic.sharding.8g.2db.0rodb.4proxy.default", "spec", "instance", "alicloud", "instanceClass"),
+					HavingFieldValue("redis.shard.mid.ce", "spec", "instance", "alicloud", "instanceClass"),
 					HavingFieldValue(int32(2), "spec", "instance", "alicloud", "shardCount"),
 				).Should(Succeed())
 		})
@@ -469,7 +469,7 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", func() {
 					NewObjActions(WithName(alicloudRedisCluster.Status.Id)),
 				).Should(Succeed())
 
-			Expect(kcpRedisCluster.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.logic.sharding.4g.2db.0rodb.4proxy.default"))
+			Expect(kcpRedisCluster.Spec.Instance.Alicloud.InstanceClass).To(Equal("redis.shard.small.ce"))
 			Expect(kcpRedisCluster.Spec.Instance.Alicloud.ShardCount).To(Equal(int32(2)))
 		})
 
@@ -505,7 +505,7 @@ var _ = Describe("Feature: SKR AlicloudRedisCluster", func() {
 			Eventually(LoadAndCheck).
 				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpRedisCluster,
 					NewObjActions(),
-					HavingFieldValue("redis.logic.sharding.4g.4db.0rodb.4proxy.default", "spec", "instance", "alicloud", "instanceClass"),
+					HavingFieldValue("redis.shard.small.ce", "spec", "instance", "alicloud", "instanceClass"),
 					HavingFieldValue(int32(4), "spec", "instance", "alicloud", "shardCount"),
 				).Should(Succeed())
 		})

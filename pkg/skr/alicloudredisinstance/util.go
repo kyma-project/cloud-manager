@@ -89,22 +89,23 @@ type redisTierInfo struct {
 	readOnlyCount int32
 }
 
-// S-tiers use redis.master.*.cloud (standard HA, cloud-disk, supports engine 5.0/6.0/7.0).
-// P-tiers use redis.master.*.cloud with ReadOnlyCount=1 (standard HA + 1 read-only replica).
+// S-tiers use tair.rdb.*g (cloud-disk HA, supports engine 5.0/6.0/7.0).
+// P-tiers use tair.rdb.*g with ReadOnlyCount=1 (HA + 1 read-only replica).
+// tair.rdb replaces redis.master.*.cloud which was local-disk only (max engine 5.0).
 // The `stand` (4 GB) class has no cross-provider equivalent and is skipped in the S tier
 // mapping so that S3-S5 align closer to GCP/AWS/Azure baselines.
 var alicloudRedisTierMap = map[cloudresourcesv1beta1.AlicloudRedisTier]redisTierInfo{
-	cloudresourcesv1beta1.AlicloudRedisTierS1: {instanceClass: "redis.master.small.cloud", readOnlyCount: 0},
-	cloudresourcesv1beta1.AlicloudRedisTierS2: {instanceClass: "redis.master.mid.cloud", readOnlyCount: 0},
-	cloudresourcesv1beta1.AlicloudRedisTierS3: {instanceClass: "redis.master.large.cloud", readOnlyCount: 0},
-	cloudresourcesv1beta1.AlicloudRedisTierS4: {instanceClass: "redis.master.2xlarge.cloud", readOnlyCount: 0},
-	cloudresourcesv1beta1.AlicloudRedisTierS5: {instanceClass: "redis.master.4xlarge.cloud", readOnlyCount: 0},
+	cloudresourcesv1beta1.AlicloudRedisTierS1: {instanceClass: "tair.rdb.1g", readOnlyCount: 0},
+	cloudresourcesv1beta1.AlicloudRedisTierS2: {instanceClass: "tair.rdb.2g", readOnlyCount: 0},
+	cloudresourcesv1beta1.AlicloudRedisTierS3: {instanceClass: "tair.rdb.4g", readOnlyCount: 0},
+	cloudresourcesv1beta1.AlicloudRedisTierS4: {instanceClass: "tair.rdb.8g", readOnlyCount: 0},
+	cloudresourcesv1beta1.AlicloudRedisTierS5: {instanceClass: "tair.rdb.16g", readOnlyCount: 0},
 
-	cloudresourcesv1beta1.AlicloudRedisTierP1: {instanceClass: "redis.master.large.cloud", readOnlyCount: 1},
-	cloudresourcesv1beta1.AlicloudRedisTierP2: {instanceClass: "redis.master.2xlarge.cloud", readOnlyCount: 1},
-	cloudresourcesv1beta1.AlicloudRedisTierP3: {instanceClass: "redis.master.4xlarge.cloud", readOnlyCount: 1},
-	cloudresourcesv1beta1.AlicloudRedisTierP4: {instanceClass: "redis.master.8xlarge.cloud", readOnlyCount: 1},
-	cloudresourcesv1beta1.AlicloudRedisTierP5: {instanceClass: "redis.master.16xlarge.cloud", readOnlyCount: 1},
+	cloudresourcesv1beta1.AlicloudRedisTierP1: {instanceClass: "tair.rdb.4g", readOnlyCount: 1},
+	cloudresourcesv1beta1.AlicloudRedisTierP2: {instanceClass: "tair.rdb.8g", readOnlyCount: 1},
+	cloudresourcesv1beta1.AlicloudRedisTierP3: {instanceClass: "tair.rdb.16g", readOnlyCount: 1},
+	cloudresourcesv1beta1.AlicloudRedisTierP4: {instanceClass: "tair.rdb.32g", readOnlyCount: 1},
+	cloudresourcesv1beta1.AlicloudRedisTierP5: {instanceClass: "tair.rdb.64g", readOnlyCount: 1},
 }
 
 func redisTierToInstanceClassAndReadOnlyCount(tier cloudresourcesv1beta1.AlicloudRedisTier) (string, int32, error) {

@@ -11,7 +11,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/rediscluster/types"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -44,10 +43,8 @@ func newTestState(t *testing.T, clusterName string, desiredAuth bool, rg *elasti
 	t.Helper()
 
 	obj := &cloudcontrolv1beta1.RedisCluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      clusterName,
-			Namespace: "kcp-system",
-		},
+		Name:      clusterName,
+		Namespace: "kcp-system",
 		Spec: cloudcontrolv1beta1.RedisClusterSpec{
 			Instance: cloudcontrolv1beta1.RedisClusterInfo{
 				Aws: &cloudcontrolv1beta1.RedisClusterAws{

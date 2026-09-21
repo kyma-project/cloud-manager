@@ -617,10 +617,8 @@ func (k *defaultKeb) RenewInstanceKubeconfig(ctx context.Context, runtimeID stri
 		}
 	} else {
 		secret = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: ns,
-				Name:      gc.Spec.Kubeconfig.Secret.Name,
-			},
+			Namespace: ns,
+			Name:      gc.Spec.Kubeconfig.Secret.Name,
 			Data: map[string][]byte{
 				gc.Spec.Kubeconfig.Secret.Key: data,
 			},

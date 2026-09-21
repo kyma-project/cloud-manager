@@ -66,11 +66,10 @@ spec:
                       design decision 8 in issue #2012.
                     properties:
                       engineVersion:
-                        default: "5.0"
+                        default: "7.0"
                         description: |-
-                          EngineVersion is set at creation and is immutable. Defaults to "5.0" for
-                          cluster instances (proxy-based sharding classes are available on engine 5.0
-                          in all AliCloud international regions).
+                          EngineVersion is set at creation and is immutable. Defaults to "7.0" —
+                          the minimum version required by the redis.shard.*.ce cloud-native cluster family.
                         enum:
                         - "5.0"
                         - "6.0"

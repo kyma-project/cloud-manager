@@ -329,14 +329,10 @@ func init() {
 
 func (sc *GcpNfsBackupSchedule) CloneForPatchStatus() client.Object {
 	return &GcpNfsBackupSchedule{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "GcpNfsBackupSchedule",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: sc.Namespace,
-			Name:      sc.Name,
-		},
-		Status: sc.Status,
+		Kind:       "GcpNfsBackupSchedule",
+		APIVersion: GroupVersion.String(),
+		Namespace:  sc.Namespace,
+		Name:       sc.Name,
+		Status:     sc.Status,
 	}
 }

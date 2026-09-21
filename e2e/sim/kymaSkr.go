@@ -181,7 +181,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 
 			if elapsed >= r.timeoutRemoveModuleToErrorState {
 				ms := skrKyma.GetModuleStatusMap()["cloud-manager"]
-				if ms.State != operatorshared.StateError {
+				// ms is nil when the module has not yet been observed in the Kyma status.
+				if ms == nil || ms.State != operatorshared.StateError {
 					outcome.Processed("cloud-manager", operatorshared.StateError, "Timeout waiting for module to be deleted")
 
 					util.ExpiringSwitch().
@@ -261,7 +262,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 			elapsed := r.clock.Since(cm.CreationTimestamp.Time)
 			if elapsed >= r.timeoutRemoveModuleToErrorState {
 				ms := skrKyma.GetModuleStatusMap()["cloud-manager"]
-				if ms.State != operatorshared.StateError {
+				// ms is nil when the module has not yet been observed in the Kyma status.
+				if ms == nil || ms.State != operatorshared.StateError {
 					outcome.Processed("cloud-manager", operatorshared.StateError, "Timeout waiting for module to be deleted")
 
 					util.ExpiringSwitch().
@@ -299,10 +301,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		if cm == nil {
 			logger.Info("Creating default CloudResources")
 			cm = &cloudresourcesv1beta1.CloudResources{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "kyma-system",
-					Name:      "default",
-				},
+				Namespace: "kyma-system",
+				Name:      "default",
 			}
 			err = r.skr.Create(ctx, cm)
 			if client.IgnoreAlreadyExists(err) != nil {
@@ -328,7 +328,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 			elapsed := r.clock.Since(cm.CreationTimestamp.Time)
 			if elapsed >= r.timeoutAddModuleToReadyState {
 				ms := skrKyma.GetModuleStatusMap()["cloud-manager"]
-				if ms.State != operatorshared.StateError {
+				// ms is nil when the module has not yet been observed in the Kyma status.
+				if ms == nil || ms.State != operatorshared.StateError {
 					outcome.Processed("cloud-manager", operatorshared.StateError, "Timeout waiting for module to be ready")
 
 					util.ExpiringSwitch().
@@ -396,7 +397,7 @@ func (r *simKymaSkr) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(
 			&cloudresourcesv1beta1.CloudResources{},
 			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
-				return []reconcile.Request{{NamespacedName: types.NamespacedName{Namespace: "kyma-system", Name: "default"}}}
+				return []reconcile.Request{{Namespace: "kyma-system", Name: "default"}}
 			}),
 		).
 		Complete(r)
