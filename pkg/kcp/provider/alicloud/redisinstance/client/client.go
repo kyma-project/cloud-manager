@@ -23,6 +23,7 @@ import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	rkvstore "github.com/alibabacloud-go/r-kvstore-20150101/v7/client"
 	"github.com/alibabacloud-go/tea/tea"
+	alicloudclientconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 )
 
 // Instance status values used by the AliCloud r-kvstore API. Only a subset is
@@ -210,16 +211,17 @@ func IsReadOnlyCountUnsupported(instanceClass string) bool {
 
 // ClientProvider is the standard cloud-manager credential/region-scoped
 // constructor signature used across all AliCloud client packages.
-type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error)
+type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecret, assumeRoleArn string) (Client, error)
 
 // NewClientProvider returns a ClientProvider that constructs a real SDK-backed
 // AliCloud r-kvstore client.
 func NewClientProvider() ClientProvider {
-	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error) {
+	return func(ctx context.Context, region, accessKeyId, accessKeySecret, assumeRoleArn string) (Client, error) {
 		config := &openapi.Config{
-			AccessKeyId:     new(accessKeyId),
-			AccessKeySecret: new(accessKeySecret),
-			RegionId:        new(region),
+			RegionId: new(region),
+		}
+		if err := alicloudclientconfig.ApplyCredentials(config, accessKeyId, accessKeySecret, assumeRoleArn); err != nil {
+			return nil, err
 		}
 		config.Endpoint = new(fmt.Sprintf("r-kvstore.%s.aliyuncs.com", region))
 

@@ -20,6 +20,7 @@ import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	rkvstore "github.com/alibabacloud-go/r-kvstore-20150101/v7/client"
 
+	alicloudclientconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	instanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
 )
 
@@ -38,18 +39,19 @@ type Client interface {
 
 // ClientProvider mirrors the credential/region-scoped constructor signature
 // used by all AliCloud client packages in cloud-manager.
-type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error)
+type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecret, assumeRoleArn string) (Client, error)
 
 // NewClientProvider returns a ClientProvider backed by the real AliCloud
 // r-kvstore SDK. A single *rkvstore.Client is constructed and shared between
 // the embedded instance operations and the cluster-only sharding operations,
 // so exactly one SDK connection is opened per reconcile.
 func NewClientProvider() ClientProvider {
-	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error) {
+	return func(ctx context.Context, region, accessKeyId, accessKeySecret, assumeRoleArn string) (Client, error) {
 		config := &openapi.Config{
-			AccessKeyId:     new(accessKeyId),
-			AccessKeySecret: new(accessKeySecret),
-			RegionId:        new(region),
+			RegionId: new(region),
+		}
+		if err := alicloudclientconfig.ApplyCredentials(config, accessKeyId, accessKeySecret, assumeRoleArn); err != nil {
+			return nil, err
 		}
 		config.Endpoint = new(fmt.Sprintf("r-kvstore.%s.aliyuncs.com", region))
 

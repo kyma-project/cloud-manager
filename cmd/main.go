@@ -422,6 +422,7 @@ func main() {
 		ctx,
 		mgr,
 		scopeclient.NewAwsStsGardenClientProvider(),
+		scopeclient.NewAlicloudStsGardenClientProvider(),
 		activeSkrCollection,
 		gcpclient.NewServiceUsageClientProvider(),
 		awsexposeddataclient.NewClientProvider(),
@@ -559,6 +560,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupSubscriptionReconciler(
 		mgr,
 		subscriptionclient.NewAwsStsGardenClientProvider(),
+		subscriptionclient.NewAlicloudStsGardenClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Subscription")
 		os.Exit(1)
