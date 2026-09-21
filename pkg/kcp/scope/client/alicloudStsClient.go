@@ -25,7 +25,10 @@ func NewAlicloudStsGardenClientProvider() awsclient.GardenClientProvider[Aliclou
 			AccessKeySecret: new(secret),
 			RegionId:        new(region),
 		}
-		config.Endpoint = new(fmt.Sprintf("sts.%s.aliyuncs.com", region))
+		// Use the central STS endpoint. GetCallerIdentity is account-global, so the
+		// endpoint region is irrelevant to the result; the central domain avoids
+		// baking a region assumption into scope/subscription reconciliation.
+		config.Endpoint = new("sts.aliyuncs.com")
 		c, err := openapi.NewClient(config)
 		if err != nil {
 			return nil, fmt.Errorf("error creating alicloud sts client: %w", err)

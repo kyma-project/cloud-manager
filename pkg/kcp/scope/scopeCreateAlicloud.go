@@ -28,7 +28,7 @@ func scopeCreateAlicloud(ctx context.Context, st composed.State) (error, context
 		return composed.LogErrorAndReturn(
 			fmt.Errorf("error creating alicloud sts client: %w", err),
 			"Error creating AliCloud scope",
-			composed.StopAndForget,
+			composed.StopWithRequeue,
 			ctx)
 	}
 	accountId, err := stsClient.GetCallerIdentity(ctx)

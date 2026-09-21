@@ -136,7 +136,7 @@ func statusSaveOnCreate(ctx context.Context, st composed.State) (error, context.
 
 		stsClient, err := state.alicloudStsClientProvider(
 			ctx,
-			"ap-northeast-1", // region only selects the STS endpoint; caller identity is account-global
+			"", // no shoot/region context here; the STS client uses the central endpoint and GetCallerIdentity is account-global
 			accessKeyID,
 			accessKeySecret,
 		)
