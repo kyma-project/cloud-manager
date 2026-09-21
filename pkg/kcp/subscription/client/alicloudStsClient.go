@@ -7,7 +7,6 @@ import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	openapiutil "github.com/alibabacloud-go/openapi-util/service"
 	util "github.com/alibabacloud-go/tea-utils/v2/service"
-	"github.com/alibabacloud-go/tea/tea"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 )
 
@@ -18,11 +17,11 @@ import (
 func NewAlicloudStsGardenClientProvider() awsclient.GardenClientProvider[AlicloudStsClient] {
 	return func(ctx context.Context, region, key, secret string) (AlicloudStsClient, error) {
 		config := &openapi.Config{
-			AccessKeyId:     tea.String(key),
-			AccessKeySecret: tea.String(secret),
-			RegionId:        tea.String(region),
+			AccessKeyId:     new(key),
+			AccessKeySecret: new(secret),
+			RegionId:        new(region),
 		}
-		config.Endpoint = tea.String(fmt.Sprintf("sts.%s.aliyuncs.com", region))
+		config.Endpoint = new(fmt.Sprintf("sts.%s.aliyuncs.com", region))
 		c, err := openapi.NewClient(config)
 		if err != nil {
 			return nil, fmt.Errorf("error creating alicloud sts client: %w", err)
@@ -45,18 +44,18 @@ type alicloudStsClient struct {
 // via the generic openapi client, avoiding a dedicated STS SDK dependency.
 func (c *alicloudStsClient) GetCallerIdentity(ctx context.Context) (string, error) {
 	req := &openapi.OpenApiRequest{
-		Query: openapiutil.Query(map[string]interface{}{}),
+		Query: openapiutil.Query(map[string]any{}),
 	}
 	params := &openapi.Params{
-		Action:      tea.String("GetCallerIdentity"),
-		Version:     tea.String("2015-04-01"),
-		Protocol:    tea.String("HTTPS"),
-		Pathname:    tea.String("/"),
-		Method:      tea.String("POST"),
-		AuthType:    tea.String("AK"),
-		Style:       tea.String("RPC"),
-		ReqBodyType: tea.String("formData"),
-		BodyType:    tea.String("json"),
+		Action:      new("GetCallerIdentity"),
+		Version:     new("2015-04-01"),
+		Protocol:    new("HTTPS"),
+		Pathname:    new("/"),
+		Method:      new("POST"),
+		AuthType:    new("AK"),
+		Style:       new("RPC"),
+		ReqBodyType: new("formData"),
+		BodyType:    new("json"),
 	}
 
 	body, err := c.c.CallApi(params, req, &util.RuntimeOptions{})
@@ -76,8 +75,8 @@ func (c *alicloudStsClient) GetCallerIdentity(ctx context.Context) (string, erro
 // accountIdFromCallApiBody extracts AccountId from a darabonba-openapi CallApi
 // result. The json response is nested under the "body" key; we also tolerate a
 // flat shape defensively.
-func accountIdFromCallApiBody(result map[string]interface{}) (string, bool) {
-	if inner, ok := result["body"].(map[string]interface{}); ok {
+func accountIdFromCallApiBody(result map[string]any) (string, bool) {
+	if inner, ok := result["body"].(map[string]any); ok {
 		if id, ok := inner["AccountId"].(string); ok {
 			return id, true
 		}

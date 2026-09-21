@@ -2,8 +2,7 @@ package config
 
 import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
-	"github.com/alibabacloud-go/tea/tea"
-	credentials "github.com/aliyun/credentials-go/credentials"
+	"github.com/aliyun/credentials-go/credentials"
 )
 
 // ApplyCredentials configures an AliCloud openapi client Config for authentication.
@@ -22,17 +21,17 @@ import (
 // path deliberately leaves those unset and provides Credential instead.
 func ApplyCredentials(config *openapi.Config, accessKeyId, accessKeySecret, assumeRoleArn string) error {
 	if assumeRoleArn == "" {
-		config.AccessKeyId = tea.String(accessKeyId)
-		config.AccessKeySecret = tea.String(accessKeySecret)
+		config.AccessKeyId = new(accessKeyId)
+		config.AccessKeySecret = new(accessKeySecret)
 		return nil
 	}
 
 	cred, err := credentials.NewCredential(&credentials.Config{
-		Type:            tea.String("ram_role_arn"),
-		AccessKeyId:     tea.String(accessKeyId),
-		AccessKeySecret: tea.String(accessKeySecret),
-		RoleArn:         tea.String(assumeRoleArn),
-		RoleSessionName: tea.String(AlicloudConfig.RoleSessionName),
+		Type:            new("ram_role_arn"),
+		AccessKeyId:     new(accessKeyId),
+		AccessKeySecret: new(accessKeySecret),
+		RoleArn:         new(assumeRoleArn),
+		RoleSessionName: new(AlicloudConfig.RoleSessionName),
 	})
 	if err != nil {
 		return err
