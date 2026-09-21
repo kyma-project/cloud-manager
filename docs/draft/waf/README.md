@@ -270,17 +270,37 @@ metadata:
 spec:
   # TODO: extend to showcase standard + custom rule
   data: |
-    {
-      "priority": 1000,
-      "description": "OWASP CRS 4.22 - SQL injection",
-      "action": "deny(403)",
-      "preview": true,
-      "match": {
-        "expr": {
-          "expression": "evaluatePreconfiguredWaf('sqli-v422-stable', {'sensitivity': 1})"
-        }
-      }
-    }
+    priority: 1000
+    description: OWASP CRS 4.22 - SQL injection
+    action: deny(403)
+    preview: true
+    match:
+      expr:
+        expression: |
+          evaluatePreconfiguredWaf('xss-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('lfi-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('rfi-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('rce-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('methodenforcement-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('scannerdetection-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('protocolattack-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('php-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('sessionfixation-v422-stable', {'sensitivity': 1}) ||
+
+          !(
+            request.path.startsWith('/allow-me') ||
+            request.path.startsWith('/nesto-drugo')
+          ) && 
+          evaluatePreconfiguredWaf('sqli-v422-stable', {
+            'sensitivity': 1,
+            'opt_out_rule_ids': ['owasp-crs-v042200-id942350-sqli', 'owasp-crs-v042200-id942360-sqli']
+          }) ||
+
+          evaluatePreconfiguredWaf('cve-canary', {
+            'sensitivity': 0,
+            'opt_in_rule_ids': ['owasp-crs-v042200-id044228-cve', 'owasp-crs-v042200-id144228-cve']
+          })
+
 
 ---
 

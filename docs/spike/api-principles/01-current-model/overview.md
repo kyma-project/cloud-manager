@@ -261,6 +261,12 @@ spec:
 
 N shapes replaces by N+1 shapes, where each CR still has all the fields it had before just in slightly different syntax. Must decide how it's driven by feature flags.
 
+The `VpcPeeringConfig` is not suitable for Kyma provided reasonable defaults since for some providers it contains peering specific `remotePeerinName` that must be unique. This requires creation of new `VpcPeeringConfig` for each new `VpcPeering` that is equivalent to the original provider specific resources.
+
+### Conclusion
+
+Vpc peering provider-specific resources is the right choice.
+
 ---
 
 ## NfsVolume
@@ -550,12 +556,20 @@ spec:
 
 N shapes replaces by N+1 shapes, where each CR still has all the fields it had before just in slightly different syntax. Must decide how it's driven by feature flags (ie Azure doesn't have NFS at all).
 
+For some providers the `NfsConfig` holds the storage capacity. Some providers have fixed, predefined storage and require capacity, while some providers are flexible and no not accept capacity. If many `NfsVolume` resources reference the same config it makes impossible to increase size on only one of them. That makes `NfsConfig` unsuitable for Kyma provided reasonable defaults. 
+
+Future cloud services, yet to be published, that will replace existing NFS services have unknown shape and there's no guarantee even if current fields are generalized as common that will remain in the future. In that case CloudManager would need to either take the union schema with not all fields are relevant approach or publish a new kind to match the new service. 
+
+### Conclusion
+
+NFS provider-specific resources is the right choice.
+
 ---
 
 
 ## Redis
 
-Cloud Manager provides managed Redis for both single-node HA instances (`*RedisInstance`) and sharded clusters (`*RedisCluster`). Both sub-families are shown in the same table to make Instance vs. Cluster differences immediately visible. `AzureManagedRedis` is a separate resource mapping to a different Azure product (Azure Managed Redis / Enterprise) from `AzureRedisInstance` (Azure Cache for Redis / OSS).
+Cloud Manager provides managed Redis for both single-node HA instances (`*RedisInstance`) and sharded clusters (`*RedisCluster`). Both subfamilies are shown in the same table to make Instance vs. Cluster differences immediately visible. `AzureManagedRedis` is a separate resource mapping to a different Azure product (Azure Managed Redis / Enterprise) from `AzureRedisInstance` (Azure Cache for Redis / OSS).
 
 <table>
 <tr>
@@ -1144,6 +1158,13 @@ spec:
 
 N shapes replaces by N+1 shapes, where each CR still has all the fields it had before just in slightly different syntax. Must decide how it's driven by feature flags.
 
+The Redis Config kinds encapsulate Redis capacity (memory) and are not suitable for Kyma provided reasonable defaults. If many Redis resources reference the same config it makes impossible to increase capacity (memory) on only one of them. That makes Redis Config resources unsuitable for Kyma provided reasonable defaults.
+
+If providers release a new Redis like service in the future, there's no guarantee its API share will fit the general portable shape we have modeled. In that case CloudManager would need to either take the union schema with not all fields are relevant approach or publish a new kind to match the new service.
+
+### Conclusion
+
+Redis provider-specific resources is the right choice.
 
 ---
 

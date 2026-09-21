@@ -4,9 +4,11 @@
 
 # 1) Current model
 
-Detailed analysis of the current CloudManager CRDs with possible separation into portable intent and provider specific resources can be found [here](./01-current-model/overview.md). The remodeling is forcefully fitted to accommodate the request, but the validity is questionable since union of the portable intent resource with provider specific resource produces the originally remodeled shape. The change is cosmetic illusion of portability introducing more CRDs. The only benefit can be found in Kyma provided reasonable defaults, but only some resource (NFS & Redis).
+Detailed analysis of the current CloudManager CRDs with possible separation into portable intent and provider specific resources can be found [here](./01-current-model/overview.md). The remodeling is forcefully fitted to accommodate the request, but the validity is questionable since union of the portable intent resource with provider specific resource produces the originally remodeled shape. The change is cosmetic illusion of portability introducing more CRDs. Not even the benefit of Kyma provided reasonable defaults is possible since provider specific fields carry instance specific fields like unique name or capacity.
 
-## IpRange & GcpSubet
+## IpRange & GcpSubet ✅
+
+From the UX perspective the provider-specific resources is not the right choice.
 
 No shape differences. GcpSubnet can collapse into IpRange with addition on the `type` field indicating a predefined enumerable set of possible values, without additional configuration.
 
@@ -14,25 +16,30 @@ Carry significant network reconfiguration pre-requisites that are hidden from th
 
 [Details](./01-current-model/overview.md#iprange-and-gcpsubnet)
 
-## VpcPeering
+## VpcPeering ❌
 
-If risk of custom remote VPC identifier for providers not having standard format is accepted, then a non-empty portable intent resource `VpcPeering` can be defined with separate per provider `VpcPeeringConfig`.
+Vpc peering provider-specific resources is the right choice.
 
-**⚠️ Risk** providers not having a specific standard resource identifier where we must define **own custom format**. Otherwise, the remote VPC identifier moves to the provider specific configuration and portable intent resource remains empty, which doesn't make much sense.
+- provider specific shape carries fields with unique constraints and thus can not serve as global Kyma provided best practices shared resource
+- risk of a need to define own custom format for remote vpc network for cases when provider doesn't already have a standard format
 
 [Details](./01-current-model/overview.md#vpcpeering)
 
 
-## NFS
+## NFS ❌
 
-Common fields can stay in portable intent resource `NfsVolume`, with rest moved to provider specific `NfsConfig`.
+NFS provider-specific resources is the right choice.
+
+- provider specific shape carries the capacity field and can not serve as global Kyma provided best practices shared resource
 
 [Details](./01-current-model/overview.md#nfsvolume)
 
 
-## Redis
+## Redis ❌
 
-Common fields can stay in portable intent resource `Redis`, with rest moved to provider specific `RedisConfig`, `RedisClusterConfig`, `ManagedRedisConfig`.
+Redis provider-specific resources is the right choice.
+
+- provider specific shape carries the capacity field and can not serve as global Kyma provided best practices shared resource
 
 [Details](./01-current-model/overview.md#redis)
 
