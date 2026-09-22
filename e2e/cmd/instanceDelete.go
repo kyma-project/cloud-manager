@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/elliotchance/pie/v2"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type cmdInstanceDeleteOptionsType struct {
@@ -65,6 +69,7 @@ var cmdInstanceDelete = &cobra.Command{
 			}
 			err = e2ekeb.WaitCompleted(rootCtx, keb, opts...)
 			if err != nil {
+				printShootStatus(keb, cmdInstanceDeleteOptions.runtimeID)
 				return fmt.Errorf("failed to wait for instance to be deleted: %w", err)
 			}
 			fmt.Println("Instance is destroyed.")
@@ -82,4 +87,34 @@ func init() {
 	cmdInstanceDelete.Flags().DurationVarP(&cmdInstanceDeleteOptions.timeout, "timeout", "t", 40*time.Minute, "Timeout for waiting for instance to be deleted")
 	cmdInstanceDelete.MarkFlagsMutuallyExclusive("runtime-id", "alias")
 	cmdInstanceDelete.MarkFlagsOneRequired("runtime-id", "alias")
+}
+
+func printShootStatus(keb e2ekeb.Keb, runtimeID string) {
+	instances, err := keb.List(rootCtx, e2ekeb.WithRuntime(runtimeID))
+	if err != nil || len(instances) == 0 {
+		fmt.Printf("shoot status: runtime %s not found in KEB\n", runtimeID)
+		return
+	}
+	shootName := instances[0].ShootName
+	if shootName == "" {
+		fmt.Printf("shoot status: no shoot name for runtime %s\n", runtimeID)
+		return
+	}
+	shoot := &gardencorev1beta1.Shoot{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err = keb.GardenClient().Get(ctx, types.NamespacedName{
+		Namespace: keb.Config().GardenNamespace,
+		Name:      shootName,
+	}, shoot)
+	if err != nil {
+		fmt.Printf("shoot status: failed to get shoot %s: %v\n", shootName, err)
+		return
+	}
+	b, err := json.MarshalIndent(shoot.Status, "", "  ")
+	if err != nil {
+		fmt.Printf("shoot status: failed to marshal shoot status: %v\n", err)
+		return
+	}
+	fmt.Printf("shoot %s status:\n%s\n", shootName, string(b))
 }
