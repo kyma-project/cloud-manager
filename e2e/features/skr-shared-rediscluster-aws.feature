@@ -47,6 +47,7 @@ Feature: AwsRedisCluster feature
 
     When resource "redis" is deleted
 
-    Then eventually resource "redis" does not exist
+    Then eventually resource "redis" does not exist, with:
+      | timeout | 30m |
 
     And resource "secret" does not exist
