@@ -100,6 +100,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: read
+      contents: read
+      pull-requests: read
     steps:
       - name: Get job durations
         id: durations
@@ -140,12 +142,60 @@ jobs:
           echo "gcp_dur=$(compute_duration 'test gcp' '${{ needs.gcp.result }}')" >> "$GITHUB_OUTPUT"
           echo "alicloud_dur=$(compute_duration 'test alicloud' '${{ needs.alicloud.result }}')" >> "$GITHUB_OUTPUT"
 
-      - name: Format start time
-        id: start_time
+      - name: Gather run metadata
+        id: meta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_STARTED_AT: ${{ github.run_started_at }}
         run: |
-          T=$(date -d "${{ github.run_started_at }}" +"%H:%M:%S" 2>/dev/null || \
-              date -jf "%Y-%m-%dT%H:%M:%SZ" "${{ github.run_started_at }}" +"%H:%M:%S")
-          echo "value=$T" >> "$GITHUB_OUTPUT"
+          # Start time: prefer github.run_started_at, fall back to the run's created_at
+          STARTED="$RUN_STARTED_AT"
+          if [ -z "$STARTED" ]; then
+            STARTED=$(gh api \
+              "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              --jq '.run_started_at // .created_at // empty')
+          fi
+
+          START_EPOCH=""
+          if [ -n "$STARTED" ]; then
+            START_EPOCH=$(date -u -d "$STARTED" +%s 2>/dev/null || true)
+          fi
+
+          # Formatted start time (full UTC date+time); raw value if unparseable
+          if [ -n "$START_EPOCH" ]; then
+            T=$(date -u -d "@$START_EPOCH" +"%Y-%m-%d %H:%M:%S UTC")
+          elif [ -n "$STARTED" ]; then
+            T="$STARTED"
+          else
+            T="unknown"
+          fi
+          echo "start_time=$T" >> "$GITHUB_OUTPUT"
+
+          # Total duration = now - start
+          if [ -n "$START_EPOCH" ]; then
+            NOW=$(date -u +%s)
+            DIFF=$(( NOW - START_EPOCH ))
+            [ "$DIFF" -lt 0 ] && DIFF=0
+            H=$(( DIFF / 3600 ))
+            M=$(( (DIFF % 3600 + 59) / 60 ))
+            if [ "$H" -gt 0 ]; then
+              TOTAL="${H}h ${M}m"
+            else
+              TOTAL="${M}m"
+            fi
+          else
+            TOTAL="N/A"
+          fi
+          echo "total_dur=$TOTAL" >> "$GITHUB_OUTPUT"
+
+          # Short commit SHA
+          echo "sha_short=${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+          # Associated PR (empty on scheduled runs without a PR)
+          PR=$(gh api \
+            "/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+            --jq '.[0].number // empty' 2>/dev/null || true)
+          echo "pr=$PR" >> "$GITHUB_OUTPUT"
 
       - name: Send Slack notification
         uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4
@@ -153,4 +203,4 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "CloudManager E2E test run https://github.com/kyma-project/cloud-manager/actions/runs/${{ github.run_id }} started at ${{ steps.start_time.outputs.value }}\n* AWS ${{ steps.durations.outputs.aws_dur }} ${{ needs.aws.result == 'success' && ':white_check_mark:' || needs.aws.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* Azure ${{ steps.durations.outputs.azure_dur }} ${{ needs.azure.result == 'success' && ':white_check_mark:' || needs.azure.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* GCP ${{ steps.durations.outputs.gcp_dur }} ${{ needs.gcp.result == 'success' && ':white_check_mark:' || needs.gcp.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* AliCloud ${{ steps.durations.outputs.alicloud_dur }} ${{ needs.alicloud.result == 'success' && ':white_check_mark:' || needs.alicloud.result == 'skipped' && ':white_check_mark:' || ':x:' }}"
+            text: "CloudManager E2E test run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} started at ${{ steps.meta.outputs.start_time }} (total ${{ steps.meta.outputs.total_dur }})\nRepository: ${{ github.repository }}\nBranch: ${{ github.ref_name }}${{ steps.meta.outputs.pr != '' && format('\nPR: #{0}', steps.meta.outputs.pr) || '' }}\nCommit: ${{ steps.meta.outputs.sha_short }}\n* AWS ${{ steps.durations.outputs.aws_dur }} ${{ needs.aws.result == 'success' && ':white_check_mark:' || needs.aws.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* Azure ${{ steps.durations.outputs.azure_dur }} ${{ needs.azure.result == 'success' && ':white_check_mark:' || needs.azure.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* GCP ${{ steps.durations.outputs.gcp_dur }} ${{ needs.gcp.result == 'success' && ':white_check_mark:' || needs.gcp.result == 'skipped' && ':white_check_mark:' || ':x:' }}\n* AliCloud ${{ steps.durations.outputs.alicloud_dur }} ${{ needs.alicloud.result == 'success' && ':white_check_mark:' || needs.alicloud.result == 'skipped' && ':white_check_mark:' || ':x:' }}"
