@@ -41,6 +41,10 @@ on:
         type: boolean
         description: Extra logs and prints
         default: false
+      notify:
+        type: boolean
+        description: Send Slack notification with results
+        default: true
 
 jobs:
   aws:
@@ -92,7 +96,7 @@ jobs:
   notify:
     name: Notify Slack
     needs: [aws, azure, gcp, alicloud]
-    if: always()
+    if: always() && (github.event_name == 'schedule' || inputs.notify)
     runs-on: ubuntu-latest
     permissions:
       actions: read
