@@ -195,8 +195,7 @@ jobs:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
           if [ -f "$KUBECONFIG" ]; then
-            go run ./e2e/cmd instance module remove --alias shared-$PROVIDER --module cloud-manager
-            sleep 10
+            go run ./e2e/cmd instance module remove --alias shared-$PROVIDER --module cloud-manager --wait --timeout 5m
           fi
 
       - name: Delete shared instance
