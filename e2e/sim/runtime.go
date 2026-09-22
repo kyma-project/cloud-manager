@@ -7,7 +7,6 @@ import (
 
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	gardenerconstants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
-	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
@@ -361,7 +360,7 @@ func (r *simRuntime) reconcileRequest(ctx context.Context, request reconcile.Req
 			Name:      rt.Name,
 			Labels:    rt.Labels,
 			Finalizers: []string{
-				api.CommonFinalizerDeletionHook,
+				FinalizerE2E,
 			},
 			Spec: operatorv1beta2.KymaSpec{
 				Channel: operatorv1beta2.DefaultChannel,
