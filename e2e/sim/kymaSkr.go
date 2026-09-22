@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -229,7 +228,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		// CloudResources does not exist
 
 		logger.Info("Removing SKR Kyma finalizer")
-		_, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, skrKyma, r.skr)
+		_, err := composed.PatchObjRemoveFinalizer(ctx, FinalizerE2E, skrKyma, r.skr)
 		if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
 			return reconcile.Result{}, fmt.Errorf("error removing SKR Kyma finalizer: %w", err)
 		}
