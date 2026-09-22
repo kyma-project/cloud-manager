@@ -49,14 +49,21 @@ spec:
               details:
                 properties:
                   bandwidth:
-                    description: Bandwidth for cross-region peering in Mbit/s. 0 means
-                      provider default.
+                    description: |-
+                      Bandwidth for cross-region peering in Mbit/s. 0 means provider default.
+                      Mutable: unlike the other fields, bandwidth can be changed after creation.
                     format: int32
                     type: integer
                   deleteRemotePeering:
                     type: boolean
+                    x-kubernetes-validations:
+                    - message: DeleteRemotePeering is immutable.
+                      rule: (self == oldSelf)
                   importCustomRoutes:
                     type: boolean
+                    x-kubernetes-validations:
+                    - message: ImportCustomRoutes is immutable.
+                      rule: (self == oldSelf)
                   localNetwork:
                     description: ObjectRef references a kubernetes object
                     properties:
@@ -70,10 +77,18 @@ spec:
                     x-kubernetes-validations:
                     - message: Local network name is required.
                       rule: (self.name != "")
+                    - message: LocalNetwork is immutable.
+                      rule: (self == oldSelf)
                   localPeeringName:
                     type: string
+                    x-kubernetes-validations:
+                    - message: LocalPeeringName is immutable.
+                      rule: (self == oldSelf)
                   peeringName:
                     type: string
+                    x-kubernetes-validations:
+                    - message: PeeringName is immutable.
+                      rule: (self == oldSelf)
                   remoteNetwork:
                     description: ObjectRef references a kubernetes object
                     properties:
@@ -87,6 +102,8 @@ spec:
                     x-kubernetes-validations:
                     - message: Remote network name is required.
                       rule: (self.name != "")
+                    - message: RemoteNetwork is immutable.
+                      rule: (self == oldSelf)
                   remoteRouteTableUpdateStrategy:
                     default: AUTO
                     enum:
@@ -95,31 +112,18 @@ spec:
                     - MATCHED
                     - UNMATCHED
                     type: string
+                    x-kubernetes-validations:
+                    - message: RemoteRouteTableUpdateStrategy is immutable.
+                      rule: (self == oldSelf)
                   useRemoteGateway:
                     type: boolean
+                    x-kubernetes-validations:
+                    - message: UseRemoteGateway is immutable.
+                      rule: (self == oldSelf)
                 required:
                 - localNetwork
                 - remoteNetwork
                 type: object
-                x-kubernetes-validations:
-                - message: Peering details are immutable (except bandwidth).
-                  rule: (self.localNetwork == oldSelf.localNetwork && self.remoteNetwork
-                    == oldSelf.remoteNetwork && ((!has(self.peeringName) && !has(oldSelf.peeringName))
-                    || (has(self.peeringName) && has(oldSelf.peeringName) && self.peeringName
-                    == oldSelf.peeringName)) && ((!has(self.localPeeringName) && !has(oldSelf.localPeeringName))
-                    || (has(self.localPeeringName) && has(oldSelf.localPeeringName)
-                    && self.localPeeringName == oldSelf.localPeeringName)) && ((!has(self.importCustomRoutes)
-                    && !has(oldSelf.importCustomRoutes)) || (has(self.importCustomRoutes)
-                    && has(oldSelf.importCustomRoutes) && self.importCustomRoutes
-                    == oldSelf.importCustomRoutes)) && ((!has(self.useRemoteGateway)
-                    && !has(oldSelf.useRemoteGateway)) || (has(self.useRemoteGateway)
-                    && has(oldSelf.useRemoteGateway) && self.useRemoteGateway == oldSelf.useRemoteGateway))
-                    && ((!has(self.deleteRemotePeering) && !has(oldSelf.deleteRemotePeering))
-                    || (has(self.deleteRemotePeering) && has(oldSelf.deleteRemotePeering)
-                    && self.deleteRemotePeering == oldSelf.deleteRemotePeering)) &&
-                    ((!has(self.remoteRouteTableUpdateStrategy) && !has(oldSelf.remoteRouteTableUpdateStrategy))
-                    || (has(self.remoteRouteTableUpdateStrategy) && has(oldSelf.remoteRouteTableUpdateStrategy)
-                    && self.remoteRouteTableUpdateStrategy == oldSelf.remoteRouteTableUpdateStrategy)))
               remoteRef:
                 properties:
                   name:

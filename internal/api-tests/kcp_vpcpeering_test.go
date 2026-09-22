@@ -53,6 +53,16 @@ var _ = Describe("Feature: KCP VpcPeering", func() {
 			bb(b).
 				WithDetails("loc2", "loc-ns2", "rem2", "rem-ns2", "name2", false, false)
 		},
-		"Peering details are immutable",
+		"LocalNetwork is immutable",
+	)
+
+	canChangeKcp(
+		"VpcPeering bandwidth can change",
+		nb().WithScope("s").WithRemoteRef("ns", "n").
+			WithDetails("loc", "loc-ns", "rem", "rem-ns", "name", true, false).
+			WithBandwidth(512),
+		func(b Builder[*cloudcontrolv1beta1.VpcPeering]) {
+			bb(b).WithBandwidth(1024)
+		},
 	)
 })
