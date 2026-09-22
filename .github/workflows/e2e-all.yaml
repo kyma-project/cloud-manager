@@ -42,9 +42,15 @@ on:
         description: Extra logs and prints
         default: false
       notify:
-        type: boolean
-        description: Send Slack notification with results
-        default: true
+        type: choice
+        required: false
+        options:
+          - default
+          - "yes"
+          - "no"
+        default: default
+        description: |
+          Send Slack notification: 'default' sends only from the canonical repo on main; 'yes'/'no' force it
 
 jobs:
   aws:
@@ -96,7 +102,12 @@ jobs:
   notify:
     name: Notify Slack
     needs: [aws, azure, gcp, alicloud]
-    if: always() && (github.event_name == 'schedule' || inputs.notify)
+    if: >
+      always() &&
+      (inputs.notify == 'yes' ||
+       (inputs.notify != 'no' &&
+        github.repository == 'kyma-project/cloud-manager' &&
+        github.ref_name == 'main'))
     runs-on: ubuntu-latest
     permissions:
       actions: read
