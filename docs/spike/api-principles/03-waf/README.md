@@ -13,10 +13,16 @@ The question is not "what should the WAF API look like?" It is: **does a two-lev
 A two-level architecture modelled on Kubernetes Gateway API:
 
 ```
+[SKR cluster]
+AppLoadBalancer
+    ↓ references
 WafConfiguration (portable intent)
     ↓ SKR controller translates
 WafPolicy (provider-specific JSON passthrough)
-    ↓ KCP reconciles
+    ↓ remote reconciliation (KCP watches SKR resources)
+[KCP]
+KCP WafPolicy reconciler
+    ↓ calls cloud API
 Cloud WAF resources (AWS WAFv2 / Azure Front Door WAF / GCP Cloud Armor)
 ```
 
