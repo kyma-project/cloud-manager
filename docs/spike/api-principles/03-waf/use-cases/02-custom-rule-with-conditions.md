@@ -695,7 +695,7 @@ spec:
 **Custom rules with path and header conditions work perfectly across all providers.**
 
 This is the **most portable** feature of the WAF API:
-- ✅ Use Case 1 (Unconditional rule override): AWS + Azure perfect, GCP partial
+- ✅ Use Case 1 (Managed rules override): AWS + Azure perfect, GCP partial
 - ✅ Use Case 3 (Custom rules): **All providers perfect** ⭐
 
 **Recommendation:** ✅ **Prioritize implementing `customRules` first**

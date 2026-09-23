@@ -4,14 +4,14 @@ This document shows complete working examples for key WAF use cases, demonstrati
 
 ## Table of Contents
 
-1. [Use Case 1: Unconditional Rule Override](#use-case-1-unconditional-rule-override)
+1. [Use Case 1: Managed Rules Override](#use-case-1-managed-rules-override)
 2. [Use Case 2: Custom Rule with Conditions](#use-case-2-custom-rule-with-conditions)
 3. [Use Case 3: IP Allowlist/Blocklist](#use-case-3-ip-allowlistblocklist)
 4. [Translation Patterns Reference](#translation-patterns-reference)
 
 ---
 
-## Use Case 1: Unconditional Rule Override
+## Use Case 1: Managed Rules Override
 
 **Scenario:** Enable OWASP protection in block mode globally, but change specific rules to count mode because they trigger false positives.
 
@@ -850,7 +850,7 @@ spec:
 
 This document provides **complete, working examples** for the three main Phase 2 use cases:
 
-1. **Unconditional Rule Override** - Tune managed rules for false positives
+1. **Managed Rules Override** - Tune managed rules for false positives
 2. **Custom Rules with Conditions** - Add portable rules for health checks, admin bypasses, and conditional blocking
 3. **IP Allowlist/Blocklist** - IP-based access control
 

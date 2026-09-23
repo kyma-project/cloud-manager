@@ -1,4 +1,4 @@
-# Use Case 1: Unconditional Rule Override in Managed Rule Group
+# Use Case 1: Managed Rules Override
 
 ## User Story
 

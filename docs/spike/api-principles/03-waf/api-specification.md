@@ -81,6 +81,7 @@ status:
     - type: Ready
       status: False
       reason: NotUsed
+      observedGeneration: 1
 ```
 
 **Shipped presets:**
