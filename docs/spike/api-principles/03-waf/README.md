@@ -1,221 +1,91 @@
-# Cloud Manager WAF API Specification
+# Cloud Manager WAF — Spike Findings
 
-## Overview
+## Purpose
 
-This directory contains the complete WAF (Web Application Firewall) API specification for Cloud Manager, designed as a **two-level architecture** with **phased implementation**.
+WAF is the test case for spike bullet #3: *apply the pattern from step 2 and check whether it holds*.
+
+The question is not "what should the WAF API look like?" It is: **does a two-level portable-intent + provider-specific-passthrough pattern hold for WAF, and what does that tell us about Cloud Manager API design principles in general?**
 
 ---
 
-## Quick Start
+## What Was Tested
 
-### For Users (Phase 1)
+A two-level architecture modelled on Kubernetes Gateway API:
 
-Use pre-deployed WafPolicy presets:
+```
+WafConfiguration (portable intent)
+    ↓ SKR controller translates
+WafPolicy (provider-specific JSON passthrough)
+    ↓ KCP reconciles
+Cloud WAF resources (AWS WAFv2 / Azure Front Door WAF / GCP Cloud Armor)
+```
+
+Three specific features were validated across AWS, Azure, and GCP:
+
+| Feature | AWS | Azure | GCP | Portable? |
+|---------|-----|-------|-----|-----------|
+| Managed rule groups | ✅ | ✅ | ✅ | ❌ Different names, structure, bundling |
+| Managed rules override (`ruleOverrides`) | ✅ | ✅ | ⚠️ Degrades entire ruleset | ❌ Not portable |
+| Custom rules with conditions (`customRules`) | ✅ | ✅ | ✅ | ✅ Genuinely portable |
+
+---
+
+## Findings
+
+### What works: `customRules`
+
+Path, header, and IP-based custom rules translate cleanly across all three providers. The portable abstraction holds here. A user writing:
 
 ```yaml
-apiVersion: cloud-resources.kyma-project.io/v1alpha1
-kind: AppLoadBalancer
-spec:
-  backend:
-    kind: Service
-    name: my-service
-    namespace: default
-  policy:
-    kind: WafPolicy
-    name: owasp-moderate
+customRules:
+  - name: health-check-bypass
+    priority: 10
+    action: allow
+    conditions:
+      path:
+        exact: "/health"
 ```
 
-### For Developers (Phase 2)
+gets the correct behaviour on AWS, Azure, and GCP with no semantic drift.
 
-Customize base policies with WafConfiguration:
+### What fails: `ruleOverrides`
 
-```yaml
-apiVersion: cloud-resources.kyma-project.io/v1alpha1
-kind: WafConfiguration
-metadata:
-  name: my-config
-spec:
-  basePolicyRef:
-    name: owasp-moderate
-  ruleOverrides:
-    - managedRuleGroup: CoreRuleSet
-      ruleId: "942100"
-      action: count
-  customRules:
-    - name: health-bypass
-      priority: 10
-      action: allow
-      conditions:
-        path:
-          exact: "/health"
----
-apiVersion: cloud-resources.kyma-project.io/v1alpha1
-kind: AppLoadBalancer
-spec:
-  policy:
-    kind: WafConfiguration
-    name: my-config
-```
+Managed rule overrides are not portable:
+
+- The `managedRuleGroup` and `ruleId` fields require **provider-specific names** — an AWS rule ID does not exist on Azure or GCP.
+- GCP has no per-rule override mechanism. Any override entry causes the **entire matched ruleset** to degrade to preview mode (count-all), not the specific rule the user intended.
+- The field looks portable but silently behaves differently per provider.
+
+### What cannot be abstracted: managed rule groups
+
+Managed rule group names, structure, and bundling are completely different across providers. AWS, Azure, and GCP have no common vocabulary. A portable `managedRuleGroups` field is not viable. Provider-specific presets (`WafPolicy` with `spec.data`) are the correct answer here.
 
 ---
 
-## Architecture
+## Conclusion for the Spike
 
-### Two-Level Design
+The two-level pattern **partially holds** for WAF:
 
-```
-Phase 1: WafPolicy (Provider-Specific)
-  - spec.data: JSON passthrough
-  - Remote reconciliation from KCP to SKR
-  - Pre-deployed presets
+- ✅ It works for the additive, condition-based layer (`customRules`) where provider capabilities genuinely overlap.
+- ❌ It breaks down for managed rule tuning (`ruleOverrides`) — provider-specific names and GCP's coarse granularity mean the abstraction leaks.
+- ❌ It cannot abstract managed rule groups at all.
 
-Phase 2: WafConfiguration (Portable Intent)
-  - Base + overrides pattern
-  - SKR controller translates to WafPolicy
-  - Portable across AWS/Azure/GCP
-```
+**The portable-intent layer is only as strong as the intersection of provider capabilities.** For WAF, that intersection is narrow: custom rules with basic conditions. Everything else requires provider-specific configuration.
 
-### Phased Implementation
+This is a useful finding for the broader API principles question:
 
-**Phase 1** (Ship first): Simple, proven, fast to market  
-**Phase 2** (Add later): Portable, informed by Phase 1 feedback
-
-Both coexist. No forced migration.
+> A portable abstraction is justified when provider capabilities genuinely overlap for the use case. When they do not, a provider-specific passthrough (`WafPolicy`-style) with curated presets is more honest and more maintainable than a leaky abstraction.
 
 ---
 
-## Documentation Files
+## Documentation
 
-### Core Specification
+**[api-specification.md](api-specification.md)** — The two-level API design, including the `ruleOverrides` portability failure and open design questions.
 
-**[api-specification.md](api-specification.md)** - THE complete API specification  
-- Phase 1: WafPolicy API
-- Phase 2: WafConfiguration API
-- Pre-deployed presets
-- Usage patterns
-- Implementation checklist
+**[design-rationale.md](design-rationale.md)** — Why this architecture was explored, what it gets right, and where it breaks down.
 
-**[design-rationale.md](design-rationale.md)** - Why this design  
-- Two-level architecture explanation
-- Phased approach reasoning
-- Comparison to Terraform/Crossplane
-- Key design decisions
+**[implementation-examples.md](implementation-examples.md)** — Full provider translations for the three main use cases (managed rules override, custom rules with conditions, IP allowlist/blocklist).
 
-**[implementation-examples.md](implementation-examples.md)** - Complete working examples  
-- 15 comprehensive condition scenarios
-- Full AWS WAFv2 JSON
-- Full Azure Application Gateway WAF JSON
-- Full GCP Cloud Armor JSON
-- Translation notes
+**[use-cases/](use-cases/)** — Per-use-case provider capability validation (8 use cases, AWS/Azure/GCP).
 
----
-
-### Supporting Analysis
-
-**[research/](research/)** - Cross-provider analysis  
-- Boolean logic capabilities
-- Label chaining support
-- Condition type support matrix
-- Managed rule structures
-- See [research/README.md](research/README.md)
-
-**[use-cases/](use-cases/)** - Provider capability validation  
-- 8 real-world use cases
-- Provider support matrix (AWS, Azure, GCP)
-- Feasibility for Phase 2 features
-- See [use-cases/README.md](use-cases/README.md)
-
----
-
-## Key Concepts
-
-### WafPolicy (Phase 1)
-
-**Provider-specific passthrough:**
-- Single field: `spec.data` (provider JSON)
-- No translation
-- Remote reconciliation from KCP to SKR
-- Full control for experts
-
-**Pre-deployed presets:**
-- `owasp-basic`, `owasp-moderate`, `owasp-strict`, `owasp-detection`
-- Not provisioned until referenced
-- Protected from modification/deletion
-
----
-
-### WafConfiguration (Phase 2)
-
-**Base + overrides pattern:**
-- Start from preset or custom WafPolicy
-- Apply portable overrides on top
-- Controller generates new WafPolicy
-- Supports future extensions
-
-**Key features:**
-- `preset` or `basePolicyRef` - Starting point
-- `ruleOverrides` - Change specific rule actions (unconditional)
-- `customRules` - Add new rules with conditions (universal support)
-
----
-
-## Reading Guide
-
-### I want to...
-
-**...understand the API design**  
-→ Start with [api-specification.md](api-specification.md)
-
-**...understand why we chose this approach**  
-→ Read [design-rationale.md](design-rationale.md)
-
-**...see complete working examples**  
-→ Browse [implementation-examples.md](implementation-examples.md)
-
-**...understand provider differences**  
-→ Explore [research/](research/)
-
-**...validate a specific use case**  
-→ Check [use-cases/](use-cases/)
-
-**...implement Phase 1**  
-→ Follow checklist in [api-specification.md](api-specification.md#phase-1-implementation-checklist)
-
-**...plan Phase 2**  
-→ Review prerequisites in [api-specification.md](api-specification.md#phase-2-implementation-prerequisites)
-
----
-
-## Design Principles
-
-1. ✅ **Honest about provider differences** - WafPolicy is explicitly provider-specific
-2. ✅ **Value through curation** - Presets provide proven starting points
-3. ✅ **Clear escape hatches** - Can always use WafPolicy for full control
-4. ✅ **Phased delivery** - Ship fast (Phase 1), add value incrementally (Phase 2)
-5. ✅ **User feedback driven** - Phase 2 design informed by Phase 1 usage
-6. ✅ **Future-proof** - New fields add on top without breaking changes
-7. ✅ **Simple mental model** - "Base + my changes = result"
-
----
-
-## Status
-
-**Phase 1**: Ready to implement  
-**Phase 2**: Fully designed, validated, ready to implement after Phase 1 feedback
-
----
-
-## Related Documentation
-
-- Spike request: [../spike-request.md](../spike-request.md)
-- API principles: [../README.md](../README.md) (if exists)
-- AppLoadBalancer integration: See main Cloud Manager docs
-
----
-
-## Questions?
-
-- **API usage**: See [api-specification.md](api-specification.md)
-- **Provider differences**: See [research/](research/)
-- **Specific use case**: See [use-cases/](use-cases/)
-- **Implementation**: Follow checklists in api-specification.md
+**[research/](research/)** — Cross-provider analysis of boolean logic, label chaining, condition types, and managed rule structures.

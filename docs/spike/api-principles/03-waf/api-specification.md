@@ -163,8 +163,10 @@ spec:
 
 - **Base + overrides pattern**: Start from a WafPolicy (preset or custom), apply changes on top
 - **Always generates fresh WafPolicy**: WafConfiguration controller creates new WafPolicy with merged configuration
-- **Portable extensions**: Add `ruleOverrides`, `customRules`, and future fields in provider-neutral way
-- **Future-proof**: New fields (customRules, sizeLimits, geoBlocking) can be added without breaking existing configs
+- **`customRules` are genuinely portable**: path/header/IP-based custom rules translate cleanly across all three providers
+- **`ruleOverrides` are NOT portable**: they use provider-specific rule group names and rule IDs; GCP cannot override individual rules at all — any override degrades the entire ruleset to preview (count) mode, which is a fundamentally different behavior than what the user expressed
+
+> ⚠️ **Design concern**: `ruleOverrides` breaks the portability promise of `WafConfiguration`. The field uses provider-specific names (`managedRuleGroup`, `ruleId`) and behaves differently per provider. This raises the question of whether `ruleOverrides` belongs in `WafConfiguration` at all, or whether it should live in `WafPolicy` where provider-specificity is explicit. See [Design Concerns](#design-concerns) below.
 
 ### WafConfiguration API
 
@@ -181,14 +183,17 @@ spec:
   # --- Everything below overrides/extends the base ---
   
   # Optional: Override specific rules from base (unconditional)
+  # ⚠️ NOT PORTABLE: managedRuleGroup and ruleId are provider-specific.
+  # GCP does not support individual rule overrides — any entry here degrades
+  # the ENTIRE matching ruleset to preview mode on GCP, not the specific rule.
   ruleOverrides:
-    - managedRuleGroup: AWSManagedRulesCommonRuleSet  # AWS (Azure: Microsoft_DefaultRuleSet, GCP: owasp-crs-v030301-id)
-      ruleId: "SizeRestrictions_BODY"  # AWS rule name (Azure: "942100", GCP: not supported)
+    - managedRuleGroup: AWSManagedRulesCommonRuleSet  # AWS-specific (Azure: Microsoft_DefaultRuleSet, GCP: not supported at rule level)
+      ruleId: "SizeRestrictions_BODY"  # AWS rule name (Azure: "942100", GCP: no equivalent)
       action: count     # Change to detection mode
       reason: "Testing for false positives on file uploads"
     
     - managedRuleGroup: AWSManagedRulesCommonRuleSet  # AWS-specific managed rule group
-      ruleId: "GenericRFI_BODY"  # AWS rule name (Azure: "931130", GCP: not supported)
+      ruleId: "GenericRFI_BODY"  # AWS rule name (Azure: "931130", GCP: no equivalent)
       action: allow  # Disable specific rule
       reason: "Known false positive on API endpoints"
   
@@ -384,11 +389,10 @@ spec:
 ✅ **Base policy + customization** - Start from proven base, tweak as needed  
 ✅ **Base policy upgrades** - When base policy updates, regenerate includes updates  
 ✅ **No duplication** - Don't copy full policy, just specify changes  
-✅ **Future-proof** - New fields add on top without breaking existing configs  
 ✅ **Backward compatible** - Phase 1 WafPolicy references keep working  
-✅ **Flexible base** - Can use pre-deployed policy, custom policy, or start from scratch  
-✅ **Clear semantics** - "Base + my changes = result"  
-✅ **Universal custom rules** - customRules work perfectly on all providers  
+✅ **Universal custom rules** - `customRules` work perfectly on all providers  
+⚠️ **`ruleOverrides` portability is a lie** - Field names are provider-specific; GCP degrades behavior silently to entire-ruleset preview mode  
+⚠️ **`basePolicyRef` is provider-specific** - The base policy contains provider-specific JSON, so the "portable" layer is built on a provider-specific foundation
 
 ---
 
@@ -480,78 +484,49 @@ Phase 1 Users              Phase 2 Users
 
 ---
 
-## Phase 1 Implementation Checklist
-
-### Deliverables
-
-- [ ] **WafPolicy CRD** with `spec.data` field only
-- [ ] **Pre-deployed preset WafPolicy resources** (owasp-basic, owasp-moderate, owasp-strict, owasp-detection)
-- [ ] **Preset protection** (finalizers, validation webhooks)
-- [ ] **AppLoadBalancer.spec.policy** field supporting WafPolicy reference
-- [ ] **KCP reconcilers** for AWS/Azure/GCP (provision WafPolicy to cloud)
-- [ ] **Gated provisioning** (don't provision until referenced)
-- [ ] **Status tracking** (Ready condition, providerId)
-
-### Documentation
-
-- [ ] User guide: Using preset WafPolicy
-- [ ] User guide: Writing custom WafPolicy
-- [ ] Provider-specific JSON examples (AWS/Azure/GCP)
-- [ ] Preset upgrade guide (how to fork and customize)
-
----
-
-## Phase 2 Implementation Prerequisites
-
-Before adding WafConfiguration:
-
-- [ ] **Phase 1 deployed and validated** in production
-- [ ] **User feedback collected** on what customizations are needed
-- [ ] **Cross-provider analysis complete** for common override patterns
-- [ ] **Translation strategy validated** for at least 2 providers
-- [ ] **Override patterns documented** (ruleOverrides, customRules)
-
-### Phase 2 Deliverables
-
-- [ ] **WafConfiguration CRD** with preset/basePolicyRef and override fields
-- [ ] **WafConfiguration controller** (translation + WafPolicy generation)
-- [ ] **CEL validation** (preset XOR basePolicyRef, etc.)
-- [ ] **AppLoadBalancer update** to support WafConfiguration reference
-- [ ] **Migration guide** from Phase 1 to Phase 2
-
-### Phase 2 Documentation
-
-- [ ] User guide: Using preset with overrides
-- [ ] User guide: Portable override patterns
-- [ ] Translation reference (how overrides map to providers)
-- [ ] Migration examples (Phase 1 → Phase 2)
-
----
-
 ## Future Evolution (Phase 2.1+)
 
 WafConfiguration can grow with new portable fields:
 
-**Phase 2.1** (Ready to implement):
-- `ruleOverrides` - Unconditional changes to managed rules ✅ Validated
-- `customRules` - Add new rules with conditions ✅ Validated (universal support)
+**Phase 2.1** — what was planned:
+- `customRules` - Add new rules with conditions ✅ Genuinely portable (universal provider support)
+- `ruleOverrides` - Unconditional changes to managed rules ⚠️ **Not portable** — see Design Concerns below
 
-**Phase 2.2+**:
-- `sizeLimits` - Request size constraints
-- `geoBlocking` - Geographic restrictions (with Azure limitations)
-- `timeBasedRules` - Time-based activation
-- Advanced rate limiting with custom keys
+**Phase 2.2+** (all with provider gaps):
+- `sizeLimits` - Request size constraints (AWS/Azure native, GCP limited)
+- `geoBlocking` - Geographic restrictions (Azure does not support at WAF level)
+- `timeBasedRules` - Time-based activation (no universal support)
 
 **NOT PLANNED for portable API:**
-- ❌ `managedRuleGroups` - Providers have completely different offerings
+- ❌ `managedRuleGroups` - Providers have completely different offerings and naming schemes
   - AWS: `AWSManagedRulesCommonRuleSet`, `AWSManagedRulesSQLiRuleSet`
-  - Azure: `Microsoft_DefaultRuleSet` (includes multiple protections)
+  - Azure: `Microsoft_DefaultRuleSet` (bundles multiple protections)
   - GCP: `owasp-crs-v030301-id`, `sqli-v33-stable`
-  - Different names, different bundling, different versioning
   - **Solution**: Phase 1 WafPolicy presets already include provider-specific managed rules
-  - See [use-cases/00-specify-managed-rules.md](use-cases/00-specify-managed-rules.md) for details
 
-All added fields follow the same pattern: **Base + additions = Generated WafPolicy**
+---
+
+## Design Concerns
+
+### `ruleOverrides` does not belong in WafConfiguration
+
+The `ruleOverrides` field was included in `WafConfiguration` as a "portable" way to tune managed rules, but the analysis reveals it is not portable:
+
+1. **Provider-specific names**: `managedRuleGroup` and `ruleId` use provider-specific identifiers. The same rule does not exist under the same name on AWS, Azure, and GCP. A `WafConfiguration` that works on AWS silently means something different (or nothing) on Azure/GCP.
+
+2. **GCP cannot implement it**: GCP Cloud Armor has no per-rule override mechanism. Any `ruleOverrides` entry on GCP degrades the **entire** matched ruleset to `preview: true` (count mode) — a blunt, unintended side-effect that contradicts the user's expressed intent.
+
+3. **It is provider-specific by design**: The `WafPolicy` layer already exists for provider-specific configuration. `ruleOverrides` in `WafConfiguration` is a provider-specific feature with a portable-looking wrapper.
+
+**Options being considered:**
+
+| Option | Trade-off |
+|--------|-----------|
+| Remove `ruleOverrides` from `WafConfiguration` | Honest — keeps `WafConfiguration` to what is actually portable (`customRules`); users who need rule tuning drop to `WafPolicy` |
+| Keep `ruleOverrides` with explicit provider scope | `ruleOverrides` becomes `spec.aws.ruleOverrides` / `spec.azure.ruleOverrides` — but then `WafConfiguration` is just a multi-provider `WafPolicy` with extra steps |
+| Drop `WafConfiguration` entirely | If `customRules` is the only genuinely portable feature, a simpler `customRules` field directly on `AppLoadBalancer` or `WafPolicy` may suffice |
+
+**Current leaning**: `WafConfiguration` makes less and less sense as a portable abstraction. The only feature that justifies it is `customRules` (path/header/IP rules). Everything else either requires provider-specific names or has uneven provider support. The spike should inform whether a dedicated portable resource is worth the added complexity, or whether `customRules` on `WafPolicy` is sufficient.
 
 ---
 
