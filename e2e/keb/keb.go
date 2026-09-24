@@ -55,6 +55,8 @@ type Keb interface {
 	List(ctx context.Context, opts ...ListOption) ([]InstanceDetails, error)
 	DeleteInstance(ctx context.Context, opts ...DeleteOption) error
 
+	GetShoot(ctx context.Context, shootName string) (*gardenerapicore.Shoot, error)
+
 	GetInstanceKubeconfig(ctx context.Context, runtimeID string) ([]byte, time.Time, error)
 	CreateInstanceClient(ctx context.Context, runtimeID string) (client.Client, error)
 	RenewInstanceKubeconfig(ctx context.Context, runtimeID string) error
@@ -324,6 +326,18 @@ func (k *defaultKeb) GetInstance(ctx context.Context, runtimeID string) (*Instan
 		return nil, nil
 	}
 	return new(RuntimeToInstanceDetails(rt)), nil
+}
+
+func (k *defaultKeb) GetShoot(ctx context.Context, shootName string) (*gardenerapicore.Shoot, error) {
+	shoot := &gardenerapicore.Shoot{}
+	err := k.gardenClient.Get(ctx, client.ObjectKey{Namespace: k.config.GardenNamespace, Name: shootName}, shoot)
+	if client.IgnoreNotFound(err) != nil {
+		return nil, fmt.Errorf("error getting shoot %q: %w", shootName, err)
+	}
+	if err != nil {
+		return nil, nil
+	}
+	return shoot, nil
 }
 
 func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (InstanceDetails, error) {

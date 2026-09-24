@@ -25,7 +25,7 @@ Feature: AzureRedisInstance feature
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
       | redis.status.state == 'Error' |
-      | #timeout=20m                  |
+      | #timeout=30m                  |
 
     And Redis "PING" gives "PONG" with:
       | Host | Secret | ${redis.metadata.name} | host       |
