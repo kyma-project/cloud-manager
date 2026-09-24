@@ -20,10 +20,6 @@ WafConfiguration (portable intent)
     ↓ SKR controller translates
 WafPolicy (provider-specific JSON passthrough)
     ↓ remote reconciliation (KCP watches SKR resources)
-[KCP]
-KCP WafPolicy reconciler
-    ↓ calls cloud API
-Cloud WAF resources (AWS WAFv2 / Azure Front Door WAF / GCP Cloud Armor)
 ```
 
 Three specific features were validated across AWS, Azure, and GCP:
