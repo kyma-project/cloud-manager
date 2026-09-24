@@ -59,7 +59,15 @@ var cmdInstanceCreate = &cobra.Command{
 			}
 			err = e2ekeb.WaitCompleted(rootCtx, keb, opts...)
 			if err != nil {
-				return fmt.Errorf("error waiting provisioning completed: %w", err)
+				shoot, err2 := keb.GetShoot(rootCtx, id.ShootName)
+				if err2 != nil {
+					return fmt.Errorf("error waiting provisioning completed: %w\n\nerror getting shoot: %w", err, err2)
+				}
+				txt, err2 := yaml.Marshal(shoot)
+				if err2 != nil {
+					return fmt.Errorf("error waiting provisioning completed: %w\n\nerror marshalling shoot to yaml: %w", err, err2)
+				}
+				return fmt.Errorf("error waiting provisioning completed: %w\n\nshoot details:\n%s", err, string(txt))
 			}
 			fmt.Println("Instance is ready")
 		}
