@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/cloud-manager/api"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/config/crd"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
@@ -160,7 +159,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 
 		// remove finalizer
 
-		removed, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, kcpKyma, r.kcp)
+		removed, err := composed.PatchObjRemoveFinalizer(ctx, FinalizerE2E, kcpKyma, r.kcp)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error removing KCP Kyma finalizer: %w", err)
 		}
@@ -174,9 +173,9 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 	// create ======================================================================
 
 	// finalizer
-	if !controllerutil.ContainsFinalizer(kcpKyma, api.CommonFinalizerDeletionHook) {
+	if !controllerutil.ContainsFinalizer(kcpKyma, FinalizerE2E) {
 		logger.Info("Adding finalizer to KCP Kyma")
-		_, err = composed.PatchObjAddFinalizer(ctx, api.CommonFinalizerDeletionHook, kcpKyma, r.kcp)
+		_, err = composed.PatchObjAddFinalizer(ctx, FinalizerE2E, kcpKyma, r.kcp)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error adding KCP Kyma finalizer: %w", err)
 		}
@@ -194,9 +193,7 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 	if ns == nil {
 		ns = &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "kyma-system",
-			},
+			Name: "kyma-system",
 		}
 		logger.Info("Creating kyma-system namespace")
 		err = mi.mngr.GetClient().Create(ctx, ns)
@@ -277,13 +274,11 @@ func (r *simKymaKcp) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	if skrKyma == nil {
 		skrKyma = &operatorv1beta2.Kyma{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "kyma-system",
-				Name:      "default",
-				Labels:    kcpKyma.Labels,
-				Finalizers: []string{
-					api.CommonFinalizerDeletionHook,
-				},
+			Namespace: "kyma-system",
+			Name:      "default",
+			Labels:    kcpKyma.Labels,
+			Finalizers: []string{
+				FinalizerE2E,
 			},
 			Spec: operatorv1beta2.KymaSpec{
 				Channel: operatorv1beta2.DefaultChannel,

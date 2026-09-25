@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	alicloudmetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/metrics"
+	alicloudutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/util"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
 	vpcnetworktypes "github.com/kyma-project/cloud-manager/pkg/kcp/vpcnetwork/types"
 )
@@ -41,9 +42,14 @@ func (f *stateFactory) NewState(ctx context.Context, baseState vpcnetworktypes.S
 	logger = logger.WithValues("alicloudRegion", region)
 	ctx = composed.LoggerIntoCtx(ctx, logger)
 
-	ctx = alicloudmetrics.AccountIdIntoContext(ctx, alicloudmetrics.AccountIdFromSubscription(baseState.Subscription()))
+	accountId := alicloudmetrics.AccountIdFromSubscription(baseState.Subscription())
+	if accountId == "" {
+		return ctx, nil, fmt.Errorf("subscription %q for VpcNetwork is AliCloud but its subscription info has no account id",
+			baseState.Subscription().Name)
+	}
+	ctx = alicloudmetrics.AccountIdIntoContext(ctx, accountId)
 
-	c, err := f.clientProvider(ctx, region, accessKeyId, accessKeySecret)
+	c, err := f.clientProvider(ctx, region, accessKeyId, accessKeySecret, alicloudutil.RoleArnDefault(accountId))
 	if err != nil {
 		return ctx, nil, fmt.Errorf("error creating alicloud vpc client: %w", err)
 	}

@@ -301,13 +301,11 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 		olderSnap := &cloudresourcesv1beta1.SapNfsVolumeSnapshot{}
 		By("And Given an older pre-existing Ready snapshot", func() {
 			olderSnap = &cloudresourcesv1beta1.SapNfsVolumeSnapshot{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      olderSnapName,
-					Namespace: DefaultSkrNamespace,
-					Labels: map[string]string{
-						cloudresourcesv1beta1.LabelScheduleName:      scheduleName,
-						cloudresourcesv1beta1.LabelScheduleNamespace: DefaultSkrNamespace,
-					},
+				Name:      olderSnapName,
+				Namespace: DefaultSkrNamespace,
+				Labels: map[string]string{
+					cloudresourcesv1beta1.LabelScheduleName:      scheduleName,
+					cloudresourcesv1beta1.LabelScheduleNamespace: DefaultSkrNamespace,
 				},
 				Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotSpec{
 					SourceVolume: corev1.ObjectReference{
@@ -330,13 +328,11 @@ var _ = Describe("Feature: SKR SapNfsVolumeSnapshotSchedule", func() {
 		newerSnap := &cloudresourcesv1beta1.SapNfsVolumeSnapshot{}
 		By("And Given a newer pre-existing Ready snapshot", func() {
 			newerSnap = &cloudresourcesv1beta1.SapNfsVolumeSnapshot{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      newerSnapName,
-					Namespace: DefaultSkrNamespace,
-					Labels: map[string]string{
-						cloudresourcesv1beta1.LabelScheduleName:      scheduleName,
-						cloudresourcesv1beta1.LabelScheduleNamespace: DefaultSkrNamespace,
-					},
+				Name:      newerSnapName,
+				Namespace: DefaultSkrNamespace,
+				Labels: map[string]string{
+					cloudresourcesv1beta1.LabelScheduleName:      scheduleName,
+					cloudresourcesv1beta1.LabelScheduleNamespace: DefaultSkrNamespace,
 				},
 				Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotSpec{
 					SourceVolume: corev1.ObjectReference{

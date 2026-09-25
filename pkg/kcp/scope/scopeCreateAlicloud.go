@@ -2,6 +2,7 @@ package scope
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/elliotchance/pie/v2"
 	gardeneraliclouddapi "github.com/gardener/gardener-extension-provider-alicloud/pkg/apis/alicloud/v1alpha1"
@@ -15,8 +16,32 @@ import (
 func scopeCreateAlicloud(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
+	// Call STS with the shoot (runtime account) credentials to find the AliCloud
+	// account id, needed to build the assume-role ARN acs:ram::<accountId>:role/CloudManagerRole.
+	stsClient, err := state.alicloudStsClientProvider(
+		ctx,
+		state.shoot.Spec.Region,
+		state.credentialData["accessKeyID"],
+		state.credentialData["accessKeySecret"],
+	)
+	if err != nil {
+		return composed.LogErrorAndReturn(
+			fmt.Errorf("error creating alicloud sts client: %w", err),
+			"Error creating AliCloud scope",
+			composed.StopWithRequeue,
+			ctx)
+	}
+	accountId, err := stsClient.GetCallerIdentity(ctx)
+	if err != nil {
+		return composed.LogErrorAndReturn(
+			fmt.Errorf("error getting caller identity: %w", err),
+			"Error creating AliCloud scope",
+			composed.StopWithRequeue,
+			ctx)
+	}
+
 	infra := &gardeneraliclouddapi.InfrastructureConfig{}
-	err := json.Unmarshal(state.shoot.Spec.Provider.InfrastructureConfig.Raw, infra)
+	err = json.Unmarshal(state.shoot.Spec.Provider.InfrastructureConfig.Raw, infra)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error unmarshalling AliCloud InfrastructureConfig", composed.StopAndForget, ctx)
 	}
@@ -25,7 +50,7 @@ func scopeCreateAlicloud(ctx context.Context, st composed.State) (error, context
 		Spec: cloudcontrolv1beta1.ScopeSpec{
 			Scope: cloudcontrolv1beta1.ScopeInfo{
 				Alicloud: &cloudcontrolv1beta1.AlicloudScope{
-					AccountId:  state.credentialData["accessKeyID"],
+					AccountId:  accountId,
 					VpcNetwork: common.GardenerVpcName(state.shootNamespace, state.shootName),
 					Network: cloudcontrolv1beta1.AlicloudNetwork{
 						Nodes:    ptr.Deref(state.shoot.Spec.Networking.Nodes, ""),

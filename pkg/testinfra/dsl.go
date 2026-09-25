@@ -80,10 +80,8 @@ func (dsl *infraDSL) GivenSkrIpRangeExists(ctx context.Context, ns, name, cidr s
 
 func (dsl *infraDSL) createSkrIpRangeExists(ctx context.Context, ns, name, cidr string) (*cloudresourcesv1beta1.IpRange, error) {
 	skrIpRange := &cloudresourcesv1beta1.IpRange{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: ns,
-			Name:      name,
-		},
+		Namespace: ns,
+		Name:      name,
 		Spec: cloudresourcesv1beta1.IpRangeSpec{
 			Cidr: cidr,
 		},
@@ -101,10 +99,8 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 	// Gardener-credentials secret
 	{
 		secret := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: dsl.i.KCP().Namespace(),
-				Name:      "gardener-credentials",
-			},
+			Namespace: dsl.i.KCP().Namespace(),
+			Name:      "gardener-credentials",
 		}
 		err := dsl.i.KCP().Client().Get(dsl.i.Ctx(), client.ObjectKeyFromObject(secret), secret)
 		if client.IgnoreNotFound(err) != nil {
@@ -129,10 +125,8 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 	// Shoot
 	{
 		shoot := &gardenertypes.Shoot{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: dsl.i.Garden().Namespace(),
-				Name:      name,
-			},
+			Namespace: dsl.i.Garden().Namespace(),
+			Name:      name,
 			Spec: gardenertypes.ShootSpec{
 				Region: "us-west1",
 				Provider: gardenertypes.Provider{
@@ -154,10 +148,8 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 		// SA1019 keep using SecretBinding until migrated to CredentialsBinding
 		// nolint:staticcheck
 		secretBinding := &gardenertypes.SecretBinding{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: dsl.i.Garden().Namespace(),
-				Name:      name,
-			},
+			Namespace: dsl.i.Garden().Namespace(),
+			Name:      name,
 			// SA1019 keep using SecretBinding until migrated to CredentialsBinding
 			// nolint:staticcheck
 			Provider: &gardenertypes.SecretBindingProvider{
@@ -177,10 +169,8 @@ func (dsl *infraDSL) GivenGardenShootGcpExists(name string) error {
 	// Secret
 	{
 		secret := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: dsl.i.Garden().Namespace(),
-				Name:      name,
-			},
+			Namespace: dsl.i.Garden().Namespace(),
+			Name:      name,
 			StringData: map[string]string{
 				"serviceaccount.json": "{}",
 			},
@@ -206,10 +196,8 @@ func (dsl *infraDSL) GivenScopeGcpExistsWithProject(name, project string) error 
 
 func (dsl *infraDSL) givenScopeGcpExistsWithProject(name, project string) error {
 	desired := &cloudcontrolv1beta1.Scope{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: dsl.i.KCP().Namespace(),
-			Name:      name,
-		},
+		Namespace: dsl.i.KCP().Namespace(),
+		Name:      name,
 		Spec: cloudcontrolv1beta1.ScopeSpec{
 			KymaName:  name,
 			ShootName: name,
@@ -260,10 +248,8 @@ type clusterDSL struct {
 
 func (dsl *clusterDSL) GivenSecretExists(name string, data map[string][]byte) error {
 	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: dsl.ci.Namespace(),
-			Name:      name,
-		},
+		Namespace: dsl.ci.Namespace(),
+		Name:      name,
 	}
 	err := dsl.ci.Client().Get(dsl.ctx(), client.ObjectKeyFromObject(secret), secret)
 	if client.IgnoreNotFound(err) != nil {
@@ -281,9 +267,7 @@ func (dsl *clusterDSL) GivenSecretExists(name string, data map[string][]byte) er
 
 func (dsl *clusterDSL) GivenNamespaceExists(name string) error {
 	ns := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
+		Name: name,
 	}
 	err := dsl.ci.Client().Get(dsl.ctx(), client.ObjectKeyFromObject(ns), ns)
 	if err == nil {

@@ -471,9 +471,7 @@ func (s *mainStore) DeleteSubnet(ctx context.Context, subnetId string) error {
 
 	if foundInNetworkId == "" {
 		return &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("subnet %q not found", subnetId),
-			},
+			Info:     fmt.Sprintf("subnet %q not found", subnetId),
 			Expected: []int{http.StatusOK},
 			Actual:   http.StatusNotFound,
 		}
@@ -1319,9 +1317,7 @@ func (s *mainStore) shareChangeSize(ctx context.Context, shareId string, newSize
 	}
 	if theShare == nil {
 		return &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("share %q does not exist", shareId),
-			},
+			Info:   fmt.Sprintf("share %q does not exist", shareId),
 			Actual: http.StatusNotFound,
 		}
 	}
@@ -1380,9 +1376,7 @@ func (s *mainStore) GrantShareAccess(ctx context.Context, shareId string, cidr s
 	}
 	if !exists {
 		return nil, &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("share %q does not exist", shareId),
-			},
+			Info:   fmt.Sprintf("share %q does not exist", shareId),
 			Actual: http.StatusNotFound,
 		}
 	}
@@ -1419,9 +1413,7 @@ func (s *mainStore) RevokeShareAccess(ctx context.Context, shareId, accessId str
 	}
 	if !exists {
 		return &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("share %q does not exist", shareId),
-			},
+			Info:   fmt.Sprintf("share %q does not exist", shareId),
 			Actual: http.StatusNotFound,
 		}
 	}
@@ -1553,17 +1545,13 @@ func (s *mainStore) RevertShareToSnapshot(ctx context.Context, shareId string, s
 	}
 	if theSnapshot == nil {
 		return &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("snapshot %q does not exist", snapshotId),
-			},
+			Info:   fmt.Sprintf("snapshot %q does not exist", snapshotId),
 			Actual: http.StatusNotFound,
 		}
 	}
 	if theSnapshot.ShareID != shareId {
 		return &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("snapshot %q does not belong to share %q", snapshotId, shareId),
-			},
+			Info:   fmt.Sprintf("snapshot %q does not belong to share %q", snapshotId, shareId),
 			Actual: http.StatusBadRequest,
 		}
 	}
@@ -1579,9 +1567,7 @@ func (s *mainStore) RevertShareToSnapshot(ctx context.Context, shareId string, s
 	}
 
 	return &gophercloud.ErrUnexpectedResponseCode{
-		BaseError: gophercloud.BaseError{
-			Info: fmt.Sprintf("share %q does not exist", shareId),
-		},
+		Info:   fmt.Sprintf("share %q does not exist", shareId),
 		Actual: http.StatusNotFound,
 	}
 }

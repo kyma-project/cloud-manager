@@ -10,7 +10,7 @@ This pattern describes the *structural mechanism* for housing provider-specific 
 
 ### Crossplane Provider — forProvider typed sub-struct
 **Repo:** [crossplane-contrib/provider-aws](https://github.com/crossplane-contrib/provider-aws)
-**Key file:** [`apis/cache/v1beta1/replicationgroup_types.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/cache/v1beta1/replicationgroup_types.go)
+**Key file:** [`apis/cache/v1beta1/replicationgroup_types.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/cache/v1beta1/replication_group_types.go)
 
 Each Crossplane provider's Managed Resource has a `spec.forProvider` sub-struct that is typed to the provider's API. The sub-struct has full CRD schema validation — not a `map[string]interface{}`. The controller reads exactly these fields and calls the provider API.
 
@@ -35,7 +35,7 @@ spec:
 
 ### Cluster API — Infrastructure Provider Contract
 **Repo:** [kubernetes-sigs/cluster-api](https://github.com/kubernetes-sigs/cluster-api)
-**Key file:** [`api/v1beta1/cluster_types.go`](https://github.com/kubernetes-sigs/cluster-api/blob/main/api/v1beta1/cluster_types.go)
+**Key file:** [`api/v1beta1/cluster_types.go`](https://github.com/kubernetes-sigs/cluster-api/blob/main/api/core/v1beta1/cluster_types.go)
 
 The provider object (`AWSCluster`, `GCPCluster`) is a fully typed CRD — not a `map[string]interface{}`. The base `Cluster` references it by type name. The contract between base and provider is enforced through a defined set of status fields the provider must populate.
 

@@ -8,6 +8,7 @@ import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	"github.com/alibabacloud-go/tea/tea"
 	vpc "github.com/alibabacloud-go/vpc-20160428/v6/client"
+	alicloudclientconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	alicloudmetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/metrics"
 )
 
@@ -45,14 +46,15 @@ type VpcAttributeInfo struct {
 	SecondaryCidrBlocks []string
 }
 
-type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error)
+type ClientProvider func(ctx context.Context, region, accessKeyId, accessKeySecret, assumeRoleArn string) (Client, error)
 
 func NewClientProvider() ClientProvider {
-	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (Client, error) {
+	return func(ctx context.Context, region, accessKeyId, accessKeySecret, assumeRoleArn string) (Client, error) {
 		config := &openapi.Config{
-			AccessKeyId:     new(accessKeyId),
-			AccessKeySecret: new(accessKeySecret),
-			RegionId:        new(region),
+			RegionId: new(region),
+		}
+		if err := alicloudclientconfig.ApplyCredentials(config, accessKeyId, accessKeySecret, assumeRoleArn); err != nil {
+			return nil, err
 		}
 		config.Endpoint = new(fmt.Sprintf("vpc.%s.aliyuncs.com", region))
 		config.HttpClient = alicloudmetrics.NewMetricsHTTPClient(region, alicloudmetrics.AccountIdFromContext(ctx))

@@ -8,7 +8,7 @@ This is the foundational pattern for Cloud Manager CRD API design. It appears ac
 
 ### Cluster API (CAPI)
 **Repo:** [kubernetes-sigs/cluster-api](https://github.com/kubernetes-sigs/cluster-api)
-**Key file:** [`api/v1beta1/cluster_types.go`](https://github.com/kubernetes-sigs/cluster-api/blob/main/api/v1beta1/cluster_types.go)
+**Key file:** [`api/v1beta1/cluster_types.go`](https://github.com/kubernetes-sigs/cluster-api/blob/main/api/core/v1beta1/cluster_types.go)
 
 Base `Cluster` holds provider-agnostic fields. Provider-specific resources (`AWSCluster`, `GCPCluster`, `AzureCluster`) live in separate repos and are referenced via `spec.infrastructureRef`.
 

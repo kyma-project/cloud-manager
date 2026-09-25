@@ -11,7 +11,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func pvCreate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -39,18 +38,16 @@ func pvCreate(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	pv := &corev1.PersistentVolume{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: state.ObjAsSapNfsVolume().GetPVName(),
-			Labels: util.NewLabelBuilder().
-				WithCustomLabels(state.ObjAsSapNfsVolume().GetPVLabels()).
-				WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolName, state.ObjAsSapNfsVolume().Name).
-				WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolNS, state.ObjAsSapNfsVolume().Namespace).
-				WithCloudManagerDefaults().
-				Build(),
-			Annotations: state.ObjAsSapNfsVolume().GetPVAnnotations(),
-			Finalizers: []string{
-				api.CommonFinalizerDeletionHook,
-			},
+		Name: state.ObjAsSapNfsVolume().GetPVName(),
+		Labels: util.NewLabelBuilder().
+			WithCustomLabels(state.ObjAsSapNfsVolume().GetPVLabels()).
+			WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolName, state.ObjAsSapNfsVolume().Name).
+			WithCustomLabel(cloudresourcesv1beta1.LabelNfsVolNS, state.ObjAsSapNfsVolume().Namespace).
+			WithCloudManagerDefaults().
+			Build(),
+		Annotations: state.ObjAsSapNfsVolume().GetPVAnnotations(),
+		Finalizers: []string{
+			api.CommonFinalizerDeletionHook,
 		},
 		Spec: corev1.PersistentVolumeSpec{
 			Capacity: corev1.ResourceList{

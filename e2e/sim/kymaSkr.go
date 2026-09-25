@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -229,7 +228,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		// CloudResources does not exist
 
 		logger.Info("Removing SKR Kyma finalizer")
-		_, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, skrKyma, r.skr)
+		_, err := composed.PatchObjRemoveFinalizer(ctx, FinalizerE2E, skrKyma, r.skr)
 		if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
 			return reconcile.Result{}, fmt.Errorf("error removing SKR Kyma finalizer: %w", err)
 		}
@@ -301,10 +300,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		if cm == nil {
 			logger.Info("Creating default CloudResources")
 			cm = &cloudresourcesv1beta1.CloudResources{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "kyma-system",
-					Name:      "default",
-				},
+				Namespace: "kyma-system",
+				Name:      "default",
 			}
 			err = r.skr.Create(ctx, cm)
 			if client.IgnoreAlreadyExists(err) != nil {
@@ -399,7 +396,7 @@ func (r *simKymaSkr) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(
 			&cloudresourcesv1beta1.CloudResources{},
 			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
-				return []reconcile.Request{{NamespacedName: types.NamespacedName{Namespace: "kyma-system", Name: "default"}}}
+				return []reconcile.Request{{Namespace: "kyma-system", Name: "default"}}
 			}),
 		).
 		Complete(r)

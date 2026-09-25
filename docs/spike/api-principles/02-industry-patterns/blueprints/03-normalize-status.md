@@ -10,7 +10,7 @@ This is distinct from Pattern 1 (base+extensions structure) — it applies speci
 
 ### Crossplane Provider AWS — engineVersion normalization
 **Repo:** [crossplane-contrib/provider-aws](https://github.com/crossplane-contrib/provider-aws)
-**Key file:** [`apis/cache/v1beta1/replicationgroup_types.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/cache/v1beta1/replicationgroup_types.go)
+**Key file:** [`apis/cache/v1beta1/replicationgroup_types.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/cache/v1beta1/replication_group_types.go)
 
 In Crossplane, a Composition maps a neutral Claim field to a provider Managed Resource. The *mapping* — including value transformation — lives in the Composition, not in the CRD field name. The user writing `engineVersion: "7.0"` always writes the same field name regardless of whether the underlying provider calls it `engineVersion`, `redisVersion`, or `REDIS_7_0`.
 
