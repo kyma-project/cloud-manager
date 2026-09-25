@@ -2,6 +2,7 @@
 
 > https://github.tools.sap/kyma/backlog/issues/10259 with [local copy](./spike-request.md)
 
+ 
 # 1) Current model
 
 Detailed analysis of the current CloudManager CRDs with possible separation into portable intent and provider specific resources can be found [here](./01-current-model/overview.md). The remodeling is forcefully fitted to accommodate the request, but the validity is questionable since union of the portable intent resource with provider specific resource produces the originally remodeled shape. The change is cosmetic illusion of portability introducing more CRDs. Not even the benefit of Kyma provided reasonable defaults is possible since provider specific fields carry instance specific fields like unique name or capacity.
@@ -63,3 +64,9 @@ Redis provider-specific resources is the right choice.
 # 3) WAF test case
 
 - [WAF test case](./03-waf/README.md)
+
+---
+
+# 4) Principles
+
+- [CloudManager API Principles(./04-api-principles/README.md)
