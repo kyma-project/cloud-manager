@@ -67,6 +67,7 @@ Similarly to CloudManager - Unifying API access across different cloud providers
 
 # 3) WAF test case
 
+- [WAF API Porposal](../../draft/waf/README.md)
 - [WAF test case](./03-waf/README.md)
 
 ---
