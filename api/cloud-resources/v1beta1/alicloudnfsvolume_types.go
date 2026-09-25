@@ -141,15 +141,11 @@ func (in *AlicloudNfsVolume) SetState(v string) {
 
 func (in *AlicloudNfsVolume) CloneForPatchStatus() client.Object {
 	return &AlicloudNfsVolume{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "AlicloudNfsVolume",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "AlicloudNfsVolume",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 }
 

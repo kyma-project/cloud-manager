@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -54,8 +53,8 @@ func newOverlapCheckState(t *testing.T, statusCidr, vpcCidr string, secondaryCid
 	}
 
 	ipRange := &cloudcontrolv1beta1.IpRange{
-		ObjectMeta: metav1.ObjectMeta{Name: "test-iprange", Namespace: "kcp-system"},
-		Status:     cloudcontrolv1beta1.IpRangeStatus{Cidr: statusCidr},
+		Name: "test-iprange", Namespace: "kcp-system",
+		Status: cloudcontrolv1beta1.IpRangeStatus{Cidr: statusCidr},
 	}
 
 	fakeClient := fake.NewClientBuilder().

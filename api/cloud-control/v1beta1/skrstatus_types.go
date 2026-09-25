@@ -70,12 +70,10 @@ type SkrStatus struct {
 
 func (in *SkrStatus) CloneForPatch() *SkrStatus {
 	result := &SkrStatus{
-		TypeMeta: in.TypeMeta,
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Spec: in.Spec,
+		TypeMeta:  in.TypeMeta,
+		Namespace: in.Namespace,
+		Name:      in.Name,
+		Spec:      in.Spec,
 	}
 	if len(in.Labels) > 0 {
 		result.Labels = in.Labels

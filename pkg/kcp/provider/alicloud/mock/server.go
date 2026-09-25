@@ -11,6 +11,9 @@ import (
 	alicloudredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/rediscluster/client"
 	alicloudredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 )
 
 var _ Server = (*server)(nil)
@@ -68,7 +71,7 @@ func (s *server) deleteAccount(accountId string) {
 }
 
 func (s *server) IpRangeClientProvider() alicloudiprangeclient.ClientProvider {
-	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (alicloudiprangeclient.Client, error) {
+	return func(ctx context.Context, region, accessKeyId, accessKeySecret, _ string) (alicloudiprangeclient.Client, error) {
 		// In tests the state factory passes credentials from AlicloudConfig which are empty.
 		// Fall back to the first registered account so mock tests work without real credentials.
 		a, err := s.Login(accessKeyId, accessKeySecret)
@@ -83,7 +86,7 @@ func (s *server) IpRangeClientProvider() alicloudiprangeclient.ClientProvider {
 }
 
 func (s *server) VpcNetworkClientProvider() alicloudvpcnetworkclient.ClientProvider {
-	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (alicloudvpcnetworkclient.Client, error) {
+	return func(ctx context.Context, region, accessKeyId, accessKeySecret, _ string) (alicloudvpcnetworkclient.Client, error) {
 		a, err := s.Login(accessKeyId, accessKeySecret)
 		if err != nil {
 			a = s.firstAccount()
@@ -96,7 +99,7 @@ func (s *server) VpcNetworkClientProvider() alicloudvpcnetworkclient.ClientProvi
 }
 
 func (s *server) NfsInstanceClientProvider() alicloudnfsinstanceclient.ClientProvider {
-	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (alicloudnfsinstanceclient.Client, error) {
+	return func(ctx context.Context, region, accessKeyId, accessKeySecret, _ string) (alicloudnfsinstanceclient.Client, error) {
 		a, err := s.Login(accessKeyId, accessKeySecret)
 		if err != nil {
 			a = s.firstAccount()
@@ -109,7 +112,7 @@ func (s *server) NfsInstanceClientProvider() alicloudnfsinstanceclient.ClientPro
 }
 
 func (s *server) RedisInstanceClientProvider() alicloudredisinstanceclient.ClientProvider {
-	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (alicloudredisinstanceclient.Client, error) {
+	return func(ctx context.Context, region, accessKeyId, accessKeySecret, _ string) (alicloudredisinstanceclient.Client, error) {
 		a, err := s.Login(accessKeyId, accessKeySecret)
 		if err != nil {
 			a = s.firstAccount()
@@ -122,7 +125,7 @@ func (s *server) RedisInstanceClientProvider() alicloudredisinstanceclient.Clien
 }
 
 func (s *server) RedisClusterClientProvider() alicloudredisclusterclient.ClientProvider {
-	return func(ctx context.Context, region, accessKeyId, accessKeySecret string) (alicloudredisclusterclient.Client, error) {
+	return func(ctx context.Context, region, accessKeyId, accessKeySecret, _ string) (alicloudredisclusterclient.Client, error) {
 		a, err := s.Login(accessKeyId, accessKeySecret)
 		if err != nil {
 			a = s.firstAccount()
@@ -141,4 +144,38 @@ func (s *server) firstAccount() Account {
 		return a
 	}
 	return nil
+}
+
+func (s *server) ScopeGardenProvider() awsclient.GardenClientProvider[scopeclient.AlicloudStsClient] {
+	return func(ctx context.Context, region, key, secret string) (scopeclient.AlicloudStsClient, error) {
+		a, err := s.Login(key, secret)
+		if err != nil {
+			a = s.firstAccount()
+		}
+		if a == nil {
+			return nil, ErrInvalidCredentials
+		}
+		return &mockStsClient{accountId: a.AccountId()}, nil
+	}
+}
+
+func (s *server) SubscriptionGardenProvider() awsclient.GardenClientProvider[subscriptionclient.AlicloudStsClient] {
+	return func(ctx context.Context, region, key, secret string) (subscriptionclient.AlicloudStsClient, error) {
+		a, err := s.Login(key, secret)
+		if err != nil {
+			a = s.firstAccount()
+		}
+		if a == nil {
+			return nil, ErrInvalidCredentials
+		}
+		return &mockStsClient{accountId: a.AccountId()}, nil
+	}
+}
+
+type mockStsClient struct {
+	accountId string
+}
+
+func (c *mockStsClient) GetCallerIdentity(ctx context.Context) (string, error) {
+	return c.accountId, nil
 }

@@ -98,6 +98,7 @@ var _ = BeforeSuite(func() {
 		infra.Ctx(),
 		infra.KcpManager(),
 		infra.AwsMock().ScopeGardenProvider(),
+		infra.AlicloudMock().ScopeGardenProvider(),
 		infra.ActiveSkrCollection(),
 		infra.GcpMock().ServiceUsageClientProvider(),
 		infra.AwsMock().ExposedDataProvider(),
@@ -208,6 +209,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupSubscriptionReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().SubscriptionGardenProvider(),
+		infra.AlicloudMock().SubscriptionGardenProvider(),
 	)).To(Succeed())
 	// Runtime
 	Expect(SetupRuntimeReconciler(

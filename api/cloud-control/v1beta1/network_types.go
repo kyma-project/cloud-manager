@@ -204,15 +204,11 @@ func (in *Network) GetObjectMeta() *metav1.ObjectMeta {
 
 func (in *Network) CloneForPatchStatus() client.Object {
 	return &Network{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Network",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "Network",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 }
 

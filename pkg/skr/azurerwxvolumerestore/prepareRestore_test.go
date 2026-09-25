@@ -12,7 +12,6 @@ import (
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -26,10 +25,8 @@ func TestSetStartTime(t *testing.T) {
 		var k8sClient client.WithWatch
 
 		scope := &cloudcontrolv1beta1.Scope{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-scope",
-				Namespace: "test-ns",
-			},
+			Name:      "test-scope",
+			Namespace: "test-ns",
 			Spec: cloudcontrolv1beta1.ScopeSpec{
 				Scope: cloudcontrolv1beta1.ScopeInfo{
 					Azure: &cloudcontrolv1beta1.AzureScope{
@@ -54,10 +51,8 @@ func TestSetStartTime(t *testing.T) {
 
 		setupTest := func(withObj bool) {
 			azureRwxVolumeRestore = &cloudresourcesv1beta1.AzureRwxVolumeRestore{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-azure-restore",
-					Namespace: "test-ns-2",
-				},
+				Name:      "test-azure-restore",
+				Namespace: "test-ns-2",
 				Spec: cloudresourcesv1beta1.AzureRwxVolumeRestoreSpec{
 
 					Destination: cloudresourcesv1beta1.PvcSource{

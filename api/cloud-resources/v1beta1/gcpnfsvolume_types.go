@@ -238,14 +238,10 @@ const (
 
 func (in *GcpNfsVolume) CloneForPatchStatus() client.Object {
 	return &GcpNfsVolume{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "GcpNfsVolume",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "GcpNfsVolume",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 }

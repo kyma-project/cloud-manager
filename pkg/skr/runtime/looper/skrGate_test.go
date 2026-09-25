@@ -79,19 +79,19 @@ func TestSkrGateAtomicity(t *testing.T) {
 	g := NewSkrGate()
 
 	const n = 64
-	var wins int64
+	var wins atomic.Int64
 	var wg sync.WaitGroup
 	wg.Add(n)
 	for range n {
 		go func() {
 			defer wg.Done()
 			if g.TryClaim("k") {
-				atomic.AddInt64(&wins, 1)
+				wins.Add(1)
 			}
 		}()
 	}
 	wg.Wait()
-	assert.Equal(t, int64(1), atomic.LoadInt64(&wins), "exactly one goroutine must win the claim")
+	assert.Equal(t, int64(1), wins.Load(), "exactly one goroutine must win the claim")
 	assert.True(t, g.heldForTest("k"))
 
 	// A second attempt while held fails.
@@ -119,9 +119,9 @@ func TestWorkerGateConflict(t *testing.T) {
 	col := newTestCollection(fakeClock)
 
 	release := make(chan struct{})
-	var calls int64
+	var calls atomic.Int64
 	handle := func(_ int, kymaName string) {
-		atomic.AddInt64(&calls, 1)
+		calls.Add(1)
 		<-release // hold the claim until the test lets go
 	}
 	l := newTestLooper(col, handle)
@@ -148,7 +148,7 @@ func TestWorkerGateConflict(t *testing.T) {
 		t.Fatal("processOne did not return on the conflict path")
 	}
 
-	assert.Equal(t, int64(0), atomic.LoadInt64(&calls), "handle must NOT be called on the conflict path")
+	assert.Equal(t, int64(0), calls.Load(), "handle must NOT be called on the conflict path")
 	after := counterValue(t, metrics.SkrLooperGateConflictTotal.WithLabelValues("cyclic"))
 	assert.Equal(t, before+1, after, "conflict counter must increment")
 
@@ -162,7 +162,7 @@ func TestWorkerGateConflict(t *testing.T) {
 	go func() {
 		l.processOne(0, col.cyclicQueue, "cyclic", func(string) {}, col.cyclicQueue.Add)
 	}()
-	assert.Eventually(t, func() bool { return atomic.LoadInt64(&calls) == 1 }, 2*time.Second, 10*time.Millisecond)
+	assert.Eventually(t, func() bool { return calls.Load() == 1 }, 2*time.Second, 10*time.Millisecond)
 
 	close(release)
 	col.cyclicQueue.ShutDown()
@@ -223,8 +223,8 @@ func TestWorkerMembershipGuard(t *testing.T) {
 	fakeClock := clocktesting.NewFakeClock(time.Now())
 	col := newTestCollection(fakeClock)
 
-	var calls int64
-	l := newTestLooper(col, func(_ int, _ string) { atomic.AddInt64(&calls, 1) })
+	var calls atomic.Int64
+	l := newTestLooper(col, func(_ int, _ string) { calls.Add(1) })
 
 	// Deliver "k" but it is NOT a member (never activated).
 	col.cyclicQueue.wq.Add("k") // bypass membership recording to simulate a truly stale item
@@ -236,7 +236,7 @@ func TestWorkerMembershipGuard(t *testing.T) {
 		t.Fatal("onConflict must not run for a dropped item")
 	})
 	assert.False(t, shuttingDown)
-	assert.Equal(t, int64(0), atomic.LoadInt64(&calls), "handle must not be called for a non-member")
+	assert.Equal(t, int64(0), calls.Load(), "handle must not be called for a non-member")
 	assert.False(t, col.Gate().heldForTest("k"), "no claim must be taken for a non-member")
 
 	col.cyclicQueue.ShutDown()
