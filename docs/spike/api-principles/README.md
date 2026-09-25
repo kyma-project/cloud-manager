@@ -53,10 +53,13 @@ Redis provider-specific resources is the right choice.
 
 # 2) Industry patterns
 
-- [overview](./02-industry-patterns/blueprints/overview.md)
-- [Pattern 1: Common base + provider-specific extensions](./02-industry-patterns/blueprints/01-base-with-extensions.md)
-- [Pattern 2: Neutral intent resource](./02-industry-patterns/blueprints/02-neutral-intent-resource.md)
-- [Pattern 3: Consistent field naming for shared concepts](./02-industry-patterns/blueprints/03-normalize-status.md)
-- [Pattern 4: Provider-specific resource](./02-industry-patterns/blueprints/04-provider-specific-resource.md)
-- [Pattern 5: Typed provider sub-struct](./02-industry-patterns/blueprints/05-typed-provider-sub-struct.md)
-- [Pattern 6: Portable container + unstructured payload](./02-industry-patterns/blueprints/06-unstructured-payload.md)
+- [Established infrastructure provisioning tools](./02-industry-patterns/infrastructure.md)
+- [General API blueprints](./02-industry-patterns/blueprints/)
+- [Progressive API design](./02-industry-patterns/progressive-api-design.md)
+
+
+---
+
+# 3) WAF test case
+
+- [WAF test case](./03-waf-test-case/overview.md)
