@@ -58,6 +58,10 @@ Redis provider-specific resources is the right choice.
 - [General API blueprints](./02-industry-patterns/blueprints/README.md)
 - [Progressive API design](./02-industry-patterns/progressive-api-design/README.md)
 
+## CloudOrchestrator Highlight
+
+Similarly to CloudManager - Unifying API access across different cloud providers is not the focus of CloudOrchestrator. They learned that this is not the main concern of many their stakeholders. Either, you have no config options or you have all config options, first is unusable, second is unmanageable. Experiments where done, without much success (from checking with consumers). They are focused on basic building blocks and leave abstractions on top to be built by their customers.
+
 
 ---
 
