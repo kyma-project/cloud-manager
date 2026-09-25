@@ -375,7 +375,7 @@ The [Kyma Cloud Manager spike branch](https://github.com/kyma-project/cloud-mana
 - Crossplane v2.4.0: [docs.crossplane.io/latest/whats-new](https://docs.crossplane.io/latest/whats-new/)
 - Crossplane 2.0 announcement: [blog.crossplane.io/announcing-crossplane-2-0](https://blog.crossplane.io/announcing-crossplane-2-0/)
 - kro overview: [kro.run](https://kro.run)
-- kro + ACK EKS example: [kro.run/examples/ack-eks-cluster](https://kro.run/examples/ack-eks-cluster/)
+- kro + ACK EKS example: [kro.run/examples/ack-eks-cluster](https://github.com/kubernetes-sigs/kro/tree/main/examples/aws/ack-eks-cluster)
 - kro + ACK AWS blog (Jan 2026): [aws.amazon.com/blogs/containers/simplify-kubernetes-cluster-management-using-ack-kro-and-amazon-eks](https://aws.amazon.com/blogs/containers/simplify-kubernetes-cluster-management-using-ack-kro-and-amazon-eks/)
 - Kratix Promise reference: [docs.kratix.io/main/reference/promises/intro](https://docs.kratix.io/main/reference/promises/intro)
 - Kratix Workflows: [docs.kratix.io/main/reference/workflows](https://docs.kratix.io/main/reference/workflows)

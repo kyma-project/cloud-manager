@@ -245,7 +245,7 @@ The principle: what is the minimum the user must say to get a working resource? 
 ### Where this came from
 
 **Crossplane Managed Resources** (`spec.forProvider`) are the clearest production example of typed provider sub-structs.
-[`crossplane-contrib/provider-aws — apis/cache/v1beta1/replicationgroup_types.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/cache/v1beta1/replicationgroup_types.go)
+[`crossplane-contrib/provider-aws — apis/cache/v1beta1/replicationgroup_types.go`](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/cache/v1beta1/replication_group_types.go)
 
 ```go
 // Crossplane provider-aws: typed sub-struct, not map[string]interface{}
@@ -295,7 +295,7 @@ We use the typed struct for Layer 3 fields where the schema is stable (VpcPeerin
 ### Where this came from
 
 **Cluster API's status contract** is the canonical Kubernetes example.
-[`kubernetes-sigs/cluster-api — api/v1beta1/cluster_types.go`](https://github.com/kubernetes-sigs/cluster-api/blob/main/api/v1beta1/cluster_types.go)
+[`kubernetes-sigs/cluster-api — api/v1beta1/cluster_types.go`](https://github.com/kubernetes-sigs/cluster-api/blob/main/api/core/v1beta1/cluster_types.go)
 
 CAPI requires every infrastructure provider (`AWSCluster`, `GCPCluster`, etc.) to populate a defined set of status fields — specifically `status.ready` and `status.failureDomains`. The base `Cluster` controller only proceeds when `infrastructureRef.status.ready = true`. This is a formal contract between the base and its providers.
 
@@ -405,8 +405,8 @@ Each design decision traces to a specific source. Here is the complete lineage i
 | [Kubernetes StorageClass](https://github.com/kubernetes/api/blob/master/storage/v1/types.go) | `parameters` as typed escape hatch; `reclaimPolicy` as neutral envelope |
 | [Gardener DNSEntry](https://github.com/gardener/external-dns-management/blob/master/pkg/apis/dns/v1alpha1/dnsentry.go) | Cloud routing from cluster context — no provider field in user spec |
 | [Crossplane Composition](https://github.com/crossplane/crossplane/blob/master/apis/apiextensions/v1/composition_types.go) | Neutral schema + controller-side value translation |
-| [Crossplane provider-aws forProvider](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/cache/v1beta1/replicationgroup_types.go) | Typed sub-struct for provider-specific fields |
-| [CAPI Cluster types](https://github.com/kubernetes-sigs/cluster-api/blob/main/api/v1beta1/cluster_types.go) | Status contract; typed infrastructure provider pattern |
+| [Crossplane provider-aws forProvider](https://github.com/crossplane-contrib/provider-aws/blob/master/apis/cache/v1beta1/replication_group_types.go) | Typed sub-struct for provider-specific fields |
+| [CAPI Cluster types](https://github.com/kubernetes-sigs/cluster-api/blob/main/api/core/v1beta1/cluster_types.go) | Status contract; typed infrastructure provider pattern |
 | [Gateway API GatewayClass](https://github.com/kubernetes-sigs/gateway-api/blob/main/apis/v1/gatewayclass_types.go) | Typed optional `parametersRef` escape hatch |
 | [kro ResourceGraphDefinition](https://kro.run/docs/concepts/rgd/overview/) | CEL-based resource graphs; per-cloud RGD as contrast case |
 | [Kratix Promise model](https://docs.kratix.io/main/reference/promises/intro) | Pipeline-based routing; schemaless pass-through payload |

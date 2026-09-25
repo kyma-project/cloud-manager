@@ -552,7 +552,7 @@ This is not a compromise between usability and power. It is **additive** — eac
 | [Gardener DNSEntry](https://github.com/gardener/external-dns-management/blob/master/pkg/apis/dns/v1alpha1/dnsentry.go) | Runtime cloud routing from cluster context, not user-provided selector |
 | [Kubernetes StorageClass](https://github.com/kubernetes/api/blob/master/storage/v1/types.go) | `parameters: map[string]string` for schemaless pass-through payload |
 | [Crossplane Compositions](https://docs.crossplane.io/latest/composition/compositions/) | Neutral intent schema + controller-side value translation |
-| [Cluster API ClusterClass](https://github.com/kubernetes-sigs/cluster-api/blob/main/api/v1beta1/cluster_types.go) | Status contract pattern (ready condition, failure domains) |
+| [Cluster API ClusterClass](https://github.com/kubernetes-sigs/cluster-api/blob/main/api/core/v1beta1/cluster_types.go) | Status contract pattern (ready condition, failure domains) |
 | [Gateway API GatewayClass](https://github.com/kubernetes-sigs/gateway-api/blob/main/apis/v1/gatewayclass_types.go) | `parametersRef` as the typed escape hatch for provider-specific extensions |
 | [ACK](https://aws-controllers-k8s.github.io/community/) · [ASO](https://azure.github.io/azure-service-operator/) · [KCC](https://cloud.google.com/config-connector/docs/overview) | Provider-specific field vocabulary used in Layer 3 sub-structs |
 | [Kubernetes API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md) | Naming consistency rules (same concept = same name everywhere) |
