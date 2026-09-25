@@ -69,4 +69,4 @@ Redis provider-specific resources is the right choice.
 
 # 4) Principles
 
-- [CloudManager API Principles(./04-api-principles/README.md)
+- [CloudManager API Principles](./04-api-principles/README.md)
