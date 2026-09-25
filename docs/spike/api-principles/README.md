@@ -7,9 +7,9 @@
 
 Detailed analysis of the current CloudManager CRDs with possible separation into portable intent and provider specific resources can be found [here](./01-current-model/overview.md). The remodeling is forcefully fitted to accommodate the request, but the validity is questionable since union of the portable intent resource with provider specific resource produces the originally remodeled shape. The change is cosmetic illusion of portability introducing more CRDs. Not even the benefit of Kyma provided reasonable defaults is possible since provider specific fields carry instance specific fields like unique name or capacity.
 
-## IpRange & GcpSubet ✅
+## IpRange & GcpSubet ❌
 
-From the UX perspective the provider-specific resources is not the right choice.
+From the UX perspective the provider-specific resources is the right choice.
 
 No shape differences. GcpSubnet can collapse into IpRange with addition on the `type` field indicating a predefined enumerable set of possible values, without additional configuration.
 
@@ -27,7 +27,7 @@ Vpc peering provider-specific resources maybe the right choice.
 [Details](./01-current-model/overview.md#vpcpeering)
 
 
-## NFS ❌
+## NFS  ✅
 
 NFS provider-specific resources is NOT the right choice.
 
@@ -36,7 +36,7 @@ NFS provider-specific resources is NOT the right choice.
 [Details](./01-current-model/overview.md#nfsvolume)
 
 
-## Redis ❌
+## Redis  ✅
 
 Redis provider-specific resources is NOT the right choice.
 
