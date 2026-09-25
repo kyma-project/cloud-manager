@@ -17,9 +17,9 @@ Carry significant network reconfiguration pre-requisites that are hidden from th
 
 [Details](./01-current-model/overview.md#iprange-and-gcpsubnet)
 
-## VpcPeering ❌
+## VpcPeering ❓
 
-Vpc peering provider-specific resources is the right choice.
+Vpc peering provider-specific resources maybe the right choice.
 
 - provider specific shape carries fields with unique constraints and thus can not serve as global Kyma provided best practices shared resource
 - risk of a need to define own custom format for remote vpc network for cases when provider doesn't already have a standard format
@@ -29,7 +29,7 @@ Vpc peering provider-specific resources is the right choice.
 
 ## NFS ❌
 
-NFS provider-specific resources is the right choice.
+NFS provider-specific resources is NOT the right choice.
 
 - provider specific shape carries the capacity field and can not serve as global Kyma provided best practices shared resource
 
@@ -38,7 +38,7 @@ NFS provider-specific resources is the right choice.
 
 ## Redis ❌
 
-Redis provider-specific resources is the right choice.
+Redis provider-specific resources is NOT the right choice.
 
 - provider specific shape carries the capacity field and can not serve as global Kyma provided best practices shared resource
 
