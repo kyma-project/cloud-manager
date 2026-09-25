@@ -86,57 +86,6 @@ spec:
 
 ---
 
-## How Cloud Manager Uses This Pattern
-
-CM does not currently use this pattern explicitly. The closest analog is the Redis `parameters: map[string]string` on AWS and GCP — a freeform config map where the controller passes keys through to the provider API without validating individual key names at the CRD level.
-
-```yaml
-kind: AwsRedisInstance
-spec:
-  parameters:                   # freeform — ElastiCache validates keys, not CM
-    maxmemory-policy: volatile-lru
-    activedefrag: "yes"
-    lazyfree-lazy-eviction: "yes"
-```
-
----
-
-## Applying to CM CRD Families
-
-### Future WafPolicy — rule configuration
-
-WAF rule sets are provider-native, content-rich, and provider-versioned. AWS managed rule group schemas, GCP preconfigured rule IDs, and Azure managed rule set versions change independently of CM releases. Encoding them as typed CRD fields would require CM schema updates every time a provider adds or renames a rule.
-
-The right shape: strongly typed envelope for what is universal (`targetRef`, common toggles); unstructured `ruleConfig` per provider for rule content.
-
-```yaml
-kind: WafPolicy
-spec:
-  # Strongly typed envelope — validated by CM CRD
-  # Note: targetRef (what to protect) is omitted here — the attachment model
-  # differs structurally per provider and requires a separate design decision.
-  rules:
-    owaspTop10: true              # toggle — all providers support this concept
-    rateLimit:
-      requestsPerMinute: 1000
-
-  # Unstructured per-provider rule payload — provider validates content
-  # Each field is a separate runtime.RawExtension (schemaless)
-  aws:                          # schemaless — AWS WAF JSON passed through
-    managedRuleGroups:
-      - vendorName: AWS
-        name: AWSManagedRulesCommonRuleSet
-  gcp:                          # schemaless — Cloud Armor JSON passed through
-    preconfiguredWafRules:
-      - id: "sqli-v33-stable"
-  azure:                        # schemaless — Azure WAF JSON passed through
-    managedRuleSets:
-      - ruleSetType: OWASP
-        ruleSetVersion: "3.2"
-```
-
----
-
 ## When to Use This Pattern
 
 Use when:
