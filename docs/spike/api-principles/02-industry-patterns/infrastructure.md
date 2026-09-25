@@ -4,6 +4,7 @@ Leading cloud provider infrastructure tooling:
 - Terraform / OpenTofu
 - Pulumi
 - CrossPlane
+
 None unifies cross provider, but keeps strict provider specific 1:1 scheme. Some provide mapping/templating engines which allows users to define their own simple intent based resources with predefined configuration and to many providers mapping, but none actually implements it nor provides design principles. They all leave it open for the platform providers to use it and shape the high level API and mapping to cloud API for their own needs.
 
 ## CloudOrchestrator
