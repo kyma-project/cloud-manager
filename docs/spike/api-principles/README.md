@@ -54,12 +54,12 @@ Redis provider-specific resources is the right choice.
 # 2) Industry patterns
 
 - [Established infrastructure provisioning tools](./02-industry-patterns/infrastructure.md)
-- [General API blueprints](./02-industry-patterns/blueprints/)
-- [Progressive API design](./02-industry-patterns/progressive-api-design.md)
+- [General API blueprints](./02-industry-patterns/blueprints/README.md)
+- [Progressive API design](./02-industry-patterns/progressive-api-design/README.md)
 
 
 ---
 
 # 3) WAF test case
 
-- [WAF test case](./03-waf-test-case/overview.md)
+- [WAF test case](./03-waf/README.md)

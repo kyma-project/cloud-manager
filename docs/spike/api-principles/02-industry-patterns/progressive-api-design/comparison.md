@@ -355,7 +355,7 @@ Kratix provides the multi-cluster routing and developer API; Crossplane provides
 
 ## Alignment with Kyma Cloud Manager API Principles
 
-The [Kyma Cloud Manager spike branch](https://github.com/kyma-project/cloud-manager/tree/spike-api-principles/docs/spike/api-principles/02-industry-patterns) documents six API design patterns derived from production Kubernetes projects (CAPI, Crossplane, Gateway API, ACK, ASO, StorageClass). A full pattern-by-pattern analysis is in **[kyma-industry-patterns-fit.md](./kyma-industry-patterns-fit.md)**. Quick summary:
+The [Kyma Cloud Manager spike branch](https://github.com/kyma-project/cloud-manager/tree/spike-api-principles/docs/spike/api-principles/02-industry-patterns) documents six API design patterns derived from production Kubernetes projects (CAPI, Crossplane, Gateway API, ACK, ASO, StorageClass). Quick summary:
 
 | Pattern | Crossplane v2 | kro | Kratix |
 |---|---|---|---|

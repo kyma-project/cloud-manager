@@ -19,7 +19,7 @@ These files validate:
 | Use Case | AWS | Azure | GCP |
 |----------|-----|-------|-----|
 | [00. Specify Managed Rules](00-specify-managed-rules.md) | ✅ Perfect | ✅ Perfect | ✅ Perfect |
-| [01. Managed Rules Override](01-unconditional-rule-override.md) | ✅ Perfect | ✅ Perfect | ⚠️ Limited |
+| [01. Managed Rules Override](01-managed-rules-override.md) | ✅ Perfect | ✅ Perfect | ⚠️ Limited |
 | [02. Custom Rule with Conditions](02-custom-rule-with-conditions.md) | ✅ Native | ✅ Native | ✅ Native |
 | [03. Rate Limiting with Path Thresholds](03-rate-limiting-with-path-thresholds.md) | ✅ Native | ✅ Native | ✅ Native |
 | [04. IP Allowlist/Blocklist](04-ip-allowlist-blocklist.md) | ✅ Native | ✅ Native | ✅ Native |
