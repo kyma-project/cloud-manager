@@ -11,6 +11,9 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - alicloudnfsvolumes
+  - alicloudredisclusters
+  - alicloudredisinstances
   - awsnfsbackupschedules
   - awsnfsvolumebackups
   - awsnfsvolumerestores
@@ -37,6 +40,9 @@ rules:
   - gcpvpcpeerings
   - ipranges
   - sapnfsvolumes
+  - sapnfsvolumesnapshots
+  - sapnfsvolumesnapshotrestores
+  - sapnfsvolumesnapshotschedules
   verbs:
   - get
   - list
@@ -44,6 +50,9 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - alicloudnfsvolumes/status
+  - alicloudredisclusters/status
+  - alicloudredisinstances/status
   - awsnfsbackupschedules/status
   - awsnfsvolumebackups/status
   - awsnfsvolumerestores/status
@@ -70,5 +79,8 @@ rules:
   - gcpvpcpeerings/status
   - ipranges/status
   - sapnfsvolumes/status
+  - sapnfsvolumesnapshots/status
+  - sapnfsvolumesnapshotrestores/status
+  - sapnfsvolumesnapshotschedules/status
   verbs:
   - get
