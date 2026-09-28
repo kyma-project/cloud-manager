@@ -132,7 +132,7 @@ spec:
 ## Industry Patterns:
 
 ### Common Base with Provider-Specific Extensions
-Cloud manager will generate a provider-specific WAF configuration based on the user's custom configuration. The user can then modify the generated configuration to further customize the behavior of the load balancer and WAF. This allows for more fine-grained control over the behavior of the load balancer and WAF, while still providing a simple and easy-to-use interface for the user.
+As mentioned above, cloud manager will generate a provider-specific WAF configuration for OWASP top 10 threats, but the user can customize it to their needs.
 
 ### Normalized Status Contract
 The cloud manager will provide a normalized status contract for the user, regardless of the underlying cloud provider.
