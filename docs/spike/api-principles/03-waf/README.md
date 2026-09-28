@@ -4,90 +4,74 @@
 
 WAF is the test case for spike bullet #3: *apply the pattern from step 2 and check whether it holds*.
 
-The question is not "what should the WAF API look like?" It is: **does a two-level portable-intent + provider-specific-passthrough pattern hold for WAF, and what does that tell us about Cloud Manager API design principles in general?**
+The question is not "what should the WAF API look like?" It is: **does the [progressive API design model](../02-industry-patterns/progressive-api-design/progressive-api-design.md) hold for WAF, and what does that tell us about Cloud Manager API design principles in general?**
 
 ---
 
-## What Was Tested
+## How the Progressive API Layers Map to WAF
 
-A two-level architecture modelled on Kubernetes Gateway API:
+| Layer | Progressive model | WAF implementation |
+|-------|------------------|--------------------|
+| **Layer 0** | Cloud detection — controller concern, no user-facing field | No `spec.cloud` or `spec.provider` field. Cloud is read from Kyma Scope at runtime. |
+| **Layer 1** | Zero-config intent — neutral vocabulary, same on all clouds | **Deferred.** `WafConfiguration.spec.intents` was designed for this role but is not yet implementable — the fragment-merge model it depends on has no clean cross-provider solution, and the intent vocabulary lacks a defined override path. See [waf-configuration-design.md](waf-configuration-design.md). |
+| **Layer 2** | Neutral tuning — optional shared fields, same semantics on all clouds | **Deliberately absent.** No WAF tuning concept has identical semantics on all three providers. See [design-rationale.md](design-rationale.md). |
+| **Layer 3 / unstructured payload (P6)** | Provider escape hatch — unstructured payload, controller-validated only | `WafPolicy.spec.data` carries complete provider-native JSON inline. No typed sub-struct. Currently the only specified entry point. |
+
+The resulting resource flow (current state — Layer 1 deferred):
 
 ```
-[SKR cluster]
 AppLoadBalancer
     ↓ references
-WafConfiguration (portable intent)
-    ↓ SKR controller translates
-WafPolicy (provider-specific JSON passthrough)
-    ↓ remote reconciliation (KCP watches SKR resources)
+WafPolicy        (Layer 3 unstructured payload — complete provider-native JSON inline in spec.data)
+    ↓ Cloud Manager SKR reconciler
+Cloud WAF (AWS WAFv2 / Azure Front Door WAF / GCP Cloud Armor)
 ```
-
-Three specific features were validated across AWS, Azure, and GCP:
-
-| Feature | AWS | Azure | GCP | Portable? |
-|---------|-----|-------|-----|-----------|
-| Managed rule groups | ✅ | ✅ | ✅ | ❌ Different names, structure, bundling |
-| Managed rules override (`ruleOverrides`) | ✅ | ✅ | ⚠️ Degrades entire ruleset | ❌ Not portable |
-| Custom rules with conditions (`customRules`) | ✅ | ✅ | ✅ | ✅ Genuinely portable |
 
 ---
 
 ## Findings
 
-### What works: `customRules`
+### What the model validates
 
-Path, header, and IP-based custom rules translate cleanly across all three providers. The portable abstraction holds here. A user writing:
+| Feature | AWS | Azure | GCP | Result |
+|---------|-----|-------|-----|--------|
+| Managed rule groups | ✅ | ✅ | ✅ | Layer 1 via `spec.intents` — deferred; no implementation path yet |
+| Managed rules override | ✅ | ✅ | ⚠️ Degrades entire ruleset | Not portable — unstructured payload (P6) only |
+| Custom rules (path/header/IP) | ✅ | ✅ | ✅ | Portable concept — unstructured payload (P6) via `WafPolicy.spec.data` |
 
-```yaml
-customRules:
-  - name: health-check-bypass
-    priority: 10
-    action: allow
-    conditions:
-      path:
-        exact: "/health"
-```
+Path, header, and IP-based custom rules translate cleanly across all three providers. They are not exposed as typed Layer 2 fields because doing so covers only one portable concept while leaving geographic blocking, size filtering, rate limiting, and managed rule tuning all at Layer 3 anyway. A partial Layer 2 adds API surface without eliminating the escape hatch — the cleaner boundary is `spec.intents` for built-in goals (once Layer 1 is implementable) and `WafPolicy.spec.data` for everything else.
 
-gets the correct behaviour on AWS, Azure, and GCP with no semantic drift.
+### Why Layer 2 is absent for WAF
 
-### What fails: `ruleOverrides`
+Layer 2 requires that a field concept genuinely exists on all clouds with the same semantics. No WAF field meets this bar:
 
-Managed rule overrides are not portable:
+- Managed rule group names and bundling are completely provider-specific — no common vocabulary exists across AWS, Azure, and GCP.
+- Rule overrides use provider-specific rule IDs and behave differently per provider (GCP silently degrades the entire ruleset instead of the targeted rule).
 
-- The `managedRuleGroup` and `ruleId` fields require **provider-specific names** — an AWS rule ID does not exist on Azure or GCP.
-- GCP has no per-rule override mechanism. Any override entry causes the **entire matched ruleset** to degrade to preview mode (count-all), not the specific rule the user intended.
-- The field looks portable but silently behaves differently per provider.
+A field that silently behaves differently per provider is worse than no abstraction. The `spec.intents` vocabulary sidesteps this by operating at the level of user goals, not provider fields.
 
-### What cannot be abstracted: managed rule groups
+### Why unstructured payload (P6) and not typed sub-struct (P5) for Layer 3
 
-Managed rule group names, structure, and bundling are completely different across providers. AWS, Azure, and GCP have no common vocabulary. A portable `managedRuleGroups` field is not viable. Provider-specific presets (`WafPolicy` with `spec.data`) are the correct answer here.
+Provider WAF JSON schemas are large, versioned, and structurally different. A typed sub-struct (`spec.aws`, `spec.gcp`, `spec.azure`) would require Cloud Manager to mirror three provider WAF schemas. The unstructured payload approach — inline JSON in `spec.data` — lets the user write provider-native content directly, with the controller validating only the envelope.
 
 ---
 
 ## Conclusion for the Spike
 
-The two-level pattern **partially holds** for WAF:
+The progressive API design model holds for WAF, with two forced adaptations: Layer 2 is empty by design, and Layer 1 is deferred. The `spec.intents` Layer 1 vocabulary was designed to substitute for what would normally be Layer 2 neutral tuning — by operating above the provider API surface entirely rather than mapping across it. However, the intent vocabulary is not yet implementable: the fragment-merge model it depends on has no clean cross-provider solution, and the intents have no defined override path for false positives. Use case collection is a prerequisite before Layer 1 can be designed — see [waf-configuration-design.md](waf-configuration-design.md).
 
-- ✅ It works for the additive, condition-based layer (`customRules`) where provider capabilities genuinely overlap.
-- ❌ It breaks down for managed rule tuning (`ruleOverrides`) — provider-specific names and GCP's coarse granularity mean the abstraction leaks.
-- ❌ It cannot abstract managed rule groups at all.
+**The finding for the broader API principles question:**
 
-**The portable-intent layer is only as strong as the intersection of provider capabilities.** For WAF, that intersection is narrow: custom rules with basic conditions. Everything else requires provider-specific configuration.
-
-This is a useful finding for the broader API principles question:
-
-> A portable abstraction is justified when provider capabilities genuinely overlap for the use case. When they do not, a provider-specific passthrough (`WafPolicy`-style) with curated presets is more honest and more maintainable than a leaky abstraction.
+> A portable abstraction is justified when provider capabilities genuinely overlap for the use case. When they do not, the abstraction must operate at a higher level — user intent rather than provider fields — with Cloud Manager owning the translation. A leaky field-level abstraction is worse than no abstraction.
 
 ---
 
 ## Documentation
 
-**[api-specification.md](api-specification.md)** — The two-level API design, including the `ruleOverrides` portability failure and open design questions.
+**[api-specification.md](api-specification.md)** — The `WafPolicy` API design and design decisions.
 
-**[design-rationale.md](design-rationale.md)** — Why this architecture was explored, what it gets right, and where it breaks down.
+**[waf-configuration-design.md](waf-configuration-design.md)** — The `WafConfiguration` intent-based design as explored, and why the fragment-merge model stalls across providers. Deferred from the current spec.
 
-**[implementation-examples.md](implementation-examples.md)** — Full provider translations for the three main use cases (managed rules override, custom rules with conditions, IP allowlist/blocklist).
-
-**[use-cases/](use-cases/)** — Per-use-case provider capability validation (8 use cases, AWS/Azure/GCP).
+**[design-rationale.md](design-rationale.md)** — How each layer of the progressive API model maps to WAF, and where the model holds.
 
 **[research/](research/)** — Cross-provider analysis of boolean logic, label chaining, condition types, and managed rule structures.
