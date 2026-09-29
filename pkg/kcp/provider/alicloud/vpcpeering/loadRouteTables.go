@@ -43,11 +43,9 @@ func loadRemoteRouteTables(ctx context.Context, st composed.State) (error, conte
 }
 
 // routeTablesForStrategy returns the subset of route tables to act on for the given strategy.
-// For MATCHED/UNMATCHED the cidrTag parameter is used as the tag KEY: a table is "matched"
-// when it carries that key with a non-empty value. Callers pass the local VPC CIDR
-// (e.g. "10.0.0.0/16") — tag route tables with this CIDR as the key to opt them in.
-// ponytail: using a CIDR string as a tag key is unusual; align with a named tag convention if
-// this proves hard to operate.
+// For MATCHED/UNMATCHED the shootName parameter is used as the tag KEY: a table is "matched"
+// when it carries that key with a non-empty value (e.g. tag key = "<shoot-name>", value = "true").
+// AUTO selects all tables; NONE skips all.
 func routeTablesForStrategy(tables []alicloudvpcpeeringclient.RouteTableInfo, strategy, shootName string) []alicloudvpcpeeringclient.RouteTableInfo {
 	switch strategy {
 	case "NONE":
