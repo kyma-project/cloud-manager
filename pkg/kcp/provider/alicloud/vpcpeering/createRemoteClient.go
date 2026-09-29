@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -33,19 +32,12 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 		return nil, ctx
 	}
 
-	accessKeyId := alicloudconfig.AlicloudConfig.AccessKeyId
-	accessKeySecret := alicloudconfig.AlicloudConfig.AccessKeySecret
-
-	c, err := state.provider(ctx, remoteRegion, accessKeyId, accessKeySecret)
-	if err != nil {
-		return composed.LogErrorAndReturn(
-			fmt.Errorf("error creating alicloud remote vpcpeering client: %w", err),
-			"Error creating remote client",
-			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
-			ctx,
-		)
-	}
-	state.remoteClient = c
-
-	return nil, ctx
+	// ponytail: cross-account peering requires assumeRoleArn (pending rebase of #2199).
+	// Return an explicit error rather than silently using wrong credentials.
+	return composed.LogErrorAndReturn(
+		fmt.Errorf("cross-account AliCloud VPC peering not yet supported: remote account %s differs from local account %s", remoteAccountId, state.localAccountId),
+		"Cross-account AliCloud VPC peering requires assumeRoleArn support (pending)",
+		composed.StopWithRequeueDelay(util.Timing.T300000ms()),
+		ctx,
+	)
 }
