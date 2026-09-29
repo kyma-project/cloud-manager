@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document defines Cloud Manager's WAF API. The stable foundation is `WafPolicy` — a single SKR resource that provisions a WAF policy on any supported cloud provider. The policy content is supplied inline as `spec.data`, a free-form JSON object that the controller passes through to the provider without schema enforcement.
+This document defines Cloud Manager's WAF API. The stable foundation is `WafPolicy` — a single SKR resource that provisions a WAF policy on any supported cloud provider. The policy content is supplied inline as `spec.payload`, a free-form JSON object that the controller passes through to the provider without schema enforcement.
 
 A higher-level `WafConfiguration` resource (intent-based, generates `WafPolicy`) was explored but is **deferred**. The fragment-merge model it depends on does not have a clean cross-provider solution. See [waf-configuration-design.md](waf-configuration-design.md) for the full design and the reasons it stalls.
 
@@ -14,7 +14,7 @@ The design follows the [progressive API design model](../02-industry-patterns/pr
 
 ### Design
 
-- Carries the provider-specific WAF policy JSON **inline** in `spec.data`
+- Carries the provider-specific WAF policy JSON **inline** in `spec.payload`
 - Provisioned in cloud as soon as it is created and successfully reconciled — independently of whether `AppLoadBalancer` references it
 - `ownerReference` is nil when created directly by the user; set to the generating resource if created programmatically
 
@@ -27,7 +27,7 @@ metadata:
   name: my-policy
   namespace: my-namespace
 spec:
-  data: |
+  payload: |
     {
       "Name": "my-web-acl",
       "DefaultAction": { "Allow": {} },
@@ -67,7 +67,7 @@ status:
 
 ### Validation
 
-`WafPolicy.spec.data` is a free-form JSON object (`runtime.RawExtension`). The API server does not validate its contents at admission time. All structural validation is controller-side — the controller parses `spec.data`, checks provider-specific constraints, and reports violations via `Ready=False` status conditions with descriptive messages. Users will not receive an immediate rejection on `kubectl apply`; they will see the condition on the resource status.
+`WafPolicy.spec.payload` is a free-form JSON object (`runtime.RawExtension`). The API server does not validate its contents at admission time. All structural validation is controller-side — the controller parses `spec.payload`, checks provider-specific constraints, and reports violations via `Ready=False` status conditions with descriptive messages. Users will not receive an immediate rejection on `kubectl apply`; they will see the condition on the resource status.
 
 ### Status
 
@@ -94,7 +94,7 @@ spec:
 ```
 [SKR cluster]
 
-WafPolicy (spec.data: complete provider-native WAF policy JSON)
+WafPolicy (spec.payload: complete provider-native WAF policy JSON)
     ↓
 AppLoadBalancer (spec.policyRef: WafPolicy)
     ↓
@@ -103,13 +103,13 @@ Cloud WAF resources (AWS WAFv2 / Azure Front Door WAF / GCP Cloud Armor)
 
 `WafPolicy` is the single contract `AppLoadBalancer` references — always. There is no higher-level resource currently specified.
 
-**Progressive model coverage:** The [progressive API design model](../02-industry-patterns/progressive-api-design/progressive-api-design.md) expects a Layer 1 zero-config intent resource as the primary user entry point. For WAF, that resource is `WafConfiguration` — explored but deferred. As a result, the current API starts at **Layer 3 unstructured payload (P6)**: every user must supply a complete provider-native WAF policy JSON in `spec.data`. There is no zero-config path yet. This is a deliberate gap, not an oversight — see [waf-configuration-design.md](waf-configuration-design.md) for why Layer 1 is not yet implementable.
+**Progressive model coverage:** The [progressive API design model](../02-industry-patterns/progressive-api-design/progressive-api-design.md) expects a Layer 1 zero-config intent resource as the primary user entry point. For WAF, that resource is `WafConfiguration` — explored but deferred. As a result, the current API starts at **Layer 3 unstructured payload (P6)**: every user must supply a complete provider-native WAF policy JSON in `spec.payload`. There is no zero-config path yet. This is a deliberate gap, not an oversight — see [waf-configuration-design.md](waf-configuration-design.md) for why Layer 1 is not yet implementable.
 
 ---
 
 ## Design Decisions
 
-See [design-rationale.md](design-rationale.md) for the reasoning behind `spec.data` (inline) over `spec.configMapRef` and over typed provider sub-structs (`spec.aws/gcp/azure`).
+See [design-rationale.md](design-rationale.md) for the reasoning behind `spec.payload` (inline) over `spec.configMapRef` and over typed provider sub-structs (`spec.aws/gcp/azure`).
 
 ### WafConfiguration is not a cloud Kind
 
@@ -123,5 +123,5 @@ The deferred `WafConfiguration` is not a cloud-provisioning Kind — it would ne
 
 | Use case | Resources user creates | `AppLoadBalancer.spec.policyRef` | Controller behaviour |
 |---|---|---|---|
-| **Full control** | `WafPolicy` with `spec.data` (inline policy JSON) | `name: my-policy` | No generation — user owns everything |
+| **Full control** | `WafPolicy` with `spec.payload` (inline policy JSON) | `name: my-policy` | No generation — user owns everything |
 | **Intent-based** | `WafConfiguration` (deferred) | — | See [waf-configuration-design.md](waf-configuration-design.md) |

@@ -8,7 +8,7 @@ This document captures the `WafConfiguration` design as explored during the spik
 
 ## The Intended Design
 
-`WafConfiguration` was designed as a higher-level SKR resource that lets users express protection goals as named intents, without writing provider-specific JSON. The controller would resolve intents to preset policy fragments, merge them with any user-supplied fragments, and generate a complete `WafPolicy` with the merged content inline in `spec.data`.
+`WafConfiguration` was designed as a higher-level SKR resource that lets users express protection goals as named intents, without writing provider-specific JSON. The controller would resolve intents to preset policy fragments, merge them with any user-supplied fragments, and generate a complete `WafPolicy` with the merged content inline in `spec.payload`.
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1alpha1
@@ -22,7 +22,7 @@ spec:
     - BotProtection
   customIntents:
     - dataRef:
-        name: my-custom-waf-rules   # user-owned WafPolicy spec.data fragment, same namespace
+        name: my-custom-waf-rules   # user-owned WafPolicy spec.payload fragment, same namespace
 status:
   generatedPolicy:
     name: my-config
@@ -68,7 +68,7 @@ These presets are stored as ConfigMaps in `kyma-system` (as infrastructure data,
    - customIntents wins on conflict
    - Controller overwrites unconditionally on every reconcile
 
-4. Generate WafPolicy with the merged content in spec.data
+4. Generate WafPolicy with the merged content in spec.payload
    - ownerReference: WafConfiguration
 ```
 
@@ -155,7 +155,7 @@ Any of the following would resolve the merge stall:
 
 2. **Define a provider-aware merge DSL** — the fragments include merge annotations (e.g. `$mergeKey: Name` for AWS, `$mergeKey: priority` for GCP). The controller interprets these per provider. Adds controller complexity and a new fragment format to document and validate.
 
-3. **Drop the fragment model entirely for `customIntents`** — `spec.customIntents` accepts a complete policy replacement, not additions. Users who need customisation write a full policy inline in `WafPolicy.spec.data` directly. This collapses `WafConfiguration` to `spec.intents`-only (no customisation path), with the expert path being `WafPolicy`.
+3. **Drop the fragment model entirely for `customIntents`** — `spec.customIntents` accepts a complete policy replacement, not additions. Users who need customisation write a full policy inline in `WafPolicy.spec.payload` directly. This collapses `WafConfiguration` to `spec.intents`-only (no customisation path), with the expert path being `WafPolicy`.
 
 4. **Make intents produce independent provider resources** — if the cloud provider supports attaching multiple independent WAF rule groups to a load balancer (rather than a single policy), each intent could be a separate resource with no merging. AWS WAFv2 does not support this model; all rules must be in a single WebACL.
 
@@ -165,7 +165,7 @@ However, resolving the merge problem is not sufficient to unblock `WafConfigurat
 
 ## The Deeper Prerequisite: Use Cases and Override Path
 
-Even if merging were solved, the intent vocabulary (`OwaspTop10`, `BotProtection`, etc.) gives users no way to tune or override the rules those intents resolve to. When `OwaspTop10` blocks a legitimate request — a false positive — the only recourse in the current design is to abandon `WafConfiguration` entirely and write a full `WafPolicy.spec.data`. That is a cliff, not a ladder.
+Even if merging were solved, the intent vocabulary (`OwaspTop10`, `BotProtection`, etc.) gives users no way to tune or override the rules those intents resolve to. When `OwaspTop10` blocks a legitimate request — a false positive — the only recourse in the current design is to abandon `WafConfiguration` entirely and write a full `WafPolicy.spec.payload`. That is a cliff, not a ladder.
 
 A usable Layer 1 must answer: **what does a user do when an intent produces the wrong behaviour?** Without a defined override or exclusion path, the intent vocabulary is a one-size-fits-all wrapper that breaks the progressive API model's core promise — that each layer adds capability without forcing the user to abandon what lower layers gave them.
 
@@ -249,12 +249,12 @@ spec:
 
 ### How it interacts with WafPolicy
 
-Each provider-specific `WafConfiguration` generates a `WafPolicy` with `spec.data` set to the assembled provider-native JSON — the same way the unified `WafConfiguration` was intended to work. `AppLoadBalancer.spec.policyRef` still resolves to a `WafPolicy` name.
+Each provider-specific `WafConfiguration` generates a `WafPolicy` with `spec.payload` set to the assembled provider-native JSON — the same way the unified `WafConfiguration` was intended to work. `AppLoadBalancer.spec.policyRef` still resolves to a `WafPolicy` name.
 
 ```
 AwsWafConfiguration / AzureWafConfiguration / GcpWafConfiguration
     ↓ controller assembles provider-native JSON, creates/updates
-WafPolicy (spec.data: complete provider-native JSON)
+WafPolicy (spec.payload: complete provider-native JSON)
     ↓
 AppLoadBalancer (spec.policyRef: WafPolicy)
 ```
@@ -281,6 +281,6 @@ The split also moves the "which Kind do I use?" decision to the user at authorin
 
 ## What Remains Valid
 
-The `WafPolicy` design is unaffected by this problem. A `WafPolicy` carries a single complete policy inline in `spec.data` — no merging, no fragments. It is the stable foundation regardless of how `WafConfiguration` is eventually resolved.
+The `WafPolicy` design is unaffected by this problem. A `WafPolicy` carries a single complete policy inline in `spec.payload` — no merging, no fragments. It is the stable foundation regardless of how `WafConfiguration` is eventually resolved.
 
 The preset policy content (per intent per provider) remains valid as reference material — the question is only how to combine them, not what they contain.

@@ -60,11 +60,11 @@ A partial Layer 2 adds API surface without eliminating the need for the escape h
 
 ---
 
-## Layer 3 — Unstructured Payload (P6) via spec.data
+## Layer 3 — Unstructured Payload (P6) via spec.payload
 
 WAF rule content is schemaless — provider JSON structures vary significantly across versions and features. A typed sub-struct (P5) would require Cloud Manager to schema every provider's WAF JSON, which is not feasible for a feature of this complexity.
 
-Instead, the design uses the **unstructured payload (P6)** pattern: the user supplies a complete provider-native WAF policy inline in `spec.data`, and Cloud Manager passes it through as an opaque payload.
+Instead, the design uses the **unstructured payload (P6)** pattern: the user supplies a complete provider-native WAF policy inline in `spec.payload`, and Cloud Manager passes it through as an opaque payload.
 
 ```yaml
 apiVersion: cloud-resources.kyma-project.io/v1beta1
@@ -72,14 +72,15 @@ kind: WafPolicy
 metadata:
   name: my-aws-policy
 spec:
-  data:                        # complete provider-native WAF policy JSON
-    Name: "my-web-acl"
-    DefaultAction:
-      Allow: {}
-    Rules: [...]
+  payload: |
+    {
+      "Name": "my-web-acl",
+      "DefaultAction": { "Allow": {} },
+      "Rules": [...]
+    }
 ```
 
-`WafPolicy` is the Layer 3 resource. It is honest, simple, and follows the same pattern as Terraform and Crossplane: no translation, no leaky abstraction. `spec.data` must contain a complete provider WAF policy (not a fragment).
+`WafPolicy` is the Layer 3 resource. It is honest, simple, and follows the same pattern as Terraform and Crossplane: no translation, no leaky abstraction. `spec.payload` must contain a complete provider WAF policy (not a fragment).
 
 ### Why unstructured payload (P6) and not typed sub-struct (P5)
 
@@ -89,19 +90,19 @@ A typed sub-struct (P5) would require defining `spec.aws`, `spec.gcp`, `spec.azu
 
 ## Design Decisions
 
-### Why spec.data (inline) instead of spec.configMapRef
+### Why spec.payload (inline) instead of spec.configMapRef
 
 During the spike, `spec.configMapRef` was considered — a reference to a ConfigMap in the same namespace carrying the policy JSON. It was not adopted for the following reasons:
 
 - **`WafPolicy` is the policy document.** A ConfigMap reference is pure indirection with no semantic value of its own. The policy content belongs with the resource that owns it.
-- **Single object, single apply.** `spec.data` requires one `kubectl apply`; `spec.configMapRef` requires two coordinated objects. The coordination surface is a liability, not a feature.
-- **Consistent observability.** With `spec.configMapRef`, validation errors appear on `WafPolicy` but the content is in the ConfigMap — the user must cross-reference two objects. With `spec.data`, the policy and its status are co-located.
+- **Single object, single apply.** `spec.payload` requires one `kubectl apply`; `spec.configMapRef` requires two coordinated objects. The coordination surface is a liability, not a feature.
+- **Consistent observability.** With `spec.configMapRef`, validation errors appear on `WafPolicy` but the content is in the ConfigMap — the user must cross-reference two objects. With `spec.payload`, the policy and its status are co-located.
 - **No orphan risk.** An inline field has no orphaned ConfigMap edge case if the `WafPolicy` is deleted.
 - **etcd size is equivalent.** The "large payload in a ConfigMap avoids bloating the CR" argument does not hold — etcd stores both; the total bytes are the same.
 
 The one argument for `spec.configMapRef` — that the same ConfigMap could be shared by multiple `WafPolicy` objects — does not apply in practice. WAF policies are namespace-scoped and tightly coupled to the workload they protect; sharing a policy across resources via a reference adds no value and introduces implicit coupling.
 
-### Why spec.data (inline) instead of spec.aws/spec.gcp/spec.azure sub-structs
+### Why spec.payload (inline) instead of spec.aws/spec.gcp/spec.azure sub-structs
 
 Other Cloud Manager resources (`RedisInstance`, `VpcPeering`) use typed provider sub-structs — `spec.instance.aws`, `spec.instance.gcp`, etc. — with known, validated fields. This is the typed sub-struct (P5) pattern from the progressive design model: a typed Layer 3 sub-struct with full CRD schema validation. It works because the option space for those resources is bounded and fully expressible as a Go struct.
 
@@ -111,7 +112,7 @@ WAF policy schemas are a different category of problem:
 - **Circular dependencies** — AWS WAFv2 allows logical operator nesting (`AndStatement` containing `OrStatement` containing `NotStatement` containing `AndStatement`...) that is structurally recursive. Kubernetes CRD validation does not support recursive or circular type references.
 - **No shared structure** — AWS, Azure, and GCP WAF schemas are so different that a typed `spec.aws` / `spec.gcp` / `spec.azure` split would give users three completely unrelated APIs with no benefit over raw JSON.
 
-A single `WafPolicy` with a `spec.data` inline field is the correct abstraction. `runtime.RawExtension` holds arbitrary JSON — the right primitive for a schemaless provider payload.
+A single `WafPolicy` with a `spec.payload` inline field is the correct abstraction. `runtime.RawExtension` holds arbitrary JSON — the right primitive for a schemaless provider payload.
 
 ---
 
@@ -130,7 +131,7 @@ Custom rules with path, header, and IP conditions translate cleanly across all t
 | Negate | `NotStatement` | `negationConditon: true` | `!condition` |
 | AND logic | `AndStatement` | array of `matchConditions` | `&&` in CEL |
 
-The portable abstraction holds for this class of rule. These are expressed in provider-native JSON in `WafPolicy.spec.data`.
+The portable abstraction holds for this class of rule. These are expressed in provider-native JSON in `WafPolicy.spec.payload`.
 
 ### Feature portability summary
 
@@ -138,12 +139,12 @@ The portable abstraction holds for this class of rule. These are expressed in pr
 |---------|-----------|-------|-------|
 | Managed rule groups | ❌ | Layer 1 via intents (deferred) | Provider names/structure incompatible — resolved by intent abstraction |
 | Managed rules override | ❌ | unstructured payload (P6) only | Provider-specific names; GCP degrades entire ruleset |
-| Custom rules (path/header/IP) | ✅ | unstructured payload (P6) via `WafPolicy.spec.data` | Portable concept — expressed as provider-native JSON |
-| Rate limiting | ✅ | unstructured payload (P6) via `WafPolicy.spec.data` | Universal support |
-| IP allowlist/blocklist | ✅ | unstructured payload (P6) via `WafPolicy.spec.data` | Universal support |
-| Geographic blocking | ⚠️ | unstructured payload (P6) via `WafPolicy.spec.data` | Azure Application Gateway WAF lacks geo support |
-| Size-based filtering | ⚠️ | unstructured payload (P6) via `WafPolicy.spec.data` | GCP limited; Azure global-only |
-| Bot protection | ✅ | Layer 1 via intents (deferred) + unstructured payload (P6) | Basic via intent; advanced via `WafPolicy.spec.data` |
+| Custom rules (path/header/IP) | ✅ | unstructured payload (P6) via `WafPolicy.spec.payload` | Portable concept — expressed as provider-native JSON |
+| Rate limiting | ✅ | unstructured payload (P6) via `WafPolicy.spec.payload` | Universal support |
+| IP allowlist/blocklist | ✅ | unstructured payload (P6) via `WafPolicy.spec.payload` | Universal support |
+| Geographic blocking | ⚠️ | unstructured payload (P6) via `WafPolicy.spec.payload` | Azure Application Gateway WAF lacks geo support |
+| Size-based filtering | ⚠️ | unstructured payload (P6) via `WafPolicy.spec.payload` | GCP limited; Azure global-only |
+| Bot protection | ✅ | Layer 1 via intents (deferred) + unstructured payload (P6) | Basic via intent; advanced via `WafPolicy.spec.payload` |
 
 ---
 

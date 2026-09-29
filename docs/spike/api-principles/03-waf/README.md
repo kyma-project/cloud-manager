@@ -15,14 +15,14 @@ The question is not "what should the WAF API look like?" It is: **does the [prog
 | **Layer 0** | Cloud detection — controller concern, no user-facing field | No `spec.cloud` or `spec.provider` field. Cloud is read from Kyma Scope at runtime. |
 | **Layer 1** | Zero-config intent — neutral vocabulary, same on all clouds | **Deferred.** `WafConfiguration.spec.intents` was designed for this role but is not yet implementable — the fragment-merge model it depends on has no clean cross-provider solution, and the intent vocabulary lacks a defined override path. See [waf-configuration-design.md](waf-configuration-design.md). |
 | **Layer 2** | Neutral tuning — optional shared fields, same semantics on all clouds | **Deliberately absent.** No WAF tuning concept has identical semantics on all three providers. See [design-rationale.md](design-rationale.md). |
-| **Layer 3 / unstructured payload (P6)** | Provider escape hatch — unstructured payload, controller-validated only | `WafPolicy.spec.data` carries complete provider-native JSON inline. No typed sub-struct. Currently the only specified entry point. |
+| **Layer 3 / unstructured payload (P6)** | Provider escape hatch — unstructured payload, controller-validated only | `WafPolicy.spec.payload` carries complete provider-native JSON inline. No typed sub-struct. Currently the only specified entry point. |
 
 The resulting resource flow (current state — Layer 1 deferred):
 
 ```
 AppLoadBalancer
     ↓ references
-WafPolicy        (Layer 3 unstructured payload — complete provider-native JSON inline in spec.data)
+WafPolicy        (Layer 3 unstructured payload — complete provider-native JSON inline in spec.payload)
     ↓ Cloud Manager SKR reconciler
 Cloud WAF (AWS WAFv2 / Azure Front Door WAF / GCP Cloud Armor)
 ```
@@ -37,9 +37,9 @@ Cloud WAF (AWS WAFv2 / Azure Front Door WAF / GCP Cloud Armor)
 |---------|-----|-------|-----|--------|
 | Managed rule groups | ✅ | ✅ | ✅ | Layer 1 via `spec.intents` — deferred; no implementation path yet |
 | Managed rules override | ✅ | ✅ | ⚠️ Degrades entire ruleset | Not portable — unstructured payload (P6) only |
-| Custom rules (path/header/IP) | ✅ | ✅ | ✅ | Portable concept — unstructured payload (P6) via `WafPolicy.spec.data` |
+| Custom rules (path/header/IP) | ✅ | ✅ | ✅ | Portable concept — unstructured payload (P6) via `WafPolicy.spec.payload` |
 
-Path, header, and IP-based custom rules translate cleanly across all three providers. They are not exposed as typed Layer 2 fields because doing so covers only one portable concept while leaving geographic blocking, size filtering, rate limiting, and managed rule tuning all at Layer 3 anyway. A partial Layer 2 adds API surface without eliminating the escape hatch — the cleaner boundary is `spec.intents` for built-in goals (once Layer 1 is implementable) and `WafPolicy.spec.data` for everything else.
+Path, header, and IP-based custom rules translate cleanly across all three providers. They are not exposed as typed Layer 2 fields because doing so covers only one portable concept while leaving geographic blocking, size filtering, rate limiting, and managed rule tuning all at Layer 3 anyway. A partial Layer 2 adds API surface without eliminating the escape hatch — the cleaner boundary is `spec.intents` for built-in goals (once Layer 1 is implementable) and `WafPolicy.spec.payload` for everything else.
 
 ### Why Layer 2 is absent for WAF
 
@@ -52,7 +52,7 @@ A field that silently behaves differently per provider is worse than no abstract
 
 ### Why unstructured payload (P6) and not typed sub-struct (P5) for Layer 3
 
-Provider WAF JSON schemas are large, versioned, and structurally different. A typed sub-struct (`spec.aws`, `spec.gcp`, `spec.azure`) would require Cloud Manager to mirror three provider WAF schemas. The unstructured payload approach — inline JSON in `spec.data` — lets the user write provider-native content directly, with the controller validating only the envelope.
+Provider WAF JSON schemas are large, versioned, and structurally different. A typed sub-struct (`spec.aws`, `spec.gcp`, `spec.azure`) would require Cloud Manager to mirror three provider WAF schemas. The unstructured payload approach — inline JSON in `spec.payload` — lets the user write provider-native content directly, with the controller validating only the envelope.
 
 ---
 
