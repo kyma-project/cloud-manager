@@ -16,6 +16,9 @@ func createRoutes(ctx context.Context, st composed.State) (error, context.Contex
 	if state.vpcPeering == nil || len(state.vpcPeering.RemoteIpv4Cidrs) == 0 {
 		return nil, ctx
 	}
+	if state.ObjAsVpcPeering().Spec.Details == nil {
+		return nil, ctx
+	}
 
 	// Use the VPC CIDR (not VpcNetwork which is the VPC name) for MATCHED/UNMATCHED tag filtering
 	localVpcCidr := state.Scope().Spec.Scope.Alicloud.Network.VPC.CIDR
@@ -42,6 +45,9 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 	// The actual CIDR is in Scope.Scope.Alicloud.Network.VPC.CIDR.
 	localVpcCidr := state.Scope().Spec.Scope.Alicloud.Network.VPC.CIDR
 	if localVpcCidr == "" {
+		return nil, ctx
+	}
+	if state.ObjAsVpcPeering().Spec.Details == nil {
 		return nil, ctx
 	}
 

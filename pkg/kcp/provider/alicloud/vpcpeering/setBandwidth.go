@@ -14,6 +14,9 @@ func setBandwidth(ctx context.Context, st composed.State) (error, context.Contex
 	if !isCrossRegion {
 		return nil, ctx
 	}
+	if state.ObjAsVpcPeering().Spec.Details == nil {
+		return nil, ctx
+	}
 
 	bandwidth := state.ObjAsVpcPeering().Spec.Details.Bandwidth
 	if bandwidth == 0 {
