@@ -27,27 +27,34 @@ metadata:
   name: my-policy
   namespace: my-namespace
 spec:
-  data:                        # complete provider-native WAF policy JSON
-    Name: "my-web-acl"
-    DefaultAction:
-      Allow: {}
-    Rules:
-      - Name: "AWSManagedRulesCommonRuleSet"
-        Priority: 1
-        OverrideAction:
-          None: {}
-        Statement:
-          ManagedRuleGroupStatement:
-            VendorName: "AWS"
-            Name: "AWSManagedRulesCommonRuleSet"
-        VisibilityConfig:
-          SampledRequestsEnabled: true
-          CloudWatchMetricsEnabled: true
-          MetricName: "AWSManagedRulesCommonRuleSet"
-    VisibilityConfig:
-      SampledRequestsEnabled: true
-      CloudWatchMetricsEnabled: true
-      MetricName: "my-web-acl"
+  data: |
+    {
+      "Name": "my-web-acl",
+      "DefaultAction": { "Allow": {} },
+      "Rules": [
+        {
+          "Name": "AWSManagedRulesCommonRuleSet",
+          "Priority": 1,
+          "OverrideAction": { "None": {} },
+          "Statement": {
+            "ManagedRuleGroupStatement": {
+              "VendorName": "AWS",
+              "Name": "AWSManagedRulesCommonRuleSet"
+            }
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "AWSManagedRulesCommonRuleSet"
+          }
+        }
+      ],
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "my-web-acl"
+      }
+    }
 
 status:
   providerId: "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/..."
