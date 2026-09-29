@@ -20,10 +20,11 @@ func createRoutes(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, ctx
 	}
 
-	// Use the VPC CIDR (not VpcNetwork which is the VPC name) for MATCHED/UNMATCHED tag filtering
-	localVpcCidr := state.Scope().Spec.Scope.Alicloud.Network.VPC.CIDR
+	// Use the shoot name (not the CIDR) as the tag key for MATCHED/UNMATCHED filtering,
+	// consistent with the AWS pattern (ShouldUpdateRouteTable uses shoot name as tag key).
+	shootName := state.Scope().Spec.ShootName
 	strategy := string(state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy)
-	tables := routeTablesForStrategy(state.routeTables, strategy, localVpcCidr)
+	tables := routeTablesForStrategy(state.routeTables, strategy, shootName)
 
 	instanceId := state.ObjAsVpcPeering().Status.Id
 	for _, table := range tables {
@@ -51,8 +52,9 @@ func createRemoteRoutes(ctx context.Context, st composed.State) (error, context.
 		return nil, ctx
 	}
 
+	shootName := state.Scope().Spec.ShootName
 	strategy := string(state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy)
-	tables := routeTablesForStrategy(state.remoteRouteTables, strategy, localVpcCidr)
+	tables := routeTablesForStrategy(state.remoteRouteTables, strategy, shootName)
 
 	instanceId := state.ObjAsVpcPeering().Status.Id
 	for _, table := range tables {
@@ -68,6 +70,10 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 	state := st.(*State)
 	obj := state.ObjAsVpcPeering()
 
+	if state.vpcPeering == nil {
+		return nil, ctx
+	}
+
 	if len(obj.Status.Id) > 0 &&
 		len(obj.Status.RemoteId) > 0 &&
 		meta.IsStatusConditionTrue(*obj.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
@@ -77,7 +83,7 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 	meta.RemoveStatusCondition(obj.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
 
 	obj.Status.State = string(cloudcontrolv1beta1.StateReady)
-	if state.vpcPeering != nil {
+	if state.vpcPeering.RemoteVpcId != "" {
 		obj.Status.RemoteId = state.vpcPeering.RemoteVpcId
 	}
 
