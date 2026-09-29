@@ -45,6 +45,7 @@ func waitVpcPeeringActive(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state)
 
 	default:
+		logger.Info("AliCloud VpcPeerConnection waiting", "status", info.Status)
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 }

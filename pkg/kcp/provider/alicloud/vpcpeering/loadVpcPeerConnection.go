@@ -27,6 +27,10 @@ func loadVpcPeerConnection(ctx context.Context, st composed.State) (error, conte
 		}
 	}
 
+	if state.localVpcId == "" {
+		return nil, ctx
+	}
+
 	list, err := state.client.ListVpcPeerConnections(ctx, state.localVpcId, obj.GetName())
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error listing AliCloud VpcPeerConnections", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
