@@ -4,12 +4,16 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	alicloudvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
+	if state.ObjAsVpcPeering().Spec.Details == nil {
+		return nil, ctx
+	}
 	if !state.ObjAsVpcPeering().Spec.Details.DeleteRemotePeering {
 		return nil, ctx
 	}
@@ -19,16 +23,14 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 		return nil, ctx
 	}
 
-	// Use the VPC CIDR (not VpcNetwork which is the VPC name) as the route destination
+	// localVpcCidr is the route destination; shootName is the tag key for MATCHED/UNMATCHED strategy.
 	localVpcCidr := state.Scope().Spec.Scope.Alicloud.Network.VPC.CIDR
 	if localVpcCidr == "" {
 		return nil, ctx
 	}
-	if state.ObjAsVpcPeering().Spec.Details == nil {
-		return nil, ctx
-	}
+	shootName := state.Scope().Spec.ShootName
 	strategy := string(state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy)
-	tables := routeTablesForStrategy(state.remoteRouteTables, strategy, localVpcCidr)
+	tables := routeTablesForStrategy(state.remoteRouteTables, strategy, shootName)
 	for _, table := range tables {
 		if err := state.remoteClient.DeleteRouteEntry(ctx, table.RouteTableId, localVpcCidr, instanceId); err != nil {
 			return composed.LogErrorAndReturn(err, "Error deleting remote route entry", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
@@ -50,8 +52,9 @@ func deleteRoutes(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	localVpcCidr := state.Scope().Spec.Scope.Alicloud.Network.VPC.CIDR
+	shootName := state.Scope().Spec.ShootName
 	strategy := string(state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy)
-	tables := routeTablesForStrategy(state.routeTables, strategy, localVpcCidr)
+	tables := routeTablesForStrategy(state.routeTables, strategy, shootName)
 	for _, table := range tables {
 		for _, cidr := range state.vpcPeering.RemoteIpv4Cidrs {
 			if err := state.client.DeleteRouteEntry(ctx, table.RouteTableId, cidr, instanceId); err != nil {
@@ -72,6 +75,10 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	if err := state.client.DeleteVpcPeerConnection(ctx, instanceId); err != nil {
+		if alicloudvpcpeeringclient.IsRetryable(err) {
+			// IncorrectStatus fires when the connection is already transitioning; safe to retry.
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+		}
 		return composed.LogErrorAndReturn(err, "Error deleting AliCloud VpcPeerConnection", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 
