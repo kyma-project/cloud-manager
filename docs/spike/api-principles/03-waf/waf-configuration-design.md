@@ -179,6 +179,106 @@ Until those questions are answered with real use cases, any `WafConfiguration` d
 
 ---
 
+## Possible Solution: Provider-Specific WafConfiguration Kinds
+
+The merge problem exists because a single `WafConfiguration` must work across providers with structurally incompatible policy schemas. One way to remove that constraint entirely is to split into provider-specific Kinds: `AwsWafConfiguration`, `AzureWafConfiguration`, `GcpWafConfiguration`.
+
+### What this solves
+
+Each Kind owns one provider's schema. The controller for `AwsWafConfiguration` knows the AWS WAFv2 shape — it can use `Name` as the merge key for the `Rules` array, manage `Priority` assignment, and handle `OverrideAction` correctly. The controller for `GcpWafConfiguration` knows GCP Cloud Armor's integer `priority` namespace and can enforce uniqueness. `AzureWafConfiguration` can route fragments to `customRules` vs `managedRules.managedRuleSets` because the schema is known at compile time.
+
+The fragment-merge problem is reduced to a per-provider problem with a known structure — solvable with typed Go structs and deterministic merge logic — rather than a cross-provider problem requiring a neutral DSL.
+
+### API sketch
+
+```yaml
+# AWS
+apiVersion: cloud-resources.kyma-project.io/v1alpha1
+kind: AwsWafConfiguration
+metadata:
+  name: my-aws-config
+spec:
+  intents:
+    - OwaspTop10
+    - BotProtection
+  customRules:
+    - name: HealthCheckBypass        # typed; Name is the merge key
+      priority: 10
+      action: Allow
+      statement:
+        byteMatch:
+          fieldToMatch: URI
+          positionalConstraint: STARTS_WITH
+          searchString: /health
+  defaultAction: Allow
+```
+
+```yaml
+# GCP
+apiVersion: cloud-resources.kyma-project.io/v1alpha1
+kind: GcpWafConfiguration
+spec:
+  intents:
+    - OwaspTop10
+  customRules:
+    - priority: 1000               # typed; priority is the merge key; controller enforces uniqueness
+      action: allow
+      match:
+        expr: "request.path == '/health'"
+  defaultAction: allow
+```
+
+```yaml
+# Azure
+apiVersion: cloud-resources.kyma-project.io/v1alpha1
+kind: AzureWafConfiguration
+spec:
+  intents:
+    - OwaspTop10
+  customRules:
+    - name: HealthCheckBypass      # routes to customRules array; typed
+      priority: 10
+      action: Allow
+      matchConditions:
+        - matchVariable: RequestUri
+          operator: BeginsWith
+          matchValues: ["/health"]
+  managedRuleOverrides: []
+  policyMode: Prevention
+```
+
+### How it interacts with WafPolicy
+
+Each provider-specific `WafConfiguration` generates a `WafPolicy` with `spec.data` set to the assembled provider-native JSON — the same way the unified `WafConfiguration` was intended to work. `AppLoadBalancer.spec.policyRef` still resolves to a `WafPolicy` name.
+
+```
+AwsWafConfiguration / AzureWafConfiguration / GcpWafConfiguration
+    ↓ controller assembles provider-native JSON, creates/updates
+WafPolicy (spec.data: complete provider-native JSON)
+    ↓
+AppLoadBalancer (spec.policyRef: WafPolicy)
+```
+
+`WafPolicy` remains the stable foundation and the only cloud-provisioning Kind. The provider-specific `WafConfiguration` Kinds are a generation layer — they never call cloud provider APIs directly.
+
+### Trade-offs
+
+| | Unified WafConfiguration | Provider-specific WafConfiguration |
+|---|---|---|
+| Portability | Single Kind, any cloud | User picks the right Kind per cluster |
+| Merge problem | No clean cross-provider solution | Solved per provider with typed structs |
+| Override/tuning surface | Requires cloud-neutral DSL | Can use provider-native field names |
+| API size | One Kind | Three Kinds; intent vocabulary shared |
+| Migration cost | One Kind to learn | Users on multi-cloud must manage three |
+
+### Remaining open question
+
+Provider-specific Kinds solve the merge problem but do not resolve the deeper prerequisite described above: the override path. A user who deploys `AwsWafConfiguration` with `OwaspTop10` and gets a false positive still needs a way to suppress or tune specific rules within the intent. That override surface (`customRules` in the sketch above) is now expressible in a typed way — but the vocabulary, defaults, and priority assignment conventions still need to be defined from real use cases before the Kind can be specified.
+
+The split also moves the "which Kind do I use?" decision to the user at authoring time, which is a trade-off relative to the single `WafConfiguration` goal of transparent provider routing.
+
+---
+
 ## What Remains Valid
 
 The `WafPolicy` design is unaffected by this problem. A `WafPolicy` carries a single complete policy inline in `spec.data` — no merging, no fragments. It is the stable foundation regardless of how `WafConfiguration` is eventually resolved.
