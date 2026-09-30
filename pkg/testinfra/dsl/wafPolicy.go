@@ -2,6 +2,7 @@ package dsl
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -10,8 +11,8 @@ func CreateWafPolicy(ctx context.Context, clnt client.Client, obj *cloudresource
 	NewObjActions(opts...).ApplyOnObject(obj)
 
 	// Set default data if not already set
-	if obj.Spec.Data == "" {
-		obj.Spec.Data = `{
+	if obj.Spec.Payload == "" {
+		obj.Spec.Payload = `{
 			"DefaultAction": {
 				"Allow": {}
 			},

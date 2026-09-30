@@ -49,9 +49,9 @@ spec:
             spec:
               description: spec defines the desired state of WafPolicy
               properties:
-                data:
+                payload:
                   description: |-
-                    Data contains the provider-specific WAF policy configuration.
+                    Payload contains the provider-specific WAF policy configuration.
                     The structure and format depend on the cloud provider specified in the Scope resource.
 
                     AWS (supported):
@@ -95,7 +95,7 @@ spec:
                   minLength: 1
                   type: string
               required:
-                - data
+                - payload
               type: object
             status:
               description: status defines the observed state of WafPolicy

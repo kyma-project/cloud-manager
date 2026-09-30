@@ -7,15 +7,15 @@ Feature: WafPolicy feature
 
     And resource declaration:
       | Alias     | Kind                | ApiVersion                              | Name                 | Namespace |
-      | webacl    | WafPolicy           | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}          |           |
+      | policy    | WafPolicy           | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}          |           |
 
     # Create WebACL demonstrating ManagedRuleGroup with different configurations
-    When resource "webacl" is created:
+    When resource "policy" is created:
       """
       apiVersion: cloud-resources.kyma-project.io/v1beta1
       kind: WafPolicy
       spec:
-        data: |
+        payload: |
           {
             "DefaultAction": {
               "Allow": {}
@@ -170,18 +170,15 @@ Feature: WafPolicy feature
           }
       """
 
-    # Then debug wait "webacl"
+    Then eventually "findConditionTrue(policy, 'Ready')" is ok, unless:
+      | findConditionFalse(policy, 'Ready') |
+      | #timeout=20m                        |
 
-    Then eventually "webacl.status.state == 'Ready'" is ok, unless:
-      | webacl.status.state == 'Error' |
-      | #timeout=20m                   |
-
-    And "findConditionTrue(webacl, 'Ready')" is ok
-    And "webacl.status.providerId" is ok
+    And "policy.status.providerId" is ok
 
     # Clean up
-    When resource "webacl" is deleted
-    Then eventually resource "webacl" does not exist
+    When resource "policy" is deleted
+    Then eventually resource "policy" does not exist
 
   @skr @aws @waf @debug
   Scenario: Deploy httpbin application and protect it with AWS WAF
@@ -190,7 +187,7 @@ Feature: WafPolicy feature
 
     And resource declaration:
       | Alias           | Kind               | ApiVersion                              | Name                       | Namespace |
-      | webacl          | WafPolicy          | cloud-resources.kyma-project.io/v1beta1 | e2e-${scenarioId}          | default   |
+      | policy          | WafPolicy          | cloud-resources.kyma-project.io/v1beta1 | e2e-${scenarioId}          | default   |
       | sa              | ServiceAccount     | v1                                      | e2e-${scenarioId}          | default   |
       | service         | Service            | v1                                      | e2e-${scenarioId}          | default   |
       | deployment      | Deployment         | apps/v1                                 | e2e-${scenarioId}          | default   |
@@ -198,12 +195,12 @@ Feature: WafPolicy feature
       | ingress         | Ingress            | networking.k8s.io/v1                    | e2e-${scenarioId}          | default   |
 
     # Step 1: Create WAF Policy with security rules
-    When resource "webacl" is created:
+    When resource "policy" is created:
       """
       apiVersion: cloud-resources.kyma-project.io/v1beta1
       kind: WafPolicy
       spec:
-        data: |
+        payload: |
           {
             "DefaultAction": {
               "Allow": {}
@@ -255,12 +252,11 @@ Feature: WafPolicy feature
           }
       """
 
-    Then eventually "webacl.status.state == 'Ready'" is ok, unless:
-      | webacl.status.state == 'Error' |
-      | #timeout=3m                    |
+    Then eventually "findConditionTrue(policy, 'Ready')" is ok, unless:
+      | findConditionFalse(policy, 'Ready') |
+      | #timeout=3m                         |
 
-    And "findConditionTrue(webacl, 'Ready')" is ok
-    And "webacl.status.providerId" is ok
+    And "policy.status.providerId" is ok
 
     # Step 2: Deploy httpbin application
     When resource "sa" is created:
@@ -275,8 +271,8 @@ Feature: WafPolicy feature
       kind: Service
       metadata:
         labels:
-          app: ${webacl.metadata.name}
-          service: ${webacl.metadata.name}
+          app: ${policy.metadata.name}
+          service: ${policy.metadata.name}
       spec:
         type: NodePort
         ports:
@@ -284,7 +280,7 @@ Feature: WafPolicy feature
           port: 8000
           targetPort: 80
         selector:
-          app: ${webacl.metadata.name}
+          app: ${policy.metadata.name}
       """
 
     And resource "deployment" is created:
@@ -295,15 +291,15 @@ Feature: WafPolicy feature
         replicas: 1
         selector:
           matchLabels:
-            app: ${webacl.metadata.name}
+            app: ${policy.metadata.name}
             version: v1
         template:
           metadata:
             labels:
-              app: ${webacl.metadata.name}
+              app: ${policy.metadata.name}
               version: v1
           spec:
-            serviceAccountName: ${webacl.metadata.name}
+            serviceAccountName: ${policy.metadata.name}
             containers:
             - image: docker.io/kennethreitz/httpbin
               imagePullPolicy: IfNotPresent
@@ -336,7 +332,7 @@ Feature: WafPolicy feature
           alb.ingress.kubernetes.io/scheme: internet-facing
           alb.ingress.kubernetes.io/target-type: instance
           alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
-          alb.ingress.kubernetes.io/wafv2-acl-arn: "${webacl.status.providerId}"
+          alb.ingress.kubernetes.io/wafv2-acl-arn: "${policy.status.providerId}"
       spec:
         ingressClassName: alb
         rules:
@@ -346,7 +342,7 @@ Feature: WafPolicy feature
               pathType: Prefix
               backend:
                 service:
-                  name: ${webacl.metadata.name}
+                  name: ${policy.metadata.name}
                   port:
                     number: 8000
       """
@@ -371,8 +367,8 @@ Feature: WafPolicy feature
     When resource "ingress" is deleted
     Then eventually resource "ingress" does not exist
 
-    When resource "webacl" is deleted
-    Then eventually resource "webacl" does not exist
+    When resource "policy" is deleted
+    Then eventually resource "policy" does not exist
 
     When resource "ingressclass" is deleted
     Then eventually resource "ingressclass" does not exist

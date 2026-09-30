@@ -1,5 +1,5 @@
-- path: spec.data
-  name: spec.data
+- path: spec.payload
+  name: spec.payload
   widget: CodeEditor
   language: "'plaintext'"
   required: true
