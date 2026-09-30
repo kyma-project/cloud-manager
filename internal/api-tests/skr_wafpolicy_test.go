@@ -21,7 +21,6 @@ import (
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Feature: SKR WafPolicy", func() {
@@ -30,9 +29,7 @@ var _ = Describe("Feature: SKR WafPolicy", func() {
 		const webaclName = "test-webacl"
 
 		webacl := &cloudresourcesv1beta1.WafPolicy{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: webaclName,
-			},
+			Name: webaclName,
 			Spec: cloudresourcesv1beta1.WafPolicySpec{
 				Payload: `{
 					"DefaultAction": {
@@ -88,9 +85,7 @@ var _ = Describe("Feature: SKR WafPolicy", func() {
 		const webaclName = "test-webacl-multi"
 
 		webacl := &cloudresourcesv1beta1.WafPolicy{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: webaclName,
-			},
+			Name: webaclName,
 			Spec: cloudresourcesv1beta1.WafPolicySpec{
 				Payload: `{
 					"DefaultAction": {
@@ -183,9 +178,7 @@ var _ = Describe("Feature: SKR WafPolicy", func() {
 		const webaclName = "test-webacl-invalid"
 
 		webacl := &cloudresourcesv1beta1.WafPolicy{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: webaclName,
-			},
+			Name: webaclName,
 			Spec: cloudresourcesv1beta1.WafPolicySpec{
 				Payload: `invalid json{`,
 			},
