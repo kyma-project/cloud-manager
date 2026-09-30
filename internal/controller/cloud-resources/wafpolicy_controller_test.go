@@ -62,7 +62,7 @@ var _ = Describe("WafPolicy Controller", func() {
 
 		By("When WafPolicy is created", func() {
 			awsWebAcl.Spec = cloudresourcesv1beta1.WafPolicySpec{
-				Data: `{
+				Payload: `{
 					"DefaultAction": {
 						"Allow": {}
 					},

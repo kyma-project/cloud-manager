@@ -7,8 +7,8 @@ data:
           source: spec
           children:
             - widget: CodeViewer
-              source: data
-              name: spec.data
+              source: payload
+              name: spec.payload
               language: json
         - name: status
           widget: Panel
@@ -21,8 +21,8 @@ data:
               source: conditions
               name: status.conditions
   form: |
-    - path: spec.data
-      name: spec.data
+    - path: spec.payload
+      name: spec.payload
       widget: CodeEditor
       language: "'plaintext'"
       required: true
@@ -42,7 +42,7 @@ data:
       name: status.providerId
   translations: |
     en:
-      spec.data: WebACL Configuration (JSON)
+      spec.payload: Provider policy payload
       status.providerId: Provider ID
       status.conditions: Status Conditions
       configuration: Configuration

@@ -24,7 +24,7 @@ import (
 
 // WafPolicySpec defines the desired state of WafPolicy
 type WafPolicySpec struct {
-	// Data contains the provider-specific WAF policy configuration.
+	// Payload contains the provider-specific WAF policy configuration.
 	// The structure and format depend on the cloud provider specified in the Scope resource.
 	//
 	// AWS (supported):
@@ -67,7 +67,7 @@ type WafPolicySpec struct {
 	// The configuration is validated by the provider's API during reconciliation.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
-	Data string `json:"data"`
+	Payload string `json:"payload"`
 }
 
 // WafPolicyStatus defines the observed state of WafPolicy.
@@ -172,19 +172,28 @@ func (in *WafPolicy) SetStatusProcessing() {
 	})
 }
 
-func (in *WafPolicy) SetStatusDeleteWhileUsed(msg string) {
+func (in *WafPolicy) SetStatusDeleting() {
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
 		ObservedGeneration: in.Generation,
-		Reason:             ReasonDeleteWhileUsed,
+		Reason:             ReasonDeleting,
+		Message:            ReasonDeleting,
+	})
+}
+
+func (in *WafPolicy) SetStatusDeletionBlockedByDependents(msg string) {
+	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
+		Type:               ConditionTypeReady,
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: in.Generation,
+		Reason:             ReasonDeletionBlockedByDependents,
 		Message:            msg,
 	})
 }
 
-func (in *WafPolicy) RemoveStatusDeleteWhileUsed() {
-	// When DeleteWhileUsed is cleared, set back to Processing to continue deletion
-	in.SetStatusProcessing()
+func (in *WafPolicy) RemoveStatusDeletionBlockedByDependents() {
+	in.SetStatusDeleting()
 }
 
 func (in *WafPolicy) Conditions() *[]metav1.Condition { return &in.Status.Conditions }

@@ -22,6 +22,19 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Deleting AWS WebACL")
 
+	if webAcl.Status.ProviderId != "" {
+		readyCondition := meta.FindStatusCondition(webAcl.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
+		if readyCondition == nil || (readyCondition.Reason != cloudresourcesv1beta1.ReasonDeleting && readyCondition.Reason != cloudresourcesv1beta1.ReasonDeletionBlockedByDependents) {
+			return composed.NewStatusPatcherComposed(webAcl).
+				MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
+					acl.SetStatusDeleting()
+				}).
+				OnSuccess(composed.Requeue).
+				OnStatusChanged(composed.Log("WafPolicy Deleting")).
+				Run(ctx, state.Cluster().K8sClient())
+		}
+	}
+
 	scope := ScopeRegional()
 
 	// Get ID from loaded WebACL in state
@@ -62,15 +75,15 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, ctx
 	}
 
-	// If WebACL is still associated with resources, set DeleteWhileUsed condition
+	// If WebACL is still associated with resources, set DeletionBlockedByDependents condition
 	if isWebAclAssociatedError(err) {
 		logger.Error(err, "WebACL is still associated with AWS resources, cannot delete")
 		return composed.NewStatusPatcherComposed(webAcl).
 			MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
-				acl.SetStatusDeleteWhileUsed("WebACL is still associated with AWS resources. Remove all associations before deleting.")
+				acl.SetStatusDeletionBlockedByDependents("WebACL is still associated with AWS resources. Remove all associations before deleting.")
 			}).
 			OnSuccess(composed.Requeue).
-			OnStatusChanged(composed.Log("WafPolicy DeleteWhileUsed")).
+			OnStatusChanged(composed.Log("WafPolicy DeletionBlockedByDependents")).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
@@ -110,16 +123,16 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	// Deletion succeeded - if we had a DeleteWhileUsed reason, clear it
+	// Deletion succeeded - if we had a DeletionBlockedByDependents reason, clear it
 	readyCondition := meta.FindStatusCondition(webAcl.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
-	if readyCondition != nil && readyCondition.Reason == cloudresourcesv1beta1.ReasonDeleteWhileUsed {
-		logger.Info("WebACL is no longer associated, clearing DeleteWhileUsed state")
+	if readyCondition != nil && readyCondition.Reason == cloudresourcesv1beta1.ReasonDeletionBlockedByDependents {
+		logger.Info("WebACL is no longer associated, clearing DeletionBlockedByDependents state")
 		return composed.NewStatusPatcherComposed(webAcl).
 			MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
-				acl.RemoveStatusDeleteWhileUsed()
+				acl.RemoveStatusDeletionBlockedByDependents()
 			}).
 			OnSuccess(composed.Continue).
-			OnFailure(composed.Log("Failed to clear DeleteWhileUsed state")).
+			OnFailure(composed.Log("Failed to clear DeletionBlockedByDependents state")).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 

@@ -34,7 +34,7 @@ var _ = Describe("Feature: SKR WafPolicy", func() {
 				Name: webaclName,
 			},
 			Spec: cloudresourcesv1beta1.WafPolicySpec{
-				Data: `{
+				Payload: `{
 					"DefaultAction": {
 						"Allow": {}
 					},
@@ -92,7 +92,7 @@ var _ = Describe("Feature: SKR WafPolicy", func() {
 				Name: webaclName,
 			},
 			Spec: cloudresourcesv1beta1.WafPolicySpec{
-				Data: `{
+				Payload: `{
 					"DefaultAction": {
 						"Block": {}
 					},
@@ -187,7 +187,7 @@ var _ = Describe("Feature: SKR WafPolicy", func() {
 				Name: webaclName,
 			},
 			Spec: cloudresourcesv1beta1.WafPolicySpec{
-				Data: `invalid json{`,
+				Payload: `invalid json{`,
 			},
 		}
 

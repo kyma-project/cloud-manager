@@ -21,8 +21,8 @@ func checkUpdateNeeded(ctx context.Context, st composed.State) (error, context.C
 
 	// Parse desired spec from JSON
 	var desired wafv2.CreateWebACLInput
-	if err := json.Unmarshal([]byte(webAcl.Spec.Data), &desired); err != nil {
-		return composed.LogErrorAndReturn(err, "Error parsing WebACL JSON from spec.data", composed.StopWithRequeue, ctx)
+	if err := json.Unmarshal([]byte(webAcl.Spec.Payload), &desired); err != nil {
+		return composed.LogErrorAndReturn(err, "Error parsing WebACL JSON from spec.payload", composed.StopWithRequeue, ctx)
 	}
 
 	// Compare desired vs current state

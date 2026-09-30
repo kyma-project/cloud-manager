@@ -4,8 +4,8 @@ body:
       source: spec
       children:
         - widget: CodeViewer
-          source: data
-          name: spec.data
+          source: payload
+          name: spec.payload
           language: json
     - name: status
       widget: Panel

@@ -26,11 +26,11 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Updating AWS WebACL")
 
-	// Parse JSON from spec.data directly into AWS SDK CreateWebACLInput
+	// Parse JSON from spec.payload directly into AWS SDK CreateWebACLInput
 	var createInput wafv2.CreateWebACLInput
-	if err := json.Unmarshal([]byte(webAcl.Spec.Data), &createInput); err != nil {
-		logger.Error(err, "Failed to parse spec.data as JSON")
-		return composed.LogErrorAndReturn(err, "Error parsing WebACL JSON from spec.data", composed.StopWithRequeue, ctx)
+	if err := json.Unmarshal([]byte(webAcl.Spec.Payload), &createInput); err != nil {
+		logger.Error(err, "Failed to parse spec.payload as JSON")
+		return composed.LogErrorAndReturn(err, "Error parsing WebACL JSON from spec.payload", composed.StopWithRequeue, ctx)
 	}
 
 	// Build UpdateWebACLInput from CreateWebACLInput

@@ -23,15 +23,15 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Creating AWS WebACL")
 
-	// Parse JSON from spec.data directly into AWS SDK CreateWebACLInput
+	// Parse JSON from spec.payload directly into AWS SDK CreateWebACLInput
 	var input wafv2.CreateWebACLInput
-	err := json.Unmarshal([]byte(webAcl.Spec.Data), &input)
+	err := json.Unmarshal([]byte(webAcl.Spec.Payload), &input)
 	if err != nil {
-		// JSON unmarshal error is always a configuration error (user must fix spec.data)
-		logger.Error(err, "Invalid JSON in spec.data")
+		// JSON unmarshal error is always a configuration error (user must fix spec.payload)
+		logger.Error(err, "Invalid JSON in spec.payload")
 		return composed.NewStatusPatcherComposed(webAcl).
 			MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
-				acl.SetStatusConfigurationError("Invalid JSON in spec.data: " + err.Error())
+				acl.SetStatusConfigurationError("Invalid JSON in spec.payload: " + err.Error())
 			}).
 			OnSuccess(composed.Forget).
 			OnStatusChanged(composed.Log("WafPolicy ConfigurationError")).
