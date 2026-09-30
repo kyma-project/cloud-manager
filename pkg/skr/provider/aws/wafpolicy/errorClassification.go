@@ -21,8 +21,7 @@ func isConfigurationError(err error) bool {
 	}
 
 	// Check for specific AWS API error codes that indicate configuration issues
-	var apiError smithy.APIError
-	if errors.As(err, &apiError) {
+	if apiError, ok := errors.AsType[smithy.APIError](err); ok {
 		switch apiError.ErrorCode() {
 		// WAF validation errors - invalid rule structure, invalid parameters
 		case "WAFInvalidParameterException",
