@@ -24,6 +24,9 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 	}
 
 	// localVpcCidr is the route destination; shootName is the tag key for MATCHED/UNMATCHED strategy.
+	if state.Scope().Spec.Scope.Alicloud == nil {
+		return nil, ctx
+	}
 	localVpcCidr := state.Scope().Spec.Scope.Alicloud.Network.VPC.CIDR
 	if localVpcCidr == "" {
 		return nil, ctx
@@ -51,7 +54,6 @@ func deleteRoutes(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, ctx
 	}
 
-	localVpcCidr := state.Scope().Spec.Scope.Alicloud.Network.VPC.CIDR
 	shootName := state.Scope().Spec.ShootName
 	strategy := string(state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy)
 	tables := routeTablesForStrategy(state.routeTables, strategy, shootName)

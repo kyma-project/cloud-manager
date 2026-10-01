@@ -249,8 +249,7 @@ func (c *alicloudVpcPeeringClient) DescribeRouteTables(ctx context.Context, vpcI
 			}
 			result = append(result, info)
 		}
-		totalCount := tea.Int32Value(resp.Body.TotalCount)
-		if int32(len(result)) >= totalCount || int32(len(resp.Body.RouterTableList.RouterTableListType)) < pageSize {
+		if int32(len(resp.Body.RouterTableList.RouterTableListType)) < pageSize {
 			break
 		}
 		pageNum++

@@ -48,6 +48,9 @@ func (f *stateFactory) NewState(ctx context.Context, vpcPeeringState vpcpeeringt
 	accessKeySecret := alicloudconfig.AlicloudConfig.AccessKeySecret
 
 	scope := vpcPeeringState.Scope()
+	if scope.Spec.Scope.Alicloud == nil {
+		return nil, fmt.Errorf("scope %s/%s has no AliCloud provider data", scope.Namespace, scope.Name)
+	}
 	localRegion := scope.Spec.Region
 	localAccountId := scope.Spec.Scope.Alicloud.AccountId
 
