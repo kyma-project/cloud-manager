@@ -52,9 +52,9 @@ func NewClientProvider() ClientProvider {
 		// API calls (CreateVpcPeerConnection, AcceptVpcPeerConnection, etc.) are not tracked
 		// by alicloudmetrics. vpc-20160428 route calls below are tracked.
 		peerConfig := &openapiv1.Config{
-			AccessKeyId:     tea.String(accessKeyId),
-			AccessKeySecret: tea.String(accessKeySecret),
-			RegionId:        tea.String(region),
+			AccessKeyId:     new(accessKeyId),
+			AccessKeySecret: new(accessKeySecret),
+			RegionId:        new(region),
 		}
 		peerClient, err := vpcpeer.NewClient(peerConfig)
 		if err != nil {
@@ -63,10 +63,10 @@ func NewClientProvider() ClientProvider {
 
 		// vpc-20160428/v6 uses darabonba-openapi v2
 		vpcConfig := &openapiv2.Config{
-			AccessKeyId:     tea.String(accessKeyId),
-			AccessKeySecret: tea.String(accessKeySecret),
-			RegionId:        tea.String(region),
-			Endpoint:        tea.String(fmt.Sprintf("vpc.%s.aliyuncs.com", region)),
+			AccessKeyId:     new(accessKeyId),
+			AccessKeySecret: new(accessKeySecret),
+			RegionId:        new(region),
+			Endpoint:        new(fmt.Sprintf("vpc.%s.aliyuncs.com", region)),
 			HttpClient:      alicloudmetrics.NewMetricsHTTPClient(region, alicloudmetrics.AccountIdFromContext(ctx)),
 		}
 		vpcClient, err := vpc.NewClient(vpcConfig)
@@ -96,12 +96,12 @@ func (c *alicloudVpcPeeringClient) CreateVpcPeerConnection(ctx context.Context, 
 		return "", fmt.Errorf("error parsing acceptingAliUid %q: %w", acceptingAliUid, err)
 	}
 	req := &vpcpeer.CreateVpcPeerConnectionRequest{
-		RegionId:          tea.String(c.region),
-		VpcId:             tea.String(vpcId),
-		AcceptingAliUid:   tea.Int64(uid),
-		AcceptingRegionId: tea.String(acceptingRegion),
-		AcceptingVpcId:    tea.String(acceptingVpcId),
-		Name:              tea.String(name),
+		RegionId:          new(c.region),
+		VpcId:             new(vpcId),
+		AcceptingAliUid:   new(uid),
+		AcceptingRegionId: new(acceptingRegion),
+		AcceptingVpcId:    new(acceptingVpcId),
+		Name:              new(name),
 	}
 	resp, err := c.peerClient.CreateVpcPeerConnection(req)
 	if err != nil {
@@ -112,7 +112,7 @@ func (c *alicloudVpcPeeringClient) CreateVpcPeerConnection(ctx context.Context, 
 
 func (c *alicloudVpcPeeringClient) AcceptVpcPeerConnection(ctx context.Context, instanceId string) error {
 	req := &vpcpeer.AcceptVpcPeerConnectionRequest{
-		InstanceId: tea.String(instanceId),
+		InstanceId: new(instanceId),
 	}
 	_, err := c.peerClient.AcceptVpcPeerConnection(req)
 	if err != nil {
@@ -123,7 +123,7 @@ func (c *alicloudVpcPeeringClient) AcceptVpcPeerConnection(ctx context.Context, 
 
 func (c *alicloudVpcPeeringClient) GetVpcPeerConnection(ctx context.Context, instanceId string) (*VpcPeerInfo, error) {
 	req := &vpcpeer.GetVpcPeerConnectionAttributeRequest{
-		InstanceId: tea.String(instanceId),
+		InstanceId: new(instanceId),
 	}
 	resp, err := c.peerClient.GetVpcPeerConnectionAttribute(req)
 	if err != nil {
@@ -156,7 +156,7 @@ func (c *alicloudVpcPeeringClient) GetVpcPeerConnection(ctx context.Context, ins
 
 func (c *alicloudVpcPeeringClient) DeleteVpcPeerConnection(ctx context.Context, instanceId string) error {
 	req := &vpcpeer.DeleteVpcPeerConnectionRequest{
-		InstanceId: tea.String(instanceId),
+		InstanceId: new(instanceId),
 	}
 	_, err := c.peerClient.DeleteVpcPeerConnection(req)
 	if err != nil {
@@ -173,9 +173,9 @@ func (c *alicloudVpcPeeringClient) ListVpcPeerConnections(ctx context.Context, v
 	var nextToken *string
 	for {
 		req := &vpcpeer.ListVpcPeerConnectionsRequest{
-			RegionId:   tea.String(c.region),
-			VpcId:      []*string{tea.String(vpcId)},
-			Name:       tea.String(name),
+			RegionId:   new(c.region),
+			VpcId:      []*string{new(vpcId)},
+			Name:       new(name),
 			MaxResults: tea.Int32(100),
 		}
 		if nextToken != nil {
@@ -223,9 +223,9 @@ func (c *alicloudVpcPeeringClient) DescribeRouteTables(ctx context.Context, vpcI
 	const pageSize = int32(50)
 	for {
 		req := &vpc.DescribeRouteTableListRequest{
-			RegionId:   tea.String(c.region),
-			VpcId:      tea.String(vpcId),
-			PageNumber: tea.Int32(pageNum),
+			RegionId:   new(c.region),
+			VpcId:      new(vpcId),
+			PageNumber: new(pageNum),
 			PageSize:   tea.Int32(pageSize),
 		}
 		resp, err := c.vpcClient.DescribeRouteTableList(req)
@@ -259,11 +259,11 @@ func (c *alicloudVpcPeeringClient) DescribeRouteTables(ctx context.Context, vpcI
 
 func (c *alicloudVpcPeeringClient) CreateRouteEntry(ctx context.Context, routeTableId, destCidr, instanceId string) error {
 	req := &vpc.CreateRouteEntryRequest{
-		RegionId:             tea.String(c.region),
-		RouteTableId:         tea.String(routeTableId),
-		DestinationCidrBlock: tea.String(destCidr),
-		NextHopType:          tea.String("VpcPeer"),
-		NextHopId:            tea.String(instanceId),
+		RegionId:             new(c.region),
+		RouteTableId:         new(routeTableId),
+		DestinationCidrBlock: new(destCidr),
+		NextHopType:          new("VpcPeer"),
+		NextHopId:            new(instanceId),
 	}
 	_, err := c.vpcClient.CreateRouteEntry(req)
 	if err != nil {
@@ -277,10 +277,10 @@ func (c *alicloudVpcPeeringClient) CreateRouteEntry(ctx context.Context, routeTa
 
 func (c *alicloudVpcPeeringClient) DeleteRouteEntry(ctx context.Context, routeTableId, destCidr, instanceId string) error {
 	req := &vpc.DeleteRouteEntryRequest{
-		RegionId:             tea.String(c.region),
-		RouteTableId:         tea.String(routeTableId),
-		DestinationCidrBlock: tea.String(destCidr),
-		NextHopId:            tea.String(instanceId),
+		RegionId:             new(c.region),
+		RouteTableId:         new(routeTableId),
+		DestinationCidrBlock: new(destCidr),
+		NextHopId:            new(instanceId),
 	}
 	_, err := c.vpcClient.DeleteRouteEntry(req)
 	if err != nil {
