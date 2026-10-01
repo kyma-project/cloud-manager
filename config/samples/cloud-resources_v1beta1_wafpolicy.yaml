@@ -1,9 +1,9 @@
 apiVersion: cloud-resources.kyma-project.io/v1beta1
 kind: WafPolicy
 metadata:
-  name: my-webacl
+  name: my-policy
 spec:
-  data: |
+  payload: |
     {
       "DefaultAction": {
         "Allow": {}
