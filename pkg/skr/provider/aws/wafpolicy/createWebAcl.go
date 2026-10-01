@@ -43,7 +43,7 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 	input.Scope = ScopeRegional()
 
 	// Add Cloud Manager tags
-	input.Tags = convertTags(webAcl, state.Scope())
+	input.Tags = convertTags(webAcl, state)
 
 	// Create WebACL
 	err = state.awsClient.CreateWebACL(ctx, &input)
