@@ -29,6 +29,9 @@ func waitVpcPeeringActive(ctx context.Context, st composed.State) (error, contex
 		return nil, ctx
 
 	case "Accepting":
+		// Cross-account peering only: connection lands in Accepting until the remote account
+		// calls AcceptVpcPeerConnection. Currently unreachable because createRemoteClient blocks
+		// cross-account peering until assumeRoleArn support is added (see #2199).
 		logger.Info("AliCloud VpcPeerConnection is Accepting, calling AcceptVpcPeerConnection")
 		if err := state.remoteClient.AcceptVpcPeerConnection(ctx, obj.Status.Id); err != nil {
 			return composed.LogErrorAndReturn(err, "Error accepting AliCloud VpcPeerConnection", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
