@@ -24,7 +24,6 @@ type VpcPeerInfo struct {
 	RemoteVpcId       string   // from AcceptingVpc.VpcId
 	RemoteIpv4Cidrs   []string // from AcceptingVpc.Ipv4Cidrs
 	LocalIpv4Cidrs    []string // from Vpc.Ipv4Cidrs
-	Bandwidth         int32
 }
 
 // RouteTableInfo is a flattened view of a route table entry.
@@ -35,7 +34,6 @@ type RouteTableInfo struct {
 
 type Client interface {
 	CreateVpcPeerConnection(ctx context.Context, vpcId, acceptingAliUid, acceptingRegion, acceptingVpcId, name string) (instanceId string, err error)
-	ModifyVpcPeerConnection(ctx context.Context, instanceId string, bandwidth int32) error
 	AcceptVpcPeerConnection(ctx context.Context, instanceId string) error
 	GetVpcPeerConnection(ctx context.Context, instanceId string) (*VpcPeerInfo, error)
 	DeleteVpcPeerConnection(ctx context.Context, instanceId string) error
@@ -112,18 +110,6 @@ func (c *alicloudVpcPeeringClient) CreateVpcPeerConnection(ctx context.Context, 
 	return tea.StringValue(resp.Body.InstanceId), nil
 }
 
-func (c *alicloudVpcPeeringClient) ModifyVpcPeerConnection(ctx context.Context, instanceId string, bandwidth int32) error {
-	req := &vpcpeer.ModifyVpcPeerConnectionRequest{
-		InstanceId: tea.String(instanceId),
-		Bandwidth:  tea.Int32(bandwidth),
-	}
-	_, err := c.peerClient.ModifyVpcPeerConnection(req)
-	if err != nil {
-		return fmt.Errorf("error modifying alicloud vpc peer connection %s: %w", instanceId, err)
-	}
-	return nil
-}
-
 func (c *alicloudVpcPeeringClient) AcceptVpcPeerConnection(ctx context.Context, instanceId string) error {
 	req := &vpcpeer.AcceptVpcPeerConnectionRequest{
 		InstanceId: tea.String(instanceId),
@@ -152,7 +138,6 @@ func (c *alicloudVpcPeeringClient) GetVpcPeerConnection(ctx context.Context, ins
 		Status:            tea.StringValue(b.Status),
 		RegionId:          tea.StringValue(b.RegionId),
 		AcceptingRegionId: tea.StringValue(b.AcceptingRegionId),
-		Bandwidth:         tea.Int32Value(b.Bandwidth),
 	}
 	if b.Vpc != nil {
 		info.LocalVpcId = tea.StringValue(b.Vpc.VpcId)
@@ -209,7 +194,6 @@ func (c *alicloudVpcPeeringClient) ListVpcPeerConnections(ctx context.Context, v
 				Status:            tea.StringValue(p.Status),
 				RegionId:          tea.StringValue(p.RegionId),
 				AcceptingRegionId: tea.StringValue(p.AcceptingRegionId),
-				Bandwidth:         tea.Int32Value(p.Bandwidth),
 			}
 			if p.Vpc != nil {
 				info.LocalVpcId = tea.StringValue(p.Vpc.VpcId)
