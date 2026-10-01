@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
