@@ -15,6 +15,8 @@ func statusInitiated(ctx context.Context, st composed.State) (error, context.Con
 		return nil, ctx
 	}
 
+	// StateProcessing is the KCP-wide initial state; AWS uses "initiating-request" instead,
+	// but AliCloud follows the shared KCP convention.
 	obj.Status.State = string(cloudcontrolv1beta1.StateProcessing)
 
 	return composed.PatchStatus(obj).
