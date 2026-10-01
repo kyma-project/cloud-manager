@@ -41,7 +41,6 @@ func New(stateFactory StateFactory) composed.Action {
 					actions.PatchAddCommonFinalizer(),
 					createVpcPeerConnection,
 					waitVpcPeeringActive,
-					setBandwidth,
 					createRoutes,
 					createRemoteRoutes,
 					updateSuccessStatus,
