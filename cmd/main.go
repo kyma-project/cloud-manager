@@ -96,6 +96,7 @@ import (
 	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	wafpolicyclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshot"
@@ -339,6 +340,11 @@ func main() {
 
 	if err = cloudresourcescontroller.SetupAwsVpcPeeringReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsVpcPeering")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupWafPolicyReconciler(skrRegistry, wafpolicyclient.NewClientProvider(), abstractions.NewOSEnvironment()); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "WafPolicy")
 		os.Exit(1)
 	}
 
