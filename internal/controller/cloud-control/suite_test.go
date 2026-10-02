@@ -134,6 +134,7 @@ var _ = BeforeSuite(func() {
 	//VpcPeering
 	Expect(SetupVpcPeeringReconciler(
 		infra.KcpManager(),
+		infra.AlicloudMock().VpcPeeringClientProvider(),
 		infra.AwsMock().VpcPeeringSkrProvider(),
 		infra.AzureMock().VpcPeeringProvider(),
 		infra.GcpMock().VpcPeeringProvider(),
