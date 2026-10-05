@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -35,7 +36,7 @@ func deleteWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		}
 	}
 
-	scope := ScopeRegional()
+	scope := wafv2types.ScopeRegional
 
 	// Get ID from loaded WebACL in state
 	var id string

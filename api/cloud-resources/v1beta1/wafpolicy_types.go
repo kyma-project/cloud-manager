@@ -72,6 +72,11 @@ type WafPolicySpec struct {
 
 // WafPolicyStatus defines the observed state of WafPolicy.
 type WafPolicyStatus struct {
+	// Id is the Cloud Manager generated unique identifier for the cloud resource,
+	// used as the cloud resource name to avoid collision across namespaces and SKRs.
+	// +optional
+	Id string `json:"id,omitempty"`
+
 	// ProviderId is the provider-specific resource identifier (e.g., AWS ARN, Azure Resource ID)
 	// +optional
 	ProviderId string `json:"providerId,omitempty"`

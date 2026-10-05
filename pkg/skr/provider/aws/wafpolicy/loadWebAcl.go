@@ -3,6 +3,7 @@ package wafpolicy
 import (
 	"context"
 
+	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 )
@@ -12,9 +13,14 @@ func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context)
 	logger := composed.LoggerFromCtx(ctx)
 	webAcl := state.ObjAsWafPolicy()
 
+	if webAcl.Status.Id == "" {
+		return nil, ctx
+	}
+
 	logger.Info("Loading AWS WebACL")
 
-	scope := ScopeRegional()
+	scope := wafv2types.ScopeRegional
+	webAclName := webAcl.Status.Id
 
 	// List WebACLs to find by name
 	summaries, err := state.awsClient.ListWebACLs(ctx, scope)
@@ -25,7 +31,7 @@ func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context)
 	// Find the WebACL by name
 	var foundId string
 	for _, summary := range summaries {
-		if summary.Name != nil && *summary.Name == webAcl.Name {
+		if summary.Name != nil && *summary.Name == webAclName {
 			if summary.Id != nil {
 				foundId = *summary.Id
 			}
@@ -42,7 +48,7 @@ func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context)
 	}
 
 	// Load full WebACL details
-	awsWebACL, lockToken, err := state.awsClient.GetWebACL(ctx, webAcl.Name, foundId, scope)
+	awsWebACL, lockToken, err := state.awsClient.GetWebACL(ctx, webAclName, foundId, scope)
 	if err != nil {
 		// If not found, clear status so it can be recreated
 		if awsmeta.IsNotFound(err) {

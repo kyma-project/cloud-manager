@@ -2,20 +2,19 @@ package wafpolicy
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
 func updateWebAcl(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
-	webAcl := state.ObjAsWafPolicy()
 
 	// Skip if not created yet
-	if webAcl.Status.ProviderId == "" {
+	if state.ObjAsWafPolicy().Status.ProviderId == "" {
 		return nil, ctx
 	}
 
@@ -26,18 +25,11 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("Updating AWS WebACL")
 
-	// Parse JSON from spec.payload directly into AWS SDK CreateWebACLInput
-	var createInput wafv2.CreateWebACLInput
-	if err := json.Unmarshal([]byte(webAcl.Spec.Payload), &createInput); err != nil {
-		logger.Error(err, "Failed to parse spec.payload as JSON")
-		return composed.LogErrorAndReturn(err, "Error parsing WebACL JSON from spec.payload", composed.StopWithRequeue, ctx)
-	}
-
-	// Build UpdateWebACLInput from CreateWebACLInput
+	createInput := state.parsedInput
 	input := &wafv2.UpdateWebACLInput{
-		Name:                 aws.String(webAcl.Name),
+		Name:                 aws.String(state.ObjAsWafPolicy().Status.Id),
 		Id:                   state.awsWebAcl.Id,
-		Scope:                ScopeRegional(),
+		Scope:                wafv2types.ScopeRegional,
 		DefaultAction:        createInput.DefaultAction,
 		Rules:                createInput.Rules,
 		VisibilityConfig:     createInput.VisibilityConfig,
@@ -45,23 +37,15 @@ func updateWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		TokenDomains:         createInput.TokenDomains,
 		CaptchaConfig:        createInput.CaptchaConfig,
 		ChallengeConfig:      createInput.ChallengeConfig,
+		Description:          createInput.Description,
 		LockToken:            aws.String(state.lockToken),
 	}
 
-	if createInput.Description != nil {
-		input.Description = createInput.Description
-	}
-
-	// Update WebACL
-	err := state.awsClient.UpdateWebACL(ctx, input)
-
-	if err != nil {
+	if err := state.awsClient.UpdateWebACL(ctx, input); err != nil {
 		logger.Error(err, "Error updating WebACL")
 		return composed.LogErrorAndReturn(err, "Error updating AWS WebACL", composed.StopWithRequeue, ctx)
 	}
 
 	logger.Info("WebACL updated successfully, requeueing to reload")
-
-	// Requeue to reload WebACL with fresh state from AWS
 	return composed.StopWithRequeue, ctx
 }

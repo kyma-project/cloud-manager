@@ -15,7 +15,11 @@ var _ NukeNfsBackupClient = (awsnfsvolumebackupclient.Client)(nil)
 
 // NukeNfsBackupClient is a subset of awsnfsvolumebackupclient.Client
 type NukeNfsBackupClient interface {
-	// whichever methods are used from awsnfsvolumebackupclient
+	CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error)
+	StartBackupJob(ctx context.Context, params *awsnfsvolumebackupclient.StartBackupJobInput) (*backup.StartBackupJobOutput, error)
+	ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaultListMember, error)
+	ListRecoveryPointsForVault(ctx context.Context, accountId, backupVaultName string) ([]backuptypes.RecoveryPointByBackupVault, error)
+	DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error)
 }
 
 var _ NukeWafPolicyClient = (wafpolicyclient.Client)(nil)
@@ -31,16 +35,6 @@ type NukeWafPolicyClient interface {
 type NukeClient interface {
 	NukeNfsBackupClient
 	NukeWafPolicyClient
-}
-
-// no boilerplate methods
-	awsnfsvolumebackupclient.Client
-
-	// WebACL methods
-	ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error)
-	GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error)
-	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
-	ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error)
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[NukeClient] {
@@ -78,60 +72,24 @@ type client struct {
 }
 
 // Embed backup client methods
-func (c *client) IsNotFound(err error) bool {
-	return c.backupClient.IsNotFound(err)
-}
-
-func (c *client) IsAlreadyExists(err error) bool {
-	return c.backupClient.IsAlreadyExists(err)
-}
-
-func (c *client) ListTags(ctx context.Context, resourceArn string) (map[string]string, error) {
-	return c.backupClient.ListTags(ctx, resourceArn)
-}
-
-func (c *client) ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaultListMember, error) {
-	return c.backupClient.ListBackupVaults(ctx)
-}
-
-func (c *client) DescribeBackupVault(ctx context.Context, backupVaultName string) (*backup.DescribeBackupVaultOutput, error) {
-	return c.backupClient.DescribeBackupVault(ctx, backupVaultName)
-}
-
 func (c *client) CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error) {
 	return c.backupClient.CreateBackupVault(ctx, name, tags)
-}
-
-func (c *client) DeleteBackupVault(ctx context.Context, name string) error {
-	return c.backupClient.DeleteBackupVault(ctx, name)
 }
 
 func (c *client) StartBackupJob(ctx context.Context, params *awsnfsvolumebackupclient.StartBackupJobInput) (*backup.StartBackupJobOutput, error) {
 	return c.backupClient.StartBackupJob(ctx, params)
 }
 
-func (c *client) DescribeBackupJob(ctx context.Context, backupJobId string) (*backup.DescribeBackupJobOutput, error) {
-	return c.backupClient.DescribeBackupJob(ctx, backupJobId)
+func (c *client) ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaultListMember, error) {
+	return c.backupClient.ListBackupVaults(ctx)
 }
 
 func (c *client) ListRecoveryPointsForVault(ctx context.Context, accountId, backupVaultName string) ([]backuptypes.RecoveryPointByBackupVault, error) {
 	return c.backupClient.ListRecoveryPointsForVault(ctx, accountId, backupVaultName)
 }
 
-func (c *client) DescribeRecoveryPoint(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.DescribeRecoveryPointOutput, error) {
-	return c.backupClient.DescribeRecoveryPoint(ctx, accountId, backupVaultName, recoveryPointArn)
-}
-
 func (c *client) DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error) {
 	return c.backupClient.DeleteRecoveryPoint(ctx, backupVaultName, recoveryPointArn)
-}
-
-func (c *client) StartCopyJob(ctx context.Context, params *awsnfsvolumebackupclient.StartCopyJobInput) (*backup.StartCopyJobOutput, error) {
-	return c.backupClient.StartCopyJob(ctx, params)
-}
-
-func (c *client) DescribeCopyJob(ctx context.Context, copyJobId string) (*backup.DescribeCopyJobOutput, error) {
-	return c.backupClient.DescribeCopyJob(ctx, copyJobId)
 }
 
 // WebACL methods

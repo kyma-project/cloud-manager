@@ -73,60 +73,24 @@ func (m *mockClient) IsWebACLDeleted(arn string) bool {
 }
 
 // Implement NukeClient interface by embedding backup client methods
-func (m *mockClient) IsNotFound(err error) bool {
-	return m.backupClient.IsNotFound(err)
-}
-
-func (m *mockClient) IsAlreadyExists(err error) bool {
-	return m.backupClient.IsAlreadyExists(err)
-}
-
-func (m *mockClient) ListTags(ctx context.Context, resourceArn string) (map[string]string, error) {
-	return m.backupClient.ListTags(ctx, resourceArn)
-}
-
-func (m *mockClient) ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaultListMember, error) {
-	return m.backupClient.ListBackupVaults(ctx)
-}
-
-func (m *mockClient) DescribeBackupVault(ctx context.Context, backupVaultName string) (*backup.DescribeBackupVaultOutput, error) {
-	return m.backupClient.DescribeBackupVault(ctx, backupVaultName)
-}
-
 func (m *mockClient) CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error) {
 	return m.backupClient.CreateBackupVault(ctx, name, tags)
-}
-
-func (m *mockClient) DeleteBackupVault(ctx context.Context, name string) error {
-	return m.backupClient.DeleteBackupVault(ctx, name)
 }
 
 func (m *mockClient) StartBackupJob(ctx context.Context, params *awsnfsvolumebackupclient.StartBackupJobInput) (*backup.StartBackupJobOutput, error) {
 	return m.backupClient.StartBackupJob(ctx, params)
 }
 
-func (m *mockClient) DescribeBackupJob(ctx context.Context, backupJobId string) (*backup.DescribeBackupJobOutput, error) {
-	return m.backupClient.DescribeBackupJob(ctx, backupJobId)
+func (m *mockClient) ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaultListMember, error) {
+	return m.backupClient.ListBackupVaults(ctx)
 }
 
 func (m *mockClient) ListRecoveryPointsForVault(ctx context.Context, accountId, backupVaultName string) ([]backuptypes.RecoveryPointByBackupVault, error) {
 	return m.backupClient.ListRecoveryPointsForVault(ctx, accountId, backupVaultName)
 }
 
-func (m *mockClient) DescribeRecoveryPoint(ctx context.Context, accountId, backupVaultName, recoveryPointArn string) (*backup.DescribeRecoveryPointOutput, error) {
-	return m.backupClient.DescribeRecoveryPoint(ctx, accountId, backupVaultName, recoveryPointArn)
-}
-
 func (m *mockClient) DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error) {
 	return m.backupClient.DeleteRecoveryPoint(ctx, backupVaultName, recoveryPointArn)
-}
-
-func (m *mockClient) StartCopyJob(ctx context.Context, params *awsnfsvolumebackupclient.StartCopyJobInput) (*backup.StartCopyJobOutput, error) {
-	return m.backupClient.StartCopyJob(ctx, params)
-}
-
-func (m *mockClient) DescribeCopyJob(ctx context.Context, copyJobId string) (*backup.DescribeCopyJobOutput, error) {
-	return m.backupClient.DescribeCopyJob(ctx, copyJobId)
 }
 
 // Mock WebACL methods

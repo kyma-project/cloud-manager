@@ -159,6 +159,11 @@ spec:
                   x-kubernetes-list-map-keys:
                     - type
                   x-kubernetes-list-type: map
+                id:
+                  description: |-
+                    Id is the Cloud Manager generated unique identifier for the cloud resource,
+                    used as the cloud resource name to avoid collision across namespaces and SKRs.
+                  type: string
                 providerId:
                   description: ProviderId is the provider-specific resource identifier (e.g., AWS ARN, Azure Resource ID)
                   type: string
