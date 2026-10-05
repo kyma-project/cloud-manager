@@ -40,7 +40,7 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 
 	// Override immutable fields
 	input.Name = aws.String(webAcl.Name)
-	input.Scope = ScopeRegional()
+	input.Scope = wafv2types.ScopeRegional
 
 	// Add Cloud Manager tags
 	input.Tags = convertTags(webAcl, state)
