@@ -5,7 +5,7 @@ go 1.27.1
 require (
 	cloud.google.com/go/auth v0.24.0
 	cloud.google.com/go/auth/oauth2adapt v0.3.0
-	cloud.google.com/go/compute v1.70.0
+	cloud.google.com/go/compute v1.71.0
 	cloud.google.com/go/filestore v1.17.0
 	cloud.google.com/go/longrunning v1.3.0
 	cloud.google.com/go/networkconnectivity v1.29.0
@@ -62,7 +62,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/google/cel-go v0.31.0
 	github.com/google/uuid v1.6.0
-	github.com/googleapis/gax-go/v2 v2.24.1
+	github.com/googleapis/gax-go/v2 v2.26.2
 	github.com/gophercloud/gophercloud/v2 v2.14.0
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/hashicorp/go-multierror v1.1.1
@@ -85,7 +85,7 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.28.0
 	golang.org/x/oauth2 v0.37.0
-	google.golang.org/api v0.299.0
+	google.golang.org/api v0.300.0
 	google.golang.org/genproto v0.0.0-20260715232425-e75dac1f907d
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260921155816-b14227669459
 	google.golang.org/grpc v1.84.0
@@ -104,7 +104,7 @@ require (
 require (
 	cel.dev/expr v0.25.2 // indirect
 	cloud.google.com/go v0.123.0 // indirect
-	cloud.google.com/go/compute/metadata v0.9.1 // indirect
+	cloud.google.com/go/compute/metadata v0.10.0 // indirect
 	cloud.google.com/go/iam v1.12.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.8.0 // indirect
