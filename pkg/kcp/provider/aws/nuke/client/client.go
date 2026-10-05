@@ -11,7 +11,29 @@ import (
 	wafpolicyclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/client"
 )
 
+var _ NukeNfsBackupClient = (awsnfsvolumebackupclient.Client)(nil)
+
+// NukeNfsBackupClient is a subset of awsnfsvolumebackupclient.Client
+type NukeNfsBackupClient interface {
+	// whichever methods are used from awsnfsvolumebackupclient
+}
+
+var _ NukeWafPolicyClient = (wafpolicyclient.Client)(nil)
+
+// NukeWafPolicyClient is a subset of wafpolicyclient.Client
+type NukeWafPolicyClient interface {
+	ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error)
+	GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error)
+	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
+	ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error)
+}
+
 type NukeClient interface {
+	NukeNfsBackupClient
+	NukeWafPolicyClient
+}
+
+// no boilerplate methods
 	awsnfsvolumebackupclient.Client
 
 	// WebACL methods
