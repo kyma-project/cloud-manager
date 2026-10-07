@@ -112,6 +112,7 @@
         "wafv2:CreateWebACL",
         "wafv2:DeleteWebACL",
         "wafv2:GetWebACL",
+        "wafv2:ListTagsForResource",
         "wafv2:ListWebACLs",
         "wafv2:TagResource",
         "wafv2:UntagResource",

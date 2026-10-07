@@ -1,0 +1,6 @@
+en:
+  spec.payload: Provider policy payload
+  status.providerId: Provider ID
+  status.conditions: Status Conditions
+  configuration: Configuration
+  status: Status
