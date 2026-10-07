@@ -57,12 +57,27 @@ This model implements the common approaches observed in the field **01 — Commo
 spec:
   # Layer 1: the information required from the user
 
-  # Layer 2: optional neutral tuning (all have defaults)
+  # Layer 2: optional neutral tuning — Cloud Manager applies managed defaults
+  # for anything not set here. Defaults are transparent (see status).
   # <featureOption>: true | false
   # <neutralParam>: <value>
 
-  # Layer 3: provider-specific configuration (optional, generated when absent)
+  # Layer 3: provider-specific configuration — the provider-native trump card.
+  # Optional. When absent, Cloud Manager generates it from Layer 2 settings.
+  # When provided, it is used verbatim. The user takes full responsibility for
+  # maintaining it and will not automatically benefit from default improvements.
+  # Example: WafPolicy generates a Cloud Armor / WAF Web ACL policy from the
+  # Layer 2 toggles above; a user who needs full control can supply the raw
+  # provider configuration here instead.
 ```
+
+### Managed Defaults
+
+Cloud Manager provides managed defaults for all Layer 2 fields, based on current best practices and operational experience. They are maintained by the Cloud Manager team and updated as cloud providers evolve — users automatically benefit from improvements without changing their configuration.
+
+Defaults must not be hidden in controller code. Every resource must surface in its status where each applied value came from: whether it was set explicitly by the user, applied from a managed default, or assigned by the platform during fulfillment. This makes defaults inspectable by humans and AI tooling, so the real reason a resource behaves a certain way can always be traced.
+
+When a user overrides a default via Layer 3, they take ownership of that configuration. It will not automatically receive updates from the Cloud Manager team. This is a deliberate trade-off and should be a conscious choice, not the path of least resistance.
 
 ### Versioning
 
