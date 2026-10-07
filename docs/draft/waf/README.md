@@ -270,17 +270,37 @@ metadata:
 spec:
   # TODO: extend to showcase standard + custom rule
   data: |
-    {
-      "priority": 1000,
-      "description": "OWASP CRS 4.22 - SQL injection",
-      "action": "deny(403)",
-      "preview": true,
-      "match": {
-        "expr": {
-          "expression": "evaluatePreconfiguredWaf('sqli-v422-stable', {'sensitivity': 1})"
-        }
-      }
-    }
+    priority: 1000
+    description: OWASP CRS 4.22 - SQL injection
+    action: deny(403)
+    preview: true
+    match:
+      expr:
+        expression: |
+          evaluatePreconfiguredWaf('xss-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('lfi-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('rfi-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('rce-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('methodenforcement-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('scannerdetection-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('protocolattack-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('php-v422-stable', {'sensitivity': 1}) ||
+          evaluatePreconfiguredWaf('sessionfixation-v422-stable', {'sensitivity': 1}) ||
+
+          !(
+            request.path.startsWith('/allow-me') ||
+            request.path.startsWith('/nesto-drugo')
+          ) && 
+          evaluatePreconfiguredWaf('sqli-v422-stable', {
+            'sensitivity': 1,
+            'opt_out_rule_ids': ['owasp-crs-v042200-id942350-sqli', 'owasp-crs-v042200-id942360-sqli']
+          }) ||
+
+          evaluatePreconfiguredWaf('cve-canary', {
+            'sensitivity': 0,
+            'opt_in_rule_ids': ['owasp-crs-v042200-id044228-cve', 'owasp-crs-v042200-id144228-cve']
+          })
+
 
 ---
 
@@ -297,8 +317,25 @@ spec:
       },
       "Rules": [
         {
-          "Name": "RateLimitRule",
+          "Name": "BlockSpecificIPs",
           "Priority": 1,
+          "Statement": {
+            "IPSetReferenceStatement": {
+              "Arn": "arn:aws:wafv2:us-east-1:123456789012:regional/ipset/blocked-ips/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111"
+            }
+          },
+          "Action": {
+            "Block": {}
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "BlockedIPsMetric"
+          }
+        },
+        {
+          "Name": "RateLimitPerIP",
+          "Priority": 2,
           "Statement": {
             "RateBasedStatement": {
               "Limit": 100,
@@ -311,23 +348,62 @@ spec:
           "VisibilityConfig": {
             "SampledRequestsEnabled": true,
             "CloudWatchMetricsEnabled": true,
-            "MetricName": "RateLimitRuleMetric"
+            "MetricName": "RateLimitMetric"
+          }
+        },
+        {
+          "Name": "AWSManagedRulesCommonRuleSet",
+          "Priority": 3,
+          "Statement": {
+            "ManagedRuleGroupStatement": {
+              "VendorName": "AWS",
+              "Name": "AWSManagedRulesCommonRuleSet",
+              "ExcludedRules": []
+            }
+          },
+          "OverrideAction": {
+            "None": {}
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "CommonRuleSetMetric"
+          }
+        },
+        {
+          "Name": "AWSManagedRulesBotControlRuleSet",
+          "Priority": 4,
+          "Statement": {
+            "ManagedRuleGroupStatement": {
+              "VendorName": "AWS",
+              "Name": "AWSManagedRulesBotControlRuleSet"
+            }
+          },
+          "OverrideAction": {
+            "None": {}
+          },
+          "VisibilityConfig": {
+            "SampledRequestsEnabled": true,
+            "CloudWatchMetricsEnabled": true,
+            "MetricName": "BotControlMetric"
           }
         }
       ],
       "VisibilityConfig": {
         "SampledRequestsEnabled": true,
         "CloudWatchMetricsEnabled": true,
-        "MetricName": "ExampleWebACLMetric"
+        "MetricName": "MyAWSPolicyMetric"
       }
     }
+  # NOTE: AWS WAF requires IPSet to be created separately before referencing in rules
+  # The IPSet ARN referenced above should contain: 181.55.22.103/32, 141.11.252.217/32, 136.65.234.235/32
 status:
   observedGeneration: 9
   conditions:
     - type: Ready
-      status: False
+      status: True
       reason: Ready
-  providerId: aksjdhakjsdh
+  providerId: arn:aws:wafv2:us-east-1:123456789012:regional/webacl/my-aws-policy/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111
 ```
 
 ## AppLoadBalancer & WafPolicy conditions
