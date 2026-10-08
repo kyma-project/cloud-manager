@@ -1,7 +1,7 @@
 - path: spec.redisTier
   name: spec.redisTier
   required: true
-  description: "Capacity tier can be changed (e.g. S2→S4). Service tier (S↔P) is immutable after creation."
+  description: "Capacity tier can be changed (e.g. S2→S4). Service tier (S↔P) is immutable. Scale-down requires new capacity × 0.8 > used memory."
 
 - path: spec.engineVersion
   name: spec.engineVersion
