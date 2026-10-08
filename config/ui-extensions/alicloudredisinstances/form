@@ -18,6 +18,7 @@
       name: spec.ipRange.name
       widget: Text
       required: true
+      disableOnEdit: true
 
 - path: spec.authSecret
   name: spec.authSecret
