@@ -47,7 +47,7 @@ This model implements the common approaches observed in the field **01 — Commo
 | Neutral field names | `memorySizeGb`, `tier`, `engineVersion` | `skuName`, `cacheParameterGroup`, `diskType` |
 | Neutral enum values | `tier: standard` | `tier: Standard_LRS` |
 | No provider prefixes in neutral fields | `spec.backend` | `spec.gcpBackend` |
-| Provider sub-structs for Layer 3 | `spec.aws`, `spec.gcp`, `spec.azure` | `spec.providerConfig: {}` |
+| Provider sub-structs for Layer 3 | `spec.payload` | `spec.providerConfig: {}` |
 | Kind names should not encode the provider when possible | `WafPolicy` | `AzureWafPolicy` |
 
 ### Spec structure
