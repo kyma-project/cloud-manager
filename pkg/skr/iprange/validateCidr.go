@@ -3,11 +3,36 @@ package iprange
 import (
 	"context"
 	"fmt"
+	"net"
+
 	"github.com/3th1nk/cidr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var reservedIPv4CIDRs = []string{
+	"0.0.0.0/0",
+	"127.0.0.0/8",
+	"169.254.0.0/16",
+}
+
+func isReservedCIDR(input string) bool {
+	_, inputNet, err := net.ParseCIDR(input)
+	if err != nil {
+		return false
+	}
+	for _, reserved := range reservedIPv4CIDRs {
+		_, reservedNet, err := net.ParseCIDR(reserved)
+		if err != nil {
+			continue
+		}
+		if inputNet.String() == reservedNet.String() {
+			return true
+		}
+	}
+	return false
+}
 
 func validateCidr(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
@@ -55,6 +80,20 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 			DeriveStateFromConditions(state.MapConditionToState()).
 			ErrorLogMessage("Error updating IpRange status with CIDR not an IPv4 condition").
 			SuccessLogMsg("Forgetting IpRange with invalid non IPv4 Cidr").
+			Run(ctx, state)
+	}
+
+	if isReservedCIDR(state.ObjAsIpRange().Spec.Cidr) {
+		return composed.UpdateStatus(state.ObjAsIpRange()).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudresourcesv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudresourcesv1beta1.ConditionReasonInvalidCidr,
+				Message: fmt.Sprintf("CIDR %s is a reserved range and cannot be used", state.ObjAsIpRange().Spec.Cidr),
+			}).
+			DeriveStateFromConditions(state.MapConditionToState()).
+			ErrorLogMessage("Error updating IpRange status with reserved CIDR").
+			SuccessLogMsg("Forgetting IpRange with reserved CIDR").
 			Run(ctx, state)
 	}
 
