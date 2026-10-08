@@ -1,6 +1,7 @@
 - path: spec.redisTier
   name: spec.redisTier
   required: true
+  description: "Per-shard capacity tier. Total capacity = tier memory × shard count."
 
 - path: spec.shardCount
   name: spec.shardCount
