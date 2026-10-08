@@ -66,4 +66,41 @@ var _ = Describe("Feature: SKR IpRange", Ordered, func() {
 		},
 		"CIDR is immutable",
 	)
+
+	// Test reserved / invalid CIDR ranges are rejected at admission
+	canNotCreateSkr(
+		"IpRange cannot be created with default route 0.0.0.0/0",
+		newTestSkrIpRangeBuilder().WithCidr("0.0.0.0/0"),
+		"reserved or invalid range",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv4 loopback 127.0.0.0/8",
+		newTestSkrIpRangeBuilder().WithCidr("127.0.0.0/8"),
+		"reserved or invalid range",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv4 link-local 169.254.0.0/16",
+		newTestSkrIpRangeBuilder().WithCidr("169.254.0.0/16"),
+		"reserved or invalid range",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv6 default route ::/0",
+		newTestSkrIpRangeBuilder().WithCidr("::/0"),
+		"reserved or invalid range",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv6 loopback ::1/128",
+		newTestSkrIpRangeBuilder().WithCidr("::1/128"),
+		"reserved or invalid range",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv6 link-local fe80::/10",
+		newTestSkrIpRangeBuilder().WithCidr("fe80::/10"),
+		"reserved or invalid range",
+	)
 })
