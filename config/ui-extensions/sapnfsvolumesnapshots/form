@@ -1,0 +1,22 @@
+- path: spec.sourceVolume
+  name: spec.sourceVolume
+  widget: FormGroup
+  required: true
+  children:
+    - path: name
+      name: spec.sourceVolume.name
+      widget: Text
+      required: true
+      disableOnEdit: true
+      description: The SapNfsVolume to snapshot. Immutable once set.
+    - path: namespace
+      name: spec.sourceVolume.namespace
+      widget: Text
+      required: false
+      disableOnEdit: true
+      description: Immutable once set.
+- path: spec.deleteAfterDays
+  name: spec.deleteAfterDays
+  widget: Number
+  required: false
+  description: Days after which the snapshot is automatically deleted. 0 means no automatic deletion.

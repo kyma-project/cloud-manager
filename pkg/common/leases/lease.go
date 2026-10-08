@@ -33,10 +33,8 @@ func Acquire(ctx context.Context, cluster composed.StateCluster, leaseName, leas
 
 	if lease.Name == "" {
 		lease = &coordinationv1.Lease{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      leaseName,
-				Namespace: leaseNamespace,
-			},
+			Name:      leaseName,
+			Namespace: leaseNamespace,
 			Spec: coordinationv1.LeaseSpec{
 				HolderIdentity:       &holderName,
 				LeaseDurationSeconds: &leaseDurationSec,

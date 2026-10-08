@@ -69,8 +69,32 @@ func vSwitchCreate(ctx context.Context, st composed.State) (error, context.Conte
 
 		vSwitchId, err := state.client.CreateVSwitch(ctx, state.vpcId, zoneName, zoneCidr, name)
 		if err != nil {
+			if alicloudiprangeclient.IsVSwitchCidrOverlapErr(err) {
+				// CIDR already used by an existing vSwitch - look it up by name instead of failing.
+				existing, lookupErr := state.client.DescribeVSwitchesByName(ctx, state.vpcId, name)
+				if lookupErr == nil && len(existing) > 0 {
+					logger.Info("AliCloud VSwitch already exists, reusing", "vSwitchId", existing[0].VSwitchId, "zone", zoneName)
+					found := existing[0]
+					state.vSwitches = append(state.vSwitches, &found)
+					anyCreated = true
+					continue
+				}
+				if lookupErr != nil {
+					logger.Error(lookupErr, "Error looking up existing AliCloud VSwitch after CIDR overlap", "zone", zoneName)
+				}
+			}
 			logger.Error(err, "Error creating AliCloud VSwitch for IpRange")
-			return composed.StopWithRequeue, ctx
+			state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
+			return composed.PatchStatus(state.ObjAsIpRange()).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudcontrolv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
+					Message: "Error creating VSwitch; see controller logs for details",
+				}).
+				ErrorLogMessage("Error patching AliCloud KCP IpRange status after failed VSwitch create").
+				SuccessError(composed.StopWithRequeue).
+				Run(ctx, state)
 		}
 
 		state.vSwitches = append(state.vSwitches, &alicloudiprangeclient.VSwitchInfo{

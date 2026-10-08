@@ -73,19 +73,18 @@ var cmdInstanceModulesAdd = &cobra.Command{
 
 		if isFound {
 			fmt.Println("Module is already added")
-			return nil
+		} else {
+			kyma.Spec.Modules = append(kyma.Spec.Modules, operatorv1beta2.Module{
+				Name: cmdInstanceModulesAddOptions.moduleName,
+			})
+
+			err = clnt.Update(rootCtx, kyma)
+			if err != nil {
+				return fmt.Errorf("failed to update SKR kyma: %w", err)
+			}
+
+			fmt.Println("Module is added")
 		}
-
-		kyma.Spec.Modules = append(kyma.Spec.Modules, operatorv1beta2.Module{
-			Name: cmdInstanceModulesAddOptions.moduleName,
-		})
-
-		err = clnt.Update(rootCtx, kyma)
-		if err != nil {
-			return fmt.Errorf("failed to update SKR kyma: %w", err)
-		}
-
-		fmt.Println("Module is added")
 
 		if cmdInstanceModulesAddOptions.waitDone && cmdInstanceModulesAddOptions.moduleName == "cloud-manager" {
 			fmt.Printf("Waiting for module to be ready with timeout %s\n", cmdInstanceModulesAddOptions.timeout.String())

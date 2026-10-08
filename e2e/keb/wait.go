@@ -26,14 +26,17 @@ type WaitOption interface {
 }
 
 type waitOptions struct {
-	runtimeId           string
-	alias               string
-	timeout             time.Duration
-	interval            time.Duration
-	progressCallback    func(WaitProgress)
-	logger              logr.Logger
-	errorCountThreshold int
-	sleeper             util.Sleeper
+	runtimeId             string
+	alias                 string
+	timeout               time.Duration
+	interval              time.Duration
+	progressCallback      func(WaitProgress)
+	logger                logr.Logger
+	errorDuration         time.Duration
+	terminalErrorDuration time.Duration
+	terminalRetryLimit    int
+	sleeper               util.Sleeper
+	nowFunc               func() time.Time
 }
 
 func (o *waitOptions) validate() error {
@@ -50,11 +53,20 @@ func (o *waitOptions) validate() error {
 	if o.interval == 0 {
 		o.interval = 10 * time.Second
 	}
-	if o.errorCountThreshold == 0 {
-		o.errorCountThreshold = 36 // with interval 5s = 1min
+	if o.errorDuration == 0 {
+		o.errorDuration = 10 * time.Minute
+	}
+	if o.terminalErrorDuration == 0 {
+		o.terminalErrorDuration = 5 * time.Minute
+	}
+	if o.terminalRetryLimit == 0 {
+		o.terminalRetryLimit = 3
 	}
 	if o.sleeper == nil {
 		o.sleeper = util.SleeperFunc(util.RealSleeperFunc)
+	}
+	if o.nowFunc == nil {
+		o.nowFunc = time.Now
 	}
 	return nil
 }
@@ -104,11 +116,18 @@ var defaultWaitOptions = []WaitOption{
 	WithTimeout(15 * time.Minute),
 	WithInterval(5 * time.Second),
 	WithProgressCallback(func(WaitProgress) {}),
-	WithErrorCountThreshold(12), // with interval 5s = 1min
+	WithErrorDuration(10 * time.Minute),
+	WithTerminalErrorDuration(5 * time.Minute),
 	WithSleeperFunc(util.RealSleeperFunc),
 }
 
-func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOption) error {
+// WaitHandler combines listing instances with the ability to force-retry a failed shoot.
+type WaitHandler interface {
+	InstanceLister
+	ShootRetrier
+}
+
+func WaitCompleted(ctx context.Context, handler WaitHandler, opts ...WaitOption) error {
 	options := &waitOptions{}
 	for _, o := range append(append([]WaitOption{}, defaultWaitOptions...), opts...) {
 		o.ApplyOnWait(options)
@@ -119,7 +138,13 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 
 	lastNotifyHash := "-"
 
-	runtimeErrorCount := map[string]int{}
+	// tracks the first time a transient error was seen per runtimeID
+	errorFirstSeen := map[string]time.Time{}
+
+	// tracks terminal shoot errors: first detection, retry count, and last retry time
+	terminalErrorFirstSeen := map[string]time.Time{}
+	terminalRetryCount := map[string]int{}
+	lastRetryAt := map[string]time.Time{}
 
 	// map wait options to list options
 	var listOpts []ListOption
@@ -133,8 +158,10 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(ctx, options.timeout)
 	defer cancel()
+
+outerLoop:
 	for {
-		arr, err := lister.List(ctx, listOpts...)
+		arr, err := handler.List(ctx, listOpts...)
 		if apierrors.IsNotFound(err) || meta.IsNoMatchError(err) {
 			break
 		}
@@ -181,27 +208,70 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 		lastNotifyHash = currentNotifyHash
 		options.progressCallback(wp)
 
-		// increase the error count for this runtime
+		// process instances in error state
 		for _, id := range withErr {
-			v := runtimeErrorCount[id.RuntimeID]
-			v++
-			runtimeErrorCount[id.RuntimeID] = v
+			if id.HasTerminalShootError() {
+				// record first detection
+				if _, seen := terminalErrorFirstSeen[id.RuntimeID]; !seen {
+					terminalErrorFirstSeen[id.RuntimeID] = options.nowFunc()
+				}
+				// bounded, debounced retry
+				if terminalRetryCount[id.RuntimeID] < options.terminalRetryLimit {
+					last, retried := lastRetryAt[id.RuntimeID]
+					if !retried || options.nowFunc().Sub(last) >= options.interval {
+						if retryErr := handler.ForceShootRetry(ctx, id.RuntimeID); retryErr != nil {
+							options.logger.Error(retryErr, "ForceShootRetry failed", "runtimeID", id.RuntimeID)
+						}
+						terminalRetryCount[id.RuntimeID]++
+						lastRetryAt[id.RuntimeID] = options.nowFunc()
+						options.logger.Info("forced shoot retry", "runtimeID", id.RuntimeID, "attempt", terminalRetryCount[id.RuntimeID])
+					}
+				}
+				// fail once the tolerance window is exhausted
+				if options.nowFunc().Sub(terminalErrorFirstSeen[id.RuntimeID]) > options.terminalErrorDuration {
+					loopErr = fmt.Errorf("instance %s %s has terminal shoot error: %q\n%s", id.Alias, id.RuntimeID, id.Message, id.ShootInfo())
+					break outerLoop
+				}
+				continue
+			}
+			// transient error: record when we first saw it
+			if _, seen := errorFirstSeen[id.RuntimeID]; !seen {
+				errorFirstSeen[id.RuntimeID] = options.nowFunc()
+			}
 		}
 
-		// go through all runtimes with error counts and make err with those crossing the threshold
+		// clear recovered instances from all error trackers
+		withErrSet := make(map[string]bool, len(withErr))
+		for _, id := range withErr {
+			withErrSet[id.RuntimeID] = true
+		}
+		for runtimeID := range errorFirstSeen {
+			if !withErrSet[runtimeID] {
+				delete(errorFirstSeen, runtimeID)
+			}
+		}
+		for runtimeID := range terminalErrorFirstSeen {
+			if !withErrSet[runtimeID] {
+				delete(terminalErrorFirstSeen, runtimeID)
+				delete(terminalRetryCount, runtimeID)
+				delete(lastRetryAt, runtimeID)
+			}
+		}
+
+		// check if any transient error has exceeded the tolerance window
 		err = nil
-		for runtimeID, errorCount := range runtimeErrorCount {
-			if errorCount > options.errorCountThreshold {
+		for runtimeID, since := range errorFirstSeen {
+			if options.nowFunc().Sub(since) > options.errorDuration {
 				var id *InstanceDetails
 				for _, x := range arr {
 					if x.RuntimeID == runtimeID {
 						xx := x
-						id = &xx
+						id = new(xx)
 						break
 					}
 				}
 				if id != nil {
-					err = multierror.Append(err, fmt.Errorf("instance %s %s has error %q", id.Alias, id.RuntimeID, id.Message))
+					err = multierror.Append(err, fmt.Errorf("instance %s %s has error %q\n%s", id.Alias, id.RuntimeID, id.Message, id.ShootInfo()))
 				}
 			}
 		}
@@ -210,7 +280,7 @@ func WaitCompleted(ctx context.Context, lister InstanceLister, opts ...WaitOptio
 			loopErr = err
 			break
 		}
-		// this is early exit, exiting the loop if no more pending, or there's some instance with error
+		// early exit when nothing left to wait for
 		if len(pending) == 0 && len(withErr) == 0 {
 			break
 		}

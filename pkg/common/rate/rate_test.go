@@ -15,10 +15,8 @@ func TestRateLimiter(t *testing.T) {
 
 	testWhen := func(r workqueue.TypedRateLimiter[client.Object], whenValues []time.Duration) {
 		obj := &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: metav1.NamespaceDefault,
-				Name:      "rate-limiter-obj",
-			},
+			Namespace: metav1.NamespaceDefault,
+			Name:      "rate-limiter-obj",
 		}
 		r.Forget(obj)
 		for i, expected := range whenValues {

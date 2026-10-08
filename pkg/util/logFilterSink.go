@@ -13,6 +13,8 @@ type LogFilterSink struct {
 	failedWaitingForInformerToSync *regexp.Regexp
 }
 
+var _ logr.CallDepthLogSink = (*LogFilterSink)(nil)
+
 func NewLogFilterSink(inner logr.LogSink) *LogFilterSink {
 	return &LogFilterSink{
 		inner:                          inner,
@@ -66,13 +68,27 @@ func (l *LogFilterSink) Error(err error, msg string, keysAndValues ...any) {
 }
 
 func (l *LogFilterSink) WithValues(keysAndValues ...any) logr.LogSink {
-	newLogger := *l
-	newLogger.inner = l.inner.WithValues(keysAndValues...)
-	return &newLogger
+	return l.withInner(l.inner.WithValues(keysAndValues...))
 }
 
 func (l *LogFilterSink) WithName(name string) logr.LogSink {
+	return l.withInner(l.inner.WithName(name))
+}
+
+// WithCallDepth implements logr.CallDepthLogSink so WithCallDepth propagates to
+// the inner sink instead of being silently dropped. If inner doesn't support it,
+// the entry is still emitted unchanged.
+func (l *LogFilterSink) WithCallDepth(depth int) logr.LogSink {
+	if cds, ok := l.inner.(logr.CallDepthLogSink); ok {
+		return l.withInner(cds.WithCallDepth(depth))
+	}
+	return l.withInner(l.inner)
+}
+
+// withInner returns a copy wrapping a new inner sink. Returns *LogFilterSink so the
+// CallDepthLogSink identity survives WithValues/WithName chains.
+func (l *LogFilterSink) withInner(inner logr.LogSink) *LogFilterSink {
 	newLogger := *l
-	newLogger.inner = l.inner.WithName(name)
+	newLogger.inner = inner
 	return &newLogger
 }

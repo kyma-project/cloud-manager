@@ -35,6 +35,7 @@ type NfsConfig interface {
 	AddRouter(id, name string, ipAddresses ...string) *routers.Router
 	SetShareStatus(id, status string)
 	SetSnapshotStatus(id, status string)
+	DeleteNetworkWithSubnets(ctx context.Context, routerId, networkId string) error
 }
 
 func newMainStore() *mainStore {
@@ -300,6 +301,25 @@ func (s *mainStore) DeleteNetwork(ctx context.Context, id string) error {
 
 // NetworkClient high level derived methods --------------------------------------------
 
+// DeleteNetworkWithSubnets deletes every subnet in the network (detaching each from
+// the router) and then the network - simulating an out-of-band teardown. DeleteNetwork
+// rejects a network that still has subnets, so they must go first.
+func (s *mainStore) DeleteNetworkWithSubnets(ctx context.Context, routerId, networkId string) error {
+	subnetList, err := s.ListSubnetsByNetworkId(ctx, networkId)
+	if err != nil {
+		return err
+	}
+	for _, sn := range subnetList {
+		if err := s.RemoveSubnetFromRouter(ctx, routerId, sn.ID); err != nil {
+			return err
+		}
+		if err := s.DeleteSubnet(ctx, sn.ID); err != nil {
+			return err
+		}
+	}
+	return s.DeleteNetwork(ctx, networkId)
+}
+
 func (s *mainStore) ListInternalNetworksByName(ctx context.Context, name string) ([]networks.Network, error) {
 	return s.ListNetworks(ctx, networks.ListOpts{Name: name})
 }
@@ -451,9 +471,7 @@ func (s *mainStore) DeleteSubnet(ctx context.Context, subnetId string) error {
 
 	if foundInNetworkId == "" {
 		return &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("subnet %q not found", subnetId),
-			},
+			Info:     fmt.Sprintf("subnet %q not found", subnetId),
 			Expected: []int{http.StatusOK},
 			Actual:   http.StatusNotFound,
 		}
@@ -1299,9 +1317,7 @@ func (s *mainStore) shareChangeSize(ctx context.Context, shareId string, newSize
 	}
 	if theShare == nil {
 		return &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("share %q does not exist", shareId),
-			},
+			Info:   fmt.Sprintf("share %q does not exist", shareId),
 			Actual: http.StatusNotFound,
 		}
 	}
@@ -1360,9 +1376,7 @@ func (s *mainStore) GrantShareAccess(ctx context.Context, shareId string, cidr s
 	}
 	if !exists {
 		return nil, &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("share %q does not exist", shareId),
-			},
+			Info:   fmt.Sprintf("share %q does not exist", shareId),
 			Actual: http.StatusNotFound,
 		}
 	}
@@ -1399,9 +1413,7 @@ func (s *mainStore) RevokeShareAccess(ctx context.Context, shareId, accessId str
 	}
 	if !exists {
 		return &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("share %q does not exist", shareId),
-			},
+			Info:   fmt.Sprintf("share %q does not exist", shareId),
 			Actual: http.StatusNotFound,
 		}
 	}
@@ -1533,17 +1545,13 @@ func (s *mainStore) RevertShareToSnapshot(ctx context.Context, shareId string, s
 	}
 	if theSnapshot == nil {
 		return &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("snapshot %q does not exist", snapshotId),
-			},
+			Info:   fmt.Sprintf("snapshot %q does not exist", snapshotId),
 			Actual: http.StatusNotFound,
 		}
 	}
 	if theSnapshot.ShareID != shareId {
 		return &gophercloud.ErrUnexpectedResponseCode{
-			BaseError: gophercloud.BaseError{
-				Info: fmt.Sprintf("snapshot %q does not belong to share %q", snapshotId, shareId),
-			},
+			Info:   fmt.Sprintf("snapshot %q does not belong to share %q", snapshotId, shareId),
 			Actual: http.StatusBadRequest,
 		}
 	}
@@ -1559,9 +1567,7 @@ func (s *mainStore) RevertShareToSnapshot(ctx context.Context, shareId string, s
 	}
 
 	return &gophercloud.ErrUnexpectedResponseCode{
-		BaseError: gophercloud.BaseError{
-			Info: fmt.Sprintf("share %q does not exist", shareId),
-		},
+		Info:   fmt.Sprintf("share %q does not exist", shareId),
 		Actual: http.StatusNotFound,
 	}
 }

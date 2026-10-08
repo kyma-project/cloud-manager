@@ -31,8 +31,6 @@ import (
 	awsnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nfsinstance/client"
 	azurenfsinstance "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nfsinstance"
 	gcpclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
-	gcpnfsinstancev1 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1" //nolint:staticcheck // SA1019: v1 maintained for backward compatibility until v2 is default
-	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	sapclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/client"
@@ -47,7 +45,6 @@ import (
 func SetupNfsInstanceReconciler(
 	kcpManager manager.Manager,
 	awsSkrProvider awsclient.SkrClientProvider[awsnfsinstanceclient.Client],
-	filestoreClientProviderV1 gcpclient.ClientProvider[gcpnfsinstancev1client.FilestoreClient],
 	filestoreClientProviderV2 gcpclient.GcpClientProvider[gcpnfsinstancev2client.FilestoreClient],
 	sapProvider sapclient.SapClientProvider[sapnfsinstanceclient.Client],
 	alicloudProvider alicloudnfsinstanceclient.ClientProvider,
@@ -62,7 +59,6 @@ func SetupNfsInstanceReconciler(
 			focal.NewStateFactory(),
 			awsnfsinstance.NewStateFactory(awsSkrProvider),
 			azurenfsinstance.NewStateFactory(),
-			gcpnfsinstancev1.NewStateFactory(filestoreClientProviderV1, env),
 			gcpnfsinstancev2.NewStateFactory(filestoreClientProviderV2, env),
 			sapnfsinstance.NewStateFactory(sapProvider),
 			alicloudnfsinstance.NewStateFactory(alicloudProvider),

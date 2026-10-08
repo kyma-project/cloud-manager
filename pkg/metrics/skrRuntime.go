@@ -45,6 +45,15 @@ var (
 		Help: "Total runtime-watcher notifications dropped due to a missing or invalid runtime-id",
 	})
 
+	// SkrLooperNotificationRateLimitedTotal counts notifications dropped (coalesced) by the
+	// per-SKR notifMinInterval rate limit: a notification arrived within the minimum interval
+	// of that SKR's last notification-driven connect. High values for a kyma indicate a hot SKR
+	// whose notification rate is being throttled to protect cyclic-sleeve fairness.
+	SkrLooperNotificationRateLimitedTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "cloud_manager_skr_looper_notification_rate_limited_total",
+		Help: "Total runtime-watcher notifications dropped by the per-SKR notifMinInterval rate limit, per kyma name",
+	}, []string{"kyma"})
+
 	// SkrLooperConnectPhaseSeconds measures per-SKR connect time broken down by phase.
 	// Phases: create_manager (KCP secret+Scope reads), skr_readiness (SKR readiness check;
 	// zero if skipped), installer (manifest apply + status save; zero if skipped),
@@ -53,7 +62,7 @@ var (
 	SkrLooperConnectPhaseSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "cloud_manager_skr_looper_connect_phase_seconds",
 		Help:    "Duration of each SKR connect phase (create_manager, skr_readiness, installer, pre_start, start) per kyma name and timeout outcome",
-		Buckets: []float64{1, 2, 5, 10, 20, 30, 60, 120, 300},
+		Buckets: []float64{0.25, 0.5, 1, 1.5, 2, 2.5, 3, 5, 7, 10, 30, 120, 600},
 	}, []string{"phase", "kyma", "timeout"})
 
 	// SkrLooperConnectTotalSeconds measures the total wall-clock time for one SKR connect.
@@ -61,7 +70,7 @@ var (
 	SkrLooperConnectTotalSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "cloud_manager_skr_looper_connect_total_seconds",
 		Help:    "Total duration of one SKR connect (pre-amble + Start) per kyma name and timeout outcome",
-		Buckets: []float64{1, 2, 5, 10, 20, 30, 60, 120, 300},
+		Buckets: []float64{5, 10, 12, 14, 16, 18, 20, 30, 60, 120, 600},
 	}, []string{"kyma", "timeout"})
 )
 
@@ -73,6 +82,7 @@ func init() {
 		SkrLooperGateInFlight,
 		SkrLooperNotificationReceivedTotal,
 		SkrLooperNotificationDroppedTotal,
+		SkrLooperNotificationRateLimitedTotal,
 		SkrLooperConnectPhaseSeconds,
 		SkrLooperConnectTotalSeconds,
 	)

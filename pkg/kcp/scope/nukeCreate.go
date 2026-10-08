@@ -8,7 +8,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -33,10 +32,8 @@ func nukeCreate(ctx context.Context, st composed.State) (error, context.Context)
 	// Take care! Scope might not exist, thus it's easier just to use the reconciliation request
 
 	nuke := &cloudcontrolv1beta1.Nuke{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: state.Name().Namespace,
-			Name:      state.Name().Name,
-		},
+		Namespace: state.Name().Namespace,
+		Name:      state.Name().Name,
 		Spec: cloudcontrolv1beta1.NukeSpec{
 			Scope: cloudcontrolv1beta1.ScopeRef{
 				Name: state.Name().Name,

@@ -73,6 +73,8 @@ func (r *reconciler) newAction() composed.Action {
 		preventDeleteOnAwsRedisInstanceUsage,
 		preventDeleteOnGcpRedisInstanceUsage,
 		preventDeleteOnAwsRedisClusterUsage,
+		preventDeleteOnAlicloudRedisInstanceUsage,
+		preventDeleteOnAlicloudRedisClusterUsage,
 		deleteKcpIpRange,
 		removeFinalizer,
 		updateStatus,

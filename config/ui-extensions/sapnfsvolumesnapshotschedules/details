@@ -1,0 +1,70 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - widget: Labels
+        source: schedule
+        name: spec.schedule
+      - widget: Labels
+        source: prefix
+        name: spec.prefix
+      - widget: Labels
+        source: startTime
+        name: spec.startTime
+      - widget: Labels
+        source: endTime
+        name: spec.endTime
+      - widget: Labels
+        source: maxRetentionDays
+        name: spec.maxRetentionDays
+      - widget: Labels
+        source: maxReadySnapshots
+        name: spec.maxReadySnapshots
+      - widget: Labels
+        source: maxFailedSnapshots
+        name: spec.maxFailedSnapshots
+      - widget: Labels
+        source: suspend
+        name: spec.suspend
+      - widget: Labels
+        source: deleteCascade
+        name: spec.deleteCascade
+  - name: template
+    widget: Panel
+    source: spec.template
+    children:
+      - widget: Labels
+        source: spec.sourceVolume.name
+        name: spec.template.spec.sourceVolume.name
+      - widget: Labels
+        source: spec.sourceVolume.namespace
+        name: spec.template.spec.sourceVolume.namespace
+      - widget: Labels
+        source: spec.deleteAfterDays
+        name: spec.template.spec.deleteAfterDays
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - widget: Labels
+        source: state
+        name: status.state
+      - widget: Labels
+        source: schedule
+        name: status.schedule
+      - widget: Labels
+        source: nextRunTimes
+        name: status.nextRunTimes
+      - widget: Labels
+        source: lastCreateRun
+        name: status.lastCreateRun
+      - widget: Labels
+        source: lastCreatedBackup.name
+        name: status.lastCreatedBackup.name
+      - widget: Labels
+        source: snapshotIndex
+        name: status.snapshotIndex
+      - widget: Labels
+        source: backupCount
+        name: status.backupCount

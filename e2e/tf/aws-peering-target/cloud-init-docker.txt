@@ -16,9 +16,4 @@ runcmd:
   - systemctl enable docker
   - systemctl start docker
   - docker run -d -p 80:80 --restart always --name httpbin kennethreitz/httpbin
-ssh_pwauth: true
-chpasswd:
-  list: |
-    ubuntu:Temp1234!
-  expire: false
 final_message: "Cloud-init completed. Docker and httpbin are up and running."

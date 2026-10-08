@@ -8,7 +8,7 @@ import (
 // composeActions creates the main action pipeline for GCP NfsInstance reconciliation.
 func composeActions() composed.Action {
 	return composed.ComposeActions(
-		"gcpNfsInstanceV2",
+		"gcpNfsInstance",
 		actions.AddCommonFinalizer(),
 
 		pollOperation,

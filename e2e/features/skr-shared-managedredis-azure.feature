@@ -1,6 +1,6 @@
 Feature: AzureManagedRedis feature
 
-  @skr @azure @managedredis @skip
+  @skr @azure @managedredis
   Scenario: AzureManagedRedis P-tier scenario (HA, EnterpriseCluster)
 
     Given there is shared SKR with "Azure" provider
@@ -29,10 +29,11 @@ Feature: AzureManagedRedis feature
     And eventually "secret.data.authString" is ok
 
     And Redis "PING" gives "PONG" with:
-      | Host | Secret | ${redis.metadata.name} | host       |
-      | Port | Secret | ${redis.metadata.name} | port       |
-      | Auth | Secret | ${redis.metadata.name} | authString |
-      | TLS  | True   |                        |            |
+      | Host  | Secret | ${redis.metadata.name} | host       |
+      | Port  | Secret | ${redis.metadata.name} | port       |
+      | Auth  | Secret | ${redis.metadata.name} | authString |
+      | TLS   | True   |                        |            |
+      | Retry | 10     |                        |            |
 
     When resource "redis" is deleted
 
@@ -41,7 +42,7 @@ Feature: AzureManagedRedis feature
     And resource "secret" does not exist
 
 
-  @skr @azure @managedredis @rediscluster @skip
+  @skr @azure @managedredis @rediscluster
   Scenario: AzureManagedRedis C-tier scenario (HA, OSSCluster sharded)
 
     Given there is shared SKR with "Azure" provider
@@ -75,6 +76,7 @@ Feature: AzureManagedRedis feature
       | Auth        | Secret | ${redis.metadata.name} | authString |
       | TLS         | True   |                        |            |
       | ClusterMode | True   |                        |            |
+      | Retry       | 10     |                        |            |
 
     When resource "redis" is deleted
 

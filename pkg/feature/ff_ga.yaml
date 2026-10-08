@@ -19,8 +19,20 @@ apiDisabled:
       query: feature == "vpcdnslink"
       variation: disabled
 
+    - name: Disable WAF
+      query: feature == "waf"
+      variation: disabled
+
     - name: Disable AzureManagedRedis
       query: feature == "azureManagedRedis"
+      variation: disabled
+
+    - name: Disable Redis on AliCloud
+      query: feature == "redis" and provider == "alicloud"
+      variation: disabled
+
+    - name: Disable RedisCluster on AliCloud
+      query: feature == "rediscluster" and provider == "alicloud"
       variation: disabled
 
     - name: Disable all on trial
@@ -50,21 +62,7 @@ vpcPeeringSync:
   defaultRule:
     variation: disabled
 
-gcpIpRangeV3:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: disabled
-
 nfs41Gcp:
-  variations:
-    enabled: true
-    disabled: false
-  defaultRule:
-    variation: disabled
-
-gcpNfsInstanceV2:
   variations:
     enabled: true
     disabled: false

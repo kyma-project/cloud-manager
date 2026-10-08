@@ -108,14 +108,20 @@ func (h *credentialsHandlerImpl) LoadAllOnce(ctx context.Context) error {
 	}
 
 	var result error
-	if err := h.LoadSubscriptionCredentials(ctx, h.config.Subscriptions.GetDefaultForProvider(cloudcontrolv1beta1.ProviderAws).Name); err != nil {
-		result = multierror.Append(result, fmt.Errorf("aws: %w", err))
+	if sub := h.config.Subscriptions.GetDefaultForProvider(cloudcontrolv1beta1.ProviderAws); sub != nil {
+		if err := h.LoadSubscriptionCredentials(ctx, sub.Name); err != nil {
+			result = multierror.Append(result, fmt.Errorf("aws: %w", err))
+		}
 	}
-	if err := h.LoadSubscriptionCredentials(ctx, h.config.Subscriptions.GetDefaultForProvider(cloudcontrolv1beta1.ProviderAzure).Name); err != nil {
-		result = multierror.Append(result, fmt.Errorf("azure: %w", err))
+	if sub := h.config.Subscriptions.GetDefaultForProvider(cloudcontrolv1beta1.ProviderAzure); sub != nil {
+		if err := h.LoadSubscriptionCredentials(ctx, sub.Name); err != nil {
+			result = multierror.Append(result, fmt.Errorf("azure: %w", err))
+		}
 	}
-	if err := h.LoadSubscriptionCredentials(ctx, h.config.Subscriptions.GetDefaultForProvider(cloudcontrolv1beta1.ProviderGCP).Name); err != nil {
-		result = multierror.Append(result, fmt.Errorf("gcp: %w", err))
+	if sub := h.config.Subscriptions.GetDefaultForProvider(cloudcontrolv1beta1.ProviderGCP); sub != nil {
+		if err := h.LoadSubscriptionCredentials(ctx, sub.Name); err != nil {
+			result = multierror.Append(result, fmt.Errorf("gcp: %w", err))
+		}
 	}
 	if sub := h.config.Subscriptions.GetDefaultForProvider(cloudcontrolv1beta1.ProviderAlicloud); sub != nil {
 		if err := h.LoadSubscriptionCredentials(ctx, sub.Name); err != nil {

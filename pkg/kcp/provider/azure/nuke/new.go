@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
+	azuremetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/metrics"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,6 +29,7 @@ func New(stateFactory StateFactory) composed.Action {
 				SuccessError(composed.StopAndForget).
 				Run(ctx, st)
 		}
+		ctx = azuremetrics.RegionIntoContext(ctx, state.Scope().Spec.Region)
 		return composed.ComposeActions(
 			"azureNuke",
 			createAzureClient,

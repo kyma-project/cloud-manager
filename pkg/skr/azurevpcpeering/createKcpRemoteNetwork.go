@@ -7,7 +7,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func createKcpRemoteNetwork(ctx context.Context, st composed.State) (error, context.Context) {
@@ -31,17 +30,15 @@ func createKcpRemoteNetwork(ctx context.Context, st composed.State) (error, cont
 	}
 
 	remoteNetwork := &cloudcontrolv1beta1.Network{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      state.ObjAsAzureVpcPeering().Status.Id,
-			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
-				common.LabelKymaModule: common.FieldOwner,
-			},
-			Annotations: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      obj.Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: obj.Namespace,
-			},
+		Name:      state.ObjAsAzureVpcPeering().Status.Id,
+		Namespace: state.KymaRef.Namespace,
+		Labels: map[string]string{
+			common.LabelKymaModule: common.FieldOwner,
+		},
+		Annotations: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      obj.Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: obj.Namespace,
 		},
 		Spec: cloudcontrolv1beta1.NetworkSpec{
 			Scope: cloudcontrolv1beta1.ScopeRef{

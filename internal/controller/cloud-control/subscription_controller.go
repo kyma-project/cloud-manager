@@ -31,9 +31,10 @@ import (
 func SetupSubscriptionReconciler(
 	kcpManager manager.Manager,
 	awsStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AwsStsClient],
+	alicloudStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AlicloudStsClient],
 ) error {
 	return NewSubscriptionReconciler(
-		kcpsubscription.New(kcpManager, awsStsClientProvider),
+		kcpsubscription.New(kcpManager, awsStsClientProvider, alicloudStsClientProvider),
 	).SetupWithManager(kcpManager)
 }
 

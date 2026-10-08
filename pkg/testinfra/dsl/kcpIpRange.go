@@ -56,6 +56,24 @@ func WithKcpIpRangeStatusCidr(cidr string) ObjStatusAction {
 	}
 }
 
+func WithKcpIpRangeStatusVpcId(vpcId string) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.IpRange)
+			x.Status.VpcId = vpcId
+		},
+	}
+}
+
+func WithKcpIpRangeStatusSubnets(subnets ...cloudcontrolv1beta1.IpRangeSubnet) ObjStatusAction {
+	return &objStatusAction{
+		f: func(obj client.Object) {
+			x := obj.(*cloudcontrolv1beta1.IpRange)
+			x.Status.Subnets = append(x.Status.Subnets, subnets...)
+		},
+	}
+}
+
 func WithKcpIpRangeRemoteRef(name string) ObjAction {
 	return &objAction{
 		f: func(obj client.Object) {

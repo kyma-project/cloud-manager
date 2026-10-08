@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
-	messages "github.com/cucumber/messages/go/v21"
+	messages "github.com/cucumber/messages/go/v34"
 	"github.com/elliotchance/pie/v2"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
@@ -18,7 +18,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -63,14 +62,12 @@ func debugWait(ctx context.Context, suffix string) (context.Context, error) {
 	}
 
 	cm := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: world.Config().SkrNamespace,
-			Name:      name,
-			Annotations: map[string]string{
-				e2elib.AliasLabel:             alias,
-				e2elib.ScenarioNameAnnotation: session.GetScenarioName(),
-				e2elib.StepNameAnnotation:     session.GetStepName(),
-			},
+		Namespace: world.Config().SkrNamespace,
+		Name:      name,
+		Annotations: map[string]string{
+			e2elib.AliasLabel:             alias,
+			e2elib.ScenarioNameAnnotation: session.GetScenarioName(),
+			e2elib.StepNameAnnotation:     session.GetStepName(),
 		},
 	}
 	err = session.CurrentCluster().GetClient().Create(ctx, cm)
@@ -650,6 +647,49 @@ func eventuallyResourceDoesNotExist(ctx context.Context, alias string) (context.
 	return ctx, err
 }
 
+func eventuallyResourceDoesNotExistWith(ctx context.Context, alias string, tbl *godog.Table) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+
+	current := session.Timing()
+	newTiming := &Timing{
+		EventuallyTimeout:  current.EventuallyTimeout,
+		EventuallyInterval: current.EventuallyInterval,
+	}
+
+	for _, row := range tbl.Rows {
+		if len(row.Cells) < 2 {
+			return ctx, fmt.Errorf("timing table row must have two columns, got %d", len(row.Cells))
+		}
+		name := strings.TrimPrefix(strings.TrimSpace(row.Cells[0].Value), "#")
+		value := strings.TrimSpace(row.Cells[1].Value)
+		switch name {
+		case "timeout":
+			d, err := time.ParseDuration(value)
+			if err != nil {
+				return ctx, fmt.Errorf("invalid timeout value %q: %w", value, err)
+			}
+			newTiming.EventuallyTimeout = d
+		case "interval":
+			d, err := time.ParseDuration(value)
+			if err != nil {
+				return ctx, fmt.Errorf("invalid interval value %q: %w", value, err)
+			}
+			newTiming.EventuallyInterval = d
+		default:
+			return ctx, fmt.Errorf("unknown timing parameter %q", name)
+		}
+	}
+
+	session.PushTiming(newTiming)
+	defer func() { _ = session.PopTiming() }()
+
+	err := session.EventuallyResourceDoesNotExist(ctx, alias)
+	return ctx, err
+}
+
 func resourceDoesNotExist(ctx context.Context, alias string) (context.Context, error) {
 	session := GetCurrentScenarioSession(ctx)
 	if session == nil {
@@ -895,6 +935,12 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 				return ctx, fmt.Errorf("invalid ClusterMode value, expected true/false: %w", err)
 			}
 			opts.ClusterMode = b
+		case "Retry":
+			n, err := strconv.Atoi(row.Cells[1].Value)
+			if err != nil {
+				return ctx, fmt.Errorf("invalid Retry value, expected integer: %w", err)
+			}
+			opts.Retry = n
 		default:
 			return ctx, fmt.Errorf("invalid value indicator %q", row.Cells[0].Value)
 		} // switch row[0]
@@ -930,7 +976,19 @@ func redisGivesWith(ctx context.Context, cmd string, out string, tbl *godog.Tabl
 
 	command += " " + cmd
 
-	scriptLines = append(scriptLines, command)
+	if opts.Retry > 0 {
+		scriptLines = append(scriptLines,
+			fmt.Sprintf("for i in $(seq 1 %d); do", opts.Retry+1),
+			fmt.Sprintf("  %s && exit 0", command),
+			"  echo \"redis-cli attempt $i failed, retrying in 10s...\"",
+			"  sleep 10",
+			"done",
+			fmt.Sprintf("echo \"all %d redis-cli attempts failed\"", opts.Retry+1),
+			"exit 1",
+		)
+	} else {
+		scriptLines = append(scriptLines, command)
+	}
 
 	if opts.Version == "" {
 		opts.Version = "latest"
@@ -1055,9 +1113,6 @@ func tfModuleIsApplied(ctx context.Context, alias string, tbl *godog.Table) (con
 	if err := ws.Apply(); err != nil {
 		return ctx, fmt.Errorf("failed to apply tf workspace: %w", err)
 	}
-
-	// Sleeping for 5m to allow cloud-init to finish
-	time.Sleep(5 * time.Minute)
 
 	return ctx, nil
 }

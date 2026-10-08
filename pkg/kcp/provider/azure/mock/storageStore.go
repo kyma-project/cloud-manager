@@ -291,21 +291,19 @@ func (s *storageStore) TriggerRestore(ctx context.Context, request client.Restor
 	idPath := client.GetVaultPath(s.subscription, request.ResourceGroupName, request.VaultName) + "/backupJobs/" + jobId
 	inProgress := string(armrecoveryservicesbackup.JobStatusInProgress)
 	JobDetailsClientGetResponse := armrecoveryservicesbackup.JobDetailsClientGetResponse{
-		JobResource: armrecoveryservicesbackup.JobResource{
-			ID:   &idPath,
-			Name: &jobId,
-			Properties: new(armrecoveryservicesbackup.AzureStorageJob{
-				Status:             &inProgress,
-				EntityFriendlyName: new(request.TargetFileShareName),
-				ExtendedInfo: new(armrecoveryservicesbackup.AzureStorageJobExtendedInfo{
-					PropertyBag: map[string]*string{
-						"RestoreDestination": new(request.TargetFolderName),
-					},
-				}),
-				StartTime: new(time.Now()),
-				Operation: to.Ptr(string(armrecoveryservicesbackup.JobOperationTypeRestore)),
+		ID:   &idPath,
+		Name: &jobId,
+		Properties: new(armrecoveryservicesbackup.AzureStorageJob{
+			Status:             &inProgress,
+			EntityFriendlyName: new(request.TargetFileShareName),
+			ExtendedInfo: new(armrecoveryservicesbackup.AzureStorageJobExtendedInfo{
+				PropertyBag: map[string]*string{
+					"RestoreDestination": new(request.TargetFolderName),
+				},
 			}),
-		},
+			StartTime: new(time.Now()),
+			Operation: to.Ptr(string(armrecoveryservicesbackup.JobOperationTypeRestore)),
+		}),
 	}
 	s.jobs[jobId] = &JobDetailsClientGetResponse
 	return &jobId, nil

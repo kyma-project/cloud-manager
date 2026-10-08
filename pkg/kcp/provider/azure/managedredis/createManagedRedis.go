@@ -61,8 +61,7 @@ func createManagedRedis(ctx context.Context, st composed.State) (error, context.
 
 	err := state.client.CreateOrUpdateCluster(ctx, state.resourceGroupName, obj.Name, cluster)
 	if err != nil {
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 			composed.LoggerFromCtx(ctx).
 				WithValues(
 					"errorCode", respErr.ErrorCode,

@@ -170,12 +170,10 @@ var _ = Describe("Feature: KCP Subscription", func() {
 			var x client.Object
 			kcpscope.Ignore.AddName(subscriptionName)
 			x = &cloudcontrolv1beta1.Scope{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      subscriptionName,
-					Namespace: DefaultKcpNamespace,
-					Labels: map[string]string{
-						cloudcontrolv1beta1.SubscriptionLabel: subscriptionName,
-					},
+				Name:      subscriptionName,
+				Namespace: DefaultKcpNamespace,
+				Labels: map[string]string{
+					cloudcontrolv1beta1.SubscriptionLabel: subscriptionName,
 				},
 				Spec: cloudcontrolv1beta1.ScopeSpec{
 					KymaName:  subscriptionName,
@@ -199,12 +197,10 @@ var _ = Describe("Feature: KCP Subscription", func() {
 
 			kcpiprange.Ignore.AddName(subscriptionName)
 			x = &cloudcontrolv1beta1.IpRange{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      subscriptionName,
-					Namespace: DefaultKcpNamespace,
-					Labels: map[string]string{
-						cloudcontrolv1beta1.SubscriptionLabel: subscriptionName,
-					},
+				Name:      subscriptionName,
+				Namespace: DefaultKcpNamespace,
+				Labels: map[string]string{
+					cloudcontrolv1beta1.SubscriptionLabel: subscriptionName,
 				},
 				Spec: cloudcontrolv1beta1.IpRangeSpec{
 					Scope:     cloudcontrolv1beta1.ScopeRef{Name: subscriptionName},

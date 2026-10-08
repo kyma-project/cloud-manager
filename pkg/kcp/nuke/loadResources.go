@@ -56,6 +56,10 @@ func loadResources(ctx context.Context, st composed.State) (error, context.Conte
 			Kind: "AzureManagedRedis",
 			List: &cloudcontrolv1beta1.AzureManagedRedisList{},
 		},
+		{
+			Kind: "AzureVNetLink",
+			List: &cloudcontrolv1beta1.AzureVNetLinkList{},
+		},
 	}
 
 	for _, rks := range state.Resources {

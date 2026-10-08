@@ -41,12 +41,7 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 		return x.Name
 	})
 	names = pie.Sort(names)
-	logger := composed.LoggerFromCtx(ctx)
-	// TODO: log as warning
-	logger.
-		WithValues("objectKind", "NfsInstance").
-		WithValues("names", names).V(-1).
-		Info("Found more then one KCP object")
+	composed.LogWarning(ctx, "Found more than one KCP NfsInstance", "names", names)
 	selectedName := names[0]
 	for _, i := range list.Items {
 		if i.Name == selectedName {

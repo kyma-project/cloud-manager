@@ -8,6 +8,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -51,6 +52,15 @@ func rangeCheckVSwitchOverlap(ctx context.Context, st composed.State) (error, co
 					"vSwitchId", vsw.VSwitchId,
 					"vSwitchCidr", vsw.CidrBlock,
 				).Info("Range overlaps with existing vSwitch")
+
+				// Skip patching if the Error/CidrOverlap condition is already set -
+				// patching status unconditionally triggers a watch event on every
+				// reconcile, creating a hot loop. Requeue slowly so the object
+				// recovers automatically if the overlapping vSwitch is removed.
+				existing := meta.FindStatusCondition(state.ObjAsIpRange().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+				if existing != nil && existing.Reason == cloudcontrolv1beta1.ReasonCidrOverlap && existing.Status == metav1.ConditionTrue {
+					return composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx
+				}
 
 				state.ObjAsIpRange().Status.State = cloudcontrolv1beta1.StateError
 				return composed.PatchStatus(state.ObjAsIpRange()).

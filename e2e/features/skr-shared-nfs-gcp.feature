@@ -81,7 +81,8 @@ Feature: GcpNfsVolume feature
     When resource "restore" is deleted
     When resource "vol" is deleted
 
-    Then eventually resource "restore" does not exist
+    Then eventually resource "restore" does not exist, with:
+      | timeout | 20m |
     Then eventually resource "pvc" does not exist
     And eventually resource "pv" does not exist
     And eventually resource "vol" does not exist

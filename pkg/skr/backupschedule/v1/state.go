@@ -12,6 +12,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/skr/backupschedule"
 	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/clock"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -24,6 +25,7 @@ type State struct {
 	SourceRef composed.ObjWithConditions
 	Backups   []client.Object
 
+	Scheduler          *backupschedule.ScheduleCalculator
 	cronExpression     *cronexpr.Expression
 	nextRunTime        time.Time
 	createRunCompleted bool
@@ -39,13 +41,14 @@ type StateFactory interface {
 }
 
 func NewStateFactory(scopeProvider scopeprovider.ScopeProvider, kcpCluster composed.StateCluster, skrCluster composed.StateCluster,
-	env abstractions.Environment) StateFactory {
+	env abstractions.Environment, clk clock.Clock) StateFactory {
 
 	return &stateFactory{
 		scopeProvider: scopeProvider,
 		kcpCluster:    kcpCluster,
 		skrCluster:    skrCluster,
 		env:           env,
+		clk:           clk,
 	}
 }
 
@@ -54,6 +57,7 @@ type stateFactory struct {
 	kcpCluster    composed.StateCluster
 	skrCluster    composed.StateCluster
 	env           abstractions.Environment
+	clk           clock.Clock
 }
 
 func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (*State, error) {
@@ -67,6 +71,7 @@ func (f *stateFactory) NewState(ctx context.Context, baseState composed.State) (
 		KcpCluster: f.kcpCluster,
 		SkrCluster: f.skrCluster,
 		env:        f.env,
+		Scheduler:  backupschedule.NewScheduleCalculator(f.clk, 1*time.Second),
 	}, nil
 }
 

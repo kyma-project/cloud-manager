@@ -53,13 +53,21 @@ var cmdInstanceCreate = &cobra.Command{
 
 		if cmdInstanceCreateOptions.waitDone {
 			fmt.Printf("Waiting for instance to be ready with timeout of %s...\n", cmdInstanceCreateOptions.timeout)
-			opts := []e2ekeb.WaitOption{e2ekeb.WithAlias(id.Alias), e2ekeb.WithTimeout(cmdInstanceCreateOptions.timeout)}
+			opts := []e2ekeb.WaitOption{e2ekeb.WithAlias(id.Alias), e2ekeb.WithTimeout(cmdInstanceCreateOptions.timeout), e2ekeb.WithErrorDuration(cmdInstanceCreateOptions.timeout), e2ekeb.WithTerminalErrorDuration(5 * time.Minute)}
 			if verbose {
 				opts = append(opts, e2ekeb.WaitProgressPrint())
 			}
 			err = e2ekeb.WaitCompleted(rootCtx, keb, opts...)
 			if err != nil {
-				return fmt.Errorf("error waiting provisioning completed: %w", err)
+				shoot, err2 := keb.GetShoot(rootCtx, id.ShootName)
+				if err2 != nil {
+					return fmt.Errorf("error waiting provisioning completed: %w\n\nerror getting shoot: %w", err, err2)
+				}
+				txt, err2 := yaml.Marshal(shoot)
+				if err2 != nil {
+					return fmt.Errorf("error waiting provisioning completed: %w\n\nerror marshalling shoot to yaml: %w", err, err2)
+				}
+				return fmt.Errorf("error waiting provisioning completed: %w\n\nshoot details:\n%s", err, string(txt))
 			}
 			fmt.Println("Instance is ready")
 		}
@@ -72,7 +80,7 @@ func init() {
 	cmdInstanceCreate.Flags().StringVarP(&cmdInstanceCreateOptions.alias, "alias", "a", "", "Alias name for the instance")
 	cmdInstanceCreate.Flags().StringVarP(&cmdInstanceCreateOptions.provider, "provider", "p", "", "Provider name for the instance")
 	cmdInstanceCreate.Flags().BoolVarP(&cmdInstanceCreateOptions.waitDone, "wait", "w", false, "Wait for instance to be ready before exiting")
-	cmdInstanceCreate.Flags().DurationVarP(&cmdInstanceCreateOptions.timeout, "timeout", "t", 900*time.Second, "Timeout in seconds for waiting for instance to become ready")
+	cmdInstanceCreate.Flags().DurationVarP(&cmdInstanceCreateOptions.timeout, "timeout", "t", 900*time.Second, "Timeout for waiting for instance to become ready")
 
 	_ = cmdInstanceCreate.MarkFlagRequired("alias")
 	_ = cmdInstanceCreate.MarkFlagRequired("provider")

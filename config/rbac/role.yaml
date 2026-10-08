@@ -83,6 +83,9 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - alicloudnfsvolumes
+  - alicloudredisclusters
+  - alicloudredisinstances
   - awsnfsVolumeRestores
   - awsnfsbackupschedules
   - awsnfsvolumebackups
@@ -113,6 +116,7 @@ rules:
   - sapnfsvolumesnapshotrestores
   - sapnfsvolumesnapshots
   - sapnfsvolumesnapshotschedules
+  - wafpolicies
   verbs:
   - create
   - delete
@@ -124,6 +128,9 @@ rules:
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - alicloudnfsvolumes/finalizers
+  - alicloudredisclusters/finalizers
+  - alicloudredisinstances/finalizers
   - awsnfsVolumeRestores/finalizers
   - awsnfsbackupschedules/finalizers
   - awsnfsvolumebackups/finalizers
@@ -154,11 +161,15 @@ rules:
   - sapnfsvolumesnapshotrestores/finalizers
   - sapnfsvolumesnapshots/finalizers
   - sapnfsvolumesnapshotschedules/finalizers
+  - wafpolicies/finalizers
   verbs:
   - update
 - apiGroups:
   - cloud-resources.kyma-project.io
   resources:
+  - alicloudnfsvolumes/status
+  - alicloudredisclusters/status
+  - alicloudredisinstances/status
   - awsnfsVolumeRestores/status
   - awsnfsbackupschedules/status
   - awsnfsvolumebackups/status
@@ -189,6 +200,7 @@ rules:
   - sapnfsvolumesnapshotrestores/status
   - sapnfsvolumesnapshots/status
   - sapnfsvolumesnapshotschedules/status
+  - wafpolicies/status
   verbs:
   - get
   - patch

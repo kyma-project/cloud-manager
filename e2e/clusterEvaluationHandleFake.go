@@ -38,13 +38,11 @@ func (h *clusterEvaluationHandleFake) setObj(alias string, obj any) {
 
 func (h *clusterEvaluationHandleFake) declare(alias, name, namespace string) {
 	h.resources[alias] = &ResourceInfo{
-		ResourceDeclaration: ResourceDeclaration{
-			Alias:      alias,
-			Kind:       "SomeKind",
-			ApiVersion: "v1",
-			Name:       name,
-			Namespace:  namespace,
-		},
+		Alias:      alias,
+		Kind:       "SomeKind",
+		ApiVersion: "v1",
+		Name:       name,
+		Namespace:  namespace,
 	}
 }
 

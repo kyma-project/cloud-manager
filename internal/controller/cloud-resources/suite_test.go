@@ -29,11 +29,12 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	clocktesting "k8s.io/utils/clock/testing"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
-	clocktesting "k8s.io/utils/clock/testing"
 
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -101,6 +102,9 @@ var _ = BeforeSuite(func() {
 	// AwsNfsVolume
 	Expect(SetupAwsNfsVolumeReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// AlicloudNfsVolume
+	Expect(SetupAlicloudNfsVolumeReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 	// SapNfsVolume
 	Expect(SetupSapNfsVolumeReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
@@ -137,6 +141,12 @@ var _ = BeforeSuite(func() {
 	// AzureManagedRedis
 	Expect(SetupAzureManagedRedisReconciler(infra.Registry())).
 		NotTo(HaveOccurred())
+	// AlicloudRedisInstance
+	Expect(SetupAlicloudRedisInstanceReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
+	// AlicloudRedisCluster
+	Expect(SetupAlicloudRedisClusterReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
 	// NfsBackupSchedule
 	Expect(SetupGcpNfsBackupScheduleReconciler(infra.Registry(), env, testFakeClock)).NotTo(HaveOccurred())
 
@@ -155,7 +165,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupGcpVpcPeeringReconciler(infra.Registry())).NotTo(HaveOccurred())
 
 	//AzureRwxBackup Schedule
-	Expect(SetupAzureRwxBackupScheduleReconciler(infra.Registry(), env)).NotTo(HaveOccurred())
+	Expect(SetupAzureRwxBackupScheduleReconciler(infra.Registry(), env, testFakeClock)).NotTo(HaveOccurred())
 
 	// SapNfsVolumeSnapshot
 	Expect(SetupSapNfsVolumeSnapshotReconciler(infra.Registry(), infra.SapMock().SnapshotClientProvider(), testFakeClock)).
@@ -171,6 +181,10 @@ var _ = BeforeSuite(func() {
 
 	// GcpSubnet
 	Expect(SetupGcpSubnetReconciler(infra.Registry())).
+		NotTo(HaveOccurred())
+
+	// WafPolicy
+	Expect(SetupWafPolicyReconciler(infra.Registry(), infra.AwsMock().WebAclProvider(), env)).
 		NotTo(HaveOccurred())
 
 	// Start controllers

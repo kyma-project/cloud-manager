@@ -6,7 +6,6 @@ import (
 	kcpkyma "github.com/kyma-project/cloud-manager/pkg/kcp/kyma"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -61,10 +60,8 @@ func (r *KymaReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *KymaReconciler) mapRequestsFromKymaCR(_ context.Context, kymaObj client.Object) []reconcile.Request {
 	return []reconcile.Request{
 		{
-			NamespacedName: types.NamespacedName{
-				Namespace: kymaObj.GetNamespace(),
-				Name:      kymaObj.GetName(),
-			},
+			Namespace: kymaObj.GetNamespace(),
+			Name:      kymaObj.GetName(),
 		},
 	}
 }

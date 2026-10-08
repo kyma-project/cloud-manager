@@ -5,7 +5,6 @@ import (
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"testing"
@@ -49,14 +48,10 @@ func NewBusolaCmTypedKindGroup(t *testing.T, k string) *corev1.ConfigMap {
 	assert.NoError(t, err)
 
 	return &corev1.ConfigMap{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ConfigMap",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Labels: map[string]string{
-				"busola.io/extension": "resource",
-			},
+		Kind:       "ConfigMap",
+		APIVersion: "v1",
+		Labels: map[string]string{
+			"busola.io/extension": "resource",
 		},
 		Data: map[string]string{
 			"general": string(b),

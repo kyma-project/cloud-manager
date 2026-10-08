@@ -44,6 +44,22 @@ func (o *SyncOutcome) AllRemovedModules() []string {
 	return append([]string{}, o.modulesToRemove...)
 }
 
+// KcpModulesNotInSkrSpec returns modules present in the KCP Kyma status just written by this outcome
+// but NOT listed in the SKR Kyma spec. SKR spec is the authoritative desired state; status is derived
+// and lags through informer caches. Non-empty means KCP has not yet converged and the reconcile must
+// requeue. Reads o.KymaKCP.Status (our own last write), so it is immune to KCP cache lag.
+func (o *SyncOutcome) KcpModulesNotInSkrSpec() []string {
+	specSet := moduleNames(o.KymaSKR.Spec.Modules)
+	statusNames := moduleStatusNames(o.KymaKCP.Status.Modules)
+	var diverged []string
+	for _, name := range statusNames {
+		if !pie.Contains(specSet, name) {
+			diverged = append(diverged, name)
+		}
+	}
+	return diverged
+}
+
 // IsRemoved returns true if given module is in the removed modules - exists in status, but not in spec
 func (o *SyncOutcome) IsRemoved(moduleName string) bool {
 	return pie.Contains(o.modulesToRemove, moduleName)

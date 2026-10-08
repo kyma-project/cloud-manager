@@ -23,6 +23,8 @@ const (
 	ReasonCanNotDeleteResourceGroup = "ResourceGroupCanNotDelete"
 
 	ReasonCanNotCreateResourceGroup = "ResourceGroupCanNotCreate"
+
+	ReasonFailedCreatingRedisInstance = "FailedCreatingRedisInstance"
 )
 
 // RedisInstanceSpec defines the desired state of RedisInstance
@@ -53,6 +55,9 @@ type RedisInstanceInfo struct {
 
 	// +optional
 	Aws *RedisInstanceAws `json:"aws,omitempty"`
+
+	// +optional
+	Alicloud *RedisInstanceAlicloud `json:"alicloud,omitempty"`
 }
 
 type RedisInstanceAzureConfigs struct {

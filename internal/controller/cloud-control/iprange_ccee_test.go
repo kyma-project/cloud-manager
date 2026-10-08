@@ -4,6 +4,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
+	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	. "github.com/onsi/ginkgo/v2"
@@ -153,6 +154,220 @@ var _ = Describe("Feature: KCP IpRange SAP", func() {
 				}
 			}
 			Expect(found).To(BeFalse())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: KCP SAP IpRange completes deletion when the Openstack network was deleted out-of-band", func() {
+		name := "7c5b19e5-c38d-4f13-bc33-02ea6c97295d"
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		sapMock := infra.SapMock().NewProject()
+
+		By("Given OpenStack Scope exists", func() {
+			kcpscope.Ignore.AddName(name)
+			Expect(CreateScopeOpenStack(infra.Ctx(), infra, scope, sapMock.ProviderParams(), WithName(name))).
+				To(Succeed(), "failed creating Scope")
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(name).
+				WithName(common.KcpNetworkKymaCommonName(name)).
+				WithOpenStackRef(scope.Spec.Scope.OpenStack.DomainName, scope.Spec.Scope.OpenStack.TenantName, "", scope.Spec.Scope.OpenStack.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		var sapGardenInfra *SapGardenerInfra
+
+		By("And Given SAP infra exists", func() {
+			sgi, err := CreateSapGardenerResources(infra.Ctx(), sapMock, infra.Garden().Namespace(), scope.Spec.ShootName, "10.250.0.0/16")
+			Expect(err).NotTo(HaveOccurred())
+			sapGardenInfra = sgi
+		})
+
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+		By("And Given KCP IpRange is provisioned in Ready state", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithName(name),
+					WithKcpIpRangeRemoteRef("some-remote-ref"),
+					WithKcpIpRangeNetwork(kcpNetworkKyma.Name),
+					WithScope(name),
+				).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		var osSubnet *subnets.Subnet
+
+		By("And Given the Openstack subnet exists", func() {
+			subnet, err := sapMock.GetSubnetByName(infra.Ctx(), sapGardenInfra.VPC.ID, kcpIpRange.Status.Subnets[0].Name)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(subnet).ToNot(BeNil())
+			osSubnet = subnet
+		})
+
+		By("When the underlying Openstack network is deleted out-of-band", func() {
+			// ignore the IpRange so the controller cannot re-create the subnet mid-cascade
+			kcpiprange.Ignore.AddName(name)
+			defer kcpiprange.Ignore.RemoveName(name)
+
+			Expect(sapMock.DeleteNetworkWithSubnets(infra.Ctx(), sapGardenInfra.Router.ID, sapGardenInfra.VPC.ID)).
+				To(Succeed())
+
+			net, err := sapMock.GetNetworkByName(infra.Ctx(), sapGardenInfra.VPC.Name)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(net).To(BeNil())
+
+			goneSubnet, err := sapMock.GetSubnetByName(infra.Ctx(), sapGardenInfra.VPC.ID, osSubnet.Name)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(goneSubnet).To(BeNil())
+		})
+
+		By("And When KCP IpRange is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), kcpIpRange)).
+				To(Succeed())
+		})
+
+		By("Then KCP IpRange finalizer is removed and it no longer exists", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).
+				To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: KCP SAP IpRange stuck in Error from a missing network still completes deletion", func() {
+		name := "9df96e49-f948-426a-9b08-68c5781b60d8"
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		sapMock := infra.SapMock().NewProject()
+
+		By("Given OpenStack Scope exists", func() {
+			kcpscope.Ignore.AddName(name)
+			Expect(CreateScopeOpenStack(infra.Ctx(), infra, scope, sapMock.ProviderParams(), WithName(name))).
+				To(Succeed(), "failed creating Scope")
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(name).
+				WithName(common.KcpNetworkKymaCommonName(name)).
+				WithOpenStackRef(scope.Spec.Scope.OpenStack.DomainName, scope.Spec.Scope.OpenStack.TenantName, "", scope.Spec.Scope.OpenStack.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		var sapGardenInfra *SapGardenerInfra
+
+		By("And Given SAP infra exists", func() {
+			sgi, err := CreateSapGardenerResources(infra.Ctx(), sapMock, infra.Garden().Namespace(), scope.Spec.ShootName, "10.250.0.0/16")
+			Expect(err).NotTo(HaveOccurred())
+			sapGardenInfra = sgi
+		})
+
+		kcpIpRange := &cloudcontrolv1beta1.IpRange{}
+
+		By("And Given KCP IpRange is provisioned in Ready state", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithName(name),
+					WithKcpIpRangeRemoteRef("some-remote-ref"),
+					WithKcpIpRangeNetwork(kcpNetworkKyma.Name),
+					WithScope(name),
+				).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("When the underlying Openstack network is deleted out-of-band", func() {
+			// ignore the IpRange so the controller cannot re-create the subnet mid-cascade
+			kcpiprange.Ignore.AddName(name)
+			defer kcpiprange.Ignore.RemoveName(name)
+
+			Expect(sapMock.DeleteNetworkWithSubnets(infra.Ctx(), sapGardenInfra.Router.ID, sapGardenInfra.VPC.ID)).
+				To(Succeed())
+
+			net, err := sapMock.GetNetworkByName(infra.Ctx(), sapGardenInfra.VPC.Name)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(net).To(BeNil())
+		})
+
+		By("And When a non-deletion reconcile runs", func() {
+			Eventually(UpdateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					WithLabels(map[string]string{"test-trigger": "1"})).
+				Should(Succeed())
+		})
+
+		By("Then KCP IpRange enters Error state reporting the network as not found", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange,
+					NewObjActions(),
+					HavingConditionReasonTrue(cloudcontrolv1beta1.ConditionTypeError, cloudcontrolv1beta1.ReasonCloudProviderError)).
+				Should(Succeed())
+		})
+
+		By("And When KCP IpRange is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), kcpIpRange)).
+				To(Succeed())
+		})
+
+		By("Then KCP IpRange finalizer is removed and it no longer exists", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpIpRange).
+				Should(Succeed())
 		})
 
 		By("// cleanup: delete Scope", func() {

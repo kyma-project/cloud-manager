@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"testing"
 )
@@ -24,13 +23,11 @@ func (s *pvEventHandlerSuite) SetupTest() {
 func (s *pvEventHandlerSuite) TestIsMatchingPV() {
 	//Update the capacity in spec.
 	pv := corev1.PersistentVolume{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-pv",
-			Namespace: "test",
-			Labels: map[string]string{
-				v1beta1.LabelNfsVolName: "test-pv",
-				v1beta1.LabelNfsVolNS:   "test",
-			},
+		Name:      "test-pv",
+		Namespace: "test",
+		Labels: map[string]string{
+			v1beta1.LabelNfsVolName: "test-pv",
+			v1beta1.LabelNfsVolNS:   "test",
 		},
 	}
 
@@ -43,10 +40,8 @@ func (s *pvEventHandlerSuite) TestIsMatchingPV() {
 func (s *pvEventHandlerSuite) TestNotMatchingPV() {
 	//Update the capacity in spec.
 	pod := corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-pod",
-			Namespace: "test",
-		},
+		Name:      "test-pod",
+		Namespace: "test",
 	}
 
 	matching, key := isMatchingPV(&pod)

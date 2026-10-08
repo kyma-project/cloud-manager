@@ -40,6 +40,8 @@ import (
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
 	alicloudnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance/client"
+	alicloudredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/rediscluster/client"
+	alicloudredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
 	sapexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/exposedData/client"
 	sapiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/iprange/client"
 
@@ -81,7 +83,6 @@ import (
 	gcpexposeddataclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/exposedData/client"
 	gcpiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/iprange/client"
 	gcpnfsbackupclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsbackup/client/v2"
-	gcpnfsinstancev1client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v1/client"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	gcpnfsrestoreclientv2 "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsrestore/client/v2"
 	gcpredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/rediscluster/client"
@@ -95,6 +96,7 @@ import (
 	awsnfsvolumerestoreclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumerestore/client"
 	azurerwxpvclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxpv/client"
 	azurerwxvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/azurerwxvolumebackup/client"
+	wafpolicyclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	skrruntimeconfig "github.com/kyma-project/cloud-manager/pkg/skr/runtime/config"
 	"github.com/kyma-project/cloud-manager/pkg/skr/sapnfsvolumesnapshot"
@@ -255,6 +257,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsVolume")
 		os.Exit(1)
 	}
+	if err = cloudresourcescontroller.SetupAlicloudNfsVolumeReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AlicloudNfsVolume")
+		os.Exit(1)
+	}
 	if err = cloudresourcescontroller.SetupGcpNfsVolumeReconciler(skrRegistry, gcpnfsbackupclientv2.NewFileBackupClientProvider(gcpClients)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GcpNfsVolume")
 		os.Exit(1)
@@ -322,8 +328,23 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = cloudresourcescontroller.SetupAlicloudRedisInstanceReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AlicloudRedisInstance")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupAlicloudRedisClusterReconciler(skrRegistry); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AlicloudRedisCluster")
+		os.Exit(1)
+	}
+
 	if err = cloudresourcescontroller.SetupAwsVpcPeeringReconciler(skrRegistry); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsVpcPeering")
+		os.Exit(1)
+	}
+
+	if err = cloudresourcescontroller.SetupWafPolicyReconciler(skrRegistry, wafpolicyclient.NewClientProvider(), abstractions.NewOSEnvironment()); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "WafPolicy")
 		os.Exit(1)
 	}
 
@@ -362,7 +383,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupAwsNfsBackupScheduleReconciler(skrRegistry, env); err != nil {
+	if err = cloudresourcescontroller.SetupAwsNfsBackupScheduleReconciler(skrRegistry, env, clock.RealClock{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AwsNfsBackupSchedule")
 		os.Exit(1)
 	}
@@ -382,7 +403,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env); err != nil {
+	if err = cloudresourcescontroller.SetupAzureRwxBackupScheduleReconciler(skrRegistry, env, clock.RealClock{}); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AzureRwxBackupSchedule")
 		os.Exit(1)
 	}
@@ -407,6 +428,7 @@ func main() {
 		ctx,
 		mgr,
 		scopeclient.NewAwsStsGardenClientProvider(),
+		scopeclient.NewAlicloudStsGardenClientProvider(),
 		activeSkrCollection,
 		gcpclient.NewServiceUsageClientProvider(),
 		awsexposeddataclient.NewClientProvider(),
@@ -424,7 +446,6 @@ func main() {
 	if err = cloudcontrolcontroller.SetupNfsInstanceReconciler(
 		mgr,
 		awsnfsinstanceclient.NewClientProvider(),
-		gcpnfsinstancev1client.NewFilestoreClientProvider(),
 		gcpnfsinstancev2client.NewFilestoreClientProvider(gcpClients),
 		sapnfsinstanceclient.NewClientProvider(),
 		alicloudnfsinstanceclient.NewClientProvider(),
@@ -450,11 +471,8 @@ func main() {
 		azureiprangeclient.NewClientProvider(),
 		gcpiprangeclient.NewServiceNetworkingClientProvider(gcpClients),
 		gcpiprangeclient.NewComputeClientProvider(gcpClients),
-		gcpiprangeclient.NewServiceNetworkingClientProviderV2(gcpClients),
-		gcpiprangeclient.NewOldComputeClientProviderV2(gcpClients),
 		sapiprangeclient.NewClientProvider(),
 		alicloudiprangeclient.NewClientProvider(),
-		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "IpRange")
 		os.Exit(1)
@@ -464,6 +482,7 @@ func main() {
 		gcpredisinstanceclient.NewMemorystoreClientProvider(gcpClients),
 		azureredisinstanceclient.NewClientProvider(),
 		awsclient.NewElastiCacheClientProvider(),
+		alicloudredisinstanceclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisInstance")
@@ -492,6 +511,7 @@ func main() {
 		mgr,
 		awsclient.NewElastiCacheClientProvider(),
 		azureredisclusterclient.NewClientProvider(),
+		alicloudredisclusterclient.NewClientProvider(),
 		env,
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RedisCluster")
@@ -546,6 +566,7 @@ func main() {
 	if err = cloudcontrolcontroller.SetupSubscriptionReconciler(
 		mgr,
 		subscriptionclient.NewAwsStsGardenClientProvider(),
+		subscriptionclient.NewAlicloudStsGardenClientProvider(),
 	); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Subscription")
 		os.Exit(1)

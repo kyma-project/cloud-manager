@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azuremetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/metrics"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/vpcpeering/types"
 )
 
@@ -18,6 +19,7 @@ func New(stateFactory StateFactory) composed.Action {
 			logger.Error(err, "Error")
 			return composed.StopAndForget, nil
 		}
+		ctx = azuremetrics.RegionIntoContext(ctx, state.Scope().Spec.Region)
 
 		return composed.ComposeActions(
 			"azureVpcPeering",

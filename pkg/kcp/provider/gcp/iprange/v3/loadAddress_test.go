@@ -19,7 +19,6 @@ import (
 	spy "github.com/kyma-project/cloud-manager/pkg/testinfra/clientspy"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/googleapi"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -194,10 +193,8 @@ func TestLoadAddress(t *testing.T) {
 
 		setupTest := func() {
 			scope = &cloudcontrolv1beta1.Scope{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "gcp-test",
-					Namespace: "kcp-system",
-				},
+				Name:      "gcp-test",
+				Namespace: "kcp-system",
 				Spec: cloudcontrolv1beta1.ScopeSpec{
 					KymaName:  "8ed7960c-7596-4039-8143-485df5312725",
 					ShootName: "a34d2ac1-81f5-4dd1-9288-9cfac0151c4f",
@@ -213,10 +210,8 @@ func TestLoadAddress(t *testing.T) {
 			}
 
 			ipRange = &cloudcontrolv1beta1.IpRange{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "3abd9b3c-1125-42e2-9157-72a3758b1b59",
-					Namespace: "kcp-system",
-				},
+				Name:      "3abd9b3c-1125-42e2-9157-72a3758b1b59",
+				Namespace: "kcp-system",
 				Spec: cloudcontrolv1beta1.IpRangeSpec{
 					RemoteRef: cloudcontrolv1beta1.RemoteRef{
 						Name: "default",

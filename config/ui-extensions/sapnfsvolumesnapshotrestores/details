@@ -1,0 +1,39 @@
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    children:
+      - widget: Labels
+        source: sourceSnapshot.name
+        name: spec.sourceSnapshot.name
+      - widget: Labels
+        source: sourceSnapshot.namespace
+        name: spec.sourceSnapshot.namespace
+      - widget: Labels
+        source: destination.existingVolume.name
+        name: spec.destination.existingVolume.name
+      - widget: Labels
+        source: destination.existingVolume.namespace
+        name: spec.destination.existingVolume.namespace
+      - widget: Labels
+        source: destination.newVolume.metadata.name
+        name: spec.destination.newVolume.metadata.name
+      - widget: Labels
+        source: destination.newVolume.metadata.namespace
+        name: spec.destination.newVolume.metadata.namespace
+  - name: status
+    widget: Panel
+    source: status
+    children:
+      - widget: Labels
+        source: state
+        name: status.state
+      - widget: Labels
+        source: revertInitiated
+        name: status.revertInitiated
+      - widget: Labels
+        source: createdVolume.name
+        name: status.createdVolume.name
+      - widget: Labels
+        source: createdVolume.namespace
+        name: status.createdVolume.namespace

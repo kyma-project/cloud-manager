@@ -12,7 +12,7 @@ const alicloudFlagName = "alicloud"
 // vpcnetwork reconciler, iprange reconciler) MUST check this flag and skip
 // Alicloud handling when it returns false.
 //
-// Default is false — Alicloud is opt-in per landscape via ff_ga.yaml / ff_edge.yaml
+// Default is false - Alicloud is opt-in per landscape via ff_ga.yaml / ff_edge.yaml
 // targeting rules until the implementation reaches GA.
 var Alicloud = &alicloudInfo{}
 

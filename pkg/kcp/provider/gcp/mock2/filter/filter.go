@@ -38,7 +38,7 @@ var _ = func() {
 
 	// filtering addresses by network
 	// ListGlobalAddresses
-	// pkg/kcp/provider/gcp/iprange/client/oldComputeClient.go
+	// pkg/kcp/provider/gcp/iprange/client/computeClient.go
 	var _ = fmt.Sprintf("network=\"https://www.googleapis.com/compute/v1/projects/%s/global/networks/%s\"", projectId, vpc)
 
 	// FindRestoreOperation
@@ -421,7 +421,7 @@ func envOptionsFromStruct(v any) ([]cel.EnvOption, map[string]string, error) {
 		name := f.Name
 		tag := f.Tag.Get("json")
 		if tag != "" {
-			jsonName := strings.Split(tag, ",")[0]
+			jsonName, _, _ := strings.Cut(tag, ",")
 			if jsonName == "-" {
 				continue
 			}

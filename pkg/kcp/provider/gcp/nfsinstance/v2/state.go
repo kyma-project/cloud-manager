@@ -1,8 +1,8 @@
 // Package v2 provides the modern, streamlined GCP NfsInstance implementation.
 //
 // This package follows the OLD reconciler pattern (multi-provider CRD) but with
-// improved organization and maintainability. It is designed to replace the v1
-// implementation when enabled via the gcpNfsInstanceV2 feature flag.
+// improved organization and maintainability. It is the sole GCP NfsInstance
+// implementation, having replaced the v1 implementation.
 //
 // Key improvements over v1:
 // - Modern GCP client (cloud.google.com/go/filestore) with protobuf types

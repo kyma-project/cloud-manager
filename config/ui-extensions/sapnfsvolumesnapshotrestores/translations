@@ -1,0 +1,21 @@
+en:
+  configuration: Configuration
+  spec.sourceSnapshot: Source Snapshot
+  spec.sourceSnapshot.name: Source Snapshot Name
+  spec.sourceSnapshot.namespace: Source Snapshot Namespace
+  spec.destination.existingVolume: Existing Volume
+  spec.destination.existingVolume.name: Existing Volume Name
+  spec.destination.existingVolume.namespace: Existing Volume Namespace
+  spec.destination.newVolume: New Volume
+  spec.destination.newVolume.metadata.name: New Volume Name
+  spec.destination.newVolume.metadata.namespace: New Volume Namespace
+  spec.destination.newVolume.metadata.labels: New Volume Labels
+  spec.destination.newVolume.metadata.annotations: New Volume Annotations
+  spec.destination.newVolume.spec.capacityGb: New Volume Capacity Gb
+  spec.destination.newVolume.spec.volume.name: New Volume Persistent Volume Name
+  spec.destination.newVolume.spec.volumeClaim.name: New Volume Persistent Volume Claim Name
+  status: Status
+  status.state: State
+  status.revertInitiated: Revert Initiated
+  status.createdVolume.name: Created Volume Name
+  status.createdVolume.namespace: Created Volume Namespace

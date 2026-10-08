@@ -126,19 +126,34 @@ func statusSaveOnCreate(ctx context.Context, st composed.State) (error, context.
 		if !ok {
 			theErr = multierror.Append(theErr, errors.New("gardener credentials for alicloud missing accessKeyID key"))
 		}
-		_, ok = state.credentialData["accessKeySecret"]
+		accessKeySecret, ok := state.credentialData["accessKeySecret"]
 		if !ok {
 			theErr = multierror.Append(theErr, errors.New("gardener credentials for alicloud missing accessKeySecret key"))
 		}
 		if theErr != nil {
 			break
 		}
-		// AliCloud credentials don't have a direct equivalent to STS GetCallerIdentity,
-		// so we store the accessKeyID as the account identifier
-		_ = accessKeyID
+
+		stsClient, err := state.alicloudStsClientProvider(
+			ctx,
+			"", // no shoot/region context here; the STS client uses the central endpoint and GetCallerIdentity is account-global
+			accessKeyID,
+			accessKeySecret,
+		)
+		if err != nil {
+			theErr = multierror.Append(theErr, fmt.Errorf("error creating alicloud sts client: %w", err))
+			break
+		}
+
+		accountId, err := stsClient.GetCallerIdentity(ctx)
+		if err != nil {
+			theErr = multierror.Append(theErr, fmt.Errorf("error getting caller identity: %w", err))
+			break
+		}
+
 		state.ObjAsSubscription().Status.SubscriptionInfo = &cloudcontrolv1beta1.SubscriptionInfo{
 			Alicloud: &cloudcontrolv1beta1.SubscriptionInfoAlicloud{
-				AccountId: accessKeyID,
+				AccountId: accountId,
 			},
 		}
 	} // case

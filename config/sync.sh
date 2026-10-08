@@ -24,6 +24,7 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsredisclusters.yaml $
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsnfsvolumebackups.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsnfsbackupschedules.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_awsnfsvolumerestores.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_wafpolicies.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 
 # AWS UI
 cp $SCRIPT_DIR/ui-extensions/awsnfsvolumes/cloud-resources.kyma-project.io_awsnfsvolumes_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
@@ -34,6 +35,7 @@ cp $SCRIPT_DIR/ui-extensions/awsnfsvolumebackups/cloud-resources.kyma-project.io
 cp $SCRIPT_DIR/ui-extensions/awsnfsvolumerestores/cloud-resources.kyma-project.io_awsnfsvolumerestores_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/ui-extensions/awsnfsbackupschedules/cloud-resources.kyma-project.io_awsnfsbackupschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 cp $SCRIPT_DIR/ui-extensions/awsredisclusters/cloud-resources.kyma-project.io_awsredisclusters_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
+cp $SCRIPT_DIR/ui-extensions/wafpolicies/cloud-resources.kyma-project.io_wafpolicies_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/aws
 
 # ============= GCP ================
 
@@ -82,6 +84,18 @@ cp $SCRIPT_DIR/ui-extensions/azurerwxvolumerestores/cloud-resources.kyma-project
 cp $SCRIPT_DIR/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 cp $SCRIPT_DIR/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_azurevpcdnslinks_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/azure
 
+# ============= AliCloud ================
+
+# AliCloud
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml             $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisinstances.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisclusters.yaml  $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudnfsvolumes.yaml     $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+
+# AliCloud UI
+# Note: AliCloud Redis UI extensions (Busola forms) are not yet designed.
+# Once designed, add alicloudredisinstances_ui.yaml and alicloudredisclusters_ui.yaml here.
+cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 
 # ============= OpenStack ================
 
@@ -95,14 +109,9 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotsch
 # OpenStack UI
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 cp $SCRIPT_DIR/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnfsvolumes_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
-
-# ============= AliCloud ================
-
-# AliCloud
-cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_ipranges.yaml       $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
-
-# AliCloud UI
-cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+cp $SCRIPT_DIR/ui-extensions/sapnfsvolumesnapshots/cloud-resources.kyma-project.io_sapnfsvolumesnapshots_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
+cp $SCRIPT_DIR/ui-extensions/sapnfsvolumesnapshotrestores/cloud-resources.kyma-project.io_sapnfsvolumesnapshotrestores_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
+cp $SCRIPT_DIR/ui-extensions/sapnfsvolumesnapshotschedules/cloud-resources.kyma-project.io_sapnfsvolumesnapshotschedules_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/openstack
 
 echo "CRD resources are copied to ./dist kcp and skr dirs"
 echo "Note that no files are removed - you must remove them manually"

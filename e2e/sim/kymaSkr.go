@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -18,6 +17,7 @@ import (
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -180,7 +180,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 
 			if elapsed >= r.timeoutRemoveModuleToErrorState {
 				ms := skrKyma.GetModuleStatusMap()["cloud-manager"]
-				if ms.State != operatorshared.StateError {
+				// ms is nil when the module has not yet been observed in the Kyma status.
+				if ms == nil || ms.State != operatorshared.StateError {
 					outcome.Processed("cloud-manager", operatorshared.StateError, "Timeout waiting for module to be deleted")
 
 					util.ExpiringSwitch().
@@ -227,7 +228,7 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		// CloudResources does not exist
 
 		logger.Info("Removing SKR Kyma finalizer")
-		_, err := composed.PatchObjRemoveFinalizer(ctx, api.CommonFinalizerDeletionHook, skrKyma, r.skr)
+		_, err := composed.PatchObjRemoveFinalizer(ctx, FinalizerE2E, skrKyma, r.skr)
 		if client.IgnoreNotFound(err) != nil && util.IgnoreNoMatch(err) != nil {
 			return reconcile.Result{}, fmt.Errorf("error removing SKR Kyma finalizer: %w", err)
 		}
@@ -260,7 +261,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 			elapsed := r.clock.Since(cm.CreationTimestamp.Time)
 			if elapsed >= r.timeoutRemoveModuleToErrorState {
 				ms := skrKyma.GetModuleStatusMap()["cloud-manager"]
-				if ms.State != operatorshared.StateError {
+				// ms is nil when the module has not yet been observed in the Kyma status.
+				if ms == nil || ms.State != operatorshared.StateError {
 					outcome.Processed("cloud-manager", operatorshared.StateError, "Timeout waiting for module to be deleted")
 
 					util.ExpiringSwitch().
@@ -298,10 +300,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		if cm == nil {
 			logger.Info("Creating default CloudResources")
 			cm = &cloudresourcesv1beta1.CloudResources{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "kyma-system",
-					Name:      "default",
-				},
+				Namespace: "kyma-system",
+				Name:      "default",
 			}
 			err = r.skr.Create(ctx, cm)
 			if client.IgnoreAlreadyExists(err) != nil {
@@ -327,7 +327,8 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 			elapsed := r.clock.Since(cm.CreationTimestamp.Time)
 			if elapsed >= r.timeoutAddModuleToReadyState {
 				ms := skrKyma.GetModuleStatusMap()["cloud-manager"]
-				if ms.State != operatorshared.StateError {
+				// ms is nil when the module has not yet been observed in the Kyma status.
+				if ms == nil || ms.State != operatorshared.StateError {
 					outcome.Processed("cloud-manager", operatorshared.StateError, "Timeout waiting for module to be ready")
 
 					util.ExpiringSwitch().
@@ -373,6 +374,18 @@ func (r *simKymaSkr) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
+	// Self-correcting convergence backstop. KCP status is a mirror of cache-lagged SKR status;
+	// a stale reconcile can re-mirror an already-removed module onto KCP. The old backstop
+	// gated on AllRemovedModules() (SKR-status-minus-SKR-spec) drained to empty once the module
+	// left SKR status, so the final stale-driven reconcile returned without requeue and stranded
+	// KCP dirty (the sim flake). Gate instead on whether the KCP status we just wrote still lists
+	// a module absent from the SKR spec (authoritative desired state). Terminates: once KCP
+	// status contains only spec modules the slice is empty; the cm==nil path removes the module
+	// and re-patches clean each pass, so convergence is monotonic.
+	if len(outcome.KcpModulesNotInSkrSpec()) > 0 {
+		return reconcile.Result{RequeueAfter: util.Timing.T1000ms()}, nil
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -380,5 +393,11 @@ func (r *simKymaSkr) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(fmt.Sprintf("kyma-skr-%s", r.runtimeID)).
 		For(&operatorv1beta2.Kyma{}).
+		Watches(
+			&cloudresourcesv1beta1.CloudResources{},
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
+				return []reconcile.Request{{Namespace: "kyma-system", Name: "default"}}
+			}),
+		).
 		Complete(r)
 }

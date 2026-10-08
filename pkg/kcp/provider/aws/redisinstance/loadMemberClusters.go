@@ -2,7 +2,6 @@ package redisinstance
 
 import (
 	"context"
-	"errors"
 
 	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 
@@ -31,8 +30,9 @@ func loadMemberClusters(ctx context.Context, st composed.State) (error, context.
 	}
 	state.memberClusters = elastiCacheClusters
 
+	// Empty member list is not an error; defer readiness/terminal state to waitElastiCacheAvailable.
 	if len(elastiCacheClusters) < 1 {
-		return composed.LogErrorAndReturn(errors.New("no replication group clusters found"), "no replication group clusters found", composed.StopWithRequeueDelay(5*util.Timing.T10000ms()), ctx)
+		logger.Info("Replication group has no member clusters yet; deferring to waitElastiCacheAvailable")
 	}
 
 	return nil, ctx

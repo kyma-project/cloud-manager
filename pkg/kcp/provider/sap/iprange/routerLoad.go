@@ -13,6 +13,8 @@ func routerLoad(ctx context.Context, st composed.State) (error, context.Context)
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	// only reached when the network exists (guarded by networkExists in New); a
+	// partial teardown with the router gone but network present is out of scope
 	router, err := state.sapClient.GetRouterByName(ctx, state.Network().Status.Network.OpenStack.NetworkName)
 	if err != nil {
 		logger.Error(err, "Error loading SAP KCP IpRange openstack router")

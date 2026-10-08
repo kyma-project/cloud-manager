@@ -8,12 +8,14 @@ import (
 	"time"
 
 	gardenerapicore "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardenerconstants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-multierror"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
+	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
@@ -27,12 +29,17 @@ import (
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 )
 
 // KEB =============================================
 
 type InstanceLister interface {
 	List(ctx context.Context, opts ...ListOption) ([]InstanceDetails, error)
+}
+
+type ShootRetrier interface {
+	ForceShootRetry(ctx context.Context, runtimeId string) error
 }
 
 type Keb interface {
@@ -48,9 +55,13 @@ type Keb interface {
 	List(ctx context.Context, opts ...ListOption) ([]InstanceDetails, error)
 	DeleteInstance(ctx context.Context, opts ...DeleteOption) error
 
+	GetShoot(ctx context.Context, shootName string) (*gardenerapicore.Shoot, error)
+
 	GetInstanceKubeconfig(ctx context.Context, runtimeID string) ([]byte, time.Time, error)
 	CreateInstanceClient(ctx context.Context, runtimeID string) (client.Client, error)
 	RenewInstanceKubeconfig(ctx context.Context, runtimeID string) error
+
+	ForceShootRetry(ctx context.Context, runtimeId string) error
 }
 
 var _ InstanceLister = (Keb)(nil)
@@ -215,6 +226,9 @@ type InstanceDetails struct {
 	BeingDeleted bool `json:"beingDeleted" yaml:"beingDeleted"`
 
 	Ignored bool `json:"ignored" yaml:"ignored"`
+
+	ShootLastErrors    []gardenerapicore.LastError    `json:"shootLastErrors,omitempty" yaml:"shootLastErrors,omitempty"`
+	ShootLastOperation *gardenerapicore.LastOperation `json:"shootLastOperation,omitempty" yaml:"shootLastOperation,omitempty"`
 }
 
 func (id InstanceDetails) AddLoggerValues(log logr.Logger) logr.Logger {
@@ -257,12 +271,37 @@ func RuntimeToInstanceDetails(rt *infrastructuremanagerv1.Runtime) InstanceDetai
 		State:                 string(rt.Status.State),
 		BeingDeleted:          rt.DeletionTimestamp != nil,
 		Ignored:               rt.Labels[e2elib.DoNotReconcile] != "",
+		ShootLastErrors:       rt.Status.ShootLastErrors,
+		ShootLastOperation:    rt.Status.ShootLastOperation,
 	}
 	errCond := meta.FindStatusCondition(rt.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	if errCond != nil && errCond.Status == metav1.ConditionTrue {
 		id.Message = errCond.Message
 	}
 	return id
+}
+
+// HasTerminalShootError returns true when the shoot error is permanent and WaitCompleted
+// should stop waiting immediately. This covers both Gardener giving up (LastOperation.State == Failed)
+// and user-caused errors (misconfiguration, quota exceeded, bad credentials, etc.).
+// Only transient errors (rate limits, retryable infra dependencies) return false.
+func (id InstanceDetails) HasTerminalShootError() bool {
+	return commongardener.IsTerminalShootLastOperation(id.ShootLastOperation) ||
+		!commongardener.IsTransientShootErrors(id.ShootLastErrors)
+}
+
+func (id InstanceDetails) ShootInfo() string {
+	b, err := yaml.Marshal(struct {
+		ShootLastErrors    []gardenerapicore.LastError    `yaml:"shootLastErrors,omitempty"`
+		ShootLastOperation *gardenerapicore.LastOperation `yaml:"shootLastOperation,omitempty"`
+	}{
+		ShootLastErrors:    id.ShootLastErrors,
+		ShootLastOperation: id.ShootLastOperation,
+	})
+	if err != nil {
+		return fmt.Sprintf("shootLastErrors=%v shootLastOperation=%v", id.ShootLastErrors, id.ShootLastOperation)
+	}
+	return string(b)
 }
 
 func (k *defaultKeb) Config() *e2econfig.ConfigType {
@@ -287,6 +326,18 @@ func (k *defaultKeb) GetInstance(ctx context.Context, runtimeID string) (*Instan
 		return nil, nil
 	}
 	return new(RuntimeToInstanceDetails(rt)), nil
+}
+
+func (k *defaultKeb) GetShoot(ctx context.Context, shootName string) (*gardenerapicore.Shoot, error) {
+	shoot := &gardenerapicore.Shoot{}
+	err := k.gardenClient.Get(ctx, client.ObjectKey{Namespace: k.config.GardenNamespace, Name: shootName}, shoot)
+	if client.IgnoreNotFound(err) != nil {
+		return nil, fmt.Errorf("error getting shoot %q: %w", shootName, err)
+	}
+	if err != nil {
+		return nil, nil
+	}
+	return shoot, nil
 }
 
 func (k *defaultKeb) CreateInstance(ctx context.Context, opts ...CreateOption) (InstanceDetails, error) {
@@ -580,10 +631,8 @@ func (k *defaultKeb) RenewInstanceKubeconfig(ctx context.Context, runtimeID stri
 		}
 	} else {
 		secret = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: ns,
-				Name:      gc.Spec.Kubeconfig.Secret.Name,
-			},
+			Namespace: ns,
+			Name:      gc.Spec.Kubeconfig.Secret.Name,
 			Data: map[string][]byte{
 				gc.Spec.Kubeconfig.Secret.Key: data,
 			},
@@ -603,5 +652,43 @@ func (k *defaultKeb) RenewInstanceKubeconfig(ctx context.Context, runtimeID stri
 		return fmt.Errorf("error patching GardenerCluster expires-in annotation: %w", err)
 	}
 
+	return nil
+}
+
+func (k *defaultKeb) ForceShootRetry(ctx context.Context, runtimeId string) error {
+	rt := &infrastructuremanagerv1.Runtime{}
+	err := k.kcpClient.Get(ctx, client.ObjectKey{Namespace: k.config.KcpNamespace, Name: runtimeId}, rt)
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error getting runtime %q: %w", runtimeId, err)
+	}
+
+	shoot := &gardenerapicore.Shoot{}
+	err = k.gardenClient.Get(ctx, types.NamespacedName{
+		Namespace: k.config.GardenNamespace,
+		Name:      rt.Spec.Shoot.Name,
+	}, shoot)
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error getting shoot %q: %w", rt.Spec.Shoot.Name, err)
+	}
+
+	if !commongardener.IsTerminalShootLastOperation(shoot.Status.LastOperation) {
+		return nil
+	}
+
+	_, err = composed.PatchObjMergeAnnotation(
+		ctx,
+		gardenerconstants.GardenerOperation,
+		gardenerconstants.ShootOperationRetry,
+		shoot, k.gardenClient,
+	)
+	if err != nil {
+		return fmt.Errorf("error annotating shoot %q for retry: %w", rt.Spec.Shoot.Name, err)
+	}
 	return nil
 }

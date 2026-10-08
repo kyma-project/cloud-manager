@@ -484,5 +484,30 @@ var _ = Describe("Feature: SKR GcpNfsVolumeRestore V2", func() {
 				return errCond.Reason == cloudresourcesv1beta1.ConditionReasonNfsVolumeNotReady, nil
 			}).Should(BeTrue(), "expected GcpNfsVolumeRestore to have Error condition with NfsVolumeNotReady reason")
 		})
+
+		// DELETE
+
+		By("And Given SKR GcpNfsVolume becomes Ready", func() {
+			// The restore reconciler short-circuits on the not-ready volume before
+			// reaching its delete branch, so the common finalizer can only be removed
+			// once the volume is Ready. Flip it Ready so deletion can complete.
+			Eventually(UpdateStatus).
+				WithArguments(
+					infra.Ctx(), infra.SKR().Client(), skrGcpNfsVolume,
+					WithConditions(SkrReadyCondition()),
+				).Should(Succeed())
+		})
+
+		By("When GcpNfsVolumeRestore is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeRestore).
+				Should(Succeed())
+		})
+
+		By("Then GcpNfsVolumeRestore does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), gcpNfsVolumeRestore).
+				Should(Succeed(), "expected GcpNfsVolumeRestore to be deleted")
+		})
 	})
 })

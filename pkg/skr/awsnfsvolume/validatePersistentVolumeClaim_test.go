@@ -36,18 +36,14 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 
 		setupTest := func() {
 			awsNfsVolume = &cloudresourcesv1beta1.AwsNfsVolume{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-awsnfsvol",
-					Namespace: "test-ns",
-				},
+				Name:      "test-awsnfsvol",
+				Namespace: "test-ns",
 			}
 
 			pvc = &corev1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-awsnfsvol",
-					Namespace: "test-ns",
-					Labels:    getVolumeClaimLabels(awsNfsVolume),
-				},
+				Name:      "test-awsnfsvol",
+				Namespace: "test-ns",
+				Labels:    getVolumeClaimLabels(awsNfsVolume),
 			}
 
 			fakeClient := fake.NewClientBuilder().

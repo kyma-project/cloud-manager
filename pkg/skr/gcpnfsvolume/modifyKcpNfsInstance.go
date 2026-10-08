@@ -47,14 +47,12 @@ func createKcpNfsInstance(ctx context.Context, state *State, logger logr.Logger)
 	}
 
 	state.KcpNfsInstance = &cloudcontrolv1beta1.NfsInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      uuid.NewString(),
-			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      state.Name().Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: state.Name().Namespace,
-			},
+		Name:      uuid.NewString(),
+		Namespace: state.KymaRef.Namespace,
+		Labels: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      state.Name().Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: state.Name().Namespace,
 		},
 		Spec: cloudcontrolv1beta1.NfsInstanceSpec{
 			Scope: cloudcontrolv1beta1.ScopeRef{

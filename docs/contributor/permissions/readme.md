@@ -4,7 +4,7 @@ This guide explains how to extend Cloud Manager permissions when adding new feat
 
 ## Overview
 
-The process is the same for all providers (Azure, GCP, AWS):
+The process is the same for all providers (Azure, GCP, AWS, AliCloud):
 
 1. **Setup** - Authenticate and prepare configuration files
 2. **Test** - Run Cloud Manager locally to discover missing permissions
@@ -130,6 +130,7 @@ Follow the same process as Azure, but:
 | Azure | `az` | `azure_default.json` | `azure_infra.sh` |
 | GCP | `gcloud` | `gcp_default.json` | `gcp_infra.sh` |
 | AWS | `aws`, `aws-azure-login` | `aws_default.json` | `aws_infra.sh` |
+| AliCloud | `aliyun` | `alicloud/policy-CloudManagerAccess.json` | `alicloud_infra.sh` |
 
 ## Tips
 

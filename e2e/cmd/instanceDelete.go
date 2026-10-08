@@ -7,6 +7,7 @@ import (
 	"github.com/elliotchance/pie/v2"
 	e2ekeb "github.com/kyma-project/cloud-manager/e2e/keb"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 type cmdInstanceDeleteOptionsType struct {
@@ -43,6 +44,11 @@ var cmdInstanceDelete = &cobra.Command{
 			cmdInstanceDeleteOptions.runtimeID = idArr[0].RuntimeID
 		}
 
+		id, err := keb.GetInstance(rootCtx, cmdInstanceDeleteOptions.runtimeID)
+		if err != nil {
+			return fmt.Errorf("failed to get instance: %w", err)
+		}
+
 		err = keb.DeleteInstance(
 			rootCtx,
 			e2ekeb.WithRuntime(cmdInstanceDeleteOptions.runtimeID),
@@ -65,7 +71,15 @@ var cmdInstanceDelete = &cobra.Command{
 			}
 			err = e2ekeb.WaitCompleted(rootCtx, keb, opts...)
 			if err != nil {
-				return fmt.Errorf("failed to wait for instance to be deleted: %w", err)
+				shoot, err2 := keb.GetShoot(rootCtx, id.ShootName)
+				if err2 != nil {
+					return fmt.Errorf("failed to wait for instance to be deleted: %w\n\nerror getting shoot: %w", err, err2)
+				}
+				txt, err2 := yaml.Marshal(shoot)
+				if err2 != nil {
+					return fmt.Errorf("failed to wait for instance to be deleted: %w\n\nerror marshalling shoot to yaml: %w", err, err2)
+				}
+				return fmt.Errorf("failed to wait for instance to be deleted: %w\n\nshoot details:\n%s", err, string(txt))
 			}
 			fmt.Println("Instance is destroyed.")
 		}

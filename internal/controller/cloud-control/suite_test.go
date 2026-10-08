@@ -25,8 +25,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
 	commongardener "github.com/kyma-project/cloud-manager/pkg/common/gardener"
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
+	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud"
 	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
-	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	azurenukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/nuke/client"
 	azurevpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcnetwork"
@@ -67,6 +67,11 @@ var _ = BeforeSuite(func() {
 	commongardener.SetGardenerNamespaceProviderMock("kyma-test")
 	rate.SetValuesForTests()
 
+	// Stub out the live CA cert fetch so controller tests run without outbound network calls.
+	alicloud.CACertFetcher = func(_ context.Context) (string, error) {
+		return "test-ca-cert", nil
+	}
+
 	var err error
 	infra, err = testinfra.Start()
 	Expect(err).
@@ -92,6 +97,7 @@ var _ = BeforeSuite(func() {
 		infra.Ctx(),
 		infra.KcpManager(),
 		infra.AwsMock().ScopeGardenProvider(),
+		infra.AlicloudMock().ScopeGardenProvider(),
 		infra.ActiveSkrCollection(),
 		infra.GcpMock().ServiceUsageClientProvider(),
 		infra.AwsMock().ExposedDataProvider(),
@@ -112,17 +118,13 @@ var _ = BeforeSuite(func() {
 		infra.AzureMock().IpRangeProvider(),
 		infra.GcpMock2().IpRangeServiceNetworkingProvider(), // v3: NEW pattern (GcpClientProvider) via mock2
 		infra.GcpMock2().IpRangeComputeProvider(),           // v3: NEW pattern (GcpClientProvider) via mock2
-		infra.GcpMock().ServiceNetworkingClientProvider(),   // v2: OLD pattern (ClientProvider)
-		infra.GcpMock().OldComputeClientProvider(),          // v2: OLD pattern (ClientProvider)
 		infra.SapMock().IpRangeProvider(),
 		infra.AlicloudMock().IpRangeClientProvider(),
-		env,
 	)).NotTo(HaveOccurred())
 	// NfsInstance
 	Expect(SetupNfsInstanceReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().NfsInstanceSkrProvider(),
-		infra.GcpMock().FilestoreClientProvider(),
 		infra.GcpMock2().NfsInstanceV2Provider(),
 		infra.SapMock().NfsInstanceProvider(),
 		infra.AlicloudMock().NfsInstanceClientProvider(),
@@ -142,6 +144,7 @@ var _ = BeforeSuite(func() {
 		infra.GcpMock2().RedisInstanceProvider(),
 		infra.AzureMock().RedisClientProvider(),
 		infra.AwsMock().ElastiCacheProviderFake(),
+		infra.AlicloudMock().RedisInstanceClientProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	// RedisCluster
@@ -149,6 +152,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.AwsMock().ElastiCacheProviderFake(),
 		infra.AzureMock().RedisClusterClientProvider(),
+		infra.AlicloudMock().RedisClusterClientProvider(),
 		env,
 	)).NotTo(HaveOccurred())
 	Expect(SetupGcpRedisClusterReconciler(
@@ -172,7 +176,7 @@ var _ = BeforeSuite(func() {
 		infra.KcpManager(),
 		infra.ActiveSkrCollection(),
 		infra.GcpMock2().NfsBackupV2Provider(),
-		awsnukeclient.Mock(),
+		infra.AwsMock().NukeProvider(),
 		azurenukeclient.NukeProvider(infra.AzureMock().StorageProvider()),
 		env,
 	)).To(Succeed())
@@ -204,6 +208,7 @@ var _ = BeforeSuite(func() {
 	Expect(SetupSubscriptionReconciler(
 		infra.KcpManager(),
 		infra.AwsMock().SubscriptionGardenProvider(),
+		infra.AlicloudMock().SubscriptionGardenProvider(),
 	)).To(Succeed())
 	// Runtime
 	Expect(SetupRuntimeReconciler(

@@ -7,6 +7,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	skrgcpnfsvol "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolume"
+	skrgcpnfsvolbackupv2 "github.com/kyma-project/cloud-manager/pkg/skr/gcpnfsvolumebackup/v2"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -80,6 +81,8 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 			expected, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
 			Expect(err).NotTo(HaveOccurred())
 			nfsBackupName = fmt.Sprintf("%s-%d-%s", scheduleName, 1, expected.Format("20060102-150405"))
+			// Suppress the backup reconciler so the created backup doesn't linger past this test.
+			skrgcpnfsvolbackupv2.Ignore.AddName(nfsBackupName)
 			testFakeClock.Step(2 * time.Minute)
 		})
 
@@ -184,11 +187,13 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 				).Should(Succeed())
 		})
 
+		nfsBackupName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, startTime.Format("20060102-150405"))
+
 		By("And When fake clock advances past start time", func() {
+			skrgcpnfsvolbackupv2.Ignore.AddName(nfsBackupName)
 			testFakeClock.Step(3 * time.Minute)
 		})
 
-		nfsBackupName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, startTime.Format("20060102-150405"))
 		nfsBackup := &cloudresourcesv1beta1.GcpNfsVolumeBackup{}
 
 		By("Then a single GcpNfsVolumeBackup is created", func() {
@@ -275,6 +280,10 @@ var _ = Describe("Feature: SKR GcpNfsBackupSchedule V2", func() {
 		})
 
 		By("And When fake clock advances past the first scheduled run", func() {
+			expected, err := time.Parse(time.RFC3339, schedule.Status.NextRunTimes[0])
+			Expect(err).NotTo(HaveOccurred())
+			nfsBackupName := fmt.Sprintf("%s-%d-%s", scheduleName, 1, expected.Format("20060102-150405"))
+			skrgcpnfsvolbackupv2.Ignore.AddName(nfsBackupName)
 			testFakeClock.Step(2 * time.Minute)
 		})
 

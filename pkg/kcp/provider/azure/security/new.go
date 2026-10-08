@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	azuremetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/metrics"
 	runtimetypes "github.com/kyma-project/cloud-manager/pkg/kcp/runtime/types"
 )
 
@@ -17,6 +18,7 @@ func New(sf StateFactory) composed.Action {
 		if err != nil {
 			return err, ctx
 		}
+		ctx = azuremetrics.RegionIntoContext(ctx, runtimeState.ObjAsRuntime().Spec.Shoot.Region)
 
 		toggleServiceFlow := composed.ComposeActionsNoName(
 			resourceGroupWatcherLoad,

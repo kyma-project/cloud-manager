@@ -18,16 +18,19 @@ type StateFactory interface {
 func NewStateFactory(
 	baseStateFactory composed.StateFactory,
 	awsStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AwsStsClient],
+	alicloudStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AlicloudStsClient],
 ) StateFactory {
 	return &stateFactory{
-		baseStateFactory:     baseStateFactory,
-		awsStsClientProvider: awsStsClientProvider,
+		baseStateFactory:          baseStateFactory,
+		awsStsClientProvider:      awsStsClientProvider,
+		alicloudStsClientProvider: alicloudStsClientProvider,
 	}
 }
 
 type stateFactory struct {
-	baseStateFactory     composed.StateFactory
-	awsStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AwsStsClient]
+	baseStateFactory          composed.StateFactory
+	awsStsClientProvider      awsclient.GardenClientProvider[subscriptionclient.AwsStsClient]
+	alicloudStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AlicloudStsClient]
 }
 
 func (f *stateFactory) NewState(req ctrl.Request) *State {
@@ -36,6 +39,7 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 	return newState(
 		baseState,
 		f.awsStsClientProvider,
+		f.alicloudStsClientProvider,
 	)
 }
 
@@ -44,7 +48,8 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 type State struct {
 	composed.State
 
-	awsStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AwsStsClient]
+	awsStsClientProvider      awsclient.GardenClientProvider[subscriptionclient.AwsStsClient]
+	alicloudStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AlicloudStsClient]
 
 	gardenNamespace string
 	gardenerClient  client.Client
@@ -57,10 +62,12 @@ type State struct {
 func newState(
 	baseState composed.State,
 	awsStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AwsStsClient],
+	alicloudStsClientProvider awsclient.GardenClientProvider[subscriptionclient.AlicloudStsClient],
 ) *State {
 	return &State{
-		State:                baseState,
-		awsStsClientProvider: awsStsClientProvider,
+		State:                     baseState,
+		awsStsClientProvider:      awsStsClientProvider,
+		alicloudStsClientProvider: alicloudStsClientProvider,
 	}
 }
 

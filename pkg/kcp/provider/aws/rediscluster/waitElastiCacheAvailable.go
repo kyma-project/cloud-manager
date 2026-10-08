@@ -56,10 +56,12 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 			Run(ctx, st)
 	}
 
-	if cacheState == awsmeta.ElastiCache_AVAILABLE {
+	if state.IsReplicationGroupAvailable() {
 		return nil, ctx
 	}
 
+	// Available-but-no-members-yet is a transient eventual-consistency window, not
+	// a terminal state - requeue and let the members appear.
 	logger.Info("Redis instance is not ready yet, requeueing with delay")
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }

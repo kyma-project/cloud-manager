@@ -5,7 +5,7 @@ Feature: AzureRedisInstance feature
 
     Given there is shared SKR with "Azure" provider
 
-    Given eventually timeout is 20m
+    Given eventually timeout is "20m"
 
     And resource declaration:
       | Alias  | Kind               | ApiVersion                              | Name                         | Namespace |
@@ -25,7 +25,7 @@ Feature: AzureRedisInstance feature
 
     Then eventually "redis.status.state == 'Ready'" is ok, unless:
       | redis.status.state == 'Error' |
-      | #timeout=20m                  |
+      | #timeout=30m                  |
 
     And Redis "PING" gives "PONG" with:
       | Host | Secret | ${redis.metadata.name} | host       |

@@ -1,0 +1,103 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - widget: Labels
+            source: sourceVolume.name
+            name: spec.sourceVolume.name
+          - widget: Labels
+            source: sourceVolume.namespace
+            name: spec.sourceVolume.namespace
+          - widget: Labels
+            source: deleteAfterDays
+            name: spec.deleteAfterDays
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - widget: Labels
+            source: state
+            name: status.state
+          - widget: Labels
+            source: id
+            name: status.id
+          - widget: Labels
+            source: openstackId
+            name: status.openstackId
+          - widget: Labels
+            source: sizeGb
+            name: status.sizeGb
+          - widget: Labels
+            source: shareId
+            name: status.shareId
+  form: |
+    - path: spec.sourceVolume
+      name: spec.sourceVolume
+      widget: FormGroup
+      required: true
+      children:
+        - path: name
+          name: spec.sourceVolume.name
+          widget: Text
+          required: true
+          disableOnEdit: true
+          description: The SapNfsVolume to snapshot. Immutable once set.
+        - path: namespace
+          name: spec.sourceVolume.namespace
+          widget: Text
+          required: false
+          disableOnEdit: true
+          description: Immutable once set.
+    - path: spec.deleteAfterDays
+      name: spec.deleteAfterDays
+      widget: Number
+      required: false
+      description: Days after which the snapshot is automatically deleted. 0 means no automatic deletion.
+  general: |
+    resource:
+      group: cloud-resources.kyma-project.io
+      kind: SapNfsVolumeSnapshot
+      version: v1beta1
+    urlPath: sapnfsvolumesnapshots
+    name: SAP NFS Volume Snapshot
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: SapNfsVolumeSnapshot is a point-in-time snapshot of a SapNfsVolume.
+  list: |
+    - source: spec.sourceVolume.name
+      name: spec.sourceVolume.name
+      sort: true
+    - source: status.state
+      name: status.state
+      sort: true
+    - source: status.sizeGb
+      name: status.sizeGb
+      sort: true
+  translations: |
+    en:
+      configuration: Configuration
+      spec.sourceVolume: Source Volume
+      spec.sourceVolume.name: Source Volume Name
+      spec.sourceVolume.namespace: Source Volume Namespace
+      spec.deleteAfterDays: Delete After Days
+      status: Status
+      status.state: State
+      status.id: ID
+      status.openstackId: OpenStack ID
+      status.sizeGb: Size Gb
+      status.shareId: Share ID
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: sapnfsvolumesnapshots-ui.operator.kyma-project.io
+  namespace: kyma-system

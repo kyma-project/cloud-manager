@@ -23,12 +23,14 @@ func NewStateFactory(
 	baseStateFactory composed.StateFactory,
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
+	alicloudStsClientProvider awsclient.GardenClientProvider[scopeclient.AlicloudStsClient],
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 ) StateFactory {
 	return &stateFactory{
 		baseStateFactory:              baseStateFactory,
 		activeSkrCollection:           activeSkrCollection,
 		awsStsClientProvider:          awsStsClientProvider,
+		alicloudStsClientProvider:     alicloudStsClientProvider,
 		gcpServiceUsageClientProvider: gcpServiceUsageClientProvider,
 	}
 }
@@ -37,6 +39,7 @@ type stateFactory struct {
 	baseStateFactory              composed.StateFactory
 	activeSkrCollection           skrruntime.ActiveSkrCollection
 	awsStsClientProvider          awsclient.GardenClientProvider[scopeclient.AwsStsClient]
+	alicloudStsClientProvider     awsclient.GardenClientProvider[scopeclient.AlicloudStsClient]
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]
 }
 
@@ -47,6 +50,7 @@ func (f *stateFactory) NewState(req ctrl.Request) *State {
 		baseState,
 		f.activeSkrCollection,
 		f.awsStsClientProvider,
+		f.alicloudStsClientProvider,
 		f.gcpServiceUsageClientProvider,
 	)
 }
@@ -57,12 +61,14 @@ func newState(
 	baseState composed.State,
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
+	alicloudStsClientProvider awsclient.GardenClientProvider[scopeclient.AlicloudStsClient],
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient],
 ) *State {
 	return &State{
 		State:                         baseState,
 		activeSkrCollection:           activeSkrCollection,
 		awsStsClientProvider:          awsStsClientProvider,
+		alicloudStsClientProvider:     alicloudStsClientProvider,
 		gcpServiceUsageClientProvider: gcpServiceUsageClientProvider,
 		credentialData:                map[string]string{},
 	}
@@ -90,6 +96,7 @@ type State struct {
 	kcpNetworkKyma *cloudcontrolv1beta1.Network
 
 	awsStsClientProvider          awsclient.GardenClientProvider[scopeclient.AwsStsClient]
+	alicloudStsClientProvider     awsclient.GardenClientProvider[scopeclient.AlicloudStsClient]
 	gcpServiceUsageClientProvider gcpclient.ClientProvider[gcpclient.ServiceUsageClient]
 
 	nuke *cloudcontrolv1beta1.Nuke

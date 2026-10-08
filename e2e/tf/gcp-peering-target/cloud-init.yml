@@ -5,4 +5,3 @@ packages:
 
 runcmd:
   - systemctl start nginx
-  - echo "GCP VPC Peering is working!" > /var/www/html/index.html

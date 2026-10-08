@@ -45,17 +45,15 @@ func createKcpRedisInstance(ctx context.Context, st composed.State) (error, cont
 	replicaCount := redisTierToReadReplicas(awsRedisInstance.Spec.RedisTier)
 
 	state.KcpRedisInstance = &cloudcontrolv1beta1.RedisInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      awsRedisInstance.Status.Id,
-			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
-				common.LabelKymaModule: common.FieldOwner,
-			},
-			Annotations: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      awsRedisInstance.Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: awsRedisInstance.Namespace,
-			},
+		Name:      awsRedisInstance.Status.Id,
+		Namespace: state.KymaRef.Namespace,
+		Labels: map[string]string{
+			common.LabelKymaModule: common.FieldOwner,
+		},
+		Annotations: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      awsRedisInstance.Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: awsRedisInstance.Namespace,
 		},
 		Spec: cloudcontrolv1beta1.RedisInstanceSpec{
 			RemoteRef: cloudcontrolv1beta1.RemoteRef{

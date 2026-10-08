@@ -1,0 +1,10 @@
+resource:
+  group: cloud-resources.kyma-project.io
+  kind: SapNfsVolumeSnapshotSchedule
+  version: v1beta1
+urlPath: sapnfsvolumesnapshotschedules
+name: SAP NFS Volume Snapshot Schedule
+scope: namespace
+category: Storage
+icon: shelf
+description: SapNfsVolumeSnapshotSchedule schedules recurring snapshots of a SapNfsVolume.

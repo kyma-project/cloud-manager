@@ -8,7 +8,6 @@ import (
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	kcpiprange "github.com/kyma-project/cloud-manager/pkg/kcp/iprange"
 	gcpnfsinstancev2client "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/nfsinstance/v2/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -19,13 +18,6 @@ import (
 )
 
 var _ = Describe("Feature: KCP NfsInstance GCP v2", func() {
-
-	// Skip v2 tests when GcpNfsInstanceV2 flag is not enabled
-	BeforeEach(func() {
-		if !feature.GcpNfsInstanceV2.Value(infra.Ctx()) {
-			Skip("Skipping v2 tests when GcpNfsInstanceV2 flag is not enabled")
-		}
-	})
 
 	It("Scenario: KCP GCP NfsInstance v2 is created, updated and deleted", func() {
 

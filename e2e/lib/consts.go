@@ -11,9 +11,9 @@ const (
 var DefaultRegions = map[cloudcontrolv1beta1.ProviderType]string{
 	cloudcontrolv1beta1.ProviderAws:       "us-east-1",
 	cloudcontrolv1beta1.ProviderGCP:       "us-east1",
-	cloudcontrolv1beta1.ProviderAzure:     "eastus2",
+	cloudcontrolv1beta1.ProviderAzure:     "eastus",
 	cloudcontrolv1beta1.ProviderOpenStack: "eu-de-1",
-	cloudcontrolv1beta1.ProviderAlicloud:  "eu-central-1",
+	cloudcontrolv1beta1.ProviderAlicloud:  "ap-northeast-1",
 }
 
 const (

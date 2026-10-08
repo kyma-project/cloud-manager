@@ -6,7 +6,6 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -25,17 +24,15 @@ func createKcpVpcPeering(ctx context.Context, st composed.State) (error, context
 	obj := state.ObjAsAwsVpcPeering()
 
 	state.KcpVpcPeering = &cloudcontrolv1beta1.VpcPeering{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      obj.Status.Id,
-			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
-				common.LabelKymaModule: common.FieldOwner,
-			},
-			Annotations: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      obj.Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: obj.Namespace,
-			},
+		Name:      obj.Status.Id,
+		Namespace: state.KymaRef.Namespace,
+		Labels: map[string]string{
+			common.LabelKymaModule: common.FieldOwner,
+		},
+		Annotations: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      obj.Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: obj.Namespace,
 		},
 		Spec: cloudcontrolv1beta1.VpcPeeringSpec{
 			RemoteRef: cloudcontrolv1beta1.RemoteRef{

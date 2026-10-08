@@ -64,12 +64,10 @@ func createSnapshot(ctx context.Context, st composed.State) (error, context.Cont
 	}
 
 	snapshot := &cloudresourcesv1beta1.SapNfsVolumeSnapshot{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   schedule.GetNamespace(),
-			Labels:      labels,
-			Annotations: annotations,
-		},
+		Name:        name,
+		Namespace:   schedule.GetNamespace(),
+		Labels:      labels,
+		Annotations: annotations,
 		Spec: cloudresourcesv1beta1.SapNfsVolumeSnapshotSpec{
 			SourceVolume: corev1.ObjectReference{
 				Name:      state.Source.Name,

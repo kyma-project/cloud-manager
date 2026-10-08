@@ -1,0 +1,12 @@
+en:
+  configuration: Configuration
+  spec.sourceVolume: Source Volume
+  spec.sourceVolume.name: Source Volume Name
+  spec.sourceVolume.namespace: Source Volume Namespace
+  spec.deleteAfterDays: Delete After Days
+  status: Status
+  status.state: State
+  status.id: ID
+  status.openstackId: OpenStack ID
+  status.sizeGb: Size Gb
+  status.shareId: Share ID

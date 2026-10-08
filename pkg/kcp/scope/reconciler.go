@@ -35,6 +35,7 @@ type ScopeReconciler interface {
 func New(
 	mgr manager.Manager,
 	awsStsClientProvider awsclient.GardenClientProvider[scopeclient.AwsStsClient],
+	alicloudStsClientProvider awsclient.GardenClientProvider[scopeclient.AlicloudStsClient],
 	activeSkrCollection skrruntime.ActiveSkrCollection,
 	// keep gcpServiceUsageClientProvider separate from the expose data client, since SRE will start enabling APIs soon,
 	// so gcpServiceUsageClientProvider will be removed completely
@@ -49,6 +50,7 @@ func New(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(mgr)),
 			activeSkrCollection,
 			awsStsClientProvider,
+			alicloudStsClientProvider,
 			gcpServiceUsageClientProvider,
 		),
 		awsStateFactory,

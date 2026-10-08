@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -48,7 +47,7 @@ func (s *nukeBackupSuite) newState(nuke *cloudcontrolv1beta1.Nuke, store gcpmock
 		types.NamespacedName{Name: nuke.Name, Namespace: nuke.Namespace}, nuke)
 	focalState := focal.NewStateFactory().NewState(baseState)
 	focalState.SetScope(&cloudcontrolv1beta1.Scope{
-		ObjectMeta: metav1.ObjectMeta{Name: testScopeName},
+		Name: testScopeName,
 		Spec: cloudcontrolv1beta1.ScopeSpec{
 			Scope: cloudcontrolv1beta1.ScopeInfo{
 				Gcp: &cloudcontrolv1beta1.GcpScope{Project: testProject},
@@ -93,7 +92,7 @@ func (s *nukeBackupSuite) seedBackup(store gcpmock2.Store, id string, state file
 
 func newNuke() *cloudcontrolv1beta1.Nuke {
 	return &cloudcontrolv1beta1.Nuke{
-		ObjectMeta: metav1.ObjectMeta{Name: "test-nuke", Namespace: "kcp-system"},
+		Name: "test-nuke", Namespace: "kcp-system",
 	}
 }
 

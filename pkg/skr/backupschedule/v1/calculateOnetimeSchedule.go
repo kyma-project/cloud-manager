@@ -12,7 +12,7 @@ func calculateOnetimeSchedule(ctx context.Context, st composed.State) (error, co
 	state := st.(*State)
 	schedule := state.ObjAsBackupSchedule()
 	logger := composed.LoggerFromCtx(ctx)
-	now := time.Now()
+	now := state.Scheduler.Now()
 
 	//If marked for deletion, continue
 	if composed.MarkedForDeletionPredicate(ctx, st) {

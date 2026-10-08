@@ -7,7 +7,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Feature: Cluster context", func() {
@@ -67,10 +66,8 @@ var _ = Describe("Feature: Cluster context", func() {
 
 		By("When cmTwo is created", func() {
 			err := world.Kcp().GetClient().Create(infra.Ctx(), &corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      cmTwoName,
-					Namespace: config.KcpNamespace,
-				},
+				Name:      cmTwoName,
+				Namespace: config.KcpNamespace,
 				Data: map[string]string{
 					"myName": "cmTwo",
 				},
@@ -80,10 +77,8 @@ var _ = Describe("Feature: Cluster context", func() {
 
 		By("And When cmOne is created", func() {
 			err := world.Kcp().GetClient().Create(infra.Ctx(), &corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      cmOneName,
-					Namespace: config.KcpNamespace,
-				},
+				Name:      cmOneName,
+				Namespace: config.KcpNamespace,
 				Data: map[string]string{
 					"cmTwoName": cmTwoName,
 				},
@@ -154,20 +149,16 @@ var _ = Describe("Feature: Cluster context", func() {
 
 		By("// cleanup: delete cmOne", func() {
 			err := world.Kcp().GetClient().Delete(infra.Ctx(), &corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      cmOneName,
-					Namespace: config.KcpNamespace,
-				},
+				Name:      cmOneName,
+				Namespace: config.KcpNamespace,
 			})
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		By("// cleanup: delete cmTwo", func() {
 			err := world.Kcp().GetClient().Delete(infra.Ctx(), &corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      cmTwoName,
-					Namespace: config.KcpNamespace,
-				},
+				Name:      cmTwoName,
+				Namespace: config.KcpNamespace,
 			})
 			Expect(err).NotTo(HaveOccurred())
 		})

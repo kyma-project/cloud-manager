@@ -2,8 +2,10 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -119,10 +121,16 @@ func newElastiCacheClient(ec2Svc *ec2.Client, elastiCacheSvc *elasticache.Client
 	}
 }
 
+type secretsManagerApi interface {
+	GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
+	CreateSecret(ctx context.Context, params *secretsmanager.CreateSecretInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.CreateSecretOutput, error)
+	DeleteSecret(ctx context.Context, params *secretsmanager.DeleteSecretInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.DeleteSecretOutput, error)
+}
+
 type elastiCacheClient struct {
 	ec2Svc            *ec2.Client
 	elastiCacheSvc    *elasticache.Client
-	secretsManagerSvc *secretsmanager.Client
+	secretsManagerSvc secretsManagerApi
 }
 
 func (c *elastiCacheClient) DescribeElastiCacheSubnetGroup(ctx context.Context, name string) ([]elasticachetypes.CacheSubnetGroup, error) {
@@ -292,7 +300,8 @@ func (c *elastiCacheClient) GetAuthTokenSecretValue(ctx context.Context, secretN
 	})
 
 	if err != nil {
-		if awsmeta.IsNotFound(err) {
+		// secret scheduled for deletion reads as InvalidRequestException, not NotFound - treat as absent
+		if awsmeta.IsNotFound(err) || isScheduledForDeletion(err) {
 			return nil, nil
 		}
 
@@ -302,12 +311,26 @@ func (c *elastiCacheClient) GetAuthTokenSecretValue(ctx context.Context, secretN
 	return out, nil
 }
 
+func isScheduledForDeletion(err error) bool {
+	var invalidRequest *secretsmanagertypes.InvalidRequestException
+	if !errors.As(err, &invalidRequest) {
+		return false
+	}
+	msg := strings.ToLower(invalidRequest.ErrorMessage())
+	return strings.Contains(msg, "marked for deletion") || strings.Contains(msg, "scheduled for deletion")
+}
+
 func (c *elastiCacheClient) CreateAuthTokenSecret(ctx context.Context, secretName string, tags []secretsmanagertypes.Tag) error {
 	_, err := c.secretsManagerSvc.CreateSecret(ctx, &secretsmanager.CreateSecretInput{
 		Name:         new(secretName),
 		SecretString: new(uuid.NewString()),
 		Tags:         tags,
 	})
+
+	// secret already exists (eventual consistency re-run) - desired outcome
+	if _, ok := errors.AsType[*secretsmanagertypes.ResourceExistsException](err); ok {
+		return nil
+	}
 
 	return err
 }
@@ -317,6 +340,11 @@ func (c *elastiCacheClient) DeleteAuthTokenSecret(ctx context.Context, secretNam
 		SecretId:                   new(secretName),
 		ForceDeleteWithoutRecovery: aws.Bool(true),
 	})
+
+	// secret already deleting or already gone (eventual consistency re-run) - desired outcome
+	if awsmeta.IsNotFound(err) || isScheduledForDeletion(err) {
+		return nil
+	}
 
 	return err
 }

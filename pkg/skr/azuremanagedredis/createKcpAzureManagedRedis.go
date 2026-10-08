@@ -44,17 +44,15 @@ func createKcpAzureManagedRedis(ctx context.Context, st composed.State) (error, 
 	}
 
 	state.KcpAzureManagedRedis = &cloudcontrolv1beta1.AzureManagedRedis{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      amr.Status.Id,
-			Namespace: state.KymaRef.Namespace,
-			Labels: map[string]string{
-				common.LabelKymaModule: common.FieldOwner,
-			},
-			Annotations: map[string]string{
-				cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
-				cloudcontrolv1beta1.LabelRemoteName:      amr.Name,
-				cloudcontrolv1beta1.LabelRemoteNamespace: amr.Namespace,
-			},
+		Name:      amr.Status.Id,
+		Namespace: state.KymaRef.Namespace,
+		Labels: map[string]string{
+			common.LabelKymaModule: common.FieldOwner,
+		},
+		Annotations: map[string]string{
+			cloudcontrolv1beta1.LabelKymaName:        state.KymaRef.Name,
+			cloudcontrolv1beta1.LabelRemoteName:      amr.Name,
+			cloudcontrolv1beta1.LabelRemoteNamespace: amr.Namespace,
 		},
 		Spec: cloudcontrolv1beta1.AzureManagedRedisSpec{
 			RemoteRef: cloudcontrolv1beta1.RemoteRef{

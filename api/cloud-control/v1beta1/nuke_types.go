@@ -136,15 +136,11 @@ func (in *Nuke) SetState(v string) {
 
 func (in *Nuke) CloneForPatchStatus() client.Object {
 	result := &Nuke{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Nuke",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: in.Namespace,
-			Name:      in.Name,
-		},
-		Status: in.Status,
+		Kind:       "Nuke",
+		APIVersion: GroupVersion.String(),
+		Namespace:  in.Namespace,
+		Name:       in.Name,
+		Status:     in.Status,
 	}
 	if result.Status.Conditions == nil {
 		result.Status.Conditions = []metav1.Condition{}

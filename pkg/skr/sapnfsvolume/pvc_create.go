@@ -7,7 +7,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
 
@@ -28,17 +27,15 @@ func pvcCreate(ctx context.Context, st composed.State) (error, context.Context) 
 	}
 
 	pvc := &corev1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: state.ObjAsSapNfsVolume().GetNamespace(),
-			Name:      state.ObjAsSapNfsVolume().GetPVCName(),
-			Labels: util.NewLabelBuilder().
-				WithCustomLabels(state.ObjAsSapNfsVolume().GetPVCLabels()).
-				WithCloudManagerDefaults().
-				Build(),
-			Annotations: state.ObjAsSapNfsVolume().GetPVCAnnotations(),
-			Finalizers: []string{
-				api.CommonFinalizerDeletionHook,
-			},
+		Namespace: state.ObjAsSapNfsVolume().GetNamespace(),
+		Name:      state.ObjAsSapNfsVolume().GetPVCName(),
+		Labels: util.NewLabelBuilder().
+			WithCustomLabels(state.ObjAsSapNfsVolume().GetPVCLabels()).
+			WithCloudManagerDefaults().
+			Build(),
+		Annotations: state.ObjAsSapNfsVolume().GetPVCAnnotations(),
+		Finalizers: []string{
+			api.CommonFinalizerDeletionHook,
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			VolumeName:  state.PV.GetName(), // connection to PV

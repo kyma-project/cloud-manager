@@ -11,6 +11,7 @@ type ConfigStruct struct {
 	SkrCyclicMinInterval      time.Duration
 	SkrGateConflictRetryDelay time.Duration
 	SkrWorkerTimeout          time.Duration
+	SkrNotifMinInterval       time.Duration
 
 	ProvidersDir         string `yaml:"providersDir,omitempty" json:"providersDir,omitempty"`
 	Concurrency          int    `yaml:"concurrency,omitempty" json:"concurrency,omitempty"`
@@ -25,6 +26,11 @@ type ConfigStruct struct {
 	NotificationListenerAddr string `yaml:"notificationListenerAddr,omitempty" json:"notificationListenerAddr,omitempty"`
 	GateConflictRetryDelay   string `yaml:"gateConflictRetryDelay,omitempty" json:"gateConflictRetryDelay,omitempty"`
 	WorkerTimeout            string `yaml:"workerTimeout,omitempty" json:"workerTimeout,omitempty"`
+	// NotifMinInterval is the per-SKR minimum interval between notification-driven connects.
+	// Notifications for an SKR arriving within this window of its last notification connect are
+	// dropped (coalesced), so a hot SKR cannot monopolize the notification sleeve. It does NOT
+	// bound the cyclic sleeve — every SKR still gets its normal fair cyclic turn.
+	NotifMinInterval string `yaml:"notifMinInterval,omitempty" json:"notifMinInterval,omitempty"`
 }
 
 func (c *ConfigStruct) AfterConfigLoaded() {
@@ -58,6 +64,8 @@ func (c *ConfigStruct) AfterConfigLoaded() {
 	c.SkrGateConflictRetryDelay = max(GetDuration(c.GateConflictRetryDelay, 1*time.Second), 200*time.Millisecond)
 
 	c.SkrWorkerTimeout = GetDuration(c.WorkerTimeout, 10*time.Minute)
+
+	c.SkrNotifMinInterval = GetDuration(c.NotifMinInterval, 10*time.Second)
 
 	if c.NotificationListenerAddr == "" {
 		c.NotificationListenerAddr = ":8083"
@@ -111,6 +119,11 @@ func InitConfig(cfg config.Config) {
 			"workerTimeout",
 			config.DefaultScalar("10m"),
 			config.SourceEnv("SKR_RUNTIME_WORKER_TIMEOUT"),
+		),
+		config.Path(
+			"notifMinInterval",
+			config.DefaultScalar("10s"),
+			config.SourceEnv("SKR_RUNTIME_NOTIF_MIN_INTERVAL"),
 		),
 		config.SourceFile("skrRuntime.yaml"),
 		config.Bind(SkrRuntimeConfig),

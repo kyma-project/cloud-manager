@@ -2,7 +2,7 @@
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.35.0
+ENVTEST_K8S_VERSION = 1.36.0
 JV_VERSION = v0.5.0
 
 # TEST_PATH: optional target path for tests.
@@ -95,16 +95,20 @@ test: manifests generate fmt vet envtest test-ff build_ui ## Run tests.
 	SKR_PROVIDERS="$(PROJECTROOT)/config/dist/skr/bases/providers" ENVTEST_K8S_VERSION="$(ENVTEST_K8S_VERSION)" PROJECTROOT="$(PROJECTROOT)" KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" GOFIPS140=v1.0.0 go test $(if $(TEST_PATH),./$(TEST_PATH)/...,./...) -test.v -v -coverprofile cover.out -coverpkg=./...
 
 GOLANGCI_LINT = $(shell pwd)/bin/golangci-lint
-GOLANGCI_LINT_VERSION ?= v1.54.2
+GOLANGCI_LINT_VERSION ?= v2.13.2
 golangci-lint:
 	@[ -f $(GOLANGCI_LINT) ] || { \
 	set -e ;\
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell dirname $(GOLANGCI_LINT)) $(GOLANGCI_LINT_VERSION) ;\
+	echo "Installing golangci-lint $(GOLANGCI_LINT_VERSION) to $(shell dirname $(GOLANGCI_LINT))" ;\
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(shell dirname $(GOLANGCI_LINT)) $(GOLANGCI_LINT_VERSION) ;\
 	}
 
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint linter & yamllint
-	$(GOLANGCI_LINT) run
+	$(GOLANGCI_LINT) run ./...
+	go vet ./...
+	go fmt ./...
+	go fix ./...
 
 .PHONY: lint-fix
 lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
@@ -115,6 +119,10 @@ lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
 .PHONY: build
 build: manifests generate fmt vet build_ui ## Build manager binary.
 	GOFIPS140=v1.0.0 go build -o bin/manager cmd/main.go
+
+.PHONY: build-for-codeql
+build-for-codeql: ## Build all packages for CodeQL analysis (no generators, no output).
+	go build -o /dev/null ./...
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
@@ -178,6 +186,7 @@ build_ui: manifests kustomize # Build CRDS test
 	@$(KUSTOMIZE) build config/ui-extensions/awsnfsvolumerestores > config/ui-extensions/awsnfsvolumerestores/cloud-resources.kyma-project.io_awsnfsvolumerestores_ui.yaml
 	@$(KUSTOMIZE) build config/ui-extensions/awsnfsbackupschedules > config/ui-extensions/awsnfsbackupschedules/cloud-resources.kyma-project.io_awsnfsbackupschedules_ui.yaml
 	@$(KUSTOMIZE) build config/ui-extensions/awsredisclusters > config/ui-extensions/awsredisclusters/cloud-resources.kyma-project.io_awsredisclusters_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/wafpolicies > config/ui-extensions/wafpolicies/cloud-resources.kyma-project.io_wafpolicies_ui.yaml
 
 	@$(KUSTOMIZE) build config/ui-extensions/azurevpcpeerings > config/ui-extensions/azurevpcpeerings/cloud-resources.kyma-project.io_azurevpcpeerings_ui.yaml
 	@$(KUSTOMIZE) build config/ui-extensions/azureredisinstances > config/ui-extensions/azureredisinstances/cloud-resources.kyma-project.io_azureredisinstances_ui.yaml
@@ -186,6 +195,9 @@ build_ui: manifests kustomize # Build CRDS test
 	@$(KUSTOMIZE) build config/ui-extensions/azureredisclusters > config/ui-extensions/azureredisclusters/cloud-resources.kyma-project.io_azureredisclusters_ui.yaml
 	@$(KUSTOMIZE) build config/ui-extensions/azurevpcdnslinks > config/ui-extensions/azurevpcdnslinks/cloud-resources.kyma-project.io_azurevpcdnslinks_ui.yaml
 	@$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumes > config/ui-extensions/sapnfsvolumes/cloud-resources.kyma-project.io_sapnfsvolumes_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumesnapshots > config/ui-extensions/sapnfsvolumesnapshots/cloud-resources.kyma-project.io_sapnfsvolumesnapshots_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumesnapshotrestores > config/ui-extensions/sapnfsvolumesnapshotrestores/cloud-resources.kyma-project.io_sapnfsvolumesnapshotrestores_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumesnapshotschedules > config/ui-extensions/sapnfsvolumesnapshotschedules/cloud-resources.kyma-project.io_sapnfsvolumesnapshotschedules_ui.yaml
 
 
 

@@ -3,7 +3,12 @@ package mock
 import (
 	alicloudiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/iprange/client"
 	alicloudnfsinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/nfsinstance/client"
+	alicloudredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/rediscluster/client"
+	alicloudredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
+	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
+	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 )
 
 // VpcConfig is the test-side seeding API for VPCs and vSwitches.
@@ -21,10 +26,34 @@ type NasConfig interface {
 	SetNasFileSystemError(fileSystemId string, err error)
 }
 
+// RedisInstanceConfig is the test-side seeding API for AliCloud r-kvstore
+// standard (non-sharded) HA instances.
+type RedisInstanceConfig interface {
+	AddRedisInstance(instanceId, instanceClass, engineVersion, status string) *RedisInstanceEntry
+	SetRedisInstanceError(instanceId string, err error)
+	// GetRedisInstance returns the stored entry for instanceId, or nil if not found.
+	GetRedisInstance(instanceId string) *RedisInstanceEntry
+}
+
+// RedisClusterConfig is the test-side seeding API for AliCloud r-kvstore
+// sharded cloud-native cluster instances. Kept as a distinct interface because
+// the cluster entry carries additional shape (ShardCount, ReplicasPerShard).
+type RedisClusterConfig interface {
+	AddRedisCluster(instanceId, instanceClass, engineVersion, status string, shardCount int32) *RedisClusterEntry
+	SetRedisClusterError(instanceId string, err error)
+	// GetRedisCluster returns the stored entry or nil. Do not mutate concurrently with
+	// the reconciler; use SetRedisCluster instead.
+	GetRedisCluster(instanceId string) *RedisClusterEntry
+	// SetRedisCluster mutates the entry under the store lock. Safe for concurrent use.
+	SetRedisCluster(instanceId string, mutate func(*RedisClusterEntry))
+}
+
 // Configs aggregates all test-side seeding interfaces.
 type Configs interface {
 	VpcConfig
 	NasConfig
+	RedisInstanceConfig
+	RedisClusterConfig
 }
 
 // AccountRegion is the per-(account, region) mock surface.
@@ -34,8 +63,14 @@ type AccountRegion interface {
 	IpRangeClient() alicloudiprangeclient.Client
 	VpcNetworkClient() alicloudvpcnetworkclient.Client
 	NfsInstanceClient() alicloudnfsinstanceclient.Client
+	RedisInstanceClient() alicloudredisinstanceclient.Client
+	RedisClusterClient() alicloudredisclusterclient.Client
 
 	Region() string
+
+	// TransitionAllToNormal advances every in-flight r-kvstore entry
+	// (Creating/Changing) to Normal. Test helper.
+	TransitionAllToNormal()
 }
 
 // AccountCredential is the access-key pair for an account.
@@ -57,9 +92,17 @@ type Providers interface {
 	IpRangeClientProvider() alicloudiprangeclient.ClientProvider
 	VpcNetworkClientProvider() alicloudvpcnetworkclient.ClientProvider
 	NfsInstanceClientProvider() alicloudnfsinstanceclient.ClientProvider
+	RedisInstanceClientProvider() alicloudredisinstanceclient.ClientProvider
+	RedisClusterClientProvider() alicloudredisclusterclient.ClientProvider
+	// ScopeGardenProvider yields the STS client the scope reconciler uses to
+	// resolve the account id via GetCallerIdentity.
+	ScopeGardenProvider() awsclient.GardenClientProvider[scopeclient.AlicloudStsClient]
+	// SubscriptionGardenProvider yields the STS client the subscription reconciler
+	// uses to resolve the account id via GetCallerIdentity.
+	SubscriptionGardenProvider() awsclient.GardenClientProvider[subscriptionclient.AlicloudStsClient]
 }
 
-// Server is the top-level mock — owns accounts and yields providers.
+// Server is the top-level mock - owns accounts and yields providers.
 type Server interface {
 	Providers
 

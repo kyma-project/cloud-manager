@@ -1,0 +1,10 @@
+resource:
+  group: cloud-resources.kyma-project.io
+  kind: SapNfsVolumeSnapshotRestore
+  version: v1beta1
+urlPath: sapnfsvolumesnapshotrestores
+name: SAP NFS Volume Snapshot Restore
+scope: namespace
+category: Storage
+icon: shelf
+description: SapNfsVolumeSnapshotRestore describes a request to restore a SapNfsVolume from a snapshot.
