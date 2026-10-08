@@ -11,6 +11,4 @@ en:
   spec.authSecret.extraData: Extra Data
   spec.engineVersion: Engine Version
   spec.redisTier: Redis Tier
-  spec.sharding: Sharding
   spec.shardCount: Shard Count
-  spec.replicasPerShard: Replicas Per Shard

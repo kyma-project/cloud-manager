@@ -5,7 +5,8 @@
 - path: spec.engineVersion
   name: spec.engineVersion
   required: false
-  description: Engine Version cannot be downgraded.
+  description: Engine Version is immutable after creation.
+  disableOnEdit: true
 
 - path: spec.ipRange
   name: spec.ipRange

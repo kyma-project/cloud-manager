@@ -1,0 +1,133 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+      - name: configuration
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.engineVersion
+            source: engineVersion
+            widget: Labels
+          - name: spec.redisTier
+            source: redisTier
+            widget: Labels
+
+      - name: spec.ipRange
+        widget: Panel
+        source: spec
+        children:
+          - name: spec.ipRange.name
+            source: ipRange.name
+            widget: Labels
+
+      - name: spec.authSecret
+        widget: Panel
+        source: spec
+        children:
+          - source: authSecret.name
+            name: spec.authSecret.name
+            widget: Labels
+          - source: authSecret.labels
+            name: spec.authSecret.labels
+            widget: Labels
+          - source: authSecret.annotations
+            name: spec.authSecret.annotations
+            widget: Labels
+          - source: authSecret.extraData
+            name: spec.authSecret.extraData
+            widget: Labels
+
+      - name: status
+        widget: Panel
+        source: status
+        children:
+          - name: status.state
+            source: state
+            widget: Labels
+  form: |
+    - path: spec.redisTier
+      name: spec.redisTier
+      required: true
+
+    - path: spec.engineVersion
+      name: spec.engineVersion
+      required: false
+      description: Engine Version is immutable after creation.
+      disableOnEdit: true
+
+    - path: spec.ipRange
+      name: spec.ipRange
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.ipRange.name
+          widget: Text
+          required: true
+
+    - path: spec.authSecret
+      name: spec.authSecret
+      widget: FormGroup
+      required: false
+      children:
+        - path: name
+          name: spec.authSecret.name
+          widget: Text
+          required: true
+          disableOnEdit: true
+        - path: labels
+          name: spec.authSecret.labels
+          required: false
+          widget: KeyValuePair
+          disableOnEdit: true
+        - path: annotations
+          name: spec.authSecret.annotations
+          required: false
+          widget: KeyValuePair
+          disableOnEdit: true
+        - path: extraData
+          name: spec.authSecret.extraData
+          required: false
+          widget: KeyValuePair
+          disableOnEdit: true
+  general: |
+    resource:
+        kind: AlicloudRedisInstance
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: alicloudredisinstances
+    name: AliCloud Redis Instance
+    scope: namespace
+    category: Storage
+    icon: shelf
+    description: >-
+        AlicloudRedisInstance description here
+  list: |
+    - source: status.state
+      name: status.state
+      sort: true
+  translations: |
+    en:
+      configuration: Configuration
+      status: Status
+      status.state: State
+      spec.ipRange: Ip Range
+      spec.ipRange.name: Ip Range Name
+      spec.authSecret: Authentication Secret
+      spec.authSecret.name: Name
+      spec.authSecret.labels: Labels
+      spec.authSecret.annotations: Annotations
+      spec.authSecret.extraData: Extra Data
+      spec.engineVersion: Engine Version
+      spec.redisTier: Redis Tier
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: alicloudredisinstances-ui.operator.kyma-project.io
+  namespace: kyma-system
