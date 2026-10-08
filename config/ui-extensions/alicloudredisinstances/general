@@ -1,0 +1,11 @@
+resource:
+    kind: AlicloudRedisInstance
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: alicloudredisinstances
+name: AliCloud Redis Instance
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    AlicloudRedisInstance description here

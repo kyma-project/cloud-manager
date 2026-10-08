@@ -198,6 +198,8 @@ build_ui: manifests kustomize # Build CRDS test
 	@$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumesnapshots > config/ui-extensions/sapnfsvolumesnapshots/cloud-resources.kyma-project.io_sapnfsvolumesnapshots_ui.yaml
 	@$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumesnapshotrestores > config/ui-extensions/sapnfsvolumesnapshotrestores/cloud-resources.kyma-project.io_sapnfsvolumesnapshotrestores_ui.yaml
 	@$(KUSTOMIZE) build config/ui-extensions/sapnfsvolumesnapshotschedules > config/ui-extensions/sapnfsvolumesnapshotschedules/cloud-resources.kyma-project.io_sapnfsvolumesnapshotschedules_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/alicloudredisinstances > config/ui-extensions/alicloudredisinstances/cloud-resources.kyma-project.io_alicloudredisinstances_ui.yaml
+	@$(KUSTOMIZE) build config/ui-extensions/alicloudredisclusters > config/ui-extensions/alicloudredisclusters/cloud-resources.kyma-project.io_alicloudredisclusters_ui.yaml
 
 
 
