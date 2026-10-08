@@ -26,6 +26,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.15.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.8.1
+	github.com/alibabacloud-go/darabonba-openapi v0.2.1
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
 	github.com/alibabacloud-go/nas-20170626/v3 v3.5.2
 	github.com/alibabacloud-go/openapi-util v0.1.1
@@ -33,6 +34,7 @@ require (
 	github.com/alibabacloud-go/tea v1.5.3
 	github.com/alibabacloud-go/tea-utils/v2 v2.0.9
 	github.com/alibabacloud-go/vpc-20160428/v6 v6.16.0
+	github.com/alibabacloud-go/vpcpeer-20220101 v1.0.6
 	github.com/aliyun/credentials-go v1.4.5
 	github.com/aws/aws-sdk-go-v2 v1.47.1
 	github.com/aws/aws-sdk-go-v2/config v1.33.6
@@ -114,6 +116,8 @@ require (
 	github.com/alibabacloud-go/alibabacloud-gateway-spi v0.0.5 // indirect
 	github.com/alibabacloud-go/debug v1.0.1 // indirect
 	github.com/alibabacloud-go/endpoint-util v1.1.0 // indirect
+	github.com/alibabacloud-go/tea-utils v1.4.5 // indirect
+	github.com/alibabacloud-go/tea-xml v1.1.3 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.4 // indirect
