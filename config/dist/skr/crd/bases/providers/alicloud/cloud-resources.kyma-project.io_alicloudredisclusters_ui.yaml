@@ -12,9 +12,6 @@ data:
           - name: spec.shardCount
             source: shardCount
             widget: Labels
-          - name: spec.replicasPerShard
-            source: replicasPerShard
-            widget: Labels
           - name: spec.engineVersion
             source: engineVersion
             widget: Labels
@@ -61,15 +58,11 @@ data:
       widget: Number
       required: true
 
-    - path: spec.replicasPerShard
-      name: spec.replicasPerShard
-      widget: Number
-      required: false
-
     - path: spec.engineVersion
       name: spec.engineVersion
       required: false
-      description: Engine Version cannot be downgraded.
+      description: Engine Version is immutable after creation.
+      disableOnEdit: true
 
     - path: spec.ipRange
       name: spec.ipRange
@@ -136,9 +129,7 @@ data:
       spec.authSecret.extraData: Extra Data
       spec.engineVersion: Engine Version
       spec.redisTier: Redis Tier
-      spec.sharding: Sharding
       spec.shardCount: Shard Count
-      spec.replicasPerShard: Replicas Per Shard
 kind: ConfigMap
 metadata:
   annotations:
