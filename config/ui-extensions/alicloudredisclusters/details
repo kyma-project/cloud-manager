@@ -9,9 +9,6 @@ body:
       - name: spec.shardCount
         source: shardCount
         widget: Labels
-      - name: spec.replicasPerShard
-        source: replicasPerShard
-        widget: Labels
       - name: spec.engineVersion
         source: engineVersion
         widget: Labels
