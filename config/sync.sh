@@ -93,9 +93,9 @@ cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudredisclusters.y
 cp $SCRIPT_DIR/crd/bases/cloud-resources.kyma-project.io_alicloudnfsvolumes.yaml     $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 
 # AliCloud UI
-# Note: AliCloud Redis UI extensions (Busola forms) are not yet designed.
-# Once designed, add alicloudredisinstances_ui.yaml and alicloudredisclusters_ui.yaml here.
 cp $SCRIPT_DIR/ui-extensions/ipranges/cloud-resources.kyma-project.io_ipranges_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+cp $SCRIPT_DIR/ui-extensions/alicloudredisinstances/cloud-resources.kyma-project.io_alicloudredisinstances_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
+cp $SCRIPT_DIR/ui-extensions/alicloudredisclusters/cloud-resources.kyma-project.io_alicloudredisclusters_ui.yaml $SCRIPT_DIR/dist/skr/crd/bases/providers/alicloud
 
 # ============= OpenStack ================
 
