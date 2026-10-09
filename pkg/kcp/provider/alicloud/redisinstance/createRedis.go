@@ -83,12 +83,11 @@ func tryCreateInstanceInVSwitches(ctx context.Context, state *State, vSwitchIds 
 	allZonesFailed := true
 
 	for _, vSwitchId := range vSwitchIds {
-		// "v3" suffix rotates tokens away from v2 tokens that included password.
-		// Different ReadOnlyCount values must not share a token — AliCloud would
-		// return the existing instance without applying the new replica count.
-		tokenInput := fmt.Sprintf("%s%s%s%dv3",
+		// "v4" rotates away from v3 tokens that omitted EngineVersion.
+		tokenInput := fmt.Sprintf("%s%s%s%s%dv4",
 			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
+			kcp.Spec.Instance.Alicloud.EngineVersion,
 			kcp.Spec.Instance.Alicloud.ReadOnlyCount,
 		)
 		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenInput)))[:32] //nolint:gosec
@@ -142,6 +141,11 @@ func handleInstanceCreateError(ctx context.Context, state *State, err error, all
 	if allZonesFailed {
 		// Don't give up permanently — the user may add subnets in a compatible zone later.
 		return composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx
+	}
+	// IdempotentParameterMismatch: prior token used different params, instance may exist.
+	// Check before IsPermanentError — StatusCode may be nil causing that to return false.
+	if alicloudclient.IsIdempotentTokenMismatch(err) {
+		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 	}
 	if alicloudclient.IsPermanentError(err) {
 		if alicloudclient.IsPasswordErr(err) {

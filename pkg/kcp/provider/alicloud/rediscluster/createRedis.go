@@ -79,11 +79,11 @@ func tryCreateClusterInVSwitches(ctx context.Context, state *State, vSwitchIds [
 	allZonesFailed := true
 
 	for _, vSwitchId := range vSwitchIds {
-		// "v5" suffix rotates tokens away from v4 tokens that included password.
-		// Different shard/replica configs must not share a token.
-		tokenInput := fmt.Sprintf("%s%s%s%d%dv5",
+		// "v6" rotates away from v5 tokens that omitted EngineVersion.
+		tokenInput := fmt.Sprintf("%s%s%s%s%d%dv6",
 			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
+			kcp.Spec.Instance.Alicloud.EngineVersion,
 			kcp.Spec.Instance.Alicloud.ShardCount,
 			kcp.Spec.Instance.Alicloud.ReplicasPerShard,
 		)
@@ -138,6 +138,11 @@ func handleClusterCreateError(ctx context.Context, state *State, err error, allZ
 	}
 	if allZonesFailed {
 		return composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx
+	}
+	// IdempotentParameterMismatch: prior token used different params, instance may exist.
+	// Check before IsPermanentError — StatusCode may be nil causing that to return false.
+	if alicloudclient.IsIdempotentTokenMismatch(err) {
+		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 	}
 	if alicloudclient.IsPermanentError(err) {
 		if alicloudclient.IsPasswordErr(err) {
