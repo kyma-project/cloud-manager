@@ -35,7 +35,7 @@ const (
 // IpRangeSpec defines the desired state of IpRange
 type IpRangeSpec struct {
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="CIDR is immutable"
-	// +kubebuilder:validation:XValidation:rule=(!has(self) || self == "" || (self != "0.0.0.0/0" && self != "127.0.0.0/8" && self != "169.254.0.0/16" && self != "::/0" && self != "::1/128" && self != "fe80::/10")), message="CIDR must not be a reserved or invalid range (0.0.0.0/0, 127.0.0.0/8, 169.254.0.0/16, ::/0, ::1/128, fe80::/10)"
+	// +kubebuilder:validation:XValidation:rule="isCIDR(self) && cidr(self).ip().family() == 'IPv4' && !cidr(self).containsCIDR(cidr('0.0.0.0/0')) && !cidr(self).containsCIDR(cidr('127.0.0.0/8')) && !cidr(self).containsCIDR(cidr('169.254.0.0/16'))",message="Must be a valid IPv4 CIDR and cannot overlap with 0.0.0.0/0, 127.0.0.0/8, or 169.254.0.0/16 (IPv6 is not allowed)"
 	// +optional
 	Cidr string `json:"cidr"`
 }

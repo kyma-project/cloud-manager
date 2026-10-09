@@ -57,11 +57,10 @@ spec:
                 x-kubernetes-validations:
                 - message: CIDR is immutable
                   rule: (self == oldSelf)
-                - message: CIDR must not be a reserved or invalid range (0.0.0.0/0,
-                    127.0.0.0/8, 169.254.0.0/16, ::/0, ::1/128, fe80::/10)
-                  rule: (!has(self) || self == "" || (self != "0.0.0.0/0" && self
-                    != "127.0.0.0/8" && self != "169.254.0.0/16" && self != "::/0"
-                    && self != "::1/128" && self != "fe80::/10"))
+                - message: Must be a valid IPv4 CIDR and cannot overlap with 0.0.0.0/0,
+                    127.0.0.0/8, or 169.254.0.0/16 (IPv6 is not allowed)
+                  rule: isCIDR(self) && cidr(self).ip().family() == 'IPv4' && !cidr(self).containsCIDR(cidr('0.0.0.0/0'))
+                    && !cidr(self).containsCIDR(cidr('127.0.0.0/8')) && !cidr(self).containsCIDR(cidr('169.254.0.0/16'))
               network:
                 description: |-
                   Network is a reference to the network where this IpRange belongs and where it creates subnets.
