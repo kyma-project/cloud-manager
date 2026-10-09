@@ -20,11 +20,12 @@ import (
 func createRedis(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
+	kcp := state.ObjAsRedisInstance()
+
 	if state.instance != nil {
+		meta.RemoveStatusCondition(kcp.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
 		return nil, ctx
 	}
-
-	kcp := state.ObjAsRedisInstance()
 
 	var vSwitchIds []string
 	for _, sn := range state.IpRange().Status.Subnets {
@@ -47,6 +48,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	if password == "" {
 		password = alicloud.GeneratePassword()
 		kcp.Status.AuthString = password
+		kcp.Status.TokenSeed = alicloud.GeneratePassword()
 		if err := state.UpdateObjStatus(ctx); err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error persisting AliCloud r-kvstore instance auth string before create",
@@ -56,7 +58,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 
 	meta.RemoveStatusCondition(kcp.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
 
-	instanceId, lastErr, allZonesFailed := tryCreateInstanceInVSwitches(ctx, state, vSwitchIds, password)
+	instanceId, lastErr, allZonesFailed := tryCreateInstanceInVSwitches(ctx, state, vSwitchIds, password, kcp.Status.TokenSeed)
 
 	if lastErr != nil {
 		return handleInstanceCreateError(ctx, state, lastErr, allZonesFailed)
@@ -74,7 +76,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 
 // tryCreateInstanceInVSwitches tries each vSwitch in turn and returns the new instance ID,
 // the last error (nil on success), and whether every zone rejected the request.
-func tryCreateInstanceInVSwitches(ctx context.Context, state *State, vSwitchIds []string, password string) (string, error, bool) {
+func tryCreateInstanceInVSwitches(ctx context.Context, state *State, vSwitchIds []string, password, tokenSeed string) (string, error, bool) {
 	logger := composed.LoggerFromCtx(ctx)
 	kcp := state.ObjAsRedisInstance()
 
@@ -83,12 +85,12 @@ func tryCreateInstanceInVSwitches(ctx context.Context, state *State, vSwitchIds 
 	allZonesFailed := true
 
 	for _, vSwitchId := range vSwitchIds {
-		// "v3" suffix rotates tokens away from v2 tokens that included password.
-		// Different ReadOnlyCount values must not share a token — AliCloud would
-		// return the existing instance without applying the new replica count.
-		tokenInput := fmt.Sprintf("%s%s%s%dv3",
+		// "v4" rotates away from v3 tokens that omitted password and EngineVersion.
+		tokenInput := fmt.Sprintf("%s%s%s%s%s%dv4",
 			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
+			kcp.Spec.Instance.Alicloud.EngineVersion,
+			tokenSeed,
 			kcp.Spec.Instance.Alicloud.ReadOnlyCount,
 		)
 		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenInput)))[:32] //nolint:gosec
@@ -143,10 +145,16 @@ func handleInstanceCreateError(ctx context.Context, state *State, err error, all
 		// Don't give up permanently — the user may add subnets in a compatible zone later.
 		return composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx
 	}
+	// IdempotentParameterMismatch: prior token used different params, instance may exist.
+	// Check before IsPermanentError — StatusCode=400 would cause StopAndForget, losing the instance.
+	if alicloudclient.IsIdempotentTokenMismatch(err) {
+		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
+	}
 	if alicloudclient.IsPermanentError(err) {
 		if alicloudclient.IsPasswordErr(err) {
-			// Clear authString so the next reconcile generates a fresh password.
+			// Clear authString and tokenSeed so the next reconcile generates fresh credentials.
 			kcp.Status.AuthString = ""
+			kcp.Status.TokenSeed = ""
 			if updErr := state.UpdateObjStatus(ctx); updErr != nil {
 				logger.Error(updErr, "Error clearing invalid password from status")
 			}

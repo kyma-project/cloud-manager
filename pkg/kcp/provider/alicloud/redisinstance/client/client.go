@@ -162,6 +162,17 @@ func IsVSwitchZoneErr(err error) bool {
 	return false
 }
 
+// IsIdempotentTokenMismatch returns true when a prior CreateInstance used the same
+// token with different parameters. An instance may already exist; requeue so loadRedis
+// can recover it by name.
+func IsIdempotentTokenMismatch(err error) bool {
+	var sdkErr *tea.SDKError
+	if errors.As(err, &sdkErr) && sdkErr.Code != nil {
+		return tea.StringValue(sdkErr.Code) == "IdempotentParameterMismatch"
+	}
+	return false
+}
+
 // IsPasswordErr returns true when AliCloud rejects the CreateInstance password
 // as malformed (InvalidPassword.Malformed). Callers should clear the stored
 // authString so the next reconcile generates a fresh, compliant password.
