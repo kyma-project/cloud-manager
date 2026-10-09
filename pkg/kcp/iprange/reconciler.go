@@ -100,6 +100,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 					),
 					allocateIpRange,
 				),
+				validateCidr,
 				copyCidrToStatus,
 				kcpNetworkInit,
 				kcpNetworkLoad,

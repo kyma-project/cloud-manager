@@ -75,4 +75,41 @@ var _ = Describe("Feature: KCP IpRange", Ordered, func() {
 		},
 		"CIDR is immutable",
 	)
+
+	// Test reserved / invalid CIDR ranges are rejected at admission
+	canNotCreateKcp(
+		"IpRange cannot be created with default route 0.0.0.0/0",
+		newTestKcpIpRangeBuilder().WithCidr("0.0.0.0/0"),
+		"reserved or invalid range",
+	)
+
+	canNotCreateKcp(
+		"IpRange cannot be created with IPv4 loopback 127.0.0.0/8",
+		newTestKcpIpRangeBuilder().WithCidr("127.0.0.0/8"),
+		"reserved or invalid range",
+	)
+
+	canNotCreateKcp(
+		"IpRange cannot be created with IPv4 link-local 169.254.0.0/16",
+		newTestKcpIpRangeBuilder().WithCidr("169.254.0.0/16"),
+		"reserved or invalid range",
+	)
+
+	canNotCreateKcp(
+		"IpRange cannot be created with IPv6 default route ::/0",
+		newTestKcpIpRangeBuilder().WithCidr("::/0"),
+		"reserved or invalid range",
+	)
+
+	canNotCreateKcp(
+		"IpRange cannot be created with IPv6 loopback ::1/128",
+		newTestKcpIpRangeBuilder().WithCidr("::1/128"),
+		"reserved or invalid range",
+	)
+
+	canNotCreateKcp(
+		"IpRange cannot be created with IPv6 link-local fe80::/10",
+		newTestKcpIpRangeBuilder().WithCidr("fe80::/10"),
+		"reserved or invalid range",
+	)
 })
