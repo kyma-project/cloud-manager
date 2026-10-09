@@ -434,6 +434,12 @@ spec:
                 type: integer
               state:
                 type: string
+              tokenSeed:
+                description: |-
+                  TokenSeed is a random value generated alongside AuthString and used in the
+                  AliCloud r-kvstore idempotency token. It is rotated whenever AuthString is
+                  regenerated, ensuring a fresh token without hashing the password itself.
+                type: string
             type: object
         type: object
     served: true

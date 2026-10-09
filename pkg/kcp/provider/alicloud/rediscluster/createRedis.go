@@ -44,6 +44,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	if password == "" {
 		password = alicloud.GeneratePassword()
 		kcp.Status.AuthString = password
+		kcp.Status.TokenSeed = alicloud.GeneratePassword()
 		if err := state.UpdateObjStatus(ctx); err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error persisting AliCloud r-kvstore cluster auth string before create",
@@ -53,7 +54,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 
 	meta.RemoveStatusCondition(kcp.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
 
-	instanceId, lastErr, allZonesFailed := tryCreateClusterInVSwitches(ctx, state, vSwitchIds, password)
+	instanceId, lastErr, allZonesFailed := tryCreateClusterInVSwitches(ctx, state, vSwitchIds, password, kcp.Status.TokenSeed)
 
 	if lastErr != nil {
 		return handleClusterCreateError(ctx, state, lastErr, allZonesFailed)
@@ -71,7 +72,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 
 // tryCreateClusterInVSwitches tries each vSwitch in turn and returns the new instance ID,
 // the last error (nil on success), and whether every zone rejected the request.
-func tryCreateClusterInVSwitches(ctx context.Context, state *State, vSwitchIds []string, password string) (string, error, bool) {
+func tryCreateClusterInVSwitches(ctx context.Context, state *State, vSwitchIds []string, password, tokenSeed string) (string, error, bool) {
 	logger := composed.LoggerFromCtx(ctx)
 	kcp := state.ObjAsRedisCluster()
 
@@ -85,7 +86,7 @@ func tryCreateClusterInVSwitches(ctx context.Context, state *State, vSwitchIds [
 			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
 			kcp.Spec.Instance.Alicloud.EngineVersion,
-			alicloudclient.DigestBytes([]byte(password)),
+			tokenSeed,
 			kcp.Spec.Instance.Alicloud.ShardCount,
 			kcp.Spec.Instance.Alicloud.ReplicasPerShard,
 		)
@@ -149,6 +150,7 @@ func handleClusterCreateError(ctx context.Context, state *State, err error, allZ
 	if alicloudclient.IsPermanentError(err) {
 		if alicloudclient.IsPasswordErr(err) {
 			kcp.Status.AuthString = ""
+			kcp.Status.TokenSeed = ""
 			if updErr := state.UpdateObjStatus(ctx); updErr != nil {
 				logger.Error(updErr, "Error clearing invalid password from status")
 			}
