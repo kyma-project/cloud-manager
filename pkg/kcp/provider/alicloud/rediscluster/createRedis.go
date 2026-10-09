@@ -17,11 +17,12 @@ import (
 func createRedis(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
+	kcp := state.ObjAsRedisCluster()
+
 	if state.instance != nil {
+		meta.RemoveStatusCondition(kcp.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
 		return nil, ctx
 	}
-
-	kcp := state.ObjAsRedisCluster()
 
 	var vSwitchIds []string
 	for _, sn := range state.IpRange().Status.Subnets {
@@ -141,7 +142,7 @@ func handleClusterCreateError(ctx context.Context, state *State, err error, allZ
 		return composed.StopWithRequeueDelay(util.Timing.T300000ms()), ctx
 	}
 	// IdempotentParameterMismatch: prior token used different params, instance may exist.
-	// Check before IsPermanentError — StatusCode may be nil causing that to return false.
+	// Check before IsPermanentError — StatusCode=400 would cause StopAndForget, losing the instance.
 	if alicloudclient.IsIdempotentTokenMismatch(err) {
 		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
 	}
