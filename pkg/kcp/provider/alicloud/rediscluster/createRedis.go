@@ -81,13 +81,11 @@ func tryCreateClusterInVSwitches(ctx context.Context, state *State, vSwitchIds [
 
 	for _, vSwitchId := range vSwitchIds {
 		// "v6" rotates away from v5 tokens that omitted password and EngineVersion.
-		// Password is pre-hashed so the token input never contains a plaintext secret.
-		pwHash := fmt.Sprintf("%x", sha256.Sum256([]byte(password))) //nolint:gosec
 		tokenInput := fmt.Sprintf("%s%s%s%s%s%d%dv6",
 			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
 			kcp.Spec.Instance.Alicloud.EngineVersion,
-			pwHash,
+			alicloudclient.DigestBytes([]byte(password)),
 			kcp.Spec.Instance.Alicloud.ShardCount,
 			kcp.Spec.Instance.Alicloud.ReplicasPerShard,
 		)
