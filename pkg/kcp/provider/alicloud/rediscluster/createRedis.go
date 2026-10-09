@@ -79,11 +79,12 @@ func tryCreateClusterInVSwitches(ctx context.Context, state *State, vSwitchIds [
 	allZonesFailed := true
 
 	for _, vSwitchId := range vSwitchIds {
-		// "v6" rotates away from v5 tokens that omitted EngineVersion.
-		tokenInput := fmt.Sprintf("%s%s%s%s%d%dv6",
+		// "v6" rotates away from v5 tokens that omitted password and EngineVersion.
+		tokenInput := fmt.Sprintf("%s%s%s%s%s%d%dv6",
 			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
 			kcp.Spec.Instance.Alicloud.EngineVersion,
+			password,
 			kcp.Spec.Instance.Alicloud.ShardCount,
 			kcp.Spec.Instance.Alicloud.ReplicasPerShard,
 		)

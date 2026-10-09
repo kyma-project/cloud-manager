@@ -83,11 +83,12 @@ func tryCreateInstanceInVSwitches(ctx context.Context, state *State, vSwitchIds 
 	allZonesFailed := true
 
 	for _, vSwitchId := range vSwitchIds {
-		// "v4" rotates away from v3 tokens that omitted EngineVersion.
-		tokenInput := fmt.Sprintf("%s%s%s%s%dv4",
+		// "v4" rotates away from v3 tokens that omitted password and EngineVersion.
+		tokenInput := fmt.Sprintf("%s%s%s%s%s%dv4",
 			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
 			kcp.Spec.Instance.Alicloud.EngineVersion,
+			password,
 			kcp.Spec.Instance.Alicloud.ReadOnlyCount,
 		)
 		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenInput)))[:32] //nolint:gosec
