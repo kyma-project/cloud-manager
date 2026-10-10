@@ -6,6 +6,7 @@ import (
 	"maps"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Context) {
@@ -13,8 +14,10 @@ func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.AuthSecret == nil {
-		logger.Info("cant modify auth secret, not found")
-		return nil, ctx
+		// The secret was just created but the cache hasn't caught up yet. Requeue
+		// so modifyAuthSecret runs again with a fresh load rather than skipping and
+		// letting updateStatus mark the SKR Ready with an incomplete secret.
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
 	currentSecretData := state.AuthSecret.Data
