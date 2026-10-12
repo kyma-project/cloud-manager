@@ -180,7 +180,7 @@ Feature: WafPolicy feature
     When resource "policy" is deleted
     Then eventually resource "policy" does not exist
 
-  @skr @aws @waf @debug
+  @skr @aws @waf
   Scenario: Deploy httpbin application and protect it with AWS WAF
 
     Given there is shared SKR with "AWS" provider
@@ -349,8 +349,6 @@ Feature: WafPolicy feature
 
     Then eventually "ingress.status.loadBalancer.ingress[0].hostname != ''" is ok, unless:
       | #timeout=20m |
-
-    # Then debug wait "ingress"
 
     # Step 5 & 6: Test with WAF protection -  XSS is blocked, normal requests work
     And HTTP operation succeeds:

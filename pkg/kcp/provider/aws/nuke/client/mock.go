@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -143,4 +144,17 @@ func (m *mockClient) ListTagsForWebACL(ctx context.Context, resourceArn string) 
 		return wacl.Tags, nil
 	}
 	return nil, nil
+}
+
+// Certificate methods (minimal mock — no cert state needed for current nuke tests)
+func (m *mockClient) ListCertificates(_ context.Context) ([]acmtypes.CertificateSummary, error) {
+	return nil, nil
+}
+
+func (m *mockClient) ListCertificateTags(_ context.Context, _ string) ([]acmtypes.Tag, error) {
+	return nil, nil
+}
+
+func (m *mockClient) DeleteCertificate(_ context.Context, _ string) error {
+	return nil
 }

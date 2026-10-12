@@ -11,7 +11,6 @@
         "acm:ImportCertificate",
         "acm:ListCertificates",
         "acm:ListTagsForCertificate",
-        "acm:SearchCertificates",
         "backup-storage:MountCapsule",
         "backup:CreateBackupVault",
         "backup:DeleteBackupVault",

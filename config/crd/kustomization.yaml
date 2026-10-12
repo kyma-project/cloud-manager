@@ -46,6 +46,7 @@ resources:
 - bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotrestores.yaml
 - bases/cloud-resources.kyma-project.io_sapnfsvolumesnapshotschedules.yaml
 - bases/cloud-resources.kyma-project.io_wafpolicies.yaml
+- bases/cloud-resources.kyma-project.io.kyma-project.io_cartificates.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:

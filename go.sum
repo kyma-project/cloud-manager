@@ -210,6 +210,8 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.4 h1:dD4MR81I7YkpEBRk6UP
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.4/go.mod h1:EcXV1kAFd5XwSkDHlj94gnF3q5CkJyYiIJfH8N0VmrE=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.4 h1:7Wo47d/xn/7KttCSBd8EGYeZ7ULRFRkUHr6vkZPBzVQ=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.4/go.mod h1:tDB2IVC1xC3vX8o+6uRlzhTxP3g1b77CZXFX/oD2FnQ=
+github.com/aws/aws-sdk-go-v2/service/acm v1.50.1 h1:8gUULHv+lyKQENT6AmAu7sGrn9umPxf4ZoQRwF4WZNY=
+github.com/aws/aws-sdk-go-v2/service/acm v1.50.1/go.mod h1:Lo1ubU13LylwXEExnJopObY1xpTgGvLbUn7y8x0Yt+s=
 github.com/aws/aws-sdk-go-v2/service/backup v1.67.0 h1:S06gfsWy6IVXBbLNMf7kQXAh4OezV9/ojAmtfg67Vw0=
 github.com/aws/aws-sdk-go-v2/service/backup v1.67.0/go.mod h1:/yu/vxVqQLU6+29yZgLfQRNdDkT/s3F8zS2mrLQy8FE=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.338.1 h1:sfwX4gbR9CGsMgBsOQNFMGigRjiZeIG0CF4BlWP/LBQ=

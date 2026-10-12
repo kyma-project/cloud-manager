@@ -10,6 +10,7 @@ import (
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
+	certificateclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/certificate/client"
 	awswebaclclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/client"
 )
 
@@ -49,6 +50,10 @@ type WebAclClient interface {
 	awswebaclclient.Client
 }
 
+type CertificateClient interface {
+	certificateclient.Client
+}
+
 type Clients interface {
 	IpRangeClient
 	NfsClient
@@ -57,6 +62,7 @@ type Clients interface {
 	ExposedDataClient
 	VpcNetworkClient
 	WebAclClient
+	CertificateClient
 }
 
 type Providers interface {
@@ -69,6 +75,7 @@ type Providers interface {
 	ExposedDataProvider() awsclient.SkrClientProvider[awsexposeddataclient.Client]
 	VpcNetworkProvider() awsclient.SkrClientProvider[awsvpcnetworkclient.Client]
 	WebAclProvider() awsclient.SkrClientProvider[awswebaclclient.Client]
+	CertificateProvider() awsclient.SkrClientProvider[certificateclient.Client]
 	NukeProvider() awsclient.SkrClientProvider[awsnukeclient.NukeClient]
 }
 

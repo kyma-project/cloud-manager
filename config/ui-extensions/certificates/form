@@ -1,0 +1,11 @@
+- path: metadata.name
+  name: metadata.name
+  widget: Text
+  required: true
+- path: spec.secretRef
+  name: spec.secretRef
+  widget: ResourceRef
+  required: true
+  resource:
+    kind: Secret
+    version: v1

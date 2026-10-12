@@ -1,0 +1,25 @@
+body:
+    - name: configuration
+      widget: Panel
+      source: spec
+      children:
+        - name: spec.secretRef
+          widget: ResourceLink
+          source: secretRef.name
+          resource:
+            name: secretRef.name
+            namespace: secretRef.namespace
+            kind: "'Secret'"
+    - name: status
+      widget: Panel
+      source: status
+      children:
+        - widget: Labels
+          source: state
+          name: status.state
+        - widget: Labels
+          source: providerId
+          name: status.providerId
+        - widget: ConditionList
+          source: conditions
+          name: status.conditions
