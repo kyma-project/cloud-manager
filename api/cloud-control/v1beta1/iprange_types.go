@@ -53,7 +53,7 @@ type IpRangeSpec struct {
 	Scope ScopeRef `json:"scope"`
 
 	// +kubebuilder:validation:XValidation:rule=(self == oldSelf), message="CIDR is immutable"
-	// +kubebuilder:validation:XValidation:rule="isCIDR(self) && cidr(self).ip().family() == 'IPv4' && !cidr(self).containsCIDR(cidr('0.0.0.0/0')) && !cidr(self).containsCIDR(cidr('127.0.0.0/8')) && !cidr(self).containsCIDR(cidr('169.254.0.0/16'))",message="Must be a valid IPv4 CIDR and cannot overlap with 0.0.0.0/0, 127.0.0.0/8, or 169.254.0.0/16 (IPv6 is not allowed)"
+	// +kubebuilder:validation:XValidation:rule="self == '' || (isCIDR(self) && cidr(self).ip().family() == 4 && self != '0.0.0.0/0' && !cidr(self).containsCIDR(cidr('127.0.0.0/8')) && !cidr('127.0.0.0/8').containsCIDR(cidr(self)) && !cidr(self).containsCIDR(cidr('169.254.0.0/16')) && !cidr('169.254.0.0/16').containsCIDR(cidr(self)))",message="Must be a valid IPv4 CIDR and cannot overlap with 127.0.0.0/8, or 169.254.0.0/16, and cannot be 0.0.0.0/0 (IPv6 is not allowed)"
 	// +optional
 	Cidr string `json:"cidr"`
 

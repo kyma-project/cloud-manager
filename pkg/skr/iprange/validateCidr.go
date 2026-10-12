@@ -3,7 +3,7 @@ package iprange
 import (
 	"context"
 	"fmt"
-	"net"
+	"net/netip"
 
 	"github.com/3th1nk/cidr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -11,26 +11,36 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var reservedIPv4CIDRs = []string{
-	"0.0.0.0/0",
+// reservedIPv4CIDRContainmentBlocks lists ranges that must not overlap (by containment) with a user-supplied CIDR.
+// The logic mirrors the CEL XValidation rules on the CRD: reject if either side contains the other.
+var reservedIPv4CIDRContainmentBlocks = []string{
 	"127.0.0.0/8",
 	"169.254.0.0/16",
 }
 
 func isReservedCIDR(input string) bool {
-	_, inputNet, err := net.ParseCIDR(input)
+	inputPrefix, err := netip.ParsePrefix(input)
 	if err != nil {
-		return false
+		return true
 	}
-	for _, reserved := range reservedIPv4CIDRs {
-		_, reservedNet, err := net.ParseCIDR(reserved)
+
+	// Exact match: 0.0.0.0/0 is forbidden, mirroring the CEL rule `self != '0.0.0.0/0'`
+	if input == "0.0.0.0/0" {
+		return true
+	}
+
+	// Overlap check: reject if input overlaps the reserved block in either direction,
+	// mirroring the CEL rules !cidr(self).containsCIDR(cidr(reserved)) && !cidr(reserved).containsCIDR(cidr(self))
+	for _, reserved := range reservedIPv4CIDRContainmentBlocks {
+		reservedPrefix, err := netip.ParsePrefix(reserved)
 		if err != nil {
 			continue
 		}
-		if inputNet.String() == reservedNet.String() {
+		if inputPrefix.Overlaps(reservedPrefix) {
 			return true
 		}
 	}
+
 	return false
 }
 
