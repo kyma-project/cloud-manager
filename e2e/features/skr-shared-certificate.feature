@@ -24,8 +24,6 @@ Feature: Certificate feature
           namespace: default
       """
 
-    Then debug wait "certificate"
-
     Then eventually "certificate.status.state == 'Ready'" is ok, unless:
       | certificate.status.state == 'Error' |
       | #timeout=10m                        |
