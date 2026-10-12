@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	"k8s.io/utils/ptr"
 )
 
 func importCertificate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -27,7 +26,7 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	if cert.Status.ProviderId != "" {
-		input.CertificateArn = ptr.To(cert.Status.ProviderId)
+		input.CertificateArn = new(cert.Status.ProviderId)
 		logger.WithValues("arn", cert.Status.ProviderId).Info("Updating existing certificate")
 	} else {
 		input.Tags = state.convertTags()
