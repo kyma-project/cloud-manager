@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Script to create Kubernetes Secret from test certificate files
-# This Secret is used by the skr-shared-certificate.feature test
+# This Secret is used by the skr-shared-certificate-aws.feature test
 #
 # Prerequisites:
 #   - Certificate files must exist in e2e/tmp/certs/ (run create-test-certificate.sh first)
