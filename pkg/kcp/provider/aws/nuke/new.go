@@ -44,6 +44,10 @@ func New(stateFactory StateFactory) composed.Action {
 			loadWebAcls,
 			providerResourceStatusDiscovered,
 			deleteWebAcls,
+			// Certificates (always runs when AWS nuke is enabled)
+			loadCertificates,
+			providerResourceStatusDiscovered,
+			deleteCertificates,
 			// Status tracking (applies to all resource types)
 			providerResourceStatusDeleting,
 			providerResourceStatusDeleted,

@@ -22,6 +22,7 @@ import (
 	awsvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	certificateclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/certificate/client"
 	awswebaclclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/client"
 )
 
@@ -195,9 +196,20 @@ func (s *server) WebAclProvider() awsclient.SkrClientProvider[awswebaclclient.Cl
 	}
 }
 
+func (s *server) CertificateProvider() awsclient.SkrClientProvider[certificateclient.Client] {
+	return func(_ context.Context, account, region, key, secret, role string) (certificateclient.Client, error) {
+		acc := s.GetAccount(account)
+		if acc == nil {
+			return nil, ErrNoAccount
+		}
+		return acc.Region(region), nil
+	}
+}
+
 func (s *server) NukeProvider() awsclient.SkrClientProvider[awsnukeclient.NukeClient] {
 	return awsnukeclient.NukeProvider(
 		awsnfsvolumebackupclient.NewMockClient(),
 		s.WebAclProvider(),
+		s.CertificateProvider(),
 	)
 }

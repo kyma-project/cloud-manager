@@ -3,11 +3,13 @@ package client
 import (
 	"context"
 
+	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
+	certificateclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/certificate/client"
 	wafpolicyclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/client"
 )
 
@@ -32,21 +34,33 @@ type NukeWafPolicyClient interface {
 	ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error)
 }
 
+var _ NukeCertificateClient = (certificateclient.Client)(nil)
+
+// NukeCertificateClient is a subset of certificateclient.Client
+type NukeCertificateClient interface {
+	ListCertificates(ctx context.Context) ([]acmtypes.CertificateSummary, error)
+	ListCertificateTags(ctx context.Context, arn string) ([]acmtypes.Tag, error)
+	DeleteCertificate(ctx context.Context, arn string) error
+}
+
 type NukeClient interface {
 	NukeNfsBackupClient
 	NukeWafPolicyClient
+	NukeCertificateClient
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[NukeClient] {
 	return NukeProvider(
 		awsnfsvolumebackupclient.NewClientProvider(),
 		wafpolicyclient.NewClientProvider(),
+		certificateclient.NewClientProvider(),
 	)
 }
 
 func NukeProvider(
 	backupProvider awsclient.SkrClientProvider[awsnfsvolumebackupclient.Client],
 	webAclProvider awsclient.SkrClientProvider[wafpolicyclient.Client],
+	certProvider awsclient.SkrClientProvider[certificateclient.Client],
 ) awsclient.SkrClientProvider[NukeClient] {
 	return func(ctx context.Context, account, region, key, secret, role string) (NukeClient, error) {
 		backupClient, err := backupProvider(ctx, account, region, key, secret, role)
@@ -59,9 +73,15 @@ func NukeProvider(
 			return nil, err
 		}
 
+		certClient, err := certProvider(ctx, account, region, key, secret, role)
+		if err != nil {
+			return nil, err
+		}
+
 		return &client{
 			backupClient: backupClient,
 			webAclClient: webAclClient,
+			certClient:   certClient,
 		}, nil
 	}
 }
@@ -69,9 +89,10 @@ func NukeProvider(
 type client struct {
 	backupClient awsnfsvolumebackupclient.Client
 	webAclClient wafpolicyclient.Client
+	certClient   certificateclient.Client
 }
 
-// Embed backup client methods
+// Backup client methods
 func (c *client) CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error) {
 	return c.backupClient.CreateBackupVault(ctx, name, tags)
 }
@@ -107,4 +128,17 @@ func (c *client) DeleteWebACL(ctx context.Context, name, id string, scope wafv2t
 
 func (c *client) ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error) {
 	return c.webAclClient.ListTagsForWebACL(ctx, resourceArn)
+}
+
+// Certificate methods
+func (c *client) ListCertificates(ctx context.Context) ([]acmtypes.CertificateSummary, error) {
+	return c.certClient.ListCertificates(ctx)
+}
+
+func (c *client) ListCertificateTags(ctx context.Context, arn string) ([]acmtypes.Tag, error) {
+	return c.certClient.ListCertificateTags(ctx, arn)
+}
+
+func (c *client) DeleteCertificate(ctx context.Context, arn string) error {
+	return c.certClient.DeleteCertificate(ctx, arn)
 }

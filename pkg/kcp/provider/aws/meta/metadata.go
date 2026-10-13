@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
+	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	secretsmanagertypes "github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
@@ -93,6 +94,7 @@ func IsRouteNotSupported(err error) bool {
 
 // https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html
 var notFoundErrorCodes = map[string]struct{}{
+	(&acmtypes.ResourceNotFoundException{}).ErrorCode():             {},
 	(&efstypes.FileSystemNotFound{}).ErrorCode():                    {},
 	(&efstypes.AccessPointNotFound{}).ErrorCode():                   {},
 	(&efstypes.MountTargetNotFound{}).ErrorCode():                   {},

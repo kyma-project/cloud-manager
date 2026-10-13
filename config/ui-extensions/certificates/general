@@ -1,0 +1,10 @@
+resource:
+    kind: Certificate
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: certificates
+name: Certificates
+scope: cluster
+category: Security
+description: >-
+    Manage TLS certificates for secure communications

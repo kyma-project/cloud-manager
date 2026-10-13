@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/aws/aws-sdk-go-v2/service/backup/types"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -90,6 +91,28 @@ func (s *State) GetAccountId() string {
 
 // Helper function to check if a WAFv2 tag exists with the expected value
 func hasTag(tags []wafv2types.Tag, key, value string) bool {
+	for _, tag := range tags {
+		if ptr.Deref(tag.Key, "") == key && ptr.Deref(tag.Value, "") == value {
+			return true
+		}
+	}
+	return false
+}
+
+type CertificateResource struct {
+	Summary acmtypes.CertificateSummary
+}
+
+func (r CertificateResource) GetId() string {
+	return ptr.Deref(r.Summary.CertificateArn, "")
+}
+
+func (r CertificateResource) GetObject() any {
+	return r
+}
+
+// hasCertificateTag checks if an ACM tag exists with the expected value
+func hasCertificateTag(tags []acmtypes.Tag, key, value string) bool {
 	for _, tag := range tags {
 		if ptr.Deref(tag.Key, "") == key && ptr.Deref(tag.Value, "") == value {
 			return true

@@ -101,6 +101,7 @@ rules:
   - azurerwxvolumerestores
   - azurevpcdnslinks
   - azurevpcpeerings
+  - certificates
   - cloudresources
   - gcpnfsbackupschedules
   - gcpnfsvolumebackupdiscoveries
@@ -146,6 +147,7 @@ rules:
   - azurerwxvolumerestores/finalizers
   - azurevpcdnslinks/finalizers
   - azurevpcpeerings/finalizers
+  - certificates/finalizers
   - cloudresources/finalizers
   - gcpnfsbackupschedules/finalizers
   - gcpnfsvolumebackupdiscoveries/finalizers
@@ -185,6 +187,7 @@ rules:
   - azurerwxvolumerestores/status
   - azurevpcdnslinks/status
   - azurevpcpeerings/status
+  - certificates/status
   - cloudresources/status
   - gcpnfsbackupschedules/status
   - gcpnfsvolumebackupdiscoveries/status

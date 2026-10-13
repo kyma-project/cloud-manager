@@ -1,0 +1,77 @@
+apiVersion: v1
+data:
+  details: |
+    body:
+        - name: configuration
+          widget: Panel
+          source: spec
+          children:
+            - name: spec.secretRef
+              widget: ResourceLink
+              source: secretRef.name
+              resource:
+                name: secretRef.name
+                namespace: secretRef.namespace
+                kind: "'Secret'"
+        - name: status
+          widget: Panel
+          source: status
+          children:
+            - widget: Labels
+              source: state
+              name: status.state
+            - widget: Labels
+              source: providerId
+              name: status.providerId
+            - widget: ConditionList
+              source: conditions
+              name: status.conditions
+  form: |
+    - path: metadata.name
+      name: metadata.name
+      widget: Text
+      required: true
+    - path: spec.secretRef
+      name: spec.secretRef
+      widget: ResourceRef
+      required: true
+      resource:
+        kind: Secret
+        version: v1
+  general: |
+    resource:
+        kind: Certificate
+        group: cloud-resources.kyma-project.io
+        version: v1beta1
+    urlPath: certificates
+    name: Certificates
+    scope: cluster
+    category: Security
+    description: >-
+        Manage TLS certificates for secure communications
+  list: |
+    - source: status.state
+      name: status.state
+      sort: true
+    - source: status.providerId
+      name: status.providerId
+      sort: true
+  translations: |
+    en:
+      metadata.name: Name
+      spec.secretRef: Secret Reference
+      status.state: State
+      status.providerId: Provider ID
+      status.conditions: Conditions
+      configuration: Configuration
+      status: Status
+kind: ConfigMap
+metadata:
+  annotations:
+    cloud-resources.kyma-project.io/version: v0.0.1
+  labels:
+    busola.io/extension: resource
+    busola.io/extension-version: "0.5"
+    cloud-manager: ui-cm
+  name: certificates-ui.operator.kyma-project.io
+  namespace: kyma-system

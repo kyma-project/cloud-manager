@@ -1,0 +1,8 @@
+en:
+  metadata.name: Name
+  spec.secretRef: Secret Reference
+  status.state: State
+  status.providerId: Provider ID
+  status.conditions: Conditions
+  configuration: Configuration
+  status: Status
