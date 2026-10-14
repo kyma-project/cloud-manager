@@ -75,7 +75,7 @@ type ScopeReconciler struct {
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=kymas,verbs=get;list;watch;update;patch
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=kymas/status,verbs=get
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=kymas/finalizers,verbs=update;patch
-// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch,namespace=default
 // +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=skrstatuses,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=skrstatuses/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=cloud-control.kyma-project.io,resources=skrstatuses/finalizers,verbs=update
