@@ -66,4 +66,65 @@ var _ = Describe("Feature: SKR IpRange", Ordered, func() {
 		},
 		"CIDR is immutable",
 	)
+
+	// Test reserved / invalid CIDR ranges are rejected at admission
+	canNotCreateSkr(
+		"IpRange cannot be created with default route 0.0.0.0/0",
+		newTestSkrIpRangeBuilder().WithCidr("0.0.0.0/0"),
+		"Must be a valid IPv4 CIDR and cannot overlap",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv4 loopback 127.0.0.0/7",
+		newTestSkrIpRangeBuilder().WithCidr("127.0.0.0/7"),
+		"Must be a valid IPv4 CIDR and cannot overlap",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv4 loopback 127.0.0.0/8",
+		newTestSkrIpRangeBuilder().WithCidr("127.0.0.0/8"),
+		"Must be a valid IPv4 CIDR and cannot overlap",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv4 loopback 127.0.0.0/9",
+		newTestSkrIpRangeBuilder().WithCidr("127.0.0.0/9"),
+		"Must be a valid IPv4 CIDR and cannot overlap",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv4 link-local 169.254.0.0/15",
+		newTestSkrIpRangeBuilder().WithCidr("169.254.0.0/15"),
+		"Must be a valid IPv4 CIDR and cannot overlap",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv4 link-local 169.254.0.0/16",
+		newTestSkrIpRangeBuilder().WithCidr("169.254.0.0/16"),
+		"Must be a valid IPv4 CIDR and cannot overlap",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv4 link-local 169.254.0.0/17",
+		newTestSkrIpRangeBuilder().WithCidr("169.254.0.0/16"),
+		"Must be a valid IPv4 CIDR and cannot overlap",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv6 default route ::/0",
+		newTestSkrIpRangeBuilder().WithCidr("::/0"),
+		"Must be a valid IPv4 CIDR and cannot overlap",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv6 loopback ::1/128",
+		newTestSkrIpRangeBuilder().WithCidr("::1/128"),
+		"Must be a valid IPv4 CIDR and cannot overlap",
+	)
+
+	canNotCreateSkr(
+		"IpRange cannot be created with IPv6 link-local fe80::/10",
+		newTestSkrIpRangeBuilder().WithCidr("fe80::/10"),
+		"Must be a valid IPv4 CIDR and cannot overlap",
+	)
 })

@@ -79,6 +79,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 				"ipRangeCommon",
 				// common IpRange common actions here
 				actions.PatchAddCommonFinalizer(),
+				validateCidr,
 				composed.If(
 					shouldAllocateIpRange,
 					composed.BuildSwitchAction(
