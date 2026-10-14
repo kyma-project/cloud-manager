@@ -187,6 +187,10 @@ var _ = BeforeSuite(func() {
 	Expect(SetupWafPolicyReconciler(infra.Registry(), infra.AwsMock().WebAclProvider(), env)).
 		NotTo(HaveOccurred())
 
+	// Certificate
+	Expect(SetupCertificateReconciler(infra.Registry(), infra.AwsMock().CertificateProvider(), env)).
+		NotTo(HaveOccurred())
+
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
 })
