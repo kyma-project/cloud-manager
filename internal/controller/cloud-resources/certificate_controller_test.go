@@ -25,7 +25,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -62,11 +61,9 @@ var _ = Describe("Feature: SKR Certificate", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		secret := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "cert-chain-secret",
-				Namespace: infra.SKR().Namespace(),
-			},
-			Type: corev1.SecretTypeTLS,
+			Name:      "cert-chain-secret",
+			Namespace: infra.SKR().Namespace(),
+			Type:      corev1.SecretTypeTLS,
 			Data: map[string][]byte{
 				"tls.crt": tlsCrt,
 				"tls.key": tlsKey,
