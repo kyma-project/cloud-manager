@@ -331,8 +331,8 @@ github.com/fsnotify/fsnotify v1.10.1 h1:b0/UzAf9yR5rhf3RPm9gf3ehBPpf0oZKIjtpKrx5
 github.com/fsnotify/fsnotify v1.10.1/go.mod h1:TLheqan6HD6GBK6PrDWyDPBaEV8LspOxvPSjC+bVfgo=
 github.com/fsouza/fake-gcs-server v1.56.1 h1:K03sAvbLvDz4hAynpCCUqnNRp+ik9JFSvHbkD/wTPOU=
 github.com/fsouza/fake-gcs-server v1.56.1/go.mod h1:rzibfBNKouMLeVYDkIDqUiCEcfgDyJWe+4PhG7uesmU=
-github.com/fxamacker/cbor/v2 v2.9.2 h1:X4Ksno9+x3cz0TZv69ec1hxP/+tymuR8PXQJyDwfh78=
-github.com/fxamacker/cbor/v2 v2.9.2/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
+github.com/fxamacker/cbor/v2 v2.9.4 h1:xwjVlxEMR3S605oUlgBjKLTTeGFciYPGYCtF/35LKGo=
+github.com/fxamacker/cbor/v2 v2.9.4/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
 github.com/gardener/cert-management v0.23.0 h1:kD88XcPn6C4zLc8EYtrHyb+/45Iyaozhb+HEM44MKz0=
 github.com/gardener/cert-management v0.23.0/go.mod h1:Mehn8XY+iAkm8XOBbNGHmbMft8fP9ZEJFWzWSonPkfc=
 github.com/gardener/etcd-druid/api v0.36.4 h1:o/17ciPrbh/w+igKMUuglW7N9XLjoMh7AvRKTzsBEVs=
@@ -349,8 +349,8 @@ github.com/gardener/gardener-extension-provider-gcp v1.53.4 h1:uelIZqAtnP+Zrffw+
 github.com/gardener/gardener-extension-provider-gcp v1.53.4/go.mod h1:T4WgD/IXGCN/oVzRBV0LdEiONHSMbWPtJSAlLu0yaEM=
 github.com/gardener/gardener-extension-provider-openstack v1.57.0 h1:QQXVSOC+9c94r21BbcLW1gQfxJ95zmo0e18Aoy32BhQ=
 github.com/gardener/gardener-extension-provider-openstack v1.57.0/go.mod h1:N397cSwvKwFl/as2g39eeXyFj3gON83KQb7TliQX9nI=
-github.com/gardener/gardener/pkg/apis v1.152.0 h1:d7E4IiW9iwInqYjxe+/DqksBM586jDF8pL69iJpLnhU=
-github.com/gardener/gardener/pkg/apis v1.152.0/go.mod h1:2MoOSd0E01pkMjEFWnvz61MHu/OJjDfo496cDPk/aYA=
+github.com/gardener/gardener/pkg/apis v1.153.0 h1:xpfMMPIjP0z8F61URH5f868MpkjhenrhPeMpQ4YiwYo=
+github.com/gardener/gardener/pkg/apis v1.153.0/go.mod h1:KB8DbLjix1SO81uaHGNIcHcBV5awnnLGXMNulp5YaBo=
 github.com/gardener/machine-controller-manager v0.62.1 h1:TQ4Qs9aaYTqSkqFownIaEAvnrYoNpBMcp7ZMYVEgUWM=
 github.com/gardener/machine-controller-manager v0.62.1/go.mod h1:ICsymXK4VHm7NVr8Mpl6USvYcTZjUNSk6+XaVu/dd74=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
