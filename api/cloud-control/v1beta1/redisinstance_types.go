@@ -268,6 +268,12 @@ type RedisInstanceStatus struct {
 	AuthString string `json:"authString,omitempty"`
 
 	// +optional
+	// TokenSeed is a random value generated alongside AuthString and used in the
+	// AliCloud r-kvstore idempotency token. It is rotated whenever AuthString is
+	// regenerated, ensuring a fresh token without hashing the password itself.
+	TokenSeed string `json:"tokenSeed,omitempty"`
+
+	// +optional
 	CaCert string `json:"caCert,omitempty"`
 
 	// The reconciled node/machine type of the Redis instance.
