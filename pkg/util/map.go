@@ -1,9 +1,9 @@
 package util
 
 import (
-	"bytes"
 	"maps"
-	"text/template"
+	"regexp"
+	"strings"
 )
 
 // MergeMaps merges two maps of the same key-value types.
@@ -29,7 +29,7 @@ func MergeMaps[K comparable, V any](first, second map[K]V, onCollisionOverwrite 
 	return result
 }
 
-// ParseTemplatesMapToBytesMap Templates format map[k]="Hello {{.name}}"
+// ParseTemplatesMapToBytesMap interpolates values using {{.key}} syntax against dataMap keys.
 func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[string][]byte {
 	result := map[string][]byte{}
 
@@ -40,19 +40,32 @@ func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[st
 		dataMap = map[string]string{}
 	}
 
+	// Build a single regex matching {{[-\s]*.key[-\s]*}} for each key in dataMap.
+	// This mimics text/template field access ({{.key}}, {{ .key }}, {{- .key -}}, etc.)
+	// without executing arbitrary template actions like range, call, pipe, etc.
+	keyPatterns := make([]string, 0, len(dataMap))
+	for k := range dataMap {
+		keyPatterns = append(keyPatterns, regexp.QuoteMeta(k))
+	}
+	var re *regexp.Regexp
+	if len(keyPatterns) > 0 {
+		// Pattern: optional trim marker (-), optional whitespace, .key, optional whitespace, optional trim marker (-)
+		joined := "(" + strings.Join(keyPatterns, "|") + ")"
+		re = regexp.MustCompile(`\{\{-?\s*\.` + joined + `\s*-?\}\}`)
+	}
+
 	for k, v := range templatesMap {
-		var parseResult bytes.Buffer
-		tpl, err := template.New(k).Parse(v)
-		if err != nil {
+		if re == nil {
 			result[k] = []byte(v)
 			continue
 		}
-		err = tpl.Execute(&parseResult, dataMap)
-		if err != nil {
-			result[k] = []byte(v)
-			continue
-		}
-		result[k] = parseResult.Bytes()
+		result[k] = re.ReplaceAllFunc([]byte(v), func(match []byte) []byte {
+			sub := re.FindSubmatch(match)
+			if len(sub) < 2 {
+				return match
+			}
+			return []byte(dataMap[string(sub[1])])
+		})
 	}
 
 	return result
