@@ -74,18 +74,19 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 		return nil, ctx
 	}
 
-	if len(obj.Status.Id) > 0 &&
-		len(obj.Status.RemoteId) > 0 &&
-		meta.IsStatusConditionTrue(*obj.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
+	changed := false
+	changed = meta.RemoveStatusCondition(obj.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
+
+	if obj.Status.RemoteId != state.vpcPeering.RemoteVpcId {
+		changed = true
+		obj.Status.RemoteId = state.vpcPeering.RemoteVpcId
+	}
+
+	if !changed && meta.IsStatusConditionTrue(*obj.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
 		return nil, ctx
 	}
 
-	meta.RemoveStatusCondition(obj.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
-
 	obj.Status.State = string(cloudcontrolv1beta1.StateReady)
-	if state.vpcPeering.RemoteVpcId != "" {
-		obj.Status.RemoteId = state.vpcPeering.RemoteVpcId
-	}
 
 	return composed.PatchStatus(obj).
 		SetExclusiveConditions(metav1.Condition{

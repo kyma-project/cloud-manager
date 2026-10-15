@@ -17,13 +17,23 @@ import (
 // VpcPeerInfo is a flattened view of a VpcPeerConnection, unwrapping nested SDK structs.
 type VpcPeerInfo struct {
 	InstanceId        string
-	Status            string // Creating, Accepting, Activated, Deleting, Deleted
+	Status            string // Creating, Accepting, Activated, Deleting, Deleted, Rejected, Expired
 	RegionId          string
 	AcceptingRegionId string
 	LocalVpcId        string   // from Vpc.VpcId
 	RemoteVpcId       string   // from AcceptingVpc.VpcId
 	RemoteIpv4Cidrs   []string // from AcceptingVpc.Ipv4Cidrs
 	LocalIpv4Cidrs    []string // from Vpc.Ipv4Cidrs
+}
+
+// IsTerminal reports whether the peering connection has reached a state from which
+// it cannot recover: Rejected, Expired, Deleted, or Deleting.
+func (v *VpcPeerInfo) IsTerminal() bool {
+	switch v.Status {
+	case "Rejected", "Expired", "Deleted", "Deleting":
+		return true
+	}
+	return false
 }
 
 // RouteTableInfo is a flattened view of a route table entry.
@@ -38,6 +48,7 @@ type Client interface {
 	GetVpcPeerConnection(ctx context.Context, instanceId string) (*VpcPeerInfo, error)
 	DeleteVpcPeerConnection(ctx context.Context, instanceId string) error
 	ListVpcPeerConnections(ctx context.Context, vpcId, name string) ([]VpcPeerInfo, error)
+	DescribeVpc(ctx context.Context, vpcId string) (map[string]string, error)
 	DescribeRouteTables(ctx context.Context, vpcId string) ([]RouteTableInfo, error)
 	CreateRouteEntry(ctx context.Context, routeTableId, destCidr, instanceId string) error
 	DeleteRouteEntry(ctx context.Context, routeTableId, destCidr, instanceId string) error
@@ -106,6 +117,9 @@ func (c *alicloudVpcPeeringClient) CreateVpcPeerConnection(ctx context.Context, 
 	resp, err := c.peerClient.CreateVpcPeerConnection(req)
 	if err != nil {
 		return "", fmt.Errorf("error creating alicloud vpc peer connection: %w", err)
+	}
+	if resp.Body == nil {
+		return "", fmt.Errorf("error creating alicloud vpc peer connection: empty response body")
 	}
 	return tea.StringValue(resp.Body.InstanceId), nil
 }
@@ -217,16 +231,41 @@ func (c *alicloudVpcPeeringClient) ListVpcPeerConnections(ctx context.Context, v
 	return result, nil
 }
 
+func (c *alicloudVpcPeeringClient) DescribeVpc(ctx context.Context, vpcId string) (map[string]string, error) {
+	req := &vpc.DescribeVpcsRequest{
+		RegionId: new(c.region),
+		VpcId:    new(vpcId),
+	}
+	resp, err := c.vpcClient.DescribeVpcs(req)
+	if err != nil {
+		return nil, fmt.Errorf("error describing alicloud vpc %s: %w", vpcId, err)
+	}
+	if resp.Body == nil || resp.Body.Vpcs == nil || len(resp.Body.Vpcs.Vpc) == 0 {
+		return nil, nil
+	}
+	v := resp.Body.Vpcs.Vpc[0]
+	tags := map[string]string{}
+	if v.Tags != nil {
+		for _, tag := range v.Tags.Tag {
+			if tag.Key != nil && tag.Value != nil {
+				tags[tea.StringValue(tag.Key)] = tea.StringValue(tag.Value)
+			}
+		}
+	}
+	return tags, nil
+}
+
 func (c *alicloudVpcPeeringClient) DescribeRouteTables(ctx context.Context, vpcId string) ([]RouteTableInfo, error) {
 	var result []RouteTableInfo
 	pageNum := int32(1)
 	const pageSize = int32(50)
 	for {
 		req := &vpc.DescribeRouteTableListRequest{
-			RegionId:   new(c.region),
-			VpcId:      new(vpcId),
-			PageNumber: new(pageNum),
-			PageSize:   tea.Int32(pageSize),
+			RegionId:       new(c.region),
+			VpcId:          new(vpcId),
+			RouteTableType: new("Custom"),
+			PageNumber:     new(pageNum),
+			PageSize:       tea.Int32(pageSize),
 		}
 		resp, err := c.vpcClient.DescribeRouteTableList(req)
 		if err != nil {
