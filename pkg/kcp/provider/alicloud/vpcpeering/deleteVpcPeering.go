@@ -43,4 +43,3 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	logger.Info("AliCloud VpcPeerConnection delete issued, requeueing to confirm")
 	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }
-
