@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 # Script to generate a self-signed test certificate for Certificate e2e tests
-# This certificate is used by the skr-shared-certificate.feature test
 #
 # Usage:
 #   ./e2e/scripts/create-test-certificate.sh

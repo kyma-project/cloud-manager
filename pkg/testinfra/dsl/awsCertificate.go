@@ -1,7 +1,6 @@
 package dsl
 
 import (
-	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -10,10 +9,6 @@ import (
 	"encoding/pem"
 	"math/big"
 	"time"
-
-	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // GenerateTestCertificate generates a valid CA-signed certificate chain for testing.
@@ -100,35 +95,15 @@ func GenerateTestCertificate(commonName, org string) (certPEM []byte, keyPEM []b
 	return certPEM, keyPEM, caPEM, nil
 }
 
-func CreateCertificate(ctx context.Context, clnt client.Client, obj *cloudresourcesv1beta1.Certificate, opts ...ObjAction) error {
-	NewObjActions(opts...).ApplyOnObject(obj)
-
-	err := clnt.Create(ctx, obj)
-	return err
-}
-
-func CreateCertificateSecret(ctx context.Context, clnt client.Client, secret *corev1.Secret, opts ...ObjAction) error {
-	NewObjActions(opts...).ApplyOnObject(secret)
-
-	// Set default type if not set
-	if secret.Type == "" {
-		secret.Type = corev1.SecretTypeTLS
+// GenerateTestCertificateWithChain generates a certificate where tls.crt contains
+// both the leaf certificate and the intermediate CA concatenated (Gardener-style chain),
+// with no separate ca.crt key. This mirrors secrets like kyma-gateway-certs.
+func GenerateTestCertificateWithChain(commonName, org string) (tlsCrtPEM []byte, keyPEM []byte, err error) {
+	certPEM, keyPEM, caPEM, err := GenerateTestCertificate(commonName, org)
+	if err != nil {
+		return nil, nil, err
 	}
-
-	// Set default certificate data if not provided
-	if len(secret.Data) == 0 {
-		certPEM, keyPEM, caPEM, err := GenerateTestCertificate("test.example.com", "Test Org")
-		if err != nil {
-			return err
-		}
-
-		secret.Data = map[string][]byte{
-			"tls.crt": certPEM,
-			"tls.key": keyPEM,
-			"ca.crt":  caPEM,
-		}
-	}
-
-	err := clnt.Create(ctx, secret)
-	return err
+	// Concatenate leaf cert + intermediate CA into tls.crt (Gardener convention)
+	tlsCrtPEM = append(certPEM, caPEM...)
+	return tlsCrtPEM, keyPEM, nil
 }

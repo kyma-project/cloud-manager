@@ -15,8 +15,8 @@ func parseCertificateData(ctx context.Context, st composed.State) (error, contex
 	logger := composed.LoggerFromCtx(ctx)
 	cert := state.ObjAsCertificate()
 
-	certificate, ok := state.secret.Data["tls.crt"]
-	if !ok || len(certificate) == 0 {
+	tlsCrt, ok := state.secret.Data["tls.crt"]
+	if !ok || len(tlsCrt) == 0 {
 		logger.Error(fmt.Errorf("missing tls.crt"), "Secret missing required key tls.crt")
 		return composed.NewStatusPatcherComposed(cert).
 			MutateStatus(func(c *cloudresourcesv1beta1.Certificate) {
@@ -37,10 +37,10 @@ func parseCertificateData(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	certificateChain := state.secret.Data["ca.crt"]
-
-	block, _ := pem.Decode(certificate)
-	if block == nil {
+	// tls.crt may contain a full chain; only the first PEM block (leaf) is imported.
+	// Any intermediates embedded in tls.crt are intentionally discarded — use ca.crt for the chain.
+	leafBlock, _ := pem.Decode(tlsCrt)
+	if leafBlock == nil {
 		logger.Error(fmt.Errorf("failed to decode PEM"), "Failed to decode certificate PEM")
 		return composed.NewStatusPatcherComposed(cert).
 			MutateStatus(func(c *cloudresourcesv1beta1.Certificate) {
@@ -50,7 +50,7 @@ func parseCertificateData(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	_, err := x509.ParseCertificate(block.Bytes)
+	_, err := x509.ParseCertificate(leafBlock.Bytes)
 	if err != nil {
 		logger.Error(err, "Failed to parse X.509 certificate")
 		return composed.NewStatusPatcherComposed(cert).
@@ -62,9 +62,9 @@ func parseCertificateData(ctx context.Context, st composed.State) (error, contex
 	}
 
 	state.certificateData = &CertificateData{
-		Certificate:      certificate,
+		Certificate:      pem.EncodeToMemory(leafBlock),
 		PrivateKey:       privateKey,
-		CertificateChain: certificateChain,
+		CertificateChain: state.secret.Data["ca.crt"],
 	}
 
 	logger.Info("Certificate data parsed successfully")

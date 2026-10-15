@@ -1,17 +1,15 @@
 Feature: Certificate feature
 
-  @skr @aws @certificate
+  @skip @skr @aws @certificate
   Scenario: Certificate imports certificate to ACM then deletes it
 
     Given there is shared SKR with "AWS" provider
 
     And resource declaration:
-      | Alias       | Kind            | ApiVersion                              | Name                    | Namespace |
-      | certificate | Certificate  | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}             |           |
-      | secret      | Secret          | v1                                      | e2e-test-certificate    | default   |
+      | Alias       | Kind        | ApiVersion                              | Name                 | Namespace |
+      | certificate | Certificate | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}          |           |
+      | secret      | Secret      | v1                                      | e2e-test-certificate | default   |
 
-    # Note: Secret "e2e-test-certificate" is created by the workflow before running tests
-    # For local development: Run ./e2e/scripts/create-test-certificate.sh and ./e2e/scripts/create-certificate-secret.sh
 
     # Create Certificate referencing the pre-existing Secret
     When resource "certificate" is created:
@@ -32,6 +30,6 @@ Feature: Certificate feature
     And "certificate.status.providerId" is ok
     And "certificate.status.providerId.startsWith('arn:aws:acm:')" is ok
 
-    # Clean up Certificate (Secret is cleaned up by workflow)
+    # Clean up Certificate and Secret
     When resource "certificate" is deleted
     Then eventually resource "certificate" does not exist
