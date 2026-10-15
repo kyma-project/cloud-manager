@@ -79,7 +79,7 @@ require (
 	github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/client_model v0.6.3
 	github.com/rdumont/assistdog v0.0.0-20240711132531-b5b791dd7452
-	github.com/rodaine/table v1.3.1
+	github.com/rodaine/table v1.4.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
 	github.com/thomaspoignant/go-feature-flag v1.55.3
