@@ -31,7 +31,6 @@ func loadRemoteRouteTables(ctx context.Context, st composed.State) (error, conte
 	if remoteNet.Status.Network == nil || remoteNet.Status.Network.Alicloud == nil {
 		return nil, ctx
 	}
-
 	remoteVpcId := remoteNet.Status.Network.Alicloud.VpcId
 	tables, err := state.remoteClient.DescribeRouteTables(ctx, remoteVpcId)
 	if err != nil {

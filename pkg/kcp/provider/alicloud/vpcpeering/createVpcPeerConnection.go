@@ -20,26 +20,26 @@ func createVpcPeerConnection(ctx context.Context, st composed.State) (error, con
 	}
 
 	obj := state.ObjAsVpcPeering()
-	remoteNet := state.RemoteNetwork()
 
-	if remoteNet.Status.Network == nil || remoteNet.Status.Network.Alicloud == nil {
-		return composed.LogErrorAndReturn(
-			fmt.Errorf("remote network Alicloud status not populated yet"),
-			"Remote network Alicloud status is nil, requeueing",
-			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
-			ctx,
-		)
+	// If Status.Id is set but the load action found no matching connection, the cloud object
+	// was externally deleted. Do not create a new one — requeue and let the operator decide.
+	if obj.Status.Id != "" {
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
 	if state.localVpcId == "" {
 		return composed.LogErrorAndReturn(
-			fmt.Errorf("local VPC ID not yet available from VpcNetwork"),
+			fmt.Errorf("local VPC ID not yet available from LocalNetwork"),
 			"Local VPC ID is empty, requeueing",
 			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
 			ctx,
 		)
 	}
 
+	remoteNet := state.RemoteNetwork()
+	if remoteNet.Status.Network == nil || remoteNet.Status.Network.Alicloud == nil {
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+	}
 	remoteVpcId := remoteNet.Status.Network.Alicloud.VpcId
 	remoteAccountId := remoteNet.Status.Network.Alicloud.AccountId
 
@@ -59,14 +59,25 @@ func createVpcPeerConnection(ctx context.Context, st composed.State) (error, con
 		obj.GetName(),
 	)
 	if err != nil {
-		meta.RemoveStatusCondition(&obj.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
-		meta.SetStatusCondition(&obj.Status.Conditions, metav1.Condition{
+		changed := false
+		if meta.RemoveStatusCondition(&obj.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady) {
+			changed = true
+		}
+		if meta.SetStatusCondition(&obj.Status.Conditions, metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
 			Message: fmt.Sprintf("Failed creating VpcPeerConnection: %s", err.Error()),
-		})
-		obj.Status.State = string(cloudcontrolv1beta1.StateWarning)
+		}) {
+			changed = true
+		}
+		if obj.Status.State != string(cloudcontrolv1beta1.StateWarning) {
+			obj.Status.State = string(cloudcontrolv1beta1.StateWarning)
+			changed = true
+		}
+		if !changed {
+			return composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx
+		}
 		return composed.PatchStatus(obj).
 			ErrorLogMessage("Error patching AliCloud VpcPeering status after create failure").
 			FailedError(composed.StopWithRequeue).

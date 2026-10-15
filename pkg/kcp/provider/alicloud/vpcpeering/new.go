@@ -39,7 +39,9 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"alicloudVpcPeering-non-delete",
 					actions.PatchAddCommonFinalizer(),
+					checkNetworkTag,
 					createVpcPeerConnection,
+					acceptVpcPeerConnection,
 					waitVpcPeeringActive,
 					createRoutes,
 					createRemoteRoutes,
