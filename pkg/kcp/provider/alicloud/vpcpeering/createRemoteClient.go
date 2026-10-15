@@ -29,6 +29,13 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 	state.remoteRegion = remoteRegion
 
 	if remoteAccountId != state.localAccountId {
+		// On deletion, proceed with the local client so routes and the peering object can be
+		// cleaned up even without cross-account support. Remote-side cleanup (remoteRoutesDelete)
+		// is gated by DeleteRemotePeering, so skipping the remote client here is safe.
+		if state.ObjAsVpcPeering().DeletionTimestamp != nil {
+			state.remoteClient = state.client
+			return nil, ctx
+		}
 		// Cross-account peering requires assumeRoleArn support (pending rebase of #2199 into this branch).
 		return composed.LogErrorAndReturn(
 			fmt.Errorf("cross-account AliCloud VPC peering not yet supported: remote account %s differs from local account %s", remoteAccountId, state.localAccountId),
