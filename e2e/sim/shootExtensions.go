@@ -15,8 +15,8 @@ type shootCertIssuers struct {
 }
 
 type shootDNSConfig struct {
-	APIVersion                    string                      `json:"apiVersion"`
-	Kind                          string                      `json:"kind"`
+	APIVersion                    string                       `json:"apiVersion"`
+	Kind                          string                       `json:"kind"`
 	DNSProviderReplication        *shootDNSProviderReplication `json:"dnsProviderReplication,omitempty"`
 	Providers                     []shootDNSProvider           `json:"providers,omitempty"`
 	SyncProvidersFromShootSpecDNS *bool                        `json:"syncProvidersFromShootSpecDNS,omitempty"`
