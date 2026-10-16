@@ -1,6 +1,7 @@
 package sim
 
 import (
+	"encoding/json"
 	"fmt"
 	"maps"
 	"time"
@@ -18,6 +19,7 @@ import (
 	e2elib "github.com/kyma-project/cloud-manager/e2e/lib"
 	"github.com/kyma-project/cloud-manager/pkg/external/infrastructuremanagerv1"
 	sapconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/config"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
@@ -102,9 +104,82 @@ func (b *ShootBuilder) WithRuntime(rt *infrastructuremanagerv1.Runtime) *ShootBu
 		Name: cloudProfileName,
 	}
 
+	domain := fmt.Sprintf("%s.%s", rt.Spec.Shoot.Name, b.config.DNSBaseDomain)
+
+	isPrimary := true
+	b.obj.Spec.DNS = &gardenertypes.DNS{
+		Domain: new(domain),
+		//nolint:staticcheck
+		Providers: []gardenertypes.DNSProvider{
+			{
+				Domains: &gardenertypes.DNSIncludeExclude{ //nolint:staticcheck
+					Include: []string{domain},
+				},
+				Primary: &isPrimary, //nolint:staticcheck
+				Type:    new("google-clouddns"),
+				CredentialsRef: &autoscalingv1.CrossVersionObjectReference{
+					APIVersion: "v1",
+					Kind:       "Secret",
+					Name:       b.config.DNSCredential,
+				},
+			},
+		},
+	}
+
+	certJSON, err := json.Marshal(&shootCertConfig{
+		APIVersion:   "service.cert.extensions.gardener.cloud/v1alpha1",
+		Kind:         "CertConfig",
+		ShootIssuers: &shootCertIssuers{Enabled: true},
+	})
+	if err != nil {
+		b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("failed to marshal cert config: %w", err))
+		return b
+	}
+
+	// credentials is a named resource reference — must match an entry in spec.resources
+	dnsCredentialRef := "shoot-dns-service-" + b.config.DNSCredential
+
+	dnsJSON, err := json.Marshal(&shootDNSConfig{
+		APIVersion:                    "service.dns.extensions.gardener.cloud/v1alpha1",
+		Kind:                          "DNSConfig",
+		DNSProviderReplication:        &shootDNSProviderReplication{Enabled: true},
+		SyncProvidersFromShootSpecDNS: new(true),
+		Providers: []shootDNSProvider{
+			{
+				Domains:     &shootDNSIncludeExclude{Include: []string{domain}},
+				Credentials: new(dnsCredentialRef),
+				Type:        new("google-clouddns"),
+			},
+		},
+	})
+	if err != nil {
+		b.errWithRuntime = append(b.errWithRuntime, fmt.Errorf("failed to marshal dns config: %w", err))
+		return b
+	}
+
+	b.obj.Spec.Resources = []gardenertypes.NamedResourceReference{
+		{
+			Name: dnsCredentialRef,
+			ResourceRef: autoscalingv1.CrossVersionObjectReference{
+				APIVersion: "v1",
+				Kind:       "Secret",
+				Name:       b.config.DNSCredential,
+			},
+		},
+	}
+
 	b.obj.Spec.Extensions = []gardenertypes.Extension{
 		{
-			Type: "shoot-oidc-service",
+			Type:     "shoot-oidc-service",
+			Disabled: new(false),
+		},
+		{
+			Type:           "shoot-cert-service",
+			ProviderConfig: &runtime.RawExtension{Raw: certJSON},
+		},
+		{
+			Type:           "shoot-dns-service",
+			ProviderConfig: &runtime.RawExtension{Raw: dnsJSON},
 		},
 	}
 
