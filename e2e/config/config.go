@@ -49,6 +49,9 @@ type ConfigType struct {
 	TfWorkspaceDir string `yaml:"tfWorkspaceDir" json:"tfWorkspaceDir"`
 	TfCmd          string `yaml:"tfCmd" json:"tfCmd"`
 
+	DNSBaseDomain string `yaml:"dnsBaseDomain" json:"dnsBaseDomain"`
+	DNSCredential string `yaml:"dnsCredential" json:"dnsCredential"`
+
 	DownloadGardenSecrets map[string]map[string]string `yaml:"downloadGardenSecrets" json:"downloadGardenSecrets"`
 }
 

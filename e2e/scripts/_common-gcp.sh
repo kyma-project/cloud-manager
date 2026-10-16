@@ -44,6 +44,12 @@ initSANamePeering() {
   return 0
 }
 
+initSANameDNS() {
+  local default_value=$1
+  SA_NAME_DNS="${SA_NAME_DNS:-$default_value}"
+  return 0
+}
+
 initRoleNameDefault() {
   local default_value=$1
   ROLE_NAME_DEFAULT="${ROLE_NAME_DEFAULT:-$default_value}"
@@ -59,6 +65,12 @@ initRoleNamePeering() {
 initRoleNameRemotePeering() {
   local default_value=$1
   ROLE_NAME_REMOTE_PEERING="${ROLE_NAME_REMOTE_PEERING:-$default_value}"
+  return 0
+}
+
+initRoleNameDNS() {
+  local default_value=$1
+  ROLE_NAME_DNS="${ROLE_NAME_DNS:-$default_value}"
   return 0
 }
 
@@ -83,10 +95,12 @@ gcpInit() {
 
   initSANameDefault 'cloud-manager-e2e'
   initSANamePeering 'cloud-manager-peering-e2e'
+  initSANameDNS 'kyma-phx-dns'
 
   initRoleNameDefault 'cloud_manager_e2e'
   initRoleNamePeering 'cloud_manager_peering_e2e'
   initRoleNameRemotePeering 'cloud_manager_remote_peering_e2e'
+  initRoleNameDNS 'roles/dns.admin'
 
   echo "GCP_PROJECT=$GCP_PROJECT"
   echo "SA_NAME_DEFAULT=$SA_NAME_DEFAULT"
