@@ -1,9 +1,8 @@
 package util
 
 import (
-	"bytes"
 	"maps"
-	"text/template"
+	"strings"
 )
 
 // MergeMaps merges two maps of the same key-value types.
@@ -29,7 +28,7 @@ func MergeMaps[K comparable, V any](first, second map[K]V, onCollisionOverwrite 
 	return result
 }
 
-// ParseTemplatesMapToBytesMap Templates format map[k]="Hello {{.name}}"
+// ParseTemplatesMapToBytesMap interpolates values using {{.key}} syntax against dataMap keys.
 func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[string][]byte {
 	result := map[string][]byte{}
 
@@ -40,19 +39,14 @@ func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[st
 		dataMap = map[string]string{}
 	}
 
+	pairs := make([]string, 0, len(dataMap)*2)
+	for k, v := range dataMap {
+		pairs = append(pairs, "{{."+k+"}}", v)
+	}
+	r := strings.NewReplacer(pairs...)
+
 	for k, v := range templatesMap {
-		var parseResult bytes.Buffer
-		tpl, err := template.New(k).Parse(v)
-		if err != nil {
-			result[k] = []byte(v)
-			continue
-		}
-		err = tpl.Execute(&parseResult, dataMap)
-		if err != nil {
-			result[k] = []byte(v)
-			continue
-		}
-		result[k] = parseResult.Bytes()
+		result[k] = []byte(r.Replace(v))
 	}
 
 	return result
