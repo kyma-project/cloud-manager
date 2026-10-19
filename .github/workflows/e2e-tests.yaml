@@ -138,15 +138,53 @@ jobs:
         run: |
           DETAILS=$(go run ./e2e/cmd instance show -a shared-$PROVIDER)
           echo "$DETAILS"
-          
+
           echo "# Instance Details :information_source:" >> $GITHUB_STEP_SUMMARY
           echo "$DETAILS" | awk '{print "* " toupper(substr($0,1,1)) substr($0,2)}' >> $GITHUB_STEP_SUMMARY
 
-      - name: Add module to shared instance
+          for KEY in globalAccount subAccount runtimeID shootName; do
+            VALUE=$(echo "$DETAILS" | awk -F': ' -v k="$KEY" '$1==k {print $2; exit}')
+            echo "$KEY=$VALUE" >> $GITHUB_ENV
+          done
+
+      - name: Add cloud-manager module to shared instance
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
           go run ./e2e/cmd instance modules add -m cloud-manager -a shared-$PROVIDER --wait --verbose --timeout 5m
+
+      - name: Check Gardener Cluster
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+        run: |
+          echo "Waiting up to 2 minutes for GardenerCluster kcp-system/$runtimeID to become Ready"
+          DEADLINE=$(( $(date +%s) + 120 ))
+          while true; do
+            STATE=$(kubectl get gardenercluster "$runtimeID" -n kcp-system -o jsonpath='{.status.state}' 2>/dev/null || true)
+            if [ "$STATE" = "Ready" ]; then
+              echo "GardenerCluster $runtimeID is Ready"
+              break
+            fi
+            if [ "$(date +%s)" -ge "$DEADLINE" ]; then
+              echo "::error::GardenerCluster $runtimeID did not become Ready within 2 minutes (last state: '${STATE:-<not found>}')"
+              kubectl get gardenercluster "$runtimeID" -n kcp-system -o yaml || true
+              exit 1
+            fi
+            echo "GardenerCluster $runtimeID state: '${STATE:-<not found>}', waiting..."
+            sleep 5
+          done
+
+      - name: Install Istio module
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+        run: |
+          go run ./e2e/cmd instance modules install -a shared-$PROVIDER -m istio
+
+      - name: Install ApiGateway module
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+        run: |
+          go run ./e2e/cmd instance modules install -a shared-$PROVIDER -m api-gateway
 
       - name: run e2e tests
         env:
