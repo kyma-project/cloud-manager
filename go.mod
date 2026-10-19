@@ -52,13 +52,13 @@ require (
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/fatih/color v1.19.0
 	github.com/fsnotify/fsnotify v1.10.1
-	github.com/gardener/gardener v1.153.0
-	github.com/gardener/gardener-extension-provider-alicloud v1.72.0
-	github.com/gardener/gardener-extension-provider-aws v1.73.0
-	github.com/gardener/gardener-extension-provider-azure v1.62.1
-	github.com/gardener/gardener-extension-provider-gcp v1.53.4
-	github.com/gardener/gardener-extension-provider-openstack v1.57.0
-	github.com/gardener/gardener/pkg/apis v1.153.0
+	github.com/gardener/gardener v1.153.1
+	github.com/gardener/gardener-extension-provider-alicloud v1.74.0
+	github.com/gardener/gardener-extension-provider-aws v1.75.1
+	github.com/gardener/gardener-extension-provider-azure v1.65.1
+	github.com/gardener/gardener-extension-provider-gcp v1.56.0
+	github.com/gardener/gardener-extension-provider-openstack v1.58.0
+	github.com/gardener/gardener/pkg/apis v1.153.1
 	github.com/go-logr/logr v1.4.4
 	github.com/go-logr/zapr v1.3.0
 	github.com/go-viper/mapstructure/v2 v2.5.0
@@ -180,7 +180,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nikunjy/rules v1.5.0 // indirect
-	github.com/oklog/ulid/v2 v2.1.2 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/common v0.72.0 // indirect
