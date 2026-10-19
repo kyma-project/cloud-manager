@@ -48,6 +48,8 @@ runs:
       run: |
         cat <<EOF > ./tmp/e2e-config.yaml
         gardenKubeconfig: $PWD/kubeconfig-garden.yaml
+        dnsBaseDomain: phx.dev.kyma.ondemand.com
+        dnsCredential: cm-e2e-dns-gcp
         shootPrefix: pp
         kcpNamespace: kcp-system
         gardenNamespace: garden-spm-test01
