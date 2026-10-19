@@ -98,6 +98,17 @@ runs:
           cm-e2e-default-alicloud:
             ALICLOUD_ACCESS_KEY: accessKeyID
             ALICLOUD_SECRET_KEY: accessKeySecret
+        modules:
+          istio:
+            repository: github.com/kyma-project/istio
+            version: latest
+            default: istio-default-cr.yaml
+            manifest: istio-manager.yaml
+          api-gateway:
+            repository: github.com/kyma-project/api-gateway
+            version: latest
+            default: apigateway-default-cr.yaml
+            manifest: api-gateway-manager.yaml
         EOF
 
     - name: List directory
