@@ -211,6 +211,24 @@ jobs:
             echo
           fi
 
+      - name: Uninstall ApiGateway module
+        if: always() && env.INPUTSOK != ''
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+        run: |
+          if [ -f "$KUBECONFIG" ]; then
+            go run ./e2e/cmd instance modules install --delete -a shared-$PROVIDER -m api-gateway
+          fi
+
+      - name: Uninstall Istio module
+        if: always() && env.INPUTSOK != ''
+        env:
+          KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+        run: |
+          if [ -f "$KUBECONFIG" ]; then
+            go run ./e2e/cmd instance modules install --delete -a shared-$PROVIDER -m istio
+          fi
+
         # task "Cleaning extended API groups" failed: 1 error occurred:
         #  * retry failed with context deadline exceeded, last error: remaining objects are still present:
         # *v1.CustomResourceDefinition /cloudresources.cloud-resources.kyma-project.io
@@ -233,7 +251,7 @@ jobs:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
         run: |
           if [ -f "$KUBECONFIG" ]; then
-            go run ./e2e/cmd instance module remove --alias shared-$PROVIDER --module cloud-manager
+            go run ./e2e/cmd instance modules remove --alias shared-$PROVIDER --module cloud-manager
             sleep 10
           fi
 
