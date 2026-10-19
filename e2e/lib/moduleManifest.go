@@ -18,7 +18,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -392,7 +391,7 @@ func ensureNamespace(ctx context.Context, kubeClient client.Client, name string)
 	if !apierrors.IsNotFound(err) {
 		return fmt.Errorf("error getting namespace %s: %w", name, err)
 	}
-	ns = &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
+	ns = &corev1.Namespace{Name: name}
 	if err := kubeClient.Create(ctx, ns); err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating namespace %s: %w", name, err)
 	}
