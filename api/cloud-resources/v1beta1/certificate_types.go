@@ -122,7 +122,7 @@ func (in *Certificate) SetStatusProcessing() {
 	in.Status.State = StateProcessing
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
-		Status:             metav1.ConditionFalse,
+		Status:             metav1.ConditionUnknown,
 		ObservedGeneration: in.Generation,
 		Reason:             ReasonProcessing,
 		Message:            ReasonProcessing,
