@@ -120,6 +120,8 @@ The following resources were studied to reach this design. They are listed here 
 | 05 | Typed Provider Sub-Struct | A typed `spec.<provider>` sub-struct with mutual exclusion keeps provider-specific configuration fully validated within a shared envelope |
 | 06 | Portable Container with Unstructured Payload | When the provider-native payload has no meaningful cross-provider schema, CM owns the typed envelope while the payload is passed through for the cloud provider to validate |
 
+For more information, please check [blueprints](blueprints/README.md).
+
 **Industry tools studied:**
 
 - **Crossplane v2** (CNCF Graduated) — XRD + Composition model separates the API contract from implementation; continuous cloud reconciliation. *Taken:* the principle that the user-facing schema is pure intent and the controller does the translation. *Left:* the need for users to choose a `compositionSelector` or know which Composition to use.
