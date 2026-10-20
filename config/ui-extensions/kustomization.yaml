@@ -9,6 +9,8 @@ resources:
 #  - scopes
   - azurevpcpeerings
   - gcpredisinstances
+  - alicloudredisinstances
+  - alicloudredisclusters
 
 labels:
   - includeSelectors: true
