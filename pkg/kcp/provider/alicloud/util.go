@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"math/big"
@@ -98,6 +99,16 @@ func GeneratePassword() string {
 		b[i], b[j] = b[j], b[i]
 	}
 	return string(b)
+}
+
+// GenerateToken returns a random 32-char hex string. It is used as a seed for the
+// idempotency token (not a credential), so it has no password-complexity rules.
+func GenerateToken() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		panic(fmt.Sprintf("crypto/rand failure: %v", err))
+	}
+	return hex.EncodeToString(b)
 }
 
 // BuildRequiredCidrs returns the unique list of CIDRs that must be present in the security-IP list.
