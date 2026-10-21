@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kyma-project/cloud-manager/pkg/common/cloudmanager"
 	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
@@ -172,19 +173,14 @@ func main() {
 	skrRegistry := skrruntime.NewRegistry(skrScheme)
 	activeSkrCollection := skrruntime.NewActiveSkrCollection()
 
-	pprofBindAddress := ""
-	enablePprof := os.Getenv("ENABLE_PPROF") == "true"
-	if enablePprof {
-		pprofBindAddress = os.Getenv("PPROF_BIND_ADDRESS")
-		if pprofBindAddress == "" {
-			pprofBindAddress = ":8082"
-		}
-	}
+	restConfig := ctrl.GetConfigOrDie()
+	cloudmanager.Config.ApplyToRestConfig(restConfig)
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, err := ctrl.NewManager(restConfig, ctrl.Options{
 		BaseContext: func() context.Context {
 			return baseCtx
 		},
+		Controller:             cloudmanager.Config.GetManagerControllerConfig(),
 		Scheme:                 kcpScheme,
 		Metrics:                metricsserver.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress: probeAddr,
@@ -207,7 +203,7 @@ func main() {
 				Unstructured: true,
 			},
 		},
-		PprofBindAddress: pprofBindAddress,
+		PprofBindAddress: cloudmanager.Config.GetManagerPprofBindAddress(),
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
