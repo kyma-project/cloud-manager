@@ -48,7 +48,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	if password == "" {
 		password = alicloud.GeneratePassword()
 		kcp.Status.AuthString = password
-		kcp.Status.TokenSeed = alicloud.GeneratePassword()
+		kcp.Status.TokenSeed = alicloud.GenerateToken()
 		if err := state.UpdateObjStatus(ctx); err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error persisting AliCloud r-kvstore instance auth string before create",
@@ -85,7 +85,7 @@ func tryCreateInstanceInVSwitches(ctx context.Context, state *State, vSwitchIds 
 	allZonesFailed := true
 
 	for _, vSwitchId := range vSwitchIds {
-		// "v4" rotates away from v3 tokens that omitted password and EngineVersion.
+		// "v4" rotates away from v3 tokens that omitted the seed and EngineVersion.
 		tokenInput := fmt.Sprintf("%s%s%s%s%s%dv4",
 			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
