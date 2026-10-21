@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/common/cloudmanager"
 	"github.com/kyma-project/cloud-manager/pkg/config"
 	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
@@ -30,6 +31,7 @@ func CreateNewConfigAndLoad() config.Config {
 }
 
 func LoadConfigInstance(cfg config.Config) {
+	cloudmanager.InitConfig(cfg, nil)
 	awsconfig.InitConfig(cfg)
 	azureconfig.InitConfig(cfg)
 	alicloudconfig.InitConfig(cfg)
