@@ -2,7 +2,6 @@ package rediscluster
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -81,13 +80,14 @@ func tryCreateClusterInVSwitches(ctx context.Context, state *State, vSwitchIds [
 	for _, vSwitchId := range vSwitchIds {
 		// "v5" suffix rotates tokens away from v4 tokens that included password.
 		// Different shard/replica configs must not share a token.
-		tokenInput := fmt.Sprintf("%s%s%s%d%dv5",
+		tokenHash := alicloud.BuildIdempotencyToken(
 			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
-			kcp.Spec.Instance.Alicloud.ShardCount,
-			kcp.Spec.Instance.Alicloud.ReplicasPerShard,
+			fmt.Sprintf("%d%dv5",
+				kcp.Spec.Instance.Alicloud.ShardCount,
+				kcp.Spec.Instance.Alicloud.ReplicasPerShard,
+			),
 		)
-		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenInput)))[:32] //nolint:gosec
 
 		opts := alicloudclient.CreateInstanceOptions{
 			InstanceName:  kcp.Name,

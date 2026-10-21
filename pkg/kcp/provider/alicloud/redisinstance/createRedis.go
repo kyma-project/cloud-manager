@@ -2,7 +2,6 @@ package redisinstance
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -86,12 +85,11 @@ func tryCreateInstanceInVSwitches(ctx context.Context, state *State, vSwitchIds 
 		// "v3" suffix rotates tokens away from v2 tokens that included password.
 		// Different ReadOnlyCount values must not share a token — AliCloud would
 		// return the existing instance without applying the new replica count.
-		tokenInput := fmt.Sprintf("%s%s%s%dv3",
+		tokenHash := alicloud.BuildIdempotencyToken(
 			string(kcp.UID),
 			kcp.Spec.Instance.Alicloud.InstanceClass, vSwitchId,
-			kcp.Spec.Instance.Alicloud.ReadOnlyCount,
+			fmt.Sprintf("%dv3", kcp.Spec.Instance.Alicloud.ReadOnlyCount),
 		)
-		tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenInput)))[:32] //nolint:gosec
 
 		opts := alicloudclient.CreateInstanceOptions{
 			InstanceName:  kcp.Name,
