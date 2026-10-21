@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"math/big"
@@ -98,6 +99,15 @@ func GeneratePassword() string {
 		b[i], b[j] = b[j], b[i]
 	}
 	return string(b)
+}
+
+// BuildIdempotencyToken returns a 32-char hex token derived from the given
+// inputs, used as the AliCloud CreateInstance idempotency Token. It hashes only
+// the provided non-sensitive inputs; the instance password is deliberately kept
+// out of this function so credentials never reach the hashing code path.
+func BuildIdempotencyToken(parts ...string) string {
+	sum := sha256.Sum256([]byte(strings.Join(parts, "")))
+	return fmt.Sprintf("%x", sum)[:32]
 }
 
 // BuildRequiredCidrs returns the unique list of CIDRs that must be present in the security-IP list.
