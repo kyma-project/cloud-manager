@@ -14,7 +14,6 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 	cert := state.ObjAsCertificate()
 
 	if !state.certificateNeedsUpdate {
-		logger.Info("Certificate update not needed, skipping import")
 		return nil, ctx
 	}
 

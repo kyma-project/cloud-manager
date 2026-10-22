@@ -1,14 +1,21 @@
 Feature: Certificate feature
 
-  @skip @skr @aws @certificate
+  @skr @aws @certificate
   Scenario: Certificate imports certificate to ACM then deletes it
 
     Given there is shared SKR with "AWS" provider
 
     And resource declaration:
-      | Alias       | Kind        | ApiVersion                              | Name                 | Namespace |
-      | certificate | Certificate | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}          |           |
-      | secret      | Secret      | v1                                      | e2e-test-certificate | default   |
+      | Alias        | Kind        | ApiVersion                              | Name               | Namespace    |
+      | certificate  | Certificate | cloud-resources.kyma-project.io/v1beta1 | e2e-${scenarioId}  |              |
+      | secret       | Secret      | v1                                      | kyma-gateway-certs | istio-system |
+      | gardenerCert | Certificate | cert.gardener.cloud/v1alpha1            | kyma-tls-cert      | istio-system |
+
+
+    # Wait for pre-existing gardener Certificate (kyma-tls-cert) to be Ready
+    Then eventually "findConditionTrue(gardenerCert, 'Ready')" is ok, unless:
+      | findConditionFalse(gardenerCert, 'Ready') |
+      | #timeout=10m                              |
 
 
     # Create Certificate referencing the pre-existing Secret
@@ -18,18 +25,17 @@ Feature: Certificate feature
       kind: Certificate
       spec:
         secretRef:
-          name: e2e-test-certificate
-          namespace: default
+          name: ${_.secret.name}
+          namespace: ${_.secret.namespace}
       """
 
-    Then eventually "certificate.status.state == 'Ready'" is ok, unless:
-      | certificate.status.state == 'Error' |
-      | #timeout=10m                        |
+    Then eventually "findConditionTrue(certificate, 'Ready')" is ok, unless:
+      | findConditionFalse(certificate, 'Ready') |
+      | #timeout=10m                             |
 
-    And "findConditionTrue(certificate, 'Ready')" is ok
     And "certificate.status.providerId" is ok
     And "certificate.status.providerId.startsWith('arn:aws:acm:')" is ok
 
-    # Clean up Certificate and Secret
+    # Clean up
     When resource "certificate" is deleted
     Then eventually resource "certificate" does not exist
