@@ -23,6 +23,10 @@ apiDisabled:
       query: feature == "waf"
       variation: disabled
 
+    - name: Disable Certificate
+      query: feature == "certificate"
+      variation: disabled
+
     - name: Disable AzureManagedRedis
       query: feature == "azureManagedRedis"
       variation: disabled
