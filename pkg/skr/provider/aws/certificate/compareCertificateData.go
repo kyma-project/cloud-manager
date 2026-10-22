@@ -45,7 +45,6 @@ func compareCertificateData(ctx context.Context, st composed.State) (error, cont
 		return nil, ctx
 	}
 
-	logger.Info("Certificate matches AWS, no update needed")
 	state.certificateNeedsUpdate = false
 	return nil, ctx
 }
