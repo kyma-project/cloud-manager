@@ -124,7 +124,7 @@ func TestParseTemplatesMapToBytesMap(t *testing.T) {
 			assert.Equal(t, 3, len(result))
 			assert.Equal(t, "Hello major laser.", string(result["greeting1"]))
 			assert.Equal(t, "Hello.", string(result["greeting2"]))
-			assert.Equal(t, "Hello. <no value>.", string(result["greeting3"]))
+			assert.Equal(t, "Hello. {{.unknown}}.", string(result["greeting3"]))
 		})
 
 		t.Run("should handle empty template map", func(t *testing.T) {
@@ -148,9 +148,9 @@ func TestParseTemplatesMapToBytesMap(t *testing.T) {
 			result := ParseTemplatesMapToBytesMap(templates, nil)
 
 			assert.Equal(t, 3, len(result))
-			assert.Equal(t, string("Hello <no value> <no value>."), string(result["greeting1"]))
+			assert.Equal(t, string("Hello {{.rank}} {{.name}}."), string(result["greeting1"]))
 			assert.Equal(t, string("Hello."), string(result["greeting2"]))
-			assert.Equal(t, string("Hello. <no value>."), string(result["greeting3"]))
+			assert.Equal(t, string("Hello. {{.unknown}}."), string(result["greeting3"]))
 		})
 
 	})
