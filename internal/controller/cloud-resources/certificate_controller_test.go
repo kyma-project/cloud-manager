@@ -103,7 +103,7 @@ var _ = Describe("Feature: SKR Certificate", func() {
 					infra.SKR().Client(),
 					cert,
 					NewObjActions(),
-					HavingState(cloudresourcesv1beta1.StateReady),
+					HavingState(cloudresourcesv1beta1.ReasonAvailable),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
@@ -152,7 +152,7 @@ var _ = Describe("Feature: SKR Certificate", func() {
 					infra.SKR().Client(),
 					cert,
 					NewObjActions(),
-					HavingState(cloudresourcesv1beta1.StateReady),
+					HavingState(cloudresourcesv1beta1.ReasonAvailable),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
