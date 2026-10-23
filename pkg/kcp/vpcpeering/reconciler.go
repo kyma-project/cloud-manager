@@ -2,11 +2,13 @@ package vpcpeering
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/actions/focal"
 	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	alicloud "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering"
 	aws "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcpeering"
 	azure "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/vpcpeering"
 	gcp "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcpeering"
@@ -24,14 +26,16 @@ type vpcPeeringReconciler struct {
 	composedStateFactory composed.StateFactory
 	focalStateFactory    focal.StateFactory
 
-	awsStateFactory   aws.StateFactory
-	azureStateFactory azure.StateFactory
-	gcpStateFactory   gcp.StateFactory
+	alicloudStateFactory alicloud.StateFactory
+	awsStateFactory      aws.StateFactory
+	azureStateFactory    azure.StateFactory
+	gcpStateFactory      gcp.StateFactory
 }
 
 func NewVpcPeeringReconciler(
 	composedStateFactory composed.StateFactory,
 	focalStateFactory focal.StateFactory,
+	alicloudStateFactory alicloud.StateFactory,
 	awsStateFactory aws.StateFactory,
 	azureStateFactory azure.StateFactory,
 	gcpStateFactory gcp.StateFactory,
@@ -39,6 +43,7 @@ func NewVpcPeeringReconciler(
 	return &vpcPeeringReconciler{
 		composedStateFactory: composedStateFactory,
 		focalStateFactory:    focalStateFactory,
+		alicloudStateFactory: alicloudStateFactory,
 		awsStateFactory:      awsStateFactory,
 		azureStateFactory:    azureStateFactory,
 		gcpStateFactory:      gcpStateFactory,
@@ -79,6 +84,7 @@ func (r *vpcPeeringReconciler) newAction() composed.Action {
 				composed.BuildSwitchAction(
 					"providerSwitch",
 					nil,
+					composed.NewCase(statewithscope.AlicloudProviderPredicate, alicloud.New(r.alicloudStateFactory)),
 					composed.NewCase(statewithscope.AwsProviderPredicate, aws.New(r.awsStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azure.New(r.azureStateFactory)),
 					composed.NewCase(statewithscope.GcpProviderPredicate, gcp.New(r.gcpStateFactory)),
