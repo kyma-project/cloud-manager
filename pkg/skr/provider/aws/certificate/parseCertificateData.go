@@ -50,7 +50,7 @@ func parseCertificateData(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	_, err := x509.ParseCertificate(leafBlock.Bytes)
+	x509Cert, err := x509.ParseCertificate(leafBlock.Bytes)
 	if err != nil {
 		logger.Error(err, "Failed to parse X.509 certificate")
 		return composed.NewStatusPatcherComposed(cert).
@@ -65,6 +65,7 @@ func parseCertificateData(ctx context.Context, st composed.State) (error, contex
 		Certificate:      pem.EncodeToMemory(leafBlock),
 		PrivateKey:       privateKey,
 		CertificateChain: state.secret.Data["ca.crt"],
+		X509:             x509Cert,
 	}
 
 	return nil, ctx

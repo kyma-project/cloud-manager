@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/utils/ptr"
 )
 
 func importCertificate(ctx context.Context, st composed.State) (error, context.Context) {
@@ -17,15 +18,13 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 		return nil, ctx
 	}
 
-	logger.Info("Importing certificate to ACM")
-
 	input := &acm.ImportCertificateInput{
 		Certificate: state.certificateData.Certificate,
 		PrivateKey:  state.certificateData.PrivateKey,
 	}
 
 	if cert.Status.ProviderId != "" {
-		input.CertificateArn = new(cert.Status.ProviderId)
+		input.CertificateArn = ptr.To(cert.Status.ProviderId)
 		logger.WithValues("arn", cert.Status.ProviderId).Info("Updating existing certificate")
 	} else {
 		input.Tags = state.convertTags()
@@ -53,5 +52,12 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 		WithValues("arn", arn).
 		Info("Certificate imported successfully")
 
-	return nil, ctx
+	return composed.NewStatusPatcherComposed(cert).
+		MutateStatus(func(c *cloudresourcesv1beta1.Certificate) {
+			c.Status.ProviderId = arn
+			c.SetStatusProcessing()
+		}).
+		OnStatusChanged(composed.Log("Certificate providerId updated after import")).
+		OnSuccess(composed.Requeue).
+		Run(ctx, state.Cluster().K8sClient())
 }
