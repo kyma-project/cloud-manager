@@ -18,7 +18,7 @@ spec:
   scope: Cluster
   versions:
     - additionalPrinterColumns:
-        - jsonPath: .status.state
+        - jsonPath: .status.conditions[?(@.type=='Ready')].reason
           name: State
           type: string
         - jsonPath: .status.providerId
@@ -137,8 +137,6 @@ spec:
                   type: string
                 providerId:
                   description: ProviderId is the provider-specific resource identifier (e.g., AWS ARN, Azure Resource ID)
-                  type: string
-                state:
                   type: string
               type: object
           required:
