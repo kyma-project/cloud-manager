@@ -67,7 +67,5 @@ func parseCertificateData(ctx context.Context, st composed.State) (error, contex
 		CertificateChain: state.secret.Data["ca.crt"],
 	}
 
-	logger.Info("Certificate data parsed successfully")
-
 	return nil, ctx
 }
