@@ -137,6 +137,9 @@ func (c *alicloudVpcPeeringClient) GetVpcPeerConnection(ctx context.Context, ins
 	}
 	resp, err := c.peerClient.GetVpcPeerConnectionAttribute(req)
 	if err != nil {
+		if IsNotFound(err) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("error getting alicloud vpc peer connection %s: %w", instanceId, err)
 	}
 	if resp.Body == nil {
