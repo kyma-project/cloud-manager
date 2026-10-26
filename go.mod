@@ -5,13 +5,13 @@ go 1.27.3
 require (
 	cloud.google.com/go/auth v0.24.1
 	cloud.google.com/go/auth/oauth2adapt v0.3.0
-	cloud.google.com/go/compute v1.73.0
-	cloud.google.com/go/filestore v1.17.0
-	cloud.google.com/go/longrunning v1.3.0
-	cloud.google.com/go/networkconnectivity v1.29.0
-	cloud.google.com/go/redis v1.27.0
-	cloud.google.com/go/resourcemanager v1.17.0
-	cloud.google.com/go/securitycentermanagement v1.7.0
+	cloud.google.com/go/compute v1.74.0
+	cloud.google.com/go/filestore v1.18.0
+	cloud.google.com/go/longrunning v1.4.0
+	cloud.google.com/go/networkconnectivity v1.30.0
+	cloud.google.com/go/redis v1.28.0
+	cloud.google.com/go/resourcemanager v1.18.0
+	cloud.google.com/go/securitycentermanagement v1.8.0
 	github.com/3th1nk/cidr v0.3.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.23.3
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.15.0
@@ -87,9 +87,9 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/zap v1.28.0
 	golang.org/x/oauth2 v0.37.0
-	google.golang.org/api v0.304.0
+	google.golang.org/api v0.308.0
 	google.golang.org/genproto v0.0.0-20260715232425-e75dac1f907d
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261019180522-ce908d29299b
 	google.golang.org/grpc v1.84.0
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v3 v3.0.1
