@@ -16,14 +16,10 @@ import (
 
 // VpcPeerInfo is a flattened view of a VpcPeerConnection, unwrapping nested SDK structs.
 type VpcPeerInfo struct {
-	InstanceId        string
-	Status            string // Creating, Accepting, Activated, Deleting, Deleted, Rejected, Expired
-	RegionId          string
-	AcceptingRegionId string
-	LocalVpcId        string   // from Vpc.VpcId
-	RemoteVpcId       string   // from AcceptingVpc.VpcId
-	RemoteIpv4Cidrs   []string // from AcceptingVpc.Ipv4Cidrs
-	LocalIpv4Cidrs    []string // from Vpc.Ipv4Cidrs
+	InstanceId      string
+	Status          string   // Creating, Accepting, Activated, Deleting, Deleted, Rejected, Expired
+	RemoteVpcId     string   // from AcceptingVpc.VpcId
+	RemoteIpv4Cidrs []string // from AcceptingVpc.Ipv4Cidrs
 }
 
 // IsTerminal reports whether the peering connection has reached a state from which
@@ -148,16 +144,8 @@ func (c *alicloudVpcPeeringClient) GetVpcPeerConnection(ctx context.Context, ins
 	}
 	b := resp.Body
 	info := &VpcPeerInfo{
-		InstanceId:        tea.StringValue(b.InstanceId),
-		Status:            tea.StringValue(b.Status),
-		RegionId:          tea.StringValue(b.RegionId),
-		AcceptingRegionId: tea.StringValue(b.AcceptingRegionId),
-	}
-	if b.Vpc != nil {
-		info.LocalVpcId = tea.StringValue(b.Vpc.VpcId)
-		for _, cidr := range b.Vpc.Ipv4Cidrs {
-			info.LocalIpv4Cidrs = append(info.LocalIpv4Cidrs, tea.StringValue(cidr))
-		}
+		InstanceId: tea.StringValue(b.InstanceId),
+		Status:     tea.StringValue(b.Status),
 	}
 	if b.AcceptingVpc != nil {
 		info.RemoteVpcId = tea.StringValue(b.AcceptingVpc.VpcId)
@@ -204,16 +192,8 @@ func (c *alicloudVpcPeeringClient) ListVpcPeerConnections(ctx context.Context, v
 		}
 		for _, p := range resp.Body.VpcPeerConnects {
 			info := VpcPeerInfo{
-				InstanceId:        tea.StringValue(p.InstanceId),
-				Status:            tea.StringValue(p.Status),
-				RegionId:          tea.StringValue(p.RegionId),
-				AcceptingRegionId: tea.StringValue(p.AcceptingRegionId),
-			}
-			if p.Vpc != nil {
-				info.LocalVpcId = tea.StringValue(p.Vpc.VpcId)
-				for _, cidr := range p.Vpc.Ipv4Cidrs {
-					info.LocalIpv4Cidrs = append(info.LocalIpv4Cidrs, tea.StringValue(cidr))
-				}
+				InstanceId: tea.StringValue(p.InstanceId),
+				Status:     tea.StringValue(p.Status),
 			}
 			if p.AcceptingVpc != nil {
 				info.RemoteVpcId = tea.StringValue(p.AcceptingVpc.VpcId)
