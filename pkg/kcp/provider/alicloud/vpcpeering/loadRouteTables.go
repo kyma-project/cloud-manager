@@ -34,6 +34,11 @@ func loadRemoteRouteTables(ctx context.Context, st composed.State) (error, conte
 	remoteVpcId := remoteNet.Status.Network.Alicloud.VpcId
 	tables, err := state.remoteClient.DescribeRouteTables(ctx, remoteVpcId)
 	if err != nil {
+		// On delete the remote client may point at the wrong account/region (cross-account delete
+		// reuses the local client), so a failed remote lookup must not wedge teardown — skip and continue.
+		if composed.IsMarkedForDeletion(state.Obj()) {
+			return composed.LogErrorAndReturn(err, "Error loading remote route tables but skipping as marked for deletion", nil, ctx)
+		}
 		return composed.LogErrorAndReturn(err, "Error loading remote route tables", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 	state.remoteRouteTables = tables
