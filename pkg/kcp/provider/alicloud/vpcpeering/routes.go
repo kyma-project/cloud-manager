@@ -74,15 +74,18 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 		return nil, ctx
 	}
 
-	changed := false
-	changed = meta.RemoveStatusCondition(obj.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
+	changed := meta.RemoveStatusCondition(obj.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
 
 	if obj.Status.RemoteId != state.vpcPeering.RemoteVpcId {
 		changed = true
 		obj.Status.RemoteId = state.vpcPeering.RemoteVpcId
 	}
 
-	if !changed && meta.IsStatusConditionTrue(*obj.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
+	// Already provisioned and nothing changed: skip the patch to avoid re-triggering reconciliation.
+	if !changed &&
+		obj.Status.Id != "" &&
+		obj.Status.RemoteId != "" &&
+		meta.IsStatusConditionTrue(*obj.Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
 		return nil, ctx
 	}
 
