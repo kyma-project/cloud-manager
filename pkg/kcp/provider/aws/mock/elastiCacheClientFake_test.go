@@ -96,7 +96,7 @@ func TestElastiCacheFake_DescribeReplicationGroupEvents(t *testing.T) {
 		client := newElastiCacheClientFake()
 		msg := "Insufficient memory"
 		client.SetAwsElastiCacheEvents("cm-test", []elasticachetypes.Event{
-			{Message: ptr.To(msg)},
+			{Message: new(msg)},
 		})
 
 		events, err := client.DescribeElastiCacheReplicationGroupEvents(context.Background(), "cm-test")
@@ -107,7 +107,7 @@ func TestElastiCacheFake_DescribeReplicationGroupEvents(t *testing.T) {
 
 	t.Run("different ids are independent", func(t *testing.T) {
 		client := newElastiCacheClientFake()
-		client.SetAwsElastiCacheEvents("rg-a", []elasticachetypes.Event{{Message: ptr.To("a")}})
+		client.SetAwsElastiCacheEvents("rg-a", []elasticachetypes.Event{{Message: new("a")}})
 
 		events, err := client.DescribeElastiCacheReplicationGroupEvents(context.Background(), "rg-b")
 		require.NoError(t, err)

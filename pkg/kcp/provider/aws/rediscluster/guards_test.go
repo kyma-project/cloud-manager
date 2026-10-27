@@ -340,7 +340,7 @@ func TestWaitElastiCacheAvailable_NonTerminalStatesRequeue(t *testing.T) {
 func TestWaitElastiCacheAvailable_CreateFailedYoung_Heals(t *testing.T) {
 	stub := newElastiCacheStub()
 	stub.describeEventsReturns = []elasticachetypes.Event{
-		{Message: ptr.To("InsufficientCacheClusterCapacity"), Date: ptr.To(time.Unix(3000, 0))},
+		{Message: new("InsufficientCacheClusterCapacity"), Date: new(time.Unix(3000, 0))},
 	}
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
@@ -432,9 +432,9 @@ func TestWaitElastiCacheAvailable_CreateFailedYoung_DeleteError_Requeues(t *test
 func TestWaitElastiCacheAvailable_CreateFailedOldTimestamp_TimeoutPicksMostRecentEvent(t *testing.T) {
 	stub := newElastiCacheStub()
 	stub.describeEventsReturns = []elasticachetypes.Event{
-		{Message: ptr.To("OlderEvent"), Date: ptr.To(time.Unix(1000, 0))},
-		{Message: ptr.To("NewestEvent"), Date: ptr.To(time.Unix(3000, 0))},
-		{Message: ptr.To("MiddleEvent"), Date: ptr.To(time.Unix(2000, 0))},
+		{Message: new("OlderEvent"), Date: new(time.Unix(1000, 0))},
+		{Message: new("NewestEvent"), Date: new(time.Unix(3000, 0))},
+		{Message: new("MiddleEvent"), Date: new(time.Unix(2000, 0))},
 	}
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
@@ -461,7 +461,7 @@ func TestWaitElastiCacheAvailable_ModifyingSnapshottingPastDeadline_Requeues(t *
 	for _, status := range []string{awsmeta.ElastiCache_MODIFYING, awsmeta.ElastiCache_SNAPSHOTTING} {
 		t.Run(status, func(t *testing.T) {
 			state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
-				Status: ptr.To(status),
+				Status: new(status),
 			}, nil)
 			state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now().Add(-3 * time.Hour)))
 			err, _ := waitElastiCacheAvailable(context.Background(), state)
@@ -576,7 +576,7 @@ func TestWaitElastiCacheAvailable_CreatingAtDeadline_Timeout(t *testing.T) {
 func TestWaitElastiCacheAvailable_CreateFailedOldTimestamp_TimeoutWithReason(t *testing.T) {
 	stub := newElastiCacheStub()
 	stub.describeEventsReturns = []elasticachetypes.Event{
-		{Message: ptr.To("InsufficientCacheClusterCapacity"), Date: ptr.To(time.Unix(3000, 0))},
+		{Message: new("InsufficientCacheClusterCapacity"), Date: new(time.Unix(3000, 0))},
 	}
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
