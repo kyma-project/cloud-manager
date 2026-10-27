@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	elasticachetypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -37,28 +38,30 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 
 	cacheState := ptr.Deref(state.elastiCacheReplicationGroup.Status, "")
 
-	// create-failed is terminal - the replication group won't recover on its own.
-	if cacheState == awsmeta.ElastiCache_CREATE_FAILED {
-		redisInstance := st.Obj().(*cloudcontrolv1beta1.RedisInstance)
+	if state.IsReplicationGroupAvailable() {
+		return nil, ctx
+	}
 
-		events, evErr := state.awsClient.DescribeElastiCacheReplicationGroupEvents(ctx, ptr.Deref(state.elastiCacheReplicationGroup.ReplicationGroupId, ""))
-		reason := ""
-		if evErr != nil {
-			logger.Error(evErr, "failed to fetch ElastiCache replication group events")
-		} else {
-			reason = latestElastiCacheEventReason(events)
-		}
+	// AVAILABLE but member clusters not yet visible — transient eventual-consistency;
+	// not subject to provisioning deadline.
+	if cacheState == awsmeta.ElastiCache_AVAILABLE {
+		logger.Info("Redis instance is not ready yet, requeueing with delay")
+		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
+	}
 
+	switch awsmeta.EvaluateProvisioningAction(cacheState, st.Obj().GetCreationTimestamp().Time, time.Now()) {
+	case awsmeta.ProvisioningActionHeal:
+		reason := createFailedEventReason(ctx, state)
 		msg := "Failed to provision RedisInstance"
 		if reason != "" {
 			msg += ": " + reason
 		}
-
 		logger.Error(
 			fmt.Errorf("ElastiCache replication group is in an unrecoverable state"),
 			"ElastiCache replication group provisioning failed",
 			"reason", reason,
 		)
+		redisInstance := st.Obj().(*cloudcontrolv1beta1.RedisInstance)
 		redisInstance.Status.State = cloudcontrolv1beta1.StateError
 		return composed.UpdateStatus(redisInstance).
 			SetExclusiveConditions(metav1.Condition{
@@ -70,16 +73,55 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 			SuccessError(composed.StopAndForget).
 			SuccessLogMsg("RedisInstance failed to provision and cannot recover in place").
 			Run(ctx, st)
+	case awsmeta.ProvisioningActionTimeout:
+		reason := ""
+		if cacheState == awsmeta.ElastiCache_CREATE_FAILED {
+			reason = createFailedEventReason(ctx, state)
+		}
+		msg := provisioningTimeoutMessage("RedisInstance", reason)
+		logger.Error(
+			fmt.Errorf("ElastiCache replication group provisioning timed out"),
+			"RedisInstance provisioning deadline exceeded",
+			"cacheState", cacheState,
+		)
+		redisInstance := st.Obj().(*cloudcontrolv1beta1.RedisInstance)
+		redisInstance.Status.State = cloudcontrolv1beta1.StateError
+		return composed.UpdateStatus(redisInstance).
+			SetExclusiveConditions(metav1.Condition{
+				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Status:  metav1.ConditionTrue,
+				Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
+				Message: msg,
+			}).
+			SuccessError(composed.StopAndForget).
+			SuccessLogMsg("RedisInstance provisioning deadline exceeded").
+			Run(ctx, st)
 	}
 
-	if state.IsReplicationGroupAvailable() {
-		return nil, ctx
-	}
-
-	// Available-but-no-members-yet is a transient eventual-consistency window, not
-	// a terminal state - requeue and let the members appear.
+	// ProvisioningActionWait — still provisioning within the deadline
 	logger.Info("Redis instance is not ready yet, requeueing with delay")
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
+}
+
+// createFailedEventReason fetches events and returns the most recent event reason, or "" on error.
+func createFailedEventReason(ctx context.Context, state *State) string {
+	logger := composed.LoggerFromCtx(ctx)
+	events, evErr := state.awsClient.DescribeElastiCacheReplicationGroupEvents(ctx, ptr.Deref(state.elastiCacheReplicationGroup.ReplicationGroupId, ""))
+	if evErr != nil {
+		logger.Error(evErr, "failed to fetch ElastiCache replication group events")
+		return ""
+	}
+	return latestElastiCacheEventReason(events)
+}
+
+// provisioningTimeoutMessage builds the terminal timeout condition message.
+func provisioningTimeoutMessage(kind, reason string) string {
+	msg := fmt.Sprintf("Failed to provision %s: provisioning did not complete within the %s deadline; delete and recreate this resource to retry",
+		kind, awsmeta.ElastiCacheProvisioningTimeout)
+	if reason != "" {
+		msg += " (cause: " + reason + ")"
+	}
+	return msg
 }
 
 // latestElastiCacheEventReason returns the Message of the most-recently dated

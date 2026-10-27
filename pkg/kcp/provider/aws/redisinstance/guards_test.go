@@ -20,6 +20,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // elastiCacheStub is a minimal awsclient.ElastiCacheClient for action-guard
@@ -310,6 +311,7 @@ func TestWaitElastiCacheAvailable_NonTerminalStatesRequeue(t *testing.T) {
 			state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 				Status: new(status),
 			}, nil)
+			state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
 			err, _ := waitElastiCacheAvailable(context.Background(), state)
 			assert.NotNil(t, err, "waitElastiCacheAvailable must requeue while RG is %q", status)
 			assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State,
@@ -326,6 +328,7 @@ func TestWaitElastiCacheAvailable_CreateFailedSurfacesError(t *testing.T) {
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
 	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
 	state.awsClient = stub
 
 	err, _ := waitElastiCacheAvailable(context.Background(), state)
@@ -351,6 +354,7 @@ func TestWaitElastiCacheAvailable_CreateFailed_NoEvents(t *testing.T) {
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
 	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
 	state.awsClient = stub
 
 	err, _ := waitElastiCacheAvailable(context.Background(), state)
@@ -371,6 +375,7 @@ func TestWaitElastiCacheAvailable_CreateFailed_EventsError(t *testing.T) {
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
 	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
 	state.awsClient = stub
 
 	err, _ := waitElastiCacheAvailable(context.Background(), state)
@@ -400,6 +405,7 @@ func TestWaitElastiCacheAvailable_CreateFailed_PicksMostRecentEvent(t *testing.T
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
 	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
 	state.awsClient = stub
 
 	_, _ = waitElastiCacheAvailable(context.Background(), state)
@@ -442,4 +448,94 @@ func TestModifyPreferredMaintenanceWindow_NoMembersSkips(t *testing.T) {
 	err, _ := modifyPreferredMaintenanceWindow(context.Background(), state)
 
 	assert.Nil(t, err, "modifyPreferredMaintenanceWindow must skip (nil) when there are no member clusters")
+}
+
+// provisioning deadline tests — use ages well outside ±1min to avoid flakiness
+// on slow machines; exact-boundary logic is covered by metadata_test.go.
+
+func TestWaitElastiCacheAvailable_CreatingOldTimestamp_Timeout(t *testing.T) {
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(awsmeta.ElastiCache_CREATING),
+	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now().Add(-3 * time.Hour)))
+	state.awsClient = newElastiCacheStub()
+
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+
+	assert.Equal(t, composed.StopAndForget, err, "timeout must StopAndForget")
+	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State)
+	cond := meta.FindStatusCondition(state.ObjAsRedisInstance().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.NotNil(t, cond)
+	assert.Equal(t, cloudcontrolv1beta1.ReasonCloudProviderError, cond.Reason)
+	assert.Contains(t, cond.Message, "delete and recreate this resource to retry")
+	assert.Contains(t, cond.Message, "2h0m0s")
+	assert.NotContains(t, cond.Message, string(awsmeta.ElastiCache_CREATE_FAILED))
+}
+
+func TestWaitElastiCacheAvailable_CreatingRecentTimestamp_Requeues(t *testing.T) {
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(awsmeta.ElastiCache_CREATING),
+	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
+
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+
+	assert.NotNil(t, err, "within-deadline creating must requeue")
+	assert.NotEqual(t, composed.StopAndForget, err)
+	assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State)
+}
+
+func TestWaitElastiCacheAvailable_DeletingOldTimestamp_Requeues(t *testing.T) {
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(awsmeta.ElastiCache_DELETING),
+	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now().Add(-3 * time.Hour)))
+
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+
+	assert.NotNil(t, err, "in-progress delete must never be timed out")
+	assert.NotEqual(t, composed.StopAndForget, err)
+	assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State)
+}
+
+func TestWaitElastiCacheAvailable_CreatingAtDeadline_Timeout(t *testing.T) {
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(awsmeta.ElastiCache_CREATING),
+	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now().Add(-awsmeta.ElastiCacheProvisioningTimeout)))
+	state.awsClient = newElastiCacheStub()
+
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+
+	assert.Equal(t, composed.StopAndForget, err, "age==deadline must be terminal")
+	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State)
+	cond := meta.FindStatusCondition(state.ObjAsRedisInstance().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.NotNil(t, cond)
+	assert.Equal(t, cloudcontrolv1beta1.ReasonCloudProviderError, cond.Reason)
+	assert.Contains(t, cond.Message, "delete and recreate this resource to retry",
+		"boundary timeout message must carry the remediation")
+}
+
+func TestWaitElastiCacheAvailable_CreateFailedOldTimestamp_TimeoutWithReason(t *testing.T) {
+	stub := newElastiCacheStub()
+	stub.describeEventsReturns = []elasticachetypes.Event{
+		{Message: ptr.To("InsufficientCacheClusterCapacity"), Date: ptr.To(time.Unix(3000, 0))},
+	}
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
+	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now().Add(-3 * time.Hour)))
+	state.awsClient = stub
+
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+
+	assert.Equal(t, composed.StopAndForget, err, "create-failed past deadline must StopAndForget")
+	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State)
+	cond := meta.FindStatusCondition(state.ObjAsRedisInstance().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.NotNil(t, cond)
+	assert.Equal(t, cloudcontrolv1beta1.ReasonCloudProviderError, cond.Reason)
+	assert.Contains(t, cond.Message, "InsufficientCacheClusterCapacity")
+	assert.Contains(t, cond.Message, "delete and recreate this resource to retry")
+	assert.NotContains(t, cond.Message, string(awsmeta.ElastiCache_CREATE_FAILED))
+	assert.Len(t, stub.describeEventsCalls, 1, "events must be fetched for create-failed timeout")
 }

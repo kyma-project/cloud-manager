@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
@@ -179,3 +180,46 @@ const (
 	ElastiCache_UserGroup_DELETING  ElastiCacheUserGroupState = "deleting"
 	ElastiCache_UserGroup_MODIFYING ElastiCacheUserGroupState = "modifying"
 )
+
+// ElastiCacheProvisioningTimeout is the maximum time allowed for an ElastiCache provisioning operation.
+const ElastiCacheProvisioningTimeout = 2 * time.Hour
+
+// ProvisioningAction is the decision returned by EvaluateProvisioningAction.
+type ProvisioningAction int
+
+const (
+	ProvisioningActionWait    ProvisioningAction = iota // keep waiting
+	ProvisioningActionTimeout                           // deadline exceeded
+	ProvisioningActionHeal                              // trigger self-heal
+)
+
+func (a ProvisioningAction) String() string {
+	switch a {
+	case ProvisioningActionWait:
+		return "Wait"
+	case ProvisioningActionTimeout:
+		return "Timeout"
+	case ProvisioningActionHeal:
+		return "Heal"
+	default:
+		return "Unknown"
+	}
+}
+
+// EvaluateProvisioningAction returns the action to take based on the ElastiCache state and elapsed time.
+// Order of evaluation is significant: DELETING is always Wait, then CREATE_FAILED within deadline is Heal,
+// then age >= timeout is Timeout, else Wait.
+func EvaluateProvisioningAction(cacheState string, createdAt, now time.Time) ProvisioningAction {
+	age := now.Sub(createdAt)
+
+	if cacheState == ElastiCache_DELETING {
+		return ProvisioningActionWait
+	}
+	if cacheState == ElastiCache_CREATE_FAILED && age < ElastiCacheProvisioningTimeout {
+		return ProvisioningActionHeal
+	}
+	if age >= ElastiCacheProvisioningTimeout {
+		return ProvisioningActionTimeout
+	}
+	return ProvisioningActionWait
+}
