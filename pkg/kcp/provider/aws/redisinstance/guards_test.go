@@ -441,6 +441,27 @@ func TestWaitElastiCacheAvailable_CreateFailedOldTimestamp_TimeoutPicksMostRecen
 	assert.NotContains(t, cond.Message, "MiddleEvent", "only the most-recent event reason must be surfaced")
 }
 
+// Regression: an already-provisioned instance that is modifying/snapshotting
+// past the 2h mark must NOT be failed by the provisioning deadline — the
+// deadline applies only to in-progress provisioning (creating/create-failed).
+func TestWaitElastiCacheAvailable_ModifyingSnapshottingPastDeadline_Requeues(t *testing.T) {
+	for _, status := range []string{awsmeta.ElastiCache_MODIFYING, awsmeta.ElastiCache_SNAPSHOTTING} {
+		t.Run(status, func(t *testing.T) {
+			state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+				Status: ptr.To(status),
+			}, nil)
+			state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now().Add(-3 * time.Hour)))
+			err, _ := waitElastiCacheAvailable(context.Background(), state)
+			assert.NotNil(t, err, "%s past the deadline must requeue", status)
+			assert.NotEqual(t, composed.StopAndForget, err, "%s must not terminate past the deadline", status)
+			assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State,
+				"an already-provisioned %s instance must not be failed by the provisioning deadline", status)
+			cond := meta.FindStatusCondition(state.ObjAsRedisInstance().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+			assert.Nil(t, cond, "%s past deadline must not set an Error condition", status)
+		})
+	}
+}
+
 // loadMemberClusters must continue (not error) on an empty member list so
 // waitElastiCacheAvailable can decide readiness/terminal state.
 func TestLoadMemberClusters_NoMembersDefersToWait(t *testing.T) {

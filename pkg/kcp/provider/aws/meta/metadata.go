@@ -209,8 +209,9 @@ func (a ProvisioningAction) String() string {
 }
 
 // EvaluateProvisioningAction returns the action to take based on the ElastiCache state and elapsed time.
-// Order of evaluation is significant: DELETING is always Wait, then CREATE_FAILED within deadline is Heal,
-// then age >= timeout is Timeout, else Wait.
+// Order is significant: DELETING is always Wait; CREATE_FAILED within the deadline is Heal; the deadline
+// Timeout applies ONLY to in-progress provisioning states (CREATING/CREATE_FAILED) — an already-provisioned
+// instance that is modifying/snapshotting/available is never failed by it; everything else is Wait.
 func EvaluateProvisioningAction(cacheState string, createdAt, now time.Time) ProvisioningAction {
 	age := now.Sub(createdAt)
 
@@ -220,7 +221,7 @@ func EvaluateProvisioningAction(cacheState string, createdAt, now time.Time) Pro
 	if cacheState == ElastiCache_CREATE_FAILED && age < ElastiCacheProvisioningTimeout {
 		return ProvisioningActionHeal
 	}
-	if age >= ElastiCacheProvisioningTimeout {
+	if (cacheState == ElastiCache_CREATING || cacheState == ElastiCache_CREATE_FAILED) && age >= ElastiCacheProvisioningTimeout {
 		return ProvisioningActionTimeout
 	}
 	return ProvisioningActionWait

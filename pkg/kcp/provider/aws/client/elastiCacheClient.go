@@ -454,11 +454,14 @@ func (c *elastiCacheClient) DeleteElastiCacheReplicationGroup(ctx context.Contex
 	return err
 }
 
+// elastiCacheEventsMaxRecords bounds the DescribeEvents lookup on the create-failed path.
+const elastiCacheEventsMaxRecords int32 = 20
+
 func (c *elastiCacheClient) DescribeElastiCacheReplicationGroupEvents(ctx context.Context, replicationGroupId string) ([]elasticachetypes.Event, error) {
 	out, err := c.elastiCacheSvc.DescribeEvents(ctx, &elasticache.DescribeEventsInput{
 		SourceType:       elasticachetypes.SourceTypeReplicationGroup,
 		SourceIdentifier: aws.String(replicationGroupId),
-		MaxRecords:       aws.Int32(20),
+		MaxRecords:       aws.Int32(elastiCacheEventsMaxRecords),
 	})
 	if err != nil {
 		return nil, err

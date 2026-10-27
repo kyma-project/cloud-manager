@@ -22,9 +22,9 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 	if state.elastiCacheReplicationGroup == nil {
 		errorMsg := "error: elasti cache cluster instance is not loaded"
 		logger.Error(errors.New(errorMsg), errorMsg)
-		redisInstance := st.Obj().(*cloudcontrolv1beta1.RedisCluster)
-		redisInstance.Status.State = cloudcontrolv1beta1.StateError
-		return composed.UpdateStatus(redisInstance).
+		redisCluster := st.Obj().(*cloudcontrolv1beta1.RedisCluster)
+		redisCluster.Status.State = cloudcontrolv1beta1.StateError
+		return composed.UpdateStatus(redisCluster).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -42,13 +42,6 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 		return nil, ctx
 	}
 
-	// AVAILABLE but member clusters not yet visible — transient eventual-consistency;
-	// not subject to provisioning deadline.
-	if cacheState == awsmeta.ElastiCache_AVAILABLE {
-		logger.Info("Redis instance is not ready yet, requeueing with delay")
-		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
-	}
-
 	switch awsmeta.EvaluateProvisioningAction(cacheState, st.Obj().GetCreationTimestamp().Time, time.Now()) {
 	case awsmeta.ProvisioningActionHeal:
 		reason := createFailedEventReason(ctx, state)
@@ -56,8 +49,8 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 		if err := state.awsClient.DeleteElastiCacheReplicationGroup(ctx, ptr.Deref(state.elastiCacheReplicationGroup.ReplicationGroupId, "")); err != nil {
 			return awsmeta.LogErrorAndReturn(err, "ElastiCache auto-heal delete failed", ctx)
 		}
-		redisInstance := st.Obj().(*cloudcontrolv1beta1.RedisCluster)
-		return composed.UpdateStatus(redisInstance).
+		redisCluster := st.Obj().(*cloudcontrolv1beta1.RedisCluster)
+		return composed.UpdateStatus(redisCluster).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeUpdating,
 				Status:  metav1.ConditionTrue,
@@ -78,9 +71,9 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 			"RedisCluster provisioning deadline exceeded",
 			"cacheState", cacheState,
 		)
-		redisInstance := st.Obj().(*cloudcontrolv1beta1.RedisCluster)
-		redisInstance.Status.State = cloudcontrolv1beta1.StateError
-		return composed.UpdateStatus(redisInstance).
+		redisCluster := st.Obj().(*cloudcontrolv1beta1.RedisCluster)
+		redisCluster.Status.State = cloudcontrolv1beta1.StateError
+		return composed.UpdateStatus(redisCluster).
 			SetExclusiveConditions(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
@@ -93,7 +86,7 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 	}
 
 	// ProvisioningActionWait — still provisioning within the deadline
-	logger.Info("Redis instance is not ready yet, requeueing with delay")
+	logger.Info("RedisCluster is not ready yet, requeueing with delay")
 	return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
 }
 

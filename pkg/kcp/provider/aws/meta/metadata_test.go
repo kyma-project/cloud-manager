@@ -60,13 +60,18 @@ func TestEvaluateProvisioningAction(t *testing.T) {
 		{"deleting/before", ElastiCache_DELETING, beforeDeadline, ProvisioningActionWait},
 		{"deleting/at", ElastiCache_DELETING, atDeadline, ProvisioningActionWait},
 		{"deleting/after", ElastiCache_DELETING, afterDeadline, ProvisioningActionWait},
-		// other states
+		// other states — the provisioning deadline must NEVER apply to an
+		// already-provisioned instance (available/modifying/snapshotting),
+		// regardless of age.
 		{"available/before", ElastiCache_AVAILABLE, beforeDeadline, ProvisioningActionWait},
-		{"available/after", ElastiCache_AVAILABLE, afterDeadline, ProvisioningActionTimeout},
+		{"available/at", ElastiCache_AVAILABLE, atDeadline, ProvisioningActionWait},
+		{"available/after", ElastiCache_AVAILABLE, afterDeadline, ProvisioningActionWait},
 		{"modifying/before", ElastiCache_MODIFYING, beforeDeadline, ProvisioningActionWait},
-		{"modifying/after", ElastiCache_MODIFYING, afterDeadline, ProvisioningActionTimeout},
+		{"modifying/at", ElastiCache_MODIFYING, atDeadline, ProvisioningActionWait},
+		{"modifying/after", ElastiCache_MODIFYING, afterDeadline, ProvisioningActionWait},
 		{"snapshotting/before", ElastiCache_SNAPSHOTTING, beforeDeadline, ProvisioningActionWait},
-		{"snapshotting/after", ElastiCache_SNAPSHOTTING, afterDeadline, ProvisioningActionTimeout},
+		{"snapshotting/at", ElastiCache_SNAPSHOTTING, atDeadline, ProvisioningActionWait},
+		{"snapshotting/after", ElastiCache_SNAPSHOTTING, afterDeadline, ProvisioningActionWait},
 	}
 
 	for _, tc := range cases {

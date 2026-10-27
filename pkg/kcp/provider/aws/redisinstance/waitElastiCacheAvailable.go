@@ -42,13 +42,6 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 		return nil, ctx
 	}
 
-	// AVAILABLE but member clusters not yet visible — transient eventual-consistency;
-	// not subject to provisioning deadline.
-	if cacheState == awsmeta.ElastiCache_AVAILABLE {
-		logger.Info("Redis instance is not ready yet, requeueing with delay")
-		return composed.StopWithRequeueDelay(util.Timing.T60000ms()), nil
-	}
-
 	switch awsmeta.EvaluateProvisioningAction(cacheState, st.Obj().GetCreationTimestamp().Time, time.Now()) {
 	case awsmeta.ProvisioningActionHeal:
 		reason := createFailedEventReason(ctx, state)
