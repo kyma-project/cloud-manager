@@ -181,8 +181,10 @@ const (
 	ElastiCache_UserGroup_MODIFYING ElastiCacheUserGroupState = "modifying"
 )
 
-// ElastiCacheProvisioningTimeout is the maximum time allowed for an ElastiCache provisioning operation.
-const ElastiCacheProvisioningTimeout = 2 * time.Hour
+// ElastiCacheProvisioningTimeout is the default maximum time allowed for an ElastiCache provisioning
+// operation. It is a package-level var (not a const) to allow envtests to inject a shorter deadline;
+// no production code writes it. The default of 2h is the intended operational timeout.
+var ElastiCacheProvisioningTimeout = 2 * time.Hour
 
 // ProvisioningAction is the decision returned by EvaluateProvisioningAction.
 type ProvisioningAction int

@@ -39,6 +39,9 @@ type elastiCacheStub struct {
 	describeEventsReturns []elasticachetypes.Event
 	describeEventsCalls   []string
 	describeEventsErr     error
+
+	deleteReplicationGroupCalls []string
+	deleteReplicationGroupErr   error
 }
 
 func newElastiCacheStub() *elastiCacheStub {
@@ -111,7 +114,8 @@ func (s *elastiCacheStub) ModifyElastiCacheReplicationGroup(ctx context.Context,
 	panic("unimplemented")
 }
 func (s *elastiCacheStub) DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error {
-	panic("unimplemented")
+	s.deleteReplicationGroupCalls = append(s.deleteReplicationGroupCalls, id)
+	return s.deleteReplicationGroupErr
 }
 func (s *elastiCacheStub) DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticachetypes.CacheCluster, error) {
 	panic("unimplemented")
@@ -333,7 +337,7 @@ func TestWaitElastiCacheAvailable_NonTerminalStatesRequeue(t *testing.T) {
 	}
 }
 
-func TestWaitElastiCacheAvailable_CreateFailedSurfacesError(t *testing.T) {
+func TestWaitElastiCacheAvailable_CreateFailedYoung_Heals(t *testing.T) {
 	stub := newElastiCacheStub()
 	stub.describeEventsReturns = []elasticachetypes.Event{
 		{Message: ptr.To("InsufficientCacheClusterCapacity"), Date: ptr.To(time.Unix(3000, 0))},
@@ -346,43 +350,19 @@ func TestWaitElastiCacheAvailable_CreateFailedSurfacesError(t *testing.T) {
 
 	err, _ := waitElastiCacheAvailable(context.Background(), state)
 
-	assert.Equal(t, composed.StopAndForget, err,
-		"waitElastiCacheAvailable must StopAndForget when RG is create-failed")
-	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisCluster().Status.State,
-		"RedisCluster must be set to StateError when RG is create-failed")
-	cond := meta.FindStatusCondition(state.ObjAsRedisCluster().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
-	assert.NotNil(t, cond, "Error condition must be set when RG is create-failed")
-	assert.Equal(t, cloudcontrolv1beta1.ReasonCloudProviderError, cond.Reason,
-		"Error condition must use the CloudProviderError reason")
-	assert.Contains(t, cond.Message, "InsufficientCacheClusterCapacity",
-		"condition message must include the latest event reason")
-	assert.NotContains(t, cond.Message, string(awsmeta.ElastiCache_CREATE_FAILED),
-		"condition message must not expose the raw AWS replication group status")
+	assert.NotNil(t, err, "create-failed within deadline must requeue, not terminate")
+	assert.NotEqual(t, composed.StopAndForget, err, "must not StopAndForget within deadline")
+	assert.Len(t, stub.deleteReplicationGroupCalls, 1, "delete must be called exactly once")
+	assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisCluster().Status.State,
+		"must not set StateError during auto-heal")
+	updatingCond := meta.FindStatusCondition(state.ObjAsRedisCluster().Status.Conditions, cloudcontrolv1beta1.ConditionTypeUpdating)
+	assert.NotNil(t, updatingCond, "ConditionTypeUpdating must be set during heal")
+	errCond := meta.FindStatusCondition(state.ObjAsRedisCluster().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.Nil(t, errCond, "ConditionTypeError must not be set during heal")
 	assert.Len(t, stub.describeEventsCalls, 1, "DescribeElastiCacheReplicationGroupEvents must be called once")
 }
 
-func TestWaitElastiCacheAvailable_CreateFailed_NoEvents(t *testing.T) {
-	stub := newElastiCacheStub()
-	stub.describeEventsReturns = nil
-	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
-		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
-	}, nil)
-	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
-	state.awsClient = stub
-
-	err, _ := waitElastiCacheAvailable(context.Background(), state)
-
-	assert.Equal(t, composed.StopAndForget, err,
-		"must StopAndForget on create-failed with no events")
-	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisCluster().Status.State)
-	cond := meta.FindStatusCondition(state.ObjAsRedisCluster().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
-	assert.NotNil(t, cond)
-	assert.Equal(t, "Failed to provision RedisCluster", cond.Message,
-		"base message must be used when no events are available")
-	assert.Len(t, stub.describeEventsCalls, 1, "DescribeElastiCacheReplicationGroupEvents must still be called")
-}
-
-func TestWaitElastiCacheAvailable_CreateFailed_EventsError(t *testing.T) {
+func TestWaitElastiCacheAvailable_CreateFailedYoung_EventsError_HealProceeds(t *testing.T) {
 	stub := newElastiCacheStub()
 	stub.describeEventsErr = errors.New("throttled: Rate exceeded")
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
@@ -393,22 +373,63 @@ func TestWaitElastiCacheAvailable_CreateFailed_EventsError(t *testing.T) {
 
 	err, _ := waitElastiCacheAvailable(context.Background(), state)
 
-	assert.Equal(t, composed.StopAndForget, err,
-		"must StopAndForget on create-failed even when events API errors")
-	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisCluster().Status.State)
-	cond := meta.FindStatusCondition(state.ObjAsRedisCluster().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
-	assert.NotNil(t, cond)
-	assert.NotContains(t, cond.Message, "throttled",
-		"events API error must not appear in condition message")
-	assert.NotContains(t, cond.Message, "Rate exceeded",
-		"events API error must not appear in condition message")
-	assert.NotContains(t, cond.Message, string(awsmeta.ElastiCache_CREATE_FAILED),
-		"raw create-failed status must not appear in condition message")
-	assert.Equal(t, "Failed to provision RedisCluster", cond.Message,
-		"base message must be used when the events API errors")
+	assert.NotNil(t, err, "heal must requeue even when events API errors")
+	assert.NotEqual(t, composed.StopAndForget, err, "must not terminate on events API error")
+	assert.Len(t, stub.deleteReplicationGroupCalls, 1, "delete must be called even when events API errors")
+	assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisCluster().Status.State,
+		"must not set StateError during heal")
+	errCond := meta.FindStatusCondition(state.ObjAsRedisCluster().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.Nil(t, errCond, "ConditionTypeError must not be set during heal")
 }
 
-func TestWaitElastiCacheAvailable_CreateFailed_PicksMostRecentEvent(t *testing.T) {
+func TestWaitElastiCacheAvailable_CreateFailedYoung_IdempotentHeal(t *testing.T) {
+	stub := newElastiCacheStub()
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
+	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
+	state.awsClient = stub
+
+	// First observation: heal fires
+	err1, _ := waitElastiCacheAvailable(context.Background(), state)
+	assert.NotNil(t, err1, "first observation must requeue")
+	assert.NotEqual(t, composed.StopAndForget, err1)
+	assert.Len(t, stub.deleteReplicationGroupCalls, 1)
+
+	// The fake K8s client zeroes creationTimestamp during Status().Update(); reset it so the
+	// second call still sees the object as young and routes to Heal, not Timeout.
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
+
+	// Second observation (RG still create-failed before AWS completes delete):
+	// heal is idempotent — delete issued again, still requeues, never terminal
+	err2, _ := waitElastiCacheAvailable(context.Background(), state)
+	assert.NotNil(t, err2, "second observation must also requeue")
+	assert.NotEqual(t, composed.StopAndForget, err2)
+	assert.Len(t, stub.deleteReplicationGroupCalls, 2, "delete must be called on each heal observation")
+	assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisCluster().Status.State)
+}
+
+func TestWaitElastiCacheAvailable_CreateFailedYoung_DeleteError_Requeues(t *testing.T) {
+	stub := newElastiCacheStub()
+	stub.deleteReplicationGroupErr = errors.New("delete boom")
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
+	}, nil)
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
+	state.awsClient = stub
+
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+
+	assert.NotNil(t, err, "delete error must requeue, not terminate")
+	assert.NotEqual(t, composed.StopAndForget, err, "must not terminate on delete error")
+	assert.Len(t, stub.deleteReplicationGroupCalls, 1, "delete must be attempted")
+	assert.NotEqual(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisCluster().Status.State,
+		"must not set StateError on delete error")
+	errCond := meta.FindStatusCondition(state.ObjAsRedisCluster().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.Nil(t, errCond, "ConditionTypeError must not be set on delete error")
+}
+
+func TestWaitElastiCacheAvailable_CreateFailedOldTimestamp_TimeoutPicksMostRecentEvent(t *testing.T) {
 	stub := newElastiCacheStub()
 	stub.describeEventsReturns = []elasticachetypes.Event{
 		{Message: ptr.To("OlderEvent"), Date: ptr.To(time.Unix(1000, 0))},
@@ -418,15 +439,17 @@ func TestWaitElastiCacheAvailable_CreateFailed_PicksMostRecentEvent(t *testing.T
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
 	}, nil)
-	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now()))
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now().Add(-3 * time.Hour)))
 	state.awsClient = stub
 
-	_, _ = waitElastiCacheAvailable(context.Background(), state)
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
 
+	assert.Equal(t, composed.StopAndForget, err, "create-failed past deadline must StopAndForget")
+	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisCluster().Status.State)
 	cond := meta.FindStatusCondition(state.ObjAsRedisCluster().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
 	assert.NotNil(t, cond)
 	assert.Contains(t, cond.Message, "NewestEvent",
-		"condition message must surface the most-recently dated event, not the last in the slice")
+		"timeout message must surface the most-recently dated event, not the last in the slice")
 	assert.NotContains(t, cond.Message, "OlderEvent", "only the most-recent event reason must be surfaced")
 	assert.NotContains(t, cond.Message, "MiddleEvent", "only the most-recent event reason must be surfaced")
 }

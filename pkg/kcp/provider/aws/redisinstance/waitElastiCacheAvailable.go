@@ -52,26 +52,20 @@ func waitElastiCacheAvailable(ctx context.Context, st composed.State) (error, co
 	switch awsmeta.EvaluateProvisioningAction(cacheState, st.Obj().GetCreationTimestamp().Time, time.Now()) {
 	case awsmeta.ProvisioningActionHeal:
 		reason := createFailedEventReason(ctx, state)
-		msg := "Failed to provision RedisInstance"
-		if reason != "" {
-			msg += ": " + reason
+		logger.Info("auto-healing create-failed ElastiCache replication group", "reason", reason, "autoHeal", true)
+		if err := state.awsClient.DeleteElastiCacheReplicationGroup(ctx, ptr.Deref(state.elastiCacheReplicationGroup.ReplicationGroupId, "")); err != nil {
+			return awsmeta.LogErrorAndReturn(err, "ElastiCache auto-heal delete failed", ctx)
 		}
-		logger.Error(
-			fmt.Errorf("ElastiCache replication group is in an unrecoverable state"),
-			"ElastiCache replication group provisioning failed",
-			"reason", reason,
-		)
 		redisInstance := st.Obj().(*cloudcontrolv1beta1.RedisInstance)
-		redisInstance.Status.State = cloudcontrolv1beta1.StateError
 		return composed.UpdateStatus(redisInstance).
 			SetExclusiveConditions(metav1.Condition{
-				Type:    cloudcontrolv1beta1.ConditionTypeError,
+				Type:    cloudcontrolv1beta1.ConditionTypeUpdating,
 				Status:  metav1.ConditionTrue,
-				Reason:  cloudcontrolv1beta1.ReasonCloudProviderError,
-				Message: msg,
+				Reason:  cloudcontrolv1beta1.ReasonProcessing,
+				Message: "ElastiCache provisioning failed; deleting and recreating within the provisioning deadline",
 			}).
-			SuccessError(composed.StopAndForget).
-			SuccessLogMsg("RedisInstance failed to provision and cannot recover in place").
+			SuccessError(composed.StopWithRequeueDelay(util.Timing.T60000ms())).
+			SuccessLogMsg("auto-healing create-failed ElastiCache replication group").
 			Run(ctx, st)
 	case awsmeta.ProvisioningActionTimeout:
 		reason := ""
