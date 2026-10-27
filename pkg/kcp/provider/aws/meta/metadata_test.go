@@ -37,7 +37,7 @@ func TestIsNotFound(t *testing.T) {
 
 func TestEvaluateProvisioningAction(t *testing.T) {
 	now := time.Unix(1_000_000, 0)
-	timeout := ElastiCacheProvisioningTimeout
+	timeout := ElastiCacheProvisioningTimeout()
 	beforeDeadline := timeout - time.Second
 	atDeadline := timeout
 	afterDeadline := timeout + time.Second

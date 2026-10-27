@@ -546,7 +546,7 @@ func TestWaitElastiCacheAvailable_CreatingAtDeadline_Timeout(t *testing.T) {
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(awsmeta.ElastiCache_CREATING),
 	}, nil)
-	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now().Add(-awsmeta.ElastiCacheProvisioningTimeout)))
+	state.Obj().SetCreationTimestamp(metav1.NewTime(time.Now().Add(-awsmeta.ElastiCacheProvisioningTimeout())))
 	state.awsClient = newElastiCacheStub()
 
 	err, _ := waitElastiCacheAvailable(context.Background(), state)

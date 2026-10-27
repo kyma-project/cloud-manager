@@ -104,7 +104,7 @@ func createFailedEventReason(ctx context.Context, state *State) string {
 // provisioningTimeoutMessage builds the terminal timeout condition message.
 func provisioningTimeoutMessage(kind, reason string) string {
 	msg := fmt.Sprintf("Failed to provision %s: provisioning did not complete within the %s deadline; delete and recreate this resource to retry",
-		kind, awsmeta.ElastiCacheProvisioningTimeout)
+		kind, awsmeta.ElastiCacheProvisioningTimeout())
 	if reason != "" {
 		msg += " (cause: " + reason + ")"
 	}
