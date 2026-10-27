@@ -39,6 +39,8 @@ type AwsElastiCacheMockUtils interface {
 	PreCreateUserGroup(name string, state awsmeta.ElastiCacheUserGroupState)
 
 	GetAwsElastiCacheUserGroupByName(name string) *elasticachetypes.UserGroup
+
+	SetAwsElastiCacheEvents(name string, events []elasticachetypes.Event)
 }
 
 func getDefaultParams() map[string]elasticachetypes.Parameter {
@@ -72,6 +74,7 @@ type elastiCacheClientFake struct {
 	userGroups        map[string]*elasticachetypes.UserGroup
 	secretStore       map[string]*secretsmanager.GetSecretValueOutput
 	securityGroups    []*ec2types.SecurityGroup
+	events            map[string][]elasticachetypes.Event
 
 	createUserGroupCalls        []string
 	deleteUserGroupCalls        []string
@@ -89,6 +92,7 @@ func newElastiCacheClientFake() *elastiCacheClientFake {
 		secretStore:       map[string]*secretsmanager.GetSecretValueOutput{},
 		userGroups:        map[string]*elasticachetypes.UserGroup{},
 		securityGroups:    []*ec2types.SecurityGroup{},
+		events:            map[string][]elasticachetypes.Event{},
 	}
 }
 
@@ -188,6 +192,23 @@ func (client *elastiCacheClientFake) GetAwsElastiCacheUserGroupByName(name strin
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
 	return client.userGroups[name]
+}
+
+func (client *elastiCacheClientFake) SetAwsElastiCacheEvents(name string, events []elasticachetypes.Event) {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+	client.events[name] = events
+}
+
+func (client *elastiCacheClientFake) DescribeElastiCacheReplicationGroupEvents(ctx context.Context, replicationGroupId string) ([]elasticachetypes.Event, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+
+	return client.events[replicationGroupId], nil
 }
 
 func (client *elastiCacheClientFake) DescribeAwsElastiCacheParametersByName(groupName string) map[string]string {

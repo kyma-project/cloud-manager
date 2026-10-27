@@ -2,7 +2,9 @@ package redisinstance
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
@@ -29,12 +31,17 @@ type elastiCacheStub struct {
 	deleteUserGroupCalls   []string
 	describeUserGroupCalls []string
 	preloadedUserGroups    map[string]*elasticachetypes.UserGroup
+
+	describeEventsReturns []elasticachetypes.Event
+	describeEventsCalls   []string
+	describeEventsErr     error
 }
 
 func newElastiCacheStub() *elastiCacheStub {
 	return &elastiCacheStub{preloadedUserGroups: map[string]*elasticachetypes.UserGroup{}}
 }
 
+// double-waiver: B1 — ElastiCacheClient wraps AWS ElastiCache API calls (out-of-process network handle)
 var _ awsclient.ElastiCacheClient = &elastiCacheStub{}
 
 func (s *elastiCacheStub) CreateUserGroup(ctx context.Context, id string, tags []elasticachetypes.Tag) (*elasticache.CreateUserGroupOutput, error) {
@@ -122,6 +129,10 @@ func (s *elastiCacheStub) DeleteElastiCacheSecurityGroup(ctx context.Context, id
 }
 func (s *elastiCacheStub) AuthorizeElastiCacheSecurityGroupIngress(ctx context.Context, groupId string, ipPermissions []ec2types.IpPermission) error {
 	panic("unimplemented")
+}
+func (s *elastiCacheStub) DescribeElastiCacheReplicationGroupEvents(ctx context.Context, replicationGroupId string) ([]elasticachetypes.Event, error) {
+	s.describeEventsCalls = append(s.describeEventsCalls, replicationGroupId)
+	return s.describeEventsReturns, s.describeEventsErr
 }
 
 func newTestStateWithClient(t *testing.T, instanceName string, ug *elasticachetypes.UserGroup, stub *elastiCacheStub) *State {
@@ -308,9 +319,15 @@ func TestWaitElastiCacheAvailable_NonTerminalStatesRequeue(t *testing.T) {
 }
 
 func TestWaitElastiCacheAvailable_CreateFailedSurfacesError(t *testing.T) {
+	stub := newElastiCacheStub()
+	stub.describeEventsReturns = []elasticachetypes.Event{
+		{Message: ptr.To("InsufficientCacheClusterCapacity"), Date: ptr.To(time.Unix(3000, 0))},
+	}
 	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
 		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
 	}, nil)
+	state.awsClient = stub
+
 	err, _ := waitElastiCacheAvailable(context.Background(), state)
 
 	assert.Equal(t, composed.StopAndForget, err,
@@ -321,10 +338,78 @@ func TestWaitElastiCacheAvailable_CreateFailedSurfacesError(t *testing.T) {
 	assert.NotNil(t, cond, "Error condition must be set when RG is create-failed")
 	assert.Equal(t, cloudcontrolv1beta1.ReasonCloudProviderError, cond.Reason,
 		"Error condition must use the CloudProviderError reason")
-	assert.Equal(t, "Failed to provision RedisInstance", cond.Message,
-		"condition message must stay abstract and not leak cloud provider internals")
+	assert.Contains(t, cond.Message, "InsufficientCacheClusterCapacity",
+		"condition message must include the latest event reason")
 	assert.NotContains(t, cond.Message, string(awsmeta.ElastiCache_CREATE_FAILED),
 		"condition message must not expose the raw AWS replication group status")
+	assert.Len(t, stub.describeEventsCalls, 1, "DescribeElastiCacheReplicationGroupEvents must be called once")
+}
+
+func TestWaitElastiCacheAvailable_CreateFailed_NoEvents(t *testing.T) {
+	stub := newElastiCacheStub()
+	stub.describeEventsReturns = nil
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
+	}, nil)
+	state.awsClient = stub
+
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+
+	assert.Equal(t, composed.StopAndForget, err,
+		"must StopAndForget on create-failed with no events")
+	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State)
+	cond := meta.FindStatusCondition(state.ObjAsRedisInstance().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.NotNil(t, cond)
+	assert.Equal(t, "Failed to provision RedisInstance", cond.Message,
+		"base message must be used when no events are available")
+	assert.Len(t, stub.describeEventsCalls, 1, "DescribeElastiCacheReplicationGroupEvents must still be called")
+}
+
+func TestWaitElastiCacheAvailable_CreateFailed_EventsError(t *testing.T) {
+	stub := newElastiCacheStub()
+	stub.describeEventsErr = errors.New("throttled: Rate exceeded")
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
+	}, nil)
+	state.awsClient = stub
+
+	err, _ := waitElastiCacheAvailable(context.Background(), state)
+
+	assert.Equal(t, composed.StopAndForget, err,
+		"must StopAndForget on create-failed even when events API errors")
+	assert.Equal(t, cloudcontrolv1beta1.StateError, state.ObjAsRedisInstance().Status.State)
+	cond := meta.FindStatusCondition(state.ObjAsRedisInstance().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.NotNil(t, cond)
+	assert.NotContains(t, cond.Message, "throttled",
+		"events API error must not appear in condition message")
+	assert.NotContains(t, cond.Message, "Rate exceeded",
+		"events API error must not appear in condition message")
+	assert.NotContains(t, cond.Message, string(awsmeta.ElastiCache_CREATE_FAILED),
+		"raw create-failed status must not appear in condition message")
+	assert.Equal(t, "Failed to provision RedisInstance", cond.Message,
+		"base message must be used when the events API errors")
+}
+
+func TestWaitElastiCacheAvailable_CreateFailed_PicksMostRecentEvent(t *testing.T) {
+	stub := newElastiCacheStub()
+	stub.describeEventsReturns = []elasticachetypes.Event{
+		{Message: ptr.To("OlderEvent"), Date: ptr.To(time.Unix(1000, 0))},
+		{Message: ptr.To("NewestEvent"), Date: ptr.To(time.Unix(3000, 0))},
+		{Message: ptr.To("MiddleEvent"), Date: ptr.To(time.Unix(2000, 0))},
+	}
+	state := newTestState(t, "abc", false, &elasticachetypes.ReplicationGroup{
+		Status: ptr.To(string(awsmeta.ElastiCache_CREATE_FAILED)),
+	}, nil)
+	state.awsClient = stub
+
+	_, _ = waitElastiCacheAvailable(context.Background(), state)
+
+	cond := meta.FindStatusCondition(state.ObjAsRedisInstance().Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
+	assert.NotNil(t, cond)
+	assert.Contains(t, cond.Message, "NewestEvent",
+		"condition message must surface the most-recently dated event, not the last in the slice")
+	assert.NotContains(t, cond.Message, "OlderEvent", "only the most-recent event reason must be surfaced")
+	assert.NotContains(t, cond.Message, "MiddleEvent", "only the most-recent event reason must be surfaced")
 }
 
 // loadMemberClusters must continue (not error) on an empty member list so

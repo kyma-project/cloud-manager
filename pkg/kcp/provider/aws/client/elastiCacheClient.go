@@ -99,6 +99,7 @@ type ElastiCacheClient interface {
 	CreateElastiCacheReplicationGroup(ctx context.Context, tags []elasticachetypes.Tag, options CreateElastiCacheClusterOptions) (*elasticache.CreateReplicationGroupOutput, error)
 	ModifyElastiCacheReplicationGroup(ctx context.Context, id string, options ModifyElastiCacheClusterOptions) (*elasticache.ModifyReplicationGroupOutput, error)
 	DeleteElastiCacheReplicationGroup(ctx context.Context, id string) error
+	DescribeElastiCacheReplicationGroupEvents(ctx context.Context, replicationGroupId string) ([]elasticachetypes.Event, error)
 	DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticachetypes.CacheCluster, error)
 	ModifyElastiCacheClusterShardConfiguration(ctx context.Context, options RescaleElastiCacheClusterShardOptions) error
 	ModifyElastiCacheClusterReplicaConfiguration(ctx context.Context, options RescaleElastiCacheClusterReplicaOptions) error
@@ -451,6 +452,18 @@ func (c *elastiCacheClient) DeleteElastiCacheReplicationGroup(ctx context.Contex
 	_, err := c.elastiCacheSvc.DeleteReplicationGroup(ctx, deleteInput)
 
 	return err
+}
+
+func (c *elastiCacheClient) DescribeElastiCacheReplicationGroupEvents(ctx context.Context, replicationGroupId string) ([]elasticachetypes.Event, error) {
+	out, err := c.elastiCacheSvc.DescribeEvents(ctx, &elasticache.DescribeEventsInput{
+		SourceType:       elasticachetypes.SourceTypeReplicationGroup,
+		SourceIdentifier: aws.String(replicationGroupId),
+		MaxRecords:       aws.Int32(20),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out.Events, nil
 }
 
 func (c *elastiCacheClient) DescribeElastiCacheCluster(ctx context.Context, id string) ([]elasticachetypes.CacheCluster, error) {
