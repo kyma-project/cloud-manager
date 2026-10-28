@@ -40,7 +40,7 @@ parameters:                        # different keys — Azure-specific, no CRD s
 
 ### Kubernetes CRD — x-kubernetes-preserve-unknown-fields
 **Repo:** [kubernetes/kubernetes](https://github.com/kubernetes/kubernetes)
-**Key file:** [`staging/src/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1/types_jsonschema.go`](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apiextensions-api/pkg/apis/apiextensions/v1/types_jsonschema.go)
+**Key file:** [`staging/src/k8s.io/apiextensions-api/pkg/apis/apiextensions/v1/types_jsonschema.go`](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apiextensions-api/pkg/apis/apiextensions/v1/types_jsonschema.go)
 **Kubebuilder marker docs:** [`book.kubebuilder.io — markers/crd-validation`](https://book.kubebuilder.io/reference/markers/crd-validation)
 
 For structured but provider-versioned payloads that cannot be captured in a static CRD schema (e.g. policy documents, rule sets with nested objects), `x-kubernetes-preserve-unknown-fields: true` allows arbitrary structure at a given path while keeping the rest of the spec typed.
