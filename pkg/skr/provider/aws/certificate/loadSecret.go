@@ -34,7 +34,6 @@ func loadSecret(ctx context.Context, st composed.State) (error, context.Context)
 	}
 
 	state.secret = secret
-	logger.Info("Secret loaded successfully")
 
 	return nil, ctx
 }

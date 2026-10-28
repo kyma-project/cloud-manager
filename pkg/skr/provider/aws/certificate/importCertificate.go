@@ -14,11 +14,8 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 	cert := state.ObjAsCertificate()
 
 	if !state.certificateNeedsUpdate {
-		logger.Info("Certificate update not needed, skipping import")
 		return nil, ctx
 	}
-
-	logger.Info("Importing certificate to ACM")
 
 	input := &acm.ImportCertificateInput{
 		Certificate: state.certificateData.Certificate,
@@ -54,5 +51,12 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 		WithValues("arn", arn).
 		Info("Certificate imported successfully")
 
-	return nil, ctx
+	return composed.NewStatusPatcherComposed(cert).
+		MutateStatus(func(c *cloudresourcesv1beta1.Certificate) {
+			c.Status.ProviderId = arn
+			c.SetStatusProcessing()
+		}).
+		OnStatusChanged(composed.Log("Certificate providerId updated after import")).
+		OnSuccess(composed.Requeue).
+		Run(ctx, state.Cluster().K8sClient())
 }
