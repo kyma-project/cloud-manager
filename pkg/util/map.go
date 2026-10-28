@@ -3,6 +3,7 @@ package util
 import (
 	"maps"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -47,6 +48,10 @@ func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[st
 	for k := range dataMap {
 		keyPatterns = append(keyPatterns, regexp.QuoteMeta(k))
 	}
+	// Sort longest first so that prefix keys (e.g. "h") never shadow longer ones (e.g. "host")
+	// when the alternation is evaluated left-to-right.
+	sort.Slice(keyPatterns, func(i, j int) bool { return len(keyPatterns[i]) > len(keyPatterns[j]) })
+
 	var re *regexp.Regexp
 	if len(keyPatterns) > 0 {
 		// Pattern: optional trim marker (-), optional whitespace, .key, optional whitespace, optional trim marker (-)
@@ -60,11 +65,19 @@ func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[st
 			continue
 		}
 		result[k] = re.ReplaceAllFunc([]byte(v), func(match []byte) []byte {
-			sub := re.FindSubmatch(match)
-			if len(sub) < 2 {
-				return match
+			// Extract the key name by stripping the {{ }}, optional trim markers, dot and whitespace.
+			s := string(match)
+			s = strings.TrimPrefix(s, "{{")
+			s = strings.TrimPrefix(s, "-")
+			s = strings.TrimSpace(s)
+			s = strings.TrimPrefix(s, ".")
+			s = strings.TrimSuffix(s, "}}")
+			s = strings.TrimSuffix(s, "-")
+			s = strings.TrimSpace(s)
+			if val, ok := dataMap[s]; ok {
+				return []byte(val)
 			}
-			return []byte(dataMap[string(sub[1])])
+			return match
 		})
 	}
 

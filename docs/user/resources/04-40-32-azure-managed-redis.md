@@ -27,7 +27,7 @@ This table lists the parameters of **AzureManagedRedis.spec**:
 | **authSecret.name** | string | No | Yes | Name of the Secret. Defaults to the `AzureManagedRedis` resource name. |
 | **authSecret.labels** | map[string]string | No | No | Labels applied to the Secret. |
 | **authSecret.annotations** | map[string]string | No | No | Annotations applied to the Secret. |
-| **authSecret.extraData** | map[string]string | No | No | Additional Secret keys, supporting Go templates that reference `host`, `port`, `primaryEndpoint`, `authString`. The templating follows the [Golang templating syntax](https://pkg.go.dev/text/template). |
+| **authSecret.extraData** | map[string]string | No | No | Additional Secret keys, supporting Go templates that reference `host`, `port`, `primaryEndpoint`, `authString`. Values support `{{.fieldName}}` substitution syntax (for example, `{{.host}}` or `{{.port}}`). Available field names are listed in the [Auth Secret Details](#auth-secret-details) section below. Unrecognized field names are written verbatim into the Secret. |
 | **ipRange** | object | No | No | IpRange reference. If omitted, the default IpRange is used. If the default IpRange does not exist, it will be created. |
 | **ipRange.name** | string | Yes* | No | Name of the existing IpRange to use. *Required when **ipRange** is specified. |
 

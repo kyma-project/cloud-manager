@@ -169,7 +169,7 @@ func TestParseTemplatesMapToBytesMap(t *testing.T) {
 				"nospace":         "{{.name}}",
 				"one_space":       "{{ .name }}",
 				"multi_space":     "{{  .name  }}",
-				"tab":             "{{\t.name\t}}",
+				"tab":             "{{\t.name\t}}", // tab is matched by \s*; text/template would parse-error on this
 				"trim_marker":     "{{- .name -}}",
 				"trim_left_only":  "{{- .name }}",
 				"trim_right_only": "{{ .name -}}",
@@ -185,6 +185,47 @@ func TestParseTemplatesMapToBytesMap(t *testing.T) {
 			assert.Equal(t, "laser", string(result["trim_marker"]))
 			assert.Equal(t, "laser", string(result["trim_left_only"]))
 			assert.Equal(t, "laser", string(result["trim_right_only"]))
+		})
+
+		t.Run("should substitute repeated occurrences of the same key", func(t *testing.T) {
+			templates := map[string]string{
+				"repeated": "{{.name}} and {{.name}}",
+			}
+			data := map[string]string{"name": "laser"}
+
+			result := ParseTemplatesMapToBytesMap(templates, data)
+
+			assert.Equal(t, "laser and laser", string(result["repeated"]))
+		})
+
+		t.Run("should not match a prefix key when a longer key is present", func(t *testing.T) {
+			// dataMap has both "h" and "host"; {{.host}} must resolve to "example.com", not "laser" + "ost"
+			templates := map[string]string{
+				"full":   "{{.host}}",
+				"prefix": "{{.h}}",
+			}
+			data := map[string]string{
+				"h":    "laser",
+				"host": "example.com",
+			}
+
+			result := ParseTemplatesMapToBytesMap(templates, data)
+
+			assert.Equal(t, "example.com", string(result["full"]))
+			assert.Equal(t, "laser", string(result["prefix"]))
+		})
+
+		t.Run("should not execute CVE DoS payload (deeply nested range)", func(t *testing.T) {
+			// Regression test: the original vulnerability allowed a tenant to supply
+			// deeply nested {{range}} directives that exhausted CPU/memory in the shared pod.
+			dos := `{{range $i, $v := .}}{{range $j, $w := .}}{{range $k, $u := .}}{{end}}{{end}}{{end}}`
+			templates := map[string]string{"x": dos}
+			data := map[string]string{"name": "laser"}
+
+			result := ParseTemplatesMapToBytesMap(templates, data)
+
+			// The payload must pass through verbatim — not executed, not modified.
+			assert.Equal(t, dos, string(result["x"]))
 		})
 
 	})
