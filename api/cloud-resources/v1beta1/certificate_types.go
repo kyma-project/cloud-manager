@@ -48,15 +48,12 @@ type CertificateStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
-
-	// +optional
-	State string `json:"state,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={kyma-cloud-manager}
-// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].reason"
 // +kubebuilder:printcolumn:name="ProviderID",type="string",JSONPath=".status.providerId"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
@@ -97,7 +94,6 @@ func (in *Certificate) GetStatus() any {
 }
 
 func (in *Certificate) SetStatusProviderError(msg string) {
-	in.Status.State = ReasonProviderError
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
@@ -108,7 +104,6 @@ func (in *Certificate) SetStatusProviderError(msg string) {
 }
 
 func (in *Certificate) SetStatusReady() {
-	in.Status.State = StateReady
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionTrue,
@@ -119,7 +114,6 @@ func (in *Certificate) SetStatusReady() {
 }
 
 func (in *Certificate) SetStatusProcessing() {
-	in.Status.State = StateProcessing
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionUnknown,
@@ -130,7 +124,6 @@ func (in *Certificate) SetStatusProcessing() {
 }
 
 func (in *Certificate) SetStatusDeleting() {
-	in.Status.State = StateDeleting
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionUnknown,
@@ -141,7 +134,6 @@ func (in *Certificate) SetStatusDeleting() {
 }
 
 func (in *Certificate) SetStatusDeletionBlockedByDependents(msg string) {
-	in.Status.State = ReasonDeletionBlockedByDependents
 	meta.SetStatusCondition(&in.Status.Conditions, metav1.Condition{
 		Type:               ConditionTypeReady,
 		Status:             metav1.ConditionFalse,
@@ -166,11 +158,15 @@ func (in *Certificate) SpecificToFeature() featuretypes.FeatureName {
 func (in *Certificate) SpecificToProviders() []string { return []string{"aws"} }
 
 func (in *Certificate) State() string {
-	return in.Status.State
+	readyCondition := meta.FindStatusCondition(in.Status.Conditions, ConditionTypeReady)
+	if readyCondition == nil {
+		return ""
+	}
+	return readyCondition.Reason
 }
 
 func (in *Certificate) SetState(v string) {
-	in.Status.State = v
+	// State is derived from Ready condition reason; this method is kept for interface compatibility
 }
 
 // +kubebuilder:object:root=true
