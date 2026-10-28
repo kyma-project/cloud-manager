@@ -8,7 +8,6 @@ Feature: Certificate feature
     And resource declaration:
       | Alias        | Kind        | ApiVersion                              | Name               | Namespace    |
       | certificate  | Certificate | cloud-resources.kyma-project.io/v1beta1 | e2e-${scenarioId}  |              |
-      | secret       | Secret      | v1                                      | kyma-gateway-certs | istio-system |
       | gardenerCert | Certificate | cert.gardener.cloud/v1alpha1            | kyma-tls-cert      | istio-system |
 
 
@@ -25,8 +24,8 @@ Feature: Certificate feature
       kind: Certificate
       spec:
         secretRef:
-          name: ${_.secret.name}
-          namespace: ${_.secret.namespace}
+          name: ${gardenerCert.spec.secretRef.name}
+          namespace: ${gardenerCert.spec.secretRef.namespace}
       """
 
     Then eventually "findConditionTrue(certificate, 'Ready')" is ok, unless:
