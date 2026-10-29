@@ -2,6 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -15,7 +16,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	if state.KcpNfsInstance == nil {
 		// it's deleted
-		return nil, nil
+		return nil, ctx
 	}
 
 	kcpCondErr := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeError)
@@ -69,5 +70,5 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			SuccessLogMsg("Updated SKR AwsNfsVolume status with Capacity change").
 			Run(ctx, state)
 	}
-	return nil, nil
+	return nil, ctx
 }

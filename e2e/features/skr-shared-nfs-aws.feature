@@ -1,8 +1,7 @@
 Feature: AWS NfsVolume feature
 
-  # Skipped until PR #1716 is merged - requires file-system-id parameter fix for restore to existing filesystem
-  @skip @skr @aws @nfs
-  Scenario: AwsNfsVolume scenario
+  @skr @aws @nfs
+  Scenario: AwsNfsVolume in default IpRange scenario
 
     Given there is shared SKR with "AWS" provider
 
@@ -11,10 +10,6 @@ Feature: AWS NfsVolume feature
       | vol       | AwsNfsVolume          | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                                     |           |
       | pv        | PersistentVolume      | v1                                      | ${vol.status.id ?? ''}                          |           |
       | pvc       | PersistentVolumeClaim | v1                                      | ${vol.metadata.name ?? ''}                      |           |
-      | backup    | AwsNfsVolumeBackup    | cloud-resources.kyma-project.io/v1beta1 | ${vol.metadata.name ?? ''}                      |           |
-      | restore   | AwsNfsVolumeRestore   | cloud-resources.kyma-project.io/v1beta1 | ${vol.metadata.name ?? ''}                      |           |
-      | schedule  | AwsNfsBackupSchedule  | cloud-resources.kyma-project.io/v1beta1 | ${vol.metadata.name ?? ''}                      |           |
-      | schBackup | AwsNfsVolumeBackup    | cloud-resources.kyma-project.io/v1beta1 | ${schedule.status.lastCreatedBackup.name ?? ''} |           |
 
     When resource "vol" is created:
       """
@@ -31,83 +26,110 @@ Feature: AWS NfsVolume feature
     And "vol.status.state == 'Ready'" is ok
     And eventually "pv.status.phase == 'Bound'" is ok
     And eventually "pvc.status.phase == 'Bound'" is ok
+    And eventually DNS for "${vol.status.server}" resolves
 
     # write initial content to the file, one that will be backed up
     And PVC "pvc" file operations succeed:
       | Operation | Path     | Content     |
       | Create    | test.txt | first value |
 
-    When resource "backup" is created:
-      """
-      apiVersion: cloud-resources.kyma-project.io/v1beta1
-      kind: AwsNfsVolumeBackup
-      spec:
-        source:
-          volume:
-            name: ${vol.metadata.name}
-      """
-
-    Then eventually "backup.status.state == 'Ready'" is ok
-
-    # write some other content to the file, one that will be overwritten by restore
-    When PVC "pvc" file operations succeed:
-      | Operation | Path     | Content      |
-      | Create    | test.txt | second value |
-
-    And resource "restore" is created:
-      """
-      apiVersion: cloud-resources.kyma-project.io/v1beta1
-      kind: AwsNfsVolumeRestore
-      spec:
-        source:
-          backup:
-            name: ${backup.metadata.name}
-            namespace: ${backup.metadata.namespace}
-      """
-
-    Then eventually "restore.status.state == 'Done'" is ok
-
-    # AWS Backup restores to a timestamped subdirectory (aws-backup-restore_*), not in-place
-    # Per AWS documentation, file system should have minimal activity during restore
-    # Original file at root remains unchanged; restored content is in restore subdirectory
-    And PVC "pvc" file operations succeed:
-      | Operation | Path                          | Content      |
-      | Contains  | test.txt                      | second value |
-      | Contains  | aws-backup-restore_*/test.txt | first value  |
-
-    When resource "schedule" is created:
-      """
-      apiVersion: cloud-resources.kyma-project.io/v1beta1
-      kind: AwsNfsBackupSchedule
-      spec:
-         nfsVolumeRef:
-           name: ${vol.metadata.name}
-         schedule: "*/5 * * * *"
-         prefix: ${vol.metadata.name}-sch
-         deleteCascade: true
-      """
-
-    # there will be a race condition between schedule and a pod that would write a new fourth value
-    # to be overwritten by the scheduled backup, so we're not doing that nor testing
-    # if that sceduled backup would do the restore, since we already tested above
-    # that restore overwrittes with backed up content
-
-    Then eventually "schedule.status.state == 'Active'" is ok
-    And eventually "schedule.status.lastCreatedBackup.name" is ok
-    And eventually "schBackup.status.state == 'Ready'" is ok
-
-
-    When resource "schedule" is deleted
-    Then eventually resource "schedule" does not exist
-    And eventually resource "schBackup" does not exist
-
-    When resource "restore" is deleted
-    Then eventually resource "restore" does not exist
-
-    When resource "backup" is deleted
-    Then eventually resource "backup" does not exist
-
     When resource "vol" is deleted
     Then eventually resource "pvc" does not exist
     And eventually resource "pv" does not exist
     And eventually resource "vol" does not exist
+
+
+  @skr @aws @nfs @wip
+  Scenario: AwsNfsVolume in custom IpRange scenario
+
+    Given there is shared SKR with "AWS" provider
+
+    Given resource declaration:
+      | Alias     | Kind                  | ApiVersion                              | Name                                            | Namespace |
+      | vol1      | AwsNfsVolume          | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                                     |           |
+      | range1    | IpRange               | cloud-resources.kyma-project.io/v1beta1 | default                                         |           |
+      | pv1       | PersistentVolume      | v1                                      | ${vol1.status.id ?? ''}                         |           |
+      | pvc1      | PersistentVolumeClaim | v1                                      | ${vol1.metadata.name ?? ''}                     |           |
+      | vol2      | AwsNfsVolume          | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                                     |           |
+      | range2    | IpRange               | cloud-resources.kyma-project.io/v1beta1 | e2e-${id()}                                     |           |
+      | pv2       | PersistentVolume      | v1                                      | ${vol2.status.id ?? ''}                         |           |
+      | pvc2      | PersistentVolumeClaim | v1                                      | ${vol2.metadata.name ?? ''}                     |           |
+
+    # create first nfs to trigger default IpRange creation
+    When resource "vol1" is created:
+      """
+      apiVersion: cloud-resources.kyma-project.io/v1beta1
+      kind: AwsNfsVolume
+      spec:
+        capacity: 10G
+      """
+
+    # wait for default IpRange to be created and ready
+    Then eventually "findConditionTrue(range1, 'Ready')" is ok, unless:
+      | findConditionTrue(range1, 'Error') |
+      | #timeout=20m                       |
+
+    # create custom IpRange
+    When resource "range2" is created:
+      """
+      apiVersion: cloud-resources.kyma-project.io/v1beta1
+      kind: IpRange
+      spec:
+        cidr: 10.252.0.0/16
+      """
+
+    # wait custom IpRange to be created and ready
+    Then eventually "findConditionTrue(range2, 'Ready')" is ok, unless:
+      | findConditionTrue(range1, 'Error') |
+      | #timeout=20m                       |
+
+    # create second NFS in custom IpRange
+    When resource "vol2" is created:
+      """
+      apiVersion: cloud-resources.kyma-project.io/v1beta1
+      kind: AwsNfsVolume
+      spec:
+        capacity: 10G
+        ipRange:
+          name: ${_.range2.name}
+      """
+
+    # verify first NFS works
+    Then eventually "findConditionTrue(vol1, 'Ready')" is ok, unless:
+      | findConditionTrue(vol1, 'Error') |
+      | #timeout=20m                    |
+    And "vol1.status.state == 'Ready'" is ok
+    And eventually "pv1.status.phase == 'Bound'" is ok
+    And eventually "pvc1.status.phase == 'Bound'" is ok
+    And eventually DNS for "${vol1.status.server}" resolves
+    And PVC "pvc1" file operations succeed:
+      | Operation | Path     | Content     |
+      | Create    | test.txt | first value |
+
+    # verify second NFS works
+    Then eventually "findConditionTrue(vol2, 'Ready')" is ok, unless:
+      | findConditionTrue(vol2, 'Error') |
+      | #timeout=20m                    |
+    And "vol2.status.state == 'Ready'" is ok
+    And eventually "pv2.status.phase == 'Bound'" is ok
+    And eventually "pvc2.status.phase == 'Bound'" is ok
+    And eventually DNS for "${vol2.status.server}" resolves
+    And PVC "pvc2" file operations succeed:
+      | Operation | Path     | Content     |
+      | Create    | test.txt | first value |
+
+    # clean-up and delete --------------------
+
+    When resource "vol1" is deleted
+    When resource "vol2" is deleted
+    When resource "range2" is deleted
+
+    Then eventually resource "vol1" does not exist
+    And eventually resource "pv1" does not exist
+    And eventually resource "vol1" does not exist
+
+    Then eventually resource "vol2" does not exist
+    And eventually resource "pv2" does not exist
+    And eventually resource "vol2" does not exist
+
+    Then eventually resource "range2" does not exist

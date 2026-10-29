@@ -166,6 +166,181 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 		})
 	})
 
+	It("Scenario: second KCP AWS IpRange is created in the same VPC", func() {
+
+		const (
+			kymaName     = "0d1c5e2a-8f2b-4c7e-9b3a-2d4f6a8c1e5b"
+			vpcId        = "7c3e9a1d-4b6f-48a2-9c5e-1f3d7b2a6c8e"
+			firstIpRange = "3a5b7c9d-1e2f-4a6b-8c0d-5e7f9a1b3c5d"
+			firstCidr    = "10.181.0.0/16"
+			secondRange  = "6d8f0a2b-4c6e-48a0-b2d4-7f9b1d3f5a7c"
+			secondCidr   = "10.182.0.0/16"
+		)
+
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeAws).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		awsMock := awsAccount.Region(scope.Spec.Region)
+
+		By("And Given AWS VPC exists", func() {
+			awsMock.AddVpc(
+				vpcId,
+				"10.250.0.0/22",
+				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
+				awsmock.VpcSubnetsFromScope(scope),
+			)
+		})
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma := cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithAwsRef(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, vpcId, scope.Spec.Scope.Aws.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		first := &cloudcontrolv1beta1.IpRange{}
+
+		By("And Given first KCP IpRange is Ready", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), first,
+					WithName(firstIpRange),
+					WithKcpIpRangeRemoteRef("skr-aws-ip-range-first"),
+					WithScope(kymaName),
+					WithKcpIpRangeSpecCidr(firstCidr),
+				).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), first,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+
+			Expect(first.Status.Subnets).To(HaveLen(3), "expected first IpRange to have three subnets")
+		})
+
+		var firstAwsSubnets []ec2types.Subnet
+		By("And Given first KCP IpRange AWS Subnets exist", func() {
+			awsSubnets, err := awsMock.DescribeSubnets(infra.Ctx(), vpcId)
+			Expect(err).NotTo(HaveOccurred())
+			for _, iprangeSubnet := range first.Status.Subnets {
+				for _, awsSubnet := range awsSubnets {
+					if iprangeSubnet.Id == ptr.Deref(awsSubnet.SubnetId, "") {
+						firstAwsSubnets = append(firstAwsSubnets, awsSubnet)
+						break
+					}
+				}
+			}
+			Expect(firstAwsSubnets).To(HaveLen(3), "expected three AWS subnets for first IpRange")
+		})
+
+		second := &cloudcontrolv1beta1.IpRange{}
+
+		By("When second KCP IpRange is created in the same VPC", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), second,
+					WithName(secondRange),
+					WithKcpIpRangeRemoteRef("skr-aws-ip-range-second"),
+					WithScope(kymaName),
+					WithKcpIpRangeSpecCidr(secondCidr),
+				).
+				Should(Succeed())
+		})
+
+		By("Then second KCP IpRange has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), second,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then second KCP IpRange has its own three subnets in distinct zones", func() {
+			Expect(second.Status.Subnets).To(HaveLen(3), "expected second IpRange to have exactly three subnets")
+
+			seenZones := map[string]struct{}{}
+			for i, subnet := range second.Status.Subnets {
+				Expect(subnet.Id).NotTo(BeEmpty(), fmt.Sprintf("expected second IpRange.status.subnets[%d].id not to be empty", i))
+				// Must belong to the second IpRange's own ranges, not the first's.
+				Expect(second.Status.Ranges).To(
+					ContainElement(subnet.Range),
+					fmt.Sprintf("expected second IpRange.status.subnets[%d].range %s to be one of its own ranges %v", i, subnet.Range, second.Status.Ranges),
+				)
+				Expect(seenZones).NotTo(HaveKey(subnet.Zone), fmt.Sprintf("expected second IpRange.status.subnets[%d].zone %s to be distinct", i, subnet.Zone))
+				seenZones[subnet.Zone] = struct{}{}
+			}
+			Expect(seenZones).To(HaveLen(3), "expected second IpRange subnets to span three distinct zones")
+		})
+
+		By("When second KCP IpRange is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), second).
+				Should(Succeed(), "failed deleting second KCP IpRange")
+
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), second).
+				Should(Succeed(), "expected second KCP IpRange to be deleted, but it exists")
+		})
+
+		By("Then first KCP IpRange AWS Subnets still exist", func() {
+			awsSubnets, err := awsMock.DescribeSubnets(infra.Ctx(), vpcId)
+			Expect(err).NotTo(HaveOccurred())
+
+			for _, firstSubnet := range firstAwsSubnets {
+				found := false
+				for _, awsSubnet := range awsSubnets {
+					if ptr.Deref(firstSubnet.SubnetId, "") == ptr.Deref(awsSubnet.SubnetId, "") {
+						found = true
+						break
+					}
+				}
+				Expect(found).To(
+					BeTrue(),
+					fmt.Sprintf(
+						"expected first IpRange subnet %s/%s/%s to survive deletion of the second IpRange",
+						ptr.Deref(firstSubnet.SubnetId, ""),
+						ptr.Deref(firstSubnet.AvailabilityZone, ""),
+						ptr.Deref(firstSubnet.CidrBlock, ""),
+					),
+				)
+			}
+		})
+
+		By("Cleanup: delete first KCP IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), first).
+				Should(Succeed(), "failed deleting first KCP IpRange")
+
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), first).
+				Should(Succeed(), "expected first KCP IpRange to be deleted, but it exists")
+		})
+	})
+
 	It("Scenario: KCP AWS IpRange is deleted", func() {
 		const (
 			kymaName    = "b46d0996-5c9b-42a4-a4f7-65528de92514"

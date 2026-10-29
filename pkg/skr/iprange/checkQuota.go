@@ -3,14 +3,15 @@ package iprange
 import (
 	"context"
 	"fmt"
+	"sort"
+	"time"
+
 	"github.com/elliotchance/pie/v2"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sort"
-	"time"
 )
 
 func checkQuota(ctx context.Context, st composed.State) (error, context.Context) {
@@ -23,11 +24,11 @@ func checkQuota(ctx context.Context, st composed.State) (error, context.Context)
 		// probably in time when quota was higher or not implemented.
 		// WARNING!!! These objects during deprovisioning will lose their KCP copy
 		// eventually and must be allowed to be deleted in SKR as well.
-		return nil, nil
+		return nil, ctx
 	}
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	list := &cloudresourcesv1beta1.IpRangeList{}
@@ -50,7 +51,7 @@ func checkQuota(ctx context.Context, st composed.State) (error, context.Context)
 
 	// If count(items) < quota, then it's all fine
 	if len(list.Items) <= totalCountQuota {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// There are more objects than quota allows.
@@ -69,7 +70,7 @@ func checkQuota(ctx context.Context, st composed.State) (error, context.Context)
 	}
 
 	if validObjectCount <= totalCountQuota {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// list index: 0 1 2 3
@@ -81,7 +82,7 @@ func checkQuota(ctx context.Context, st composed.State) (error, context.Context)
 		// clear QuotaExceeded if it has one
 		quotaCond := meta.FindStatusCondition(state.ObjAsIpRange().Status.Conditions, cloudresourcesv1beta1.ConditionTypeQuotaExceeded)
 		if quotaCond == nil {
-			return nil, nil
+			return nil, ctx
 		}
 
 		logger.

@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -13,7 +14,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	state := st.(*State)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if len(state.ObjAsNfsInstance().Status.Id) > 0 &&
@@ -21,7 +22,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		len(state.ObjAsNfsInstance().Status.Hosts[0]) > 0 &&
 		meta.IsStatusConditionTrue(*state.ObjAsNfsInstance().Conditions(), cloudcontrolv1beta1.ConditionTypeReady) {
 		// all already set and saved
-		return nil, nil
+		return nil, ctx
 	}
 
 	host := fmt.Sprintf(

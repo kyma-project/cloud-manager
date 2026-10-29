@@ -3,12 +3,13 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func waitMountTargetsDeleted(ctx context.Context, st composed.State) (error, context.Context) {
@@ -18,7 +19,7 @@ func waitMountTargetsDeleted(ctx context.Context, st composed.State) (error, con
 	for _, mt := range state.mountTargets {
 		if mt.LifeCycleState == efstypes.LifeCycleStateDeleting {
 			logger.Info("Waiting mount targets get deleted")
-			return composed.StopWithRequeueDelay(300 * time.Millisecond), nil
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 		}
 	}
 
@@ -37,5 +38,5 @@ func waitMountTargetsDeleted(ctx context.Context, st composed.State) (error, con
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }

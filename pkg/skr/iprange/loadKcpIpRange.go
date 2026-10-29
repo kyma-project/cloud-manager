@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -19,12 +20,12 @@ func loadKcpIpRange(ctx context.Context, st composed.State) (error, context.Cont
 	}, kcpIpRange)
 	if apierrors.IsNotFound(err) {
 		logger.Info("KCP IpRange not found")
-		return nil, nil
+		return nil, ctx
 	}
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading KCP IpRange", composed.StopWithRequeue, ctx)
 	}
 
 	state.KcpIpRange = kcpIpRange
-	return nil, nil
+	return nil, ctx
 }

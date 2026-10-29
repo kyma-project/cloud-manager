@@ -3,11 +3,12 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+	"time"
+
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func deleteEfs(ctx context.Context, st composed.State) (error, context.Context) {
@@ -15,10 +16,8 @@ func deleteEfs(ctx context.Context, st composed.State) (error, context.Context) 
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.efs == nil {
-		return nil, nil
+		return nil, ctx
 	}
-
-	logger.Info("Deciding if EFS should be deleted")
 
 	stateRequeueDelayed := map[efstypes.LifeCycleState]struct{}{
 		efstypes.LifeCycleStateCreating: {},
@@ -34,7 +33,7 @@ func deleteEfs(ctx context.Context, st composed.State) (error, context.Context) 
 		logger.
 			WithValues("waitStates", fmt.Sprintf("%v", stateRequeueDelayed)).
 			Info("Waiting for EFS LifeCycleState")
-		return composed.StopWithRequeueDelay(300 * time.Millisecond), nil
+		return composed.StopWithRequeueDelay(300 * time.Millisecond), ctx
 	}
 
 	_, okToDelete := stateOkToDelete[state.efs.LifeCycleState]
@@ -42,7 +41,7 @@ func deleteEfs(ctx context.Context, st composed.State) (error, context.Context) 
 		logger.
 			WithValues("deleteStates", fmt.Sprintf("%v", stateOkToDelete)).
 			Info("The EFS should not be deleted")
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Deleting EFS")
@@ -51,5 +50,5 @@ func deleteEfs(ctx context.Context, st composed.State) (error, context.Context) 
 		return awsmeta.LogErrorAndReturn(err, "Error deleting EFS", ctx)
 	}
 
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeue, ctx
 }

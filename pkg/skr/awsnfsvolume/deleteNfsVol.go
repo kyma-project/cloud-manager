@@ -3,6 +3,7 @@ package awsnfsvolume
 import (
 	"context"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,12 +14,12 @@ func deleteKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 	logger := composed.LoggerFromCtx(ctx)
 
 	if !composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.KcpNfsInstance == nil || composed.IsMarkedForDeletion(state.KcpNfsInstance) {
 		// already marked for deletion
-		return nil, nil
+		return nil, ctx
 	}
 
 	err, _ := composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
@@ -33,7 +34,7 @@ func deleteKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 		FailedError(composed.StopWithRequeue).
 		Run(ctx, state)
 	if err != nil {
-		return err, nil
+		return err, ctx
 	}
 
 	logger.Info("Deleting KCP NfsInstance for AwsNfsVolume")
@@ -43,5 +44,5 @@ func deleteKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 		return composed.LogErrorAndReturn(err, "Error deleting KCP NfsInstance for AwsNfsVolume", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

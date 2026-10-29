@@ -11,13 +11,13 @@ func requeueWaitKcpStatus(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// if no conditions, then we're waiting for the KCP condition to appear
 	if len(state.ObjAsAwsNfsVolume().Status.Conditions) == 0 {
-		return composed.StopWithRequeueDelay(2 * util.Timing.T100ms()), nil
+		return composed.StopWithRequeueDelay(2 * util.Timing.T100ms()), ctx
 	}
 
-	return nil, nil
+	return nil, ctx
 }

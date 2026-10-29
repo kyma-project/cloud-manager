@@ -18,12 +18,12 @@ func createKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR IpRange is marked for deletion, do not create mirror in KCP
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.KcpIpRange != nil {
 		// mirror IpRange in KCP is already created
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Creating KCP IpRange")

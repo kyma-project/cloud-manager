@@ -2,6 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -13,15 +14,15 @@ func removePersistenceVolumeFinalizer(ctx context.Context, st composed.State) (e
 	state := st.(*State)
 
 	if !composed.IsMarkedForDeletion(state.Volume) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.Volume == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if !controllerutil.ContainsFinalizer(state.Volume, api.CommonFinalizerDeletionHook) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	controllerutil.RemoveFinalizer(state.Volume, api.CommonFinalizerDeletionHook)
@@ -30,6 +31,6 @@ func removePersistenceVolumeFinalizer(ctx context.Context, st composed.State) (e
 		return composed.LogErrorAndReturn(err, "Error saving SKR PersistentVolume after finalizer removal", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 
 }

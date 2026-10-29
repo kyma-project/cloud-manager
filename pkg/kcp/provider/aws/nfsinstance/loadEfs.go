@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -25,7 +26,7 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	if state.efs == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.efs.SizeInBytes != nil {

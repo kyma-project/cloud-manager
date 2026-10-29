@@ -1204,3 +1204,116 @@ func strategicMergePatchOfResourceIsApplied(ctx context.Context, alias string, d
 	}
 	return ctx, nil
 }
+
+/*
+eventually DNS for "${vol.status.server}" resolves
+eventually DNS for "${vol.status.server}" resolves:
+
+	| #timeout=10m |
+*/
+func eventuallyDNSResolves(ctx context.Context, expression string, tbl *godog.Table) (context.Context, error) {
+	session := GetCurrentScenarioSession(ctx)
+	if session == nil {
+		return ctx, ErrNoSession
+	}
+
+	eval, err := session.Eval(ctx)
+	if err != nil {
+		return ctx, errEvalContextBuilding(err)
+	}
+
+	domain, err := eval.EvalTemplate(expression)
+	if err != nil {
+		return ctx, fmt.Errorf("failed to evaluate DNS expression %q: %w", expression, err)
+	}
+	if domain == "" {
+		return ctx, fmt.Errorf("DNS expression %q evaluated to empty string", expression)
+	}
+
+	timeout := 10 * time.Minute
+	if tbl != nil {
+		for _, row := range tbl.Rows {
+			val := row.Cells[0].Value
+			if after, ok := strings.CutPrefix(val, "#"); ok {
+				parts := strings.SplitN(strings.TrimSpace(after), "=", 2)
+				if len(parts) == 2 && parts[0] == "timeout" {
+					d, err := time.ParseDuration(parts[1])
+					if err != nil {
+						return ctx, fmt.Errorf("invalid timeout value %q: %w", parts[1], err)
+					}
+					timeout = d
+				}
+			}
+		}
+	}
+
+	timeoutSec := int(timeout.Seconds())
+	// Script is passed inline via PodWithArguments (not PodWithScript) to avoid the
+	// #!/bin/bash shebang that PodWithScript injects — busybox has no bash.
+	// The pod command is already "/bin/sh -c", so the inline string runs under sh.
+	// nslookup in busybox always exits 0 (even on NXDOMAIN), so success is detected
+	// by grepping for bare IPv4 Address lines (server line has a port: "1.2.3.4:53").
+	script := strings.Join([]string{
+		fmt.Sprintf("DOMAIN=%q", domain),
+		fmt.Sprintf("DEADLINE=$(( $(date +%%s) + %d ))", timeoutSec),
+		`while [ "$(date +%s)" -lt "$DEADLINE" ]; do`,
+		`  RESULT=$(nslookup "$DOMAIN" 2>/dev/null || true)`,
+		`  if echo "$RESULT" | grep -qE '^Address: [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then`,
+		`    echo "DNS resolved: $DOMAIN"`,
+		`    exit 0`,
+		`  fi`,
+		`  sleep 5`,
+		`done`,
+		`echo "DNS did not resolve within timeout: $DOMAIN"`,
+		`exit 1`,
+	}, "\n")
+
+	name := "e2ednscheck" + util.RandomString(6)
+	b := NewPodBuilder(name, world.Config().SkrNamespace, "busybox:1.36").
+		WithPodDetails(
+			PodWithArguments(script),
+		).
+		WithAnnotation(e2elib.ScenarioNameAnnotation, session.GetScenarioName()).
+		WithAnnotation(e2elib.StepNameAnnotation, session.GetStepName())
+
+	if err := session.CurrentCluster().AddResources(ctx, &ResourceDeclaration{
+		Alias:      name,
+		Kind:       "Pod",
+		ApiVersion: "v1",
+		Name:       name,
+		Namespace:  world.Config().SkrNamespace,
+	}); err != nil {
+		return ctx, fmt.Errorf("failed to declare DNS check pod: %w", err)
+	}
+	if err := b.Create(ctx, session.CurrentCluster()); err != nil {
+		return ctx, fmt.Errorf("failed to create DNS check pod: %w", err)
+	}
+
+	dumpYamlText := b.DumpYamlText(session.CurrentCluster().GetScheme())
+
+	failed := false
+	err = session.EventuallyValueIsOK(
+		ctx,
+		fmt.Sprintf(`%s.status.phase == "Succeeded"`, name),
+		fmt.Sprintf(`%s.status.phase == "Failed"`, name),
+		fmt.Sprintf("#timeout=%s", (timeout+2*time.Minute).String()),
+	)
+	if err != nil {
+		failed = true
+	}
+
+	logs, err := session.CurrentCluster().PodLogs(ctx, world.Config().SkrNamespace, name, name)
+	if err != nil {
+		return ctx, fmt.Errorf("failed to get DNS check pod logs: %w", err)
+	}
+
+	if err := b.Delete(ctx, session.CurrentCluster().GetClient()); err != nil {
+		return ctx, fmt.Errorf("error deleting DNS check pod: %w", err)
+	}
+
+	if failed {
+		return ctx, fmt.Errorf("DNS check failed for %q:\n%s\n\n---\n%s", domain, logs, dumpYamlText)
+	}
+
+	return ctx, nil
+}
