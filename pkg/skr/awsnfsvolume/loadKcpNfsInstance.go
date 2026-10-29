@@ -3,6 +3,7 @@ package awsnfsvolume
 import (
 	"context"
 	"errors"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -30,7 +31,7 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 	if apierrors.IsNotFound(err) {
 		state.KcpNfsInstance = nil
 		logger.Info("KCP NfsInstance does not exist")
-		return nil, nil
+		return nil, ctx
 	}
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading KCP NfsInstance", composed.StopWithRequeue, ctx)
@@ -38,5 +39,5 @@ func loadKcpNfsInstance(ctx context.Context, st composed.State) (error, context.
 
 	state.KcpNfsInstance = kcpNfsInstnace
 
-	return nil, nil
+	return nil, ctx
 }

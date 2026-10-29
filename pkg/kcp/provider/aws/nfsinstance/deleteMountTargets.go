@@ -2,12 +2,13 @@ package nfsinstance
 
 import (
 	"context"
+	"time"
+
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func deleteMountTargets(ctx context.Context, st composed.State) (error, context.Context) {
@@ -15,7 +16,7 @@ func deleteMountTargets(ctx context.Context, st composed.State) (error, context.
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.efs == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	stateRequeueDelayed := map[efstypes.LifeCycleState]struct{}{
@@ -39,7 +40,7 @@ func deleteMountTargets(ctx context.Context, st composed.State) (error, context.
 		_, shouldRequeueDelayed := stateRequeueDelayed[mt.LifeCycleState]
 		if shouldRequeueDelayed {
 			lll.Info("Waiting for mount target LifeCycleState")
-			return composed.StopWithRequeueDelay(300 * time.Millisecond), nil
+			return composed.StopWithRequeueDelay(10 * time.Second), ctx
 		}
 		_, okToDelete := stateOkToDelete[mt.LifeCycleState]
 		if !okToDelete {
@@ -56,8 +57,8 @@ func deleteMountTargets(ctx context.Context, st composed.State) (error, context.
 	}
 
 	if anyDeleted {
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
-	return nil, nil
+	return nil, ctx
 }

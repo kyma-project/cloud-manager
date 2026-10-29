@@ -439,7 +439,7 @@ func (l *skrLooper) handleOneSkr(skrWorkerId int, kymaName string) {
 		timedOut := strconv.FormatBool(workerCtx.Err() != nil)
 		metrics.SkrLooperConnectTotalSeconds.WithLabelValues(kymaName, timedOut).Observe(time.Since(tTotal).Seconds())
 		if workerCtx.Err() != nil {
-			logger.Error(nil, "SKR worker timeout exceeded", "workerTimeout", l.workerTimeout)
+			logger.Error(workerCtx.Err(), "SKR worker timeout exceeded", "workerTimeout", l.workerTimeout)
 		}
 	}()
 

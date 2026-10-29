@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -12,7 +13,7 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.ObjAsIpRange().Status.Id != "" {
-		return nil, nil
+		return nil, ctx
 	}
 
 	id := uuid.NewString()
@@ -36,5 +37,5 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 	logger.Info("SKR IpRange updated with ID status")
 
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeue, ctx
 }

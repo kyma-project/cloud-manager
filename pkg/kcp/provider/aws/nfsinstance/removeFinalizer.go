@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -13,7 +14,7 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 
 	isUpdated := controllerutil.RemoveFinalizer(state.ObjAsNfsInstance(), api.CommonFinalizerDeletionHook)
 	if !isUpdated {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Removing finalizer")
@@ -23,5 +24,5 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 		return composed.LogErrorAndReturn(err, "Error updating KCP NfsInstance after finalizer removed", composed.StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }

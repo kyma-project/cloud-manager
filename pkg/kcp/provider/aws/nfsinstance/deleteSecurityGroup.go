@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -13,7 +14,7 @@ func deleteSecurityGroup(ctx context.Context, st composed.State) (error, context
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.securityGroup == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.
@@ -25,5 +26,5 @@ func deleteSecurityGroup(ctx context.Context, st composed.State) (error, context
 		return awsmeta.LogErrorAndReturn(err, "Error deleting security group", ctx)
 	}
 
-	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }

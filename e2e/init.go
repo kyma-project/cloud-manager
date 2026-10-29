@@ -79,6 +79,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^debug wait "([^"]*)"$`, debugWait)
 	ctx.Step(`^debug log (true|false)$`, debugLog)
+	ctx.Step(`^debug sleep "([^"]*)"$`, debugSleep)
 
 	ctx.Step(`^eventually timeout is "([^"]*)"$`, eventuallyTimeoutIs)
 

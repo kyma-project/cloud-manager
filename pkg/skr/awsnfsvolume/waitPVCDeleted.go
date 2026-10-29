@@ -12,7 +12,7 @@ func waitPVCDeleted(ctx context.Context, st composed.State) (error, context.Cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	if !composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PVC == nil {
@@ -22,5 +22,5 @@ func waitPVCDeleted(ctx context.Context, st composed.State) (error, context.Cont
 	logger.Info("Waiting for PersistentVolumeClaim to be deleted")
 
 	// wait until PVC does not exist / gets deleted
-	return composed.StopWithRequeueDelay(2 * util.Timing.T100ms()), nil
+	return composed.StopWithRequeueDelay(2 * util.Timing.T100ms()), ctx
 }

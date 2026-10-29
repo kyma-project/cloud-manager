@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common"
@@ -12,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func createEfs(ctx context.Context, st composed.State) (error, context.Context) {
@@ -20,7 +21,7 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 	state := st.(*State)
 
 	if state.efs != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	out, err := state.awsClient.CreateFileSystem(
@@ -64,7 +65,7 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 			return awsmeta.LogErrorAndReturn(err, "Error updating NfsInstance status due failed creating efs", ctx)
 		}
 
-		return composed.StopWithRequeueDelay(time.Minute), nil
+		return composed.StopWithRequeueDelay(time.Minute), ctx
 	}
 
 	logger = logger.WithValues("efsId", *out.FileSystemId)

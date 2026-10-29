@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,7 +12,7 @@ func validateIpRangeSubnets(ctx context.Context, st composed.State) (error, cont
 	state := st.(*State)
 
 	if len(state.IpRange().Status.Subnets) > 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	return composed.UpdateStatus(state.ObjAsNfsInstance()).

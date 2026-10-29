@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -33,7 +34,7 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 			}
 		}
 		if hasPods && hasNet {
-			return nil, nil
+			return nil, ctx
 		}
 	}
 
@@ -67,7 +68,7 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 	}
 
 	if len(permissions) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	err := state.awsClient.AuthorizeSecurityGroupIngress(ctx, state.securityGroupId, permissions)
@@ -75,5 +76,5 @@ func authorizeSecurityGroupIngress(ctx context.Context, st composed.State) (erro
 		return awsmeta.LogErrorAndReturn(err, "Error adding security group ingress", ctx)
 	}
 
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeue, ctx
 }

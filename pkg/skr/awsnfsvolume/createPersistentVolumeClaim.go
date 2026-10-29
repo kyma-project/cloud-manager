@@ -2,6 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -15,15 +16,14 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 	if state.PVC != nil {
-		logger.Info("PersistentVolumeClaim for AwsNfsVolume already exists")
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.Volume == nil {
-		return composed.StopWithRequeueDelay(2 * util.Timing.T100ms()), nil
+		return composed.StopWithRequeueDelay(2 * util.Timing.T100ms()), ctx
 	}
 
 	pvc := &corev1.PersistentVolumeClaim{
@@ -53,5 +53,5 @@ func createPersistentVolumeClaim(ctx context.Context, st composed.State) (error,
 
 	logger.Info("PVC for AWS PV created")
 
-	return nil, nil
+	return nil, ctx
 }

@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -13,7 +14,7 @@ func removeReadyCondition(ctx context.Context, st composed.State) (error, contex
 
 	readyCond := meta.FindStatusCondition(*state.ObjAsNfsInstance().Conditions(), cloudcontrolv1beta1.ConditionTypeReady)
 	if readyCond == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Removing Ready condition")
@@ -24,5 +25,5 @@ func removeReadyCondition(ctx context.Context, st composed.State) (error, contex
 		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after removing Ready condition", composed.StopWithRequeue, ctx)
 	}
 
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeue, ctx
 }

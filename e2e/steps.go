@@ -80,6 +80,15 @@ func debugWait(ctx context.Context, suffix string) (context.Context, error) {
 	return ctx, err
 }
 
+func debugSleep(ctx context.Context, val string) (context.Context, error) {
+	duration, err := time.ParseDuration(val)
+	if err != nil {
+		return ctx, fmt.Errorf("error parsing duration %q: %w", val, err)
+	}
+	time.Sleep(duration)
+	return ctx, nil
+}
+
 func errEvalContextBuilding(err error) error {
 	return fmt.Errorf("error building evaluation context: %w", err)
 }
