@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"sigs.k8s.io/yaml"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	appsv1 "k8s.io/api/apps/v1"
@@ -23,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 )
 
 // ModuleManifestComponent downloads a Kyma module's operator manifest and default CR from its
