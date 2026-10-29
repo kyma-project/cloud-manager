@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-func createRoutes(ctx context.Context, st composed.State) (error, context.Context) {
+func createLocalRoutes(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	remoteCidrs := alicloudvpcpeeringclient.RemoteIpv4Cidrs(state.vpcPeering)

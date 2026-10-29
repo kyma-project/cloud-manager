@@ -43,7 +43,7 @@ func New(stateFactory StateFactory) composed.Action {
 					createVpcPeerConnection,
 					acceptVpcPeerConnection,
 					waitVpcPeeringActive,
-					createRoutes,
+					createLocalRoutes,
 					createRemoteRoutes,
 					updateSuccessStatus,
 					composed.StopAndForgetAction,
