@@ -29,22 +29,8 @@ func GetAwsElastiCacheSecurityGroupName(name string) string {
 	return fmt.Sprintf("cm-%s", name)
 }
 
+// GetAwsElastiCacheParameterGroupFamily maps a supported engine version (6.x / 7.0 / 7.1, per the CRD enum) to its ElastiCache parameter-group family.
 func GetAwsElastiCacheParameterGroupFamily(engineVersion string) string {
-	if strings.HasPrefix(engineVersion, "2.6") {
-		return "redis2.6"
-	}
-	if strings.HasPrefix(engineVersion, "2.8") {
-		return "redis2.8"
-	}
-	if strings.HasPrefix(engineVersion, "3.2") {
-		return "redis3.2"
-	}
-	if strings.HasPrefix(engineVersion, "4.0") {
-		return "redis4.0"
-	}
-	if strings.HasPrefix(engineVersion, "5.0") {
-		return "redis5.0"
-	}
 	if strings.HasPrefix(engineVersion, "6.") {
 		return "redis6.x"
 	}

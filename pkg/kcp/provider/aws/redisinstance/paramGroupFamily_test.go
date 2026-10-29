@@ -7,19 +7,15 @@ import (
 )
 
 func TestGetAwsElastiCacheParameterGroupFamily(t *testing.T) {
+	// engineVersion is constrained by the CRD enum to 6.x / 7.0 / 7.1; anything else falls back to "".
 	cases := []struct {
 		engineVersion string
 		expected      string
 	}{
-		{"2.6.13", "redis2.6"},
-		{"2.8.24", "redis2.8"},
-		{"3.2.6", "redis3.2"},
-		{"4.0.10", "redis4.0"},
-		{"5.0.6", "redis5.0"},
-		{"6.0", "redis6.x"},
-		{"6.2", "redis6.x"},
+		{"6.x", "redis6.x"},
 		{"7.0", "redis7"},
 		{"7.1", "redis7"},
+		{"5.0", ""},
 		{"8.0", ""},
 		{"unknown", ""},
 		{"", ""},
