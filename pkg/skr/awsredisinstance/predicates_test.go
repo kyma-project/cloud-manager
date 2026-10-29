@@ -6,40 +6,32 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestKcpRedisInstanceReady(t *testing.T) {
+func TestKcpRedisInstanceProvisioned(t *testing.T) {
 	t.Run("false when KcpRedisInstance is nil", func(t *testing.T) {
-		state := &State{}
-		assert.False(t, kcpRedisInstanceReady(context.Background(), state))
+		assert.False(t, kcpRedisInstanceProvisioned(context.Background(), &State{}))
 	})
 
-	t.Run("false when KcpRedisInstance has no Ready condition", func(t *testing.T) {
+	t.Run("false when PrimaryEndpoint is not yet published", func(t *testing.T) {
 		state := &State{KcpRedisInstance: &cloudcontrolv1beta1.RedisInstance{}}
-		assert.False(t, kcpRedisInstanceReady(context.Background(), state))
+		assert.False(t, kcpRedisInstanceProvisioned(context.Background(), state))
 	})
 
-	t.Run("true when Ready condition has ConditionTrue", func(t *testing.T) {
+	t.Run("true when PrimaryEndpoint is published", func(t *testing.T) {
 		kcp := &cloudcontrolv1beta1.RedisInstance{}
-		kcp.Status.Conditions = []metav1.Condition{{
-			Type:   cloudcontrolv1beta1.ConditionTypeReady,
-			Status: metav1.ConditionTrue,
-		}}
+		kcp.Status.PrimaryEndpoint = "host:6379"
 		state := &State{KcpRedisInstance: kcp}
-		assert.True(t, kcpRedisInstanceReady(context.Background(), state))
+		assert.True(t, kcpRedisInstanceProvisioned(context.Background(), state))
 	})
 
-	// Presence-only by design, matching updateStatus's own Ready check: KCP only
-	// ever publishes Ready with Status=True (SetExclusiveConditions), so presence
-	// is equivalent to True in practice. This pins that intent.
-	t.Run("true when Ready condition is present even with ConditionFalse (presence-only)", func(t *testing.T) {
+	// The endpoint persists across the Ready/Updating condition churn: during a
+	// modify KCP clears the Ready condition but keeps Status.PrimaryEndpoint, so
+	// the gate stays true and the secret keeps reconciling.
+	t.Run("true with endpoint but no Ready condition (modify window)", func(t *testing.T) {
 		kcp := &cloudcontrolv1beta1.RedisInstance{}
-		kcp.Status.Conditions = []metav1.Condition{{
-			Type:   cloudcontrolv1beta1.ConditionTypeReady,
-			Status: metav1.ConditionFalse,
-		}}
+		kcp.Status.PrimaryEndpoint = "host:6379"
 		state := &State{KcpRedisInstance: kcp}
-		assert.True(t, kcpRedisInstanceReady(context.Background(), state))
+		assert.True(t, kcpRedisInstanceProvisioned(context.Background(), state))
 	})
 }

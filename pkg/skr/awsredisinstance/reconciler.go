@@ -69,7 +69,7 @@ func (r *reconciler) newAction() composed.Action {
 				createKcpRedisInstance,
 				waitKcpStatusUpdate,
 				composed.If(
-					kcpRedisInstanceReady,
+					kcpRedisInstanceProvisioned,
 					createAuthSecret,
 					loadAuthSecret,
 					modifyAuthSecret,
