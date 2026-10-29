@@ -47,7 +47,7 @@ func deleteCertificate(ctx context.Context, st composed.State) (error, context.C
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	if cert.Status.State == cloudresourcesv1beta1.ReasonDeletionBlockedByDependents {
+	if cert.State() == cloudresourcesv1beta1.ReasonDeletionBlockedByDependents {
 		logger.Info("Certificate is no longer in use, clearing DeletionBlockedByDependents state")
 		err, _ := composed.NewStatusPatcherComposed(cert).
 			MutateStatus(func(c *cloudresourcesv1beta1.Certificate) {

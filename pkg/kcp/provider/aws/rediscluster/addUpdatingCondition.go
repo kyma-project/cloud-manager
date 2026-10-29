@@ -15,7 +15,7 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	redisInstance := state.ObjAsRedisCluster()
+	redisCluster := state.ObjAsRedisCluster()
 
 	if state.elastiCacheReplicationGroup == nil {
 		return nil, ctx
@@ -23,7 +23,7 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 
 	cacheState := ptr.Deref(state.elastiCacheReplicationGroup.Status, "")
 	isModifying := cacheState == awsmeta.ElastiCache_MODIFYING
-	hasUpdatingCondition := meta.FindStatusCondition(redisInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeUpdating) != nil
+	hasUpdatingCondition := meta.FindStatusCondition(redisCluster.Status.Conditions, cloudcontrolv1beta1.ConditionTypeUpdating) != nil
 
 	if !isModifying && !hasUpdatingCondition {
 		return nil, ctx
@@ -34,8 +34,8 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 	}
 
 	if isModifying && !hasUpdatingCondition {
-		logger.Info("Adding updating condition to redis instance.")
-		return composed.UpdateStatus(redisInstance).
+		logger.Info("Adding updating condition to redis cluster.")
+		return composed.UpdateStatus(redisCluster).
 			SetCondition(metav1.Condition{
 				Type:    cloudcontrolv1beta1.ConditionTypeUpdating,
 				Status:  metav1.ConditionTrue,
@@ -43,16 +43,21 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 				Message: "ElastiCache is updating.",
 			}).
 			SuccessErrorNil().
-			ErrorLogMessage("Failed to add updating condition to redis instance").
+			ErrorLogMessage("Failed to add updating condition to redis cluster").
 			Run(ctx, st)
 	}
 
 	if !isModifying && hasUpdatingCondition {
-		logger.Info("Removing updating condition from redis instance")
-		return composed.UpdateStatus(redisInstance).
+		// Auto-heal deletes+recreates the RG; keep ConditionTypeUpdating while it is
+		// deleting so the recovery stays visible. Clear it once the RG leaves deleting.
+		if cacheState == awsmeta.ElastiCache_DELETING {
+			return nil, ctx
+		}
+		logger.Info("Removing updating condition from redis cluster")
+		return composed.UpdateStatus(redisCluster).
 			RemoveConditions(cloudcontrolv1beta1.ConditionTypeUpdating).
 			SuccessErrorNil().
-			ErrorLogMessage("Failed to remove updating condition from redis instance").
+			ErrorLogMessage("Failed to remove updating condition from redis cluster").
 			Run(ctx, st)
 	}
 

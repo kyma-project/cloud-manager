@@ -322,6 +322,8 @@ Feature: WafPolicy feature
         controller: ingress.k8s.aws/alb
       """
 
+    Then eventually "ingressclass.metadata.uid" is ok
+
     # Step 4: Expose application via ALB
     When resource "ingress" is created:
       """
