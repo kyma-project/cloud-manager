@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/alibabacloud-go/tea/tea"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -26,26 +27,27 @@ func waitVpcPeeringActive(ctx context.Context, st composed.State) (error, contex
 	}
 
 	state.vpcPeering = info
+	status := tea.StringValue(info.Status)
 
-	if info.Status == "Activated" {
+	if status == "Activated" {
 		logger.Info("AliCloud VpcPeerConnection is Activated")
 		return nil, ctx
 	}
 
 	// Deleting/Deleted: still in-flight or already gone; the delete pipeline handles these.
-	if info.Status == "Deleting" || info.Status == "Deleted" {
-		logger.Info("AliCloud VpcPeerConnection is being deleted", "status", info.Status)
+	if status == "Deleting" || status == "Deleted" {
+		logger.Info("AliCloud VpcPeerConnection is being deleted", "status", status)
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
 	// Rejected or Expired: unrecoverable — surface an error condition so the operator can act.
-	if info.Status == "Rejected" || info.Status == "Expired" {
-		logger.Info("AliCloud VpcPeerConnection is in unrecoverable state", "status", info.Status)
+	if status == "Rejected" || status == "Expired" {
+		logger.Info("AliCloud VpcPeerConnection is in unrecoverable state", "status", status)
 		meta.SetStatusCondition(obj.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
 			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonFailedCreatingVpcPeeringConnection,
-			Message: fmt.Sprintf("VpcPeerConnection is in unrecoverable state: %s", info.Status),
+			Message: fmt.Sprintf("VpcPeerConnection is in unrecoverable state: %s", status),
 		})
 		obj.Status.State = string(cloudcontrolv1beta1.StateError)
 		return composed.PatchStatus(obj).
@@ -55,6 +57,6 @@ func waitVpcPeeringActive(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state)
 	}
 
-	logger.Info("AliCloud VpcPeerConnection waiting", "status", info.Status)
+	logger.Info("AliCloud VpcPeerConnection waiting", "status", status)
 	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }

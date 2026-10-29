@@ -14,22 +14,44 @@ import (
 	alicloudmetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/metrics"
 )
 
-// VpcPeerInfo is a flattened view of a VpcPeerConnection, unwrapping nested SDK structs.
-type VpcPeerInfo struct {
-	InstanceId      string
-	Status          string   // Creating, Accepting, Activated, Deleting, Deleted, Rejected, Expired
-	RemoteVpcId     string   // from AcceptingVpc.VpcId
-	RemoteIpv4Cidrs []string // from AcceptingVpc.Ipv4Cidrs
-}
-
-// IsTerminal reports whether the peering connection has reached a state from which
-// it cannot recover: Rejected, Expired, Deleted, or Deleting.
-func (v *VpcPeerInfo) IsTerminal() bool {
-	switch v.Status {
+// IsTerminal reports whether the given peering connection status is one from which
+// it cannot recover: Rejected, Expired, Deleted, or Deleting. Mirrors the AWS provider's
+// awsutil.IsTerminatedOrDeleting free function.
+func IsTerminal(status string) bool {
+	switch status {
 	case "Rejected", "Expired", "Deleted", "Deleting":
 		return true
 	}
 	return false
+}
+
+// RemoteVpcId returns the accepting (remote) VPC id from a peering connection body,
+// or "" when the AcceptingVpc block is absent.
+func RemoteVpcId(peering *vpcpeer.GetVpcPeerConnectionAttributeResponseBody) string {
+	if peering == nil || peering.AcceptingVpc == nil {
+		return ""
+	}
+	return tea.StringValue(peering.AcceptingVpc.VpcId)
+}
+
+// RemoteIpv4Cidrs returns the accepting (remote) VPC IPv4 CIDRs from a peering connection
+// body, or nil when the AcceptingVpc block is absent.
+func RemoteIpv4Cidrs(peering *vpcpeer.GetVpcPeerConnectionAttributeResponseBody) []string {
+	if peering == nil || peering.AcceptingVpc == nil {
+		return nil
+	}
+	cidrs := make([]string, 0, len(peering.AcceptingVpc.Ipv4Cidrs))
+	for _, cidr := range peering.AcceptingVpc.Ipv4Cidrs {
+		cidrs = append(cidrs, tea.StringValue(cidr))
+	}
+	return cidrs
+}
+
+// VpcPeerConnectionListItem is the minimal projection returned by ListVpcPeerConnections:
+// just enough to find a non-terminal connection by name and then re-get it by id.
+type VpcPeerConnectionListItem struct {
+	InstanceId string
+	Status     string
 }
 
 // RouteTableInfo is a flattened view of a route table entry.
@@ -41,9 +63,9 @@ type RouteTableInfo struct {
 type Client interface {
 	CreateVpcPeerConnection(ctx context.Context, vpcId, acceptingAliUid, acceptingRegion, acceptingVpcId, name string) (instanceId string, err error)
 	AcceptVpcPeerConnection(ctx context.Context, instanceId string) error
-	GetVpcPeerConnection(ctx context.Context, instanceId string) (*VpcPeerInfo, error)
+	GetVpcPeerConnection(ctx context.Context, instanceId string) (*vpcpeer.GetVpcPeerConnectionAttributeResponseBody, error)
 	DeleteVpcPeerConnection(ctx context.Context, instanceId string) error
-	ListVpcPeerConnections(ctx context.Context, vpcId, name string) ([]VpcPeerInfo, error)
+	ListVpcPeerConnections(ctx context.Context, vpcId, name string) ([]VpcPeerConnectionListItem, error)
 	DescribeVpc(ctx context.Context, vpcId string) (map[string]string, error)
 	DescribeRouteTables(ctx context.Context, vpcId string) ([]RouteTableInfo, error)
 	CreateRouteEntry(ctx context.Context, routeTableId, destCidr, instanceId string) error
@@ -131,7 +153,7 @@ func (c *alicloudVpcPeeringClient) AcceptVpcPeerConnection(ctx context.Context, 
 	return nil
 }
 
-func (c *alicloudVpcPeeringClient) GetVpcPeerConnection(ctx context.Context, instanceId string) (*VpcPeerInfo, error) {
+func (c *alicloudVpcPeeringClient) GetVpcPeerConnection(ctx context.Context, instanceId string) (*vpcpeer.GetVpcPeerConnectionAttributeResponseBody, error) {
 	req := &vpcpeer.GetVpcPeerConnectionAttributeRequest{
 		InstanceId: new(instanceId),
 	}
@@ -145,18 +167,7 @@ func (c *alicloudVpcPeeringClient) GetVpcPeerConnection(ctx context.Context, ins
 	if resp.Body == nil {
 		return nil, nil
 	}
-	b := resp.Body
-	info := &VpcPeerInfo{
-		InstanceId: tea.StringValue(b.InstanceId),
-		Status:     tea.StringValue(b.Status),
-	}
-	if b.AcceptingVpc != nil {
-		info.RemoteVpcId = tea.StringValue(b.AcceptingVpc.VpcId)
-		for _, cidr := range b.AcceptingVpc.Ipv4Cidrs {
-			info.RemoteIpv4Cidrs = append(info.RemoteIpv4Cidrs, tea.StringValue(cidr))
-		}
-	}
-	return info, nil
+	return resp.Body, nil
 }
 
 func (c *alicloudVpcPeeringClient) DeleteVpcPeerConnection(ctx context.Context, instanceId string) error {
@@ -173,8 +184,8 @@ func (c *alicloudVpcPeeringClient) DeleteVpcPeerConnection(ctx context.Context, 
 	return nil
 }
 
-func (c *alicloudVpcPeeringClient) ListVpcPeerConnections(ctx context.Context, vpcId, name string) ([]VpcPeerInfo, error) {
-	var result []VpcPeerInfo
+func (c *alicloudVpcPeeringClient) ListVpcPeerConnections(ctx context.Context, vpcId, name string) ([]VpcPeerConnectionListItem, error) {
+	var result []VpcPeerConnectionListItem
 	var nextToken *string
 	for {
 		req := &vpcpeer.ListVpcPeerConnectionsRequest{
@@ -194,17 +205,10 @@ func (c *alicloudVpcPeeringClient) ListVpcPeerConnections(ctx context.Context, v
 			break
 		}
 		for _, p := range resp.Body.VpcPeerConnects {
-			info := VpcPeerInfo{
+			result = append(result, VpcPeerConnectionListItem{
 				InstanceId: tea.StringValue(p.InstanceId),
 				Status:     tea.StringValue(p.Status),
-			}
-			if p.AcceptingVpc != nil {
-				info.RemoteVpcId = tea.StringValue(p.AcceptingVpc.VpcId)
-				for _, cidr := range p.AcceptingVpc.Ipv4Cidrs {
-					info.RemoteIpv4Cidrs = append(info.RemoteIpv4Cidrs, tea.StringValue(cidr))
-				}
-			}
-			result = append(result, info)
+			})
 		}
 		if resp.Body.NextToken == nil || tea.StringValue(resp.Body.NextToken) == "" {
 			break
