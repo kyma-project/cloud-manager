@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	alicloudvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -35,9 +36,18 @@ func loadVpcPeerConnection(ctx context.Context, st composed.State) (error, conte
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error listing AliCloud VpcPeerConnections", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
-	for i := range list {
-		if !list[i].IsTerminal() {
-			state.vpcPeering = &list[i]
+	for _, item := range list {
+		if alicloudvpcpeeringclient.IsTerminal(item.Status) {
+			continue
+		}
+		// Re-get by id so state holds the full GetVpcPeerConnectionAttribute body (the list
+		// projection omits AcceptingVpc/CIDRs that downstream route actions need).
+		info, err := state.client.GetVpcPeerConnection(ctx, item.InstanceId)
+		if err != nil {
+			return composed.LogErrorAndReturn(err, "Error loading AliCloud VpcPeerConnection found by name", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
+		}
+		if info != nil {
+			state.vpcPeering = info
 			break
 		}
 	}

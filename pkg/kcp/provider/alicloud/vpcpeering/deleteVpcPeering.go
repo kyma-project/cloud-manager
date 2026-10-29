@@ -3,6 +3,7 @@ package vpcpeering
 import (
 	"context"
 
+	"github.com/alibabacloud-go/tea/tea"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	alicloudvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -18,12 +19,12 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	// If the connection is already gone, nothing to do.
-	if state.vpcPeering != nil && state.vpcPeering.Status == "Deleted" {
+	if state.vpcPeering != nil && tea.StringValue(state.vpcPeering.Status) == "Deleted" {
 		return nil, ctx
 	}
 
 	// While the connection is still transitioning, wait.
-	if state.vpcPeering != nil && state.vpcPeering.Status == "Deleting" {
+	if state.vpcPeering != nil && tea.StringValue(state.vpcPeering.Status) == "Deleting" {
 		logger.Info("AliCloud VpcPeerConnection is still Deleting, requeueing")
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	vpcpeer "github.com/alibabacloud-go/vpcpeer-20220101/client"
 	"github.com/go-logr/logr"
 	alicloudconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/config"
 	alicloudvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering/client"
@@ -23,7 +24,7 @@ type State struct {
 	remoteRegion    string
 	remoteAccountId string
 
-	vpcPeering        *alicloudvpcpeeringclient.VpcPeerInfo
+	vpcPeering        *vpcpeer.GetVpcPeerConnectionAttributeResponseBody
 	routeTables       []alicloudvpcpeeringclient.RouteTableInfo
 	remoteRouteTables []alicloudvpcpeeringclient.RouteTableInfo
 }
