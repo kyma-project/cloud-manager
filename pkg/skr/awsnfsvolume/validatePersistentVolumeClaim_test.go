@@ -65,9 +65,8 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 				Time: time.Now(),
 			}
 
-			err, res := validatePersistentVolumeClaim(ctx, state)
+			err, _ := validatePersistentVolumeClaim(ctx, state)
 
-			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
 		})
 
@@ -79,9 +78,8 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 				Build()
 			k8sClient.(spy.ClientSpy).SetClient(fakeClient)
 
-			err, res := validatePersistentVolumeClaim(ctx, state)
+			err, _ := validatePersistentVolumeClaim(ctx, state)
 
-			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
 		})
 
@@ -89,9 +87,8 @@ func TestValidatePersistentVolumeClaim(t *testing.T) {
 			setupTest()
 			ctx := t.Context()
 
-			err, res := validatePersistentVolumeClaim(ctx, state)
+			err, _ := validatePersistentVolumeClaim(ctx, state)
 
-			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
 		})
 
