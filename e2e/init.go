@@ -79,7 +79,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^debug wait "([^"]*)"$`, debugWait)
 	ctx.Step(`^debug log (true|false)$`, debugLog)
-	ctx.Step(`^debug sleep "([^"]*)"$`, debugSleep)
 
 	ctx.Step(`^eventually timeout is "([^"]*)"$`, eventuallyTimeoutIs)
 
@@ -103,6 +102,10 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^resource "([^"]*)" does not exist$`, resourceDoesNotExist)
 	ctx.Step(`^logs of container "([^"]*)" in pod "([^"]*)" contain "([^"]*)"$`, logsOfContainerInPodContain)
 	ctx.Step(`^HTTP operation succeeds:$`, httpOperationSucceeds)
+	ctx.Step(`^eventually DNS for "([^"]*)" resolves$`, func(ctx context.Context, expr string) (context.Context, error) {
+		return eventuallyDNSResolves(ctx, expr, nil)
+	})
+	ctx.Step(`^eventually DNS for "([^"]*)" resolves:$`, eventuallyDNSResolves)
 	ctx.Step(`^Redis "([^"]*)" gives "([^"]*)" with:$`, redisGivesWith)
 	ctx.Step(`^tf module "([^"]*)" is applied:$`, tfModuleIsApplied)
 	ctx.Step(`^tf module "([^"]*)" is destroyed$`, tfModuleIsDestroyed)

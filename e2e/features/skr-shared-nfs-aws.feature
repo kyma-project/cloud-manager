@@ -1,7 +1,7 @@
 Feature: AWS NfsVolume feature
 
   @skr @aws @nfs
-  Scenario: AwsNfsVolume scenario
+  Scenario: AwsNfsVolume in default IpRange scenario
 
     Given there is shared SKR with "AWS" provider
 
@@ -26,6 +26,7 @@ Feature: AWS NfsVolume feature
     And "vol.status.state == 'Ready'" is ok
     And eventually "pv.status.phase == 'Bound'" is ok
     And eventually "pvc.status.phase == 'Bound'" is ok
+    And eventually DNS for "${vol.status.server}" resolves
 
     # write initial content to the file, one that will be backed up
     And PVC "pvc" file operations succeed:
@@ -100,6 +101,7 @@ Feature: AWS NfsVolume feature
     And "vol1.status.state == 'Ready'" is ok
     And eventually "pv1.status.phase == 'Bound'" is ok
     And eventually "pvc1.status.phase == 'Bound'" is ok
+    And eventually DNS for "${vol1.status.server}" resolves
     And PVC "pvc1" file operations succeed:
       | Operation | Path     | Content     |
       | Create    | test.txt | first value |
@@ -111,18 +113,23 @@ Feature: AWS NfsVolume feature
     And "vol2.status.state == 'Ready'" is ok
     And eventually "pv2.status.phase == 'Bound'" is ok
     And eventually "pvc2.status.phase == 'Bound'" is ok
+    And eventually DNS for "${vol2.status.server}" resolves
     And PVC "pvc2" file operations succeed:
       | Operation | Path     | Content     |
       | Create    | test.txt | first value |
 
     # clean-up and delete --------------------
 
-    Then debug wait "mtwait"
-
     When resource "vol1" is deleted
     When resource "vol2" is deleted
     When resource "range2" is deleted
 
     Then eventually resource "vol1" does not exist
+    And eventually resource "pv1" does not exist
+    And eventually resource "vol1" does not exist
+
     Then eventually resource "vol2" does not exist
+    And eventually resource "pv2" does not exist
+    And eventually resource "vol2" does not exist
+
     Then eventually resource "range2" does not exist
