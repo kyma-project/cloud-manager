@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 )
 
 // ModuleManifestComponent downloads a Kyma module's operator manifest and default CR from its
@@ -44,6 +45,7 @@ const (
 	readyStateReady    = "Ready"
 	readyStateError    = "Error"
 	pollInterval       = 5 * time.Second
+	stableWindow       = 20 * time.Second
 )
 
 // ModuleManifest constructs a ModuleManifestComponent for the given module, loading the e2e config
@@ -253,6 +255,10 @@ func (m *moduleManifest) InstallDefaultCR(kubeClient client.Client, timeout time
 	gvk := m.defaultCR.GroupVersionKind()
 
 	m.logger.Info("Waiting for default CR to become ready", "name", m.defaultCR.GetName())
+	var (
+		stableState string
+		stableUntil time.Time
+	)
 	err := wait.PollUntilContextTimeout(ctx, pollInterval, timeout, true, func(ctx context.Context) (bool, error) {
 		current := &unstructured.Unstructured{}
 		current.SetGroupVersionKind(gvk)
@@ -266,14 +272,30 @@ func (m *moduleManifest) InstallDefaultCR(kubeClient client.Client, timeout time
 		if err != nil {
 			return false, fmt.Errorf("error reading default CR %s status.state: %w", key, err)
 		}
-		switch state {
-		case readyStateReady:
-			return true, nil
-		case readyStateError:
-			return false, fmt.Errorf("default CR %s is in Error state", key)
-		default:
+
+		isTerminal := state == readyStateReady || state == readyStateError
+		if !isTerminal || state != stableState {
+			stableState = state
+			if isTerminal {
+				stableUntil = time.Now().Add(stableWindow)
+			}
 			return false, nil
 		}
+
+		if time.Now().Before(stableUntil) {
+			return false, nil
+		}
+
+		if state == readyStateReady {
+			return true, nil
+		}
+
+		statusVal, _, _ := unstructured.NestedFieldNoCopy(current.Object, "status")
+		statusYAML, yamlErr := yaml.Marshal(statusVal)
+		if yamlErr != nil {
+			return false, fmt.Errorf("default CR %s is in Error state", key)
+		}
+		return false, fmt.Errorf("default CR %s is in Error state:\n%s", key, string(statusYAML))
 	})
 	if err != nil {
 		return err
