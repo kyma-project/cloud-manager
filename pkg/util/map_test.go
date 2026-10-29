@@ -215,6 +215,17 @@ func TestParseTemplatesMapToBytesMap(t *testing.T) {
 			assert.Equal(t, "laser", string(result["prefix"]))
 		})
 
+		t.Run("should handle key with trailing dash without corruption", func(t *testing.T) {
+			templates := map[string]string{
+				"ref": "{{.name-}}",
+			}
+			data := map[string]string{"name-": "dashed"}
+
+			result := ParseTemplatesMapToBytesMap(templates, data)
+
+			assert.Equal(t, "dashed", string(result["ref"]))
+		})
+
 		t.Run("should not execute CVE DoS payload (deeply nested range)", func(t *testing.T) {
 			// Regression test: the original vulnerability allowed a tenant to supply
 			// deeply nested {{range}} directives that exhausted CPU/memory in the shared pod.

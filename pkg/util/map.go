@@ -3,7 +3,6 @@ package util
 import (
 	"maps"
 	"regexp"
-	"sort"
 	"strings"
 )
 
@@ -34,7 +33,7 @@ func MergeMaps[K comparable, V any](first, second map[K]V, onCollisionOverwrite 
 func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[string][]byte {
 	result := map[string][]byte{}
 
-	if templatesMap == nil {
+	if len(templatesMap) == 0 {
 		return result
 	}
 	if dataMap == nil {
@@ -44,17 +43,16 @@ func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[st
 	// Build a single regex matching {{[-\s]*.key[-\s]*}} for each key in dataMap.
 	// This mimics text/template field access ({{.key}}, {{ .key }}, {{- .key -}}, etc.)
 	// without executing arbitrary template actions like range, call, pipe, etc.
-	keyPatterns := make([]string, 0, len(dataMap))
-	for k := range dataMap {
-		keyPatterns = append(keyPatterns, regexp.QuoteMeta(k))
-	}
-	// Sort longest first so that prefix keys (e.g. "h") never shadow longer ones (e.g. "host")
-	// when the alternation is evaluated left-to-right.
-	sort.Slice(keyPatterns, func(i, j int) bool { return len(keyPatterns[i]) > len(keyPatterns[j]) })
-
 	var re *regexp.Regexp
-	if len(keyPatterns) > 0 {
-		// Pattern: optional trim marker (-), optional whitespace, .key, optional whitespace, optional trim marker (-)
+	if len(dataMap) > 0 {
+		keyPatterns := make([]string, 0, len(dataMap))
+		for k := range dataMap {
+			keyPatterns = append(keyPatterns, regexp.QuoteMeta(k))
+		}
+		// Capture group 1 contains the exact matched key — used directly in the closure below.
+		// Key order within the alternation does not matter: Go's RE2 engine requires the full
+		// pattern (including \s*-?\}\}) to match, so a short key like "h" cannot steal the match
+		// from "host" — "ost\s*-?\}\}" won't follow "h" in "{{.host}}".
 		joined := "(" + strings.Join(keyPatterns, "|") + ")"
 		re = regexp.MustCompile(`\{\{-?\s*\.` + joined + `\s*-?\}\}`)
 	}
@@ -65,16 +63,8 @@ func ParseTemplatesMapToBytesMap(templatesMap, dataMap map[string]string) map[st
 			continue
 		}
 		result[k] = re.ReplaceAllFunc([]byte(v), func(match []byte) []byte {
-			// Extract the key name by stripping the {{ }}, optional trim markers, dot and whitespace.
-			s := string(match)
-			s = strings.TrimPrefix(s, "{{")
-			s = strings.TrimPrefix(s, "-")
-			s = strings.TrimSpace(s)
-			s = strings.TrimPrefix(s, ".")
-			s = strings.TrimSuffix(s, "}}")
-			s = strings.TrimSuffix(s, "-")
-			s = strings.TrimSpace(s)
-			if val, ok := dataMap[s]; ok {
+			key := re.FindSubmatch(match)[1]
+			if val, ok := dataMap[string(key)]; ok {
 				return []byte(val)
 			}
 			return match
