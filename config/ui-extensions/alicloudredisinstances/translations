@@ -1,0 +1,13 @@
+en:
+  configuration: Configuration
+  status: Status
+  status.state: State
+  spec.ipRange: Ip Range
+  spec.ipRange.name: Ip Range Name
+  spec.authSecret: Authentication Secret
+  spec.authSecret.name: Name
+  spec.authSecret.labels: Labels
+  spec.authSecret.annotations: Annotations
+  spec.authSecret.extraData: Extra Data
+  spec.engineVersion: Engine Version
+  spec.redisTier: Redis Tier
