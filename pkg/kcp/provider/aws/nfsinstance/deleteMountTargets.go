@@ -2,7 +2,6 @@ package nfsinstance
 
 import (
 	"context"
-	"time"
 
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -40,7 +39,7 @@ func deleteMountTargets(ctx context.Context, st composed.State) (error, context.
 		_, shouldRequeueDelayed := stateRequeueDelayed[mt.LifeCycleState]
 		if shouldRequeueDelayed {
 			lll.Info("Waiting for mount target LifeCycleState")
-			return composed.StopWithRequeueDelay(10 * time.Second), ctx
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 		}
 		_, okToDelete := stateOkToDelete[mt.LifeCycleState]
 		if !okToDelete {

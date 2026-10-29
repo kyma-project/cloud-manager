@@ -2,11 +2,11 @@ package nfsinstance
 
 import (
 	"context"
-	"time"
 
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -38,5 +38,5 @@ func waitEfsDeleted(ctx context.Context, st composed.State) (error, context.Cont
 		WithValues("lifeCycleState", state.efs.LifeCycleState).
 		Info("Waiting EFS gets deleted")
 
-	return composed.StopWithRequeueDelay(10 * time.Second), ctx
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }

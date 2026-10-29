@@ -3,7 +3,6 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
-	"time"
 
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -50,7 +49,7 @@ func waitMountTargetsAvailable(ctx context.Context, st composed.State) (error, c
 
 		case util.Delay:
 			lll.Info("Waiting for mount target to be available")
-			return composed.StopWithRequeueDelay(10 * time.Second), ctx
+			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 
 		case util.Error:
 			lll.Info("Mount target in error state")

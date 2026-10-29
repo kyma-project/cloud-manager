@@ -2,10 +2,10 @@ package nfsinstance
 
 import (
 	"context"
-	"time"
 
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func waitEfsAvailable(ctx context.Context, st composed.State) (error, context.Context) {
@@ -24,5 +24,5 @@ func waitEfsAvailable(ctx context.Context, st composed.State) (error, context.Co
 		WithValues("efsState", state.efs.LifeCycleState).
 		Info("Waiting EFS state to become Available")
 
-	return composed.StopWithRequeueDelay(10 * time.Second), ctx
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }
