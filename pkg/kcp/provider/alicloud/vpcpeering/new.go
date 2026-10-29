@@ -31,8 +31,8 @@ func New(stateFactory StateFactory) composed.Action {
 				composed.ComposeActions(
 					"alicloudVpcPeering-delete",
 					removeReadyCondition,
-					remoteRoutesDelete,
-					deleteRoutes,
+					deleteRemoteRoutes,
+					deleteLocalRoutes,
 					deleteVpcPeering,
 					actions.PatchRemoveCommonFinalizer(),
 				),
