@@ -60,6 +60,35 @@ type RouteTableInfo struct {
 	Tags         map[string]string
 }
 
+// RouteTablesForStrategy returns the subset of route tables to act on for the given strategy.
+// For MATCHED/UNMATCHED the shootName parameter is used as the tag KEY: a table is "matched"
+// when it carries that key with a non-empty value (e.g. tag key = "<shoot-name>", value = "true").
+// AUTO selects all tables; NONE skips all.
+func RouteTablesForStrategy(tables []RouteTableInfo, strategy, shootName string) []RouteTableInfo {
+	switch strategy {
+	case "NONE":
+		return nil
+	case "MATCHED":
+		var result []RouteTableInfo
+		for _, t := range tables {
+			if t.Tags[shootName] != "" {
+				result = append(result, t)
+			}
+		}
+		return result
+	case "UNMATCHED":
+		var result []RouteTableInfo
+		for _, t := range tables {
+			if t.Tags[shootName] == "" {
+				result = append(result, t)
+			}
+		}
+		return result
+	default: // AUTO
+		return tables
+	}
+}
+
 type Client interface {
 	CreateVpcPeerConnection(ctx context.Context, vpcId, acceptingAliUid, acceptingRegion, acceptingVpcId, name string) (instanceId string, err error)
 	AcceptVpcPeerConnection(ctx context.Context, instanceId string) error

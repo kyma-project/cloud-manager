@@ -30,7 +30,7 @@ func createRemoteClient(ctx context.Context, st composed.State) (error, context.
 
 	if remoteAccountId != state.localAccountId {
 		// On deletion, proceed with the local client so routes and the peering object can be
-		// cleaned up even without cross-account support. Remote-side cleanup (remoteRoutesDelete)
+		// cleaned up even without cross-account support. Remote-side cleanup (deleteRemoteRoutes)
 		// is gated by DeleteRemotePeering, so skipping the remote client here is safe.
 		if state.ObjAsVpcPeering().DeletionTimestamp != nil {
 			state.remoteClient = state.client
