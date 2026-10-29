@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	alicloudvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
-func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.Context) {
+func deleteRemoteRoutes(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
 	if state.ObjAsVpcPeering().Spec.Details == nil {
@@ -32,7 +33,7 @@ func remoteRoutesDelete(ctx context.Context, st composed.State) (error, context.
 	}
 	shootName := state.Scope().Spec.ShootName
 	strategy := string(state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy)
-	tables := routeTablesForStrategy(state.remoteRouteTables, strategy, shootName)
+	tables := alicloudvpcpeeringclient.RouteTablesForStrategy(state.remoteRouteTables, strategy, shootName)
 	for _, table := range tables {
 		if err := state.remoteClient.DeleteRouteEntry(ctx, table.RouteTableId, localVpcCidr, instanceId); err != nil {
 			return composed.LogErrorAndReturn(err, "Error deleting remote route entry", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
