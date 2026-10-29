@@ -10,7 +10,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/utils/ptr"
 )
 
 func TestScaleElastiCacheClusterShards_NilRGSkips(t *testing.T) {
@@ -41,7 +40,7 @@ func TestScaleElastiCacheClusterShards_ErrorSetsStateError(t *testing.T) {
 	stub := newElastiCacheStub()
 	stub.modifyShardConfigErr = errors.New("scale boom")
 	rg := &elasticachetypes.ReplicationGroup{
-		ReplicationGroupId: ptr.To("cm-abc"),
+		ReplicationGroupId: new("cm-abc"),
 		NodeGroups:         []elasticachetypes.NodeGroup{{}},
 	}
 	state := newTestState(t, "abc", false, rg, nil)
@@ -89,7 +88,7 @@ func TestScaleElastiCacheClusterReplicas_ErrorSetsStateError(t *testing.T) {
 	stub := newElastiCacheStub()
 	stub.modifyReplicaConfigErr = errors.New("scale boom")
 	rg := &elasticachetypes.ReplicationGroup{
-		ReplicationGroupId: ptr.To("cm-abc"),
+		ReplicationGroupId: new("cm-abc"),
 		NodeGroups:         []elasticachetypes.NodeGroup{{}},
 	}
 	state := newTestState(t, "abc", false, rg, nil)
@@ -110,7 +109,7 @@ func TestScaleElastiCacheClusterReplicas_ErrorSetsStateError(t *testing.T) {
 func TestScaleElastiCacheClusterShards_SuccessRequeues(t *testing.T) {
 	stub := newElastiCacheStub() // no error
 	rg := &elasticachetypes.ReplicationGroup{
-		ReplicationGroupId: ptr.To("cm-abc"),
+		ReplicationGroupId: new("cm-abc"),
 		NodeGroups:         []elasticachetypes.NodeGroup{{}},
 	}
 	state := newTestState(t, "abc", false, rg, nil)
@@ -128,7 +127,7 @@ func TestScaleElastiCacheClusterShards_SuccessRequeues(t *testing.T) {
 func TestScaleElastiCacheClusterReplicas_SuccessRequeues(t *testing.T) {
 	stub := newElastiCacheStub() // no error
 	rg := &elasticachetypes.ReplicationGroup{
-		ReplicationGroupId: ptr.To("cm-abc"),
+		ReplicationGroupId: new("cm-abc"),
 		NodeGroups:         []elasticachetypes.NodeGroup{{}},
 	}
 	state := newTestState(t, "abc", false, rg, nil)
