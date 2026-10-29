@@ -83,3 +83,34 @@ func TestElastiCacheFake_AuthTokenPropagation(t *testing.T) {
 		assert.Equal(t, []string{"cm-test"}, calls[1].UserGroupIdsToRemove)
 	})
 }
+
+func TestElastiCacheFake_DescribeReplicationGroupEvents(t *testing.T) {
+	t.Run("unseeded id returns nil", func(t *testing.T) {
+		client := newElastiCacheClientFake()
+		events, err := client.DescribeElastiCacheReplicationGroupEvents(context.Background(), "no-such-id")
+		require.NoError(t, err)
+		assert.Nil(t, events)
+	})
+
+	t.Run("seeded events are returned", func(t *testing.T) {
+		client := newElastiCacheClientFake()
+		msg := "Insufficient memory"
+		client.SetAwsElastiCacheEvents("cm-test", []elasticachetypes.Event{
+			{Message: new(msg)},
+		})
+
+		events, err := client.DescribeElastiCacheReplicationGroupEvents(context.Background(), "cm-test")
+		require.NoError(t, err)
+		require.Len(t, events, 1)
+		assert.Equal(t, msg, ptr.Deref(events[0].Message, ""))
+	})
+
+	t.Run("different ids are independent", func(t *testing.T) {
+		client := newElastiCacheClientFake()
+		client.SetAwsElastiCacheEvents("rg-a", []elasticachetypes.Event{{Message: new("a")}})
+
+		events, err := client.DescribeElastiCacheReplicationGroupEvents(context.Background(), "rg-b")
+		require.NoError(t, err)
+		assert.Nil(t, events, "unseeded id rg-b must return nil, not rg-a's events")
+	})
+}
