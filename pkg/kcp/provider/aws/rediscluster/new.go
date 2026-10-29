@@ -13,8 +13,8 @@ import (
 func New(stateFactory StateFactory) composed.Action {
 	return func(ctx context.Context, st composed.State) (error, context.Context) {
 		logger := composed.LoggerFromCtx(ctx)
-		redisInstanceState := st.(types.State)
-		state, err := stateFactory.NewState(ctx, redisInstanceState)
+		redisClusterState := st.(types.State)
+		state, err := stateFactory.NewState(ctx, redisClusterState)
 		if err != nil {
 			err = fmt.Errorf("error creating new aws rediscluster state: %w", err)
 			logger.Error(err, "Error")
@@ -38,7 +38,7 @@ func New(stateFactory StateFactory) composed.Action {
 			loadElastiCacheCluster,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActions(
-					"redisInstance-create",
+					"redisCluster-create",
 					loadMemberClusters,
 					createSubnetGroup,
 					composed.If(
@@ -101,7 +101,7 @@ func New(stateFactory StateFactory) composed.Action {
 					updateStatus,
 				),
 				composed.ComposeActions(
-					"redisInstance-delete",
+					"redisCluster-delete",
 					removeReadyCondition,
 					deleteElastiCacheCluster,
 					waitElastiCacheDeleted,
@@ -117,6 +117,6 @@ func New(stateFactory StateFactory) composed.Action {
 				),
 			),
 			composed.StopAndForgetAction,
-		)(awsmeta.SetAwsAccountId(ctx, redisInstanceState.Scope().Spec.Scope.Aws.AccountId), state)
+		)(awsmeta.SetAwsAccountId(ctx, redisClusterState.Scope().Spec.Scope.Aws.AccountId), state)
 	}
 }

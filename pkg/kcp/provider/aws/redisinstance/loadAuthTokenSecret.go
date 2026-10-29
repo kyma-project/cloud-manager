@@ -21,7 +21,7 @@ func loadAuthTokenSecret(ctx context.Context, st composed.State) (error, context
 	}
 
 	if authTokenValue == nil {
-		logger.Info("ElastiCache auth token valuenot found")
+		logger.Info("ElastiCache auth token value not found")
 		return nil, ctx
 	}
 

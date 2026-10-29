@@ -42,6 +42,16 @@ type elastiCacheStub struct {
 
 	deleteReplicationGroupCalls []string
 	deleteReplicationGroupErr   error
+
+	modifyShardConfigCalls   []awsclient.RescaleElastiCacheClusterShardOptions
+	modifyShardConfigErr     error
+	modifyReplicaConfigCalls []awsclient.RescaleElastiCacheClusterReplicaOptions
+	modifyReplicaConfigErr   error
+
+	getAuthTokenValue    *secretsmanager.GetSecretValueOutput
+	getAuthTokenErr      error
+	createAuthTokenCalls []string
+	createAuthTokenErr   error
 }
 
 func newElastiCacheStub() *elastiCacheStub {
@@ -96,10 +106,11 @@ func (s *elastiCacheStub) DescribeEngineDefaultParameters(ctx context.Context, f
 	panic("unimplemented")
 }
 func (s *elastiCacheStub) GetAuthTokenSecretValue(ctx context.Context, secretName string) (*secretsmanager.GetSecretValueOutput, error) {
-	panic("unimplemented")
+	return s.getAuthTokenValue, s.getAuthTokenErr
 }
 func (s *elastiCacheStub) CreateAuthTokenSecret(ctx context.Context, secretName string, tags []secretsmanagertypes.Tag) error {
-	panic("unimplemented")
+	s.createAuthTokenCalls = append(s.createAuthTokenCalls, secretName)
+	return s.createAuthTokenErr
 }
 func (s *elastiCacheStub) DeleteAuthTokenSecret(ctx context.Context, secretName string) error {
 	panic("unimplemented")
@@ -121,10 +132,12 @@ func (s *elastiCacheStub) DescribeElastiCacheCluster(ctx context.Context, id str
 	panic("unimplemented")
 }
 func (s *elastiCacheStub) ModifyElastiCacheClusterShardConfiguration(ctx context.Context, options awsclient.RescaleElastiCacheClusterShardOptions) error {
-	panic("unimplemented")
+	s.modifyShardConfigCalls = append(s.modifyShardConfigCalls, options)
+	return s.modifyShardConfigErr
 }
 func (s *elastiCacheStub) ModifyElastiCacheClusterReplicaConfiguration(ctx context.Context, options awsclient.RescaleElastiCacheClusterReplicaOptions) error {
-	panic("unimplemented")
+	s.modifyReplicaConfigCalls = append(s.modifyReplicaConfigCalls, options)
+	return s.modifyReplicaConfigErr
 }
 func (s *elastiCacheStub) DescribeElastiCacheSecurityGroups(ctx context.Context, filters []ec2types.Filter, groupIds []string) ([]ec2types.SecurityGroup, error) {
 	panic("unimplemented")

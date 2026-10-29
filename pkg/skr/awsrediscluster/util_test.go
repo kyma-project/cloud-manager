@@ -29,14 +29,14 @@ func TestUtil(t *testing.T) {
 		}
 
 		overwritesFromConfig := map[cloudresourcesv1beta1.AwsRedisClusterTier]string{
-			cloudresourcesv1beta1.AwsRedisTierC1: "cache.t4g.small",
-			cloudresourcesv1beta1.AwsRedisTierC2: "cache.t4g.medium",
-			cloudresourcesv1beta1.AwsRedisTierC3: "cache.m7g.large",
-			cloudresourcesv1beta1.AwsRedisTierC4: "cache.m7g.xlarge",
-			cloudresourcesv1beta1.AwsRedisTierC5: "cache.m7g.2xlarge",
-			cloudresourcesv1beta1.AwsRedisTierC6: "cache.m7g.4xlarge",
-			cloudresourcesv1beta1.AwsRedisTierC7: "cache.m7g.8xlarge",
-			cloudresourcesv1beta1.AwsRedisTierC8: "cache.m7g.16xlarge",
+			cloudresourcesv1beta1.AwsRedisTierC1: "custom.99.small",
+			cloudresourcesv1beta1.AwsRedisTierC2: "custom.99.medium",
+			cloudresourcesv1beta1.AwsRedisTierC3: "custom.99.large",
+			cloudresourcesv1beta1.AwsRedisTierC4: "custom.99.xlarge",
+			cloudresourcesv1beta1.AwsRedisTierC5: "custom.99.2xlarge",
+			cloudresourcesv1beta1.AwsRedisTierC6: "custom.99.4xlarge",
+			cloudresourcesv1beta1.AwsRedisTierC7: "custom.99.8xlarge",
+			cloudresourcesv1beta1.AwsRedisTierC8: "custom.99.16xlarge",
 		}
 
 		for _, testCase := range testCases {

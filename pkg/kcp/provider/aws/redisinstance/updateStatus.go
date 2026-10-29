@@ -17,6 +17,11 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	redisInstance := state.ObjAsRedisInstance()
 	hasChanged := false
 
+	if len(state.elastiCacheReplicationGroup.NodeGroups) == 0 {
+		composed.LoggerFromCtx(ctx).Info("RedisInstance ElastiCache has no node groups yet, requeueing")
+		return composed.StopWithRequeue, nil
+	}
+
 	primaryEndpoint := fmt.Sprintf("%s:%d",
 		ptr.Deref(state.elastiCacheReplicationGroup.NodeGroups[0].PrimaryEndpoint.Address, ""),
 		ptr.Deref(state.elastiCacheReplicationGroup.NodeGroups[0].PrimaryEndpoint.Port, 0),

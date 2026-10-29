@@ -57,7 +57,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 			Run(ctx, state)
 	}
 
-	if kcpCondReady != nil && skrCondReady == nil {
+	if !kcpHasUpdatingCondition && kcpCondReady != nil && skrCondReady == nil {
 		logger.Info("Updating SKR AwsRedisInstance status with Ready condition")
 		awsRedisInstance.Status.State = cloudresourcesv1beta1.StateReady
 		return composed.UpdateStatus(awsRedisInstance).
