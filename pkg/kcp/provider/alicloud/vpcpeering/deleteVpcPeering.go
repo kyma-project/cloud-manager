@@ -19,12 +19,12 @@ func deleteVpcPeering(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	// If the connection is already gone, nothing to do.
-	if state.vpcPeering != nil && tea.StringValue(state.vpcPeering.Status) == "Deleted" {
+	if state.vpcPeering != nil && tea.StringValue(state.vpcPeering.Status) == alicloudvpcpeeringclient.StatusDeleted {
 		return nil, ctx
 	}
 
 	// While the connection is still transitioning, wait.
-	if state.vpcPeering != nil && tea.StringValue(state.vpcPeering.Status) == "Deleting" {
+	if state.vpcPeering != nil && tea.StringValue(state.vpcPeering.Status) == alicloudvpcpeeringclient.StatusDeleting {
 		logger.Info("AliCloud VpcPeerConnection is still Deleting, requeueing")
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}

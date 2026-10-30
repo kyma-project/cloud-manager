@@ -7,6 +7,7 @@ import (
 	"github.com/alibabacloud-go/tea/tea"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	alicloudvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,19 +30,19 @@ func waitVpcPeeringActive(ctx context.Context, st composed.State) (error, contex
 	state.vpcPeering = info
 	status := tea.StringValue(info.Status)
 
-	if status == "Activated" {
+	if status == alicloudvpcpeeringclient.StatusActivated {
 		logger.Info("AliCloud VpcPeerConnection is Activated")
 		return nil, ctx
 	}
 
 	// Deleting/Deleted: still in-flight or already gone; the delete pipeline handles these.
-	if status == "Deleting" || status == "Deleted" {
+	if status == alicloudvpcpeeringclient.StatusDeleting || status == alicloudvpcpeeringclient.StatusDeleted {
 		logger.Info("AliCloud VpcPeerConnection is being deleted", "status", status)
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
 	// Rejected or Expired: unrecoverable — surface an error condition so the operator can act.
-	if status == "Rejected" || status == "Expired" {
+	if status == alicloudvpcpeeringclient.StatusRejected || status == alicloudvpcpeeringclient.StatusExpired {
 		logger.Info("AliCloud VpcPeerConnection is in unrecoverable state", "status", status)
 		meta.SetStatusCondition(obj.Conditions(), metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,

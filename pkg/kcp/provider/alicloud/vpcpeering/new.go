@@ -14,8 +14,8 @@ func New(stateFactory StateFactory) composed.Action {
 		logger := composed.LoggerFromCtx(ctx)
 		state, err := stateFactory.NewState(ctx, st.(vpcpeeringtypes.State), logger)
 		if err != nil {
-			err = fmt.Errorf("error creating new alicloud vpcpeering state %w", err)
-			logger.Error(err, "Error")
+			err = fmt.Errorf("error creating new alicloud vpcpeering state: %w", err)
+			logger.Error(err, "Error creating AliCloud VpcPeering state")
 			return composed.StopAndForget, ctx
 		}
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	alicloudvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering/client"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -12,7 +13,7 @@ func acceptVpcPeerConnection(ctx context.Context, st composed.State) (error, con
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	if state.vpcPeering == nil || tea.StringValue(state.vpcPeering.Status) != "Accepting" {
+	if state.vpcPeering == nil || tea.StringValue(state.vpcPeering.Status) != alicloudvpcpeeringclient.StatusAccepting {
 		return nil, ctx
 	}
 

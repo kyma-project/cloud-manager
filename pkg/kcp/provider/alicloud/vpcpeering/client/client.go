@@ -14,12 +14,30 @@ import (
 	alicloudmetrics "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/metrics"
 )
 
+// Peering connection lifecycle statuses returned by the AliCloud VPC Peer API.
+const (
+	StatusCreating  = "Creating"
+	StatusActivated = "Activated"
+	StatusAccepting = "Accepting"
+	StatusDeleting  = "Deleting"
+	StatusDeleted   = "Deleted"
+	StatusRejected  = "Rejected"
+	StatusExpired   = "Expired"
+)
+
+// routeTableTypeCustom and nextHopTypeVpcPeer are the SDK string parameters
+// required by DescribeRouteTableList and CreateRouteEntry respectively.
+const (
+	routeTableTypeCustom = "Custom"
+	nextHopTypeVpcPeer   = "VpcPeer"
+)
+
 // IsTerminal reports whether the given peering connection status is one from which
 // it cannot recover: Rejected, Expired, Deleted, or Deleting. Mirrors the AWS provider's
 // awsutil.IsTerminatedOrDeleting free function.
 func IsTerminal(status string) bool {
 	switch status {
-	case "Rejected", "Expired", "Deleted", "Deleting":
+	case StatusRejected, StatusExpired, StatusDeleted, StatusDeleting:
 		return true
 	}
 	return false
@@ -279,7 +297,7 @@ func (c *alicloudVpcPeeringClient) DescribeRouteTables(ctx context.Context, vpcI
 		req := &vpc.DescribeRouteTableListRequest{
 			RegionId:       new(c.region),
 			VpcId:          new(vpcId),
-			RouteTableType: new("Custom"),
+			RouteTableType: new(routeTableTypeCustom),
 			PageNumber:     new(pageNum),
 			PageSize:       tea.Int32(pageSize),
 		}
@@ -317,7 +335,7 @@ func (c *alicloudVpcPeeringClient) CreateRouteEntry(ctx context.Context, routeTa
 		RegionId:             new(c.region),
 		RouteTableId:         new(routeTableId),
 		DestinationCidrBlock: new(destCidr),
-		NextHopType:          new("VpcPeer"),
+		NextHopType:          new(nextHopTypeVpcPeer),
 		NextHopId:            new(instanceId),
 	}
 	_, err := c.vpcClient.CreateRouteEntry(req)
