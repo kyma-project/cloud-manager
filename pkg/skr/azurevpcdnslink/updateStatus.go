@@ -2,6 +2,7 @@ package azurevpcdnslink
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -14,16 +15,13 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, ctx
 	}
 
-	changed := false // nolint:staticcheck
+	sanitized := composed.SanitizeConditions(state.KcpAzureVNetLink.Status.Conditions)
 
-	if composed.SyncConditions(obj, *state.KcpAzureVNetLink.Conditions()...) {
-		changed = true
-	}
-
-	if obj.Status.State != state.KcpAzureVNetLink.Status.State {
+	stateChanged := obj.Status.State != state.KcpAzureVNetLink.Status.State
+	if stateChanged {
 		obj.Status.State = state.KcpAzureVNetLink.Status.State
-		changed = true
 	}
+	changed := composed.SyncConditions(obj, sanitized...) || stateChanged
 
 	if !changed {
 		return nil, ctx
@@ -34,5 +32,4 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		SuccessLogMsg("Updated and forgot SKR AzureVpcDnsLink status").
 		SuccessErrorNil().
 		Run(ctx, state)
-
 }

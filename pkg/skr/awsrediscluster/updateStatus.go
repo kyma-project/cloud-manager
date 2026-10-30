@@ -48,7 +48,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
-				Message: kcpCondErr.Message,
+				Message: composed.SanitizeErrorForTenant(kcpCondErr.Reason),
 			}).
 			RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady, cloudresourcesv1beta1.ConditionTypeUpdating).
 			ErrorLogMessage("Error: updating AwsRedisCluster status with not ready condition due to KCP error").
