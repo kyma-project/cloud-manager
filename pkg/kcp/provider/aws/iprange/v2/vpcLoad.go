@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"fmt"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awserrorhandling "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/errorhandling"
@@ -23,9 +24,18 @@ func vpcLoad(ctx context.Context, st composed.State) (error, context.Context) {
 	vpcId := state.ObjAsIpRange().Status.VpcId
 	vpc, err := state.awsClient.DescribeVpc(ctx, vpcId)
 
-	// The VPC is reported as missing either as an empty result (vpc == nil, no error)
+	// A genuine transient/other AWS error (throttling, auth, timeout, ...) keeps the
+	// existing retryable handling. DescribeVpc returns (nil, err) on any error, so this
+	// must be checked before the not-found branch - otherwise every error would be
+	// misread as "VPC not found".
+	if err != nil && !awsmeta.IsNotFound(err) {
+		return awserrorhandling.HandleError(ctx, err, state, "KCP IpRange on VPC load",
+			cloudcontrolv1beta1.ReasonUnknown, "Error loading AWS VPC"), ctx
+	}
+
+	// The VPC is reported as missing either as an empty result (err == nil, vpc == nil)
 	// or as an AWS InvalidVpcID.NotFound error.
-	if vpc == nil || awsmeta.IsNotFound(err) {
+	if vpc == nil {
 		// On deletion a missing VPC is the terminal success condition: every AWS
 		// resource that lived in it (subnets, CIDR association) is already gone, so
 		// pass through with state.vpc == nil and let the delete actions and finalizer
@@ -50,12 +60,6 @@ func vpcLoad(ctx context.Context, st composed.State) (error, context.Context) {
 			SuccessLogMsg("Delaying KCP IpRange reconciliation with AWS VPC not found").
 			SuccessError(composed.StopWithRequeueDelay(util.Timing.T300000ms())).
 			Run(ctx, st)
-	}
-
-	// A genuine transient/other AWS error keeps the existing retryable handling.
-	if err != nil {
-		return awserrorhandling.HandleError(ctx, err, state, "KCP IpRange on VPC load",
-			cloudcontrolv1beta1.ReasonUnknown, "Error loading AWS VPC"), ctx
 	}
 
 	state.vpc = vpc
