@@ -147,7 +147,7 @@ func ErrorToRequeueResponse(err error) error {
 		return nil
 	}
 	if IsErrorRetryable(err) {
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms())
+		return composed.StopWithRequeueDelay(util.Timing.T60000ms())
 	}
 	return composed.StopWithRequeueDelay(util.Timing.T1000ms())
 }
