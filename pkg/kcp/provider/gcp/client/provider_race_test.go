@@ -29,6 +29,12 @@ func testStoreCachedClientPtr(c *http.Client) {
 	clientMutex.Unlock()
 }
 
+// testRenewCachedClient mirrors the write renewCachedHttpClientPeriodically
+// performs on a renewal tick: it swaps in the freshly built client.
+func testRenewCachedClient(c *http.Client) {
+	gcpClient.Store(c)
+}
+
 // Cycle 1: concurrently resolving the cached client while the renewal path
 // writes the global pointer must not race.
 func TestGetCachedGcpClientConcurrentResolveAndRenewNoRace(t *testing.T) {
@@ -68,4 +74,23 @@ func TestGetCachedGcpClientConcurrentResolveAndRenewNoRace(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	close(stop)
 	wg.Wait()
+}
+
+// Cycle 2: a renewal must not mutate a client a caller already holds. The
+// renewal swaps the cached pointer in, leaving previously-returned clients
+// valid and unchanged.
+func TestGetCachedGcpClientRenewalDoesNotMutateExistingReference(t *testing.T) {
+	original := &http.Client{Timeout: 11 * time.Second}
+	testSeedCachedClient(original)
+
+	held, err := GetCachedGcpClient(context.Background(), "")
+	assert.NoError(t, err)
+	assert.Equal(t, 11*time.Second, held.Timeout)
+
+	// a renewal installs a different client
+	testRenewCachedClient(&http.Client{Timeout: 22 * time.Second})
+
+	// the previously-returned client must be unchanged
+	assert.Same(t, original, held)
+	assert.Equal(t, 11*time.Second, held.Timeout)
 }
