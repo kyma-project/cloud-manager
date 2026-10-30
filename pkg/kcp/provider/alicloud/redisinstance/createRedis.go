@@ -47,7 +47,7 @@ func createRedis(ctx context.Context, st composed.State) (error, context.Context
 	if password == "" {
 		password = alicloud.GeneratePassword()
 		kcp.Status.AuthString = password
-		kcp.Status.TokenSeed = alicloud.GeneratePassword()
+		kcp.Status.TokenSeed = alicloud.GenerateToken()
 		if err := state.UpdateObjStatus(ctx); err != nil {
 			return composed.LogErrorAndReturn(err,
 				"Error persisting AliCloud r-kvstore instance auth string before create",
