@@ -12,6 +12,13 @@ import (
 func subnetsLoadAll(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 
+	// On deletion the VPC may already be gone (state.vpc == nil). With no VPC there
+	// are no subnets to load - the VPC and everything in it is already gone.
+	if state.vpc == nil {
+		state.allSubnets = nil
+		return nil, ctx
+	}
+
 	subnetList, err := state.awsClient.DescribeSubnets(ctx, ptr.Deref(state.vpc.VpcId, ""))
 	if x := awserrorhandling.HandleError(ctx, err, state, "KCP IpRange on load subnets",
 		cloudcontrolv1beta1.ReasonUnknown, "Error loading AWS VPC subnets"); x != nil {

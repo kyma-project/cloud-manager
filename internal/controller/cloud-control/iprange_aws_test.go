@@ -626,4 +626,107 @@ var _ = Describe("Feature: KCP IpRange for AWS", func() {
 		})
 	})
 
+	It("Scenario: KCP AWS IpRange is deleted when AWS VPC does not exist", func() {
+		const (
+			kymaName    = "a3e4c7f0-9b1d-4e2a-8c6f-1d2e3f4a5b6c"
+			vpcId       = "c1d2e3f4-a5b6-47c8-9d0e-1f2a3b4c5d6e"
+			vpcCidr     = "10.182.0.0/16"
+			iprangeName = "f6e5d4c3-b2a1-4098-8f7e-6d5c4b3a2b1a"
+			iprangeCidr = "10.183.0.0/16"
+		)
+
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given Scope exists", func() {
+			// Tell Scope reconciler to ignore this kymaName
+			kcpscope.Ignore.AddName(kymaName)
+
+			Eventually(CreateScopeAws).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(kymaName)).
+				Should(Succeed())
+		})
+
+		awsMock := awsAccount.Region(scope.Spec.Region)
+
+		By("And Given AWS VPC exists", func() {
+			theVpc := awsMock.AddVpc(
+				vpcId,
+				vpcCidr,
+				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
+				awsmock.VpcSubnetsFromScope(scope),
+			)
+			Expect(theVpc).NotTo(BeNil(), "expected non nil aws vpc to be created")
+		})
+
+		var kcpNetworkKyma *cloudcontrolv1beta1.Network
+
+		By("And Given KCP Kyma Network exists in Ready state", func() {
+			kcpNetworkKyma = cloudcontrolv1beta1.NewNetworkBuilder().
+				WithScope(kymaName).
+				WithName(common.KcpNetworkKymaCommonName(kymaName)).
+				WithAwsRef(scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, vpcId, scope.Spec.Scope.Aws.VpcNetwork).
+				WithType(cloudcontrolv1beta1.NetworkTypeKyma).
+				Build()
+
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma).
+				Should(Succeed())
+
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), kcpNetworkKyma, NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady)).
+				Should(Succeed())
+		})
+
+		iprange := &cloudcontrolv1beta1.IpRange{}
+
+		By("And Given KCP IpRange is created", func() {
+			Eventually(CreateKcpIpRange).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+					WithName(iprangeName),
+					WithKcpIpRangeRemoteRef("skr-aws-ip-range"),
+					WithScope(kymaName),
+					WithKcpIpRangeSpecCidr(iprangeCidr),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP IpRange has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("And Given KCP IpRange has status.vpcId populated", func() {
+			Expect(iprange.Status.VpcId).To(Equal(vpcId))
+		})
+
+		By("When the AWS VPC no longer exists", func() {
+			// Removing the VPC makes DescribeVpc return (nil, nil) - the production
+			// path where a previously provisioned IpRange's VPC/shoot was deleted.
+			err := awsMock.DeleteVpc(infra.Ctx(), vpcId)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		By("And When KCP IpRange is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				Should(Succeed(), "failed deleting KCP IpRange")
+		})
+
+		By("Then KCP IpRange does not exist", func() {
+			// The reconciler must remove the finalizer and let the object be garbage
+			// collected rather than deadlooping on the missing VPC.
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				Should(Succeed(), "expected KCP IpRange to be deleted, but it exists")
+		})
+	})
+
 })
