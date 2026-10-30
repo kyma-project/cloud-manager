@@ -15,45 +15,60 @@ import (
 // network-backed GCP client; these seams perform the same writes to the cache
 // global and change together with the production fix.
 
+// testSnapshotCachedClient restores the cache global after the test so these
+// white-box tests don't leak a populated cache into later tests (which would
+// silently push them onto the fast read path).
+func testSnapshotCachedClient(t *testing.T) {
+	saved := gcpClient.Load()
+	t.Cleanup(func() { gcpClient.Store(saved) })
+}
+
 // testSeedCachedClient seeds the cache so GetCachedGcpClient takes its fast
 // read path without building a real client.
 func testSeedCachedClient(c *http.Client) {
 	gcpClient.Store(c)
 }
 
-// testStoreCachedClientPtr mirrors the mutex-guarded pointer assignment the
-// cache performs when (re)populating the global client.
+// testStoreCachedClientPtr mirrors the mutex-guarded store the cache performs
+// when it first populates the global client (newCachedGcpClient).
 func testStoreCachedClientPtr(c *http.Client) {
 	clientMutex.Lock()
 	gcpClient.Store(c)
 	clientMutex.Unlock()
 }
 
-// testRenewCachedClient mirrors the write renewCachedHttpClientPeriodically
-// performs on a renewal tick: it swaps in the freshly built client.
+// testRenewCachedClient mirrors the bare atomic store renewCachedHttpClientPeriodically
+// performs on a renewal tick (no mutex) to swap in the freshly built client.
 func testRenewCachedClient(c *http.Client) {
 	gcpClient.Store(c)
 }
 
-// Cycle 1: concurrently resolving the cached client while the renewal path
-// writes the global pointer must not race.
+// Cycle 1: concurrently resolving the cached client while both cache-write
+// paths run must not race.
+//
+// Only meaningful under `go test -race`: without the race detector the
+// assertions below are vacuous (any seeded cache satisfies them) and the
+// concurrent read/write defect goes undetected. CI runs this package with -race.
 func TestGetCachedGcpClientConcurrentResolveAndRenewNoRace(t *testing.T) {
+	testSnapshotCachedClient(t)
 	testSeedCachedClient(&http.Client{Timeout: time.Second})
 
+	const iterations = 200
 	var wg sync.WaitGroup
-	stop := make(chan struct{})
 
-	// renewal-shaped writer: reassign the global pointer under the mutex
-	wg.Add(1)
+	// writers: exercise both production write paths concurrently with readers —
+	// the mutex-guarded initial population and the renewal's bare atomic store.
+	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		for {
-			select {
-			case <-stop:
-				return
-			default:
-				testStoreCachedClientPtr(&http.Client{Timeout: time.Second})
-			}
+		for range iterations {
+			testStoreCachedClientPtr(&http.Client{Timeout: time.Second})
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for range iterations {
+			testRenewCachedClient(&http.Client{Timeout: time.Second})
 		}
 	}()
 
@@ -62,7 +77,7 @@ func TestGetCachedGcpClientConcurrentResolveAndRenewNoRace(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for range 200 {
+			for range iterations {
 				c, err := GetCachedGcpClient(context.Background(), "")
 				assert.NoError(t, err)
 				assert.NotNil(t, c)
@@ -70,9 +85,6 @@ func TestGetCachedGcpClientConcurrentResolveAndRenewNoRace(t *testing.T) {
 		}()
 	}
 
-	// let readers run against the writer, then stop
-	time.Sleep(50 * time.Millisecond)
-	close(stop)
 	wg.Wait()
 }
 
@@ -80,6 +92,7 @@ func TestGetCachedGcpClientConcurrentResolveAndRenewNoRace(t *testing.T) {
 // renewal swaps the cached pointer in, leaving previously-returned clients
 // valid and unchanged.
 func TestGetCachedGcpClientRenewalDoesNotMutateExistingReference(t *testing.T) {
+	testSnapshotCachedClient(t)
 	original := &http.Client{Timeout: 11 * time.Second}
 	testSeedCachedClient(original)
 
