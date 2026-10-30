@@ -20,10 +20,7 @@ func deleteLocalRoutes(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	remoteCidrs := alicloudvpcpeeringclient.RemoteIpv4Cidrs(state.vpcPeering)
-	shootName := state.Scope().Spec.ShootName
-	strategy := string(state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy)
-	tables := alicloudvpcpeeringclient.RouteTablesForStrategy(state.routeTables, strategy, shootName)
-	for _, table := range tables {
+	for _, table := range state.routeTables {
 		for _, cidr := range remoteCidrs {
 			if err := state.client.DeleteRouteEntry(ctx, table.RouteTableId, cidr, instanceId); err != nil {
 				return composed.LogErrorAndReturn(err, "Error deleting local route entry", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)

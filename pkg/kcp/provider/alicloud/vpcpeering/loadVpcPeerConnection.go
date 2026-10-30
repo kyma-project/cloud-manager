@@ -48,6 +48,14 @@ func loadVpcPeerConnection(ctx context.Context, st composed.State) (error, conte
 		}
 		if info != nil {
 			state.vpcPeering = info
+			if obj.Status.Id == "" {
+				obj.Status.Id = item.InstanceId
+				return composed.PatchStatus(obj).
+					ErrorLogMessage("Error patching AliCloud VpcPeering status with recovered connection ID").
+					FailedError(composed.StopWithRequeue).
+					SuccessErrorNil().
+					Run(ctx, state)
+			}
 			break
 		}
 	}

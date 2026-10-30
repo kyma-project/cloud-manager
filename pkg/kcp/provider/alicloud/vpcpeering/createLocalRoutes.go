@@ -19,14 +19,8 @@ func createLocalRoutes(ctx context.Context, st composed.State) (error, context.C
 		return nil, ctx
 	}
 
-	// Use the shoot name (not the CIDR) as the tag key for MATCHED/UNMATCHED filtering,
-	// consistent with the AWS pattern (ShouldUpdateRouteTable uses shoot name as tag key).
-	shootName := state.Scope().Spec.ShootName
-	strategy := string(state.ObjAsVpcPeering().Spec.Details.RemoteRouteTableUpdateStrategy)
-	tables := alicloudvpcpeeringclient.RouteTablesForStrategy(state.routeTables, strategy, shootName)
-
 	instanceId := state.ObjAsVpcPeering().Status.Id
-	for _, table := range tables {
+	for _, table := range state.routeTables {
 		for _, cidr := range remoteCidrs {
 			if err := state.client.CreateRouteEntry(ctx, table.RouteTableId, cidr, instanceId); err != nil {
 				return composed.LogErrorAndReturn(err, "Error creating local route entry", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
