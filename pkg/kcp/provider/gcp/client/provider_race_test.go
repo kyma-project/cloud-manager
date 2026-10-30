@@ -60,31 +60,26 @@ func TestGetCachedGcpClientConcurrentResolveAndRenewNoRace(t *testing.T) {
 
 	// writers: exercise both production write paths concurrently with readers —
 	// the mutex-guarded initial population and the renewal's bare atomic store.
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for range iterations {
 			testInitCachedClient(&http.Client{Timeout: time.Second})
 		}
-	}()
-	go func() {
-		defer wg.Done()
+	})
+	wg.Go(func() {
 		for range iterations {
 			testRenewCachedClient(&http.Client{Timeout: time.Second})
 		}
-	}()
+	})
 
 	// readers using the real production fast path
 	for range readers {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for range iterations {
 				c, err := GetCachedGcpClient(context.Background(), "")
 				assert.NoError(t, err)
 				assert.NotNil(t, c)
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
