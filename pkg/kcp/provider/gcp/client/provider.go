@@ -37,6 +37,10 @@ func NewCachedClientProvider[T comparable](p ClientProvider[T]) ClientProvider[T
 	}
 }
 
+// gcpClient holds the shared GCP HTTP client, published and read lock-free via
+// atomic.Pointer. clientMutex serializes only first-init (guarding against a
+// duplicate client build and a duplicate renewal goroutine); the renewal path
+// publishes with a bare atomic Store.
 var gcpClient atomic.Pointer[http.Client]
 var clientMutex sync.Mutex
 

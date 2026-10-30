@@ -29,9 +29,9 @@ func testSeedCachedClient(c *http.Client) {
 	gcpClient.Store(c)
 }
 
-// testStoreCachedClientPtr mirrors the mutex-guarded store the cache performs
+// testInitCachedClient mirrors the mutex-guarded store the cache performs
 // when it first populates the global client (newCachedGcpClient).
-func testStoreCachedClientPtr(c *http.Client) {
+func testInitCachedClient(c *http.Client) {
 	clientMutex.Lock()
 	gcpClient.Store(c)
 	clientMutex.Unlock()
@@ -48,12 +48,14 @@ func testRenewCachedClient(c *http.Client) {
 //
 // Only meaningful under `go test -race`: without the race detector the
 // assertions below are vacuous (any seeded cache satisfies them) and the
-// concurrent read/write defect goes undetected. CI runs this package with -race.
+// concurrent read/write defect goes undetected. Run locally with
+// `go test -race ./pkg/kcp/provider/gcp/client/...`.
 func TestGetCachedGcpClientConcurrentResolveAndRenewNoRace(t *testing.T) {
 	testSnapshotCachedClient(t)
 	testSeedCachedClient(&http.Client{Timeout: time.Second})
 
 	const iterations = 200
+	const readers = 50 // enough concurrent readers to contend with the writers under -race
 	var wg sync.WaitGroup
 
 	// writers: exercise both production write paths concurrently with readers —
@@ -62,7 +64,7 @@ func TestGetCachedGcpClientConcurrentResolveAndRenewNoRace(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		for range iterations {
-			testStoreCachedClientPtr(&http.Client{Timeout: time.Second})
+			testInitCachedClient(&http.Client{Timeout: time.Second})
 		}
 	}()
 	go func() {
@@ -73,7 +75,7 @@ func TestGetCachedGcpClientConcurrentResolveAndRenewNoRace(t *testing.T) {
 	}()
 
 	// readers using the real production fast path
-	for range 50 {
+	for range readers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -98,12 +100,17 @@ func TestGetCachedGcpClientRenewalDoesNotMutateExistingReference(t *testing.T) {
 
 	held, err := GetCachedGcpClient(context.Background(), "")
 	assert.NoError(t, err)
+	// guard: the getter returns the exact cached pointer, not a copy
+	assert.Same(t, original, held)
 	assert.Equal(t, 11*time.Second, held.Timeout)
 
 	// a renewal installs a different client
 	testRenewCachedClient(&http.Client{Timeout: 22 * time.Second})
 
-	// the previously-returned client must be unchanged
-	assert.Same(t, original, held)
+	// the previously-returned client must be unchanged (not mutated in place)
 	assert.Equal(t, 11*time.Second, held.Timeout)
+	// a fresh resolve now observes the renewed client
+	refetched, err := GetCachedGcpClient(context.Background(), "")
+	assert.NoError(t, err)
+	assert.Equal(t, 22*time.Second, refetched.Timeout)
 }
