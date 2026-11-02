@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/hashicorp/go-retryablehttp"
 	e2econfig "github.com/kyma-project/cloud-manager/e2e/config"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	appsv1 "k8s.io/api/apps/v1"
@@ -339,10 +340,12 @@ func githubToken() string {
 }
 
 // githubGet performs an HTTP GET against a GitHub URL, adding a bearer Authorization header when
-// GH_TOKEN is set. It returns the response and whether the request was authenticated, so callers can
-// tailor the error message on auth-related failures.
+// GH_TOKEN is set. The request is retried up to 3 times with go-retryablehttp's default exponential
+// backoff (1s min, 30s max) on transport errors, 429, 5xx, and 403 (GitHub's unauthenticated
+// rate-limit status). It returns the response and whether the request was authenticated, so callers
+// can tailor the error message on auth-related failures.
 func githubGet(url string) (resp *http.Response, authenticated bool, err error) {
-	req, err := http.NewRequest(http.MethodGet, url, nil) //nolint:gosec // url built from trusted config values
+	req, err := retryablehttp.NewRequest(http.MethodGet, url, nil) //nolint:gosec // url built from trusted config values
 	if err != nil {
 		return nil, false, err
 	}
@@ -350,7 +353,18 @@ func githubGet(url string) (resp *http.Response, authenticated bool, err error) 
 		req.Header.Set("Authorization", "Bearer "+token)
 		authenticated = true
 	}
-	resp, err = http.DefaultClient.Do(req)
+
+	client := retryablehttp.NewClient()
+	client.RetryMax = 3
+	client.Logger = nil // silence the default stderr logger; failures surface through returned errors
+	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp != nil && resp.StatusCode == http.StatusForbidden {
+			return true, nil
+		}
+		return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+	}
+
+	resp, err = client.Do(req)
 	return resp, authenticated, err
 }
 
