@@ -177,12 +177,14 @@ jobs:
       - name: Install Istio module
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+          GH_TOKEN: ${{ github.token }}
         run: |
           go run ./e2e/cmd instance modules install -a shared-$PROVIDER -m istio
 
       - name: Install ApiGateway module
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+          GH_TOKEN: ${{ github.token }}
         run: |
           go run ./e2e/cmd instance modules install -a shared-$PROVIDER -m api-gateway
 
@@ -215,6 +217,7 @@ jobs:
         if: always() && env.INPUTSOK != ''
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [ -f "$KUBECONFIG" ]; then
             go run ./e2e/cmd instance modules install --delete -a shared-$PROVIDER -m api-gateway
@@ -224,6 +227,7 @@ jobs:
         if: always() && env.INPUTSOK != ''
         env:
           KUBECONFIG: ${{ github.workspace }}/tmp/kubeconfig-kcp.yaml
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [ -f "$KUBECONFIG" ]; then
             go run ./e2e/cmd instance modules install --delete -a shared-$PROVIDER -m istio
