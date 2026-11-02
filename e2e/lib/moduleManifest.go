@@ -358,6 +358,9 @@ func githubGet(url string) (resp *http.Response, authenticated bool, err error) 
 	client.RetryMax = 3
 	client.Logger = nil // silence the default stderr logger; failures surface through returned errors
 	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if ctx.Err() != nil {
+			return false, ctx.Err()
+		}
 		if resp != nil && resp.StatusCode == http.StatusForbidden {
 			return true, nil
 		}
