@@ -354,10 +354,10 @@ func githubGet(url string) (resp *http.Response, authenticated bool, err error) 
 		authenticated = true
 	}
 
-	client := retryablehttp.NewClient()
-	client.RetryMax = 3
-	client.Logger = nil // silence the default stderr logger; failures surface through returned errors
-	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	clnt := retryablehttp.NewClient()
+	clnt.RetryMax = 3
+	clnt.Logger = nil // silence the default stderr logger; failures surface through returned errors
+	clnt.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		if ctx.Err() != nil {
 			return false, ctx.Err()
 		}
@@ -367,7 +367,7 @@ func githubGet(url string) (resp *http.Response, authenticated bool, err error) 
 		return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
 	}
 
-	resp, err = client.Do(req)
+	resp, err = clnt.Do(req)
 	return resp, authenticated, err
 }
 
