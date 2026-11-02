@@ -23,5 +23,6 @@ func acceptVpcPeerConnection(ctx context.Context, st composed.State) (error, con
 	if err := state.remoteClient.AcceptVpcPeerConnection(ctx, obj.Status.Id); err != nil {
 		return composed.LogErrorAndReturn(err, "Error accepting AliCloud VpcPeerConnection", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
+	logger.Info("AliCloud VpcPeerConnection accepted, requeueing to wait for Activated")
 	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }
