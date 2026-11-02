@@ -333,15 +333,48 @@ func parseGithubRepository(repository string) (owner, repo string, err error) {
 	return parts[0], parts[1], nil
 }
 
+// githubToken returns the GitHub token from the GH_TOKEN env var, or "" if unset.
+func githubToken() string {
+	return strings.TrimSpace(os.Getenv("GH_TOKEN"))
+}
+
+// githubGet performs an HTTP GET against a GitHub URL, adding a bearer Authorization header when
+// GH_TOKEN is set. It returns the response and whether the request was authenticated, so callers can
+// tailor the error message on auth-related failures.
+func githubGet(url string) (resp *http.Response, authenticated bool, err error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil) //nolint:gosec // url built from trusted config values
+	if err != nil {
+		return nil, false, err
+	}
+	if token := githubToken(); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+		authenticated = true
+	}
+	resp, err = http.DefaultClient.Do(req)
+	return resp, authenticated, err
+}
+
+// githubAuthHint returns a note to append to an error when an unauthenticated GitHub request fails
+// with 403 (the rate-limit / forbidden signature). It is empty when the request was authenticated or
+// the status is not 403, so callers can unconditionally append it.
+func githubAuthHint(authenticated bool, statusCode int) string {
+	if authenticated || statusCode != http.StatusForbidden {
+		return ""
+	}
+	return "\nthis request was made without authentication; GitHub rate-limits unauthenticated API" +
+		" access (60 req/hour per IP) and may return 403. Set the GH_TOKEN env var to authenticate," +
+		" e.g.:\n    export GH_TOKEN=$(gh auth token)"
+}
+
 func resolveLatestTag(owner, repo string) (string, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", owner, repo)
-	resp, err := http.Get(url) //nolint:gosec // url built from trusted config values
+	resp, authenticated, err := githubGet(url)
 	if err != nil {
 		return "", fmt.Errorf("error resolving latest release for %s/%s: %w", owner, repo, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error resolving latest release for %s/%s: unexpected status %s", owner, repo, resp.Status)
+		return "", fmt.Errorf("error resolving latest release for %s/%s: unexpected status %s%s", owner, repo, resp.Status, githubAuthHint(authenticated, resp.StatusCode))
 	}
 	var payload struct {
 		TagName string `json:"tag_name"`
@@ -356,13 +389,13 @@ func resolveLatestTag(owner, repo string) (string, error) {
 }
 
 func downloadToFile(url, dest string) error {
-	resp, err := http.Get(url) //nolint:gosec // url built from trusted config values
+	resp, authenticated, err := githubGet(url)
 	if err != nil {
 		return fmt.Errorf("error downloading %s: %w", url, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error downloading %s: unexpected status %s", url, resp.Status)
+		return fmt.Errorf("error downloading %s: unexpected status %s%s", url, resp.Status, githubAuthHint(authenticated, resp.StatusCode))
 	}
 
 	tmp := dest + ".tmp"
