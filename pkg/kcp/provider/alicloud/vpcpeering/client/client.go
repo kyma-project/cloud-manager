@@ -65,13 +65,6 @@ func RemoteIpv4Cidrs(peering *vpcpeer.GetVpcPeerConnectionAttributeResponseBody)
 	return cidrs
 }
 
-// VpcPeerConnectionListItem is the minimal projection returned by ListVpcPeerConnections:
-// just enough to find a non-terminal connection by name and then re-get it by id.
-type VpcPeerConnectionListItem struct {
-	InstanceId string
-	Status     string
-}
-
 // RouteTableInfo is a flattened view of a route table entry.
 type RouteTableInfo struct {
 	RouteTableId string
@@ -112,7 +105,7 @@ type Client interface {
 	AcceptVpcPeerConnection(ctx context.Context, instanceId string) error
 	GetVpcPeerConnection(ctx context.Context, instanceId string) (*vpcpeer.GetVpcPeerConnectionAttributeResponseBody, error)
 	DeleteVpcPeerConnection(ctx context.Context, instanceId string) error
-	ListVpcPeerConnections(ctx context.Context, vpcId, name string) ([]VpcPeerConnectionListItem, error)
+	ListVpcPeerConnections(ctx context.Context, vpcId, name string) ([]*vpcpeer.ListVpcPeerConnectionsResponseBodyVpcPeerConnects, error)
 	DescribeVpc(ctx context.Context, vpcId string) (map[string]string, error)
 	DescribeRouteTables(ctx context.Context, vpcId string) ([]RouteTableInfo, error)
 	CreateRouteEntry(ctx context.Context, routeTableId, destCidr, instanceId string) error
@@ -231,8 +224,8 @@ func (c *alicloudVpcPeeringClient) DeleteVpcPeerConnection(ctx context.Context, 
 	return nil
 }
 
-func (c *alicloudVpcPeeringClient) ListVpcPeerConnections(ctx context.Context, vpcId, name string) ([]VpcPeerConnectionListItem, error) {
-	var result []VpcPeerConnectionListItem
+func (c *alicloudVpcPeeringClient) ListVpcPeerConnections(ctx context.Context, vpcId, name string) ([]*vpcpeer.ListVpcPeerConnectionsResponseBodyVpcPeerConnects, error) {
+	var result []*vpcpeer.ListVpcPeerConnectionsResponseBodyVpcPeerConnects
 	var nextToken *string
 	for {
 		req := &vpcpeer.ListVpcPeerConnectionsRequest{
@@ -251,12 +244,7 @@ func (c *alicloudVpcPeeringClient) ListVpcPeerConnections(ctx context.Context, v
 		if resp.Body == nil {
 			break
 		}
-		for _, p := range resp.Body.VpcPeerConnects {
-			result = append(result, VpcPeerConnectionListItem{
-				InstanceId: tea.StringValue(p.InstanceId),
-				Status:     tea.StringValue(p.Status),
-			})
-		}
+		result = append(result, resp.Body.VpcPeerConnects...)
 		if resp.Body.NextToken == nil || tea.StringValue(resp.Body.NextToken) == "" {
 			break
 		}
