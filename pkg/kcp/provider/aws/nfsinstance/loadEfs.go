@@ -16,20 +16,18 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-// efsMatchesTier reports whether fs matches the reconciled NfsInstance name for the given tier.
+// efsMatchesTier reports whether fs matches the reconciled NfsInstance for the given tier.
 // Tiers (first non-empty-match wins): 1=CreationToken, 2=cloud-manager name tag, 3=Name tag.
-// Matching is on non-empty values only.
-func efsMatchesTier(fs *efstypes.FileSystemDescription, tier int, name string) bool {
-	if name == "" {
-		return false
-	}
+// name is the bare object name (tiers 1 and 3); namespacedName is the "namespace/name" form
+// written to the cloud-manager tag by createEfs (tier 2). Matching is on non-empty values only.
+func efsMatchesTier(fs *efstypes.FileSystemDescription, tier int, name, namespacedName string) bool {
 	switch tier {
 	case 1:
-		return ptr.Deref(fs.CreationToken, "") == name
+		return name != "" && ptr.Deref(fs.CreationToken, "") == name
 	case 2:
-		return awsutil.GetEfsTagValue(fs.Tags, common.TagCloudManagerName) == name
+		return namespacedName != "" && awsutil.GetEfsTagValue(fs.Tags, common.TagCloudManagerName) == namespacedName
 	case 3:
-		return awsutil.GetEfsTagValue(fs.Tags, "Name") == name
+		return name != "" && awsutil.GetEfsTagValue(fs.Tags, "Name") == name
 	}
 	return false
 }
@@ -45,6 +43,9 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	name := state.Obj().GetName()
+	// namespacedName is the form createEfs writes to the cloud-manager/name tag ("namespace/name").
+	// Tier-2 matching must use this form for backward compat with all pre-existing EFS in prod.
+	namespacedName := state.Name().String()
 
 	// Three-tier match, first non-empty tier wins. Index into list (not range value) so the
 	// collected pointers address distinct elements.
@@ -52,7 +53,7 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 	for tier := 1; tier <= 3; tier++ {
 		matches = matches[:0]
 		for i := range list {
-			if efsMatchesTier(&list[i], tier, name) {
+			if efsMatchesTier(&list[i], tier, name, namespacedName) {
 				matches = append(matches, &list[i])
 			}
 		}

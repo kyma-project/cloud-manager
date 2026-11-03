@@ -136,30 +136,20 @@ func (r *Recovery) loadAndScope(ctx context.Context, efsClient awsclient.EfsClie
 	return scoped, statusIds, countMountTargets(scoped), nil
 }
 
-// refreshStatusIds returns the set of non-empty status.id for NfsInstances whose scope shoot
-// matches the configured shoot id.
+// refreshStatusIds returns the set of non-empty status.id values across all NfsInstances fleet-wide.
+// The Scope→shoot join is intentionally omitted: FileSystemIds are globally unique (AWS-assigned
+// UUIDs), so including keepers from other shoots is safe and prevents false deletions when a Scope
+// object is transiently missing from the cache. Deletion scope is enforced by inScope() on the EFS
+// side (shoot tag), not by filtering NfsInstances here.
 func (r *Recovery) refreshStatusIds(ctx context.Context) (map[string]struct{}, error) {
-	var scopes cloudcontrolv1beta1.ScopeList
-	if err := r.kcpClient.List(ctx, &scopes); err != nil {
-		return nil, fmt.Errorf("listing Scopes: %w", err)
-	}
-	shootByScopeName := map[string]string{}
-	for i := range scopes.Items {
-		shootByScopeName[scopes.Items[i].Name] = scopes.Items[i].Spec.ShootName
-	}
-
 	var nfsList cloudcontrolv1beta1.NfsInstanceList
 	if err := r.kcpClient.List(ctx, &nfsList); err != nil {
 		return nil, fmt.Errorf("listing NfsInstances: %w", err)
 	}
 	ids := map[string]struct{}{}
 	for i := range nfsList.Items {
-		n := &nfsList.Items[i]
-		if shootByScopeName[n.Spec.Scope.Name] != r.cfg.ShootId {
-			continue
-		}
-		if n.Status.Id != "" {
-			ids[n.Status.Id] = struct{}{}
+		if id := nfsList.Items[i].Status.Id; id != "" {
+			ids[id] = struct{}{}
 		}
 	}
 	return ids, nil
