@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/kyma-project/cloud-manager/pkg/common/abstractions"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
@@ -63,6 +64,8 @@ var _ = BeforeSuite(func() {
 	env := abstractions.NewOSEnvironment()
 	Expect(err).
 		NotTo(HaveOccurred(), "failed starting infra clusters")
+
+	rate.SetValuesForTests()
 
 	Expect(infra.KCP().GivenNamespaceExists(infra.KCP().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in KCP", infra.KCP().Namespace())

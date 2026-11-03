@@ -38,6 +38,7 @@ type Client interface {
 	DescribeFileSystems(ctx context.Context) ([]efstypes.FileSystemDescription, error)
 	CreateFileSystem(
 		ctx context.Context,
+		creationToken string,
 		performanceMode efstypes.PerformanceMode,
 		throughputMode efstypes.ThroughputMode,
 		tags []efstypes.Tag,

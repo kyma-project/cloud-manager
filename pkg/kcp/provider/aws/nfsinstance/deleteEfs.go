@@ -3,11 +3,11 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
-	"time"
 
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )
 
@@ -33,7 +33,7 @@ func deleteEfs(ctx context.Context, st composed.State) (error, context.Context) 
 		logger.
 			WithValues("waitStates", fmt.Sprintf("%v", stateRequeueDelayed)).
 			Info("Waiting for EFS LifeCycleState")
-		return composed.StopWithRequeueDelay(300 * time.Millisecond), ctx
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
 	_, okToDelete := stateOkToDelete[state.efs.LifeCycleState]
@@ -50,5 +50,5 @@ func deleteEfs(ctx context.Context, st composed.State) (error, context.Context) 
 		return awsmeta.LogErrorAndReturn(err, "Error deleting EFS", ctx)
 	}
 
-	return composed.StopWithRequeue, ctx
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }

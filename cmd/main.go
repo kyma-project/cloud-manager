@@ -25,6 +25,8 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common/cloudmanager"
 	alicloudvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
+	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsefsrecovery "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/efsrecovery"
 	awsvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork"
 	awsvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork/client"
 	azuresecurityclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/security/client"
@@ -603,6 +605,17 @@ func main() {
 	if err != nil {
 		setupLog.Error(err, "error adding SKR notification listener to KCP manager")
 		os.Exit(1)
+	}
+
+	// Disposable EFS orphan-recovery garbage collector. Registered only when enabled in config
+	// (mode != off); an unregistered Runnable cannot classify, hold a goroutine, or delete.
+	// Leader-gated (NeedLeaderElection). Remove after incident close-out.
+	if awsconfig.AwsConfig.EfsOrphanRecovery.Mode != awsconfig.EfsOrphanRecoveryModeOff {
+		efsRecovery := awsefsrecovery.New(mgr.GetClient(), &awsconfig.AwsConfig.EfsOrphanRecovery)
+		if err = mgr.Add(efsRecovery); err != nil {
+			setupLog.Error(err, "error adding EFS orphan recovery runnable to KCP manager")
+			os.Exit(1)
+		}
 	}
 
 	setupLog.Info("starting manager")
