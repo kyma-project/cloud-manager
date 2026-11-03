@@ -2,6 +2,7 @@ package vpcpeering
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
 	azureutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/util"
@@ -65,7 +66,6 @@ func peeringLocalLoad(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	if azuremeta.IsNotFound(err) {
-		logger.Info("Local VPC peering not found")
 		return nil, ctx
 	}
 

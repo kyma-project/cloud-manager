@@ -3,6 +3,7 @@ package rediscluster
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -18,7 +19,6 @@ func loadPrivateEndPoint(ctx context.Context, st composed.State) (error, context
 		logger.Info("Azure Private EndPoint already loaded")
 		return nil, ctx
 	}
-	logger.Info("Loading Azure Private EndPoint")
 	privateEndPointName := state.ObjAsRedisCluster().Name
 	resourceGroupName := state.resourceGroupName
 	privateEndPointCluster, err := state.client.GetPrivateEndPoint(ctx, resourceGroupName, privateEndPointName)
