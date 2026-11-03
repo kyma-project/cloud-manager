@@ -2,11 +2,8 @@ package nfsinstance
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -14,7 +11,6 @@ import (
 )
 
 func loadMountTargets(ctx context.Context, st composed.State) (error, context.Context) {
-	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
 	if state.efs == nil {
@@ -47,22 +43,6 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 		}
 		state.mountTargetSecurityGroups[mtID] = sgList
 	}
-
-	logger.
-		WithValues(
-			"mountTargets",
-			fmt.Sprintf("%v", pie.Map(mtList, func(mt efstypes.MountTargetDescription) string {
-				mtID := ptr.Deref(mt.MountTargetId, "")
-				return fmt.Sprintf(
-					"{id:%s, az:%s, ip: %s, sg: %v}",
-					mtID,
-					ptr.Deref(mt.AvailabilityZoneId, ""),
-					ptr.Deref(mt.IpAddress, ""),
-					state.mountTargetSecurityGroups[mtID],
-				)
-			})),
-		).
-		Info("Mount targets loaded")
 
 	return nil, ctx
 }

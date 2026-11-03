@@ -32,11 +32,8 @@ func loadParameterGroup(
 			foundParamGroup := &list[0]
 			setParamGroup(state, foundParamGroup)
 			logger = logger.WithValues("parameterGroupName", ptr.Deref(foundParamGroup.CacheParameterGroupName, ""))
-			logger.Info("ElastiCache parameter group found and loaded")
 			return nil, composed.LoggerIntoCtx(ctx, logger)
 		}
-
-		logger.Info("ElastiCache parameter group not found")
 
 		return nil, ctx
 	}

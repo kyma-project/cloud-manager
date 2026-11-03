@@ -3,6 +3,8 @@ package v2
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/3th1nk/cidr"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/elliotchance/pie/v2"
@@ -11,7 +13,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func rangeCheckBlockStatus(ctx context.Context, st composed.State) (error, context.Context) {
@@ -38,27 +39,18 @@ func rangeCheckBlockStatus(ctx context.Context, st composed.State) (error, conte
 	}
 
 	if state.associatedCidrBlock == nil {
-		logger.Info("Matching AWS CIDR block not found")
-		return nil, nil
+		return nil, ctx
 	}
-
-	logger.
-		WithValues(
-			"cidrBlockAssociationId", state.associatedCidrBlock.AssociationId,
-			"cidrBlockAssociationState", state.associatedCidrBlock.CidrBlockState.State,
-			"cidrBlockAssociationMessage", state.associatedCidrBlock.CidrBlockState.StatusMessage,
-		).
-		Info("Found matching AWS CIDR block")
 
 	if pie.Contains([]ec2types.VpcCidrBlockStateCode{
 		ec2types.VpcCidrBlockStateCodeAssociated,
 		ec2types.VpcCidrBlockStateCodeDisassociated,
 		ec2types.VpcCidrBlockStateCodeDisassociating,
 	}, state.associatedCidrBlock.CidrBlockState.State) {
-		return nil, nil
+		return nil, ctx
 	}
 	if state.associatedCidrBlock.CidrBlockState.State == ec2types.VpcCidrBlockStateCodeAssociating {
-		return composed.StopWithRequeueDelay(10 * time.Second), nil
+		return composed.StopWithRequeueDelay(10 * time.Second), ctx
 	}
 
 	return composed.PatchStatus(state.ObjAsIpRange()).
