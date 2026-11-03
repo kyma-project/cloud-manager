@@ -3,9 +3,11 @@ package composed
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -94,7 +96,8 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 	if IsStopWithRequeue(err) {
 		//logger.Info("Reconciliation finished with requeue")
 		result = ReconciliationLabelRequeue
-		return ctrl.Result{RequeueAfter: time.Nanosecond}, nil
+		d := rate.Quick.WhenString(fmt.Sprintf("%s/%s", h.controller, h.name))
+		return ctrl.Result{RequeueAfter: d}, nil
 	}
 	if IsStopWithRequeueDelay(err) {
 		var ed *stopWithRequeueDelay

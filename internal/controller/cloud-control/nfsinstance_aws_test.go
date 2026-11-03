@@ -170,4 +170,82 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 		})
 	})
 
+	It("Scenario: KCP AWS NfsInstance EFS is found past the first DescribeFileSystems page", func() {
+
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
+		name := "7a1c3d2e-9b4f-4a6d-8e21-3f5c7b9d0a11"
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given AWS Scope exists", func() {
+			kcpscope.Ignore.AddName(name)
+			Eventually(CreateScopeAws).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(name)).
+				Should(Succeed(), "failed creating Scope")
+		})
+
+		vpcId := "2d9f8a71-5c0e-4b3a-9d6f-1e2c4a7b8c90"
+		awsMock := awsAccount.Region(scope.Spec.Region)
+
+		By("And Given AWS VPC exists", func() {
+			awsMock.AddVpc(
+				vpcId,
+				"10.180.0.0/16",
+				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
+				awsmock.VpcSubnetsFromScope(scope),
+			)
+		})
+
+		iprange := &cloudcontrolv1beta1.IpRange{}
+		iprangeCidr := "10.181.0.0/16"
+		By("And Given KCP IpRange exists", func() {
+			kcpiprange.Ignore.AddName(name)
+			Eventually(CreateAwsIpRangeWithSubnets).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), awsMock, iprange, vpcId, name, iprangeCidr).
+				Should(Succeed(), "failed creating IpRange")
+		})
+
+		By("And Given the account already holds 120 unrelated EFS (more than one AWS page)", func() {
+			// AWS returns at most 100 file systems per DescribeFileSystems page; seeding 120 forces
+			// loadEfs to paginate and search past the first page to find this resource's own EFS.
+			for i := 0; i < 120; i++ {
+				awsMock.AddDummyFileSystem(fmt.Sprintf("unrelated-efs-%d", i))
+			}
+		})
+
+		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+		By("When NfsInstance is created", func() {
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					WithName(name),
+					WithRemoteRef("foo"),
+					WithScope(name),
+					WithIpRange(name),
+					WithNfsInstanceAws(),
+				).
+				Should(Succeed(), "failed creating NfsInstance")
+		})
+
+		By("Then NfsInstance gets status.id despite the EFS being past the first page", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					NewObjActions(),
+					HavingFieldSet("status", "id")).
+				Should(Succeed(), "expected NfsInstance to get status.id even with 120+ EFS present")
+		})
+
+		By("And Then exactly one EFS carries this NfsInstance's creation token (no duplicate minted)", func() {
+			list, err := awsMock.DescribeFileSystems(infra.Ctx())
+			Expect(err).NotTo(HaveOccurred())
+			count := 0
+			for i := range list {
+				if ptr.Deref(list[i].CreationToken, "") == name {
+					count++
+				}
+			}
+			Expect(count).To(Equal(1), "expected exactly one EFS with CreationToken == NfsInstance name")
+		})
+	})
+
 })
