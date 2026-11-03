@@ -1,0 +1,11 @@
+resource:
+    kind: AlicloudRedisCluster
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: alicloudredisclusters
+name: AliCloud Redis Cluster
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    AlicloudRedisCluster description here
