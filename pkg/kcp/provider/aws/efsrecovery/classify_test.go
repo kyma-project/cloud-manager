@@ -12,10 +12,10 @@ import (
 func mkEfs(id string, tags map[string]string, mountTargets int32) efstypes.FileSystemDescription {
 	var t []efstypes.Tag
 	for k, v := range tags {
-		t = append(t, efstypes.Tag{Key: ptr.To(k), Value: ptr.To(v)})
+		t = append(t, efstypes.Tag{Key: new(k), Value: new(v)})
 	}
 	return efstypes.FileSystemDescription{
-		FileSystemId:         ptr.To(id),
+		FileSystemId:         new(id),
 		Tags:                 t,
 		NumberOfMountTargets: mountTargets,
 	}

@@ -54,8 +54,7 @@ func createEfs(ctx context.Context, st composed.State) (error, context.Context) 
 	if err != nil {
 		// Idempotent create collided with an existing EFS (same CreationToken). Treat as
 		// success-in-progress: the next loadEfs finds it by CreationToken (tier 1).
-		var alreadyExists *efstypes.FileSystemAlreadyExists
-		if errors.As(err, &alreadyExists) {
+		if _, ok := errors.AsType[*efstypes.FileSystemAlreadyExists](err); ok {
 			logger.Info("AWS EFS already exists for creation token, requeueing to load it")
 			return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 		}

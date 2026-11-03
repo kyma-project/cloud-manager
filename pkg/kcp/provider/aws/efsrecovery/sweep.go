@@ -69,8 +69,7 @@ func deleteFileSystems(ctx context.Context, log logr.Logger, efsClient awsclient
 
 		err = efsClient.DeleteFileSystem(ctx, fsId)
 		if err != nil {
-			var inUse *efstypes.FileSystemInUse
-			if errors.As(err, &inUse) {
+			if _, ok := errors.AsType[*efstypes.FileSystemInUse](err); ok {
 				metrics.EfsRecoverySkipped.With(lbl).Inc()
 				log.Info("skipping delete: EFS still has mount targets, will retry", "efsId", fsId)
 				remaining = append(remaining, orphans[i])

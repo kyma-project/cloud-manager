@@ -209,7 +209,7 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 		By("And Given the account already holds 120 unrelated EFS (more than one AWS page)", func() {
 			// AWS returns at most 100 file systems per DescribeFileSystems page; seeding 120 forces
 			// loadEfs to paginate and search past the first page to find this resource's own EFS.
-			for i := 0; i < 120; i++ {
+			for i := range 120 {
 				awsMock.AddDummyFileSystem(fmt.Sprintf("unrelated-efs-%d", i))
 			}
 		})
