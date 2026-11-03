@@ -83,19 +83,19 @@ func SetDefaultValues() {
 // SetValuesForTests Use this in controller tests only to speed up requeues to fit default controller tests timeouts
 func SetValuesForTests() {
 	Quick = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
 	)
 
 	Slow1s = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
 	)
 
 	Slow10s = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
 	)
 
 	UltraSlow1m = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
 	)
 }
 
@@ -105,6 +105,7 @@ type ObjectRateLimiterInterface interface {
 	workqueue.TypedRateLimiter[client.Object]
 
 	WhenString(item string) time.Duration
+	ForgetString(item string)
 }
 
 func NewObjectRateLimiter(inner workqueue.TypedRateLimiter[string]) ObjectRateLimiterInterface {
@@ -125,6 +126,10 @@ func (r *ObjectRateLimiter) When(item client.Object) time.Duration {
 
 func (r *ObjectRateLimiter) WhenString(item string) time.Duration {
 	return r.inner.When(item)
+}
+
+func (r *ObjectRateLimiter) ForgetString(item string) {
+	r.inner.Forget(item)
 }
 
 func (r *ObjectRateLimiter) NumRequeues(item client.Object) int {
