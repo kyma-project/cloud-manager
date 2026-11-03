@@ -2,7 +2,7 @@
 
 ## Status
 
-[![REUSE status](https://api.reuse.software/badge/github.com/kyma-project/cloud-manager)](https://api.reuse.software/info/github.com/kyma-project/cloud-manager)
+[//]: # ([![REUSE status]&#40;https://api.reuse.software/badge/github.com/kyma-project/cloud-manager&#41;]&#40;https://api.reuse.software/info/github.com/kyma-project/cloud-manager&#41;)
 
 ![GitHub tag checks state](https://img.shields.io/github/checks-status/kyma-project/cloud-manager/main?label=cloud-manager&link=https%3A%2F%2Fgithub.com%2Fkyma-project%2Fcloud-manager%2Fcommits%2Fmain)
 
