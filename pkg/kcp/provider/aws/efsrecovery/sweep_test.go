@@ -27,7 +27,7 @@ func (baseClient) DescribeFileSystems(context.Context) ([]efstypes.FileSystemDes
 func (baseClient) CreateFileSystem(context.Context, string, efstypes.PerformanceMode, efstypes.ThroughputMode, []efstypes.Tag) (*efs.CreateFileSystemOutput, error) {
 	panic("not implemented")
 }
-func (baseClient) DeleteFileSystem(context.Context, string) error                          { panic("not implemented") }
+func (baseClient) DeleteFileSystem(context.Context, string) error { panic("not implemented") }
 func (baseClient) DescribeMountTargets(context.Context, string) ([]efstypes.MountTargetDescription, error) {
 	panic("not implemented")
 }
@@ -96,8 +96,8 @@ func (c *deleteOnlyClient) DeleteFileSystem(_ context.Context, _ string) error {
 // describeMtClient overrides DescribeMountTargets and DeleteMountTarget.
 type describeMtClient struct {
 	baseClient
-	mts []efstypes.MountTargetDescription
-	err error
+	mts       []efstypes.MountTargetDescription
+	err       error
 	mtDeleted []string
 }
 
@@ -183,13 +183,13 @@ func TestDeleteFileSystems_RefresherError(t *testing.T) {
 
 func TestDeleteMountTargets_HappyPath(t *testing.T) {
 	orphan1 := mkEfs("fs-1", nil, 1)
-	orphan1.FileSystemId = ptr.To("fs-1")
+	orphan1.FileSystemId = new("fs-1")
 	orphan2 := mkEfs("fs-2", nil, 1)
-	orphan2.FileSystemId = ptr.To("fs-2")
+	orphan2.FileSystemId = new("fs-2")
 
 	client := &describeMtClient{
 		mts: []efstypes.MountTargetDescription{
-			{MountTargetId: ptr.To("mt-a"), FileSystemId: ptr.To("fs-any")},
+			{MountTargetId: new("mt-a"), FileSystemId: new("fs-any")},
 		},
 	}
 
