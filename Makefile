@@ -118,7 +118,7 @@ lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
 
 .PHONY: build
 build: manifests generate fmt vet build_ui ## Build manager binary.
-	GOFIPS140=v1.0.0 go build -o bin/manager cmd/main.go
+	GOFIPS140=v1.0.0 go build -trimpath -ldflags="-s -w" -o bin/manager cmd/main.go
 
 .PHONY: build-for-codeql
 build-for-codeql: ## Build all packages for CodeQL analysis (no generators, no output).
