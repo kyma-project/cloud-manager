@@ -178,7 +178,7 @@ func (c *defaultClusterInSession) GetObjectsToDeleteOnTerminate() []client.Objec
 func (c *defaultClusterInSession) DeleteOnTerminate(objects ...client.Object) {
 	for _, obj := range objects {
 		if obj != nil {
-			c.deleteOnTerminate = append(c.deleteOnTerminate, objects...)
+			c.deleteOnTerminate = append(c.deleteOnTerminate, obj)
 		}
 	}
 }
