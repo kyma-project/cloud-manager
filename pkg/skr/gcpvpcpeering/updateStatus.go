@@ -14,12 +14,15 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
-	if composed.SyncConditions(state.ObjAsGcpVpcPeering(), *state.KcpVpcPeering.Conditions()...) ||
+	sanitized := composed.SanitizeConditions(state.KcpVpcPeering.Status.Conditions)
+
+	if composed.SyncConditions(state.ObjAsGcpVpcPeering(), sanitized...) ||
 		state.ObjAsGcpVpcPeering().Status.State != state.KcpVpcPeering.Status.State {
 		state.ObjAsGcpVpcPeering().Status.State = state.KcpVpcPeering.Status.State
 		return composed.UpdateStatus(state.ObjAsGcpVpcPeering()).
-			SetExclusiveConditions(state.KcpVpcPeering.Status.Conditions[0]).
-			ErrorLogMessage(state.KcpVpcPeering.Status.Conditions[0].Message).
+			SetExclusiveConditions(sanitized...).
+			ErrorLogMessage("Error updating SKR GcpVpcPeering status").
+			SuccessLogMsg("Updated and forgot SKR GcpVpcPeering status").
 			SuccessError(composed.StopWithRequeue).
 			Run(ctx, state)
 	}
