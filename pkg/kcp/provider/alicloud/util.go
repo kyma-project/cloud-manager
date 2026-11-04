@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"math/big"
@@ -98,6 +99,26 @@ func GeneratePassword() string {
 		b[i], b[j] = b[j], b[i]
 	}
 	return string(b)
+}
+
+// GenerateToken returns a 32-char cryptographically random hex string for use
+// as a non-credential idempotency seed (TokenSeed). Unlike GeneratePassword,
+// this value is never treated as a credential and does not trigger
+// go/weak-sensitive-data-hashing when passed to BuildIdempotencyToken.
+func GenerateToken() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		panic(fmt.Sprintf("crypto/rand failure: %v", err))
+	}
+	return fmt.Sprintf("%x", b)
+}
+
+// BuildIdempotencyToken returns a 32-char hex token derived from the given
+// inputs, used as the AliCloud CreateInstance idempotency Token. It hashes only
+// non-sensitive inputs; credentials never reach this function.
+func BuildIdempotencyToken(parts ...string) string {
+	sum := sha256.Sum256([]byte(strings.Join(parts, "")))
+	return fmt.Sprintf("%x", sum)[:32]
 }
 
 // BuildRequiredCidrs returns the unique list of CIDRs that must be present in the security-IP list.
