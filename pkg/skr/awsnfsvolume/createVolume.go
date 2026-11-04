@@ -2,6 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -15,17 +16,16 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 	if state.Volume != nil {
-		logger.Info("PersistentVolume for AwsNfsVolume already exists")
-		return nil, nil
+		return nil, ctx
 	}
 
 	kcpCondReady := meta.FindStatusCondition(state.KcpNfsInstance.Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
 	if kcpCondReady == nil {
 		// not yet ready, PV will be created only once KCP NfsInstance is ready
-		return nil, nil
+		return nil, ctx
 	}
 
 	pv := &corev1.PersistentVolume{
@@ -57,5 +57,5 @@ func createVolume(ctx context.Context, st composed.State) (error, context.Contex
 
 	logger.Info("PV for AwsNfsVolume created")
 
-	return nil, nil
+	return nil, ctx
 }

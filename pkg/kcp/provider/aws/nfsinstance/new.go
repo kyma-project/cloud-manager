@@ -31,6 +31,7 @@ func New(stateFactory StateFactory) composed.Action {
 					createSecurityGroup,
 					loadSecurityGroup,
 					authorizeSecurityGroupIngress,
+					gateEfsOrphanRecovery,
 					loadEfs,
 					createEfs,
 					waitEfsAvailable,

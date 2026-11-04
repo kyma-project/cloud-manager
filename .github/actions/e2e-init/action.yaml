@@ -40,6 +40,21 @@ runs:
       shell: bash
       run: mkdir ./tmp
 
+    - name: Write skrRuntime.yaml config file
+      shell: bash
+      run: |
+        cat <<EOF > ./tmp/skrRuntime.yaml
+        cyclicMinInterval: 1s
+        EOF
+
+    - name: Write resourceQuotaSkr.yaml config file
+      shell: bash
+      run: |
+        cat <<EOF > ./tmp/resourceQuotaSkr.yaml
+        defaults:
+          iprange.cloud-resources.kyma-project.io/totalCount: 10
+        EOF
+
     - name: Write e2e config file
       shell: bash
       env:

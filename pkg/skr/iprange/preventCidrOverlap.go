@@ -3,6 +3,7 @@ package iprange
 import (
 	"context"
 	"fmt"
+
 	"github.com/3th1nk/cidr"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -15,7 +16,7 @@ func preventCidrOverlap(ctx context.Context, st composed.State) (error, context.
 	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// WARNING! Overlap is symmetrical!!!
@@ -92,7 +93,7 @@ func preventCidrOverlap(ctx context.Context, st composed.State) (error, context.
 			if myDate.Before(&hisDate) || myDate.Equal(&hisDate) && state.ObjAsIpRange().Name < ipRange.Name {
 				// Im older, skip me
 				logger.Info("Letting older range with overlapping CIDR pass")
-				return nil, nil
+				return nil, ctx
 			}
 
 			// Im newer, set me overlap error
@@ -114,5 +115,5 @@ func preventCidrOverlap(ctx context.Context, st composed.State) (error, context.
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }

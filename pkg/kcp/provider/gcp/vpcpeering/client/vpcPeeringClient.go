@@ -29,7 +29,6 @@ import (
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	"cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	"github.com/elliotchance/pie/v2"
-	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/client"
 	"k8s.io/utils/ptr"
 )
@@ -123,8 +122,6 @@ func (c *gcpVpcPeeringClient) GetVpcPeering(ctx context.Context, remotePeeringNa
 	peerings := pie.Filter(network.GetPeerings(), func(peering *pb.NetworkPeering) bool { return peering.GetName() == remotePeeringName })
 
 	if len(peerings) == 0 {
-		logger := composed.LoggerFromCtx(ctx)
-		logger.Info("Vpc Peering not found", "peeringName", remotePeeringName)
 		return nil, nil
 	}
 	return peerings[0], nil

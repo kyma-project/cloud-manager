@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -36,28 +37,32 @@ func NewCachedClientProvider[T comparable](p ClientProvider[T]) ClientProvider[T
 	}
 }
 
-var gcpClient *http.Client
+// gcpClient holds the shared GCP HTTP client, published and read lock-free via
+// atomic.Pointer. clientMutex serializes only first-init (guarding against a
+// duplicate client build and a duplicate renewal goroutine); the renewal path
+// publishes with a bare atomic Store.
+var gcpClient atomic.Pointer[http.Client]
 var clientMutex sync.Mutex
 
 func newCachedGcpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
 	clientMutex.Lock()
 	defer clientMutex.Unlock()
-	if gcpClient == nil {
+	if gcpClient.Load() == nil {
 		client, err := newHttpClient(ctx, credentialsFile)
 		if err != nil {
 			return nil, err
 		}
-		gcpClient = client
+		gcpClient.Store(client)
 		go renewCachedHttpClientPeriodically(context.Background(), credentialsFile, config.GcpConfig.ClientRenewDuration)
 	}
-	return gcpClient, nil
+	return gcpClient.Load(), nil
 }
 
 func GetCachedGcpClient(ctx context.Context, credentialsFile string) (*http.Client, error) {
-	if gcpClient == nil {
-		return newCachedGcpClient(ctx, credentialsFile)
+	if c := gcpClient.Load(); c != nil {
+		return c, nil
 	}
-	return gcpClient, nil
+	return newCachedGcpClient(ctx, credentialsFile)
 }
 
 var projectNumbers = make(map[string]int64)
@@ -96,9 +101,7 @@ func renewCachedHttpClientPeriodically(ctx context.Context, credentialsFile stri
 			if err != nil {
 				logger.Error(err, "error renewing GCP HTTP client")
 			} else {
-				clientMutex.Lock()
-				*gcpClient = *client
-				clientMutex.Unlock()
+				gcpClient.Store(client)
 				logger.Info("GCP HTTP client renewed")
 			}
 		}

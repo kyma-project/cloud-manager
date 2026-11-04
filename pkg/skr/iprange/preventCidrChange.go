@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,18 +12,18 @@ func preventCidrChange(ctx context.Context, st composed.State) (error, context.C
 	state := st.(*State)
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// cidr is optional by feature flag
 	if len(state.ObjAsIpRange().Spec.Cidr) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// status.cidr is empty OR same as spec.cidr
 	if len(state.ObjAsIpRange().Status.Cidr) == 0 ||
 		state.ObjAsIpRange().Spec.Cidr == state.ObjAsIpRange().Status.Cidr {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// status.cidr is not empty AND different from spec.cidr

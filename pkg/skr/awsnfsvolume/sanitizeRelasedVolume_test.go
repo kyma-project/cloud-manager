@@ -77,9 +77,8 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 				},
 			}
 
-			err, res := sanitizeReleasedVolume(ctx, state)
+			err, _ := sanitizeReleasedVolume(ctx, state)
 
-			assert.Nil(t, res, "should return nil result")
 			assert.Nil(t, err, "should return nil err")
 			assert.EqualValues(t, 0, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should not be called")
 		})
@@ -89,9 +88,8 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 			ctx := t.Context()
 			state.Volume = nil
 
-			err, res := sanitizeReleasedVolume(ctx, state)
+			err, _ := sanitizeReleasedVolume(ctx, state)
 
-			assert.Nil(t, res, "should return nil result")
 			assert.Nil(t, err, "should return nil err")
 			assert.EqualValues(t, 0, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should not be called")
 		})
@@ -101,9 +99,8 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 			ctx := t.Context()
 			state.Volume.Status.Phase = corev1.VolumeBound
 
-			err, res := sanitizeReleasedVolume(ctx, state)
+			err, _ := sanitizeReleasedVolume(ctx, state)
 
-			assert.Nil(t, res, "should return nil result")
 			assert.Nil(t, err, "should return nil err")
 			assert.EqualValues(t, 0, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should not be called")
 		})
@@ -113,9 +110,8 @@ func TestSanitizeReleasedVolume(t *testing.T) {
 			ctx := t.Context()
 			state.Volume.Spec.ClaimRef = nil
 
-			err, res := sanitizeReleasedVolume(ctx, state)
+			err, _ := sanitizeReleasedVolume(ctx, state)
 
-			assert.Nil(t, res, "should return nil result")
 			assert.Nil(t, err, "should return nil err")
 			assert.EqualValues(t, 0, k8sClient.(spy.ClientSpy).UpdateCallCount(), "update should not be called")
 		})

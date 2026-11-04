@@ -2,11 +2,35 @@ package nfsinstance
 
 import (
 	"context"
+	"fmt"
+	"time"
+
+	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
-	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
+
+// efsMatchesTier reports whether fs matches the reconciled NfsInstance for the given tier.
+// Tiers (first non-empty-match wins): 1=CreationToken, 2=cloud-manager name tag, 3=Name tag.
+// name is the bare object name (tiers 1 and 3); namespacedName is the "namespace/name" form
+// written to the cloud-manager tag by createEfs (tier 2). Matching is on non-empty values only.
+func efsMatchesTier(fs *efstypes.FileSystemDescription, tier int, name, namespacedName string) bool {
+	switch tier {
+	case 1:
+		return name != "" && ptr.Deref(fs.CreationToken, "") == name
+	case 2:
+		return namespacedName != "" && awsutil.GetEfsTagValue(fs.Tags, common.TagCloudManagerName) == namespacedName
+	case 3:
+		return name != "" && awsutil.GetEfsTagValue(fs.Tags, "Name") == name
+	}
+	return false
+}
 
 func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
@@ -14,18 +38,72 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 
 	list, err := state.awsClient.DescribeFileSystems(ctx)
 	if err != nil {
-		return awsmeta.LogErrorAndReturn(err, "Error listing AWS file systems", ctx)
+		logger.Error(err, "Error listing AWS file systems")
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
-	for _, fs := range list {
-		if ptr.Deref(fs.Name, "") == state.Obj().GetName() {
-			state.efs = &fs
+	name := state.Obj().GetName()
+	// namespacedName is the form createEfs writes to the cloud-manager/name tag ("namespace/name").
+	// Tier-2 matching must use this form for backward compat with all pre-existing EFS in prod.
+	namespacedName := state.Name().String()
+
+	// Three-tier match, first non-empty tier wins. Index into list (not range value) so the
+	// collected pointers address distinct elements.
+	var matches []*efstypes.FileSystemDescription
+	for tier := 1; tier <= 3; tier++ {
+		matches = matches[:0]
+		for i := range list {
+			if efsMatchesTier(&list[i], tier, name, namespacedName) {
+				matches = append(matches, &list[i])
+			}
+		}
+		if len(matches) > 0 {
 			break
 		}
 	}
 
-	if state.efs == nil {
-		return nil, nil
+	switch len(matches) {
+	case 0:
+		// nothing found across all tiers; leave state.efs nil so the create path runs
+		return nil, ctx
+	case 1:
+		state.efs = matches[0]
+	default:
+		// more than one match within the winning tier: only Status.Id can disambiguate
+		statusId := state.ObjAsNfsInstance().Status.Id
+		if statusId != "" {
+			for _, m := range matches {
+				if ptr.Deref(m.FileSystemId, "") == statusId {
+					state.efs = m
+					break
+				}
+			}
+		}
+		if state.efs == nil {
+			// genuinely ambiguous: park and alarm, never pick arbitrarily, never create
+			ids := make([]string, 0, len(matches))
+			for _, m := range matches {
+				ids = append(ids, ptr.Deref(m.FileSystemId, ""))
+			}
+			logger.Error(
+				fmt.Errorf("multiple EFS match NfsInstance %q with no matching status.id", name),
+				"Multiple AWS EFS matched NfsInstance",
+				"efsIds", ids,
+			)
+			return composed.NewStatusPatcherComposed(state.ObjAsNfsInstance()).
+				SetConditions(metav1.Condition{
+					Type:    cloudcontrolv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudcontrolv1beta1.ReasonMultipleFileSystems,
+					Message: fmt.Sprintf("Multiple file systems match this NfsInstance: %v", ids),
+				}).
+				OnSuccess(composed.RequeueAfter(time.Hour)).
+				OnFailure(
+					composed.Log("Error patching NfsInstance status with multiple file systems error"),
+					composed.RequeueAfter(time.Hour),
+				).
+				Run(ctx, state.Cluster().K8sClient())
+		}
 	}
 
 	if state.efs.SizeInBytes != nil {
@@ -34,7 +112,7 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 			state.ObjAsNfsInstance().Status.Capacity = *capacity
 			err = state.PatchObjStatus(ctx)
 			if err != nil {
-				return composed.LogErrorAndReturn(err, "Error patching NfsInstance status with capacity", composed.StopWithRequeue, ctx)
+				return composed.LogErrorAndReturn(err, "Error patching NfsInstance status with capacity", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 			}
 		}
 	}
@@ -52,8 +130,8 @@ func loadEfs(ctx context.Context, st composed.State) (error, context.Context) {
 	state.ObjAsNfsInstance().Status.Id = *state.efs.FileSystemId
 	err = state.UpdateObjStatus(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status with file system id", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status with file system id", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
 	}
 
-	return composed.StopWithRequeue, ctx
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }

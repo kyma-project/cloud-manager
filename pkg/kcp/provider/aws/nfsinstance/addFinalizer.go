@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -10,12 +11,12 @@ import (
 func addFinalizer(ctx context.Context, state composed.State) (error, context.Context) {
 	// Object is being deleted, don't add finalizer
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// If finalizer already present, don't add it again.
 	if controllerutil.ContainsFinalizer(state.Obj(), api.CommonFinalizerDeletionHook) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// Add finalizer
@@ -25,5 +26,5 @@ func addFinalizer(ctx context.Context, state composed.State) (error, context.Con
 	}
 
 	// Requeue to reload the object
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeue, ctx
 }

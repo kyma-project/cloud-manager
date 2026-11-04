@@ -13,23 +13,21 @@ import (
 // and become ready to be attached to PVC
 func sanitizeReleasedVolume(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.Volume == nil {
-		logger.Info("PersistentVolume for AwsNfsVolume not present.")
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.Volume.Status.Phase != corev1.VolumeReleased {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.Volume.Spec.ClaimRef == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.Volume.Spec.ClaimRef = nil
@@ -39,5 +37,5 @@ func sanitizeReleasedVolume(ctx context.Context, st composed.State) (error, cont
 		return composed.LogErrorAndReturn(err, "Error removing claimRef from PV", composed.StopWithRequeueDelay(util.Timing.T60000ms()), ctx)
 	}
 
-	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), nil
+	return composed.StopWithRequeueDelay(util.Timing.T1000ms()), ctx
 }

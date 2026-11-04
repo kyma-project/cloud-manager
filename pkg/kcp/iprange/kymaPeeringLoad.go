@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -25,10 +26,7 @@ func kymaPeeringLoad(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	if err == nil {
-		logger.Info("KCP IpRange VpcPeering loaded")
 		state.kymaPeering = peering
-	} else {
-		logger.Info("KCP IpRange VpcPeering does not exist")
 	}
 
 	return nil, ctx

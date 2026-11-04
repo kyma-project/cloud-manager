@@ -38,7 +38,7 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 	}
 
 	if len(invalidMountTargets) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.WithValues(
@@ -73,5 +73,5 @@ func validateExistingMountTargets(ctx context.Context, st composed.State) (error
 		return composed.LogErrorAndReturn(err, "Error updating NfsInstance status state after invalid mount targets found", composed.StopWithRequeue, ctx)
 	}
 
-	return composed.StopAndForget, nil
+	return composed.StopAndForget, ctx
 }

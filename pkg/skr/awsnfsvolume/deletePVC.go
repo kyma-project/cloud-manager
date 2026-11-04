@@ -3,6 +3,7 @@ package awsnfsvolume
 import (
 	"context"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,15 +14,15 @@ func deletePVC(ctx context.Context, st composed.State) (error, context.Context) 
 	logger := composed.LoggerFromCtx(ctx)
 
 	if !composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.PVC == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if !state.PVC.DeletionTimestamp.IsZero() {
-		return nil, nil
+		return nil, ctx
 	}
 
 	err, _ := composed.UpdateStatus(state.ObjAsAwsNfsVolume()).
@@ -36,7 +37,7 @@ func deletePVC(ctx context.Context, st composed.State) (error, context.Context) 
 		FailedError(composed.StopWithRequeue).
 		Run(ctx, state)
 	if err != nil {
-		return err, nil
+		return err, ctx
 	}
 
 	logger.Info("Deleting PVC for AwsNfsVolume")
@@ -46,5 +47,5 @@ func deletePVC(ctx context.Context, st composed.State) (error, context.Context) 
 		return composed.LogErrorAndReturn(err, "Error deleting PVC for AwsNfsVolume", composed.StopWithRequeue, ctx)
 	}
 
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeue, ctx
 }

@@ -24,7 +24,7 @@ var (
 	//	5     102.4s
 	//	6     409.6s
 	//	7     600s (1638.4)
-	Quick workqueue.TypedRateLimiter[client.Object]
+	Quick ObjectRateLimiterInterface
 
 	// Slow1s with base value of 1s and cap of 10min (600s)
 	//	#                        controller tests
@@ -36,7 +36,7 @@ var (
 	//	5     600s (1024)
 	//	6     409.6s
 	//	7     600s (1638.4)
-	Slow1s workqueue.TypedRateLimiter[client.Object]
+	Slow1s ObjectRateLimiterInterface
 
 	// Slow10s with base value of 10s and cap of 10min (600s)
 	//	#                        controller tests
@@ -44,7 +44,7 @@ var (
 	//	1     40s                 0.4s
 	//	2    160s                 1s (1.6)
 	//	3    600s (640)
-	Slow10s workqueue.TypedRateLimiter[client.Object]
+	Slow10s ObjectRateLimiterInterface
 
 	// UltraSlow1m with base value of 1m and cap of 1h
 	//	#                        controller tests
@@ -55,7 +55,7 @@ var (
 	//  4    16m
 	//  5    32m
 	//  6    60m (64)
-	UltraSlow1m workqueue.TypedRateLimiter[client.Object]
+	UltraSlow1m ObjectRateLimiterInterface
 )
 
 func init() {
@@ -83,25 +83,32 @@ func SetDefaultValues() {
 // SetValuesForTests Use this in controller tests only to speed up requeues to fit default controller tests timeouts
 func SetValuesForTests() {
 	Quick = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
 	)
 
 	Slow1s = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
 	)
 
 	Slow10s = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
 	)
 
 	UltraSlow1m = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 5*time.Second, 1),
+		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
 	)
 }
 
 // ObjectRateLimiter
 
-func NewObjectRateLimiter(inner workqueue.TypedRateLimiter[string]) workqueue.TypedRateLimiter[client.Object] {
+type ObjectRateLimiterInterface interface {
+	workqueue.TypedRateLimiter[client.Object]
+
+	WhenString(item string) time.Duration
+	ForgetString(item string)
+}
+
+func NewObjectRateLimiter(inner workqueue.TypedRateLimiter[string]) ObjectRateLimiterInterface {
 	return &ObjectRateLimiter{
 		inner: inner,
 	}
@@ -111,8 +118,18 @@ type ObjectRateLimiter struct {
 	inner workqueue.TypedRateLimiter[string]
 }
 
+var _ ObjectRateLimiterInterface = (*ObjectRateLimiter)(nil)
+
 func (r *ObjectRateLimiter) When(item client.Object) time.Duration {
 	return r.inner.When(r.objectKey(item))
+}
+
+func (r *ObjectRateLimiter) WhenString(item string) time.Duration {
+	return r.inner.When(item)
+}
+
+func (r *ObjectRateLimiter) ForgetString(item string) {
+	r.inner.Forget(item)
 }
 
 func (r *ObjectRateLimiter) NumRequeues(item client.Object) int {

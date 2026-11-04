@@ -25,6 +25,7 @@ import (
 const (
 	ReasonFailedCreatingFileSystem        = "FailedCreatingFileSystem"
 	ReasonInvalidMountTargetsAlreadyExist = "InvalidMountTargetsAlreadyExist"
+	ReasonMultipleFileSystems             = "MultipleFileSystems"
 )
 
 // +kubebuilder:validation:Enum=generalPurpose;maxIO

@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -12,13 +13,13 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	added := controllerutil.AddFinalizer(state.Obj(), api.CommonFinalizerDeletionHook)
 	if !added {
 		// finalizer already added
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Adding finalizer to IpRange")
@@ -28,5 +29,5 @@ func addFinalizer(ctx context.Context, st composed.State) (error, context.Contex
 		return composed.LogErrorAndReturn(err, "Error saving object after finalizer added", composed.StopWithRequeue, ctx)
 	}
 
-	return composed.StopWithRequeue, nil
+	return composed.StopWithRequeue, ctx
 }

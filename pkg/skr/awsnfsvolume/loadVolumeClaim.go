@@ -2,6 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -24,5 +25,5 @@ func loadPersistentVolumeClaim(ctx context.Context, st composed.State) (error, c
 		state.PVC = pvc
 	}
 
-	return nil, nil
+	return nil, ctx
 }

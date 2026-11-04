@@ -3,6 +3,7 @@ package nfsinstance
 import (
 	"context"
 	"fmt"
+
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/elliotchance/pie/v2"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -18,7 +19,7 @@ func removeMountTargetsFromOtherVpcs(ctx context.Context, st composed.State) (er
 	logger := composed.LoggerFromCtx(ctx)
 
 	if len(state.mountTargets) <= 3 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.
@@ -85,5 +86,5 @@ func removeMountTargetsFromOtherVpcs(ctx context.Context, st composed.State) (er
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }

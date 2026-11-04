@@ -14,6 +14,12 @@ func rangeWaitCidrBlockDisassociated(ctx context.Context, st composed.State) (er
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
+	// On deletion the VPC may already be gone (state.vpc == nil). With no VPC there is
+	// no CIDR block association left to wait for.
+	if state.vpc == nil {
+		return nil, ctx
+	}
+
 	var theBlock *ec2types.VpcCidrBlockAssociation
 	for _, cidrBlock := range state.vpc.CidrBlockAssociationSet {
 		if ptr.Deref(cidrBlock.CidrBlock, "") == state.ObjAsIpRange().Status.Cidr {

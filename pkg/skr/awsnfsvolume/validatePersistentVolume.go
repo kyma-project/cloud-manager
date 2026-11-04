@@ -17,7 +17,7 @@ func validatePersistentVolume(ctx context.Context, st composed.State) (error, co
 	nfsVolume := state.ObjAsAwsNfsVolume()
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	pvName := getVolumeName(nfsVolume)
@@ -25,7 +25,7 @@ func validatePersistentVolume(ctx context.Context, st composed.State) (error, co
 	err := state.Cluster().K8sClient().Get(ctx, types.NamespacedName{Name: pvName}, pv)
 
 	if apierrors.IsNotFound(err) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if err != nil {
@@ -35,7 +35,7 @@ func validatePersistentVolume(ctx context.Context, st composed.State) (error, co
 	parentName, parentNameExists := pv.Labels[cloudresourcesv1beta1.LabelNfsVolName]
 	parentNamespace, parentNamespaceExists := pv.Labels[cloudresourcesv1beta1.LabelNfsVolNS]
 	if parentNameExists && parentNamespaceExists && parentName == nfsVolume.Name && parentNamespace == nfsVolume.Namespace {
-		return nil, nil
+		return nil, ctx
 	}
 
 	nfsVolume.Status.State = cloudresourcesv1beta1.StateError
