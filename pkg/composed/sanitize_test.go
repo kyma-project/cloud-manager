@@ -103,6 +103,10 @@ func TestSanitizeConditions(t *testing.T) {
 		if got[1].Message == rawSDKMessage {
 			t.Error("error condition message was not sanitized")
 		}
+		want := composed.SanitizeErrorForTenant(errCond.Reason)
+		if got[1].Message != want {
+			t.Errorf("sanitized message = %q, want %q", got[1].Message, want)
+		}
 	})
 
 	t.Run("original slice is not mutated", func(t *testing.T) {
@@ -124,6 +128,18 @@ func TestSanitizeConditions(t *testing.T) {
 		want := "an error occurred while provisioning the resource"
 		if got[0].Message != want {
 			t.Errorf("got %q, want %q", got[0].Message, want)
+		}
+	})
+
+	t.Run("only the first error condition is sanitized", func(t *testing.T) {
+		err2 := errCond
+		err2.Reason = "QuotaExceeded"
+		got := composed.SanitizeConditions([]metav1.Condition{errCond, err2})
+		if got[0].Message != composed.SanitizeErrorForTenant(errCond.Reason) {
+			t.Errorf("first error not sanitized: %q", got[0].Message)
+		}
+		if got[1].Message != rawSDKMessage {
+			t.Errorf("unexpected change to second error: %q", got[1].Message)
 		}
 	})
 }

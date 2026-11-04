@@ -7,10 +7,8 @@ import (
 	"testing"
 )
 
-// forbiddenPatterns lists variable references that must never appear verbatim in SKR
-// updateStatus files — each carries raw KCP-internal error text that must be sanitized
-// before being surfaced to tenants. Ready/Updating messages are intentionally forwarded
-// verbatim and are therefore not listed here.
+// forbiddenPatterns lists the inline kcpCondErr.Message idiom that must not appear
+// verbatim in SKR updateStatus files.
 var forbiddenPatterns = []string{
 	"kcpCondErr.Message",
 }
