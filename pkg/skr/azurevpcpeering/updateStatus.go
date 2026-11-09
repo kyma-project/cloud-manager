@@ -2,6 +2,7 @@ package azurevpcpeering
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -14,20 +15,15 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 		return nil, nil
 	}
 
-	changed := false // nolint:staticcheck
+	sanitized := composed.SanitizeConditions(state.KcpVpcPeering.Status.Conditions)
 
-	if composed.AnyConditionChanged(obj, *state.KcpVpcPeering.Conditions()...) {
-		changed = true
-	}
-
-	if obj.Status.State != state.KcpVpcPeering.Status.State {
-		changed = true
-	}
+	changed := composed.AnyConditionChanged(obj, sanitized...) ||
+		obj.Status.State != state.KcpVpcPeering.Status.State
 
 	if changed {
 		obj.Status.State = state.KcpVpcPeering.Status.State
 		return composed.UpdateStatus(obj).
-			SetExclusiveConditions(*state.KcpVpcPeering.Conditions()...).
+			SetExclusiveConditions(sanitized...).
 			ErrorLogMessage("Error updating SKR AzureVpcPeering status").
 			SuccessLogMsg("Updated and forgot SKR AzureVpcPeering status").
 			SuccessErrorNil().

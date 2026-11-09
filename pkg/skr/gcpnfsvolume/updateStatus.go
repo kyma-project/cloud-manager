@@ -39,7 +39,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 				Type:    cloudresourcesv1beta1.ConditionTypeError,
 				Status:  metav1.ConditionTrue,
 				Reason:  cloudresourcesv1beta1.ConditionReasonError,
-				Message: kcpCondErr.Message,
+				Message: composed.SanitizeErrorForTenant(kcpCondErr.Reason),
 			}).
 			ErrorLogMessage("Error updating GcpNfsVolume status with Error condition due to KCP error").
 			SuccessError(composed.StopAndForget). // do not continue further with the flow

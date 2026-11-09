@@ -172,20 +172,27 @@ func copyFile(src, dest string) error {
 	}
 	defer s.Close() // nolint: errcheck
 
-	dest1 := dest + ".tmp"
-	d, err := os.Create(dest1)
+	d, err := os.CreateTemp(filepath.Dir(dest), filepath.Base(dest)+".*.tmp")
 	if err != nil {
-		return fmt.Errorf("error creating tmp destination %s: %w", dest1, err)
+		return fmt.Errorf("error creating tmp destination for %s: %w", dest, err)
 	}
-	defer d.Close() // nolint: errcheck
+	dest1 := d.Name()
 
 	_, err = io.Copy(d, s)
 	if err != nil {
+		d.Close()        // nolint: errcheck
+		os.Remove(dest1) // nolint: errcheck
 		return fmt.Errorf("error copying to file %s: %w", dest1, err)
+	}
+
+	if err = d.Close(); err != nil {
+		os.Remove(dest1) // nolint: errcheck
+		return fmt.Errorf("error closing tmp destination %s: %w", dest1, err)
 	}
 
 	err = os.Rename(dest1, dest)
 	if err != nil {
+		os.Remove(dest1) // nolint: errcheck
 		return fmt.Errorf("error renaming destination %s: %w", dest, err)
 	}
 
