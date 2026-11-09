@@ -1,0 +1,192 @@
+name: "Create release"
+
+# Creates a GitHub release for cloud-manager and waits for the container image build.
+#
+# What it does:
+#   1. Validates the version (semver x.y.z) and that we run from a release-* branch.
+#   2. Tags the current commit and pushes the tag. The existing image-build-main.yaml
+#      workflow triggers on tag push and builds the prod image.
+#   3. Publishes a GitHub release with auto-generated notes + a Full Changelog line,
+#      attaching the sample CR and the CRD as release assets.
+#   4. Waits for the image build workflow run on that tag to succeed.
+#
+# Out of scope (stays manual, cross-repo): module-manifests PR and management-plane-charts
+# chart PR / ArgoCD deploy / SRE hand-off.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version, semver x.y.z (e.g. "1.12.0", no v prefix)'
+        required: true
+        default: ""
+
+env:
+  IMAGE: europe-docker.pkg.dev/kyma-project/prod/cloud-manager
+  IMAGE_BUILD_WORKFLOW: image-build-main.yaml
+
+jobs:
+  validate:
+    name: Validate release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Verify version follows x.y.z pattern
+        run: |
+          if [[ "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version format is valid."
+          else
+            echo "::error ::Version '${{ github.event.inputs.version }}' is invalid. Expected semver x.y.z (e.g. 1.2.3), no v prefix."
+            exit 1
+          fi
+
+      - name: Verify current branch starts with 'release-'
+        run: |
+          CURRENT_BRANCH="${{ github.ref_name }}"
+          if [[ "$CURRENT_BRANCH" == release-* ]]; then
+            echo "Branch '$CURRENT_BRANCH' starts with 'release-'."
+          else
+            echo "::error ::This workflow must run from a 'release-*' branch, but ran from '$CURRENT_BRANCH'."
+            exit 1
+          fi
+
+      - name: Verify tag does not already exist
+        run: |
+          if [ "$(git tag -l "${{ github.event.inputs.version }}")" ]; then
+            echo "::error ::Tag ${{ github.event.inputs.version }} already exists."
+            exit 1
+          fi
+          echo "Tag ${{ github.event.inputs.version }} does not exist yet."
+
+  create-release:
+    name: Create release
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Determine previous tag
+        id: prev
+        run: |
+          PREV_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          echo "previous_tag=${PREV_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Previous tag: ${PREV_TAG:-<none>}"
+
+      - name: Push release tag
+        # Pushing the tag with the default GITHUB_TOKEN triggers image-build-main.yaml
+        # (it runs on `push: tags: "*"`). If a future branch-protection change stops the
+        # default token from triggering that workflow, switch to a PAT / GitHub App token here.
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git tag "${{ github.event.inputs.version }}"
+          git push origin "${{ github.event.inputs.version }}"
+
+      - name: Compose release notes
+        id: notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.inputs.version }}
+          PREV_TAG: ${{ steps.prev.outputs.previous_tag }}
+        run: |
+          set -euo pipefail
+          # Ask GitHub to generate release notes for the new tag.
+          if [ -n "${PREV_TAG}" ]; then
+            BODY="$(gh api \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+              -f tag_name="${VERSION}" \
+              -f previous_tag_name="${PREV_TAG}" \
+              --jq '.body')"
+            CHANGELOG="**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${PREV_TAG}...${VERSION}"
+          else
+            BODY="$(gh api \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+              -f tag_name="${VERSION}" \
+              --jq '.body')"
+            CHANGELOG="**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/commits/${VERSION}"
+          fi
+          {
+            echo "body<<RELEASE_NOTES_EOF"
+            printf '%s\n\n%s\n' "${BODY}" "${CHANGELOG}"
+            echo "RELEASE_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create and publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.inputs.version }}
+          NOTES: ${{ steps.notes.outputs.body }}
+        run: |
+          set -euo pipefail
+          gh release create "${VERSION}" \
+            --title "${VERSION}" \
+            --notes "${NOTES}" \
+            config/samples/cloud-resources_v1beta1_cloudresources.yaml \
+            config/crd/bases/cloud-resources.kyma-project.io_cloudresources.yaml
+
+  wait-for-image:
+    name: Wait for image build
+    needs: create-release
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - name: Wait for image build workflow to succeed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.inputs.version }}
+          INTERVAL: "60"
+          TIMEOUT: "900"
+        run: |
+          set -euo pipefail
+          echo "Waiting for '${IMAGE_BUILD_WORKFLOW}' run on tag ${VERSION}..."
+          elapsed=0
+          while true; do
+            # Find the build workflow run triggered by the tag push.
+            STATUS="$(gh run list \
+              --workflow "${IMAGE_BUILD_WORKFLOW}" \
+              --branch "${VERSION}" \
+              --event push \
+              --limit 1 \
+              --json status,conclusion \
+              --jq '.[0] | "\(.status) \(.conclusion)"' || true)"
+
+            RUN_STATUS="${STATUS%% *}"
+            RUN_CONCLUSION="${STATUS##* }"
+
+            if [ -z "${STATUS}" ] || [ "${RUN_STATUS}" = "null" ]; then
+              echo "No build run found yet for tag ${VERSION}..."
+            else
+              echo "Build run status=${RUN_STATUS} conclusion=${RUN_CONCLUSION}"
+              if [ "${RUN_STATUS}" = "completed" ]; then
+                if [ "${RUN_CONCLUSION}" = "success" ]; then
+                  echo "Image build succeeded: ${IMAGE}:${VERSION}"
+                  exit 0
+                fi
+                echo "::error ::Image build finished with conclusion '${RUN_CONCLUSION}'."
+                exit 1
+              fi
+            fi
+
+            if [ "${elapsed}" -ge "${TIMEOUT}" ]; then
+              echo "::error ::Timed out after ${TIMEOUT}s waiting for the image build on tag ${VERSION}."
+              exit 1
+            fi
+            sleep "${INTERVAL}"
+            elapsed=$((elapsed + INTERVAL))
+          done
