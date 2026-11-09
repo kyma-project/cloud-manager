@@ -3,11 +3,11 @@ module github.com/kyma-project/cloud-manager
 go 1.27.3
 
 require (
-	cloud.google.com/go/auth v0.24.2
+	cloud.google.com/go/auth v0.24.3
 	cloud.google.com/go/auth/oauth2adapt v0.3.1
-	cloud.google.com/go/compute v1.74.1
+	cloud.google.com/go/compute v1.75.0
 	cloud.google.com/go/filestore v1.18.1
-	cloud.google.com/go/longrunning v1.4.1
+	cloud.google.com/go/longrunning v1.5.0
 	cloud.google.com/go/networkconnectivity v1.30.1
 	cloud.google.com/go/redis v1.29.0
 	cloud.google.com/go/resourcemanager v1.18.1
@@ -88,9 +88,9 @@ require (
 	github.com/tidwall/sjson v1.2.6
 	go.uber.org/zap v1.28.0
 	golang.org/x/oauth2 v0.37.0
-	google.golang.org/api v0.310.0
+	google.golang.org/api v0.311.0
 	google.golang.org/genproto v0.0.0-20261012220534-4341edf3f941
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20261019180522-ce908d29299b
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261026165753-2ffab32bce7e
 	google.golang.org/grpc v1.85.0
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v3 v3.0.1
