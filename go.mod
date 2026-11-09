@@ -84,8 +84,8 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
 	github.com/thomaspoignant/go-feature-flag v1.56.1
-	github.com/tidwall/gjson v1.19.0
-	github.com/tidwall/sjson v1.2.5
+	github.com/tidwall/gjson v1.20.0
+	github.com/tidwall/sjson v1.2.6
 	go.uber.org/zap v1.28.0
 	golang.org/x/oauth2 v0.37.0
 	google.golang.org/api v0.310.0
