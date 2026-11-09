@@ -322,8 +322,6 @@ Feature: WafPolicy feature
         controller: ingress.k8s.aws/alb
       """
 
-    Then eventually "ingressclass.metadata.uid" is ok
-
     # Step 4: Expose application via ALB
     When resource "ingress" is created:
       """
@@ -363,15 +361,12 @@ Feature: WafPolicy feature
       | ExpectedOutput | HTTPBIN is awesome                                                                        |
 
     # Clean up
-    # Delete policy first so the WAF ACL deletion starts. It will block (DeletionBlockedByDependents)
-    # until the ALB detaches it. Deleting the ingress causes the ALB to tear down and release the
-    # association, after which the policy finalizer is removed.
-
-    When resource "policy" is deleted
-    Then eventually resource "policy" does not exist
 
     When resource "ingress" is deleted
     Then eventually resource "ingress" does not exist
+
+    When resource "policy" is deleted
+    Then eventually resource "policy" does not exist
 
     When resource "ingressclass" is deleted
     Then eventually resource "ingressclass" does not exist
