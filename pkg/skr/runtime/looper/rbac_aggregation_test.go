@@ -3,6 +3,7 @@ package looper
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,10 +12,11 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const skrCRDGroupSuffix = "cloud-resources.kyma-project.io_"
+
 func TestAggregationRolesContract(t *testing.T) {
 	view := mustLoadClusterRole(t, "../../../../config/rbac/cloud-manager_view_role.yaml")
 	edit := mustLoadClusterRole(t, "../../../../config/rbac/cloud-manager_edit_role.yaml")
-	admin := mustLoadClusterRole(t, "../../../../config/rbac/cloud-manager_admin_role.yaml")
 
 	t.Run("view role is read-only and aggregated", func(t *testing.T) {
 		require.Equal(t, "kyma-cloud-manager-view", view.Name)
@@ -26,6 +28,17 @@ func TestAggregationRolesContract(t *testing.T) {
 			assert.NotContains(t, rule.Verbs, "patch")
 			assert.NotContains(t, rule.Verbs, "delete")
 			assert.NotContains(t, rule.Verbs, "deletecollection")
+		}
+	})
+
+	t.Run("view role does not grant access to sensitive resources", func(t *testing.T) {
+		for _, rule := range view.Rules {
+			for _, apiGroup := range rule.APIGroups {
+				assert.Equal(t, "cloud-resources.kyma-project.io", apiGroup,
+					"view role must only aggregate cloud-manager CRDs, never core/other groups")
+			}
+			assert.NotContains(t, rule.Resources, "secrets")
+			assert.NotContains(t, rule.Resources, "*")
 		}
 	})
 
@@ -41,13 +54,58 @@ func TestAggregationRolesContract(t *testing.T) {
 		assert.Contains(t, verbs, "deletecollection")
 	})
 
-	t.Run("admin role is explicit and wildcard", func(t *testing.T) {
-		require.Equal(t, "kyma-cloud-manager-admin", admin.Name)
-		require.Equal(t, "true", admin.Labels["rbac.authorization.k8s.io/aggregate-to-admin"])
-		require.Len(t, admin.Rules, 1)
-		assert.Equal(t, []string{"*"}, admin.Rules[0].Resources)
-		assert.Equal(t, []string{"*"}, admin.Rules[0].Verbs)
+	t.Run("edit role never uses wildcard resources or verbs", func(t *testing.T) {
+		for _, rule := range edit.Rules {
+			assert.NotContains(t, rule.Resources, "*")
+			assert.NotContains(t, rule.Verbs, "*")
+		}
 	})
+
+	t.Run("view and edit cover the same resources", func(t *testing.T) {
+		assert.Equal(t, collectResources(view.Rules), collectResources(edit.Rules),
+			"view and edit must cover identical CRDs so neither drifts behind the other")
+	})
+
+	t.Run("roles cover every SKR CRD", func(t *testing.T) {
+		covered := collectResources(view.Rules)
+		for _, plural := range skrCRDPlurals(t) {
+			assert.Contains(t, covered, plural,
+				"aggregated roles are missing SKR CRD %q — add it to view and edit roles", plural)
+		}
+	})
+}
+
+// skrCRDPlurals derives the plural name of every SKR (cloud-resources group) CRD
+// from the generated CRD base filenames, so a newly added CRD that is not wired
+// into the aggregated roles fails this test instead of silently losing coverage.
+func skrCRDPlurals(t *testing.T) []string {
+	t.Helper()
+	dir, err := filepath.Abs("../../../../config/crd/bases")
+	require.NoError(t, err)
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+
+	var plurals []string
+	for _, e := range entries {
+		name := e.Name()
+		if !strings.HasPrefix(name, skrCRDGroupSuffix) || !strings.HasSuffix(name, ".yaml") {
+			continue
+		}
+		plural := strings.TrimSuffix(strings.TrimPrefix(name, skrCRDGroupSuffix), ".yaml")
+		plurals = append(plurals, plural)
+	}
+	require.NotEmpty(t, plurals, "found no SKR CRD bases — path or naming changed")
+	return plurals
+}
+
+func collectResources(rules []rbacv1.PolicyRule) map[string]bool {
+	resources := make(map[string]bool)
+	for _, rule := range rules {
+		for _, r := range rule.Resources {
+			resources[r] = true
+		}
+	}
+	return resources
 }
 
 func collectVerbs(rules []rbacv1.PolicyRule) map[string]bool {

@@ -21,6 +21,7 @@ rules:
   - awsredisclusters
   - awsredisinstances
   - awsvpcpeerings
+  - azuremanagedredis
   - azureredisclusters
   - azureredisinstances
   - azurerwxbackupschedules
@@ -28,6 +29,7 @@ rules:
   - azurerwxvolumerestores
   - azurevpcdnslinks
   - azurevpcpeerings
+  - certificates
   - cloudresources
   - gcpnfsbackupschedules
   - gcpnfsvolumebackupdiscoveries
@@ -43,6 +45,7 @@ rules:
   - sapnfsvolumesnapshots
   - sapnfsvolumesnapshotrestores
   - sapnfsvolumesnapshotschedules
+  - wafpolicies
   verbs:
   - get
   - list
@@ -65,6 +68,7 @@ rules:
   - awsredisclusters/status
   - awsredisinstances/status
   - awsvpcpeerings/status
+  - azuremanagedredis/status
   - azureredisclusters/status
   - azureredisinstances/status
   - azurerwxbackupschedules/status
@@ -72,6 +76,7 @@ rules:
   - azurerwxvolumerestores/status
   - azurevpcdnslinks/status
   - azurevpcpeerings/status
+  - certificates/status
   - cloudresources/status
   - gcpnfsbackupschedules/status
   - gcpnfsvolumebackupdiscoveries/status
@@ -87,5 +92,6 @@ rules:
   - sapnfsvolumesnapshots/status
   - sapnfsvolumesnapshotrestores/status
   - sapnfsvolumesnapshotschedules/status
+  - wafpolicies/status
   verbs:
   - get
