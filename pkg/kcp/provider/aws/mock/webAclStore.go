@@ -30,20 +30,22 @@ type webAclEntry struct {
 }
 
 type webAclStore struct {
-	m          sync.Mutex
-	items      []*webAclEntry
-	errorMap   map[string]error
-	inUseState map[string]bool // Track which WebACLs are marked as "in use"
-	account    string
-	region     string
+	m              sync.Mutex
+	items          []*webAclEntry
+	errorMap       map[string]error
+	inUseState     map[string]bool   // Track which WebACLs are marked as "in use"
+	loggingConfigs map[string]string // webAclArn -> logGroupArn
+	account        string
+	region         string
 }
 
 func newWebAclStore(account, region string) *webAclStore {
 	return &webAclStore{
-		errorMap:   make(map[string]error),
-		inUseState: make(map[string]bool),
-		account:    account,
-		region:     region,
+		errorMap:       make(map[string]error),
+		inUseState:     make(map[string]bool),
+		loggingConfigs: make(map[string]string),
+		account:        account,
+		region:         region,
 	}
 }
 
@@ -343,4 +345,34 @@ func (s *webAclStore) ListTagsForWebACL(ctx context.Context, resourceArn string)
 
 func (s *webAclStore) WafClient() awsclient.Wafv2Client {
 	return s
+}
+
+func (s *webAclStore) PutLoggingConfiguration(ctx context.Context, webAclArn, logGroupArn string) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+	s.loggingConfigs[webAclArn] = logGroupArn
+	return nil
+}
+
+func (s *webAclStore) DeleteLoggingConfiguration(ctx context.Context, webAclArn string) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+	delete(s.loggingConfigs, webAclArn)
+	return nil
+}
+
+func (s *webAclStore) GetLoggingConfiguration(ctx context.Context, webAclArn string) (*types.LoggingConfiguration, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	logGroupArn, ok := s.loggingConfigs[webAclArn]
+	if !ok {
+		return nil, &smithy.GenericAPIError{
+			Code:    "WAFNonexistentItemException",
+			Message: fmt.Sprintf("no logging configuration for WebACL %s", webAclArn),
+		}
+	}
+	return &types.LoggingConfiguration{
+		ResourceArn:           &webAclArn,
+		LogDestinationConfigs: []string{logGroupArn},
+	}, nil
 }

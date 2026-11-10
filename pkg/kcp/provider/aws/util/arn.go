@@ -76,6 +76,21 @@ func Waf2Arn(region, accountId, name, id string) string {
 	return a.String()
 }
 
+func WafLogGroupName() string {
+	return "aws-waf-logs-cm-waf"
+}
+
+func WafLogGroupArn(region, accountId string) string {
+	a := &arn.ARN{
+		Partition: awsconfig.AwsConfig.ArnPartition,
+		Service:   "logs",
+		Region:    region,
+		AccountID: accountId,
+		Resource:  fmt.Sprintf("log-group:%s:*", WafLogGroupName()),
+	}
+	return a.String()
+}
+
 // ACM ============================================================================
 
 // CertificateArn returns string arn in form "arn:<partition>:acm:<region>:<accountId>:certificate/<certificateId>"

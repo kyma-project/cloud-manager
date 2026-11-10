@@ -26,6 +26,7 @@ func New(stateFactory StateFactory) composed.Action {
 			"awsWafPolicy",
 			createAwsClient,
 			loadWebAcl,
+			loadLoggingConfig,
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActionsNoName(
 					actions.AddCommonFinalizer(),
@@ -34,11 +35,13 @@ func New(stateFactory StateFactory) composed.Action {
 					createWebAcl,
 					checkUpdateNeeded,
 					updateWebAcl,
+					attachLogging,
 					updateStatus,
 				),
 				composed.ComposeActions(
 					"awsWafPolicy-delete",
 					statusDeleting,
+					detachLogging,
 					deleteWebAcl,
 					actions.RemoveCommonFinalizer(),
 				),

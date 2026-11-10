@@ -74,6 +74,16 @@ func TestArn(t *testing.T) {
 			assert.Equal(t, "arn:aws-cn:backup:us-east-1:123123:recovery-point:my-point", x)
 		})
 
+		t.Run("WafLogGroupName", func(t *testing.T) {
+			x := WafLogGroupName()
+			assert.Equal(t, "aws-waf-logs-cm-waf", x)
+		})
+
+		t.Run("WafLogGroupArn", func(t *testing.T) {
+			x := WafLogGroupArn("us-east-1", "123123")
+			assert.Equal(t, "arn:aws-cn:logs:us-east-1:123123:log-group:aws-waf-logs-cm-waf:*", x)
+		})
+
 	})
 
 	t.Run("partition default", func(t *testing.T) {
@@ -112,6 +122,16 @@ func TestArn(t *testing.T) {
 		t.Run("BackupRecoveryPointArn", func(t *testing.T) {
 			x := BackupRecoveryPointArn("us-east-1", "123123", "my-point")
 			assert.Equal(t, "arn:aws:backup:us-east-1:123123:recovery-point:my-point", x)
+		})
+
+		t.Run("WafLogGroupName", func(t *testing.T) {
+			x := WafLogGroupName()
+			assert.Equal(t, "aws-waf-logs-cm-waf", x)
+		})
+
+		t.Run("WafLogGroupArn", func(t *testing.T) {
+			x := WafLogGroupArn("us-east-1", "123123")
+			assert.Equal(t, "arn:aws:logs:us-east-1:123123:log-group:aws-waf-logs-cm-waf:*", x)
 		})
 	})
 
