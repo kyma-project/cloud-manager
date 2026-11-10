@@ -54,8 +54,36 @@ var cmdWatch = &cobra.Command{
 		if o.kubeconfig == "" && (o.skr || o.kcp) {
 			return fmt.Errorf("--skr/--kcp only valid with --kubeconfig")
 		}
-		if o.kubeconfig != "" && !(o.skr || o.kcp) {
+		if o.kubeconfig != "" && !o.skr && !o.kcp {
 			return fmt.Errorf("--kubeconfig requires one of --skr or --kcp")
+		}
+
+		// Resolve output target
+		toStdout := cmd.Flags().Changed("output") && o.output == ""
+		var outputPath string
+		if !toStdout {
+			if cmd.Flags().Changed("output") {
+				outputPath = o.output
+			} else {
+				outputPath = filepath.Join(config.ConfigDir, "tmp", "ctrl-watcher-log-e2e.yaml")
+			}
+			if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
+				return fmt.Errorf("failed to create output directory: %w", err)
+			}
+		}
+
+		// Build handler
+		dedup := !o.noDiffDedup
+		var handler watcher.ObjectHandler
+		switch {
+		case toStdout && dedup:
+			handler = watcher.NewDiffObjectHandler(watcher.NewYamlLoggingObjectHandler(watcher.NewStdoutLogWriter()))
+		case toStdout && !dedup:
+			handler = watcher.NewYamlLoggingObjectHandler(watcher.NewStdoutLogWriter())
+		case !toStdout && dedup:
+			handler = watcher.NewDefaultObjectHandler(outputPath)
+		default:
+			handler = watcher.NewYamlLoggingObjectHandler(watcher.NewFileLogWriter(outputPath))
 		}
 
 		var mgr manager.Manager
@@ -68,7 +96,7 @@ var cmdWatch = &cobra.Command{
 				return fmt.Errorf("failed to create KCP manager: %w", err)
 			}
 			mgr = m
-			watchFn = nil // set after watcher is created
+			watchFn = watcher.New(mgr, handler).ForKCP
 
 		case o.alias != "":
 			keb, err := e2ekeb.Create(rootCtx, config)
@@ -92,7 +120,7 @@ var cmdWatch = &cobra.Command{
 				return fmt.Errorf("failed to create SKR manager: %w", err)
 			}
 			mgr = m
-			watchFn = nil // set after watcher is created
+			watchFn = watcher.New(mgr, handler).ForSKR
 
 		case o.runtimeID != "":
 			keb, err := e2ekeb.Create(rootCtx, config)
@@ -104,7 +132,7 @@ var cmdWatch = &cobra.Command{
 				return fmt.Errorf("failed to create SKR manager: %w", err)
 			}
 			mgr = m
-			watchFn = nil // set after watcher is created
+			watchFn = watcher.New(mgr, handler).ForSKR
 
 		case o.kubeconfig != "":
 			b, err := os.ReadFile(o.kubeconfig)
@@ -137,48 +165,12 @@ var cmdWatch = &cobra.Command{
 				return fmt.Errorf("failed to create manager: %w", err)
 			}
 			mgr = m
-			watchFn = nil // set after watcher is created
-		}
-
-		// Resolve output target
-		toStdout := cmd.Flags().Changed("output") && o.output == ""
-		var outputPath string
-		if !toStdout {
-			if cmd.Flags().Changed("output") {
-				outputPath = o.output
+			w := watcher.New(mgr, handler)
+			if o.kcp {
+				watchFn = w.ForKCP
 			} else {
-				outputPath = filepath.Join(config.ConfigDir, "tmp", "ctrl-watcher-log-e2e.yaml")
+				watchFn = w.ForSKR
 			}
-			if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
-				return fmt.Errorf("failed to create output directory: %w", err)
-			}
-		}
-
-		// Build handler
-		dedup := !o.noDiffDedup
-		var handler watcher.ObjectHandler
-		switch {
-		case toStdout && dedup:
-			handler = watcher.NewDiffObjectHandler(watcher.NewYamlLoggingObjectHandler(watcher.NewStdoutLogWriter()))
-		case toStdout && !dedup:
-			handler = watcher.NewYamlLoggingObjectHandler(watcher.NewStdoutLogWriter())
-		case !toStdout && dedup:
-			handler = watcher.NewDefaultObjectHandler(outputPath)
-		default:
-			handler = watcher.NewYamlLoggingObjectHandler(watcher.NewFileLogWriter(outputPath))
-		}
-
-		// Create watcher and bind watchFn
-		w := watcher.New(mgr, handler)
-		switch {
-		case o.alias == aliasKcp:
-			watchFn = w.ForKCP
-		case o.alias != "" || o.runtimeID != "":
-			watchFn = w.ForSKR
-		case o.kcp:
-			watchFn = w.ForKCP
-		default:
-			watchFn = w.ForSKR
 		}
 
 		if err := watchFn(); err != nil {
