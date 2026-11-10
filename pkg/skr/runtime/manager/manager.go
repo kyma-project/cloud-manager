@@ -70,6 +70,10 @@ type skrManager struct {
 	controllers []manager.Runnable
 
 	ignoreWatchErrors bool
+
+	mu      sync.Mutex
+	started bool
+	ctx     context.Context
 }
 
 func (m *skrManager) IgnoreWatchErrors(v bool) {
@@ -82,9 +86,16 @@ func (m *skrManager) KymaRef() klog.ObjectRef {
 
 func (m *skrManager) Start(ctx context.Context) error {
 	//m.logger.Info("SkrManager starting")
+	m.mu.Lock()
+	m.ctx = ctx
+	m.started = true
 	m.controllers = append(m.controllers, m.Cluster)
+	controllers := make([]manager.Runnable, len(m.controllers))
+	copy(controllers, m.controllers)
+	m.mu.Unlock()
+
 	var wg sync.WaitGroup
-	for _, r := range m.controllers {
+	for _, r := range controllers {
 		rr := r
 		wg.Go(func() {
 			err := rr.Start(ctx)
@@ -107,7 +118,17 @@ func (m *skrManager) Start(ctx context.Context) error {
 }
 
 func (m *skrManager) Add(runnable manager.Runnable) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.controllers = append(m.controllers, runnable)
+	if m.started {
+		ctx := m.ctx
+		go func() {
+			if err := runnable.Start(ctx); err != nil {
+				m.logger.Error(err, "error starting late-added runnable")
+			}
+		}()
+	}
 	return nil
 }
 

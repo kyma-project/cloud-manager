@@ -3,17 +3,21 @@ package quotaIpRange
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
+	"github.com/kyma-project/cloud-manager/pkg/common/watcher"
 	"github.com/kyma-project/cloud-manager/pkg/quota"
 
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -24,6 +28,15 @@ import (
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
 var infra testinfra.Infra
+var w watcher.Watcher
+
+var _ = BeforeEach(func() {
+	w.Emit(infra.Ctx(), reconcile.Request{}, watcher.NewGinkgoTestStart())
+})
+
+var _ = AfterEach(func() {
+	w.Emit(infra.Ctx(), reconcile.Request{}, watcher.NewGinkgoTestEnd())
+})
 
 func TestControllers(t *testing.T) {
 	if len(os.Getenv("PROJECTROOT")) == 0 {
@@ -65,6 +78,13 @@ var _ = BeforeSuite(func() {
 
 	// Start controllers
 	infra.StartSkrControllers(context.Background())
+
+	logFilePath := filepath.Join(os.Getenv("PROJECTROOT"), "tmp", "ctrl-watcher-log-quotaIpRange.yaml")
+	_ = os.MkdirAll(filepath.Join(os.Getenv("PROJECTROOT"), "tmp"), os.ModePerm)
+	_ = os.Remove(logFilePath)
+	w = watcher.New(infra.SkrManager(), watcher.NewDefaultObjectHandler(logFilePath))
+	Expect(w.ForSKR()).To(Succeed())
+	time.Sleep(time.Second)
 })
 
 var _ = AfterSuite(func() {
