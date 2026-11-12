@@ -168,6 +168,22 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
 				Should(Succeed(), "expected NfsInstance not to exist (be deleted), but it still exists")
 		})
+
+		By("// cleanup: delete KCP IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
 	})
 
 	It("Scenario: KCP AWS NfsInstance EFS is found past the first DescribeFileSystems page", func() {
@@ -245,6 +261,165 @@ var _ = Describe("Feature: KCP NfsInstance AWS", func() {
 				}
 			}
 			Expect(count).To(Equal(1), "expected exactly one EFS with CreationToken == NfsInstance name")
+		})
+
+		By("When NfsInstance is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
+				Should(Succeed(), "failed deleting NfsInstance")
+		})
+
+		By("And When AWS EFS state is deleted", func() {
+			awsMock.SetFileSystemLifeCycleState(nfsInstance.Status.Id, efstypes.LifeCycleStateDeleted)
+		})
+
+		By("Then NfsInstance does not exist", func() {
+			Eventually(IsDeleted, 5*time.Second).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
+				Should(Succeed(), "expected NfsInstance not to exist (be deleted)")
+		})
+
+		By("// cleanup: delete KCP IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+	})
+
+	It("Scenario: KCP AWS NfsInstance stale Error condition is cleared after recovery", func() {
+
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
+
+		name := "b4f2e1d3-7c9a-4b6e-8d21-3f5c7b9d0a22"
+		scope := &cloudcontrolv1beta1.Scope{}
+
+		By("Given AWS Scope exists", func() {
+			kcpscope.Ignore.AddName(name)
+			Eventually(CreateScopeAws).
+				WithArguments(infra.Ctx(), infra, scope, awsAccount.AccountId(), WithName(name)).
+				Should(Succeed(), "failed creating Scope")
+		})
+
+		vpcId := "c5d3f2e1-8b7a-4c6d-9e31-4a6d8c0e1b33"
+		awsMock := awsAccount.Region(scope.Spec.Region)
+
+		By("And Given AWS VPC exists", func() {
+			awsMock.AddVpc(
+				vpcId,
+				"10.180.0.0/16",
+				awsutil.Ec2Tags("Name", scope.Spec.Scope.Aws.VpcNetwork),
+				awsmock.VpcSubnetsFromScope(scope),
+			)
+		})
+
+		iprange := &cloudcontrolv1beta1.IpRange{}
+
+		By("And Given KCP IpRange exists", func() {
+			kcpiprange.Ignore.AddName(name)
+			Eventually(CreateAwsIpRangeWithSubnets).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), awsMock, iprange, vpcId, name, "10.181.0.0/16").
+				Should(Succeed(), "failed creating IpRange")
+		})
+
+		nfsInstance := &cloudcontrolv1beta1.NfsInstance{}
+
+		By("When NfsInstance is created", func() {
+			Eventually(CreateObj).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					WithName(name),
+					WithRemoteRef("foo"),
+					WithScope(name),
+					WithIpRange(name),
+					WithNfsInstanceAws(),
+				).
+				Should(Succeed(), "failed creating NfsInstance")
+		})
+
+		var theEfs *efstypes.FileSystemDescription
+		By("Then AWS EFS is created", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					NewObjActions(),
+					HavingFieldSet("status", "id")).
+				Should(Succeed(), "expected NfsInstance to get status.id")
+			theEfs = awsMock.GetFileSystemById(nfsInstance.Status.Id)
+			awsMock.SetFileSystemStatusCapacityById(nfsInstance.Status.Id, resource.MustParse("10Gi"))
+		})
+
+		By("When EFS is Available", func() {
+			awsMock.SetFileSystemLifeCycleState(*theEfs.FileSystemId, efstypes.LifeCycleStateAvailable)
+		})
+
+		By("Then NfsInstance has Ready condition", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed(), "expected NfsInstance to reach Ready")
+		})
+
+		By("When an Error condition is injected on the ready NfsInstance", func() {
+			Eventually(UpdateStatus).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					WithConditions(KcpErrorCondition()),
+				).
+				Should(Succeed(), "failed injecting Error condition")
+		})
+
+		By("Then the Error condition is removed by the next reconcile", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance,
+					NewObjActions(),
+					HavingConditionTrue(cloudcontrolv1beta1.ConditionTypeReady),
+					NotHavingConditionTrue(cloudcontrolv1beta1.ConditionTypeError),
+				).
+				Should(Succeed(), "expected Error condition to be gone and Ready to remain")
+		})
+
+		// DELETE
+
+		By("When NfsInstance is deleted", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
+				Should(Succeed(), "failed deleting NfsInstance")
+		})
+
+		By("And When AWS EFS state is deleted", func() {
+			awsMock.SetFileSystemLifeCycleState(*theEfs.FileSystemId, efstypes.LifeCycleStateDeleted)
+		})
+
+		By("Then NfsInstance does not exist", func() {
+			Eventually(IsDeleted, 5*time.Second).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), nfsInstance).
+				Should(Succeed(), "expected NfsInstance not to exist (be deleted)")
+		})
+
+		By("// cleanup: delete KCP IpRange", func() {
+			Eventually(Delete).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				Should(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), iprange).
+				Should(Succeed())
+		})
+
+		By("// cleanup: delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
 		})
 	})
 

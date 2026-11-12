@@ -13,6 +13,7 @@ import (
 	sapmock "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/mock"
 	scopeprovider "github.com/kyma-project/cloud-manager/pkg/skr/common/scope/provider"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
+	skrmanager "github.com/kyma-project/cloud-manager/pkg/skr/runtime/manager"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -62,6 +63,7 @@ type InfraEnv interface {
 	SapMock() sapmock.Server
 	AlicloudMock() alicloudmock.Server
 	SkrRunner() skrruntime.SkrRunner
+	SkrManager() skrmanager.SkrManager
 	ScopeProvider() scopeprovider.ScopeProviderRegistry
 	Config() config.Config
 
