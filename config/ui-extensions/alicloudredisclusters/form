@@ -1,0 +1,52 @@
+- path: spec.redisTier
+  name: spec.redisTier
+  required: true
+  description: "Per-shard capacity tier. Total capacity = tier memory × shard count."
+
+- path: spec.shardCount
+  name: spec.shardCount
+  widget: Number
+  required: true
+
+- path: spec.engineVersion
+  name: spec.engineVersion
+  required: false
+  description: Engine Version is immutable after creation.
+  disableOnEdit: true
+
+- path: spec.ipRange
+  name: spec.ipRange
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.ipRange.name
+      widget: Text
+      required: true
+      disableOnEdit: true
+
+- path: spec.authSecret
+  name: spec.authSecret
+  widget: FormGroup
+  required: false
+  children:
+    - path: name
+      name: spec.authSecret.name
+      widget: Text
+      required: true
+      disableOnEdit: true
+    - path: labels
+      name: spec.authSecret.labels
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
+    - path: annotations
+      name: spec.authSecret.annotations
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
+    - path: extraData
+      name: spec.authSecret.extraData
+      required: false
+      widget: KeyValuePair
+      disableOnEdit: true
