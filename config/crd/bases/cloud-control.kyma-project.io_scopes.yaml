@@ -326,6 +326,9 @@ spec:
                 items:
                   type: string
                 type: array
+              observedGeneration:
+                format: int64
+                type: integer
               state:
                 type: string
             type: object
