@@ -12,7 +12,7 @@ func statusInitial(ctx context.Context, st composed.State) (error, context.Conte
 
 	sp := composed.NewStatusPatcherComposed(state.ObjAsWafPolicy())
 	if !sp.IsStale() {
-		return nil, ctx
+		return composed.StopAndForget, ctx
 	}
 
 	return sp.
