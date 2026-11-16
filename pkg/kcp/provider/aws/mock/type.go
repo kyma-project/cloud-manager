@@ -86,6 +86,7 @@ type Configs interface {
 	RouteTableConfig
 	AwsElastiCacheMockUtils
 	WebAclConfig
+	CloudWatchLogsConfig
 }
 
 type AccountRegion interface {

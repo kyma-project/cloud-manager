@@ -19,6 +19,7 @@ type accountRegionStore struct {
 	*routeTablesStore
 	*webAclStore
 	*certificateStore
+	*cloudWatchLogsStore
 
 	region  string
 	account string
@@ -35,6 +36,7 @@ func newAccountRegionStore(account, region string) *accountRegionStore {
 		routeTablesStore:      &routeTablesStore{},
 		webAclStore:           newWebAclStore(account, region),
 		certificateStore:      newCertificateStore(account, region),
+		cloudWatchLogsStore:   newCloudWatchLogsStore(account, region),
 	}
 }
 
