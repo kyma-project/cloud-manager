@@ -86,6 +86,10 @@ func (ie *infraEnv) SkrRunner() skrruntime.SkrRunner {
 	return ie.runner
 }
 
+func (ie *infraEnv) SkrManager() skrmanager.SkrManager {
+	return ie.skrManager
+}
+
 func (ie *infraEnv) ScopeProvider() scopeprovider.ScopeProviderRegistry {
 	return ie.runner.ScopeProvider()
 }

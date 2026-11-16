@@ -170,6 +170,16 @@ var _ = Describe("Feature: Quota SKR IpRange resource total count", func() {
 			Expect(errCond.Reason).To(Equal(cloudresourcesv1beta1.ConditionReasonCidrOverlap))
 		})
 
+		By("When second SKR IpRange is deleted", func() {
+			Expect(Delete(infra.Ctx(), infra.SKR().Client(), secondSkrIpRange)).To(Succeed())
+		})
+
+		By("Then second SKR IpRange does not exist", func() {
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.SKR().Client(), secondSkrIpRange).
+				Should(Succeed(), "expected second SKR IpRange to not exist")
+		})
+
 		By("When first SKR IpRange is deleted", func() {
 			Eventually(Delete).
 				WithArguments(infra.Ctx(), infra.SKR().Client(), firstSkrIpRange).

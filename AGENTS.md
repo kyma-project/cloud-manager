@@ -18,10 +18,11 @@ Execution flow: User creates SKR resource → SKR reconciler creates KCP resourc
 
 ## Skills
 
-| Skill | Use When |
-|-------|---------|
-| `/creating-reconcilers` | Creating KCP/SKR reconcilers, adding providers, action pipelines, state factories |
-| `/testing-cloud-manager-code` | Writing controller, API validation, unit, or e2e tests; creating provider mocks |
+| Skill                         | Use When                                                                          |
+|-------------------------------|-----------------------------------------------------------------------------------|
+| `/creating-reconcilers`       | Creating KCP/SKR reconcilers, adding providers, action pipelines, state factories |
+| `/testing-cloud-manager-code` | Writing controller, API validation, unit, or e2e tests; creating provider mocks   |
+
 ## Project Layout
 
 ```
@@ -42,13 +43,14 @@ pkg/feature/                  # Feature flag definitions (ff_ga.yaml, ff_edge.ya
 
 ## Make Commands
 
-| Command | When |
-|---------|------|
-| `make manifests` | After modifying API types |
-| `make generate` | After modifying interfaces |
-| `make test` | Before committing |
-| `make test-ff` | After editing feature flag YAML |
-| `make build` | Verify compilation |
+| Command          | When                            |
+|------------------|---------------------------------|
+| `make manifests` | After modifying API types       |
+| `make generate`  | After modifying interfaces      |
+| `make test`      | Before committing               |
+| `make test-ff`   | After editing feature flag YAML |
+| `make build`     | Verify compilation              |
+| `make lint`      | Verify lint                     |
 
 After API changes run in sequence: `make manifests && ./config/patchAfterMakeManifests.sh && ./config/sync.sh`
 
