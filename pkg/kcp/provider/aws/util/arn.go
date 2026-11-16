@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	wafpolicy "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/util"
 )
 
 var arnResourceTypeRegex = regexp.MustCompile("[:/]")
@@ -76,17 +77,13 @@ func Waf2Arn(region, accountId, name, id string) string {
 	return a.String()
 }
 
-func WafLogGroupName() string {
-	return "aws-waf-logs-cm-waf"
-}
-
-func WafLogGroupArn(region, accountId string) string {
+func WafLogGroupArn(region, accountId, suffix string) string {
 	a := &arn.ARN{
 		Partition: awsconfig.AwsConfig.ArnPartition,
 		Service:   "logs",
 		Region:    region,
 		AccountID: accountId,
-		Resource:  fmt.Sprintf("log-group:%s:*", WafLogGroupName()),
+		Resource:  fmt.Sprintf("log-group:%s:*", wafpolicy.WafLogGroupName(suffix)),
 	}
 	return a.String()
 }

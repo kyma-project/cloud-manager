@@ -8,6 +8,7 @@ import (
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 )
 
+// Required IAM permissions: https://docs.aws.amazon.com/waf/latest/developerguide/logging-cw-logs.html#logging-cw-logs-permissions
 func attachLogging(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
@@ -20,6 +21,7 @@ func attachLogging(ctx context.Context, st composed.State) (error, context.Conte
 	logGroupArn := awsutil.WafLogGroupArn(
 		state.Scope().Spec.Region,
 		state.Scope().Spec.Scope.Aws.AccountId,
+		state.Scope().Spec.ShootName,
 	)
 
 	if state.loggingConfig != nil {

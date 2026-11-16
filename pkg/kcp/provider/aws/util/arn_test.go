@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	wafpolicyutil "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,13 +76,13 @@ func TestArn(t *testing.T) {
 		})
 
 		t.Run("WafLogGroupName", func(t *testing.T) {
-			x := WafLogGroupName()
-			assert.Equal(t, "aws-waf-logs-cm-waf", x)
+			x := wafpolicyutil.WafLogGroupName("my-shoot")
+			assert.Equal(t, "aws-waf-logs-my-shoot", x)
 		})
 
 		t.Run("WafLogGroupArn", func(t *testing.T) {
-			x := WafLogGroupArn("us-east-1", "123123")
-			assert.Equal(t, "arn:aws-cn:logs:us-east-1:123123:log-group:aws-waf-logs-cm-waf:*", x)
+			x := WafLogGroupArn("us-east-1", "123123", "my-shoot")
+			assert.Equal(t, "arn:aws-cn:logs:us-east-1:123123:log-group:aws-waf-logs-my-shoot:*", x)
 		})
 
 	})
@@ -125,13 +126,13 @@ func TestArn(t *testing.T) {
 		})
 
 		t.Run("WafLogGroupName", func(t *testing.T) {
-			x := WafLogGroupName()
-			assert.Equal(t, "aws-waf-logs-cm-waf", x)
+			x := wafpolicyutil.WafLogGroupName("my-shoot")
+			assert.Equal(t, "aws-waf-logs-my-shoot", x)
 		})
 
 		t.Run("WafLogGroupArn", func(t *testing.T) {
-			x := WafLogGroupArn("us-east-1", "123123")
-			assert.Equal(t, "arn:aws:logs:us-east-1:123123:log-group:aws-waf-logs-cm-waf:*", x)
+			x := WafLogGroupArn("us-east-1", "123123", "my-shoot")
+			assert.Equal(t, "arn:aws:logs:us-east-1:123123:log-group:aws-waf-logs-my-shoot:*", x)
 		})
 	})
 
