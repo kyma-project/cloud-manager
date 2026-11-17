@@ -75,8 +75,8 @@ func TestArn(t *testing.T) {
 		})
 
 		t.Run("WafLogGroupArn", func(t *testing.T) {
-			x := LogGroupArn("us-east-1", "123123", "aws-waf-logs-my-shoot:*")
-			assert.Equal(t, "arn:aws-cn:logs:us-east-1:123123:log-group:aws-waf-logs-my-shoot:*", x)
+			x := LogGroupArn("us-east-1", "123123", "aws-waf-logs-my-shoot")
+			assert.Equal(t, "arn:aws-cn:logs:us-east-1:123123:log-group:aws-waf-logs-my-shoot", x)
 		})
 
 	})
@@ -120,8 +120,8 @@ func TestArn(t *testing.T) {
 		})
 
 		t.Run("WafLogGroupArn", func(t *testing.T) {
-			x := LogGroupArn("us-east-1", "123123", "aws-waf-logs-my-shoot:*")
-			assert.Equal(t, "arn:aws:logs:us-east-1:123123:log-group:aws-waf-logs-my-shoot:*", x)
+			x := LogGroupArn("us-east-1", "123123", "aws-waf-logs-my-shoot")
+			assert.Equal(t, "arn:aws:logs:us-east-1:123123:log-group:aws-waf-logs-my-shoot", x)
 		})
 	})
 

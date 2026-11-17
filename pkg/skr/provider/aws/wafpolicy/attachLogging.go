@@ -2,11 +2,11 @@ package wafpolicy
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
+	"github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/util"
 )
 
 // Required IAM permissions: https://docs.aws.amazon.com/waf/latest/developerguide/logging-cw-logs.html#logging-cw-logs-permissions
@@ -22,7 +22,7 @@ func attachLogging(ctx context.Context, st composed.State) (error, context.Conte
 	logGroupArn := awsutil.LogGroupArn(
 		state.Scope().Spec.Region,
 		state.Scope().Spec.Scope.Aws.AccountId,
-		fmt.Sprintf("aws-waf-logs-%s:*", state.Scope().Spec.ShootName),
+		util.WafLogGroupName(state.Scope().Spec.ShootName),
 	)
 
 	if state.loggingConfig != nil {
