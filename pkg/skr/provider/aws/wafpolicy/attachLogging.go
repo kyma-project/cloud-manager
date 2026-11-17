@@ -2,6 +2,7 @@ package wafpolicy
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
@@ -18,10 +19,10 @@ func attachLogging(ctx context.Context, st composed.State) (error, context.Conte
 	}
 
 	webAclArn := *state.awsWebAcl.ARN
-	logGroupArn := awsutil.WafLogGroupArn(
+	logGroupArn := awsutil.LogGroupArn(
 		state.Scope().Spec.Region,
 		state.Scope().Spec.Scope.Aws.AccountId,
-		state.Scope().Spec.ShootName,
+		fmt.Sprintf("aws-waf-logs-%s:*", state.Scope().Spec.ShootName),
 	)
 
 	if state.loggingConfig != nil {
