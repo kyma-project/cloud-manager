@@ -76,7 +76,7 @@ var _ = BeforeSuite(func() {
 	Expect(testinfra.SetupPVCController(infra.Registry())).
 		NotTo(HaveOccurred())
 	// CloudResources
-	Expect(cloudresourcescontroller.SetupCloudResourcesReconciler(infra.Registry())).
+	Expect(cloudresourcescontroller.SetupCloudResourcesReconciler(infra.Registry(), infra.AwsMock().CloudResourcesProvider())).
 		NotTo(HaveOccurred())
 
 	// Start controllers

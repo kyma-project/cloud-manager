@@ -225,6 +225,32 @@ func (s *cloudWatchLogsStore) DescribeLogGroups(ctx context.Context, params *clo
 	}, nil
 }
 
+func (s *cloudWatchLogsStore) PutRetentionPolicy(ctx context.Context, params *cloudwatchlogs.PutRetentionPolicyInput, optFns ...func(*cloudwatchlogs.Options)) (*cloudwatchlogs.PutRetentionPolicyOutput, error) {
+	if isContextCanceled(ctx) {
+		return nil, context.Canceled
+	}
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	name := ptr.Deref(params.LogGroupName, "")
+	if name == "" {
+		return nil, fmt.Errorf("log group name is required")
+	}
+
+	retention := ptr.Deref(params.RetentionInDays, 0)
+
+	for _, item := range s.items {
+		if ptr.Deref(item.logGroup.LogGroupName, "") == name {
+			item.logGroup.RetentionInDays = new(retention)
+			return &cloudwatchlogs.PutRetentionPolicyOutput{}, nil
+		}
+	}
+
+	return nil, &cloudwatchlogstypes.ResourceNotFoundException{
+		Message: new(fmt.Sprintf("log group %q not found", name)),
+	}
+}
+
 func (s *cloudWatchLogsStore) ListTagsForResource(ctx context.Context, params *cloudwatchlogs.ListTagsForResourceInput, optFns ...func(*cloudwatchlogs.Options)) (*cloudwatchlogs.ListTagsForResourceOutput, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled

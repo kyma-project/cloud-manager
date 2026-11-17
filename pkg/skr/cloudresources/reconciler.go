@@ -9,17 +9,21 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
 	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	awscloudresources "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/cloudresources"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func NewReconcilerFactory() skrruntime.ReconcilerFactory {
-	return &reconcilerFactory{}
+func NewReconcilerFactory(awsStateFactory awscloudresources.StateFactory) skrruntime.ReconcilerFactory {
+	return &reconcilerFactory{
+		awsStateFactory: awsStateFactory,
+	}
 }
 
 type reconcilerFactory struct {
+	awsStateFactory awscloudresources.StateFactory
 }
 
 func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
@@ -33,11 +37,14 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 			args.Provider,
 			args.IgnoreWatchErrors,
 		),
+		awsStateFactory: f.awsStateFactory,
 	}
 }
 
 type reconciler struct {
 	factory *stateFactory
+
+	awsStateFactory awscloudresources.StateFactory
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
@@ -74,11 +81,11 @@ func (r *reconciler) newAction() composed.Action {
 			composed.NotMarkedForDeletionPredicate,
 			handleServed,
 			addFinalizer,
-			statusReady,
 			composed.Switch(
 				nil,
-				composed.NewCase(statewithscope.AwsProviderPredicate, composed.Noop),
+				composed.NewCase(statewithscope.AwsProviderPredicate, awscloudresources.New(r.awsStateFactory)),
 			),
+			statusReady,
 			composed.StopAndForgetAction,
 		),
 
