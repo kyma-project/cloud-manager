@@ -36,17 +36,8 @@ var _ = Describe("Feature: CloudResources module CR", func() {
 		cr := &cloudresourcesv1beta1.CloudResources{}
 		scope := &cloudcontrolv1beta1.Scope{}
 
-		//By("Given KCP Scope exists", func() {
-		//	Expect(CreateScopeAws(infra.Ctx(), infra, scope, "aws-cr-acc-123",
-		//		WithName(crName))).To(Succeed())
-		//	meta.SetStatusCondition(scope.Conditions(), metav1.Condition{
-		//		Type:    cloudcontrolv1beta1.ConditionTypeReady,
-		//		Status:  metav1.ConditionTrue,
-		//		Reason:  cloudcontrolv1beta1.ConditionTypeReady,
-		//		Message: cloudcontrolv1beta1.ConditionTypeReady,
-		//	})
-		//	Expect(UpdateStatus(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
-		//})
+		awsAccount := infra.AwsMock().NewAccount()
+		defer awsAccount.Delete()
 
 		By("Given KCP Scope does not exist", func() {
 			infra.ScopeProvider().Add(scopeprovider.MatchingObjName(crName, infra.KCP().Namespace(), crName))
@@ -74,7 +65,7 @@ var _ = Describe("Feature: CloudResources module CR", func() {
 
 		By("When KCP Scope is created", func() {
 			// any provider can do
-			Expect(CreateScopeAws(infra.Ctx(), infra, scope, crName,
+			Expect(CreateScopeAws(infra.Ctx(), infra, scope, awsAccount.AccountId(),
 				WithName(crName))).To(Succeed())
 		})
 
