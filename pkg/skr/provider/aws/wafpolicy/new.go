@@ -30,7 +30,6 @@ func New(stateFactory StateFactory) composed.Action {
 			composed.IfElse(composed.Not(composed.MarkedForDeletionPredicate),
 				composed.ComposeActionsNoName(
 					actions.AddCommonFinalizer(),
-					updateId,
 					parsePayload,
 					createWebAcl,
 					checkUpdateNeeded,

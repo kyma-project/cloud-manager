@@ -88,6 +88,7 @@ func (r *reconciler) newAction() composed.Action {
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.WafPolicy{}),
 		commonscope.New(),
 		statusInitial,
+		updateId,
 		// Branch to provider-specific implementation
 		composed.BuildSwitchAction(
 			"providerSwitch",

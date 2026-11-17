@@ -16,7 +16,6 @@ import (
 type State struct {
 	wafpolicytypes.State
 	awsClientProvider awsclient.SkrClientProvider[client.Client]
-	env               abstractions.Environment
 
 	awsClient     client.Client
 	awsWebAcl     *wafv2types.WebACL               // Loaded AWS WebACL
@@ -52,12 +51,7 @@ func (f *stateFactory) NewState(ctx context.Context, wafPolicyState wafpolicytyp
 	return &State{
 		State:             wafPolicyState,
 		awsClientProvider: f.awsClientProvider,
-		env:               f.env,
 	}, nil
-}
-
-func (s *State) Env() abstractions.Environment {
-	return s.env
 }
 
 func (s *State) convertTags() []wafv2types.Tag {
