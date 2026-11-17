@@ -2,10 +2,10 @@ package feature
 
 import (
 	"context"
+	"strings"
 
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/kyma-project/cloud-manager/pkg/util"
-	"strings"
 )
 
 // isBootstrapKindGroup returns true when the context carries the

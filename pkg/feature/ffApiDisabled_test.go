@@ -142,6 +142,12 @@ func TestApiDisabled(t *testing.T) {
 			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureRedis).Build(ctx),
 			v: true,
 		},
+		// GlobalAccount exemption
+		{
+			t: "globalAccount exemption on stage enables nfsBackup",
+			c: ContextBuilderFromCtx(ctx).Landscape("stage").GlobalAccount("6034adc9-3441-494c-b438-a0eba4c5045a").Feature(types.FeatureNfsBackup).Build(ctx),
+			v: false, // not disabled
+		},
 	}
 
 	for _, cs := range cases {

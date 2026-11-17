@@ -14,6 +14,8 @@ import (
 // TestApiEnabled asserts ApiEnabled.Value == !ApiDisabled.Value for every case
 // in the parity matrix. Both flags are loaded from testdata/apiEnabled.yaml
 // which carries mirrored blocks (same rule order, inverted variations).
+// Bootstrap cloudresources cases also carry an absolute assert.True anchor so
+// that the isBootstrapKindGroup short-circuit is verified independently of parity.
 func TestApiEnabled(t *testing.T) {
 	ctx := t.Context()
 
@@ -23,33 +25,40 @@ func TestApiEnabled(t *testing.T) {
 	sch := commonscheme.SkrScheme
 
 	cases := []struct {
-		t string
-		c context.Context
+		t             string
+		c             context.Context
+		mustBeEnabled bool
 	}{
 		// CloudResources — bootstrap kind-group must always be enabled
 		{
-			t: "cloudresources is enabled regardless of landscape and feature",
-			c: ContextBuilderFromCtx(ctx).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			t:             "cloudresources is enabled regardless of landscape and feature",
+			c:             ContextBuilderFromCtx(ctx).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			mustBeEnabled: true,
 		},
 		{
-			t: "cloudresources is enabled on dev",
-			c: ContextBuilderFromCtx(ctx).Landscape("dev").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			t:             "cloudresources is enabled on dev",
+			c:             ContextBuilderFromCtx(ctx).Landscape("dev").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			mustBeEnabled: true,
 		},
 		{
-			t: "cloudresources is enabled on stage",
-			c: ContextBuilderFromCtx(ctx).Landscape("stage").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			t:             "cloudresources is enabled on stage",
+			c:             ContextBuilderFromCtx(ctx).Landscape("stage").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			mustBeEnabled: true,
 		},
 		{
-			t: "cloudresources is enabled on prod",
-			c: ContextBuilderFromCtx(ctx).Landscape("prod").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			t:             "cloudresources is enabled on prod",
+			c:             ContextBuilderFromCtx(ctx).Landscape("prod").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			mustBeEnabled: true,
 		},
 		{
-			t: "cloudresources is enabled on prod even for disabled feature",
-			c: ContextBuilderFromCtx(ctx).Landscape("prod").Feature(types.FeatureNfsBackup).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			t:             "cloudresources is enabled on prod even for disabled feature",
+			c:             ContextBuilderFromCtx(ctx).Landscape("prod").Feature(types.FeatureNfsBackup).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			mustBeEnabled: true,
 		},
 		{
-			t: "cloudresources is enabled on trial",
-			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Landscape("prod").Feature(types.FeatureNfsBackup).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			t:             "cloudresources is enabled on trial",
+			c:             ContextBuilderFromCtx(ctx).BrokerPlan("trial").Landscape("prod").Feature(types.FeatureNfsBackup).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			mustBeEnabled: true,
 		},
 		// NFS ====================================================
 		{
@@ -120,12 +129,21 @@ func TestApiEnabled(t *testing.T) {
 			t: "redis feature is disabled on trial",
 			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureRedis).Build(ctx),
 		},
+		// GlobalAccount exemption ====================================================
+		{
+			t: "globalAccount exemption on stage enables nfsBackup",
+			c: ContextBuilderFromCtx(ctx).Landscape("stage").GlobalAccount("6034adc9-3441-494c-b438-a0eba4c5045a").Feature(types.FeatureNfsBackup).Build(ctx),
+		},
 	}
 
 	for _, cs := range cases {
 		t.Run(cs.t, func(t *testing.T) {
 			assert.Equal(t, !ApiDisabled.Value(cs.c), ApiEnabled.Value(cs.c),
 				"ApiEnabled must equal !ApiDisabled for case: %s", cs.t)
+			if cs.mustBeEnabled {
+				assert.True(t, ApiEnabled.Value(cs.c),
+					"bootstrap cloudresources must always be ApiEnabled for case: %s", cs.t)
+			}
 		})
 	}
 }
@@ -134,6 +152,8 @@ func TestApiEnabled(t *testing.T) {
 // GA feature case when both flags are loaded from the embedded ff_ga.yaml (WithEmbeddedRetriever).
 // This is the oracle that verifies the apiEnabled allowlist in ff_ga.yaml reproduces
 // the same enabled-set as the existing apiDisabled disable-by-exception list.
+// The "" and "unknown" cases are discriminating: before the ff_ga.yaml fix they fail
+// (apiEnabled=false, !apiDisabled=true); after the fix they pass.
 func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 	ctx := t.Context()
 
@@ -211,6 +231,106 @@ func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 		{
 			name: "trial disables redis",
 			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureRedis).Build(ctx),
+		},
+		// Empty-string and unknown feature — infrastructure/foundational resources that must stay served.
+		// These are the regression guards for Defect 1: they fail before the ff_ga.yaml fix and pass after.
+		{
+			name: "empty feature (infrastructure) is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature("").Build(ctx),
+		},
+		{
+			name: "unknown feature is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureUnknown).Build(ctx),
+		},
+		// Trial must also disable "" and "unknown"
+		{
+			name: "trial disables empty feature",
+			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature("").Build(ctx),
+		},
+		{
+			name: "trial disables unknown feature",
+			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureUnknown).Build(ctx),
+		},
+	}
+
+	for _, cs := range cases {
+		t.Run(cs.name, func(t *testing.T) {
+			assert.Equal(t, !ApiDisabled.Value(cs.c), ApiEnabled.Value(cs.c),
+				"ApiEnabled must equal !ApiDisabled for case: %s", cs.name)
+		})
+	}
+}
+
+// TestApiEnabledEdgeParity asserts ApiEnabled.Value == !ApiDisabled.Value for a
+// representative matrix when both flags are loaded from ff_edge.yaml. On edge
+// the apiDisabled flag is default-enabled with no targeting, so everything resolves
+// to not-disabled; apiEnabled mirrors this with default-enabled. All cases produce
+// ApiEnabled=true, ApiDisabled=false, parity holds throughout.
+func TestApiEnabledEdgeParity(t *testing.T) {
+	ctx := t.Context()
+
+	err := Initialize(ctx, logr.Discard(), WithFile("ff_edge.yaml"))
+	assert.NoError(t, err)
+
+	cases := []struct {
+		name string
+		c    context.Context
+	}{
+		{
+			name: "nfs is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureNfs).Build(ctx),
+		},
+		{
+			name: "nfs on openstack is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureNfs).Provider("openstack").Build(ctx),
+		},
+		{
+			name: "peering is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeaturePeering).Build(ctx),
+		},
+		{
+			name: "redis is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedis).Build(ctx),
+		},
+		{
+			name: "redis on alicloud is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedis).Provider("alicloud").Build(ctx),
+		},
+		{
+			name: "nfsBackup is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureNfsBackup).Build(ctx),
+		},
+		{
+			name: "rediscluster is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedisCluster).Build(ctx),
+		},
+		{
+			name: "vpcdnslink is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureVpcDnsLink).Build(ctx),
+		},
+		{
+			name: "waf is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureWAF).Build(ctx),
+		},
+		{
+			name: "certificate is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureCertificate).Build(ctx),
+		},
+		{
+			name: "azureManagedRedis is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureAzureManagedRedis).Build(ctx),
+		},
+		{
+			name: "trial is enabled on edge",
+			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Build(ctx),
+		},
+		{
+			name: "empty feature is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature("").Build(ctx),
+		},
+		{
+			name: "unknown feature is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureUnknown).Build(ctx),
 		},
 	}
 
