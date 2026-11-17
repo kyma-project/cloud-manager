@@ -17,6 +17,11 @@ func statusUpdateProcessingLegacy(ctx context.Context, st composed.State) (error
 		// implementing composed.ObjWithStatus
 		return nil, ctx
 	}
+	if state.ObjWithStatus() != nil {
+		// object implements both old composed.ObjWithConditionsAndState and new composed.ObjWithStatus
+		// then use preferred new composed.ObjWithStatus, skip this action
+		return nil, ctx
+	}
 
 	//If the object already have a state, continue...
 	if state.ObjWithConditionsAndState().State() != "" {

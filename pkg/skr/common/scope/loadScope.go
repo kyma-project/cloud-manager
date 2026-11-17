@@ -26,20 +26,6 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 		Name:      state.KymaRef().Name,
 	}, scope)
 	if apierrors.IsNotFound(err) {
-		// legacy style
-		if state.ObjWithConditionsAndState() != nil {
-			state.ObjWithConditionsAndState().SetState(cloudresourcesv1beta1.StateError)
-			return composed.UpdateStatus(state.ObjWithConditionsAndState()).
-				SetExclusiveConditions(metav1.Condition{
-					Type:    cloudresourcesv1beta1.ConditionTypeError,
-					Status:  metav1.ConditionTrue,
-					Reason:  cloudresourcesv1beta1.ConditionReasonMissingScope,
-					Message: "Scope for SKR not found",
-				}).
-				ErrorLogMessage("Error updating object status after setting missing Scope status").
-				SuccessLogMsg("Forgetting object due to missing Scope").
-				Run(ctx, state)
-		}
 		// new, preferred, style
 		if state.ObjWithStatus() != nil {
 			return composed.NewStatusPatcherComposed(state.ObjWithStatus()).
@@ -55,7 +41,21 @@ func loadScope(ctx context.Context, st composed.State) (error, context.Context) 
 				OnStatusChanged(composed.Log("Scope for SKR not found")).
 				OnSuccess(composed.RequeueAfter(util.Timing.T10000ms())).
 				Run(ctx, state.Cluster().K8sClient())
+		} else if state.ObjWithConditionsAndState() != nil {
+			// legacy style
+			state.ObjWithConditionsAndState().SetState(cloudresourcesv1beta1.StateError)
+			return composed.UpdateStatus(state.ObjWithConditionsAndState()).
+				SetExclusiveConditions(metav1.Condition{
+					Type:    cloudresourcesv1beta1.ConditionTypeError,
+					Status:  metav1.ConditionTrue,
+					Reason:  cloudresourcesv1beta1.ConditionReasonMissingScope,
+					Message: "Scope for SKR not found",
+				}).
+				ErrorLogMessage("Error updating object status after setting missing Scope status").
+				SuccessLogMsg("Forgetting object due to missing Scope").
+				Run(ctx, state)
 		}
+
 	}
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error loading KCP Scope", composed.StopWithRequeue, ctx)

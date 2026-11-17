@@ -19,6 +19,11 @@ func waitScopeReadyLegacy(ctx context.Context, st composed.State) (error, contex
 		// implementing composed.ObjWithStatus
 		return nil, ctx
 	}
+	if state.ObjWithStatus() != nil {
+		// object implements both old composed.ObjWithConditionsAndState and new composed.ObjWithStatus
+		// then use preferred new composed.ObjWithStatus, skip this action
+		return nil, ctx
+	}
 
 	hasReady := meta.FindStatusCondition(state.Scope().Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
 	if hasReady != nil {
