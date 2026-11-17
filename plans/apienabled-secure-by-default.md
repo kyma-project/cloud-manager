@@ -489,7 +489,7 @@ Warnings incorporated: shared `isBootstrapKindGroup` predicate; `ApiNotEnabled` 
   - [x] Step 3.1: Switch looper guards to `ApiEnabled` (correct per-site polarity)
   - [x] Step 3.2: Switch `ffNukeBackupsAzure` to `ApiEnabled`
   - [x] Step 3.3: Make V2 suite execution mechanically verifiable in CI (CI-only verification; grep assertion runs in envtest matrix)
-- [ ] Slice 4: Fail-closed signal for empty/inconsistent config
-  - [ ] Step 4.1: Config-consistency check and fail-closed signal
-- [ ] Slice 5: management-plane-config parity CI gate (cross-repo)
-  - [ ] Step 5.1: Makefile target + GitHub Action invoking the parity CLI
+- [x] Slice 4: Fail-closed signal for empty/inconsistent config
+  - [x] Step 4.1: Config-consistency check and fail-closed signal
+- [ ] Slice 5: management-plane-config parity CI gate (cross-repo) — NOT built in this repo; follow-up in management-plane-config
+  - [ ] Step 5.1: Makefile target + GitHub Action invoking the parity CLI (cross-repo)
