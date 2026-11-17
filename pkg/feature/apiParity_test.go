@@ -32,7 +32,8 @@ func TestParityEquivalentToLegacy(t *testing.T) {
 	configBytes, err := os.ReadFile("testdata/apiEnabled.yaml")
 	require.NoError(t, err)
 
-	dims := buildParityDimensions(configBytes)
+	dims, err := buildParityDimensions(configBytes)
+	require.NoError(t, err)
 	corpus := buildParityCorpus(ctx, dims)
 
 	for _, e := range corpus {
@@ -59,16 +60,19 @@ func TestParityDivergentDetected(t *testing.T) {
 	require.NotEmpty(t, divergences,
 		"expected divergences to be detected in apiParityDivergent.yaml but got none")
 
-	var foundConfigurable bool
+	const exemptAccount = "6034adc9-3441-494c-b438-a0eba4c5045a"
+	var foundConfigurableInContext bool
 	for _, d := range divergences {
 		switch d.Feature {
 		case types.FeatureNfsBackup, types.FeaturePeering, types.FeatureRedis:
-			foundConfigurable = true
+			if d.Landscape == types.LandscapeStage && d.GlobalAccount == exemptAccount {
+				foundConfigurableInContext = true
+			}
 		}
 	}
-	assert.True(t, foundConfigurable,
-		"divergence for a configurable GA feature (nfsBackup/peering/redis) not detected — "+
-			"missing stage-exemption in apiEnabled should cause divergence on stage with account 6034adc9")
+	assert.True(t, foundConfigurableInContext,
+		"divergence for a configurable GA feature (nfsBackup/peering/redis) on stage with account "+
+			exemptAccount+" not detected — the removed stage-exemption in apiEnabled must diverge in exactly that context")
 }
 
 // TestParityGlobalAccountSelfSeeding verifies two things:
@@ -84,7 +88,8 @@ func TestParityGlobalAccountSelfSeeding(t *testing.T) {
 	configBytes, err := os.ReadFile("testdata/apiEnabled.yaml")
 	require.NoError(t, err)
 
-	dims := buildParityDimensions(configBytes)
+	dims, err := buildParityDimensions(configBytes)
+	require.NoError(t, err)
 
 	var accountInCorpus bool
 	for _, ga := range dims.GlobalAccounts {
@@ -114,4 +119,20 @@ func TestParityGlobalAccountSelfSeeding(t *testing.T) {
 	assert.True(t, foundAccountDivergence,
 		"self-seeding must cause the corpus to cover account=%s on stage so the missing stage-exemption is detected",
 		targetAccount)
+}
+
+// TestParityHoldsForEmbeddedGA is the in-repo parity gate: the shipped ff_ga.yaml
+// must have zero apiEnabled/apiDisabled divergence over the full corpus. A regression
+// introduced directly into ff_ga.yaml fails here.
+func TestParityHoldsForEmbeddedGA(t *testing.T) {
+	divergences, err := CheckApiParity(t.Context(), "ff_ga.yaml")
+	require.NoError(t, err)
+	assert.Empty(t, divergences, "ff_ga.yaml must have zero parity divergences: %v", divergences)
+}
+
+// TestParityHoldsForEmbeddedEdge is the in-repo parity gate for ff_edge.yaml.
+func TestParityHoldsForEmbeddedEdge(t *testing.T) {
+	divergences, err := CheckApiParity(t.Context(), "ff_edge.yaml")
+	require.NoError(t, err)
+	assert.Empty(t, divergences, "ff_edge.yaml must have zero parity divergences: %v", divergences)
 }

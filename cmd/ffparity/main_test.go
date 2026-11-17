@@ -17,6 +17,7 @@ func TestRunDivergentConfig(t *testing.T) {
 	assert.NotEqual(t, 0, code, "divergent config must exit non-zero")
 	assert.Contains(t, stdout.String(), "FAIL:", "stdout must contain FAIL: summary line")
 	assert.Contains(t, stdout.String(), "DIVERGE ", "stdout must contain at least one DIVERGE detail line")
+	assert.Contains(t, stdout.String(), "feature=", "DIVERGE detail line must carry structured fields (feature=...)")
 }
 
 // TestRunNonexistentPath asserts that a missing config exits non-zero and does not
