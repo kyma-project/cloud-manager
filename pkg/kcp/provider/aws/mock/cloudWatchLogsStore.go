@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	cloudwatchlogstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
-	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
-
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
 type CloudWatchLogsConfig interface {
@@ -44,18 +42,6 @@ func newCloudWatchLogsStore(account, region string) *cloudWatchLogsStore {
 		region:   region,
 		errorMap: make(map[string]error),
 	}
-}
-
-// buildLogGroupArn returns the no-trailing-:* ARN used as ResourceArn in tag APIs.
-func (s *cloudWatchLogsStore) buildLogGroupArn(logGroupName string) string {
-	a := &arn.ARN{
-		Partition: awsconfig.AwsConfig.ArnPartition,
-		Service:   "logs",
-		Region:    s.region,
-		AccountID: s.account,
-		Resource:  fmt.Sprintf("log-group:%s", logGroupName),
-	}
-	return a.String()
 }
 
 // arnWithWildcard returns the Arn field value (with trailing :*).
@@ -105,7 +91,7 @@ func (s *cloudWatchLogsStore) CreateLogGroup(ctx context.Context, params *cloudw
 	defer s.m.Unlock()
 
 	name := ptr.Deref(params.LogGroupName, "")
-	logGroupArn := s.buildLogGroupArn(name)
+	logGroupArn := awsutil.LogGroupArn(s.region, s.account, name)
 
 	if err, ok := s.errorMap[logGroupArn]; ok {
 		return nil, err
@@ -151,7 +137,7 @@ func (s *cloudWatchLogsStore) DeleteLogGroup(ctx context.Context, params *cloudw
 	defer s.m.Unlock()
 
 	name := ptr.Deref(params.LogGroupName, "")
-	logGroupArn := s.buildLogGroupArn(name)
+	logGroupArn := awsutil.LogGroupArn(s.region, s.account, name)
 
 	if err, ok := s.errorMap[logGroupArn]; ok {
 		return nil, err

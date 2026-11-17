@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awsconfig "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/config"
+	awsutil "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/utils/ptr"
@@ -39,7 +40,7 @@ func TestCloudWatchLogsStore_Lifecycle(t *testing.T) {
 	require.NoError(t, err)
 
 	// Derive the ARN the same way the store does so we can use it below.
-	expectedArn := store.buildLogGroupArn(lgName)
+	expectedArn := awsutil.LogGroupArn(region, account, lgName)
 
 	// --- Describe by prefix ---
 	out, err := store.DescribeLogGroups(ctx, &cloudwatchlogs.DescribeLogGroupsInput{
@@ -144,12 +145,12 @@ func TestCloudWatchLogsStore_SetLogGroupError(t *testing.T) {
 			LogGroupName: ptr.To(lgName),
 		})
 		require.NoError(t, err)
-		return s, s.buildLogGroupArn(lgName)
+		return s, awsutil.LogGroupArn(region, account, lgName)
 	}
 
 	t.Run("CreateLogGroup returns injected error", func(t *testing.T) {
 		s := newCloudWatchLogsStore(account, region)
-		lgArn := s.buildLogGroupArn(lgName)
+		lgArn := awsutil.LogGroupArn(region, account, lgName)
 		s.SetLogGroupError(lgArn, sentinel)
 
 		_, err := s.CreateLogGroup(ctx, &cloudwatchlogs.CreateLogGroupInput{
