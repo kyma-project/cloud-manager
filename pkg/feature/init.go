@@ -86,6 +86,13 @@ func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption)
 		err = fmt.Errorf("loading error: %w", errLoading)
 	}
 
+	// Secure-by-default: StartWithRetrieverError swallows load failures so the manager
+	// keeps running on the embedded default (non-bootstrap APIs disabled). Retrieve the
+	// config ourselves to surface a fail-closed signal the swallowed error would hide,
+	// and to flag an apiDisabled-only config that would silently disable untagged APIs.
+	cfgBytes, retrieveErr := rtvr.Retrieve(ctx)
+	reportApiConfigFallback(logger, cfgBytes, retrieveErr)
+
 	go func() {
 		<-ctx.Done()
 		ff.Close()
