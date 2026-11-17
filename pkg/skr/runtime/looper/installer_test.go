@@ -7,7 +7,9 @@ import (
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -142,6 +144,28 @@ func TestInstaller(t *testing.T) {
 			// TODO: enable Busola entries once the Busola forms are designed for AliCloud Redis.
 			// {"alicloudredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
 			// {"alicloudrediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+		})
+	})
+
+	// aws_apiNotEnabled uses the non-parity fixture (apiEnabled=false, apiDisabled=false).
+	// The new guard feature.ApiEnabled.Value() = false → ApiNotEnabled.
+	// The legacy guard !feature.ApiDisabled.Value() = !false = true → Starting.
+	// Recording "ApiNotEnabled" proves the installer reads apiEnabled, not !apiDisabled.
+	t.Run("aws_apiNotEnabled", func(t *testing.T) {
+		require.NoError(t, feature.Initialize(context.Background(), logr.Discard(),
+			feature.WithFile("testdata/apiEnabledNonParity.yaml")))
+		t.Cleanup(func() {
+			_ = feature.Initialize(context.Background(), logr.Discard(),
+				feature.WithFile("testdata/ffAllEnabled.yaml"))
+		})
+
+		skrStatus, instlr, _, clstr := prepare(context.Background())
+		require.NoError(t, instlr.Handle(context.Background(), string(cloudcontrolv1beta1.ProviderAws), clstr))
+
+		// Success() is always called after ApiNotEnabled() (only errors skip it), so ok=true.
+		// The discriminating assertion is Outcomes: the old guard would record "Creating" here.
+		NewSkrStatusChecker(skrStatus).InstallerManifest().CheckAll(t, []SkrStatusTestCase{
+			{"awsnfsvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"ApiNotEnabled"}},
 		})
 	})
 }

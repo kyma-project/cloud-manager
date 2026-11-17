@@ -179,7 +179,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			handle.WithObj(indexer.Obj())
 
 			if r.isObjectActiveForProvider(skrManager.GetScheme(), options.provider, indexer.Obj()) &&
-				!feature.ApiDisabled.Value(ctx) {
+				feature.ApiEnabled.Value(ctx) {
 				handle.Starting()
 				err = indexer.IndexField(ctx, skrManager.GetFieldIndexer())
 				if err != nil {
@@ -195,14 +195,14 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				//	).
 				//	Info("Starting indexer")
 			} else {
-				handle.ApiDisabled()
+				handle.ApiNotEnabled()
 				//logger.
 				//	WithValues(
 				//		"object", fmt.Sprintf("%T", indexer.Obj()),
 				//		"field", indexer.Field(),
 				//		"optionsProvider", ptr.Deref(options.provider, ""),
 				//	).
-				//	Info("Not creating indexer due to disabled API")
+				//	Info("Not creating indexer due to not-enabled API")
 			}
 		}
 
@@ -217,7 +217,7 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 			handle := skrStatus.Handle(ctx, "Controller")
 
 			if r.isObjectActiveForProvider(skrManager.GetScheme(), options.provider, b.GetForObj()) &&
-				!feature.ApiDisabled.Value(ctx) {
+				feature.ApiEnabled.Value(ctx) {
 				handle.Starting()
 				err = b.SetupWithManager(skrManager, rArgs)
 				if err != nil {
@@ -232,13 +232,13 @@ func (r *skrRunner) Run(ctx context.Context, skrManager skrmanager.SkrManager, o
 				//	).
 				//	Info("Starting controller")
 			} else {
-				handle.ApiDisabled()
+				handle.ApiNotEnabled()
 				//logger.
 				//	WithValues(
 				//		"registryBuilderObject", fmt.Sprintf("%T", b.GetForObj()),
 				//		"optionsProvider", ptr.Deref(options.provider, ""),
 				//	).
-				//	Info("Not starting controller due to disabled API")
+				//	Info("Not starting controller due to not-enabled API")
 			}
 		}
 

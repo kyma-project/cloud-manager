@@ -199,9 +199,9 @@ func (i *installer) applyFile(ctx context.Context, skrCluster Cluster, fn string
 			err = skrCluster.GetClient().Update(ctx, existing)
 		} else {
 			err = nil // clear the not found error, so we only return Create error if any, and not this not found
-			if feature.ApiDisabled.Value(objCtx) {
-				handle.ApiDisabled()
-				//logger.Info(fmt.Sprintf("Skipping installation of disabled API of %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
+			if !feature.ApiEnabled.Value(objCtx) {
+				handle.ApiNotEnabled()
+				//logger.Info(fmt.Sprintf("Skipping installation of not-enabled API of %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))
 			} else {
 				handle.Creating()
 				//logger.Info(fmt.Sprintf("Creating %s/%s/%s", desired.GetAPIVersion(), desired.GetKind(), desired.GetName()))

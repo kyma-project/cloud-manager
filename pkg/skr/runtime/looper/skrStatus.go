@@ -260,9 +260,9 @@ func (h *KindHandle) Updating(existingVersion string, desiredVersion string) {
 	h.outcomes = append(h.outcomes, "Updating", fmt.Sprintf("ExistingVersion: %s", existingVersion), fmt.Sprintf("DesiredVersion: %s", desiredVersion))
 }
 
-// ApiDisabled called if manifest does not exist in SKR but its feature is disabled
-func (h *KindHandle) ApiDisabled() {
-	h.outcomes = append(h.outcomes, "ApiDisabled")
+// ApiNotEnabled called if manifest does not exist in SKR but its feature is not enabled
+func (h *KindHandle) ApiNotEnabled() {
+	h.outcomes = append(h.outcomes, "ApiNotEnabled")
 }
 
 // Creating called if manifest does not exist in SKR and its feature is enabled
