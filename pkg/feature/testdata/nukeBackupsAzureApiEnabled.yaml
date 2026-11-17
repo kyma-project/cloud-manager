@@ -1,0 +1,8 @@
+
+# apiEnabled resolves to enabled for azure/nfsBackup → the gate is enabled via the API.
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: enabled

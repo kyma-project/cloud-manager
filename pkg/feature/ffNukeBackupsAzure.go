@@ -16,7 +16,7 @@ type nukeBackupsAzure struct{}
 func (k *nukeBackupsAzure) Value(ctx context.Context) bool {
 
 	ffCtx := ContextBuilderFromCtx(ctx).Provider("azure").Feature(types.FeatureNfsBackup).Build(ctx)
-	enabled := !ApiDisabled.Value(ffCtx) || provider.BoolVariation(ctx, nukeBackupsAzureFlagName, false)
+	enabled := ApiEnabled.Value(ffCtx) || provider.BoolVariation(ctx, nukeBackupsAzureFlagName, false)
 
 	return enabled
 }

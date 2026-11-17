@@ -1,0 +1,17 @@
+
+# Non-parity: apiEnabled resolves to disabled for azure/nfsBackup, while apiDisabled
+# resolves to false (so the legacy !apiDisabled expression would be true). The standalone
+# nukeBackupsAzure flag is absent (defaults false). The gate must follow apiEnabled → false.
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
+apiDisabled:
+  variations:
+    enabled: false
+    disabled: true
+  defaultRule:
+    variation: enabled

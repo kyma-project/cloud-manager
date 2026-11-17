@@ -1,0 +1,16 @@
+
+# apiEnabled is disabled, but the standalone nukeBackupsAzure flag is on — the gate's
+# || override must still make it enabled, independent of the API flag.
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  defaultRule:
+    variation: disabled
+
+nukeBackupsAzure:
+  variations:
+    "on": true
+    "off": false
+  defaultRule:
+    variation: "on"
