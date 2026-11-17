@@ -101,7 +101,7 @@ func GeneratePassword() string {
 	return string(b)
 }
 
-// GenerateTokenSeed returns 16 random hex bytes (32 chars) for use as the
+// GenerateTokenSeed returns the hex encoding of 16 random bytes (32 chars) for use as the
 // idempotency token seed. It is NOT a password — it is opaque entropy that
 // is fed into BuildIdempotencyToken so each CreateInstance call gets a
 // deterministic but unique token across retries.
