@@ -130,6 +130,98 @@ func TestApiEnabled(t *testing.T) {
 	}
 }
 
+// TestApiEnabledEmbeddedGAParity asserts ApiEnabled.Value == !ApiDisabled.Value for every
+// GA feature case when both flags are loaded from the embedded ff_ga.yaml (WithEmbeddedRetriever).
+// This is the oracle that verifies the apiEnabled allowlist in ff_ga.yaml reproduces
+// the same enabled-set as the existing apiDisabled disable-by-exception list.
+func TestApiEnabledEmbeddedGAParity(t *testing.T) {
+	ctx := t.Context()
+
+	err := Initialize(ctx, logr.Discard(), WithEmbeddedRetriever())
+	assert.NoError(t, err)
+
+	cases := []struct {
+		name string
+		c    context.Context
+	}{
+		// GA-enabled features
+		{
+			name: "peering is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeaturePeering).Build(ctx),
+		},
+		{
+			name: "nfs is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureNfs).Build(ctx),
+		},
+		{
+			name: "redis is enabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedis).Build(ctx),
+		},
+		// Disable exceptions within enabled set
+		{
+			name: "nfs on openstack is disabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureNfs).Provider("openstack").Build(ctx),
+		},
+		{
+			name: "redis on alicloud is disabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedis).Provider("alicloud").Build(ctx),
+		},
+		// Features fully disabled in GA
+		{
+			name: "nfsBackup is disabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureNfsBackup).Build(ctx),
+		},
+		{
+			name: "rediscluster is disabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedisCluster).Build(ctx),
+		},
+		{
+			name: "rediscluster on alicloud is disabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedisCluster).Provider("alicloud").Build(ctx),
+		},
+		{
+			name: "vpcdnslink is disabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureVpcDnsLink).Build(ctx),
+		},
+		{
+			name: "waf is disabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureWAF).Build(ctx),
+		},
+		{
+			name: "certificate is disabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureCertificate).Build(ctx),
+		},
+		{
+			name: "azureManagedRedis is disabled",
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureAzureManagedRedis).Build(ctx),
+		},
+		// Trial disables everything
+		{
+			name: "trial disables all (no feature)",
+			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Build(ctx),
+		},
+		{
+			name: "trial disables nfs",
+			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureNfs).Build(ctx),
+		},
+		{
+			name: "trial disables peering",
+			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeaturePeering).Build(ctx),
+		},
+		{
+			name: "trial disables redis",
+			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureRedis).Build(ctx),
+		},
+	}
+
+	for _, cs := range cases {
+		t.Run(cs.name, func(t *testing.T) {
+			assert.Equal(t, !ApiDisabled.Value(cs.c), ApiEnabled.Value(cs.c),
+				"ApiEnabled must equal !ApiDisabled for case: %s", cs.name)
+		})
+	}
+}
+
 // TestApiEnabledSecureDefault verifies that when no apiEnabled block is present
 // in the config, ApiEnabled.Value falls back to false for ordinary features
 // while still returning true for the bootstrap kind-group (AC2).
