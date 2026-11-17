@@ -3,6 +3,7 @@ package cloudresources
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
@@ -52,5 +53,5 @@ func logGroupCreate(ctx context.Context, st composed.State) (error, context.Cont
 
 	composed.LoggerFromCtx(ctx).Info("Successfully created logGroup for WafPolicy")
 
-	return nil, ctx
+	return composed.StopWithRequeueDelay(time.Millisecond), ctx
 }

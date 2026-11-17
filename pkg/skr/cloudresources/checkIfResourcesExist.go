@@ -2,12 +2,14 @@ package cloudresources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -62,13 +64,19 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 			continue
 		}
 		if err != nil {
-			logger.
+			logger = logger.
 				WithValues(
 					"errorType", fmt.Sprintf("%T", err),
 					"gvk", gvk.String(),
 					"listGvk", listGvk.String(),
-				).
-				Error(err, "Error listing GVK")
+				)
+			if status, ok := err.(apierrors.APIStatus); ok || errors.As(err, &status) {
+				logger = logger.WithValues(
+					"errorReason", status.Status().Reason,
+					"errorCode", status.Status().Code,
+				)
+			}
+			logger.Error(err, "Error listing GVK")
 			continue
 		}
 

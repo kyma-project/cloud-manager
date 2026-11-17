@@ -72,6 +72,10 @@ func (r *reconciler) newAction() composed.Action {
 			composed.MarkedForDeletionPredicate,
 			statusDeleting,
 			checkIfResourcesExist,
+			composed.Switch(
+				nil,
+				composed.NewCase(statewithscope.AwsProviderPredicate, awscloudresources.New(r.awsStateFactory)),
+			),
 			deleteCrds,
 			removeFinalizer,
 			composed.StopAndForgetAction,
