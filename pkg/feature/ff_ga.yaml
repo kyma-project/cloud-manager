@@ -60,7 +60,7 @@ apiEnabled:
       query: feature == "redis" and provider == "alicloud"
       variation: disabled
     - name: Enable GA features
-      query: feature in ["", "unknown", "nfs", "peering", "redis"]
+      query: feature in ["nfs", "peering", "redis"]
       variation: enabled
   defaultRule:
     variation: disabled

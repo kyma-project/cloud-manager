@@ -11,7 +11,7 @@ var ApiDisabled = &apiDisabledInfo{}
 type apiDisabledInfo struct{}
 
 func (f *apiDisabledInfo) Value(ctx context.Context) bool {
-	if isBootstrapKindGroup(ctx) {
+	if isAlwaysEnabledApi(ctx) {
 		return false
 	}
 	return provider.BoolVariation(ctx, apiDisabledFlagName, false)

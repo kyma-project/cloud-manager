@@ -28,6 +28,9 @@ type FeatureName = string
 const (
 	FeatureUnknown FeatureName = "unknown"
 
+	// FeatureFoundation represents foundational/non-feature-specific resources (always enabled, independent of config).
+	FeatureFoundation FeatureName = "foundation"
+
 	FeatureCertificate       FeatureName = "certificate"
 	FeatureNfs               FeatureName = "nfs"
 	FeatureNfsBackup         FeatureName = "nfsBackup"

@@ -152,8 +152,8 @@ func TestApiEnabled(t *testing.T) {
 // GA feature case when both flags are loaded from the embedded ff_ga.yaml (WithEmbeddedRetriever).
 // This is the oracle that verifies the apiEnabled allowlist in ff_ga.yaml reproduces
 // the same enabled-set as the existing apiDisabled disable-by-exception list.
-// The "" and "unknown" cases are discriminating: before the ff_ga.yaml fix they fail
-// (apiEnabled=false, !apiDisabled=true); after the fix they pass.
+// foundation and unknown cases are discriminating for the always-on hardcode: they must be
+// absolutely true regardless of config and both flags must agree.
 func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 	ctx := t.Context()
 
@@ -161,8 +161,9 @@ func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 	assert.NoError(t, err)
 
 	cases := []struct {
-		name string
-		c    context.Context
+		name          string
+		c             context.Context
+		mustBeEnabled bool
 	}{
 		// GA-enabled features
 		{
@@ -215,7 +216,7 @@ func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 			name: "azureManagedRedis is disabled",
 			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureAzureManagedRedis).Build(ctx),
 		},
-		// Trial disables everything
+		// Trial disables everything configurable
 		{
 			name: "trial disables all (no feature)",
 			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Build(ctx),
@@ -232,24 +233,28 @@ func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 			name: "trial disables redis",
 			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureRedis).Build(ctx),
 		},
-		// Empty-string and unknown feature — infrastructure/foundational resources that must stay served.
-		// These are the regression guards for Defect 1: they fail before the ff_ga.yaml fix and pass after.
+		// Foundation and unknown features are always-on (hardcoded, independent of config).
+		// mustBeEnabled anchors the absolute assertion; parity still holds because both flags short-circuit.
 		{
-			name: "empty feature (infrastructure) is enabled",
-			c:    ContextBuilderFromCtx(ctx).Feature("").Build(ctx),
+			name:          "foundation feature (infrastructure) is always enabled",
+			c:             ContextBuilderFromCtx(ctx).Feature(types.FeatureFoundation).Build(ctx),
+			mustBeEnabled: true,
 		},
 		{
-			name: "unknown feature is enabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureUnknown).Build(ctx),
+			name:          "unknown feature is always enabled",
+			c:             ContextBuilderFromCtx(ctx).Feature(types.FeatureUnknown).Build(ctx),
+			mustBeEnabled: true,
 		},
-		// Trial must also disable "" and "unknown"
+		// Trial cannot disable foundation or unknown — they short-circuit before the flag.
 		{
-			name: "trial disables empty feature",
-			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature("").Build(ctx),
+			name:          "foundation is always enabled even on trial",
+			c:             ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureFoundation).Build(ctx),
+			mustBeEnabled: true,
 		},
 		{
-			name: "trial disables unknown feature",
-			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureUnknown).Build(ctx),
+			name:          "unknown is always enabled even on trial",
+			c:             ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureUnknown).Build(ctx),
+			mustBeEnabled: true,
 		},
 	}
 
@@ -257,6 +262,10 @@ func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 		t.Run(cs.name, func(t *testing.T) {
 			assert.Equal(t, !ApiDisabled.Value(cs.c), ApiEnabled.Value(cs.c),
 				"ApiEnabled must equal !ApiDisabled for case: %s", cs.name)
+			if cs.mustBeEnabled {
+				assert.True(t, ApiEnabled.Value(cs.c),
+					"foundation/unknown must be absolutely enabled for case: %s", cs.name)
+			}
 		})
 	}
 }
@@ -326,7 +335,7 @@ func TestApiEnabledEdgeParity(t *testing.T) {
 		},
 		{
 			name: "empty feature is enabled",
-			c:    ContextBuilderFromCtx(ctx).Feature("").Build(ctx),
+			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureFoundation).Build(ctx),
 		},
 		{
 			name: "unknown feature is enabled",
@@ -362,4 +371,26 @@ func TestApiEnabledSecureDefault(t *testing.T) {
 	bootstrapCtx := ContextBuilderFromCtx(ctx).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx)
 	assert.True(t, ApiEnabled.Value(bootstrapCtx),
 		"bootstrap cloudresources kind-group must always be enabled")
+}
+
+// TestApiEnabledAlwaysOnIndependentOfConfig proves that FeatureFoundation and FeatureUnknown
+// are enabled even when the config has no apiEnabled block at all. Without the hardcode,
+// BoolVariation would return the default (false); the test fails if the code path is removed.
+func TestApiEnabledAlwaysOnIndependentOfConfig(t *testing.T) {
+	ctx := t.Context()
+
+	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiEnabledNoBlock.yaml"))
+	assert.NoError(t, err)
+
+	foundationCtx := ContextBuilderFromCtx(ctx).Feature(types.FeatureFoundation).Build(ctx)
+	assert.True(t, ApiEnabled.Value(foundationCtx),
+		"FeatureFoundation must be enabled even with no apiEnabled block in config")
+	assert.False(t, ApiDisabled.Value(foundationCtx),
+		"ApiDisabled must be false for FeatureFoundation even with no apiEnabled block in config")
+
+	unknownCtx := ContextBuilderFromCtx(ctx).Feature(types.FeatureUnknown).Build(ctx)
+	assert.True(t, ApiEnabled.Value(unknownCtx),
+		"FeatureUnknown must be enabled even with no apiEnabled block in config")
+	assert.False(t, ApiDisabled.Value(unknownCtx),
+		"ApiDisabled must be false for FeatureUnknown even with no apiEnabled block in config")
 }

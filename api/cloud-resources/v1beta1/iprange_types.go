@@ -90,7 +90,7 @@ func (in *IpRange) GetObjectMeta() *metav1.ObjectMeta {
 }
 
 func (in *IpRange) SpecificToFeature() featuretypes.FeatureName {
-	return ""
+	return featuretypes.FeatureFoundation
 }
 
 func (in *IpRange) SpecificToProviders() []string {

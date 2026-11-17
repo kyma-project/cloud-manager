@@ -19,3 +19,14 @@ func isBootstrapKindGroup(ctx context.Context) bool {
 		"cloudresources.cloud-resources.kyma-project.io",
 	)
 }
+
+// isAlwaysEnabledApi returns true when the API must always be enabled regardless
+// of config. This covers the bootstrap kind-group (CloudResources), and the two
+// always-on feature buckets: FeatureFoundation and FeatureUnknown.
+func isAlwaysEnabledApi(ctx context.Context) bool {
+	if isBootstrapKindGroup(ctx) {
+		return true
+	}
+	f := util.CastInterfaceToString(MustContextFromCtx(ctx).GetCustom()[types.KeyFeature])
+	return f == types.FeatureFoundation || f == types.FeatureUnknown
+}

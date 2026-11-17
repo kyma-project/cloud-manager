@@ -92,7 +92,7 @@ func (in *CloudResources) GetObjectMeta() *metav1.ObjectMeta {
 }
 
 func (in *CloudResources) SpecificToFeature() featuretypes.FeatureName {
-	return ""
+	return featuretypes.FeatureFoundation
 }
 
 func (in *CloudResources) SpecificToProviders() []string {
