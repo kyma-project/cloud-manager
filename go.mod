@@ -30,7 +30,7 @@ require (
 	github.com/alibabacloud-go/nas-20170626/v3 v3.5.2
 	github.com/alibabacloud-go/openapi-util v0.1.1
 	github.com/alibabacloud-go/r-kvstore-20150101/v7 v7.5.1
-	github.com/alibabacloud-go/tea v1.5.3
+	github.com/alibabacloud-go/tea v1.5.4
 	github.com/alibabacloud-go/tea-utils/v2 v2.0.9
 	github.com/alibabacloud-go/vpc-20160428/v6 v6.16.0
 	github.com/aliyun/credentials-go v1.4.6
