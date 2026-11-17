@@ -26,7 +26,8 @@ func TestNukeBackupsAzureEnabledByApi(t *testing.T) {
 	ctx := t.Context()
 	require.NoError(t, Initialize(ctx, logr.Discard(), WithFile("testdata/nukeBackupsAzureApiEnabled.yaml")))
 
-	assert.True(t, FFNukeBackupsAzure.Value(ctx))
+	assert.True(t, FFNukeBackupsAzure.Value(ctx),
+		"gate must be enabled when apiEnabled resolves true for the azure/nfsBackup context")
 }
 
 // TestNukeBackupsAzureStandaloneOverride asserts the || standalone override still forces
