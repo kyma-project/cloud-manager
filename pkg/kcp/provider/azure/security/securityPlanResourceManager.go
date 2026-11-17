@@ -46,11 +46,11 @@ func securityPlanResourceManager(ctx context.Context, st composed.State) (error,
 	resp, err := state.azureClient.UpdateSecurityPricing(ctx, scopeId, resourceManagerPlan.PlanName, pricing, nil)
 	if err != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error updating defender security pricing ARM: %s", err.Error()), state.ObjAsRuntime().Generation)
-		return composed.LogErrorAndReturn(err, "Error updating Arm security pricing", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
+		return composed.LogErrorAndReturn(err, "Error updating Arm security pricing", composed.StopWithRequeueDelay(rate.DefaultRegistry.Slow1s.When(state.ObjAsRuntime())), ctx)
 	}
 	if extErr := resourceManagerPlan.extensionErrors(resp); extErr != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error enabling defender security pricing ARM extensions: %s", extErr.Error()), state.ObjAsRuntime().Generation)
-		return composed.LogErrorAndReturn(extErr, "Error enabling Arm security pricing extensions", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
+		return composed.LogErrorAndReturn(extErr, "Error enabling Arm security pricing extensions", composed.StopWithRequeueDelay(rate.DefaultRegistry.Slow1s.When(state.ObjAsRuntime())), ctx)
 	}
 
 	return nil, ctx

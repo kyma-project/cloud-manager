@@ -57,11 +57,11 @@ func securityPlanServers(ctx context.Context, st composed.State) (error, context
 	resp, err := state.azureClient.UpdateSecurityPricing(ctx, scopeId, serversPlan.PlanName, pricing, nil)
 	if err != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error updating defender security pricing Servers P2: %s", err.Error()), state.ObjAsRuntime().Generation)
-		return composed.LogErrorAndReturn(err, "Error updating Servers security pricing", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
+		return composed.LogErrorAndReturn(err, "Error updating Servers security pricing", composed.StopWithRequeueDelay(rate.DefaultRegistry.Slow1s.When(state.ObjAsRuntime())), ctx)
 	}
 	if extErr := serversPlan.extensionErrors(resp); extErr != nil {
 		_, _ = state.PatchStatusAnnotations(ctx, "Error", fmt.Sprintf("Error enabling defender security pricing Servers P2 extensions: %s", extErr.Error()), state.ObjAsRuntime().Generation)
-		return composed.LogErrorAndReturn(extErr, "Error enabling Servers security pricing extensions", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
+		return composed.LogErrorAndReturn(extErr, "Error enabling Servers security pricing extensions", composed.StopWithRequeueDelay(rate.DefaultRegistry.Slow1s.When(state.ObjAsRuntime())), ctx)
 	}
 
 	return nil, ctx

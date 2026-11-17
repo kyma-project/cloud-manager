@@ -3,34 +3,28 @@ package cloudresources
 import (
 	"context"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func handleServed(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	logger := composed.LoggerFromCtx(ctx)
 
-	served, err := func() (*cloudresourcesv1beta1.CloudResources, error) {
-		list := &cloudresourcesv1beta1.CloudResourcesList{}
-		err := state.Cluster().K8sClient().List(ctx, list)
-		if err != nil {
-			return nil, err
-		}
-
-		var servedCloudResources *cloudresourcesv1beta1.CloudResources
-		for _, item := range list.Items {
-			if item.Status.Served == cloudresourcesv1beta1.ServedTrue {
-				servedCloudResources = &item
-				break
-			}
-		}
-
-		return servedCloudResources, nil
-	}()
+	list := &cloudresourcesv1beta1.CloudResourcesList{}
+	err := state.Cluster().ApiReader().List(ctx, list)
 	if err != nil {
 		return composed.LogErrorAndReturn(err, "Error listing CloudResources", composed.StopWithRequeue, ctx)
+	}
+
+	var served *cloudresourcesv1beta1.CloudResources
+	for _, item := range list.Items {
+		if item.Status.Served == cloudresourcesv1beta1.ServedTrue {
+			served = &item
+			break
+		}
 	}
 
 	if served != nil && state.Obj().GetName() == served.Name && state.Obj().GetNamespace() == served.Namespace {
@@ -39,33 +33,42 @@ func handleServed(ctx context.Context, st composed.State) (error, context.Contex
 	}
 
 	if state.ObjAsCloudResources().Status.Served == cloudresourcesv1beta1.ServedFalse {
-		logger.Info("Ignoring not served CloudResources")
 		// we're not handling not served objects
 		return composed.StopAndForget, ctx
 	}
 
 	if served == nil {
 		// none is served so far, this obj will be the one
-		logger.Info("Setting CloudResources Served to True")
-		state.ObjAsCloudResources().Status.Served = cloudresourcesv1beta1.ServedTrue
-		return composed.UpdateStatus(state.ObjAsCloudResources()).
-			ErrorLogMessage("Error updating CloudResources served to true").
-			SuccessError(composed.StopWithRequeue).
-			Run(ctx, state)
+		return composed.NewStatusPatcherComposed(state.ObjAsCloudResources()).
+			MutateStatus(func(cr *cloudresourcesv1beta1.CloudResources) {
+				cr.Status.Served = cloudresourcesv1beta1.ServedTrue
+			}).
+			OnStatusChanged(composed.Log("Set CloudResources Served to True")).
+			OnFailure(
+				composed.Log("Error patching CloudResources status.served to true"),
+				composed.Requeue,
+			).
+			OnSuccess(composed.Continue).
+			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	logger.Info("Setting CloudResources Served to False")
-	state.ObjAsCloudResources().Status.Served = cloudresourcesv1beta1.ServedFalse
-	state.ObjAsCloudResources().Status.State = cloudresourcesv1beta1.ModuleStateWarning
-	return composed.UpdateStatus(state.ObjAsCloudResources()).
-		SetExclusiveConditions(metav1.Condition{
-			Type:   cloudresourcesv1beta1.ConditionTypeError,
-			Status: metav1.ConditionTrue,
-			Reason: cloudresourcesv1beta1.ReasonOtherIsServed,
-			Message: fmt.Sprintf("only one instance of CloudResources is allowed (current served instance: %s",
-				served.Name),
+	return composed.NewStatusPatcherComposed(state.ObjAsCloudResources()).
+		MutateStatus(func(cr *cloudresourcesv1beta1.CloudResources) {
+			cr.Status.Served = cloudresourcesv1beta1.ServedFalse
+			cr.Status.State = cloudresourcesv1beta1.ModuleStateWarning
+			cr.Status.Conditions = nil
+			meta.SetStatusCondition(&cr.Status.Conditions, metav1.Condition{
+				Type:               cloudresourcesv1beta1.ConditionTypeError,
+				Status:             metav1.ConditionTrue,
+				ObservedGeneration: cr.Generation,
+				Reason:             cloudresourcesv1beta1.ReasonOtherIsServed,
+				Message:            fmt.Sprintf("only one instance of CloudResources is allowed (current served instance: %s", served.Name),
+			})
 		}).
-		ErrorLogMessage("Error updating CloudResources served to false").
-		SuccessError(composed.StopAndForget).
-		Run(ctx, state)
+		OnFailure(
+			composed.Log("Error patching CloudResources status.served to false"),
+			composed.Requeue,
+		).
+		OnSuccess(composed.Forget).
+		Run(ctx, state.Cluster().K8sClient())
 }

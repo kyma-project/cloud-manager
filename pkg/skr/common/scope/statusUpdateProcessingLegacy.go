@@ -3,13 +3,20 @@ package scope
 import (
 	"context"
 	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func setStatusProcessing(ctx context.Context, st composed.State) (error, context.Context) {
+func statusUpdateProcessingLegacy(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(State)
+
+	if state.ObjWithConditionsAndState() == nil {
+		// unsupported type, likely newer API style with object
+		// implementing composed.ObjWithStatus
+		return nil, ctx
+	}
 
 	//If the object already have a state, continue...
 	if state.ObjWithConditionsAndState().State() != "" {

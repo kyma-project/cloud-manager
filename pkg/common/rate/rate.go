@@ -13,7 +13,153 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+var DefaultRegistry Registry
+
 var (
+// Quick to be used instead of `Requeue: true` with base value of 0.1s and cap of 10min (600s)
+//	#                         controller tests
+//	0     0.1s                0.01s
+//	1     0.4s                0.04s
+//	2     1.6s                0.16s
+//	3     6.4s                0.64s
+//	4     25.6s               1s (2.56)
+//	5     102.4s
+//	6     409.6s
+//	7     600s (1638.4)
+//Quick ObjectRateLimiterInterface
+
+// Slow1s with base value of 1s and cap of 10min (600s)
+//	#                        controller tests
+//	0     1s                 0.1s
+//	1     4s                 0.4s
+//	2     16s                1s (1.6)
+//	3     64s
+//	4     256s
+//	5     600s (1024)
+//	7     600s (1638.4)
+//Slow1s ObjectRateLimiterInterface
+
+// Slow10s with base value of 10s and cap of 10min (600s)
+//	#                        controller tests
+//	0     10s                 0.1s
+//	1     40s                 0.4s
+//	2    160s                 1s (1.6)
+//	3    600s (640)
+//Slow10s ObjectRateLimiterInterface
+
+// UltraSlow1m with base value of 1m and cap of 1h
+//
+//		#                        controller tests
+//		0    1m                 0.1s
+//		1    2m                 0.4s
+//		2    4m                 1s (1.6)
+//		3    8m
+//	 4    16m
+//	 5    32m
+//	 6    60m (64)
+//
+// UltraSlow1m ObjectRateLimiterInterface
+)
+
+func init() {
+	SetDefaultValues()
+}
+
+func NewQuick(inTest bool) ObjectRateLimiterInterface {
+	if inTest {
+		return NewObjectRateLimiter(
+			NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
+		)
+	}
+	return NewObjectRateLimiter(
+		NewItemExponentialFailureRateLimiter(100*time.Millisecond, 10*time.Minute, 2),
+	)
+}
+
+func NewSlow1s(inTest bool) ObjectRateLimiterInterface {
+	if inTest {
+		return NewObjectRateLimiter(
+			NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
+		)
+	}
+	return NewObjectRateLimiter(
+		NewItemExponentialFailureRateLimiter(1*time.Second, 10*time.Minute, 2),
+	)
+}
+
+func NewSlow10s(inTest bool) ObjectRateLimiterInterface {
+	if inTest {
+		return NewObjectRateLimiter(
+			NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
+		)
+	}
+	return NewObjectRateLimiter(
+		NewItemExponentialFailureRateLimiter(10*time.Second, 10*time.Minute, 2),
+	)
+}
+
+func NewUltraSlow1m(inTest bool) ObjectRateLimiterInterface {
+	if inTest {
+		return NewObjectRateLimiter(
+			NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
+		)
+	}
+	return NewObjectRateLimiter(
+		NewItemExponentialFailureRateLimiter(1*time.Minute, 1*time.Hour, 1),
+	)
+}
+
+func NewRegistry(inTest bool) Registry {
+	return Registry{
+		Quick:       NewQuick(inTest),
+		Slow1s:      NewSlow1s(inTest),
+		Slow10s:     NewSlow10s(inTest),
+		UltraSlow1m: NewUltraSlow1m(inTest),
+	}
+}
+
+func SetDefaultValues() {
+	DefaultRegistry = NewRegistry(false)
+	//Quick = NewObjectRateLimiter(
+	//	NewItemExponentialFailureRateLimiter(100*time.Millisecond, 10*time.Minute, 2),
+	//)
+	//
+	//Slow1s = NewObjectRateLimiter(
+	//	NewItemExponentialFailureRateLimiter(1*time.Second, 10*time.Minute, 2),
+	//)
+	//
+	//Slow10s = NewObjectRateLimiter(
+	//	NewItemExponentialFailureRateLimiter(10*time.Second, 10*time.Minute, 2),
+	//)
+	//
+	//UltraSlow1m = NewObjectRateLimiter(
+	//	NewItemExponentialFailureRateLimiter(1*time.Minute, 1*time.Hour, 1),
+	//)
+}
+
+// SetValuesForTests Use this in controller tests only to speed up requeues to fit default controller tests timeouts
+func SetValuesForTests() {
+	DefaultRegistry = NewRegistry(true)
+	//Quick = NewObjectRateLimiter(
+	//	NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
+	//)
+	//
+	//Slow1s = NewObjectRateLimiter(
+	//	NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
+	//)
+	//
+	//Slow10s = NewObjectRateLimiter(
+	//	NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
+	//)
+	//
+	//UltraSlow1m = NewObjectRateLimiter(
+	//	NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
+	//)
+}
+
+// RateLimiters
+
+type Registry struct {
 	// Quick to be used instead of `Requeue: true` with base value of 0.1s and cap of 10min (600s)
 	//	#                         controller tests
 	//	0     0.1s                0.01s
@@ -34,7 +180,6 @@ var (
 	//	3     64s
 	//	4     256s
 	//	5     600s (1024)
-	//	6     409.6s
 	//	7     600s (1638.4)
 	Slow1s ObjectRateLimiterInterface
 
@@ -56,47 +201,6 @@ var (
 	//  5    32m
 	//  6    60m (64)
 	UltraSlow1m ObjectRateLimiterInterface
-)
-
-func init() {
-	SetDefaultValues()
-}
-
-func SetDefaultValues() {
-	Quick = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(100*time.Millisecond, 10*time.Minute, 2),
-	)
-
-	Slow1s = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(1*time.Second, 10*time.Minute, 2),
-	)
-
-	Slow10s = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Second, 10*time.Minute, 2),
-	)
-
-	UltraSlow1m = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(1*time.Minute, 1*time.Hour, 1),
-	)
-}
-
-// SetValuesForTests Use this in controller tests only to speed up requeues to fit default controller tests timeouts
-func SetValuesForTests() {
-	Quick = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
-	)
-
-	Slow1s = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
-	)
-
-	Slow10s = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
-	)
-
-	UltraSlow1m = NewObjectRateLimiter(
-		NewItemExponentialFailureRateLimiter(10*time.Millisecond, 2*time.Second, 1),
-	)
 }
 
 // ObjectRateLimiter

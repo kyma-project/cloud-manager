@@ -5,8 +5,10 @@ import (
 	"fmt"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -24,8 +26,10 @@ func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.R
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			args.ScopeProvider,
-			composed.NewStateClusterFromCluster(args.KcpCluster),
+			commonscope.NewStateFactory(
+				composed.NewStateClusterFromCluster(args.KcpCluster),
+				args.ScopeProvider,
+			),
 			args.Provider,
 			args.IgnoreWatchErrors,
 		),
@@ -53,28 +57,30 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 // Then module CR will get deletionTimestamp
 
 func (r *reconciler) newAction() composed.Action {
-	return composed.ComposeActions(
-		"cloudResources-main",
+	return composed.ComposeActionsNoName(
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.CloudResources{}),
-		composed.LoadObj,
+		commonscope.New(),
 
-		composed.BuildBranchingAction(
-			"cloudResources-if-delete",
+		composed.If(
 			composed.MarkedForDeletionPredicate,
-			composed.ComposeActions(
-				"cloudResources-delete",
-
-				checkIfResourcesExist,
-				deleteCrds,
-				removeFinalizer,
-
-				composed.StopAndForgetAction,
-			),
-			nil,
+			statusDeleting,
+			checkIfResourcesExist,
+			deleteCrds,
+			removeFinalizer,
+			composed.StopAndForgetAction,
 		),
-		handleServed,
-		addFinalizer,
-		statusReady,
+
+		composed.If(
+			composed.NotMarkedForDeletionPredicate,
+			handleServed,
+			addFinalizer,
+			statusReady,
+			composed.Switch(
+				nil,
+				composed.NewCase(statewithscope.AwsProviderPredicate, composed.Noop),
+			),
+			composed.StopAndForgetAction,
+		),
 
 		composed.StopAndForgetAction,
 	)

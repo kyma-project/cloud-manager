@@ -36,7 +36,7 @@ func TestRateLimiter(t *testing.T) {
 		SetDefaultValues()
 
 		t.Run("Quick", func(t *testing.T) {
-			testWhen(Quick, []time.Duration{
+			testWhen(DefaultRegistry.Quick, []time.Duration{
 				100 * time.Millisecond,
 				400 * time.Millisecond,
 				1600 * time.Millisecond,
@@ -50,7 +50,7 @@ func TestRateLimiter(t *testing.T) {
 		})
 
 		t.Run("Slow1s", func(t *testing.T) {
-			testWhen(Slow1s, []time.Duration{
+			testWhen(DefaultRegistry.Slow1s, []time.Duration{
 				1 * time.Second,
 				4 * time.Second,
 				16 * time.Second,
@@ -63,7 +63,7 @@ func TestRateLimiter(t *testing.T) {
 		})
 
 		t.Run("Slow10s", func(t *testing.T) {
-			testWhen(Slow10s, []time.Duration{
+			testWhen(DefaultRegistry.Slow10s, []time.Duration{
 				10 * time.Second,
 				40 * time.Second,
 				160 * time.Second,
@@ -74,7 +74,7 @@ func TestRateLimiter(t *testing.T) {
 		})
 
 		t.Run("UltraSlow1m", func(t *testing.T) {
-			testWhen(UltraSlow1m, []time.Duration{
+			testWhen(DefaultRegistry.UltraSlow1m, []time.Duration{
 				1 * time.Minute,
 				2 * time.Minute,
 				4 * time.Minute,
@@ -106,19 +106,19 @@ func TestRateLimiter(t *testing.T) {
 		}
 
 		t.Run("Quick", func(t *testing.T) {
-			testWhen(Quick, testingDurationValues)
+			testWhen(DefaultRegistry.Quick, testingDurationValues)
 		})
 
 		t.Run("Slow1s", func(t *testing.T) {
-			testWhen(Slow1s, testingDurationValues)
+			testWhen(DefaultRegistry.Slow1s, testingDurationValues)
 		})
 
 		t.Run("Slow10s", func(t *testing.T) {
-			testWhen(Slow10s, testingDurationValues)
+			testWhen(DefaultRegistry.Slow10s, testingDurationValues)
 		})
 
 		t.Run("UltraSlow1m", func(t *testing.T) {
-			testWhen(UltraSlow1m, testingDurationValues)
+			testWhen(DefaultRegistry.UltraSlow1m, testingDurationValues)
 		})
 
 	})

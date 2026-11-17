@@ -46,12 +46,15 @@ func TestCheckRestoreJob(t *testing.T) {
 			Build()
 		kcpCluster := composed.NewStateCluster(kcpClient, kcpClient, nil, commonscheme.KcpScheme)
 
-		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) *State {
+		createEmptyState := func(k8sClient client.WithWatch, azureRwxVolumeRestore *cloudresourcesv1beta1.AzureRwxVolumeRestore) (*State, error) {
 			cluster := composed.NewStateCluster(k8sClient, k8sClient, nil, k8sClient.Scheme())
-			scopeState, _ := commonscope.NewStateFactory(kcpCluster, scopeProvider).NewState(context.Background(), types.NamespacedName{}, composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore))
+			scopeState, err := commonscope.NewStateFactory(kcpCluster, scopeProvider).NewState(context.Background(), types.NamespacedName{}, composed.NewStateFactory(cluster).NewState(types.NamespacedName{}, azureRwxVolumeRestore))
+			if err != nil {
+				return nil, err
+			}
 			return &State{
 				State: scopeState,
-			}
+			}, nil
 		}
 
 		setupTest := func(withObj bool, backupRecoveryPointId string, backupStorageAccountPath string) {
@@ -101,7 +104,9 @@ func TestCheckRestoreJob(t *testing.T) {
 				fakeClient = fake.NewClientBuilder().WithScheme(commonscheme.SkrScheme).Build()
 			}
 			k8sClient = spy.NewClientSpy(fakeClient)
-			state = createEmptyState(k8sClient, azureRwxVolumeRestore)
+			st, err := createEmptyState(k8sClient, azureRwxVolumeRestore)
+			assert.NoError(t, err)
+			state = st
 			state.azureRwxVolumeBackup = azureRwxVolumeBackup
 			state.storageClient, _ = azurerwxvolumebackupclient.NewMockClient()(nil, "", "", "", "")
 			state.SetScope(scope)

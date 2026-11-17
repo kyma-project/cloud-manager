@@ -33,7 +33,7 @@ func vpcNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 
 	ns, err := commongardener.DefaultGardenerNamespaceProvider().GetGardenerNamespace(ctx, state.Cluster().ApiReader())
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error getting gardener namespace", composed.StopWithRequeueDelay(rate.Quick.When(state.ObjAsRuntime())), ctx)
+		return composed.LogErrorAndReturn(err, "Error getting gardener namespace", composed.StopWithRequeueDelay(rate.DefaultRegistry.Quick.When(state.ObjAsRuntime())), ctx)
 	}
 
 	vpcNetwork := cloudcontrolv1beta1.NewVpcNetworkBuilder().
@@ -59,7 +59,7 @@ func vpcNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 
 	err = state.Cluster().K8sClient().Create(ctx, vpcNetwork)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Failed to create VpcNetwork", composed.StopWithRequeueDelay(rate.Quick.When(state.ObjAsRuntime())), ctx)
+		return composed.LogErrorAndReturn(err, "Failed to create VpcNetwork", composed.StopWithRequeueDelay(rate.DefaultRegistry.Quick.When(state.ObjAsRuntime())), ctx)
 	}
 	state.vpcNetwork = vpcNetwork
 
@@ -69,7 +69,7 @@ func vpcNetworkCreate(ctx context.Context, st composed.State) (error, context.Co
 		state.ObjAsRuntime().Spec.Shoot.Networking.VPCNetwork = new(state.ObjAsRuntime().Name)
 		err = state.Cluster().K8sClient().Patch(ctx, state.ObjAsRuntime(), client.MergeFrom(original))
 		if err != nil {
-			return composed.LogErrorAndReturn(err, "Error patching Runtime with Gardener type VpcNetwork name", composed.StopWithRequeueDelay(rate.Quick.When(state.ObjAsRuntime())), ctx)
+			return composed.LogErrorAndReturn(err, "Error patching Runtime with Gardener type VpcNetwork name", composed.StopWithRequeueDelay(rate.DefaultRegistry.Quick.When(state.ObjAsRuntime())), ctx)
 		}
 		composed.LoggerFromCtx(ctx).Info("Runtime patched with Gardener type VpcNetwork name")
 	}

@@ -86,7 +86,7 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crWafPolicyMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.WafPolicy{}),
-		commonscope.LoadObjWithScope(),
+		commonscope.New(),
 		statusInitial,
 		// Branch to provider-specific implementation
 		composed.BuildSwitchAction(

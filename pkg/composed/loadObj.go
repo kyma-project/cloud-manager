@@ -2,6 +2,7 @@ package composed
 
 import (
 	"context"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -14,7 +15,7 @@ func LoadObj(ctx context.Context, state State) (error, context.Context) {
 		return LogErrorAndReturn(err, "Error loading object", StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }
 
 func LoadObjNoStopIfNotFound(ctx context.Context, state State) (error, context.Context) {
@@ -26,7 +27,7 @@ func LoadObjNoStopIfNotFound(ctx context.Context, state State) (error, context.C
 		return LogErrorAndReturn(err, "Error loading object", StopWithRequeue, ctx)
 	}
 
-	return nil, nil
+	return nil, ctx
 }
 
 func IsObjLoaded(_ context.Context, state State) bool {

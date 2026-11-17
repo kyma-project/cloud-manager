@@ -86,7 +86,7 @@ func (r *reconciler) newAction() composed.Action {
 	return composed.ComposeActions(
 		"crCertificateMain",
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.Certificate{}),
-		commonscope.LoadObjWithScope(),
+		commonscope.New(),
 		statusInitial,
 		composed.BuildSwitchAction(
 			"providerSwitch",
