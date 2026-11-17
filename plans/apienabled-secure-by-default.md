@@ -2,7 +2,7 @@
 
 **Created**: 2026-11-17
 **Branch**: `feat/api-enabled-secure-default` (to be created at build; currently on `main`)
-**Status**: approved
+**Status**: implemented
 **Gherkin persistence**: e2e/features
 **Scope enforcement**: none
 
@@ -58,15 +58,15 @@ GA allowlist, and adds Steps 1.4 and 1.5 below.
 
 ## Acceptance Criteria
 
-- [ ] AC1 — `ApiEnabled.Value(ctx) == !ApiDisabled.Value(ctx)` across the full case matrix in `ffApiDisabled_test.go` **in both directions**: features enabled by rule, AND features disabled by an explicit targeting rule (e.g. nfsBackup on stage) or by trial — against a config carrying both flags at parity.
-- [ ] AC2 — With `apiEnabled` absent or matched only by `defaultRule`, `ApiEnabled.Value` returns `false`, except the `cloudresources.cloud-resources.kyma-project.io` kind-group, which returns `true` unconditionally — verified against a config with **no `apiEnabled` block at all**, so the override is distinguishable from a permissive default.
-- [ ] AC3 — `installer.go` (CRD create), both `runner.go` guards (indexer + controller startup), and `ffNukeBackupsAzure.go` read `ApiEnabled`; a feature with no enable rule has its indexer skipped, its controller not started, and its CRD not created; a feature with an enable rule gets all three. The `skrStatus` outcome string becomes `ApiNotEnabled` at the switched call sites.
-- [ ] AC4 — The parity checker reports zero divergence over a corpus covering **all** `types.Feature*` and `types.Provider*` enum values × {trial, non-trial} × {dev, stage, prod}, **plus every `globalAccount`/`shoot` value referenced by the config under test** (self-seeded). Exposed as a CLI runnable against an external config path; returns a non-zero exit (not "zero divergence") for a missing or malformed file.
-- [ ] AC5 — The CI `pr-test.yml` matrix runs the V2 controller suites under secure-by-default with their suite names visible in the log (mechanical skip-detection), not silently skipped.
-- [ ] AC6 — `make test-ff` passes with `apiEnabled` present in `ff_ga.yaml` and `ff_edge.yaml`.
-- [ ] AC7 — Reversibility: the dual-flag config yields identical decisions under the legacy `!apiDisabled` path and the new `apiEnabled` path across the parity corpus (the mechanically testable core). Full rollback (revert the switch commit, configs retain both flags) is a manual gate underwritten by that equivalence.
-- [ ] AC8 — An empty (`{}`), missing, or malformed config resolves every non-bootstrap API to not-enabled (bootstrap `cloudresources` stays enabled), and the system emits a distinct, searchable error signal naming the fallback cause (config load failure, or `apiDisabled` present with no `apiEnabled`).
-- [ ] AC9 — `management-plane-config` CI fails a pull request when any landscape config (dev/stage/prod) diverges from parity, fails GoFF schema validation, or carries `apiDisabled` with no `apiEnabled` block — enforced by a Makefile target the parity checker CLI backs, run by a GitHub Action.
+- [x] AC1 — `ApiEnabled.Value(ctx) == !ApiDisabled.Value(ctx)` across the full case matrix in `ffApiDisabled_test.go` **in both directions**: features enabled by rule, AND features disabled by an explicit targeting rule (e.g. nfsBackup on stage) or by trial — against a config carrying both flags at parity.
+- [x] AC2 — With `apiEnabled` absent or matched only by `defaultRule`, `ApiEnabled.Value` returns `false`, except the `cloudresources.cloud-resources.kyma-project.io` kind-group, which returns `true` unconditionally — verified against a config with **no `apiEnabled` block at all**, so the override is distinguishable from a permissive default.
+- [x] AC3 — `installer.go` (CRD create), both `runner.go` guards (indexer + controller startup), and `ffNukeBackupsAzure.go` read `ApiEnabled`; a feature with no enable rule has its indexer skipped, its controller not started, and its CRD not created; a feature with an enable rule gets all three. The `skrStatus` outcome string becomes `ApiNotEnabled` at the switched call sites.
+- [x] AC4 — The parity checker reports zero divergence over a corpus covering **all** `types.Feature*` and `types.Provider*` enum values × {trial, non-trial} × {dev, stage, prod}, **plus every `globalAccount`/`shoot` value referenced by the config under test** (self-seeded). Exposed as a CLI runnable against an external config path; returns a non-zero exit (not "zero divergence") for a missing or malformed file.
+- [x] AC5 — The CI `pr-test.yml` matrix runs the V2 controller suites under secure-by-default with their suite names visible in the log (mechanical skip-detection), not silently skipped.
+- [x] AC6 — `make test-ff` passes with `apiEnabled` present in `ff_ga.yaml` and `ff_edge.yaml`.
+- [x] AC7 — Reversibility: the dual-flag config yields identical decisions under the legacy `!apiDisabled` path and the new `apiEnabled` path across the parity corpus (the mechanically testable core). Full rollback (revert the switch commit, configs retain both flags) is a manual gate underwritten by that equivalence.
+- [x] AC8 — An empty (`{}`), missing, or malformed config resolves every non-bootstrap API to not-enabled (bootstrap `cloudresources` stays enabled), and the system emits a distinct, searchable error signal naming the fallback cause (config load failure, or `apiDisabled` present with no `apiEnabled`).
+- [ ] AC9 (cross-repo, management-plane-config — not in this build) — `management-plane-config` CI fails a pull request when any landscape config (dev/stage/prod) diverges from parity, fails GoFF schema validation, or carries `apiDisabled` with no `apiEnabled` block — enforced by a Makefile target the parity checker CLI backs, run by a GitHub Action.
 
 ## Slices
 
@@ -493,3 +493,21 @@ Warnings incorporated: shared `isBootstrapKindGroup` predicate; `ApiNotEnabled` 
   - [x] Step 4.1: Config-consistency check and fail-closed signal
 - [ ] Slice 5: management-plane-config parity CI gate (cross-repo) — NOT built in this repo; follow-up in management-plane-config
   - [ ] Step 5.1: Makefile target + GitHub Action invoking the parity CLI (cross-repo)
+
+## Build Completion — 2026-11-17
+
+In-repo slices 1–4 built, reviewed, and verified. Slice 5 is cross-repo (management-plane-config) and tracked there.
+
+**Verification evidence:**
+- Full suite green under both CI matrix legs (GA + Edge munged configs); all three V2 Ginkgo suites executed, 0 failures. Re-confirmed on the GA leg after the backstop fixes.
+- `make test-ff` green (jv schema validation of `ff_ga.yaml` + `ff_edge.yaml`).
+- Per-slice reviews (spec-compliance + correctness + test) on every slice; `/code-review` backstop over the full `main...HEAD` diff.
+- Source-blind acceptance examination: AC1–AC8 **met**; AC9 N/A (cross-repo).
+
+**Backstop findings addressed:**
+1. IpRange trial-gating restored — foundation/unknown fall through to the flag on trial (bootstrap stays exempt).
+2. Fail-closed signal now reads the provider's real load state (`GetCacheRefreshDate`), not a decoupled re-read.
+3. Parity seed extraction broadened to `==`, single-quote, reversed, and `in [...]` query forms.
+4. Guard test: every SKR CRD feature must be a parity-corpus dimension.
+
+**Follow-ups (not in this build):** unarmored installer `Updating`/`AlreadyExists` path (no coverage); Slice 5 management-plane-config parity CI gate (AC9); deferred Phase-3 `apiDisabled` removal after prod soak.
