@@ -38,17 +38,15 @@ func reportApiConfigFallback(logger logr.Logger, configBytes []byte, retrieveErr
 }
 
 // apiDisabledOnly reports whether the parsed config carries an apiDisabled block with
-// content while omitting the apiEnabled block entirely — the secure-by-default divergent
-// case where every untagged API silently goes dark.
+// content while the apiEnabled block is absent or empty — the secure-by-default divergent
+// case where every untagged API silently goes dark. A present-but-empty apiEnabled key
+// (e.g. a partially-written config) counts as absent: it carries no rule, so untagged
+// APIs still go dark and the operator should be warned.
 func apiDisabledOnly(root map[string]any) bool {
-	if _, hasEnabled := root["apiEnabled"]; hasEnabled {
+	if blockHasContent(root["apiEnabled"]) {
 		return false
 	}
-	disabled, hasDisabled := root["apiDisabled"]
-	if !hasDisabled {
-		return false
-	}
-	return blockHasContent(disabled)
+	return blockHasContent(root["apiDisabled"])
 }
 
 // blockHasContent reports whether a flag block carries targeting rules or a defaultRule.

@@ -1,7 +1,6 @@
 package feature
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -59,6 +58,7 @@ func TestReportApiConfigFallback_ParseFailure(t *testing.T) {
 
 	require.Len(t, logs, 1)
 	assert.Equal(t, SignalConfigParseFailure, logs[0]["msg"])
+	assert.Contains(t, logs[0]["error"], "yaml:", "parse-failure signal must carry the YAML parse error")
 }
 
 // TestReportApiConfigFallback_ApiDisabledOnly: a config with apiDisabled rules but no
@@ -95,11 +95,25 @@ func TestReportApiConfigFallback_EmptyConfigNoSignal(t *testing.T) {
 	assert.Empty(t, logs)
 }
 
+// TestReportApiConfigFallback_EmptyApiEnabledBlock: a present-but-empty `apiEnabled:`
+// key (carries no rule) alongside a content-bearing apiDisabled block is still flagged —
+// untagged APIs go dark just as if apiEnabled were omitted entirely.
+func TestReportApiConfigFallback_EmptyApiEnabledBlock(t *testing.T) {
+	var logs []map[string]any
+	cfg := []byte("apiEnabled:\napiDisabled:\n  defaultRule:\n    variation: enabled\n")
+
+	reportApiConfigFallback(capturingLogger(&logs), cfg, nil)
+
+	require.Len(t, logs, 1)
+	assert.Equal(t, SignalApiEnabledMissing, logs[0]["msg"],
+		"a present-but-empty apiEnabled block must still be flagged")
+}
+
 // TestApiEnabledEmptyConfigFailsClosed: loading an empty {} config disables non-bootstrap
 // APIs while the cloudresources bootstrap kind-group stays enabled.
 func TestApiEnabledEmptyConfigFailsClosed(t *testing.T) {
 	ctx := t.Context()
-	restoreEmbeddedProvider(t, ctx)
+	restoreProvider(t)
 
 	require.NoError(t, Initialize(ctx, logr.Discard(), WithFile("testdata/apiEmpty.yaml")))
 
@@ -116,7 +130,7 @@ func TestApiEnabledEmptyConfigFailsClosed(t *testing.T) {
 // enabled — and the load-failure signal is emitted.
 func TestApiEnabledRetrieverErrorFailsClosed(t *testing.T) {
 	ctx := t.Context()
-	restoreEmbeddedProvider(t, ctx)
+	restoreProvider(t)
 
 	var logs []map[string]any
 	require.NoError(t, Initialize(ctx, capturingLogger(&logs), WithFile("testdata/doesNotExist.yaml")))
@@ -127,16 +141,26 @@ func TestApiEnabledRetrieverErrorFailsClosed(t *testing.T) {
 
 	assert.False(t, ApiEnabled.Value(nonBootstrap), "after a retriever error a non-bootstrap API must be disabled")
 	assert.True(t, ApiEnabled.Value(bootstrap), "the cloudresources bootstrap kind-group must stay enabled")
-	assert.Contains(t, msgs(logs), any(SignalConfigLoadFailure),
-		"a retriever error must emit the load-failure signal; got %v", msgs(logs))
+	entry := findLog(logs, SignalConfigLoadFailure)
+	require.NotNil(t, entry, "a retriever error must emit the load-failure signal; got %v", msgs(logs))
+	assert.Contains(t, entry["error"], "doesNotExist",
+		"the retriever error must be attached to the signal (proves Initialize propagates it)")
 }
 
-// restoreEmbeddedProvider re-initializes the package provider from the embedded config
-// after the test, so a test that loads an empty/broken config does not leak that state.
-func restoreEmbeddedProvider(t *testing.T, ctx context.Context) {
-	t.Cleanup(func() {
-		if err := Initialize(ctx, logr.Discard(), WithEmbeddedRetriever()); err != nil {
-			t.Errorf("cleanup: restore embedded provider: %v", err)
+// findLog returns the first captured entry whose "msg" equals msg, or nil.
+func findLog(entries []map[string]any, msg string) map[string]any {
+	for _, e := range entries {
+		if e["msg"] == msg {
+			return e
 		}
-	})
+	}
+	return nil
+}
+
+// restoreProvider captures the package provider before a test mutates it (via Initialize)
+// and restores the exact original in cleanup, so loading an empty/broken config does not
+// leak that state — or change the provider's concrete type — for later package tests.
+func restoreProvider(t *testing.T) {
+	orig := provider
+	t.Cleanup(func() { provider = orig })
 }
