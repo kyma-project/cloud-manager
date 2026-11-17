@@ -18,11 +18,28 @@ const (
 // the error-level log carries a non-nil error even though there is no underlying failure.
 var ErrApiConfigInconsistent = errors.New("feature-flag config inconsistent")
 
-// reportApiConfigFallback emits an error-level signal for each fail-closed condition
-// detected while loading the feature-flag config: a retriever error, an unparseable
-// config, or a config that carries apiDisabled rules but no apiEnabled block. It never
-// aborts startup — the caller keeps the secure-default provider either way.
-func reportApiConfigFallback(logger logr.Logger, configBytes []byte, retrieveErr error) {
+// reportApiConfigFallback emits an error-level signal for each fail-closed condition at
+// startup. The authoritative "did we fall back to the secure default" decision is
+// providerLoaded — taken from the provider's own load state, not from configBytes — so a
+// transient re-read cannot raise a false alarm (provider loaded) or hide a real fallback
+// (provider did not load). configBytes/retrieveErr are a best-effort re-read used only to
+// classify why a fallback happened (retriever vs parse) and to detect an apiDisabled-only
+// config. It never aborts startup — the caller keeps the secure-default provider either way.
+func reportApiConfigFallback(logger logr.Logger, providerLoaded bool, configBytes []byte, retrieveErr error) {
+	if providerLoaded {
+		// Provider is serving the loaded config. Only flag an apiDisabled-only config;
+		// a best-effort re-read failure here is not a fallback and must stay silent.
+		if retrieveErr != nil {
+			return
+		}
+		var root map[string]any
+		if yaml.Unmarshal(configBytes, &root) == nil && apiDisabledOnly(root) {
+			logger.Error(ErrApiConfigInconsistent, SignalApiEnabledMissing)
+		}
+		return
+	}
+
+	// Provider did NOT load — it fell back to the secure default. Classify why.
 	if retrieveErr != nil {
 		logger.Error(retrieveErr, SignalConfigLoadFailure)
 		return
@@ -32,9 +49,9 @@ func reportApiConfigFallback(logger logr.Logger, configBytes []byte, retrieveErr
 		logger.Error(err, SignalConfigParseFailure)
 		return
 	}
-	if apiDisabledOnly(root) {
-		logger.Error(ErrApiConfigInconsistent, SignalApiEnabledMissing)
-	}
+	// Config is fetchable and parseable to us, yet the provider rejected it (e.g. GoFF
+	// schema validation) — still a fallback to the secure default.
+	logger.Error(ErrApiConfigInconsistent, SignalConfigLoadFailure)
 }
 
 // apiDisabledOnly reports whether the parsed config carries an apiDisabled block with

@@ -87,11 +87,13 @@ func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption)
 	}
 
 	// Secure-by-default: StartWithRetrieverError swallows load failures so the manager
-	// keeps running on the embedded default (non-bootstrap APIs disabled). Retrieve the
-	// config ourselves to surface a fail-closed signal the swallowed error would hide,
-	// and to flag an apiDisabled-only config that would silently disable untagged APIs.
+	// keeps running on the embedded default (non-bootstrap APIs disabled). The provider's
+	// own cache-refresh date is zero exactly when the initial load failed, so it — not a
+	// re-read — is the authoritative fallback signal. The re-read only classifies the
+	// cause and detects an apiDisabled-only config.
+	providerLoaded := ff != nil && !ff.GetCacheRefreshDate().IsZero()
 	cfgBytes, retrieveErr := rtvr.Retrieve(ctx)
-	reportApiConfigFallback(logger, cfgBytes, retrieveErr)
+	reportApiConfigFallback(logger, providerLoaded, cfgBytes, retrieveErr)
 
 	go func() {
 		<-ctx.Done()

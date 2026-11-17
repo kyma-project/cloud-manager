@@ -20,12 +20,28 @@ func isBootstrapKindGroup(ctx context.Context) bool {
 	)
 }
 
+// brokerPlanTrial is the broker plan of a trial SKR. Trial SKRs disable every
+// non-bootstrap API (the "disable all on trial" config rule), so the always-on
+// carve-out does not apply to them.
+const brokerPlanTrial = "trial"
+
+// isTrialBrokerPlan reports whether the context targets a trial SKR.
+func isTrialBrokerPlan(ctx context.Context) bool {
+	return util.CastInterfaceToString(MustContextFromCtx(ctx).GetCustom()[types.KeyBrokerPlan]) == brokerPlanTrial
+}
+
 // isAlwaysEnabledApi returns true when the API must always be enabled regardless
 // of config. This covers the bootstrap kind-group (CloudResources), and the two
-// always-on feature buckets: FeatureFoundation and FeatureUnknown.
+// always-on feature buckets: FeatureFoundation and FeatureUnknown. Trial SKRs are
+// the one exception to the feature buckets: there the legacy "disable all on trial"
+// stance still applies, so foundation/unknown fall through to the flag. The bootstrap
+// kind-group remains always-on even on trial.
 func isAlwaysEnabledApi(ctx context.Context) bool {
 	if isBootstrapKindGroup(ctx) {
 		return true
+	}
+	if isTrialBrokerPlan(ctx) {
+		return false
 	}
 	f := util.CastInterfaceToString(MustContextFromCtx(ctx).GetCustom()[types.KeyFeature])
 	return f == types.FeatureFoundation || f == types.FeatureUnknown

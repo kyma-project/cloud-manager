@@ -33,13 +33,13 @@ func msgs(entries []map[string]any) []any {
 	return out
 }
 
-// TestReportApiConfigFallback_RetrieverError: a retriever error emits the load-failure
-// signal with the retriever error string attached.
+// TestReportApiConfigFallback_RetrieverError: the provider did not load and the re-read
+// also errors — the load-failure signal carries the retriever error.
 func TestReportApiConfigFallback_RetrieverError(t *testing.T) {
 	var logs []map[string]any
 	retrieveErr := errors.New("open /does/not/exist: no such file")
 
-	reportApiConfigFallback(capturingLogger(&logs), nil, retrieveErr)
+	reportApiConfigFallback(capturingLogger(&logs), false, nil, retrieveErr)
 
 	require.Len(t, logs, 1)
 	assert.Equal(t, SignalConfigLoadFailure, logs[0]["msg"])
@@ -47,51 +47,75 @@ func TestReportApiConfigFallback_RetrieverError(t *testing.T) {
 		"the retriever error must be attached to the signal")
 }
 
-// TestReportApiConfigFallback_ParseFailure: a present-but-unparseable config emits the
-// parse-failure signal, not the load-failure or inconsistency signal.
+// TestReportApiConfigFallback_ParseFailure: the provider did not load and the re-read
+// returns present-but-unparseable bytes — the parse-failure signal fires, not load-failure.
 func TestReportApiConfigFallback_ParseFailure(t *testing.T) {
 	var logs []map[string]any
 	malformed, err := os.ReadFile("testdata/apiMalformed.yaml")
 	require.NoError(t, err)
 
-	reportApiConfigFallback(capturingLogger(&logs), malformed, nil)
+	reportApiConfigFallback(capturingLogger(&logs), false, malformed, nil)
 
 	require.Len(t, logs, 1)
 	assert.Equal(t, SignalConfigParseFailure, logs[0]["msg"])
 	assert.Contains(t, logs[0]["error"], "yaml:", "parse-failure signal must carry the YAML parse error")
 }
 
-// TestReportApiConfigFallback_ApiDisabledOnly: a config with apiDisabled rules but no
+// TestReportApiConfigFallback_ProviderNotLoadedButParseable: the provider did not load even
+// though the config is fetchable and parseable to us (e.g. GoFF schema rejection) — this is
+// still a fallback, so the load-failure signal fires.
+func TestReportApiConfigFallback_ProviderNotLoadedButParseable(t *testing.T) {
+	var logs []map[string]any
+	cfg, err := os.ReadFile("testdata/apiEnabled.yaml")
+	require.NoError(t, err)
+
+	reportApiConfigFallback(capturingLogger(&logs), false, cfg, nil)
+
+	require.Len(t, logs, 1)
+	assert.Equal(t, SignalConfigLoadFailure, logs[0]["msg"],
+		"a provider that did not load a parseable config has still fallen back")
+}
+
+// TestReportApiConfigFallback_ApiDisabledOnly: a loaded config with apiDisabled rules but no
 // apiEnabled block emits the inconsistency signal with ErrApiConfigInconsistent attached.
 func TestReportApiConfigFallback_ApiDisabledOnly(t *testing.T) {
 	var logs []map[string]any
 	cfg, err := os.ReadFile("testdata/apiEnabledNoBlock.yaml")
 	require.NoError(t, err)
 
-	reportApiConfigFallback(capturingLogger(&logs), cfg, nil)
+	reportApiConfigFallback(capturingLogger(&logs), true, cfg, nil)
 
 	require.Len(t, logs, 1)
 	assert.Equal(t, SignalApiEnabledMissing, logs[0]["msg"])
 	assert.Contains(t, logs[0]["error"], ErrApiConfigInconsistent.Error())
 }
 
-// TestReportApiConfigFallback_CleanConfig: a config carrying both blocks emits no signal.
+// TestReportApiConfigFallback_CleanConfig: a loaded config carrying both blocks emits no signal.
 func TestReportApiConfigFallback_CleanConfig(t *testing.T) {
 	var logs []map[string]any
 	cfg, err := os.ReadFile("testdata/apiEnabled.yaml")
 	require.NoError(t, err)
 
-	reportApiConfigFallback(capturingLogger(&logs), cfg, nil)
+	reportApiConfigFallback(capturingLogger(&logs), true, cfg, nil)
 
 	assert.Empty(t, logs, "a config with both apiEnabled and apiDisabled must not signal: %v", msgs(logs))
 }
 
-// TestReportApiConfigFallback_EmptyConfigNoSignal: an empty {} config has no apiDisabled
+// TestReportApiConfigFallback_ProviderLoadedTransientRereadError: the provider loaded fine,
+// but the best-effort re-read blips (e.g. a transient HTTP error). No signal must fire — the
+// provider is serving the loaded config, so this is not a fallback.
+func TestReportApiConfigFallback_ProviderLoadedTransientRereadError(t *testing.T) {
+	var logs []map[string]any
+	reportApiConfigFallback(capturingLogger(&logs), true, nil, errors.New("transient network blip"))
+	assert.Empty(t, logs, "a re-read blip while the provider is loaded must not raise a false alarm: %v", msgs(logs))
+}
+
+// TestReportApiConfigFallback_EmptyConfigNoSignal: a loaded empty {} config has no apiDisabled
 // block, so it is not flagged as inconsistent (the fail-closed behavior itself is asserted
 // in TestApiEnabledEmptyConfigFailsClosed).
 func TestReportApiConfigFallback_EmptyConfigNoSignal(t *testing.T) {
 	var logs []map[string]any
-	reportApiConfigFallback(capturingLogger(&logs), []byte("{}"), nil)
+	reportApiConfigFallback(capturingLogger(&logs), true, []byte("{}"), nil)
 	assert.Empty(t, logs)
 }
 
@@ -102,7 +126,7 @@ func TestReportApiConfigFallback_EmptyApiEnabledBlock(t *testing.T) {
 	var logs []map[string]any
 	cfg := []byte("apiEnabled:\napiDisabled:\n  defaultRule:\n    variation: enabled\n")
 
-	reportApiConfigFallback(capturingLogger(&logs), cfg, nil)
+	reportApiConfigFallback(capturingLogger(&logs), true, cfg, nil)
 
 	require.Len(t, logs, 1)
 	assert.Equal(t, SignalApiEnabledMissing, logs[0]["msg"],

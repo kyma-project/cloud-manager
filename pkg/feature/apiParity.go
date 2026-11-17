@@ -213,9 +213,6 @@ func extractParitySeedValues(configBytes []byte) (globalAccounts []string, shoot
 		return nil, nil, unmarshalErr
 	}
 
-	gaRe := regexp.MustCompile(`globalAccount\s*==\s*"([^"]+)"`)
-	shRe := regexp.MustCompile(`shoot\s*==\s*"([^"]+)"`)
-
 	gaSet := map[string]struct{}{}
 	shSet := map[string]struct{}{}
 
@@ -241,11 +238,11 @@ func extractParitySeedValues(configBytes []byte) (globalAccounts []string, shoot
 			if !ok {
 				continue
 			}
-			for _, m := range gaRe.FindAllStringSubmatch(query, -1) {
-				gaSet[m[1]] = struct{}{}
+			for _, v := range extractQueryLiterals(query, "globalAccount") {
+				gaSet[v] = struct{}{}
 			}
-			for _, m := range shRe.FindAllStringSubmatch(query, -1) {
-				shSet[m[1]] = struct{}{}
+			for _, v := range extractQueryLiterals(query, "shoot") {
+				shSet[v] = struct{}{}
 			}
 		}
 	}
@@ -257,6 +254,33 @@ func extractParitySeedValues(configBytes []byte) (globalAccounts []string, shoot
 		shoots = append(shoots, sh)
 	}
 	return globalAccounts, shoots, nil
+}
+
+// quotedLiteral matches a single- or double-quoted string literal, capturing its value.
+var quotedLiteral = regexp.MustCompile(`["']([^"']+)["']`)
+
+// extractQueryLiterals returns every string literal a targeting-rule query associates
+// with key, across the query syntaxes GoFF accepts: `key == "v"`, `key == 'v'`, the
+// reversed `"v" == key`, and set membership `key in ["v1", "v2"]`. Matching any of these
+// keeps the seeded corpus from missing an account/shoot a rule actually targets.
+func extractQueryLiterals(query, key string) []string {
+	var out []string
+	eq := regexp.MustCompile(key + `\s*==\s*["']([^"']+)["']`)
+	rev := regexp.MustCompile(`["']([^"']+)["']\s*==\s*` + key)
+	inList := regexp.MustCompile(key + `\s+in\s+\[([^\]]*)\]`)
+
+	for _, m := range eq.FindAllStringSubmatch(query, -1) {
+		out = append(out, m[1])
+	}
+	for _, m := range rev.FindAllStringSubmatch(query, -1) {
+		out = append(out, m[1])
+	}
+	for _, m := range inList.FindAllStringSubmatch(query, -1) {
+		for _, lit := range quotedLiteral.FindAllStringSubmatch(m[1], -1) {
+			out = append(out, lit[1])
+		}
+	}
+	return out
 }
 
 // dedupeStrings returns a deduplicated slice starting with seed followed by

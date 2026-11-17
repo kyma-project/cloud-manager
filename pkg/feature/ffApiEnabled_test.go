@@ -245,16 +245,16 @@ func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 			c:             ContextBuilderFromCtx(ctx).Feature(types.FeatureUnknown).Build(ctx),
 			mustBeEnabled: true,
 		},
-		// Trial cannot disable foundation or unknown — they short-circuit before the flag.
+		// Trial restores the legacy "disable all on trial" stance for foundation/unknown:
+		// they fall through to the flag on trial (parity still holds, both not-enabled).
+		// The bootstrap kind-group stays exempt — covered in TestApiEnabledTrialGatesFoundation.
 		{
-			name:          "foundation is always enabled even on trial",
-			c:             ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureFoundation).Build(ctx),
-			mustBeEnabled: true,
+			name: "foundation falls through to the flag on trial",
+			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureFoundation).Build(ctx),
 		},
 		{
-			name:          "unknown is always enabled even on trial",
-			c:             ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureUnknown).Build(ctx),
-			mustBeEnabled: true,
+			name: "unknown falls through to the flag on trial",
+			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureUnknown).Build(ctx),
 		},
 	}
 
@@ -393,4 +393,28 @@ func TestApiEnabledAlwaysOnIndependentOfConfig(t *testing.T) {
 		"FeatureUnknown must be enabled even with no apiEnabled block in config")
 	assert.False(t, ApiDisabled.Value(unknownCtx),
 		"ApiDisabled must be false for FeatureUnknown even with no apiEnabled block in config")
+}
+
+// TestApiEnabledTrialGatesFoundation proves the trial exception to the always-on carve-out:
+// on a trial SKR, foundation and unknown fall through to the flag (which disables all on
+// trial), while off trial they stay always-on and the bootstrap kind-group stays enabled
+// even on trial. The matrix parity check cannot catch this (both flags stay equal), so the
+// assertions here are absolute.
+func TestApiEnabledTrialGatesFoundation(t *testing.T) {
+	ctx := t.Context()
+
+	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiEnabled.yaml"))
+	assert.NoError(t, err)
+
+	sch := commonscheme.SkrScheme
+
+	foundationTrial := ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureFoundation).Build(ctx)
+	foundationNonTrial := ContextBuilderFromCtx(ctx).Feature(types.FeatureFoundation).Build(ctx)
+	unknownTrial := ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureUnknown).Build(ctx)
+	bootstrapTrial := ContextBuilderFromCtx(ctx).BrokerPlan("trial").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx)
+
+	assert.False(t, ApiEnabled.Value(foundationTrial), "foundation must be disabled on trial (trial-gating restored)")
+	assert.False(t, ApiEnabled.Value(unknownTrial), "unknown must be disabled on trial")
+	assert.True(t, ApiEnabled.Value(foundationNonTrial), "foundation must stay always-on off trial")
+	assert.True(t, ApiEnabled.Value(bootstrapTrial), "the bootstrap kind-group must stay enabled even on trial")
 }

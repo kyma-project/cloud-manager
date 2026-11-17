@@ -1,10 +1,15 @@
 package feature
 
 import (
+	"fmt"
 	"os"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/go-logr/logr"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -136,4 +141,71 @@ func TestParityHoldsForEmbeddedEdge(t *testing.T) {
 	divergences, err := CheckApiParity(t.Context(), "ff_edge.yaml")
 	require.NoError(t, err)
 	assert.Empty(t, divergences, "ff_edge.yaml must have zero parity divergences: %v", divergences)
+}
+
+// TestParityCorpusCoversEveryCrdFeature guards against a new feature silently dropping out
+// of parity coverage: every FeatureName an SKR CRD reports via SpecificToFeature must be a
+// dimension in the parity corpus. Otherwise a divergence for that feature would never be
+// built and the parity gate (and ffparity CLI) would give false assurance for exactly the
+// newest, least-reviewed rules.
+func TestParityCorpusCoversEveryCrdFeature(t *testing.T) {
+	dims, err := buildParityDimensions([]byte("{}"))
+	require.NoError(t, err)
+
+	corpusFeatures := map[string]struct{}{}
+	for _, f := range dims.Features {
+		corpusFeatures[f] = struct{}{}
+	}
+
+	knownTypes := commonscheme.SkrScheme.KnownTypes(cloudresourcesv1beta1.GroupVersion)
+	var missing []string
+	for kind, rt := range knownTypes {
+		pkg := rt.PkgPath()
+		if pkg == "" && rt.Kind().String() == "ptr" {
+			pkg = rt.Elem().PkgPath()
+		}
+		if pkg != cloudResourcesPkgPath || strings.HasSuffix(kind, "List") {
+			continue
+		}
+		obj, err := commonscheme.SkrScheme.New(cloudresourcesv1beta1.GroupVersion.WithKind(kind))
+		if err != nil {
+			continue
+		}
+		fa, ok := obj.(types.FeatureAwareObject)
+		if !ok {
+			continue
+		}
+		f := fa.SpecificToFeature()
+		if _, found := corpusFeatures[f]; !found {
+			missing = append(missing, fmt.Sprintf("%s -> %q", kind, f))
+		}
+	}
+	sort.Strings(missing)
+	assert.Empty(t, missing,
+		"these CRD features are absent from the parity corpus (add them to buildParityDimensions):\n%s",
+		strings.Join(missing, "\n"))
+}
+
+// TestExtractQueryLiterals proves the seed extractor covers every GoFF query syntax that
+// can target an account/shoot: ==, single-quoted, reversed order, and set membership.
+// A syntax it misses would leave that account/shoot out of the corpus, so a divergence
+// there would escape the parity gate.
+func TestExtractQueryLiterals(t *testing.T) {
+	cases := []struct {
+		query string
+		key   string
+		want  []string
+	}{
+		{`globalAccount == "a1"`, "globalAccount", []string{"a1"}},
+		{`globalAccount == 'a2'`, "globalAccount", []string{"a2"}},
+		{`"a3" == globalAccount`, "globalAccount", []string{"a3"}},
+		{`globalAccount in ["a4", "a5"]`, "globalAccount", []string{"a4", "a5"}},
+		{`shoot in ['s1','s2']`, "shoot", []string{"s1", "s2"}},
+		{`landscape == "stage" and globalAccount == "a6"`, "globalAccount", []string{"a6"}},
+		{`feature == "nfs"`, "globalAccount", nil},
+	}
+	for _, c := range cases {
+		assert.ElementsMatch(t, c.want, extractQueryLiterals(c.query, c.key),
+			"query %q key %q", c.query, c.key)
+	}
 }
