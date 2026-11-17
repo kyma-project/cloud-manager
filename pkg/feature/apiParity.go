@@ -70,7 +70,10 @@ func CheckApiParity(ctx context.Context, configPath string) ([]Divergence, error
 		return nil, fmt.Errorf("initialising provider from %s: %w", configPath, err)
 	}
 
-	dims := buildParityDimensions(configBytes)
+	dims, err := buildParityDimensions(configBytes)
+	if err != nil {
+		return nil, fmt.Errorf("parsing config %s: %w", configPath, err)
+	}
 	corpus := buildParityCorpus(ctx, dims)
 	return evaluateParity(corpus), nil
 }
@@ -80,7 +83,9 @@ func CheckApiParity(ctx context.Context, configPath string) ([]Divergence, error
 // FeatureFoundation and FeatureUnknown are hardcoded always-on in code (independent
 // of config); the corpus includes them so the checker confirms parity trivially holds
 // for them on every run — they will never produce a divergence.
-func buildParityDimensions(configBytes []byte) parityCorpusDimensions {
+// A parse failure in the seed-extraction step is returned as an error so callers
+// treat a malformed config as a hard error rather than a zero-divergence pass.
+func buildParityDimensions(configBytes []byte) (parityCorpusDimensions, error) {
 	features := []string{
 		types.FeatureFoundation, // foundational resources (always hardcoded on) — parity trivially holds
 		types.FeatureUnknown,    // hardcoded always-on; parity trivially holds
@@ -115,7 +120,10 @@ func buildParityDimensions(configBytes []byte) parityCorpusDimensions {
 		types.LandscapeProd,
 	}
 
-	seededAccounts, seededShoots := extractParitySeedValues(configBytes)
+	seededAccounts, seededShoots, err := extractParitySeedValues(configBytes)
+	if err != nil {
+		return parityCorpusDimensions{}, fmt.Errorf("parsing config: %w", err)
+	}
 
 	return parityCorpusDimensions{
 		Features:    features,
@@ -125,7 +133,7 @@ func buildParityDimensions(configBytes []byte) parityCorpusDimensions {
 		// Always lead with "" so no-account/no-shoot rows are always present.
 		GlobalAccounts: dedupeStrings("", seededAccounts...),
 		Shoots:         dedupeStrings("", seededShoots...),
-	}
+	}, nil
 }
 
 // buildParityCorpus returns the cross-product of all dimensions as a slice of
@@ -197,10 +205,12 @@ func evaluateParity(corpus []parityCorpusEntry) []Divergence {
 // globalAccount and shoot string literal found in targeting-rule queries. This
 // ensures that account- and shoot-targeted rules are exercised by the corpus:
 // a rule targeting an account absent from the corpus would never be hit.
-func extractParitySeedValues(configBytes []byte) (globalAccounts []string, shoots []string) {
+// An unmarshal failure is returned as an error so callers can distinguish a
+// malformed config from a valid-but-empty one.
+func extractParitySeedValues(configBytes []byte) (globalAccounts []string, shoots []string, err error) {
 	var root map[string]interface{}
-	if err := yaml.Unmarshal(configBytes, &root); err != nil {
-		return nil, nil
+	if unmarshalErr := yaml.Unmarshal(configBytes, &root); unmarshalErr != nil {
+		return nil, nil, unmarshalErr
 	}
 
 	gaRe := regexp.MustCompile(`globalAccount\s*==\s*"([^"]+)"`)
@@ -246,7 +256,7 @@ func extractParitySeedValues(configBytes []byte) (globalAccounts []string, shoot
 	for sh := range shSet {
 		shoots = append(shoots, sh)
 	}
-	return globalAccounts, shoots
+	return globalAccounts, shoots, nil
 }
 
 // dedupeStrings returns a deduplicated slice starting with seed followed by

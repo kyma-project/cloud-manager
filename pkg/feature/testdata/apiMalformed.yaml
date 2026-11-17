@@ -1,0 +1,4 @@
+# apiMalformed.yaml — intentionally invalid YAML to verify that CheckApiParity
+# returns a parse error rather than a zero-divergence pass (AC4 hard-error requirement).
+apiDisabled: {
+  unclosed bracket
