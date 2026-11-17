@@ -1,0 +1,264 @@
+package feature
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"regexp"
+
+	"github.com/go-logr/logr"
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/feature/types"
+	"gopkg.in/yaml.v3"
+)
+
+// Divergence records a context where ApiEnabled.Value(ctx) != !ApiDisabled.Value(ctx).
+type Divergence struct {
+	Feature       string
+	Provider      string
+	BrokerPlan    string
+	Landscape     string
+	GlobalAccount string
+	Shoot         string
+	ApiEnabled    bool
+	Expected      bool // expected == !ApiDisabled decision
+}
+
+func (d Divergence) String() string {
+	return fmt.Sprintf(
+		"feature=%q provider=%q brokerPlan=%q landscape=%q globalAccount=%q shoot=%q apiEnabled=%v expected=%v",
+		d.Feature, d.Provider, d.BrokerPlan, d.Landscape, d.GlobalAccount, d.Shoot,
+		d.ApiEnabled, d.Expected,
+	)
+}
+
+// parityCorpusDimensions holds the seeded dimension slices used to build the cross-product corpus.
+type parityCorpusDimensions struct {
+	Features       []string
+	Providers      []string
+	BrokerPlans    []string
+	Landscapes     []string
+	GlobalAccounts []string
+	Shoots         []string
+}
+
+// parityCorpusEntry carries both the built context and its dimension values so
+// divergence reports are self-documenting without re-reading the context.
+type parityCorpusEntry struct {
+	ctx           context.Context
+	Feature       string
+	Provider      string
+	BrokerPlan    string
+	Landscape     string
+	GlobalAccount string
+	Shoot         string
+}
+
+// CheckApiParity reads the feature-flag config at configPath, initialises the
+// package-global feature provider, and returns the set of evaluation contexts
+// where ApiEnabled.Value(ctx) disagrees with !ApiDisabled.Value(ctx).
+//
+// It is the primary entrypoint for parity validation; it is reused by the CLI
+// (cmd/ffparity) and Slice 4's consistency check.
+func CheckApiParity(ctx context.Context, configPath string) ([]Divergence, error) {
+	configBytes, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("reading config %s: %w", configPath, err)
+	}
+
+	if err := Initialize(ctx, logr.Discard(), WithFile(configPath)); err != nil {
+		return nil, fmt.Errorf("initialising provider from %s: %w", configPath, err)
+	}
+
+	dims := buildParityDimensions(configBytes)
+	corpus := buildParityCorpus(ctx, dims)
+	return evaluateParity(corpus), nil
+}
+
+// buildParityDimensions constructs dimension slices for the corpus, including
+// globalAccount and shoot values self-seeded from the config's targeting queries.
+// FeatureFoundation and FeatureUnknown are hardcoded always-on in code (independent
+// of config); the corpus includes them so the checker confirms parity trivially holds
+// for them on every run — they will never produce a divergence.
+func buildParityDimensions(configBytes []byte) parityCorpusDimensions {
+	features := []string{
+		types.FeatureFoundation, // foundational resources (always hardcoded on) — parity trivially holds
+		types.FeatureUnknown,    // hardcoded always-on; parity trivially holds
+		types.FeatureCertificate,
+		types.FeatureNfs,
+		types.FeatureNfsBackup,
+		types.FeaturePeering,
+		types.FeatureRedis,
+		types.FeatureRedisCluster,
+		types.FeatureAzureManagedRedis,
+		types.FeatureVpcDnsLink,
+		types.FeatureWAF,
+	}
+
+	providers := []string{
+		"", // no provider set
+		string(cloudcontrolv1beta1.ProviderAws),
+		string(cloudcontrolv1beta1.ProviderGCP),
+		string(cloudcontrolv1beta1.ProviderAzure),
+		string(cloudcontrolv1beta1.ProviderOpenStack),
+		string(cloudcontrolv1beta1.ProviderAlicloud),
+	}
+
+	brokerPlans := []string{
+		"trial",
+		"", // non-trial sentinel: empty string means standard/non-trial plan
+	}
+
+	landscapes := []string{
+		types.LandscapeDev,
+		types.LandscapeStage,
+		types.LandscapeProd,
+	}
+
+	seededAccounts, seededShoots := extractParitySeedValues(configBytes)
+
+	return parityCorpusDimensions{
+		Features:    features,
+		Providers:   providers,
+		BrokerPlans: brokerPlans,
+		Landscapes:  landscapes,
+		// Always lead with "" so no-account/no-shoot rows are always present.
+		GlobalAccounts: dedupeStrings("", seededAccounts...),
+		Shoots:         dedupeStrings("", seededShoots...),
+	}
+}
+
+// buildParityCorpus returns the cross-product of all dimensions as a slice of
+// parityCorpusEntry values. Corpus growth requires only changes to this function.
+func buildParityCorpus(baseCtx context.Context, dims parityCorpusDimensions) []parityCorpusEntry {
+	var corpus []parityCorpusEntry
+	for _, f := range dims.Features {
+		for _, p := range dims.Providers {
+			for _, bp := range dims.BrokerPlans {
+				for _, l := range dims.Landscapes {
+					for _, ga := range dims.GlobalAccounts {
+						for _, sh := range dims.Shoots {
+							b := ContextBuilderFromCtx(baseCtx).Feature(f).Landscape(l)
+							if p != "" {
+								b = b.Provider(p)
+							}
+							if bp != "" {
+								b = b.BrokerPlan(bp)
+							}
+							if ga != "" {
+								b = b.GlobalAccount(ga)
+							}
+							if sh != "" {
+								b = b.Shoot(sh)
+							}
+							corpus = append(corpus, parityCorpusEntry{
+								ctx:           b.Build(baseCtx),
+								Feature:       f,
+								Provider:      p,
+								BrokerPlan:    bp,
+								Landscape:     l,
+								GlobalAccount: ga,
+								Shoot:         sh,
+							})
+						}
+					}
+				}
+			}
+		}
+	}
+	return corpus
+}
+
+// evaluateParity compares ApiEnabled and !ApiDisabled for each corpus entry and
+// collects entries where they disagree. Separated from corpus generation so each
+// concern is independently testable and growable.
+func evaluateParity(corpus []parityCorpusEntry) []Divergence {
+	var divergences []Divergence
+	for _, e := range corpus {
+		enabled := ApiEnabled.Value(e.ctx)
+		expected := !ApiDisabled.Value(e.ctx)
+		if enabled != expected {
+			divergences = append(divergences, Divergence{
+				Feature:       e.Feature,
+				Provider:      e.Provider,
+				BrokerPlan:    e.BrokerPlan,
+				Landscape:     e.Landscape,
+				GlobalAccount: e.GlobalAccount,
+				Shoot:         e.Shoot,
+				ApiEnabled:    enabled,
+				Expected:      expected,
+			})
+		}
+	}
+	return divergences
+}
+
+// extractParitySeedValues parses the raw YAML config and returns every distinct
+// globalAccount and shoot string literal found in targeting-rule queries. This
+// ensures that account- and shoot-targeted rules are exercised by the corpus:
+// a rule targeting an account absent from the corpus would never be hit.
+func extractParitySeedValues(configBytes []byte) (globalAccounts []string, shoots []string) {
+	var root map[string]interface{}
+	if err := yaml.Unmarshal(configBytes, &root); err != nil {
+		return nil, nil
+	}
+
+	gaRe := regexp.MustCompile(`globalAccount\s*==\s*"([^"]+)"`)
+	shRe := regexp.MustCompile(`shoot\s*==\s*"([^"]+)"`)
+
+	gaSet := map[string]struct{}{}
+	shSet := map[string]struct{}{}
+
+	for _, flagVal := range root {
+		flagMap, ok := flagVal.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		targeting, ok := flagMap["targeting"]
+		if !ok {
+			continue
+		}
+		rules, ok := targeting.([]interface{})
+		if !ok {
+			continue
+		}
+		for _, rule := range rules {
+			ruleMap, ok := rule.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			query, ok := ruleMap["query"].(string)
+			if !ok {
+				continue
+			}
+			for _, m := range gaRe.FindAllStringSubmatch(query, -1) {
+				gaSet[m[1]] = struct{}{}
+			}
+			for _, m := range shRe.FindAllStringSubmatch(query, -1) {
+				shSet[m[1]] = struct{}{}
+			}
+		}
+	}
+
+	for ga := range gaSet {
+		globalAccounts = append(globalAccounts, ga)
+	}
+	for sh := range shSet {
+		shoots = append(shoots, sh)
+	}
+	return globalAccounts, shoots
+}
+
+// dedupeStrings returns a deduplicated slice starting with seed followed by
+// any extra values not already present.
+func dedupeStrings(seed string, extra ...string) []string {
+	seen := map[string]struct{}{seed: {}}
+	result := []string{seed}
+	for _, s := range extra {
+		if _, ok := seen[s]; !ok {
+			seen[s] = struct{}{}
+			result = append(result, s)
+		}
+	}
+	return result
+}

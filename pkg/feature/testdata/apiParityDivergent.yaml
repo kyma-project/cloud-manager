@@ -1,0 +1,44 @@
+
+# apiParityDivergent.yaml intentionally breaks parity so tests can assert divergence detection.
+#
+# apiDisabled is identical to testdata/apiEnabled.yaml (complete, with stage-exemption).
+# apiEnabled is deliberately broken: the stage-exemption for 6034adc9 is absent — this causes
+# divergence for configurable features (nfsBackup/peering/redis) on stage with that account.
+# FeatureFoundation and FeatureUnknown are hardcoded always-on in code and are never consulted
+# against the config, so omitting them from the enable list has no effect on divergence detection.
+
+apiDisabled:
+  variations:
+    enabled: false
+    disabled: true
+  targeting:
+    - name: All APIs are disabled for trial SKR
+      query: brokerPlan == "trial"
+      variation: disabled
+    - name: Enabled on stage for global account 6034adc9-3441-494c-b438-a0eba4c5045a
+      query: landscape == "stage" and globalAccount == "6034adc9-3441-494c-b438-a0eba4c5045a"
+      variation: enabled
+    - name: Disabled APIs on stage and prod
+      query: feature in ["nfsBackup", "peering", "redis"] and landscape != "dev"
+      variation: disabled
+  defaultRule:
+    variation: enabled
+
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: All APIs are disabled for trial SKR
+      query: brokerPlan == "trial"
+      variation: disabled
+    - name: Disabled APIs on stage and prod
+      query: feature in ["nfsBackup", "peering", "redis"] and landscape != "dev"
+      variation: disabled
+    # stage-exemption for 6034adc9 is intentionally absent — divergence for that account on stage
+    # Enable named features only — "" and "unknown" intentionally omitted (replicates Defect 1)
+    - name: Enable named features only
+      query: feature in ["certificate", "nfs", "nfsBackup", "peering", "redis", "rediscluster", "azureManagedRedis", "vpcdnslink", "waf"]
+      variation: enabled
+  defaultRule:
+    variation: disabled
