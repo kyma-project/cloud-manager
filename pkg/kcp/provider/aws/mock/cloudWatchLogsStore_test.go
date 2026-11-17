@@ -43,7 +43,7 @@ func TestCloudWatchLogsStore_Lifecycle(t *testing.T) {
 
 	// --- Describe by prefix ---
 	out, err := store.DescribeLogGroups(ctx, &cloudwatchlogs.DescribeLogGroupsInput{
-		LogGroupNamePrefix: ptr.To("my-"),
+		LogGroupNamePrefix: new("my-"),
 	})
 	require.NoError(t, err)
 	require.Len(t, out.LogGroups, 1)
@@ -52,7 +52,7 @@ func TestCloudWatchLogsStore_Lifecycle(t *testing.T) {
 
 	// --- Describe by pattern (substring) ---
 	out, err = store.DescribeLogGroups(ctx, &cloudwatchlogs.DescribeLogGroupsInput{
-		LogGroupNamePattern: ptr.To("log-group"),
+		LogGroupNamePattern: new("log-group"),
 	})
 	require.NoError(t, err)
 	require.Len(t, out.LogGroups, 1)
@@ -73,40 +73,40 @@ func TestCloudWatchLogsStore_Lifecycle(t *testing.T) {
 
 	// --- Describe with non-matching prefix returns nothing ---
 	out, err = store.DescribeLogGroups(ctx, &cloudwatchlogs.DescribeLogGroupsInput{
-		LogGroupNamePrefix: ptr.To("other-"),
+		LogGroupNamePrefix: new("other-"),
 	})
 	require.NoError(t, err)
 	assert.Empty(t, out.LogGroups)
 
 	// --- List tags (initial tag set from creation) ---
 	tagsOut, err := store.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{
-		ResourceArn: ptr.To(expectedArn),
+		ResourceArn: new(expectedArn),
 	})
 	require.NoError(t, err)
 	assert.Equal(t, map[string]string{"env": "test"}, tagsOut.Tags)
 
 	// --- TagResource: add more tags ---
 	_, err = store.TagResource(ctx, &cloudwatchlogs.TagResourceInput{
-		ResourceArn: ptr.To(expectedArn),
+		ResourceArn: new(expectedArn),
 		Tags:        map[string]string{"owner": "cloud-manager", "env": "prod"},
 	})
 	require.NoError(t, err)
 
 	tagsOut, err = store.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{
-		ResourceArn: ptr.To(expectedArn),
+		ResourceArn: new(expectedArn),
 	})
 	require.NoError(t, err)
 	assert.Equal(t, map[string]string{"env": "prod", "owner": "cloud-manager"}, tagsOut.Tags)
 
 	// --- UntagResource: remove one tag ---
 	_, err = store.UntagResource(ctx, &cloudwatchlogs.UntagResourceInput{
-		ResourceArn: ptr.To(expectedArn),
+		ResourceArn: new(expectedArn),
 		TagKeys:     []string{"owner"},
 	})
 	require.NoError(t, err)
 
 	tagsOut, err = store.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{
-		ResourceArn: ptr.To(expectedArn),
+		ResourceArn: new(expectedArn),
 	})
 	require.NoError(t, err)
 	assert.Equal(t, map[string]string{"env": "prod"}, tagsOut.Tags)
@@ -173,7 +173,7 @@ func TestCloudWatchLogsStore_SetLogGroupError(t *testing.T) {
 		s.SetLogGroupError(lgArn, sentinel)
 
 		_, err := s.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{
-			ResourceArn: ptr.To(lgArn),
+			ResourceArn: new(lgArn),
 		})
 		assert.ErrorIs(t, err, sentinel)
 	})
@@ -183,7 +183,7 @@ func TestCloudWatchLogsStore_SetLogGroupError(t *testing.T) {
 		s.SetLogGroupError(lgArn, sentinel)
 
 		_, err := s.TagResource(ctx, &cloudwatchlogs.TagResourceInput{
-			ResourceArn: ptr.To(lgArn),
+			ResourceArn: new(lgArn),
 			Tags:        map[string]string{"k": "v"},
 		})
 		assert.ErrorIs(t, err, sentinel)
@@ -194,7 +194,7 @@ func TestCloudWatchLogsStore_SetLogGroupError(t *testing.T) {
 		s.SetLogGroupError(lgArn, sentinel)
 
 		_, err := s.UntagResource(ctx, &cloudwatchlogs.UntagResourceInput{
-			ResourceArn: ptr.To(lgArn),
+			ResourceArn: new(lgArn),
 			TagKeys:     []string{"k"},
 		})
 		assert.ErrorIs(t, err, sentinel)
@@ -206,7 +206,7 @@ func TestCloudWatchLogsStore_SetLogGroupError(t *testing.T) {
 
 		// Confirm it's broken first.
 		_, err := s.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{
-			ResourceArn: ptr.To(lgArn),
+			ResourceArn: new(lgArn),
 		})
 		require.ErrorIs(t, err, sentinel)
 
@@ -214,7 +214,7 @@ func TestCloudWatchLogsStore_SetLogGroupError(t *testing.T) {
 		s.SetLogGroupError(lgArn, nil)
 
 		_, err = s.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{
-			ResourceArn: ptr.To(lgArn),
+			ResourceArn: new(lgArn),
 		})
 		assert.NoError(t, err)
 	})
