@@ -34,6 +34,7 @@ func (t *testNfsBackupObj) SpecificToFeature() featuretypes.FeatureName {
 // fakeSkrManager satisfies skrmanager.SkrManager for the methods runner.go calls.
 // Any unimplemented method from the embedded manager.Manager will panic — a test
 // that triggers one of those methods needs a new override.
+// double-waiver: B1 — real SkrManager holds a live controller-runtime manager and Kubernetes cluster connection
 type fakeSkrManager struct {
 	manager.Manager // nil — panics on unimplemented calls
 	scheme          *k8sruntime.Scheme
@@ -61,6 +62,7 @@ func (n *noopFieldIndexer) IndexField(_ context.Context, _ client.Object, _ stri
 
 // noopReconcilerFactory satisfies registry.Builder.WithFactory — never called in tests
 // because SetupWithManager is only reached in the Starting path.
+// double-waiver: B1 — real reconciler factory wires controllers requiring a live controller-runtime manager
 type noopReconcilerFactory struct{}
 
 func (f *noopReconcilerFactory) New(_ reconcile2.ReconcilerArguments) ctrlreconcile.Reconciler {
@@ -69,6 +71,7 @@ func (f *noopReconcilerFactory) New(_ reconcile2.ReconcilerArguments) ctrlreconc
 
 // capturingStatusSaver records the SkrStatus pointer passed to Save so tests can
 // inspect its handles after Run returns.
+// double-waiver: B1 — real SkrStatusSaver patches to the KCP cluster via a live k8s client
 type capturingStatusSaver struct {
 	captured *SkrStatus
 }
@@ -110,8 +113,10 @@ func TestRunnerGuardReadsApiEnabled(t *testing.T) {
 	require.NoError(t, feature.Initialize(context.Background(), logr.Discard(),
 		feature.WithFile("testdata/apiEnabledNonParity.yaml")))
 	t.Cleanup(func() {
-		_ = feature.Initialize(context.Background(), logr.Discard(),
-			feature.WithFile("testdata/ffAllEnabled.yaml"))
+		if err := feature.Initialize(context.Background(), logr.Discard(),
+			feature.WithFile("testdata/ffAllEnabled.yaml")); err != nil {
+			t.Errorf("cleanup: restore ffAllEnabled.yaml: %v", err)
+		}
 	})
 
 	reg := newTestRegistryWithIndexerAndBuilder()
@@ -135,6 +140,10 @@ func TestRunnerGuardReadsApiEnabled(t *testing.T) {
 // An indexer-only registry is used so the test never reaches SetupWithManager,
 // which requires a real controller-runtime manager.
 func TestRunnerIndexerStartsWhenApiEnabled(t *testing.T) {
+	// Self-contained: do not rely on TestMain's global provider surviving other tests.
+	require.NoError(t, feature.Initialize(context.Background(), logr.Discard(),
+		feature.WithFile("testdata/ffAllEnabled.yaml")))
+
 	reg := newTestIndexerOnlyRegistry()
 	saver := &capturingStatusSaver{}
 	runner := NewSkrRunner(reg, nil, saver, "kyma-test")

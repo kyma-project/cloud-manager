@@ -149,23 +149,45 @@ func TestInstaller(t *testing.T) {
 
 	// aws_apiNotEnabled uses the non-parity fixture (apiEnabled=false, apiDisabled=false).
 	// The new guard feature.ApiEnabled.Value() = false → ApiNotEnabled.
-	// The legacy guard !feature.ApiDisabled.Value() = !false = true → Starting.
+	// The legacy guard !feature.ApiDisabled.Value() = !false = true → Creating.
 	// Recording "ApiNotEnabled" proves the installer reads apiEnabled, not !apiDisabled.
+	//
+	// Every feature-tagged AWS CRD records ApiNotEnabled; iprange (FeatureFoundation)
+	// stays Creating via the always-on carve-out (isAlwaysEnabledApi). Asserting the full
+	// manifest with the Unchecked() guard (via run) proves no CRD leaks through the gate
+	// and that the foundation carve-out holds while every feature API goes dark.
 	t.Run("aws_apiNotEnabled", func(t *testing.T) {
 		require.NoError(t, feature.Initialize(context.Background(), logr.Discard(),
 			feature.WithFile("testdata/apiEnabledNonParity.yaml")))
 		t.Cleanup(func() {
-			_ = feature.Initialize(context.Background(), logr.Discard(),
-				feature.WithFile("testdata/ffAllEnabled.yaml"))
+			if err := feature.Initialize(context.Background(), logr.Discard(),
+				feature.WithFile("testdata/ffAllEnabled.yaml")); err != nil {
+				t.Errorf("cleanup: restore ffAllEnabled.yaml: %v", err)
+			}
 		})
 
-		skrStatus, instlr, _, clstr := prepare(context.Background())
-		require.NoError(t, instlr.Handle(context.Background(), string(cloudcontrolv1beta1.ProviderAws), clstr))
-
-		// Success() is always called after ApiNotEnabled() (only errors skip it), so ok=true.
-		// The discriminating assertion is Outcomes: the old guard would record "Creating" here.
-		NewSkrStatusChecker(skrStatus).InstallerManifest().CheckAll(t, []SkrStatusTestCase{
+		run(context.Background(), t, cloudcontrolv1beta1.ProviderAws, []SkrStatusTestCase{
+			{"awsnfsbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"ApiNotEnabled"}},
 			{"awsnfsvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"ApiNotEnabled"}},
+			{"awsnfsvolumerestore.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"ApiNotEnabled"}},
+			{"awsnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"ApiNotEnabled"}},
+			{"awsrediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"ApiNotEnabled"}},
+			{"awsredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"ApiNotEnabled"}},
+			{"awsvpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"ApiNotEnabled"}},
+			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"Creating"}},
+			{"wafpolicy.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"ApiNotEnabled"}},
+			{"certificate.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormCrd, []string{"ApiNotEnabled"}},
+
+			{"awsnfsbackupschedule.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"ApiNotEnabled"}},
+			{"awsnfsvolumebackup.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"ApiNotEnabled"}},
+			{"awsnfsvolumerestore.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"ApiNotEnabled"}},
+			{"awsnfsvolume.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"ApiNotEnabled"}},
+			{"awsrediscluster.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"ApiNotEnabled"}},
+			{"awsredisinstance.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"ApiNotEnabled"}},
+			{"awsvpcpeering.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"ApiNotEnabled"}},
+			{"iprange.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"Creating"}},
+			{"wafpolicy.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"ApiNotEnabled"}},
+			{"certificate.cloud-resources.kyma-project.io", true, "InstallerManifest", KindFormBusola, []string{"ApiNotEnabled"}},
 		})
 	})
 }
