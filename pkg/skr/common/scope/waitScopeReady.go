@@ -37,10 +37,10 @@ func waitScopeReady(ctx context.Context, st composed.State) (error, context.Cont
 			})
 		}).
 		OnStatusChanged(composed.Log("Waiting Scope to become ready")).
-		OnSuccess(composed.RequeueAfter(rate.DefaultRegistry.Quick.When(state.Obj()))).
+		OnSuccess(composed.RequeueAfter(rate.Default.Quick.When(state.Obj()))).
 		OnFailure(
 			composed.Log(fmt.Sprintf("Error patching status of %T to set condition WaitingForDependency for Scope", state.Obj())),
-			composed.RequeueAfter(rate.DefaultRegistry.Quick.When(state.Obj())),
+			composed.RequeueAfter(rate.Default.Quick.When(state.Obj())),
 		).
 		Run(ctx, state.Cluster().K8sClient())
 }

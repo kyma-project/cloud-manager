@@ -20,7 +20,7 @@ func infraObserve(ctx context.Context, st composed.State) (error, context.Contex
 			MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
 				vpcNetwork.SetStatusProviderError(fmt.Sprintf("Error observing VPC: %s", err.Error()))
 			}).
-			OnSuccess(composed.RequeueAfter(rate.DefaultRegistry.Slow1s.When(state.ObjAsVpcNetwork()))).
+			OnSuccess(composed.RequeueAfter(rate.Default.Slow1s.When(state.ObjAsVpcNetwork()))).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 	if len(vpcArr) == 0 {
@@ -28,7 +28,7 @@ func infraObserve(ctx context.Context, st composed.State) (error, context.Contex
 			MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
 				vpcNetwork.SetStatusProviderError("VPC not found")
 			}).
-			OnSuccess(composed.RequeueAfter(rate.DefaultRegistry.Slow1s.When(state.ObjAsVpcNetwork()))).
+			OnSuccess(composed.RequeueAfter(rate.Default.Slow1s.When(state.ObjAsVpcNetwork()))).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
@@ -39,7 +39,7 @@ func infraObserve(ctx context.Context, st composed.State) (error, context.Contex
 			MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
 				vpcNetwork.SetStatusProviderError(fmt.Sprintf("Error observing internet gateway: %s", err.Error()))
 			}).
-			OnSuccess(composed.RequeueAfter(rate.DefaultRegistry.Slow1s.When(state.ObjAsVpcNetwork()))).
+			OnSuccess(composed.RequeueAfter(rate.Default.Slow1s.When(state.ObjAsVpcNetwork()))).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 	if len(igwArr) == 0 {
@@ -47,7 +47,7 @@ func infraObserve(ctx context.Context, st composed.State) (error, context.Contex
 			MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
 				vpcNetwork.SetStatusProviderError("Internet gateway not found")
 			}).
-			OnSuccess(composed.RequeueAfter(rate.DefaultRegistry.Slow1s.When(state.ObjAsVpcNetwork()))).
+			OnSuccess(composed.RequeueAfter(rate.Default.Slow1s.When(state.ObjAsVpcNetwork()))).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 

@@ -34,7 +34,7 @@ func genericDependencyLoad(ctx context.Context, dependencyObj client.Object, obj
 					Message:            fmt.Sprintf("%s %s is not found in namespace %q", kind, name, namespace),
 				})
 			}).
-			OnSuccess(composed.RequeueAfter(rate.DefaultRegistry.Slow10s.When(dependencyObj))).
+			OnSuccess(composed.RequeueAfter(rate.Default.Slow10s.When(dependencyObj))).
 			Run(ctx, c)
 	}
 
@@ -47,7 +47,7 @@ func genericDependencyLoad(ctx context.Context, dependencyObj client.Object, obj
 
 	if readyCond == nil || readyCond.Status == metav1.ConditionUnknown {
 		// a transient status, either will get the ready condition soon, or it's being processed, requeue
-		return composed.StopWithRequeueDelay(rate.DefaultRegistry.Slow1s.When(objReconciled)), ctx
+		return composed.StopWithRequeueDelay(rate.Default.Slow1s.When(objReconciled)), ctx
 	}
 
 	if readyCond.Status != metav1.ConditionTrue {
@@ -61,7 +61,7 @@ func genericDependencyLoad(ctx context.Context, dependencyObj client.Object, obj
 					Message:            fmt.Sprintf("%s %s is not ready", kind, name),
 				})
 			}).
-			OnSuccess(composed.RequeueAfter(rate.DefaultRegistry.Slow10s.When(objReconciled))).
+			OnSuccess(composed.RequeueAfter(rate.Default.Slow10s.When(objReconciled))).
 			Run(ctx, c)
 	}
 

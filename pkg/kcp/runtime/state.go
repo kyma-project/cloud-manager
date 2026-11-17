@@ -79,7 +79,7 @@ func (s *State) PatchStatusAnnotations(ctx context.Context, newStatus, newMessag
 		cloudcontrolv1beta1.RuntimeSecurityLastReconcileTime:            time.Now().Format(time.RFC3339),
 	})
 	if err != nil {
-		return composed.LogErrorAndReturn(err, fmt.Sprintf("Failed to patch Runtime status annotations to %s", newStatus), composed.StopWithRequeueDelay(rate.DefaultRegistry.Slow1s.When(s.Obj())), ctx)
+		return composed.LogErrorAndReturn(err, fmt.Sprintf("Failed to patch Runtime status annotations to %s", newStatus), composed.StopWithRequeueDelay(rate.Default.Slow1s.When(s.Obj())), ctx)
 	}
 
 	return nil, ctx

@@ -26,7 +26,7 @@ func nukeDeleteOld(ctx context.Context, st composed.State) (error, context.Conte
 
 	err := state.Cluster().K8sClient().Delete(ctx, state.ObjAsNuke())
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error deleting old Nuke", composed.StopWithRequeueDelay(rate.DefaultRegistry.Slow1s.When(state.ObjAsNuke())), ctx)
+		return composed.LogErrorAndReturn(err, "Error deleting old Nuke", composed.StopWithRequeueDelay(rate.Default.Slow1s.When(state.ObjAsNuke())), ctx)
 	}
 
 	return composed.StopAndForget, ctx

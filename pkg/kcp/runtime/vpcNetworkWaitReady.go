@@ -18,5 +18,5 @@ func vpcNetworkWaitReady(ctx context.Context, st composed.State) (error, context
 		return nil, ctx
 	}
 
-	return composed.StopWithRequeueDelay(rate.DefaultRegistry.Quick.When(state.vpcNetwork)), ctx
+	return composed.StopWithRequeueDelay(rate.Default.Quick.When(state.vpcNetwork)), ctx
 }

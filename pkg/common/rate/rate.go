@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var DefaultRegistry Registry
+var Default Registry
 
 func init() {
 	SetDefaultValues()
@@ -73,12 +73,12 @@ func NewRegistry(inTest bool) Registry {
 }
 
 func SetDefaultValues() {
-	DefaultRegistry = NewRegistry(false)
+	Default = NewRegistry(false)
 }
 
 // SetValuesForTests Use this in controller tests only to speed up requeues to fit default controller tests timeouts
 func SetValuesForTests() {
-	DefaultRegistry = NewRegistry(true)
+	Default = NewRegistry(true)
 }
 
 // RateLimiters

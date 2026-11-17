@@ -20,7 +20,7 @@ func infraObserve(ctx context.Context, st composed.State) (error, context.Contex
 			MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
 				vpcNetwork.SetStatusProviderError(fmt.Sprintf("Error observing resource group: %s", err.Error()))
 			}).
-			OnSuccess(composed.RequeueAfter(rate.DefaultRegistry.Slow1s.When(state.ObjAsVpcNetwork()))).
+			OnSuccess(composed.RequeueAfter(rate.Default.Slow1s.When(state.ObjAsVpcNetwork()))).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
@@ -31,7 +31,7 @@ func infraObserve(ctx context.Context, st composed.State) (error, context.Contex
 			MutateStatus(func(vpcNetwork *cloudcontrolv1beta1.VpcNetwork) {
 				vpcNetwork.SetStatusProviderError(fmt.Sprintf("Error observing virtual network: %s", err.Error()))
 			}).
-			OnSuccess(composed.RequeueAfter(rate.DefaultRegistry.Slow1s.When(state.ObjAsVpcNetwork()))).
+			OnSuccess(composed.RequeueAfter(rate.Default.Slow1s.When(state.ObjAsVpcNetwork()))).
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
