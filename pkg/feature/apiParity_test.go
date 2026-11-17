@@ -22,7 +22,8 @@ func TestParityHolds(t *testing.T) {
 
 // TestParityEquivalentToLegacy iterates the full corpus derived from
 // testdata/apiEnabled.yaml and asserts !ApiDisabled == ApiEnabled for every
-// entry (AC7: both-code-paths-equivalent property).
+// entry and asserts !ApiDisabled == ApiEnabled for every entry
+// (the both-code-paths-equivalent property).
 func TestParityEquivalentToLegacy(t *testing.T) {
 	ctx := t.Context()
 
@@ -42,7 +43,7 @@ func TestParityEquivalentToLegacy(t *testing.T) {
 			enabled := ApiEnabled.Value(e.ctx)
 			notDisabled := !ApiDisabled.Value(e.ctx)
 			assert.Equal(t, notDisabled, enabled,
-				"AC7: !ApiDisabled must equal ApiEnabled for feature=%q provider=%q brokerPlan=%q landscape=%q globalAccount=%q shoot=%q",
+				"!ApiDisabled must equal ApiEnabled for feature=%q provider=%q brokerPlan=%q landscape=%q globalAccount=%q shoot=%q",
 				e.Feature, e.Provider, e.BrokerPlan, e.Landscape, e.GlobalAccount, e.Shoot)
 		})
 	}

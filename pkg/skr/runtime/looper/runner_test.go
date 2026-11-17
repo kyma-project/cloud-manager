@@ -32,9 +32,9 @@ func (t *testNfsBackupObj) SpecificToFeature() featuretypes.FeatureName {
 }
 
 // fakeSkrManager satisfies skrmanager.SkrManager for the methods runner.go calls.
+// Faked because the real one holds a live controller-runtime manager and cluster connection.
 // Any unimplemented method from the embedded manager.Manager will panic — a test
 // that triggers one of those methods needs a new override.
-// double-waiver: B1 — real SkrManager holds a live controller-runtime manager and Kubernetes cluster connection
 type fakeSkrManager struct {
 	manager.Manager // nil — panics on unimplemented calls
 	scheme          *k8sruntime.Scheme
@@ -61,8 +61,8 @@ func (n *noopFieldIndexer) IndexField(_ context.Context, _ client.Object, _ stri
 }
 
 // noopReconcilerFactory satisfies registry.Builder.WithFactory — never called in tests
-// because SetupWithManager is only reached in the Starting path.
-// double-waiver: B1 — real reconciler factory wires controllers requiring a live controller-runtime manager
+// because SetupWithManager is only reached in the Starting path. Faked because the real
+// factory wires controllers that need a live controller-runtime manager.
 type noopReconcilerFactory struct{}
 
 func (f *noopReconcilerFactory) New(_ reconcile2.ReconcilerArguments) ctrlreconcile.Reconciler {
@@ -70,8 +70,8 @@ func (f *noopReconcilerFactory) New(_ reconcile2.ReconcilerArguments) ctrlreconc
 }
 
 // capturingStatusSaver records the SkrStatus pointer passed to Save so tests can
-// inspect its handles after Run returns.
-// double-waiver: B1 — real SkrStatusSaver patches to the KCP cluster via a live k8s client
+// inspect its handles after Run returns. Faked because the real saver patches to the
+// KCP cluster via a live k8s client.
 type capturingStatusSaver struct {
 	captured *SkrStatus
 }

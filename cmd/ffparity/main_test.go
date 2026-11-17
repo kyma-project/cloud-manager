@@ -21,7 +21,7 @@ func TestRunDivergentConfig(t *testing.T) {
 }
 
 // TestRunNonexistentPath asserts that a missing config exits non-zero and does not
-// print PASS or any zero-divergence indicator (AC4: missing file must error).
+// print PASS or any zero-divergence indicator — a missing file must error.
 func TestRunNonexistentPath(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := run([]string{"ffparity", "/does/not/exist/ffparity_test_missing.yaml"}, &stdout, &stderr)
@@ -32,7 +32,7 @@ func TestRunNonexistentPath(t *testing.T) {
 }
 
 // TestRunMalformedConfig asserts that a malformed YAML config exits non-zero and
-// produces a parse-failure error (AC4: malformed config must error, not zero-divergence pass).
+// produces a parse-failure error — a malformed config must error, not zero-divergence pass.
 func TestRunMalformedConfig(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := run([]string{"ffparity", "../../pkg/feature/testdata/apiMalformed.yaml"}, &stdout, &stderr)

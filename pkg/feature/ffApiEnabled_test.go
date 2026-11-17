@@ -353,7 +353,7 @@ func TestApiEnabledEdgeParity(t *testing.T) {
 
 // TestApiEnabledSecureDefault verifies that when no apiEnabled block is present
 // in the config, ApiEnabled.Value falls back to false for ordinary features
-// while still returning true for the bootstrap kind-group (AC2).
+// while still returning true for the bootstrap kind-group.
 func TestApiEnabledSecureDefault(t *testing.T) {
 	ctx := t.Context()
 
