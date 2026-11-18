@@ -25,8 +25,9 @@ func statusProcessing(ctx context.Context, st composed.State) (error, context.Co
 
 	return sp.
 		MutateStatus(func(obj composed.ObjWithStatus) {
-			cr := obj.(*cloudresourcesv1beta1.CloudResources)
-			cr.Status.State = cloudresourcesv1beta1.StateProcessing
+			if sObj, ok := obj.(composed.ObjWithState); ok {
+				sObj.SetState(cloudresourcesv1beta1.StateProcessing)
+			}
 			meta.SetStatusCondition(obj.Conditions(), metav1.Condition{
 				Type:               cloudresourcesv1beta1.ConditionTypeReady,
 				Status:             metav1.ConditionUnknown,
