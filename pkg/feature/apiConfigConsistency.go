@@ -18,6 +18,17 @@ const (
 // the error-level log carries a non-nil error even though there is no underlying failure.
 var ErrApiConfigInconsistent = errors.New("feature-flag config inconsistent")
 
+// parseConfigBytes unmarshals raw YAML config bytes into a root map.
+// It returns an error on parse failure so callers can distinguish malformed
+// from empty configs.
+func parseConfigBytes(b []byte) (map[string]any, error) {
+	var root map[string]any
+	if err := yaml.Unmarshal(b, &root); err != nil {
+		return nil, err
+	}
+	return root, nil
+}
+
 // reportApiConfigFallback emits an error-level signal for each fail-closed condition at
 // startup. The authoritative "did we fall back to the secure default" decision is
 // providerLoaded — taken from the provider's own load state, not from configBytes — so a
@@ -32,8 +43,8 @@ func reportApiConfigFallback(logger logr.Logger, providerLoaded bool, configByte
 		if retrieveErr != nil {
 			return
 		}
-		var root map[string]any
-		if yaml.Unmarshal(configBytes, &root) == nil && apiDisabledOnly(root) {
+		root, err := parseConfigBytes(configBytes)
+		if err == nil && isApiDisabledOnly(root) {
 			logger.Error(ErrApiConfigInconsistent, SignalApiEnabledMissing)
 		}
 		return
@@ -44,8 +55,7 @@ func reportApiConfigFallback(logger logr.Logger, providerLoaded bool, configByte
 		logger.Error(retrieveErr, SignalConfigLoadFailure)
 		return
 	}
-	var root map[string]any
-	if err := yaml.Unmarshal(configBytes, &root); err != nil {
+	if _, err := parseConfigBytes(configBytes); err != nil {
 		logger.Error(err, SignalConfigParseFailure)
 		return
 	}
@@ -59,7 +69,7 @@ func reportApiConfigFallback(logger logr.Logger, providerLoaded bool, configByte
 // case where every untagged API silently goes dark. A present-but-empty apiEnabled key
 // (e.g. a partially-written config) counts as absent: it carries no rule, so untagged
 // APIs still go dark and the operator should be warned.
-func apiDisabledOnly(root map[string]any) bool {
+func isApiDisabledOnly(root map[string]any) bool {
 	if blockHasContent(root["apiEnabled"]) {
 		return false
 	}

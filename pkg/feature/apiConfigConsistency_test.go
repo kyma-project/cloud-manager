@@ -25,7 +25,7 @@ func capturingLogger(entries *[]map[string]any) logr.Logger {
 	}, funcr.Options{})
 }
 
-func msgs(entries []map[string]any) []any {
+func logMessages(entries []map[string]any) []any {
 	var out []any
 	for _, e := range entries {
 		out = append(out, e["msg"])
@@ -98,7 +98,7 @@ func TestReportApiConfigFallback_CleanConfig(t *testing.T) {
 
 	reportApiConfigFallback(capturingLogger(&logs), true, cfg, nil)
 
-	assert.Empty(t, logs, "a config with both apiEnabled and apiDisabled must not signal: %v", msgs(logs))
+	assert.Empty(t, logs, "a config with both apiEnabled and apiDisabled must not signal: %v", logMessages(logs))
 }
 
 // TestReportApiConfigFallback_ProviderLoadedTransientRereadError: the provider loaded fine,
@@ -107,7 +107,7 @@ func TestReportApiConfigFallback_CleanConfig(t *testing.T) {
 func TestReportApiConfigFallback_ProviderLoadedTransientRereadError(t *testing.T) {
 	var logs []map[string]any
 	reportApiConfigFallback(capturingLogger(&logs), true, nil, errors.New("transient network blip"))
-	assert.Empty(t, logs, "a re-read blip while the provider is loaded must not raise a false alarm: %v", msgs(logs))
+	assert.Empty(t, logs, "a re-read blip while the provider is loaded must not raise a false alarm: %v", logMessages(logs))
 }
 
 // TestReportApiConfigFallback_EmptyConfigNoSignal: a loaded empty {} config has no apiDisabled
@@ -166,7 +166,7 @@ func TestApiEnabledRetrieverErrorFailsClosed(t *testing.T) {
 	assert.False(t, ApiEnabled.Value(nonBootstrap), "after a retriever error a non-bootstrap API must be disabled")
 	assert.True(t, ApiEnabled.Value(bootstrap), "the cloudresources bootstrap kind-group must stay enabled")
 	entry := findLog(logs, SignalConfigLoadFailure)
-	require.NotNil(t, entry, "a retriever error must emit the load-failure signal; got %v", msgs(logs))
+	require.NotNil(t, entry, "a retriever error must emit the load-failure signal; got %v", logMessages(logs))
 	assert.Contains(t, entry["error"], "doesNotExist",
 		"the retriever error must be attached to the signal (proves Initialize propagates it)")
 }

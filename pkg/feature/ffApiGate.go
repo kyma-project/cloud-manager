@@ -8,6 +8,11 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
+// BootstrapKindGroup is the kind-group for the CloudResources bootstrap object.
+// It is always-on regardless of per-feature flag state and is the only exception
+// to the trial-SKR disable-all rule.
+const BootstrapKindGroup = "cloudresources.cloud-resources.kyma-project.io"
+
 // isBootstrapKindGroup returns true when the context carries the
 // cloudresources.cloud-resources.kyma-project.io kind-group. The bootstrap
 // CloudResources object must always be accessible regardless of per-feature
@@ -16,7 +21,7 @@ func isBootstrapKindGroup(ctx context.Context) bool {
 	ffCtx := MustContextFromCtx(ctx)
 	return strings.Contains(
 		util.CastInterfaceToString(ffCtx.GetCustom()[types.KeyAllKindGroups]),
-		"cloudresources.cloud-resources.kyma-project.io",
+		BootstrapKindGroup,
 	)
 }
 

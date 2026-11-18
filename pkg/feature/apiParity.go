@@ -14,21 +14,21 @@ import (
 
 // Divergence records a context where ApiEnabled.Value(ctx) != !ApiDisabled.Value(ctx).
 type Divergence struct {
-	Feature       string
-	Provider      string
-	BrokerPlan    string
-	Landscape     string
-	GlobalAccount string
-	Shoot         string
-	ApiEnabled    bool
-	Expected      bool // expected == !ApiDisabled decision
+	Feature        string
+	Provider       string
+	BrokerPlan     string
+	Landscape      string
+	GlobalAccount  string
+	Shoot          string
+	FlagValue      bool
+	LegacyDecision bool // LegacyDecision == !ApiDisabled decision
 }
 
 func (d Divergence) String() string {
 	return fmt.Sprintf(
 		"feature=%q provider=%q brokerPlan=%q landscape=%q globalAccount=%q shoot=%q apiEnabled=%v expected=%v",
 		d.Feature, d.Provider, d.BrokerPlan, d.Landscape, d.GlobalAccount, d.Shoot,
-		d.ApiEnabled, d.Expected,
+		d.FlagValue, d.LegacyDecision,
 	)
 }
 
@@ -58,8 +58,9 @@ type parityCorpusEntry struct {
 // package-global feature provider, and returns the set of evaluation contexts
 // where ApiEnabled.Value(ctx) disagrees with !ApiDisabled.Value(ctx).
 //
-// It is the primary entrypoint for parity validation; it is reused by the CLI
-// (cmd/ffparity) and Slice 4's consistency check.
+// It is the primary entrypoint for parity validation, used by the ffparity CLI.
+// Note the side effect: it reinitialises the package-global provider, so it is
+// not safe to call from code already serving the live provider.
 func CheckApiParity(ctx context.Context, configPath string) ([]Divergence, error) {
 	configBytes, err := os.ReadFile(configPath)
 	if err != nil {
@@ -86,19 +87,7 @@ func CheckApiParity(ctx context.Context, configPath string) ([]Divergence, error
 // A parse failure in the seed-extraction step is returned as an error so callers
 // treat a malformed config as a hard error rather than a zero-divergence pass.
 func buildParityDimensions(configBytes []byte) (parityCorpusDimensions, error) {
-	features := []string{
-		types.FeatureFoundation, // foundational resources (always hardcoded on) — parity trivially holds
-		types.FeatureUnknown,    // hardcoded always-on; parity trivially holds
-		types.FeatureCertificate,
-		types.FeatureNfs,
-		types.FeatureNfsBackup,
-		types.FeaturePeering,
-		types.FeatureRedis,
-		types.FeatureRedisCluster,
-		types.FeatureAzureManagedRedis,
-		types.FeatureVpcDnsLink,
-		types.FeatureWAF,
-	}
+	features := types.AllFeatureNames()
 
 	providers := []string{
 		"", // no provider set
@@ -110,7 +99,7 @@ func buildParityDimensions(configBytes []byte) (parityCorpusDimensions, error) {
 	}
 
 	brokerPlans := []string{
-		"trial",
+		brokerPlanTrial,
 		"", // non-trial sentinel: empty string means standard/non-trial plan
 	}
 
@@ -146,28 +135,7 @@ func buildParityCorpus(baseCtx context.Context, dims parityCorpusDimensions) []p
 				for _, l := range dims.Landscapes {
 					for _, ga := range dims.GlobalAccounts {
 						for _, sh := range dims.Shoots {
-							b := ContextBuilderFromCtx(baseCtx).Feature(f).Landscape(l)
-							if p != "" {
-								b = b.Provider(p)
-							}
-							if bp != "" {
-								b = b.BrokerPlan(bp)
-							}
-							if ga != "" {
-								b = b.GlobalAccount(ga)
-							}
-							if sh != "" {
-								b = b.Shoot(sh)
-							}
-							corpus = append(corpus, parityCorpusEntry{
-								ctx:           b.Build(baseCtx),
-								Feature:       f,
-								Provider:      p,
-								BrokerPlan:    bp,
-								Landscape:     l,
-								GlobalAccount: ga,
-								Shoot:         sh,
-							})
+							corpus = append(corpus, buildCorpusEntry(baseCtx, f, p, bp, l, ga, sh))
 						}
 					}
 				}
@@ -175,6 +143,34 @@ func buildParityCorpus(baseCtx context.Context, dims parityCorpusDimensions) []p
 		}
 	}
 	return corpus
+}
+
+// buildCorpusEntry constructs a single parityCorpusEntry from the given dimension values,
+// omitting empty optional dimensions so no-provider/no-plan/no-account/no-shoot contexts
+// match the flag's "not set" default.
+func buildCorpusEntry(baseCtx context.Context, f, p, bp, l, ga, sh string) parityCorpusEntry {
+	b := ContextBuilderFromCtx(baseCtx).Feature(f).Landscape(l)
+	if p != "" {
+		b = b.Provider(p)
+	}
+	if bp != "" {
+		b = b.BrokerPlan(bp)
+	}
+	if ga != "" {
+		b = b.GlobalAccount(ga)
+	}
+	if sh != "" {
+		b = b.Shoot(sh)
+	}
+	return parityCorpusEntry{
+		ctx:           b.Build(baseCtx),
+		Feature:       f,
+		Provider:      p,
+		BrokerPlan:    bp,
+		Landscape:     l,
+		GlobalAccount: ga,
+		Shoot:         sh,
+	}
 }
 
 // evaluateParity compares ApiEnabled and !ApiDisabled for each corpus entry and
@@ -187,14 +183,14 @@ func evaluateParity(corpus []parityCorpusEntry) []Divergence {
 		expected := !ApiDisabled.Value(e.ctx)
 		if enabled != expected {
 			divergences = append(divergences, Divergence{
-				Feature:       e.Feature,
-				Provider:      e.Provider,
-				BrokerPlan:    e.BrokerPlan,
-				Landscape:     e.Landscape,
-				GlobalAccount: e.GlobalAccount,
-				Shoot:         e.Shoot,
-				ApiEnabled:    enabled,
-				Expected:      expected,
+				Feature:        e.Feature,
+				Provider:       e.Provider,
+				BrokerPlan:     e.BrokerPlan,
+				Landscape:      e.Landscape,
+				GlobalAccount:  e.GlobalAccount,
+				Shoot:          e.Shoot,
+				FlagValue:      enabled,
+				LegacyDecision: expected,
 			})
 		}
 	}
@@ -259,25 +255,36 @@ func extractParitySeedValues(configBytes []byte) (globalAccounts []string, shoot
 // quotedLiteral matches a single- or double-quoted string literal, capturing its value.
 var quotedLiteral = regexp.MustCompile(`["']([^"']+)["']`)
 
+// eqPattern matches `word == "value"` or `word == 'value'`, capturing the word and value.
+var eqPattern = regexp.MustCompile(`(\w+)\s*==\s*["']([^"']+)["']`)
+
+// revPattern matches `"value" == word` or `'value' == word`, capturing the value and word.
+var revPattern = regexp.MustCompile(`["']([^"']+)["']\s*==\s*(\w+)`)
+
+// inListPattern matches `word in [...]`, capturing the word and the bracketed list content.
+var inListPattern = regexp.MustCompile(`(\w+)\s+in\s+\[([^\]]*)\]`)
+
 // extractQueryLiterals returns every string literal a targeting-rule query associates
 // with key, across the query syntaxes GoFF accepts: `key == "v"`, `key == 'v'`, the
 // reversed `"v" == key`, and set membership `key in ["v1", "v2"]`. Matching any of these
 // keeps the seeded corpus from missing an account/shoot a rule actually targets.
 func extractQueryLiterals(query, key string) []string {
 	var out []string
-	eq := regexp.MustCompile(key + `\s*==\s*["']([^"']+)["']`)
-	rev := regexp.MustCompile(`["']([^"']+)["']\s*==\s*` + key)
-	inList := regexp.MustCompile(key + `\s+in\s+\[([^\]]*)\]`)
-
-	for _, m := range eq.FindAllStringSubmatch(query, -1) {
-		out = append(out, m[1])
+	for _, m := range eqPattern.FindAllStringSubmatch(query, -1) {
+		if m[1] == key {
+			out = append(out, m[2])
+		}
 	}
-	for _, m := range rev.FindAllStringSubmatch(query, -1) {
-		out = append(out, m[1])
+	for _, m := range revPattern.FindAllStringSubmatch(query, -1) {
+		if m[2] == key {
+			out = append(out, m[1])
+		}
 	}
-	for _, m := range inList.FindAllStringSubmatch(query, -1) {
-		for _, lit := range quotedLiteral.FindAllStringSubmatch(m[1], -1) {
-			out = append(out, lit[1])
+	for _, m := range inListPattern.FindAllStringSubmatch(query, -1) {
+		if m[1] == key {
+			for _, lit := range quotedLiteral.FindAllStringSubmatch(m[2], -1) {
+				out = append(out, lit[1])
+			}
 		}
 	}
 	return out

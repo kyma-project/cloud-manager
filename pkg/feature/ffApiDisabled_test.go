@@ -15,6 +15,7 @@ import (
 
 func TestApiDisabled(t *testing.T) {
 	ctx := t.Context()
+	restoreProvider(t)
 
 	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiDisabled.yaml"))
 	assert.NoError(t, err)

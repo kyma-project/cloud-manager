@@ -42,6 +42,24 @@ const (
 	FeatureWAF               FeatureName = "waf"
 )
 
+// AllFeatureNames returns every defined FeatureName constant in the canonical order
+// used by the parity corpus. Callers use this to stay in sync when new features are added.
+func AllFeatureNames() []FeatureName {
+	return []FeatureName{
+		FeatureFoundation,
+		FeatureUnknown,
+		FeatureCertificate,
+		FeatureNfs,
+		FeatureNfsBackup,
+		FeaturePeering,
+		FeatureRedis,
+		FeatureRedisCluster,
+		FeatureAzureManagedRedis,
+		FeatureVpcDnsLink,
+		FeatureWAF,
+	}
+}
+
 type PlaneName = string
 
 const (

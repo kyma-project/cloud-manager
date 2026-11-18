@@ -50,13 +50,13 @@ apiEnabled:
     enabled: true
     disabled: false
   targeting:
-    - name: Disable all on trial
+    - name: Exclude trial from GA rollout
       query: brokerPlan == "trial"
       variation: disabled
-    - name: Disable NFS On CCEE
+    - name: Exclude NFS on CCEE
       query: provider == "openstack" and feature == "nfs"
       variation: disabled
-    - name: Disable Redis on AliCloud
+    - name: Exclude Redis on AliCloud
       query: feature == "redis" and provider == "alicloud"
       variation: disabled
     - name: Enable GA features

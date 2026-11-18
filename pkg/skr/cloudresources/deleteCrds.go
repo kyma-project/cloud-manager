@@ -7,6 +7,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
@@ -29,7 +30,7 @@ func deleteCrds(ctx context.Context, st composed.State) (error, context.Context)
 	logger.Info("Checking CRDs to uninstall")
 
 	suffix := ".cloud-resources.kyma-project.io"
-	skip := "cloudresources.cloud-resources.kyma-project.io"
+	skip := feature.BootstrapKindGroup
 	for _, crd := range crdList.Items {
 		if !strings.HasSuffix(crd.GetName(), suffix) {
 			continue

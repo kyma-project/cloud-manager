@@ -36,7 +36,7 @@ apiEnabled:
       query: feature in ["nfsBackup", "peering", "redis"] and landscape != "dev"
       variation: disabled
     # stage-exemption for 6034adc9 is intentionally absent — divergence for that account on stage
-    # Enable named features only — "" and "unknown" intentionally omitted (replicates Defect 1)
+    # Enable named features only — foundation and unknown omitted (hardcoded always-on in code)
     - name: Enable named features only
       query: feature in ["certificate", "nfs", "nfsBackup", "peering", "redis", "rediscluster", "azureManagedRedis", "vpcdnslink", "waf"]
       variation: enabled

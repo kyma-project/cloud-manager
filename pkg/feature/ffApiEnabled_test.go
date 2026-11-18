@@ -18,6 +18,7 @@ import (
 // that the isBootstrapKindGroup short-circuit is verified independently of parity.
 func TestApiEnabled(t *testing.T) {
 	ctx := t.Context()
+	restoreProvider(t)
 
 	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiEnabled.yaml"))
 	assert.NoError(t, err)
@@ -27,117 +28,143 @@ func TestApiEnabled(t *testing.T) {
 	cases := []struct {
 		t             string
 		c             context.Context
+		wantEnabled   bool
 		mustBeEnabled bool
 	}{
 		// CloudResources — bootstrap kind-group must always be enabled
 		{
 			t:             "cloudresources is enabled regardless of landscape and feature",
 			c:             ContextBuilderFromCtx(ctx).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			wantEnabled:   true,
 			mustBeEnabled: true,
 		},
 		{
 			t:             "cloudresources is enabled on dev",
 			c:             ContextBuilderFromCtx(ctx).Landscape("dev").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			wantEnabled:   true,
 			mustBeEnabled: true,
 		},
 		{
 			t:             "cloudresources is enabled on stage",
 			c:             ContextBuilderFromCtx(ctx).Landscape("stage").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			wantEnabled:   true,
 			mustBeEnabled: true,
 		},
 		{
 			t:             "cloudresources is enabled on prod",
 			c:             ContextBuilderFromCtx(ctx).Landscape("prod").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			wantEnabled:   true,
 			mustBeEnabled: true,
 		},
 		{
 			t:             "cloudresources is enabled on prod even for disabled feature",
 			c:             ContextBuilderFromCtx(ctx).Landscape("prod").Feature(types.FeatureNfsBackup).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			wantEnabled:   true,
 			mustBeEnabled: true,
 		},
 		{
 			t:             "cloudresources is enabled on trial",
 			c:             ContextBuilderFromCtx(ctx).BrokerPlan("trial").Landscape("prod").Feature(types.FeatureNfsBackup).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx),
+			wantEnabled:   true,
 			mustBeEnabled: true,
 		},
 		// NFS ====================================================
 		{
-			t: "nfs feature is enabled on dev",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeDev).Feature(types.FeatureNfs).Build(ctx),
+			t:           "nfs feature is enabled on dev",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeDev).Feature(types.FeatureNfs).Build(ctx),
+			wantEnabled: true,
 		},
 		{
-			t: "nfs feature is enabled on stage",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeStage).Feature(types.FeatureNfs).Build(ctx),
+			t:           "nfs feature is enabled on stage",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeStage).Feature(types.FeatureNfs).Build(ctx),
+			wantEnabled: true,
 		},
 		{
-			t: "nfs feature is enabled on prod",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeatureNfs).BrokerPlan("aws").Build(ctx),
+			t:           "nfs feature is enabled on prod",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeatureNfs).BrokerPlan("aws").Build(ctx),
+			wantEnabled: true,
 		},
 		// NFS BACKUP ====================================================
 		{
-			t: "nfsBackup feature is enabled on dev",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeDev).Feature(types.FeatureNfsBackup).Build(ctx),
+			t:           "nfsBackup feature is enabled on dev",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeDev).Feature(types.FeatureNfsBackup).Build(ctx),
+			wantEnabled: true,
 		},
 		{
-			t: "nfsBackup feature is disabled on stage",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeStage).Feature(types.FeatureNfsBackup).Build(ctx),
+			t:           "nfsBackup feature is disabled on stage",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeStage).Feature(types.FeatureNfsBackup).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			t: "nfsBackup feature is disabled on prod",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeatureNfsBackup).Build(ctx),
+			t:           "nfsBackup feature is disabled on prod",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeatureNfsBackup).Build(ctx),
+			wantEnabled: false,
 		},
 		// PEERING ====================================================
 		{
-			t: "peering feature is enabled on dev",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeDev).Feature(types.FeaturePeering).Build(ctx),
+			t:           "peering feature is enabled on dev",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeDev).Feature(types.FeaturePeering).Build(ctx),
+			wantEnabled: true,
 		},
 		{
-			t: "peering feature is disabled on stage",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeStage).Feature(types.FeaturePeering).Build(ctx),
+			t:           "peering feature is disabled on stage",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeStage).Feature(types.FeaturePeering).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			t: "peering feature is disabled on prod",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeaturePeering).Build(ctx),
+			t:           "peering feature is disabled on prod",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeaturePeering).Build(ctx),
+			wantEnabled: false,
 		},
 		// REDIS ====================================================
 		{
-			t: "redis feature is enabled on dev",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeDev).Feature(types.FeatureRedis).Build(ctx),
+			t:           "redis feature is enabled on dev",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeDev).Feature(types.FeatureRedis).Build(ctx),
+			wantEnabled: true,
 		},
 		{
-			t: "redis feature is disabled on stage",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeStage).Feature(types.FeatureRedis).Build(ctx),
+			t:           "redis feature is disabled on stage",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeStage).Feature(types.FeatureRedis).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			t: "redis feature is disabled on prod",
-			c: ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeatureRedis).Build(ctx),
+			t:           "redis feature is disabled on prod",
+			c:           ContextBuilderFromCtx(ctx).Landscape(types.LandscapeProd).Feature(types.FeatureRedis).Build(ctx),
+			wantEnabled: false,
 		},
 		// TRIAL ====================================================
 		{
-			t: "nfs feature is disabled on trial",
-			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureNfs).Build(ctx),
+			t:           "nfs feature is disabled on trial",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureNfs).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			t: "nfsbackup feature is disabled on trial",
-			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureNfsBackup).Build(ctx),
+			t:           "nfsbackup feature is disabled on trial",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureNfsBackup).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			t: "peering feature is disabled on trial",
-			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeaturePeering).Build(ctx),
+			t:           "peering feature is disabled on trial",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeaturePeering).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			t: "redis feature is disabled on trial",
-			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureRedis).Build(ctx),
+			t:           "redis feature is disabled on trial",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureRedis).Build(ctx),
+			wantEnabled: false,
 		},
 		// GlobalAccount exemption ====================================================
 		{
-			t: "globalAccount exemption on stage enables nfsBackup",
-			c: ContextBuilderFromCtx(ctx).Landscape("stage").GlobalAccount("6034adc9-3441-494c-b438-a0eba4c5045a").Feature(types.FeatureNfsBackup).Build(ctx),
+			t:           "globalAccount exemption on stage enables nfsBackup",
+			c:           ContextBuilderFromCtx(ctx).Landscape("stage").GlobalAccount("6034adc9-3441-494c-b438-a0eba4c5045a").Feature(types.FeatureNfsBackup).Build(ctx),
+			wantEnabled: true,
 		},
 	}
 
 	for _, cs := range cases {
 		t.Run(cs.t, func(t *testing.T) {
+			assert.Equal(t, cs.wantEnabled, ApiEnabled.Value(cs.c),
+				"ApiEnabled must be %v for case: %s", cs.wantEnabled, cs.t)
 			assert.Equal(t, !ApiDisabled.Value(cs.c), ApiEnabled.Value(cs.c),
 				"ApiEnabled must equal !ApiDisabled for case: %s", cs.t)
 			if cs.mustBeEnabled {
@@ -156,6 +183,7 @@ func TestApiEnabled(t *testing.T) {
 // absolutely true regardless of config and both flags must agree.
 func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 	ctx := t.Context()
+	restoreProvider(t)
 
 	err := Initialize(ctx, logr.Discard(), WithEmbeddedRetriever())
 	assert.NoError(t, err)
@@ -277,6 +305,7 @@ func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 // ApiEnabled=true, ApiDisabled=false, parity holds throughout.
 func TestApiEnabledEdgeParity(t *testing.T) {
 	ctx := t.Context()
+	restoreProvider(t)
 
 	err := Initialize(ctx, logr.Discard(), WithFile("ff_edge.yaml"))
 	assert.NoError(t, err)
@@ -347,6 +376,8 @@ func TestApiEnabledEdgeParity(t *testing.T) {
 		t.Run(cs.name, func(t *testing.T) {
 			assert.Equal(t, !ApiDisabled.Value(cs.c), ApiEnabled.Value(cs.c),
 				"ApiEnabled must equal !ApiDisabled for case: %s", cs.name)
+			assert.True(t, ApiEnabled.Value(cs.c),
+				"every edge case must be ApiEnabled=true for case: %s", cs.name)
 		})
 	}
 }

@@ -127,9 +127,32 @@ func TestParityGlobalAccountSelfSeeding(t *testing.T) {
 		targetAccount)
 }
 
-// TestParityHoldsForEmbeddedGA is the in-repo parity gate: the shipped ff_ga.yaml
-// must have zero apiEnabled/apiDisabled divergence over the full corpus. A regression
-// introduced directly into ff_ga.yaml fails here.
+// TestParityCorpusCoversAllFeatureNames guards AllFeatureNames() and buildParityDimensions
+// against drift: every FeatureName defined in types.AllFeatureNames must appear in the
+// corpus dimensions returned by buildParityDimensions. If a new constant is added to
+// AllFeatureNames without updating buildParityDimensions (or if buildParityDimensions
+// stops calling AllFeatureNames), this test will catch it.
+func TestParityCorpusCoversAllFeatureNames(t *testing.T) {
+	dims, err := buildParityDimensions([]byte("{}"))
+	require.NoError(t, err)
+
+	corpusSet := map[string]struct{}{}
+	for _, f := range dims.Features {
+		corpusSet[f] = struct{}{}
+	}
+
+	var missing []string
+	for _, name := range types.AllFeatureNames() {
+		if _, ok := corpusSet[name]; !ok {
+			missing = append(missing, string(name))
+		}
+	}
+	sort.Strings(missing)
+	assert.Empty(t, missing,
+		"these FeatureNames from AllFeatureNames() are absent from the parity corpus dimensions:\n%s",
+		strings.Join(missing, "\n"))
+}
+
 func TestParityHoldsForEmbeddedGA(t *testing.T) {
 	divergences, err := CheckApiParity(t.Context(), "ff_ga.yaml")
 	require.NoError(t, err)
