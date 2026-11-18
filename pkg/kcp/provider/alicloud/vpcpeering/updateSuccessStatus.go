@@ -6,6 +6,7 @@ import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	alicloudvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering/client"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -18,9 +19,13 @@ func updateSuccessStatus(ctx context.Context, st composed.State) (error, context
 		return nil, ctx
 	}
 
+	remoteVpcId := alicloudvpcpeeringclient.RemoteVpcId(state.vpcPeering)
+	if remoteVpcId == "" {
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+	}
+
 	changed := meta.RemoveStatusCondition(obj.Conditions(), cloudcontrolv1beta1.ConditionTypeError)
 
-	remoteVpcId := alicloudvpcpeeringclient.RemoteVpcId(state.vpcPeering)
 	if obj.Status.RemoteId != remoteVpcId {
 		changed = true
 		obj.Status.RemoteId = remoteVpcId

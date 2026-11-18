@@ -37,7 +37,7 @@ func checkNetworkTag(ctx context.Context, st composed.State) (error, context.Con
 	return composed.PatchStatus(obj).
 		SetCondition(metav1.Condition{
 			Type:    cloudcontrolv1beta1.ConditionTypeError,
-			Status:  "True",
+			Status:  metav1.ConditionTrue,
 			Reason:  cloudcontrolv1beta1.ReasonFailedLoadingRemoteVpcNetwork,
 			Message: "Loaded remote VPC has no matching tags",
 		}).
