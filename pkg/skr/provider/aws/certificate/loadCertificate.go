@@ -32,7 +32,6 @@ func loadCertificate(ctx context.Context, st composed.State) (error, context.Con
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	state.certificateDetail = detail
 	state.certificateArn = *detail.CertificateArn
 
 	return nil, ctx

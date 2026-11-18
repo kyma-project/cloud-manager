@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    cloud-resources.kyma-project.io/version: v0.0.2
+    cloud-resources.kyma-project.io/version: v0.0.3
   name: certificates.cloud-resources.kyma-project.io
 spec:
   group: cloud-resources.kyma-project.io
@@ -137,6 +137,11 @@ spec:
                   type: string
                 providerId:
                   description: ProviderId is the provider-specific resource identifier (e.g., AWS ARN, Azure Resource ID)
+                  type: string
+                secretHash:
+                  description: |-
+                    SecretHash is a SHA-256 hash of the referenced Secret's certificate data (tls.crt, tls.key, ca.crt).
+                    Used to detect secret content changes without making AWS API calls on every reconcile.
                   type: string
               type: object
           required:

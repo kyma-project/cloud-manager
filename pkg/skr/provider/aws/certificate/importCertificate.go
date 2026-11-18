@@ -13,13 +13,9 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 	logger := composed.LoggerFromCtx(ctx)
 	cert := state.ObjAsCertificate()
 
-	if !state.certificateNeedsUpdate {
-		return nil, ctx
-	}
-
 	input := &acm.ImportCertificateInput{
-		Certificate: state.certificateData.Certificate,
-		PrivateKey:  state.certificateData.PrivateKey,
+		Certificate: state.State.GetData().Certificate,
+		PrivateKey:  state.State.GetData().PrivateKey,
 	}
 
 	if cert.Status.ProviderId != "" {
@@ -30,8 +26,8 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 		logger.Info("Creating new certificate with tags")
 	}
 
-	if len(state.certificateData.CertificateChain) > 0 {
-		input.CertificateChain = state.certificateData.CertificateChain
+	if len(state.State.GetData().CertificateChain) > 0 {
+		input.CertificateChain = state.State.GetData().CertificateChain
 	}
 
 	arn, err := state.awsClient.ImportCertificate(ctx, input)
@@ -46,17 +42,7 @@ func importCertificate(ctx context.Context, st composed.State) (error, context.C
 	}
 
 	state.certificateArn = arn
+	logger.WithValues("arn", arn).Info("Certificate imported successfully")
 
-	logger.
-		WithValues("arn", arn).
-		Info("Certificate imported successfully")
-
-	return composed.NewStatusPatcherComposed(cert).
-		MutateStatus(func(c *cloudresourcesv1beta1.Certificate) {
-			c.Status.ProviderId = arn
-			c.SetStatusProcessing()
-		}).
-		OnStatusChanged(composed.Log("Certificate providerId updated after import")).
-		OnSuccess(composed.Requeue).
-		Run(ctx, state.Cluster().K8sClient())
+	return nil, ctx
 }
