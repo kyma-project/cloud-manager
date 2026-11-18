@@ -18,6 +18,7 @@ import (
 // TestParityHolds asserts zero divergence against testdata/apiEnabled.yaml,
 // which carries structurally-mirrored apiDisabled and apiEnabled blocks.
 func TestParityHolds(t *testing.T) {
+	restoreProvider(t)
 	divergences, err := CheckApiParity(t.Context(), "testdata/apiEnabled.yaml")
 	require.NoError(t, err)
 	assert.Empty(t, divergences,
@@ -30,6 +31,7 @@ func TestParityHolds(t *testing.T) {
 // entry and asserts !ApiDisabled == ApiEnabled for every entry
 // (the both-code-paths-equivalent property).
 func TestParityEquivalentToLegacy(t *testing.T) {
+	restoreProvider(t)
 	ctx := t.Context()
 
 	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiEnabled.yaml"))
@@ -61,6 +63,7 @@ func TestParityEquivalentToLegacy(t *testing.T) {
 // causing peering/nfsBackup/redis on stage with that account to diverge.
 // Foundation and unknown are hardcoded always-on and will never appear in divergences.
 func TestParityDivergentDetected(t *testing.T) {
+	restoreProvider(t)
 	divergences, err := CheckApiParity(t.Context(), "testdata/apiParityDivergent.yaml")
 	require.NoError(t, err)
 	require.NotEmpty(t, divergences,
@@ -88,6 +91,7 @@ func TestParityDivergentDetected(t *testing.T) {
 //     from apiEnabled but keeps it in apiDisabled) detects divergences that
 //     involve that specific globalAccount on stage, proving the corpus covered it.
 func TestParityGlobalAccountSelfSeeding(t *testing.T) {
+	restoreProvider(t)
 	const targetAccount = "6034adc9-3441-494c-b438-a0eba4c5045a"
 
 	// Part 1: seed extraction from apiEnabled.yaml
@@ -154,6 +158,7 @@ func TestParityCorpusCoversAllFeatureNames(t *testing.T) {
 }
 
 func TestParityHoldsForEmbeddedGA(t *testing.T) {
+	restoreProvider(t)
 	divergences, err := CheckApiParity(t.Context(), "ff_ga.yaml")
 	require.NoError(t, err)
 	assert.Empty(t, divergences, "ff_ga.yaml must have zero parity divergences: %v", divergences)
@@ -161,6 +166,7 @@ func TestParityHoldsForEmbeddedGA(t *testing.T) {
 
 // TestParityHoldsForEmbeddedEdge is the in-repo parity gate for ff_edge.yaml.
 func TestParityHoldsForEmbeddedEdge(t *testing.T) {
+	restoreProvider(t)
 	divergences, err := CheckApiParity(t.Context(), "ff_edge.yaml")
 	require.NoError(t, err)
 	assert.Empty(t, divergences, "ff_edge.yaml must have zero parity divergences: %v", divergences)

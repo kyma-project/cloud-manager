@@ -92,8 +92,8 @@ func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption)
 	// re-read — is the authoritative fallback signal. The re-read only classifies the
 	// cause and detects an apiDisabled-only config.
 	providerLoaded := ff != nil && !ff.GetCacheRefreshDate().IsZero()
-	cfgBytes, retrieveErr := rtvr.Retrieve(ctx)
-	reportApiConfigFallback(logger, providerLoaded, cfgBytes, retrieveErr)
+	configBytes, retrieveErr := rtvr.Retrieve(ctx)
+	reportApiConfigFallback(logger, providerLoaded, configBytes, retrieveErr)
 
 	go func() {
 		<-ctx.Done()

@@ -171,6 +171,43 @@ func TestApiEnabledRetrieverErrorFailsClosed(t *testing.T) {
 		"the retriever error must be attached to the signal (proves Initialize propagates it)")
 }
 
+// TestApiEnabledMalformedConfigFailsClosed: a present-but-unparseable config does not abort
+// startup; the provider serves the secure default — non-bootstrap disabled, bootstrap enabled —
+// and the parse-failure signal is emitted. This closes the gap between "parse-failure was
+// signalled" and "the gate is actually closed" for a malformed config.
+func TestApiEnabledMalformedConfigFailsClosed(t *testing.T) {
+	ctx := t.Context()
+	restoreProvider(t)
+
+	var logs []map[string]any
+	require.NoError(t, Initialize(ctx, capturingLogger(&logs), WithFile("testdata/apiMalformed.yaml")))
+
+	sch := commonscheme.SkrScheme
+	nonBootstrap := ContextBuilderFromCtx(ctx).Feature(types.FeatureNfsBackup).Build(ctx)
+	bootstrap := ContextBuilderFromCtx(ctx).KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx)
+
+	assert.False(t, ApiEnabled.Value(nonBootstrap), "a malformed config must disable a non-bootstrap API")
+	assert.True(t, ApiEnabled.Value(bootstrap), "the cloudresources bootstrap kind-group must stay enabled")
+	require.NotNil(t, findLog(logs, SignalConfigParseFailure),
+		"a malformed config must emit the parse-failure signal; got %v", logMessages(logs))
+}
+
+// TestApiEnabledValidConfigEmitsNoFallbackSignal: a successfully-loaded, well-formed config
+// emits none of the fail-closed signals — proving the provider's non-zero cache-refresh date
+// after a good load is not mistaken for a load failure (the success direction the error-path
+// tests above do not cover).
+func TestApiEnabledValidConfigEmitsNoFallbackSignal(t *testing.T) {
+	ctx := t.Context()
+	restoreProvider(t)
+
+	var logs []map[string]any
+	require.NoError(t, Initialize(ctx, capturingLogger(&logs), WithFile("testdata/apiEnabled.yaml")))
+
+	assert.Nil(t, findLog(logs, SignalConfigLoadFailure), "a valid config must not signal load failure: %v", logMessages(logs))
+	assert.Nil(t, findLog(logs, SignalConfigParseFailure), "a valid config must not signal parse failure: %v", logMessages(logs))
+	assert.Nil(t, findLog(logs, SignalApiEnabledMissing), "a valid config with both blocks must not signal inconsistency: %v", logMessages(logs))
+}
+
 // findLog returns the first captured entry whose "msg" equals msg, or nil.
 func findLog(entries []map[string]any, msg string) map[string]any {
 	for _, e := range entries {

@@ -15,6 +15,18 @@ const (
 	ProviderAlicloud  = ProviderType("alicloud")
 )
 
+// AllProviders returns every defined ProviderType constant in canonical order.
+// Callers iterating all providers use this to stay in sync when a new provider is added.
+func AllProviders() []ProviderType {
+	return []ProviderType{
+		ProviderAws,
+		ProviderGCP,
+		ProviderAzure,
+		ProviderOpenStack,
+		ProviderAlicloud,
+	}
+}
+
 func ParseProviderType(provider string) (ProviderType, error) {
 	switch strings.ToLower(provider) {
 	case string(ProviderGCP):

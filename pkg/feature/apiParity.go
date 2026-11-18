@@ -9,7 +9,6 @@ import (
 	"github.com/go-logr/logr"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
-	"gopkg.in/yaml.v3"
 )
 
 // Divergence records a context where ApiEnabled.Value(ctx) != !ApiDisabled.Value(ctx).
@@ -20,15 +19,15 @@ type Divergence struct {
 	Landscape      string
 	GlobalAccount  string
 	Shoot          string
-	FlagValue      bool
+	Enabled        bool
 	LegacyDecision bool // LegacyDecision == !ApiDisabled decision
 }
 
 func (d Divergence) String() string {
 	return fmt.Sprintf(
-		"feature=%q provider=%q brokerPlan=%q landscape=%q globalAccount=%q shoot=%q apiEnabled=%v expected=%v",
+		"feature=%q provider=%q brokerPlan=%q landscape=%q globalAccount=%q shoot=%q apiEnabled=%v legacyDecision=%v",
 		d.Feature, d.Provider, d.BrokerPlan, d.Landscape, d.GlobalAccount, d.Shoot,
-		d.FlagValue, d.LegacyDecision,
+		d.Enabled, d.LegacyDecision,
 	)
 }
 
@@ -89,13 +88,9 @@ func CheckApiParity(ctx context.Context, configPath string) ([]Divergence, error
 func buildParityDimensions(configBytes []byte) (parityCorpusDimensions, error) {
 	features := types.AllFeatureNames()
 
-	providers := []string{
-		"", // no provider set
-		string(cloudcontrolv1beta1.ProviderAws),
-		string(cloudcontrolv1beta1.ProviderGCP),
-		string(cloudcontrolv1beta1.ProviderAzure),
-		string(cloudcontrolv1beta1.ProviderOpenStack),
-		string(cloudcontrolv1beta1.ProviderAlicloud),
+	providers := []string{""} // "" = no provider set
+	for _, p := range cloudcontrolv1beta1.AllProviders() {
+		providers = append(providers, string(p))
 	}
 
 	brokerPlans := []string{
@@ -189,7 +184,7 @@ func evaluateParity(corpus []parityCorpusEntry) []Divergence {
 				Landscape:      e.Landscape,
 				GlobalAccount:  e.GlobalAccount,
 				Shoot:          e.Shoot,
-				FlagValue:      enabled,
+				Enabled:        enabled,
 				LegacyDecision: expected,
 			})
 		}
@@ -204,8 +199,8 @@ func evaluateParity(corpus []parityCorpusEntry) []Divergence {
 // An unmarshal failure is returned as an error so callers can distinguish a
 // malformed config from a valid-but-empty one.
 func extractParitySeedValues(configBytes []byte) (globalAccounts []string, shoots []string, err error) {
-	var root map[string]interface{}
-	if unmarshalErr := yaml.Unmarshal(configBytes, &root); unmarshalErr != nil {
+	root, unmarshalErr := parseConfigBytes(configBytes)
+	if unmarshalErr != nil {
 		return nil, nil, unmarshalErr
 	}
 
