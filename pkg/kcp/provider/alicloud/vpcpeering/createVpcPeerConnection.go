@@ -21,21 +21,6 @@ func createVpcPeerConnection(ctx context.Context, st composed.State) (error, con
 
 	obj := state.ObjAsVpcPeering()
 
-	// If Status.Id is set but the load action found no matching connection, the cloud object
-	// was externally deleted. Do not create a new one — requeue and let the operator decide.
-	if obj.Status.Id != "" {
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
-	}
-
-	if state.localVpcId == "" {
-		return composed.LogErrorAndReturn(
-			fmt.Errorf("local VPC ID not yet available from LocalNetwork"),
-			"Local VPC ID is empty, requeueing",
-			composed.StopWithRequeueDelay(util.Timing.T10000ms()),
-			ctx,
-		)
-	}
-
 	remoteNet := state.RemoteNetwork()
 	if remoteNet.Status.Network == nil || remoteNet.Status.Network.Alicloud == nil {
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx

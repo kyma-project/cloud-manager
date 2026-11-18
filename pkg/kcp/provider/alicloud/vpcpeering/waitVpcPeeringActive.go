@@ -18,16 +18,11 @@ func waitVpcPeeringActive(ctx context.Context, st composed.State) (error, contex
 
 	obj := state.ObjAsVpcPeering()
 
-	info, err := state.client.GetVpcPeerConnection(ctx, obj.Status.Id)
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error getting AliCloud VpcPeerConnection status", composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx)
-	}
-	if info == nil {
+	if state.vpcPeering == nil {
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
-	state.vpcPeering = info
-	status := tea.StringValue(info.Status)
+	status := tea.StringValue(state.vpcPeering.Status)
 
 	if status == "Activated" {
 		logger.Info("AliCloud VpcPeerConnection is Activated")
