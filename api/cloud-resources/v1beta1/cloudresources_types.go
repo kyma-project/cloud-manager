@@ -70,6 +70,12 @@ type CloudResourcesStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	Subscription SubscriptionStatus `json:"subscription,omitempty"`
+}
+
+type SubscriptionStatus struct {
+	WafLogGroup string `json:"wafLogGroup,omitempty"`
 }
 
 // +kubebuilder:object:root=true

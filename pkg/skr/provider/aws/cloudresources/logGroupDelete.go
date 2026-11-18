@@ -43,5 +43,7 @@ func logGroupDelete(ctx context.Context, st composed.State) (error, context.Cont
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
+	composed.LoggerFromCtx(ctx).Info("Successfully deleted logGroup for WafPolicy")
+
 	return nil, ctx
 }
