@@ -3,9 +3,11 @@ package composed
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -50,6 +52,12 @@ func (h *Handler) WithTracker(t Tracker) *Handler {
 	return h
 }
 
+func (h *Handler) forgetRate() {
+	if h.controller != "" && h.name != "" {
+		rate.Quick.ForgetString(fmt.Sprintf("%s/%s", h.controller, h.name))
+	}
+}
+
 func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 	var logger logr.Logger
 	if h.noLog {
@@ -73,11 +81,13 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 
 	if errors.Is(err, context.DeadlineExceeded) {
 		//logger.Info("Reconciliation finished with context deadline exceeded")
+		h.forgetRate()
 		result = ReconciliationLabelDeadline
 		return ctrl.Result{}, nil
 	}
 	if errors.Is(err, context.Canceled) {
 		//logger.Info("Reconciliation finished with context canceled")
+		h.forgetRate()
 		result = ReconciliationLabelCanceled
 		return ctrl.Result{}, nil
 	}
@@ -88,13 +98,15 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 	}
 	if IsStopAndForget(err) {
 		//logger.Info("Reconciliation finished with stop and forget")
+		h.forgetRate()
 		result = ReconciliationLabelSuccess
 		return ctrl.Result{}, nil
 	}
 	if IsStopWithRequeue(err) {
 		//logger.Info("Reconciliation finished with requeue")
 		result = ReconciliationLabelRequeue
-		return ctrl.Result{RequeueAfter: time.Nanosecond}, nil
+		d := rate.Quick.WhenString(fmt.Sprintf("%s/%s", h.controller, h.name))
+		return ctrl.Result{RequeueAfter: d}, nil
 	}
 	if IsStopWithRequeueDelay(err) {
 		var ed *stopWithRequeueDelay
@@ -108,6 +120,7 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 		return ctrl.Result{RequeueAfter: ed.Delay()}, nil
 	}
 	//logger.Info("Reconciliation finished without control error - doing stop and forget")
+	h.forgetRate()
 	result = ReconciliationLabelSuccess
 	return ctrl.Result{}, err
 }

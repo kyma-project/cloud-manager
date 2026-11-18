@@ -31,7 +31,7 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 
 	err := state.UpdateObj(ctx)
 	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating SKR AwsNfsVolume with ID label", composed.StopWithRequeue, ctx)
+		return composed.LogErrorAndReturn(err, "Error updating SKR AwsVpcPeering with ID label", composed.StopWithRequeue, ctx)
 	}
 	logger.Info("SKR AwsVpcPeering updated with ID label")
 

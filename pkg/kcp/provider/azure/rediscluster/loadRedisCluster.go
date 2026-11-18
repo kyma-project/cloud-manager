@@ -3,6 +3,7 @@ package rediscluster
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -19,8 +20,6 @@ func loadRedisCluster(ctx context.Context, st composed.State) (error, context.Co
 		logger.Info("Azure Redis already loaded")
 		return nil, ctx
 	}
-
-	logger.Info("Loading Azure Redis")
 
 	redisClusterName := state.ObjAsRedisCluster().Name
 	resourceGroupName := state.resourceGroupName

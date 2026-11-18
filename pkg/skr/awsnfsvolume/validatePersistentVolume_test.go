@@ -67,9 +67,8 @@ func TestValidatePersistentVolume(t *testing.T) {
 				Time: time.Now(),
 			}
 
-			err, res := validatePersistentVolume(ctx, state)
+			err, _ := validatePersistentVolume(ctx, state)
 
-			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
 		})
 
@@ -81,9 +80,8 @@ func TestValidatePersistentVolume(t *testing.T) {
 				Build()
 			k8sClient.(spy.ClientSpy).SetClient(fakeClient)
 
-			err, res := validatePersistentVolume(ctx, state)
+			err, _ := validatePersistentVolume(ctx, state)
 
-			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
 		})
 
@@ -91,9 +89,8 @@ func TestValidatePersistentVolume(t *testing.T) {
 			setupTest()
 			ctx := t.Context()
 
-			err, res := validatePersistentVolume(ctx, state)
+			err, _ := validatePersistentVolume(ctx, state)
 
-			assert.Nil(t, res, "should return nil res")
 			assert.Nil(t, err, "should return nil err")
 		})
 

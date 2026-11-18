@@ -67,16 +67,24 @@ func (c *wafv2Client) DeleteWebACL(ctx context.Context, name, id string, scope w
 }
 
 func (c *wafv2Client) ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error) {
+	var result []wafv2types.WebACLSummary
 	in := &wafv2.ListWebACLsInput{
 		Scope: scope,
 	}
 
-	out, err := c.svc.ListWebACLs(ctx, in)
-	if err != nil {
-		return nil, err
+	for {
+		out, err := c.svc.ListWebACLs(ctx, in)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, out.WebACLs...)
+		if out.NextMarker == nil {
+			break
+		}
+		in.NextMarker = out.NextMarker
 	}
 
-	return out.WebACLs, nil
+	return result, nil
 }
 
 func (c *wafv2Client) ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error) {

@@ -13,12 +13,12 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 	logger := composed.LoggerFromCtx(ctx)
 
 	if !composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.KcpIpRange != nil {
 		// KCP IpRange is not yet deleted
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Removing SKR IpRange finalizer")
@@ -31,5 +31,5 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 	}
 
 	// bye, bye SKR IpRange
-	return composed.StopAndForget, nil
+	return composed.StopAndForget, ctx
 }

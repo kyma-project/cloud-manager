@@ -13,6 +13,7 @@ type EfsClient interface {
 	DescribeFileSystems(ctx context.Context) ([]efstypes.FileSystemDescription, error)
 	CreateFileSystem(
 		ctx context.Context,
+		creationToken string,
 		performanceMode efstypes.PerformanceMode,
 		throughputMode efstypes.ThroughputMode,
 		tags []efstypes.Tag,
@@ -37,15 +38,21 @@ type efsClient struct {
 
 func (c *efsClient) DescribeFileSystems(ctx context.Context) ([]efstypes.FileSystemDescription, error) {
 	in := &efs.DescribeFileSystemsInput{}
-	out, err := c.svc.DescribeFileSystems(ctx, in)
-	if err != nil {
-		return nil, err
+	paginator := efs.NewDescribeFileSystemsPaginator(c.svc, in)
+	var all []efstypes.FileSystemDescription
+	for paginator.HasMorePages() {
+		out, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, out.FileSystems...)
 	}
-	return out.FileSystems, nil
+	return all, nil
 }
 
-func (c *efsClient) CreateFileSystem(ctx context.Context, performanceMode efstypes.PerformanceMode, throughputMode efstypes.ThroughputMode, tags []efstypes.Tag) (*efs.CreateFileSystemOutput, error) {
+func (c *efsClient) CreateFileSystem(ctx context.Context, creationToken string, performanceMode efstypes.PerformanceMode, throughputMode efstypes.ThroughputMode, tags []efstypes.Tag) (*efs.CreateFileSystemOutput, error) {
 	in := &efs.CreateFileSystemInput{
+		CreationToken:   new(creationToken),
 		Encrypted:       aws.Bool(true),
 		PerformanceMode: performanceMode,
 		Tags:            tags,

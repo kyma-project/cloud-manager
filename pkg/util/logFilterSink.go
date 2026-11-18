@@ -30,7 +30,9 @@ func (l *LogFilterSink) isMsgOk(msg string) bool {
 		"Starting EventSource",
 		"Starting Controller",
 		"Shutdown signal received, waiting for all workers to finish",
-		"All workers finished":
+		"All workers finished",
+		// runtime-watcher logs this at Info level for every SKR notification received (~2600/hr in prod)
+		"dispatched event object into channel":
 		return false
 	}
 	if l.failedWaitingForInformerToSync.MatchString(msg) {

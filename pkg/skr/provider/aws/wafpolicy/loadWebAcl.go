@@ -17,8 +17,6 @@ func loadWebAcl(ctx context.Context, st composed.State) (error, context.Context)
 		return nil, ctx
 	}
 
-	logger.Info("Loading AWS WebACL")
-
 	scope := wafv2types.ScopeRegional
 	webAclName := webAcl.Status.Id
 

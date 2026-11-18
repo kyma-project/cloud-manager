@@ -2,6 +2,7 @@ package awsnfsvolume
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -12,12 +13,12 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 	logger := composed.LoggerFromCtx(ctx)
 
 	if !composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	hasFinalizer := controllerutil.ContainsFinalizer(state.ObjAsAwsNfsVolume(), api.CommonFinalizerDeletionHook)
 	if !hasFinalizer {
-		return nil, nil
+		return nil, ctx
 	}
 
 	controllerutil.RemoveFinalizer(state.ObjAsAwsNfsVolume(), api.CommonFinalizerDeletionHook)
@@ -28,5 +29,5 @@ func removeFinalizer(ctx context.Context, st composed.State) (error, context.Con
 
 	logger.Info("Finalizer removed")
 
-	return composed.StopAndForget, nil
+	return composed.StopAndForget, ctx
 }

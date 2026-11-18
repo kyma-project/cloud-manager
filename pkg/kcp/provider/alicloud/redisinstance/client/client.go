@@ -263,10 +263,13 @@ type alicloudRedisClient struct {
 // architecture is determined by opts.InstanceClass:
 //   - redis.master.*.cloud              → standard HA (cloud-disk, engines 5.0/6.0/7.0)
 //   - redis.master.*.default            → standard HA (local-disk, engines 5.0/6.0 only)
-//   - tair.rdb.*                        → DRAM-based HA
+//   - tair.rdb.*                        → DRAM-based HA; requires CreateTairInstance API
 //   - redis.logic.sharding.*            → proxy-based cluster (ShardCount encoded in class name)
 //   - redis.shard.*.ce                  → non-proxy cloud-native cluster (separate ShardCount)
 func (c *alicloudRedisClient) CreateInstance(ctx context.Context, opts CreateInstanceOptions) (string, error) {
+	if strings.HasPrefix(opts.InstanceClass, "tair.") {
+		return c.createTairInstance(ctx, opts)
+	}
 	req := &rkvstore.CreateInstanceRequest{
 		RegionId:      new(c.region),
 		InstanceName:  new(opts.InstanceName),
@@ -302,6 +305,52 @@ func (c *alicloudRedisClient) CreateInstance(ctx context.Context, opts CreateIns
 	}
 	if resp == nil || resp.Body == nil {
 		return "", fmt.Errorf("empty response from alicloud r-kvstore CreateInstance")
+	}
+	return tea.StringValue(resp.Body.InstanceId), nil
+}
+
+// tairInstanceType derives the InstanceType value required by CreateTairInstance
+// from the instance class name: tair.rdb.* → tair_rdb, tair.scm.* → tair_scm,
+// tair.essd.* → tair_essd.
+func tairInstanceType(instanceClass string) string {
+	// class format: tair.<type>.<size>, e.g. tair.rdb.1g → tair_rdb
+	parts := strings.SplitN(instanceClass, ".", 3)
+	if len(parts) >= 2 {
+		return parts[0] + "_" + parts[1]
+	}
+	return "tair_rdb"
+}
+
+// createTairInstance handles tair.* classes (tair.rdb.*, tair.scm.*, tair.essd.*)
+// which require the separate CreateTairInstance API. InstanceType is set to the
+// prefix segment: tair_rdb, tair_scm, or tair_essd.
+func (c *alicloudRedisClient) createTairInstance(ctx context.Context, opts CreateInstanceOptions) (string, error) {
+	req := &rkvstore.CreateTairInstanceRequest{
+		RegionId:      new(c.region),
+		InstanceName:  new(opts.InstanceName),
+		InstanceClass: new(opts.InstanceClass),
+		InstanceType:  new(tairInstanceType(opts.InstanceClass)),
+		EngineVersion: new(opts.EngineVersion),
+		VpcId:         new(opts.VpcId),
+		VSwitchId:     new(opts.VSwitchId),
+		ChargeType:    new(ChargeType),
+	}
+	if opts.Password != "" {
+		req.Password = new(opts.Password)
+	}
+	if opts.ReadOnlyCount > 0 {
+		req.ReadOnlyCount = new(opts.ReadOnlyCount)
+	}
+	if opts.Token != "" {
+		req.ClientToken = new(opts.Token)
+	}
+
+	resp, err := c.c.CreateTairInstance(req)
+	if err != nil {
+		return "", fmt.Errorf("error creating alicloud tair instance: %w", err)
+	}
+	if resp == nil || resp.Body == nil {
+		return "", fmt.Errorf("empty response from alicloud r-kvstore CreateTairInstance")
 	}
 	return tea.StringValue(resp.Body.InstanceId), nil
 }

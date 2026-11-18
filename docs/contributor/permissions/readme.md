@@ -83,7 +83,7 @@ Before starting, ensure you have:
 8. **Create SRE Ticket** to deploy permissions to production:
    - Generate diff from `azure_default.json`
    - Include both the diff and complete final permission set
-   - Example: https://github.tools.sap/kyma/backlog/issues/9423
+   - Example: internal SRE backlog ticket
 
 ## GCP Permissions
 

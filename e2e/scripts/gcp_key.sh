@@ -45,6 +45,8 @@ create() {
   putCredentialKeyVal "serviceaccount.json" "$val"
   if [[ "$SA_TYPE" = "default" ]]; then
     saveCredentialsToGarden "$GCP_GARDEN_DEFAULT_SECRET"
+  elif [[ "$SA_TYPE" = "dns" ]]; then
+    saveCredentialsToGarden "$GCP_GARDEN_DNS_SECRET"
   else
     saveCredentialsToGarden "$GCP_GARDEN_PEERING_SECRET"
   fi
@@ -86,6 +88,10 @@ default)
 peering)
   SA_NAME="$SA_NAME_PEERING"
   SA="${SA_NAME_PEERING}@${GCP_PROJECT}.iam.gserviceaccount.com"
+  ;;
+dns)
+  SA_NAME="$SA_NAME_DNS"
+  SA="${SA_NAME_DNS}@${GCP_PROJECT}.iam.gserviceaccount.com"
   ;;
 *)
   echo "Unknown SA type '$SA_TYPE'"

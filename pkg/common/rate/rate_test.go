@@ -100,10 +100,9 @@ func TestRateLimiter(t *testing.T) {
 			320 * time.Millisecond,
 			640 * time.Millisecond,
 			1280 * time.Millisecond,
-			2560 * time.Millisecond,
-			5 * time.Second,
-			5 * time.Second,
-			5 * time.Second,
+			2 * time.Second,
+			2 * time.Second,
+			2 * time.Second,
 		}
 
 		t.Run("Quick", func(t *testing.T) {

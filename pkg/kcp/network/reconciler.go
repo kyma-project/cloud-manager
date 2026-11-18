@@ -97,15 +97,7 @@ func (r *networkReconciler) newAction() composed.Action {
 					composed.NewCase(statewithscope.AwsProviderPredicate, awsnetwork.New(r.awsStateFactory)),
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurenetwork.New(r.azureStateFactory)),
 					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnetwork.New(r.gcpStateFactory)),
-					composed.NewCase(
-						composed.All(
-							statewithscope.AlicloudProviderPredicate,
-							func(ctx context.Context, _ composed.State) bool {
-								return feature.Alicloud.Value(ctx)
-							},
-						),
-						alicloudnetwork.New(r.alicloudStateFactory),
-					),
+					composed.NewCase(statewithscope.AlicloudProviderPredicate, alicloudnetwork.New(r.alicloudStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

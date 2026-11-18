@@ -2,27 +2,24 @@ package nfsinstance
 
 import (
 	"context"
-	"fmt"
-	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/elliotchance/pie/v2"
+	"time"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
-	"time"
 )
 
 func loadMountTargets(ctx context.Context, st composed.State) (error, context.Context) {
-	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 
 	if state.efs == nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	mtList, err := state.awsClient.DescribeMountTargets(ctx, ptr.Deref(state.efs.FileSystemId, ""))
 	if awsmeta.IsNotFound(err) {
-		return nil, nil
+		return nil, ctx
 	}
 	if err != nil {
 		return awsmeta.LogErrorAndReturn(err, "Error loading mount targets", ctx)
@@ -47,21 +44,5 @@ func loadMountTargets(ctx context.Context, st composed.State) (error, context.Co
 		state.mountTargetSecurityGroups[mtID] = sgList
 	}
 
-	logger.
-		WithValues(
-			"mountTargets",
-			fmt.Sprintf("%v", pie.Map(mtList, func(mt efstypes.MountTargetDescription) string {
-				mtID := ptr.Deref(mt.MountTargetId, "")
-				return fmt.Sprintf(
-					"{id:%s, az:%s, ip: %s, sg: %v}",
-					mtID,
-					ptr.Deref(mt.AvailabilityZoneId, ""),
-					ptr.Deref(mt.IpAddress, ""),
-					state.mountTargetSecurityGroups[mtID],
-				)
-			})),
-		).
-		Info("Mount targets loaded")
-
-	return nil, nil
+	return nil, ctx
 }

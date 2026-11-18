@@ -8,6 +8,7 @@ const (
 	ConditionTypeDeleteWhileUsed   = "DeleteWhileUsed"
 	ConditionTypeInvalidDependency = "InvalidDependency"
 
+	ReasonError              = "Error"
 	ReasonScopeNotFound      = "ScopeNoFound"
 	ReasonProcessing         = "Processing"
 	ReasonInvalidSpec        = "InvalidSpec"
@@ -27,4 +28,5 @@ const (
 	ReasonInvalidBinding     = "InvalidBinding"
 	ReasonProviderError      = "ProviderError"
 	ReasonDeleting           = "Deleting"
+	ReasonQuotaExceeded      = "QuotaExceeded"
 )

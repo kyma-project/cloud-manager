@@ -23,6 +23,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	cloudresourcescontroller "github.com/kyma-project/cloud-manager/internal/controller/cloud-resources"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/testinfra"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -55,6 +56,8 @@ var _ = BeforeSuite(func() {
 	infra, err = testinfra.Start()
 	Expect(err).
 		NotTo(HaveOccurred(), "failed starting infra clusters")
+
+	rate.SetValuesForTests()
 
 	Expect(infra.KCP().GivenNamespaceExists(infra.KCP().Namespace())).
 		NotTo(HaveOccurred(), "failed creating namespace %s in KCP", infra.KCP().Namespace())

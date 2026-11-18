@@ -19,6 +19,7 @@ type NfsConfig interface {
 	SetFileSystemLifeCycleState(id string, state efstypes.LifeCycleState)
 	GetFileSystemById(id string) *efstypes.FileSystemDescription
 	SetFileSystemStatusCapacityById(id string, capacity resource.Quantity)
+	AddDummyFileSystem(name string)
 }
 
 type mountTargetItem struct {
@@ -90,6 +91,21 @@ func (s *nfsStore) GetFileSystemById(id string) *efstypes.FileSystemDescription 
 		}
 	}
 	return nil
+}
+
+// AddDummyFileSystem appends an unrelated Available EFS carrying the given Name tag, used by tests
+// to seed the store with many file systems so that the system under test must look past the first
+// AWS page (100 items) to find a specific one.
+func (s *nfsStore) AddDummyFileSystem(name string) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	id := uuid.NewString()
+	s.fs = append(s.fs, &efstypes.FileSystemDescription{
+		FileSystemId:   new(id),
+		LifeCycleState: efstypes.LifeCycleStateAvailable,
+		Name:           new(name),
+		Tags:           []efstypes.Tag{{Key: new("Name"), Value: new(name)}},
+	})
 }
 
 // Client ===============================
@@ -184,12 +200,23 @@ func (s *nfsStore) DescribeFileSystems(ctx context.Context) ([]efstypes.FileSyst
 	return result, nil
 }
 
-func (s *nfsStore) CreateFileSystem(ctx context.Context, performanceMode efstypes.PerformanceMode, throughputMode efstypes.ThroughputMode, tags []efstypes.Tag) (*efs.CreateFileSystemOutput, error) {
+func (s *nfsStore) CreateFileSystem(ctx context.Context, creationToken string, performanceMode efstypes.PerformanceMode, throughputMode efstypes.ThroughputMode, tags []efstypes.Tag) (*efs.CreateFileSystemOutput, error) {
 	if isContextCanceled(ctx) {
 		return nil, context.Canceled
 	}
 	s.m.Lock()
 	defer s.m.Unlock()
+
+	// enforce CreationToken idempotency as real AWS does: a repeated create with the same
+	// non-empty token returns FileSystemAlreadyExists carrying the existing FileSystemId
+	if creationToken != "" {
+		for _, x := range s.fs {
+			if ptr.Deref(x.CreationToken, "") == creationToken {
+				return nil, &efstypes.FileSystemAlreadyExists{FileSystemId: x.FileSystemId}
+			}
+		}
+	}
+
 	id := uuid.NewString()
 	name := awsutil.GetEfsTagValue(tags, "Name")
 	if name == "" {
@@ -203,6 +230,9 @@ func (s *nfsStore) CreateFileSystem(ctx context.Context, performanceMode efstype
 		Tags:                 tags,
 		Name:                 new(name),
 		ThroughputMode:       throughputMode,
+	}
+	if creationToken != "" {
+		fs.CreationToken = new(creationToken)
 	}
 	s.fs = append(s.fs, fs)
 

@@ -48,7 +48,7 @@ redisClusterTierMachineTypes:
 `
 
 func TestConfigCredentialsFromFileRoleFromEnv(t *testing.T) {
-	dir, err := os.MkdirTemp("", "cloud-manager-config")
+	dir, err := os.MkdirTemp("", "cloud-manager-aws-config")
 	assert.NoError(t, err, "error creating tmp dir")
 	defer func() {
 		_ = os.RemoveAll(dir)

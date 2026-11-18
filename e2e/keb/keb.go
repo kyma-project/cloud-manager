@@ -50,6 +50,8 @@ type Keb interface {
 	KcpClient() client.Client
 	GardenClient() client.Client
 
+	LoadCloudProfileRegistry(ctx context.Context) (e2elib.CloudProfileRegistry, error)
+
 	CreateInstance(ctx context.Context, opts ...CreateOption) (InstanceDetails, error)
 	GetInstance(ctx context.Context, runtimeID string) (*InstanceDetails, error)
 	List(ctx context.Context, opts ...ListOption) ([]InstanceDetails, error)
@@ -314,6 +316,10 @@ func (k *defaultKeb) KcpClient() client.Client {
 
 func (k *defaultKeb) GardenClient() client.Client {
 	return k.gardenClient
+}
+
+func (k *defaultKeb) LoadCloudProfileRegistry(ctx context.Context) (e2elib.CloudProfileRegistry, error) {
+	return k.cpl.Load(ctx)
 }
 
 func (k *defaultKeb) GetInstance(ctx context.Context, runtimeID string) (*InstanceDetails, error) {

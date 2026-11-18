@@ -17,6 +17,9 @@ limitations under the License.
 package cloudresources
 
 import (
+	"encoding/pem"
+	"strings"
+
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
@@ -25,7 +28,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Feature: SKR Certificate", func() {
@@ -98,7 +103,7 @@ var _ = Describe("Feature: SKR Certificate", func() {
 					infra.SKR().Client(),
 					cert,
 					NewObjActions(),
-					HavingState(cloudresourcesv1beta1.StateReady),
+					HavingState(cloudresourcesv1beta1.ReasonAvailable),
 					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
 				).
 				Should(Succeed())
@@ -106,6 +111,57 @@ var _ = Describe("Feature: SKR Certificate", func() {
 
 		By("And Then Certificate has a ProviderId (ARN) set", func() {
 			Expect(cert.Status.ProviderId).NotTo(BeEmpty())
+		})
+
+		arn := cert.Status.ProviderId
+		awsMock := awsAccount.Region(scope.Spec.Region)
+
+		newTlsCrt, newTlsKey, err := GenerateTestCertificateWithChain("test.example.com", "New Org")
+		Expect(err).NotTo(HaveOccurred())
+
+		// GenerateTestCertificateWithChain concatenates leaf+CA; extract the leaf block for comparison.
+		newLeafBlock, _ := pem.Decode(newTlsCrt)
+		Expect(newLeafBlock).NotTo(BeNil())
+		newLeafPEM := strings.TrimSpace(string(pem.EncodeToMemory(newLeafBlock)))
+
+		By("When TLS secret is updated with a new certificate", func() {
+			Eventually(func() error {
+				if err := infra.SKR().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(secret), secret); err != nil {
+					return err
+				}
+				secret.Data["tls.crt"] = newTlsCrt
+				secret.Data["tls.key"] = newTlsKey
+				return infra.SKR().Client().Update(infra.Ctx(), secret)
+			}).Should(Succeed())
+		})
+
+		By("And When Certificate reconciliation is triggered", func() {
+			Eventually(func() error {
+				if err := infra.SKR().Client().Get(infra.Ctx(), client.ObjectKeyFromObject(cert), cert); err != nil {
+					return err
+				}
+				meta.RemoveStatusCondition(&cert.Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
+				return infra.SKR().Client().Status().Update(infra.Ctx(), cert)
+			}).Should(Succeed())
+		})
+
+		By("Then Certificate becomes Ready again", func() {
+			Eventually(LoadAndCheck).
+				WithArguments(
+					infra.Ctx(),
+					infra.SKR().Client(),
+					cert,
+					NewObjActions(),
+					HavingState(cloudresourcesv1beta1.ReasonAvailable),
+					HavingConditionTrue(cloudresourcesv1beta1.ConditionTypeReady),
+				).
+				Should(Succeed())
+		})
+
+		By("And Then ACM Certificate is updated", func() {
+			acmCert, _, err := awsMock.GetCertificate(infra.Ctx(), arn)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(strings.TrimSpace(acmCert)).To(Equal(newLeafPEM))
 		})
 
 		By("When Certificate is deleted", func() {

@@ -1,10 +1,28 @@
 package config
 
 import (
+	"strings"
 	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/config"
+)
+
+// EfsOrphanRecoveryConfig configures the disposable EFS orphan-recovery garbage collector.
+// It is bound from the aws.yaml config file only (no env), so the incident-specific shootId,
+// awsAccount and region never appear as code literals. Disposable: removed after close-out.
+type EfsOrphanRecoveryConfig struct {
+	Mode        string        `json:"mode" yaml:"mode"` // off | dry-run | on
+	ShootId     string        `json:"shootId" yaml:"shootId"`
+	AwsAccount  string        `json:"awsAccount" yaml:"awsAccount"`
+	Region      string        `json:"region" yaml:"region"`
+	DeleteSleep time.Duration `json:"deleteSleep" yaml:"deleteSleep"`
+}
+
+const (
+	EfsOrphanRecoveryModeOff    = "off"
+	EfsOrphanRecoveryModeDryRun = "dry-run"
+	EfsOrphanRecoveryModeOn     = "on"
 )
 
 type AwsConfigStruct struct {
@@ -13,6 +31,7 @@ type AwsConfigStruct struct {
 	Peering                       AwsCreds                                             `json:"peering" yaml:"peering"`
 	BackupRoleName                string                                               `json:"backupRoleName" yaml:"backupRoleName"`
 	EfsCapacityCheckInterval      time.Duration                                        `json:"efsCapacityCheckInterval" yaml:"efsCapacityCheckInterval"`
+	EfsOrphanRecovery             EfsOrphanRecoveryConfig                              `json:"efsOrphanRecovery" yaml:"efsOrphanRecovery"`
 	RedisInstanceTierMachineTypes map[cloudresourcesv1beta1.AwsRedisTier]string        `json:"redisInstanceTierMachineTypes" yaml:"redisInstanceTierMachineTypes"`
 	RedisClusterTierMachineTypes  map[cloudresourcesv1beta1.AwsRedisClusterTier]string `json:"redisClusterTierMachineTypes" yaml:"redisClusterTierMachineTypes"`
 }
@@ -80,4 +99,17 @@ func InitConfig(cfg config.Config) {
 		),
 	)
 
+}
+
+// AfterConfigLoaded normalizes the EFS orphan-recovery mode after the config file is decoded.
+// Invalid or empty modes silently fall back to "off" (the safe default); there is no logger
+// available at this stage, so normalization is quiet by design.
+func (c *AwsConfigStruct) AfterConfigLoaded() {
+	mode := strings.ToLower(strings.TrimSpace(c.EfsOrphanRecovery.Mode))
+	switch mode {
+	case EfsOrphanRecoveryModeDryRun, EfsOrphanRecoveryModeOn:
+		c.EfsOrphanRecovery.Mode = mode
+	default:
+		c.EfsOrphanRecovery.Mode = EfsOrphanRecoveryModeOff
+	}
 }

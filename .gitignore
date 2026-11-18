@@ -45,3 +45,6 @@ kubeconfig*.*
 .claude/**/*.local.*
 .env
 .scannerwork
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+.mcp.json

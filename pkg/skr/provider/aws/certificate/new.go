@@ -23,13 +23,13 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActions(
 			"awsCertificate",
 			createAwsClient,
-			loadSecret,
-			parseCertificateData,
 			// create/update =========================================================================
 			composed.If(composed.NotMarkedForDeletionPredicate,
 				composed.ComposeActionsNoName(
 					actions.AddCommonFinalizer(),
 					updateId,
+					loadSecret,
+					parseCertificateData,
 					findCertificateByProviderId,
 					findCertificateByUUID,
 					loadCertificate,

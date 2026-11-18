@@ -89,15 +89,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureiprange.NewAllocateIpRangeAction(r.azureStateFactory)),
 						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.NewAllocateIpRangeAction(r.gcpV3StateFactory)),
 						composed.NewCase(statewithscope.OpenStackProviderPredicate, sapiprange.NewAllocateIpRangeAction(r.sapStateFactory)),
-						composed.NewCase(
-							composed.All(
-								statewithscope.AlicloudProviderPredicate,
-								func(ctx context.Context, _ composed.State) bool {
-									return feature.Alicloud.Value(ctx)
-								},
-							),
-							alicloudiprange.NewAllocateIpRangeAction(r.alicloudStateFactory),
-						),
+						composed.NewCase(statewithscope.AlicloudProviderPredicate, alicloudiprange.NewAllocateIpRangeAction(r.alicloudStateFactory)),
 					),
 					allocateIpRange,
 				),
@@ -138,15 +130,7 @@ func (r *ipRangeReconciler) newAction() composed.Action {
 						composed.NewCase(statewithscope.AzureProviderPredicate, azureiprange.New(r.azureStateFactory)),
 						composed.NewCase(statewithscope.GcpProviderPredicate, gcpiprange.New(r.gcpV3StateFactory)),
 						composed.NewCase(statewithscope.OpenStackProviderPredicate, sapiprange.New(r.sapStateFactory)),
-						composed.NewCase(
-							composed.All(
-								statewithscope.AlicloudProviderPredicate,
-								func(ctx context.Context, _ composed.State) bool {
-									return feature.Alicloud.Value(ctx)
-								},
-							),
-							alicloudiprange.New(r.alicloudStateFactory),
-						),
+						composed.NewCase(statewithscope.AlicloudProviderPredicate, alicloudiprange.New(r.alicloudStateFactory)),
 					),
 				),
 				// delete

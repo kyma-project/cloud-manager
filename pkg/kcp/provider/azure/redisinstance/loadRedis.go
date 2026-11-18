@@ -3,6 +3,7 @@ package redisinstance
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -20,15 +21,12 @@ func loadRedis(ctx context.Context, st composed.State) (error, context.Context) 
 		return nil, ctx
 	}
 
-	logger.Info("Loading Azure Redis")
-
 	redisInstanceName := state.ObjAsRedisInstance().Name
 	resourceGroupName := state.resourceGroupName
 
 	redisInstance, err := state.client.GetRedisInstance(ctx, resourceGroupName, redisInstanceName)
 	if err != nil {
 		if azuremeta.IsNotFound(err) {
-			logger.Info("Azure Redis instance not found")
 			return nil, ctx
 		}
 

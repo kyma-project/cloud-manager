@@ -2,17 +2,17 @@ package nfsinstance
 
 import (
 	"context"
+
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
-	"k8s.io/utils/ptr"
 )
 
 func createSecurityGroup(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
 	if state.securityGroup != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger := composed.LoggerFromCtx(ctx)
@@ -23,15 +23,15 @@ func createSecurityGroup(ctx context.Context, st composed.State) (error, context
 			Value: new(state.Obj().GetName()),
 		},
 		{
-			Key:   ptr.To(common.TagCloudManagerRemoteName),
+			Key:   new(common.TagCloudManagerRemoteName),
 			Value: new(state.ObjAsNfsInstance().Spec.RemoteRef.String()),
 		},
 		{
-			Key:   ptr.To(common.TagCloudManagerName),
+			Key:   new(common.TagCloudManagerName),
 			Value: new(state.Name().String()),
 		},
 		{
-			Key:   ptr.To(common.TagScope),
+			Key:   new(common.TagScope),
 			Value: new(state.ObjAsNfsInstance().Spec.Scope.Name),
 		},
 	})

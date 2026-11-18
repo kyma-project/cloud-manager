@@ -89,7 +89,6 @@ func checkUpdateNeeded(ctx context.Context, st composed.State) (error, context.C
 		return nil, ctx
 	}
 
-	logger.Info("No update needed, WebACL matches desired state")
 	state.updateNeeded = false
 	return nil, ctx
 }

@@ -13,12 +13,8 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 
 	return composed.NewStatusPatcherComposed(cert).
 		MutateStatus(func(c *cloudresourcesv1beta1.Certificate) {
-			if state.certificateArn != "" {
-				c.Status.ProviderId = state.certificateArn
-			}
-			if state.certificateDetail != nil {
-				c.SetStatusReady()
-			}
+			c.Status.ProviderId = state.certificateArn
+			c.SetStatusReady()
 		}).
 		OnStatusChanged(composed.Log("Certificate status updated")).
 		Run(ctx, state.Cluster().K8sClient())

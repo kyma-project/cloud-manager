@@ -15,7 +15,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 	logger := composed.LoggerFromCtx(ctx)
 	state := st.(*State)
 	if state.securityGroup != nil {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if len(state.securityGroupId) == 0 {
@@ -31,7 +31,7 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after missing security group id", composed.StopWithRequeue, ctx)
 		}
-		return composed.StopAndForget, nil
+		return composed.StopAndForget, ctx
 	}
 
 	sg, err := state.awsClient.DescribeSecurityGroups(
@@ -60,12 +60,12 @@ func loadSecurityGroup(ctx context.Context, st composed.State) (error, context.C
 		if err != nil {
 			return composed.LogErrorAndReturn(err, "Error updating NfsInstance status after missing created security group", composed.StopWithRequeue, ctx)
 		}
-		return composed.StopAndForget, nil
+		return composed.StopAndForget, ctx
 	}
 
 	state.securityGroup = &sg[0]
 
 	logger.Info("Created security group is loaded")
 
-	return nil, nil
+	return nil, ctx
 }

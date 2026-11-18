@@ -87,15 +87,7 @@ func (r *nfsInstanceReconciler) newAction() composed.Action {
 					composed.NewCase(statewithscope.AzureProviderPredicate, azurenfsinstance.New(r.azureStateFactory)),
 					composed.NewCase(statewithscope.GcpProviderPredicate, gcpnfsinstancev2.New(r.gcpStateFactoryV2)),
 					composed.NewCase(statewithscope.OpenStackProviderPredicate, sapnfsinstance.New(r.sapStateFactory)),
-					composed.NewCase(
-						composed.All(
-							statewithscope.AlicloudProviderPredicate,
-							func(ctx context.Context, _ composed.State) bool {
-								return feature.Alicloud.Value(ctx)
-							},
-						),
-						alicloudnfsinstance.New(r.alicloudStateFactory),
-					),
+					composed.NewCase(statewithscope.AlicloudProviderPredicate, alicloudnfsinstance.New(r.alicloudStateFactory)),
 				),
 			)(ctx, newState(st.(focal.State)))
 		},

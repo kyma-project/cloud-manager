@@ -2,11 +2,12 @@ package nfsinstance
 
 import (
 	"context"
+
 	efstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func waitEfsDeleted(ctx context.Context, st composed.State) (error, context.Context) {
@@ -14,12 +15,11 @@ func waitEfsDeleted(ctx context.Context, st composed.State) (error, context.Cont
 	logger := composed.LoggerFromCtx(ctx)
 
 	if state.efs == nil {
-		logger.Info("The EFS not found")
-		return nil, nil
+		return nil, ctx
 	}
 	if state.efs.LifeCycleState == efstypes.LifeCycleStateDeleted {
 		logger.Info("The EFS is in the deleted state")
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.efs.LifeCycleState == efstypes.LifeCycleStateError {
@@ -38,5 +38,5 @@ func waitEfsDeleted(ctx context.Context, st composed.State) (error, context.Cont
 		WithValues("lifeCycleState", state.efs.LifeCycleState).
 		Info("Waiting EFS gets deleted")
 
-	return composed.StopWithRequeueDelay(300 * time.Millisecond), nil
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }

@@ -3,6 +3,7 @@ package redisinstance
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	azuremeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/azure/meta"
@@ -20,7 +21,6 @@ func loadPrivateDnsZoneGroup(ctx context.Context, st composed.State) (error, con
 		return nil, ctx
 	}
 	if state.privateEndPoint == nil {
-		logger.Info("Skipping Azure Private DnsZone Group loading, Private EndPoint is not loaded")
 		return nil, ctx
 	}
 	logger.Info("Loading Azure Private DnsZone Group")

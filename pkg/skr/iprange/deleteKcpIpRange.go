@@ -2,6 +2,7 @@ package iprange
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -13,16 +14,16 @@ func deleteKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 
 	if !composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR IpRange is NOT marked for deletion, do not delete mirror in KCP
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.KcpIpRange == nil {
 		// SKR IpRange is marked for deletion, but none found in KCP, probably already deleted
-		return nil, nil
+		return nil, ctx
 	}
 	if composed.IsMarkedForDeletion(state.KcpIpRange) {
 		// KCP IpRange is already marked for deletion, move forward to update the status in SKR if deletion failed
-		return nil, nil
+		return nil, ctx
 	}
 
 	logger.Info("Deleting KCP IpRange")
@@ -38,5 +39,5 @@ func deleteKcpIpRange(ctx context.Context, st composed.State) (error, context.Co
 	}
 
 	// give some time to cloud-control and cloud providers to delete it, and then run again
-	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+	return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 }

@@ -2,7 +2,6 @@ package defaultiprange
 
 import (
 	"context"
-	"fmt"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -20,11 +19,6 @@ func waitIpRangeReady(ctx context.Context, st composed.State) (error, context.Co
 	if isReady {
 		return nil, ctx
 	}
-
-	logger := composed.LoggerFromCtx(ctx)
-	logger.
-		WithValues("IpRange", fmt.Sprintf("%s/%s", state.GetSkrIpRange().Namespace, state.GetSkrIpRange().Name)).
-		Info("IpRange is not ready, requeue delayed")
 
 	return composed.StopWithRequeue, ctx
 }

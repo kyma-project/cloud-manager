@@ -178,7 +178,7 @@ func (c *defaultClusterInSession) GetObjectsToDeleteOnTerminate() []client.Objec
 func (c *defaultClusterInSession) DeleteOnTerminate(objects ...client.Object) {
 	for _, obj := range objects {
 		if obj != nil {
-			c.deleteOnTerminate = append(c.deleteOnTerminate, objects...)
+			c.deleteOnTerminate = append(c.deleteOnTerminate, obj)
 		}
 	}
 }
@@ -549,6 +549,7 @@ func (s *scenarioSession) Eval(ctx context.Context) (Evaluator, error) {
 	for _, ws := range s.tfWorkspaces {
 		b.Set(ws.GetAlias(), ws.Outputs())
 	}
+	b.Set("defaultDomain", fmt.Sprintf("%s.%s", s.CurrentCluster().ShootName(), s.world.Config().DNSBaseDomain))
 	for _, c := range s.clusters {
 		b.Add(c)
 	}

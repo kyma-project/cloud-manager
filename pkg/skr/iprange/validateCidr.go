@@ -49,17 +49,16 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
-		return nil, nil
+		return nil, ctx
 	}
 
 	// cidr is optional by feature flag
 	if len(state.ObjAsIpRange().Spec.Cidr) == 0 {
-		return nil, nil
+		return nil, ctx
 	}
 
 	if len(state.ObjAsIpRange().Status.Cidr) > 0 {
-		logger.Info("Cidr already checked and valid")
-		return nil, nil
+		return nil, ctx
 	}
 
 	rng, err := cidr.Parse(state.ObjAsIpRange().Spec.Cidr)
@@ -144,5 +143,5 @@ func validateCidr(ctx context.Context, st composed.State) (error, context.Contex
 	}
 	logger.Info("SKR IpRange Cidr validated")
 
-	return nil, nil
+	return nil, ctx
 }

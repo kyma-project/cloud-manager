@@ -11,20 +11,12 @@ import (
 
 func createAwsClient(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	logger := composed.LoggerFromCtx(ctx)
 
 	if state.awsClient != nil {
 		return nil, ctx
 	}
 
 	roleName := awsutil.RoleArnDefault(state.Scope().Spec.Scope.Aws.AccountId)
-
-	logger.
-		WithValues(
-			"awsRegion", state.Scope().Spec.Region,
-			"awsRole", roleName,
-		).
-		Info("Assuming AWS role")
 
 	cli, err := state.awsClientProvider(
 		ctx,

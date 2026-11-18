@@ -2,6 +2,7 @@ package nfsinstance
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -45,8 +46,8 @@ func createMountTargets(ctx context.Context, st composed.State) (error, context.
 	}
 
 	if anyCreated {
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
-	return nil, nil
+	return nil, ctx
 }

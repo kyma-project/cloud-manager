@@ -50,13 +50,21 @@ setProjectIAM() {
 
   log "Updating project IAM for SA $SA with role $ROLE_NAME"
 
-  gcloud projects add-iam-policy-binding $GCP_PROJECT --project="$GCP_PROJECT" \
-    --member="serviceAccount:$SA" --role="projects/$GCP_PROJECT/roles/$ROLE_NAME" > /dev/null
+  if [[ "$ROLE_NAME" == roles/* ]]; then
+    gcloud projects add-iam-policy-binding $GCP_PROJECT --project="$GCP_PROJECT" \
+      --member="serviceAccount:$SA" --role="$ROLE_NAME" > /dev/null
+  else
+    gcloud projects add-iam-policy-binding $GCP_PROJECT --project="$GCP_PROJECT" \
+      --member="serviceAccount:$SA" --role="projects/$GCP_PROJECT/roles/$ROLE_NAME" > /dev/null
+  fi
 
   return 0
 }
 
 # Main
+
+createServiceAccount "$SA_NAME_DNS"
+setProjectIAM "$SA_NAME_DNS" "$ROLE_NAME_DNS"
 
 createServiceAccount "$SA_NAME_DEFAULT"
 createServiceAccount "$SA_NAME_PEERING"

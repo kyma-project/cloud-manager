@@ -49,7 +49,19 @@ type ConfigType struct {
 	TfWorkspaceDir string `yaml:"tfWorkspaceDir" json:"tfWorkspaceDir"`
 	TfCmd          string `yaml:"tfCmd" json:"tfCmd"`
 
+	DNSBaseDomain string `yaml:"dnsBaseDomain" json:"dnsBaseDomain"`
+	DNSCredential string `yaml:"dnsCredential" json:"dnsCredential"`
+
 	DownloadGardenSecrets map[string]map[string]string `yaml:"downloadGardenSecrets" json:"downloadGardenSecrets"`
+
+	Modules map[string]ModuleConfig `yaml:"modules" json:"modules"`
+}
+
+type ModuleConfig struct {
+	Repository string `yaml:"repository" json:"repository"`
+	Version    string `yaml:"version" json:"version"`
+	Default    string `yaml:"default" json:"default"`
+	Manifest   string `yaml:"manifest" json:"manifest"`
 }
 
 func (c *ConfigType) AfterConfigLoaded() {

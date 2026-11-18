@@ -40,6 +40,21 @@ runs:
       shell: bash
       run: mkdir ./tmp
 
+    - name: Write skrRuntime.yaml config file
+      shell: bash
+      run: |
+        cat <<EOF > ./tmp/skrRuntime.yaml
+        cyclicMinInterval: 1s
+        EOF
+
+    - name: Write resourceQuotaSkr.yaml config file
+      shell: bash
+      run: |
+        cat <<EOF > ./tmp/resourceQuotaSkr.yaml
+        defaults:
+          iprange.cloud-resources.kyma-project.io/totalCount: 10
+        EOF
+
     - name: Write e2e config file
       shell: bash
       env:
@@ -48,6 +63,8 @@ runs:
       run: |
         cat <<EOF > ./tmp/e2e-config.yaml
         gardenKubeconfig: $PWD/kubeconfig-garden.yaml
+        dnsBaseDomain: phx.dev.kyma.ondemand.com
+        dnsCredential: cm-e2e-dns-gcp
         shootPrefix: pp
         kcpNamespace: kcp-system
         gardenNamespace: garden-spm-test01
@@ -96,6 +113,17 @@ runs:
           cm-e2e-default-alicloud:
             ALICLOUD_ACCESS_KEY: accessKeyID
             ALICLOUD_SECRET_KEY: accessKeySecret
+        modules:
+          istio:
+            repository: github.com/kyma-project/istio
+            version: latest
+            default: istio-default-cr.yaml
+            manifest: istio-manager.yaml
+          api-gateway:
+            repository: github.com/kyma-project/api-gateway
+            version: latest
+            default: apigateway-default-cr.yaml
+            manifest: api-gateway-manager.yaml
         EOF
 
     - name: List directory

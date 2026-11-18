@@ -74,6 +74,7 @@
         "elasticache:DescribeCacheParameters",
         "elasticache:DescribeCacheSubnetGroups",
         "elasticache:DescribeEngineDefaultParameters",
+        "elasticache:DescribeEvents",
         "elasticache:DescribeReplicationGroups",
         "elasticache:DescribeUserGroups",
         "elasticache:IncreaseReplicaCount",

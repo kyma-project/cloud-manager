@@ -60,6 +60,14 @@ func vpcFind(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 
 	if vpc == nil {
+		// On deletion a missing VPC is the terminal success condition - pass through
+		// with state.vpc == nil so the delete actions and finalizer removal run.
+		// Returning StopAndForget here would strand the finalizer.
+		if composed.IsMarkedForDeletion(state.Obj()) {
+			logger.Info("VPC already gone, proceeding with KCP IpRange deletion")
+			return nil, ctx
+		}
+
 		logger.
 			WithValues(
 				"vpcName", vpcNetworkName,

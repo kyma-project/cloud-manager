@@ -48,6 +48,11 @@ func addUpdatingCondition(ctx context.Context, st composed.State) (error, contex
 	}
 
 	if !isModifying && hasUpdatingCondition {
+		// Auto-heal deletes+recreates the RG; keep ConditionTypeUpdating while it is
+		// deleting so the recovery stays visible. Clear it once the RG leaves deleting.
+		if cacheState == awsmeta.ElastiCache_DELETING {
+			return nil, ctx
+		}
 		logger.Info("Removing updating condition from redis instance")
 		return composed.UpdateStatus(redisInstance).
 			RemoveConditions(cloudcontrolv1beta1.ConditionTypeUpdating).

@@ -38,6 +38,7 @@ func New(stateFactory StateFactory) composed.Action {
 				),
 				composed.ComposeActions(
 					"awsWafPolicy-delete",
+					statusDeleting,
 					deleteWebAcl,
 					actions.RemoveCommonFinalizer(),
 				),

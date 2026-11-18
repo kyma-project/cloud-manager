@@ -15,12 +15,12 @@ func createKcpNfsInstance(ctx context.Context, st composed.State) (error, contex
 
 	if composed.MarkedForDeletionPredicate(ctx, st) {
 		// SKR IpRange is marked for deletion, do not create mirror in KCP
-		return nil, nil
+		return nil, ctx
 	}
 
 	if state.KcpNfsInstance != nil {
 		// mirror IpRange in KCP is already created
-		return nil, nil
+		return nil, ctx
 	}
 
 	state.KcpNfsInstance = &cloudcontrolv1beta1.NfsInstance{
