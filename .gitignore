@@ -43,6 +43,7 @@ kubeconfig
 kubeconfig*.*
 
 .claude/**/*.local.*
+.claude/memory/
 .env
 .scannerwork
 # Playwright CLI output (may contain credentials)
