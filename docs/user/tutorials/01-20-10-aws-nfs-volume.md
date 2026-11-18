@@ -40,6 +40,9 @@ You have the Cloud Manager module added.
    awsnfsvolume.cloud-resources.kyma-project.io/my-vol condition met
    ```
 
+   > [!NOTE]
+   > The underlying EFS filesystem root is owned by `root:root` with `drwxr-xr-x` permissions, so workloads running with a non-root UID/GID cannot write to the volume root. If your workloads run as non-root, see [Initializing AwsNfsVolume for Non-Privileged Workloads](./01-20-14-aws-nfs-volume-init.md).
+
 4. Observe the generated PersistentVolume:
 
    ```shell
