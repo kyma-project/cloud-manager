@@ -3,8 +3,10 @@ package cloudresources
 import (
 	"context"
 
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
 	cloudresourcestypes "github.com/kyma-project/cloud-manager/pkg/skr/cloudresources/types"
 )
 
@@ -21,13 +23,19 @@ func New(stateFactory StateFactory) composed.Action {
 		return composed.ComposeActionsNoName(
 			composed.If(
 				composed.MarkedForDeletionPredicate,
-				logGroupLoad,
-				logGroupDelete,
+				composed.If(
+					isWafFeatureEnabled,
+					logGroupLoad,
+					logGroupDelete,
+				),
 			),
 			composed.If(
 				composed.NotMarkedForDeletionPredicate,
 				composed.If(
-					shouldRunWafLogGroup,
+					composed.All(
+						isWafFeatureEnabled,
+						shouldWafLogGroupBeCreatedOrUpdated,
+					),
 					logGroupLoad,
 					logGroupCreate,
 					logGroupPutRetention,
@@ -46,7 +54,14 @@ func New(stateFactory StateFactory) composed.Action {
 // cloudresources.status.subscription.wafLogGroup it will yield not equal status and gate opens
 const wafLogGroupImplementation = "v1"
 
-func shouldRunWafLogGroup(ctx context.Context, st composed.State) bool {
+func isWafFeatureEnabled(ctx context.Context, st composed.State) bool {
+	state := st.(*State)
+	_, cctx := feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.WafPolicy{})(ctx, state)
+	disabled := feature.ApiDisabled.Value(cctx)
+	return !disabled
+}
+
+func shouldWafLogGroupBeCreatedOrUpdated(ctx context.Context, st composed.State) bool {
 	state := st.(*State)
 	return state.ObjAsCloudResources().Status.Subscription.WafLogGroup != wafLogGroupImplementation
 }
