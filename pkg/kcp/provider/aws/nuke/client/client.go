@@ -32,6 +32,7 @@ type NukeWafPolicyClient interface {
 	GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error)
 	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
 	ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error)
+	DeleteLoggingConfiguration(ctx context.Context, webAclArn string) error
 }
 
 var _ NukeCertificateClient = (certificateclient.Client)(nil)
@@ -128,6 +129,10 @@ func (c *client) DeleteWebACL(ctx context.Context, name, id string, scope wafv2t
 
 func (c *client) ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error) {
 	return c.webAclClient.ListTagsForWebACL(ctx, resourceArn)
+}
+
+func (c *client) DeleteLoggingConfiguration(ctx context.Context, webAclArn string) error {
+	return c.webAclClient.DeleteLoggingConfiguration(ctx, webAclArn)
 }
 
 // Certificate methods

@@ -22,6 +22,14 @@ func deleteWebAcls(ctx context.Context, st composed.State) (error, context.Conte
 				// Get full WebACL details to obtain lock token
 				name := ptr.Deref(resource.Summary.Name, "")
 				id := ptr.Deref(resource.Summary.Id, "")
+				arn := ptr.Deref(resource.Summary.ARN, "")
+
+				// Delete logging configuration before WebACL; AWS returns WAFAssociatedItemException otherwise
+				err := state.awsClient.DeleteLoggingConfiguration(ctx, arn)
+				if err != nil && !awsmeta.IsNotFound(err) {
+					logger.Error(err, "Error deleting logging configuration for WebACL", "id", resource.GetId())
+					continue // non-fatal, but skip deletion to avoid WAFAssociatedItemException
+				}
 
 				// Note: types.ScopeRegional is the WAFv2 scope type (ALB/API Gateway), not related to state.Scope()
 				_, lockToken, err := state.awsClient.GetWebACL(ctx, name, id, types.ScopeRegional)

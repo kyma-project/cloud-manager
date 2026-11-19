@@ -9,7 +9,12 @@ import (
 )
 
 // computeSecretHash returns a hex-encoded SHA-256 of the certificate secret's relevant keys.
-// It hashes raw secret bytes so any content change is detected regardless of Kubernetes resourceVersion churn.
+//
+// Raw bytes are hashed rather than using the X.509 certificate fingerprint or serial number because:
+//   - A fingerprint covers only tls.crt; changes to tls.key or ca.crt would be missed.
+//   - Serial number is set by the CA and does not change when the same cert is re-uploaded.
+//   - Both require successfully parsing the certificate before the check can run; hashing raw
+//     bytes works even when the content is invalid, letting the short-circuit fire consistently.
 func computeSecretHash(state *State) string {
 	h := sha256.New()
 	h.Write(state.secret.Data["tls.crt"])
