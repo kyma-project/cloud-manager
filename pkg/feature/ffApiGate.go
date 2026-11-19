@@ -35,12 +35,16 @@ func isTrialBrokerPlan(ctx context.Context) bool {
 	return util.CastInterfaceToString(MustContextFromCtx(ctx).GetCustom()[types.KeyBrokerPlan]) == brokerPlanTrial
 }
 
-// isAlwaysEnabledApi returns true when the API must always be enabled regardless
+// isAlwaysEnabledApi returns true when apiEnabled must report enabled regardless
 // of config. This covers the bootstrap kind-group (CloudResources), and the two
 // always-on feature buckets: FeatureFoundation and FeatureUnknown. Trial SKRs are
-// the one exception to the feature buckets: there the legacy "disable all on trial"
-// stance still applies, so foundation/unknown fall through to the flag. The bootstrap
-// kind-group remains always-on even on trial.
+// the one exception to the feature buckets: there the "disable all on trial"
+// config rule still applies, so foundation/unknown fall through to the flag. The
+// bootstrap kind-group remains always-on even on trial.
+//
+// This gates apiEnabled only. The legacy apiDisabled flag is frozen to its
+// bootstrap-only short-circuit (see ffApiDisabled.go) so it stays the parity
+// oracle; it deliberately does not share this always-on policy.
 func isAlwaysEnabledApi(ctx context.Context) bool {
 	if isBootstrapKindGroup(ctx) {
 		return true

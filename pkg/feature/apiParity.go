@@ -80,9 +80,9 @@ func CheckApiParity(ctx context.Context, configPath string) ([]Divergence, error
 
 // buildParityDimensions constructs dimension slices for the corpus, including
 // globalAccount and shoot values self-seeded from the config's targeting queries.
-// FeatureFoundation and FeatureUnknown are hardcoded always-on in code (independent
-// of config); the corpus includes them so the checker confirms parity trivially holds
-// for them on every run — they will never produce a divergence.
+// FeatureFoundation and FeatureUnknown are hardcoded always-on for apiEnabled but
+// read config for apiDisabled (the frozen oracle), so their rows are a real parity
+// check: a config rule that disabled them would surface here as a divergence.
 // A parse failure in the seed-extraction step is returned as an error so callers
 // treat a malformed config as a hard error rather than a zero-divergence pass.
 func buildParityDimensions(configBytes []byte) (parityCorpusDimensions, error) {

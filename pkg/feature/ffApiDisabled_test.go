@@ -149,6 +149,13 @@ func TestApiDisabled(t *testing.T) {
 			c: ContextBuilderFromCtx(ctx).Landscape("stage").GlobalAccount("6034adc9-3441-494c-b438-a0eba4c5045a").Feature(types.FeatureNfsBackup).Build(ctx),
 			v: false, // not disabled
 		},
+		{
+			// Trial rule precedes the globalAccount exemption, so GoFF first-match
+			// fires the trial disable: the account exemption does not apply on trial.
+			t: "trial overrides the globalAccount exemption on stage",
+			c: ContextBuilderFromCtx(ctx).BrokerPlan("trial").Landscape("stage").GlobalAccount("6034adc9-3441-494c-b438-a0eba4c5045a").Feature(types.FeatureNfsBackup).Build(ctx),
+			v: true, // disabled
+		},
 	}
 
 	for _, cs := range cases {

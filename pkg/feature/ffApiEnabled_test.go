@@ -159,6 +159,13 @@ func TestApiEnabled(t *testing.T) {
 			c:           ContextBuilderFromCtx(ctx).Landscape("stage").GlobalAccount("6034adc9-3441-494c-b438-a0eba4c5045a").Feature(types.FeatureNfsBackup).Build(ctx),
 			wantEnabled: true,
 		},
+		{
+			// Trial rule is declared before the globalAccount exemption, so GoFF
+			// first-match fires the trial disable: trial wins over the exemption.
+			t:           "trial overrides the globalAccount exemption on stage",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Landscape("stage").GlobalAccount("6034adc9-3441-494c-b438-a0eba4c5045a").Feature(types.FeatureNfsBackup).Build(ctx),
+			wantEnabled: false,
+		},
 	}
 
 	for _, cs := range cases {
@@ -387,6 +394,7 @@ func TestApiEnabledEdgeParity(t *testing.T) {
 // while still returning true for the bootstrap kind-group.
 func TestApiEnabledSecureDefault(t *testing.T) {
 	ctx := t.Context()
+	restoreProvider(t)
 
 	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiEnabledNoBlock.yaml"))
 	assert.NoError(t, err)
@@ -409,6 +417,7 @@ func TestApiEnabledSecureDefault(t *testing.T) {
 // BoolVariation would return the default (false); the test fails if the code path is removed.
 func TestApiEnabledAlwaysOnIndependentOfConfig(t *testing.T) {
 	ctx := t.Context()
+	restoreProvider(t)
 
 	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiEnabledNoBlock.yaml"))
 	assert.NoError(t, err)
@@ -433,6 +442,7 @@ func TestApiEnabledAlwaysOnIndependentOfConfig(t *testing.T) {
 // assertions here are absolute.
 func TestApiEnabledTrialGatesFoundation(t *testing.T) {
 	ctx := t.Context()
+	restoreProvider(t)
 
 	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiEnabled.yaml"))
 	assert.NoError(t, err)
