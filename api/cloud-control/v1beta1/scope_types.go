@@ -253,6 +253,9 @@ type ScopeStatus struct {
 
 	// +optional
 	ExposedData ExposedData `json:"exposedData"`
+
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 type ExposedData struct {
@@ -280,6 +283,18 @@ type Scope struct {
 
 func (in *Scope) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
+}
+
+func (in *Scope) ObservedGeneration() int64 {
+	return in.Status.ObservedGeneration
+}
+
+func (in *Scope) SetObservedGeneration(v int64) {
+	in.Status.ObservedGeneration = v
+}
+
+func (in *Scope) GetStatus() any {
+	return &in.Status
 }
 
 func (in *Scope) GetObjectMeta() *metav1.ObjectMeta {

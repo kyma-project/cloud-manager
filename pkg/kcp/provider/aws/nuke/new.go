@@ -48,6 +48,8 @@ func New(stateFactory StateFactory) composed.Action {
 			loadCertificates,
 			providerResourceStatusDiscovered,
 			deleteCertificates,
+			// WagLogGroup
+			wafLogGroupLoadAndDelete,
 			// Status tracking (applies to all resource types)
 			providerResourceStatusDeleting,
 			providerResourceStatusDeleted,

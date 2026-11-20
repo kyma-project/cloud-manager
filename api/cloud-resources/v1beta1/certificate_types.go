@@ -43,6 +43,11 @@ type CertificateStatus struct {
 	// +optional
 	ProviderId string `json:"providerId,omitempty"`
 
+	// SecretHash is a SHA-256 hash of the referenced Secret's certificate data (tls.crt, tls.key, ca.crt).
+	// Used to detect secret content changes without making AWS API calls on every reconcile.
+	// +optional
+	SecretHash string `json:"secretHash,omitempty"`
+
 	// List of status conditions to indicate the status of a Certificate
 	// +optional
 	// +listType=map

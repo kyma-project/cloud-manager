@@ -38,6 +38,7 @@ import (
 	gcpvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/gcp/vpcnetwork/client"
 	sapvpcnetwork "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/vpcnetwork"
 	sapvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/sap/vpcnetwork/client"
+	awscloudresourcesclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/cloudresources/client"
 
 	commonconfig "github.com/kyma-project/cloud-manager/pkg/common/config"
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
@@ -244,7 +245,7 @@ func main() {
 	}()
 
 	// SKR Controllers
-	if err = cloudresourcescontroller.SetupCloudResourcesReconciler(skrRegistry); err != nil {
+	if err = cloudresourcescontroller.SetupCloudResourcesReconciler(skrRegistry, awscloudresourcesclient.NewClientProvider()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CloudResources")
 		os.Exit(1)
 	}

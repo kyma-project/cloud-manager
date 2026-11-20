@@ -197,8 +197,8 @@ github.com/armon/go-metrics v0.4.1/go.mod h1:E6amYzXo6aW1tqzoZGT755KkbgrJsSdpwZ+
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/aws/aws-sdk-go-v2 v1.48.0 h1:tFU7EJVm7MfyaXLsXdYTZ0Vd6vwt9OljCyqq0gqk0Mc=
 github.com/aws/aws-sdk-go-v2 v1.48.0/go.mod h1:oeKU5p+TQBnpeLmU42WZLWvzv+ORLn+74n4QVLnm/Z0=
-github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.24 h1:t7FxqJ5KHDeKceyD4HtGaG6z7hMSeVGjs5/4c+L5ArM=
-github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.24/go.mod h1:5XK6NRVlK8s8yj4zKcM43HLluGA/rAz+azLLvWDMRr0=
+github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.27 h1:3dMP9eEmHVosFN1QiD24IJBKVY8m6iUfVYXqRCT118Q=
+github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.27/go.mod h1:KH4PKcqtjy1m0656eqQV2v53xE04ddJzuNloEKqlHkI=
 github.com/aws/aws-sdk-go-v2/config v1.33.18 h1:WC0C4jM/tewXG8DWXnoxXnusJPZTryPazqk2k/zgd2s=
 github.com/aws/aws-sdk-go-v2/config v1.33.18/go.mod h1:0kRpFgsnD59mC2bbbyOTVpaZ9RnXW/pFkqlfiwbgZaU=
 github.com/aws/aws-sdk-go-v2/credentials v1.21.0 h1:OViwhqeipkQzSHuO2eQDUCdLrI6r3nzGxFUyM8GqnCs=
@@ -217,6 +217,8 @@ github.com/aws/aws-sdk-go-v2/service/acm v1.51.5 h1:uNlN9Ua7hkdp109+HpoSWTFQrZ4M
 github.com/aws/aws-sdk-go-v2/service/acm v1.51.5/go.mod h1:X+vU8ajhUQBywA7lCt6KDD+6jmOmYpWY/jIv/niZgRM=
 github.com/aws/aws-sdk-go-v2/service/backup v1.70.0 h1:BjZZI4Rnqza6OqY3WGuY4An9Vbe/LxEK4Fz+AbSh0eA=
 github.com/aws/aws-sdk-go-v2/service/backup v1.70.0/go.mod h1:oDajpYieqrUpQp1JKJCSg/yFjcgzlAdaBYxaWtzb4DA=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.92.2 h1:EgZ2zXnUAlPTkSvUicRCR5bBHm5ws9pGidRgmwCRQ9U=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.92.2/go.mod h1:LvyCX/2B66WkJ3qgeD2QGZtQaCInPQxZcFOAenHJz2s=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.346.0 h1:mVKNHBeByAci4VyF3a72tihL6hHCB8x7Q8/yIcmDgFQ=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.346.0/go.mod h1:uMJiOkxaT3pV+LAeAvEaXToZ2x3nEnN53HnPdj+pcNo=
 github.com/aws/aws-sdk-go-v2/service/efs v1.51.6 h1:tPvdIpAa+LSTnLZLb4sZTiudD9tHu3VnL4bcV5eJmSw=

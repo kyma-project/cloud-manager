@@ -15,6 +15,7 @@ import (
 	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	awsvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/vpcnetwork/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
+	awscloudresourcesclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/cloudresources/client"
 
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsiprangeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/iprange/client"
@@ -198,6 +199,16 @@ func (s *server) WebAclProvider() awsclient.SkrClientProvider[awswebaclclient.Cl
 
 func (s *server) CertificateProvider() awsclient.SkrClientProvider[certificateclient.Client] {
 	return func(_ context.Context, account, region, key, secret, role string) (certificateclient.Client, error) {
+		acc := s.GetAccount(account)
+		if acc == nil {
+			return nil, ErrNoAccount
+		}
+		return acc.Region(region), nil
+	}
+}
+
+func (s *server) CloudResourcesProvider() awsclient.SkrClientProvider[awscloudresourcesclient.Client] {
+	return func(_ context.Context, account, region, key, secret, role string) (awscloudresourcesclient.Client, error) {
 		acc := s.GetAccount(account)
 		if acc == nil {
 			return nil, ErrNoAccount

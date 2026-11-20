@@ -2,9 +2,6 @@ package certificate
 
 import (
 	"context"
-	"crypto/x509"
-	"encoding/hex"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	acmtypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
@@ -13,29 +10,18 @@ import (
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	certificatetypes "github.com/kyma-project/cloud-manager/pkg/skr/certificate/types"
 	certificateclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/certificate/client"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 )
-
-type CertificateData struct {
-	Certificate      []byte // tls.crt - leaf PEM, single block, ready for ACM import
-	PrivateKey       []byte // tls.key
-	CertificateChain []byte // ca.crt (optional)
-	X509             *x509.Certificate
-}
 
 type State struct {
 	certificatetypes.State
 	awsClientProvider awsclient.SkrClientProvider[certificateclient.Client]
 	env               abstractions.Environment
 
-	awsClient              certificateclient.Client
-	roleName               string
-	secret                 *corev1.Secret
-	certificateDetail      *acmtypes.CertificateDetail
-	certificateData        *CertificateData
-	certificateNeedsUpdate bool
-	certificateArn         string
+	awsClient certificateclient.Client
+	roleName  string
+
+	certificateArn string
 }
 
 type StateFactory interface {
@@ -63,20 +49,6 @@ func (f *stateFactory) NewState(_ context.Context, certState certificatetypes.St
 		awsClientProvider: f.awsClientProvider,
 		env:               f.env,
 	}, nil
-}
-
-// formatSerial formats a certificate serial number as colon-separated lowercase hex,
-// matching the format ACM uses in CertificateDetail.Serial.
-func formatSerial(serialBytes []byte) string {
-	h := hex.EncodeToString(serialBytes)
-	var sb strings.Builder
-	for i := 0; i < len(h); i += 2 {
-		if i > 0 {
-			sb.WriteByte(':')
-		}
-		sb.WriteString(h[i : i+2])
-	}
-	return sb.String()
 }
 
 func (s *State) convertTags() []acmtypes.Tag {

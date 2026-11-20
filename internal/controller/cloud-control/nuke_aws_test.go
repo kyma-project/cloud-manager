@@ -6,7 +6,6 @@ import (
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
-	awsnukeclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/nuke/client"
 	kcpscope "github.com/kyma-project/cloud-manager/pkg/kcp/scope"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	. "github.com/kyma-project/cloud-manager/pkg/testinfra/dsl"
@@ -22,7 +21,6 @@ var _ = Describe("Feature: KCP Nuke AwsNfsVolumeBackup", func() {
 	scope := &cloudcontrolv1beta1.Scope{}
 
 	vaultName := fmt.Sprintf("cm-%s", scopeName)
-	clientProvider := awsnukeclient.Mock()
 
 	recoveryPointArns := []string{"", ""}
 
@@ -57,7 +55,7 @@ var _ = Describe("Feature: KCP Nuke AwsNfsVolumeBackup", func() {
 				Should(Succeed())
 		})
 
-		nukeClient, _ := clientProvider(infra.Ctx(),
+		nukeClient, _ := infra.AwsMock().NukeProvider()(infra.Ctx(),
 			scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, "", "", "")
 
 		By(" And Given Aws Vault exits for the same scope", func() {
@@ -92,7 +90,7 @@ var _ = Describe("Feature: KCP Nuke AwsNfsVolumeBackup", func() {
 			Skip("Nuke Backups for AWS is disabled")
 		}
 
-		nukeClient, _ := clientProvider(infra.Ctx(),
+		nukeClient, _ := infra.AwsMock().NukeProvider()(infra.Ctx(),
 			scope.Spec.Scope.Aws.AccountId, scope.Spec.Region, "", "", "")
 
 		Eventually(CreateObj(infra.Ctx(), infra.KCP().Client(), nuke,

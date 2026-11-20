@@ -16,14 +16,13 @@ import (
 type State struct {
 	wafpolicytypes.State
 	awsClientProvider awsclient.SkrClientProvider[client.Client]
-	env               abstractions.Environment
 
-	awsClient    client.Client
-	roleName     string
-	awsWebAcl    *wafv2types.WebACL       // Loaded AWS WebACL
-	lockToken    string                   // Transient lock token from loadWebAcl, not persisted
-	updateNeeded bool                     // Whether update is needed based on spec vs AWS state
-	parsedInput  *wafv2.CreateWebACLInput // Parsed spec.payload, set by parsePayload action
+	awsClient     client.Client
+	awsWebAcl     *wafv2types.WebACL               // Loaded AWS WebACL
+	lockToken     string                           // Transient lock token from loadWebAcl, not persisted
+	updateNeeded  bool                             // Whether update is needed based on spec vs AWS state
+	parsedInput   *wafv2.CreateWebACLInput         // Parsed spec.payload, set by parsePayload action
+	loggingConfig *wafv2types.LoggingConfiguration // Loaded by loadLoggingConfig; nil = not configured
 }
 
 // Ensure State implements wafpolicytypes.State
@@ -52,52 +51,7 @@ func (f *stateFactory) NewState(ctx context.Context, wafPolicyState wafpolicytyp
 	return &State{
 		State:             wafPolicyState,
 		awsClientProvider: f.awsClientProvider,
-		env:               f.env,
 	}, nil
-}
-
-func (s *State) AwsClient() client.Client {
-	return s.awsClient
-}
-
-func (s *State) SetAwsClient(c client.Client) {
-	s.awsClient = c
-}
-
-func (s *State) RoleName() string {
-	return s.roleName
-}
-
-func (s *State) SetRoleName(name string) {
-	s.roleName = name
-}
-
-func (s *State) AwsWebAcl() *wafv2types.WebACL {
-	return s.awsWebAcl
-}
-
-func (s *State) SetAwsWebAcl(acl *wafv2types.WebACL) {
-	s.awsWebAcl = acl
-}
-
-func (s *State) LockToken() string {
-	return s.lockToken
-}
-
-func (s *State) SetLockToken(token string) {
-	s.lockToken = token
-}
-
-func (s *State) UpdateNeeded() bool {
-	return s.updateNeeded
-}
-
-func (s *State) SetUpdateNeeded(needed bool) {
-	s.updateNeeded = needed
-}
-
-func (s *State) Env() abstractions.Environment {
-	return s.env
 }
 
 func (s *State) convertTags() []wafv2types.Tag {

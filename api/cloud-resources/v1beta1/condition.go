@@ -87,4 +87,5 @@ const (
 	ReasonDeleting                    = "Deleting"
 	ReasonDeletionBlockedByDependents = "DeletionBlockedByDependents"
 	ReasonDeleteWhileUsed             = "DeleteWhileUsed"
+	ReasonWaitingForDependency        = "WaitingForDependency"
 )

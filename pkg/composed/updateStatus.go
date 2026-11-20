@@ -16,10 +16,15 @@ const (
 	applyServerSide applyType = 2
 )
 
-type ObjWithConditionsAndState interface {
-	ObjWithConditions
+type ObjWithState interface {
+	client.Object
 	State() string
 	SetState(v string)
+}
+
+type ObjWithConditionsAndState interface {
+	ObjWithConditions
+	ObjWithState
 }
 
 type ObjWithConditions interface {

@@ -11,6 +11,7 @@ import (
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
 	certificateclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/certificate/client"
+	awscloudresourcesclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/cloudresources/client"
 	awswebaclclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/client"
 )
 
@@ -54,6 +55,10 @@ type CertificateClient interface {
 	certificateclient.Client
 }
 
+type CloudResourcesClient interface {
+	awscloudresourcesclient.Client
+}
+
 type Clients interface {
 	IpRangeClient
 	NfsClient
@@ -63,6 +68,7 @@ type Clients interface {
 	VpcNetworkClient
 	WebAclClient
 	CertificateClient
+	CloudResourcesClient
 }
 
 type Providers interface {
@@ -76,6 +82,7 @@ type Providers interface {
 	VpcNetworkProvider() awsclient.SkrClientProvider[awsvpcnetworkclient.Client]
 	WebAclProvider() awsclient.SkrClientProvider[awswebaclclient.Client]
 	CertificateProvider() awsclient.SkrClientProvider[certificateclient.Client]
+	CloudResourcesProvider() awsclient.SkrClientProvider[awscloudresourcesclient.Client]
 	NukeProvider() awsclient.SkrClientProvider[awsnukeclient.NukeClient]
 }
 
@@ -86,6 +93,7 @@ type Configs interface {
 	RouteTableConfig
 	AwsElastiCacheMockUtils
 	WebAclConfig
+	CloudWatchLogsConfig
 }
 
 type AccountRegion interface {

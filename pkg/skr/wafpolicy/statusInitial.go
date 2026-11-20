@@ -5,6 +5,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"github.com/kyma-project/cloud-manager/pkg/util"
 )
 
 func statusInitial(ctx context.Context, st composed.State) (error, context.Context) {
@@ -12,6 +13,9 @@ func statusInitial(ctx context.Context, st composed.State) (error, context.Conte
 
 	sp := composed.NewStatusPatcherComposed(state.ObjAsWafPolicy())
 	if !sp.IsStale() {
+		if state.ObjAsWafPolicy().IsAvailable() && !util.WithinProbability(10) {
+			return composed.StopAndForget, ctx
+		}
 		return nil, ctx
 	}
 

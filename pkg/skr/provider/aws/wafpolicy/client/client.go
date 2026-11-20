@@ -15,6 +15,9 @@ type Client interface {
 	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
 	ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error)
 	ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error)
+	PutLoggingConfiguration(ctx context.Context, webAclArn, logGroupArn string) error
+	DeleteLoggingConfiguration(ctx context.Context, webAclArn string) error
+	GetLoggingConfiguration(ctx context.Context, webAclArn string) (*wafv2types.LoggingConfiguration, error)
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[Client] {
@@ -61,4 +64,16 @@ func (c *client) ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]waf
 
 func (c *client) ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error) {
 	return c.wafv2Client.ListTagsForWebACL(ctx, resourceArn)
+}
+
+func (c *client) PutLoggingConfiguration(ctx context.Context, webAclArn, logGroupArn string) error {
+	return c.wafv2Client.PutLoggingConfiguration(ctx, webAclArn, logGroupArn)
+}
+
+func (c *client) DeleteLoggingConfiguration(ctx context.Context, webAclArn string) error {
+	return c.wafv2Client.DeleteLoggingConfiguration(ctx, webAclArn)
+}
+
+func (c *client) GetLoggingConfiguration(ctx context.Context, webAclArn string) (*wafv2types.LoggingConfiguration, error) {
+	return c.wafv2Client.GetLoggingConfiguration(ctx, webAclArn)
 }

@@ -97,7 +97,7 @@ var _ = BeforeSuite(func() {
 	Expect(testinfra.SetupPVCController(infra.Registry())).
 		NotTo(HaveOccurred())
 	// CloudResources
-	Expect(SetupCloudResourcesReconciler(infra.Registry())).
+	Expect(SetupCloudResourcesReconciler(infra.Registry(), infra.AwsMock().CloudResourcesProvider())).
 		NotTo(HaveOccurred())
 	// IpRange
 	Expect(SetupIpRangeReconciler(infra.Registry())).

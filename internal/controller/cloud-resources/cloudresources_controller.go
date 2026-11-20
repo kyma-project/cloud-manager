@@ -18,8 +18,12 @@ package cloudresources
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	skrcloudresources "github.com/kyma-project/cloud-manager/pkg/skr/cloudresources"
+	awscloudresources "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/cloudresources"
+	awscloudresourcesclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/cloudresources/client"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	reconcile2 "github.com/kyma-project/cloud-manager/pkg/skr/runtime/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -28,11 +32,12 @@ import (
 )
 
 type CloudResourcesReconcilerFactory struct {
+	awsCloudResourcesStateFactory awscloudresources.StateFactory
 }
 
 func (f *CloudResourcesReconcilerFactory) New(args reconcile2.ReconcilerArguments) reconcile.Reconciler {
 	return &CloudResourcesReconciler{
-		reconciler: skrcloudresources.NewReconcilerFactory().New(args),
+		reconciler: skrcloudresources.NewReconcilerFactory(f.awsCloudResourcesStateFactory).New(args),
 	}
 }
 
@@ -58,9 +63,12 @@ func (r *CloudResourcesReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return r.reconciler.Reconcile(ctx, req)
 }
 
-func SetupCloudResourcesReconciler(reg skrruntime.SkrRegistry) error {
+func SetupCloudResourcesReconciler(reg skrruntime.SkrRegistry, awsCloudResourcesProvider awsclient.SkrClientProvider[awscloudresourcesclient.Client]) error {
+	awsCloudResourcesStateFactory := awscloudresources.NewStateFactory(awsCloudResourcesProvider)
 	return reg.Register().
-		WithFactory(&CloudResourcesReconcilerFactory{}).
+		WithFactory(&CloudResourcesReconcilerFactory{
+			awsCloudResourcesStateFactory: awsCloudResourcesStateFactory,
+		}).
 		For(&cloudresourcesv1beta1.CloudResources{}).
 		Complete()
 }

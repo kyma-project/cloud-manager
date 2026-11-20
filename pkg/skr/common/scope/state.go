@@ -2,6 +2,7 @@ package scope
 
 import (
 	"context"
+	"fmt"
 
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
@@ -16,6 +17,7 @@ type State interface {
 	KymaRef() klog.ObjectRef
 	Scope() *cloudcontrolv1beta1.Scope
 	ObjWithConditionsAndState() composed.ObjWithConditionsAndState
+	ObjWithStatus() composed.ObjWithStatus
 	SetScope(scope *cloudcontrolv1beta1.Scope)
 }
 
@@ -36,6 +38,11 @@ type stateFactory struct {
 }
 
 func (f *stateFactory) NewState(ctx context.Context, namespacedName types.NamespacedName, baseState composed.State) (State, error) {
+	_, isObjWithStatus := baseState.Obj().(composed.ObjWithStatus)
+	_, isObjWithConditionsAndState := baseState.Obj().(composed.ObjWithConditionsAndState)
+	if !isObjWithStatus && !isObjWithConditionsAndState {
+		return nil, fmt.Errorf("object %T must preferably implement composed.ObjWithStatus, or eventually composed.ObjWithConditionsAndState", baseState.Obj())
+	}
 	kymaRef, err := f.scopeProvider.GetScope(ctx, namespacedName)
 	if err != nil {
 		return nil, err
@@ -67,8 +74,26 @@ func (s *myState) Scope() *cloudcontrolv1beta1.Scope {
 	return s.scope
 }
 
+// ObjWithConditionsAndState returns object for legacy resources using composed.UpdateStatus.
+// It is preferred to use newer API style with composed.ObjWithStatus and composed.StatusPatcherComposed.
+// If this method returns nil, then use ObjWithStatus().
 func (s *myState) ObjWithConditionsAndState() composed.ObjWithConditionsAndState {
-	return s.Obj().(composed.ObjWithConditionsAndState)
+	obj, ok := s.Obj().(composed.ObjWithConditionsAndState)
+	if ok {
+		return obj
+	}
+	return nil
+}
+
+// ObjWithStatus returns object for newer API style with composed.ObjWithStatus
+// and composed.StatusPatcherComposed. This is a preferred usage pattern
+// If this method returns nil then use ObjWithConditionsAndState().
+func (s *myState) ObjWithStatus() composed.ObjWithStatus {
+	obj, ok := s.Obj().(composed.ObjWithStatus)
+	if ok {
+		return obj
+	}
+	return nil
 }
 
 func (s *myState) SetScope(scope *cloudcontrolv1beta1.Scope) {

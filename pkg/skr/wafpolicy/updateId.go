@@ -2,10 +2,10 @@ package wafpolicy
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -34,12 +34,12 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 	logger.Info("SKR WafPolicy updated with ID label")
 
-	state.ObjAsWafPolicy().Status.Id = id
-	err = state.UpdateObjStatus(ctx)
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating SKR WafPolicy status with ID label", composed.StopWithRequeue, ctx)
-	}
-	logger.Info("SKR WafPolicy updated with ID status")
-
-	return composed.StopWithRequeueDelay(100 * time.Millisecond), ctx
+	return composed.NewStatusPatcherComposed(state.ObjAsWafPolicy()).
+		MutateStatus(func(p *cloudresourcesv1beta1.WafPolicy) {
+			p.Status.Id = id
+		}).
+		OnFailure(composed.Log("Error updating SKR WafPolicy with status ID"), composed.Requeue).
+		OnSuccess(composed.RequeueAfter(rate.Default.Quick.When(state.ObjAsWafPolicy()))).
+		OnStatusChanged(composed.Log("SKR WafPolicy updated with status ID")).
+		Run(ctx, state.Cluster().K8sClient())
 }

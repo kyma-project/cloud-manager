@@ -68,6 +68,14 @@ type CloudResourcesStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	Subscription SubscriptionStatus `json:"subscription,omitempty"`
+}
+
+type SubscriptionStatus struct {
+	WafLogGroup string `json:"wafLogGroup,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -85,6 +93,18 @@ type CloudResources struct {
 
 func (in *CloudResources) Conditions() *[]metav1.Condition {
 	return &in.Status.Conditions
+}
+
+func (in *CloudResources) ObservedGeneration() int64 {
+	return in.Status.ObservedGeneration
+}
+
+func (in *CloudResources) SetObservedGeneration(v int64) {
+	in.Status.ObservedGeneration = v
+}
+
+func (in *CloudResources) GetStatus() any {
+	return &in.Status
 }
 
 func (in *CloudResources) GetObjectMeta() *metav1.ObjectMeta {

@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	awsmeta "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/meta"
 )
@@ -51,7 +52,7 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 			MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
 				acl.SetStatusProviderError(err.Error())
 			}).
-			OnSuccess(composed.Requeue).
+			OnSuccess(composed.RequeueAfter(rate.Default.Slow1s.When(state.ObjAsWafPolicy()))).
 			OnStatusChanged(composed.Log("WafPolicy Error (retryable)")).
 			Run(ctx, state.Cluster().K8sClient())
 	}
@@ -61,7 +62,7 @@ func createWebAcl(ctx context.Context, st composed.State) (error, context.Contex
 		MutateStatus(func(acl *cloudresourcesv1beta1.WafPolicy) {
 			acl.SetStatusFailure(err.Error())
 		}).
-		OnSuccess(composed.Forget).
+		OnSuccess(composed.RequeueAfter(rate.Default.Slow1s.When(state.ObjAsWafPolicy()))).
 		OnStatusChanged(composed.Log("WafPolicy Failure")).
 		Run(ctx, state.Cluster().K8sClient())
 }

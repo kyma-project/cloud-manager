@@ -3,6 +3,7 @@ package kyma
 import (
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	kymatypes "github.com/kyma-project/cloud-manager/pkg/kcp/kyma/types"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -44,6 +45,8 @@ func newState(baseState composed.State, activeSkrCollection skrruntime.ActiveSkr
 	}
 }
 
+var _ kymatypes.State = &State{}
+
 type State struct {
 	composed.State
 
@@ -52,11 +55,20 @@ type State struct {
 	// scope potentially can be nil in case when it does not exist
 	scope *cloudcontrolv1beta1.Scope
 
-	moduleState  util.KymaModuleState
-	moduleInSpec bool
-	skrActive    bool
+	moduleState    util.KymaModuleState
+	moduleInSpec   bool
+	skrActive      bool
+	desiredEnabled bool
 }
 
 func (s *State) ObjAsKyma() *unstructured.Unstructured {
 	return s.Obj().(*unstructured.Unstructured)
+}
+
+func (s *State) Scope() *cloudcontrolv1beta1.Scope {
+	return s.scope
+}
+
+func (s *State) DesiredEnabled() bool {
+	return s.desiredEnabled
 }

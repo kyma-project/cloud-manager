@@ -2,10 +2,10 @@ package certificate
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 )
 
@@ -34,12 +34,12 @@ func updateId(ctx context.Context, st composed.State) (error, context.Context) {
 	}
 	logger.Info("SKR Certificate updated with ID label")
 
-	state.ObjAsCertificate().Status.Id = id
-	err = state.UpdateObjStatus(ctx)
-	if err != nil {
-		return composed.LogErrorAndReturn(err, "Error updating SKR Certificate status with ID", composed.StopWithRequeue, ctx)
-	}
-	logger.Info("SKR Certificate updated with ID status")
-
-	return composed.StopWithRequeueDelay(100 * time.Millisecond), ctx
+	return composed.NewStatusPatcherComposed(state.ObjAsCertificate()).
+		MutateStatus(func(p *cloudresourcesv1beta1.Certificate) {
+			p.Status.Id = id
+		}).
+		OnFailure(composed.Log("Error updating SKR Certificate status ID"), composed.Requeue).
+		OnSuccess(composed.RequeueAfter(rate.Default.Quick.When(state.ObjAsCertificate()))).
+		OnStatusChanged(composed.Log("SKR Certificate updated status ID")).
+		Run(ctx, state.Cluster().K8sClient())
 }

@@ -26,7 +26,7 @@ func vpcNetworkDelete(ctx context.Context, st composed.State) (error, context.Co
 
 	err := state.Cluster().K8sClient().Delete(ctx, state.vpcNetwork)
 	if client.IgnoreNotFound(err) != nil {
-		return composed.LogErrorAndReturn(err, "Failed to delete Gardener type VpcNetwork", composed.StopWithRequeueDelay(rate.Quick.When(state.vpcNetwork)), ctx)
+		return composed.LogErrorAndReturn(err, "Failed to delete Gardener type VpcNetwork", composed.StopWithRequeueDelay(rate.Default.Quick.When(state.vpcNetwork)), ctx)
 	}
 	return nil, ctx
 }

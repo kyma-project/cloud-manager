@@ -54,7 +54,7 @@ func (h *Handler) WithTracker(t Tracker) *Handler {
 
 func (h *Handler) forgetRate() {
 	if h.controller != "" && h.name != "" {
-		rate.Quick.ForgetString(fmt.Sprintf("%s/%s", h.controller, h.name))
+		rate.Default.Quick.ForgetString(fmt.Sprintf("%s/%s", h.controller, h.name))
 	}
 }
 
@@ -105,7 +105,7 @@ func (h *Handler) Handle(err error, ctx context.Context) (ctrl.Result, error) {
 	if IsStopWithRequeue(err) {
 		//logger.Info("Reconciliation finished with requeue")
 		result = ReconciliationLabelRequeue
-		d := rate.Quick.WhenString(fmt.Sprintf("%s/%s", h.controller, h.name))
+		d := rate.Default.Quick.WhenString(fmt.Sprintf("%s/%s", h.controller, h.name))
 		return ctrl.Result{RequeueAfter: d}, nil
 	}
 	if IsStopWithRequeueDelay(err) {

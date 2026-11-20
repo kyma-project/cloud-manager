@@ -2,6 +2,7 @@ package kyma
 
 import (
 	"context"
+
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
@@ -40,8 +41,8 @@ func (r *kymaReconciler) newAction() composed.Action {
 	return composed.ComposeActionsNoName(
 		composed.LoadObj,
 		kymaRemoveStaleCloudManagerFinalizer,
-		kymaFindModuleState,
 		scopeLoad,
+		kymaFindModuleState,
 
 		composed.If(
 			composed.Not(composed.IsObjLoaded),
@@ -50,41 +51,19 @@ func (r *kymaReconciler) newAction() composed.Action {
 		),
 
 		composed.If(
-			shouldDisable,
+			composed.Not(desiredEnabled),
 			skrDeactivate,
 			composed.StopAndForgetAction,
 		),
 
 		composed.If(
-			shouldEnable,
+			desiredEnabled,
 			skrActivate,
 			composed.StopAndForgetAction,
 		),
 	)
 }
 
-var _ composed.Predicate = shouldDisable
-
-func shouldDisable(_ context.Context, st composed.State) bool {
-	state := st.(*State)
-	if state.scope == nil {
-		return true
-	}
-	if state.moduleState == util.KymaModuleStateNotPresent {
-		return true
-	}
-	return false
-}
-
-var _ composed.Predicate = shouldEnable
-
-func shouldEnable(_ context.Context, st composed.State) bool {
-	state := st.(*State)
-	if state.scope == nil {
-		return false
-	}
-	if state.moduleState != util.KymaModuleStateNotPresent {
-		return true
-	}
-	return false
+func desiredEnabled(_ context.Context, st composed.State) bool {
+	return st.(*State).desiredEnabled
 }
