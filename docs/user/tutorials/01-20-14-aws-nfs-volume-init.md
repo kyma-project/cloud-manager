@@ -4,7 +4,7 @@ This tutorial explains how to initialize an AwsNfsVolume so that workloads runni
 
 ## Context
 
-AwsNfsVolume is backed by an Amazon Elastic File System (EFS) filesystem. AWS provisions the EFS filesystem root directory with the permissions `drwxr-xr-x`, owned by UID `0` and GID `0` (`root:root`). This means only the root user can create files or directories directly under the root.
+AwsNfsVolume is backed by Amazon Elastic File System (EFS). Amazon Web Services (AWS) provisions the EFS filesystem root directory with the permissions `drwxr-xr-x`, owned by UID `0` and GID `0` (`root:root`). This means only the root user can create files or directories directly under the root.
 
 Workloads that run with a non-root UID/GID cannot write to the volume root and receive a permission error when their Pods try to create files or directories under the mount path.
 
