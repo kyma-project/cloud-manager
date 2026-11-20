@@ -52,7 +52,7 @@ This table lists the parameters of AzureRedisInstance, together with their descr
 | **redisTier**                                          | string | Required. The service capacity of the instance. Supported values are P1, P2, P3, P4, P5, S1, S2, S3, S4, S5.                                                                                                                                                                                                |
 | **redisVersion**                                       | string | Optional. The version of Redis software. Defaults to `6.0`.                                                                                                                                                                                                                                                 |
 | **redisConfiguration**                                 | object | Optional. Object containing Redis configuration options.                                                                                                                                                                                                                                                    |
-| **redisConfiguration.maxclients**                      | int    | Optional. Max number of Redis clients. Limited to [7,500 to 40,000.](https://azure.microsoft.com/en-us/pricing/details/cache/)                                                                                                                                                                              |
+| **redisConfiguration.maxclients**                      | int    | The maximum number of connected clients is determined by the selected `redisTier` and is not user-configurable. Any value set here has no effect. See the [Azure Cache for Redis pricing tiers](https://azure.microsoft.com/en-us/pricing/details/cache/) for the per-tier limits.                         |
 | **redisConfiguration.maxmemory-reserved**              | int    | Optional. [Configure your maxmemory-reserved setting to improve system responsiveness.](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management#configure-your-maxmemory-reserved-setting)                                                                     |
 | **redisConfiguration.maxmemory-delta**                 | int    | Optional. Gets or sets value in megabytes reserved for non-cache usage per shard e.g. failover.                                                                                                                                                                                                             | 
 | **redisConfiguration.maxmemory-policy**                | int    | Optional. The setting for how Redis will select what to remove when **maxmemory** (the size of the cache offering you selected when you created the cache) is reached. Defaults to `volatile-lru`.                                                                                                          | 
@@ -85,8 +85,6 @@ kind: AzureRedisInstance
 metadata:
   name: example-azure-redis-instance
 spec:
-  redisConfiguration:
-    maxclients: "8"
   redisVersion: "6.0"
   redisTier: "P1"
 ```
