@@ -4,21 +4,22 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/go-logr/logr"
-	"github.com/kyma-project/cloud-manager/pkg/common"
-	"github.com/kyma-project/cloud-manager/pkg/feature"
 	"io"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
-	yamlutil "k8s.io/apimachinery/pkg/util/yaml"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
+	"time"
+
+	"github.com/go-logr/logr"
+	"github.com/kyma-project/cloud-manager/pkg/common"
+	"github.com/kyma-project/cloud-manager/pkg/feature"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
+	yamlutil "k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
-	"time"
 )
 
 type Cluster interface {
@@ -75,17 +76,42 @@ func (i *installer) Handle(ctx context.Context, provider string, skrCluster Clus
 	ctx = feature.ContextBuilderFromCtx(ctx).
 		Provider(provider).
 		Build(ctx)
-	dir := path.Join(i.skrProvidersPath, provider)
+
+	// Apply provider-independent common resources (e.g. aggregated RBAC roles)
+	commonDir := path.Join(path.Dir(i.skrProvidersPath), "common")
+	commonCount, err := i.applyDir(ctx, skrCluster, commonDir, provider, false)
+	if err != nil {
+		return err
+	}
+
+	// Apply provider-specific resources
+	providerDir := path.Join(i.skrProvidersPath, provider)
+	providerCount, err := i.applyDir(ctx, skrCluster, providerDir, provider, false)
+	if err != nil {
+		return err
+	}
+
+	if commonCount+providerCount > 0 {
+		time.Sleep(2 * time.Second)
+	}
+
+	return nil
+}
+
+func (i *installer) applyDir(ctx context.Context, skrCluster Cluster, dir string, provider string, optional bool) (int, error) {
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
-		return fmt.Errorf("installer directory %s does not exist: %w", dir, err)
+		if optional {
+			return 0, nil
+		}
+		return 0, fmt.Errorf("installer directory %s does not exist: %w", dir, err)
 	}
 	if err != nil {
-		return fmt.Errorf("error checking provider dir %s: %w", dir, err)
+		return 0, fmt.Errorf("error checking directory %s: %w", dir, err)
 	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return fmt.Errorf("error listing SKR provider directory %s: %w", dir, err)
+		return 0, fmt.Errorf("error listing directory %s: %w", dir, err)
 	}
 	var files []string
 	rx := regexp.MustCompile(`.+\.yaml`)
@@ -99,16 +125,11 @@ func (i *installer) Handle(ctx context.Context, provider string, skrCluster Clus
 	for _, f := range files {
 		cnt, err := i.applyFile(ctx, skrCluster, f, provider)
 		if err != nil {
-			return fmt.Errorf("error installing SKR provider dependencies: %w", err)
+			return docCount, fmt.Errorf("error installing SKR dependencies from %s: %w", dir, err)
 		}
 		docCount += cnt
 	}
-
-	if docCount > 0 {
-		time.Sleep(2 * time.Second)
-	}
-
-	return nil
+	return docCount, nil
 }
 
 func (i *installer) applyFile(ctx context.Context, skrCluster Cluster, fn string, provider string) (int, error) {
