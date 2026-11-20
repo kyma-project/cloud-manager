@@ -4,6 +4,7 @@ Browse the Cloud Manager tutorials to learn how to create and use cloud resource
 
 * NFS
   * [Using NFS in Amazon Web Services](./01-20-10-aws-nfs-volume.md)
+  * [Initializing AwsNfsVolume for Non-Privileged Workloads](./01-20-14-aws-nfs-volume-init.md)
   * [Backing Up NFS Volumes in Amazon Web Services](./01-20-11-aws-nfs-volume-backup.md) [**Beta feature**]
   * [Creating Scheduled Automatic NFS Volume Backups in Amazon Web Services](./01-20-12-aws-scheduled-nfs-backup.md) [**Beta feature**]
   * [Restoring NFS Volume Backups in Amazon Web Services](./01-20-13-aws-nfs-volume-restore.md) [**Beta feature**]
