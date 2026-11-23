@@ -147,10 +147,9 @@ func TestInstaller(t *testing.T) {
 		})
 	})
 
-	// aws_apiNotEnabled uses the non-parity fixture (apiEnabled=false, apiDisabled=false).
-	// The new guard feature.ApiEnabled.Value() = false → ApiNotEnabled.
-	// The legacy guard !feature.ApiDisabled.Value() = !false = true → Creating.
-	// Recording "ApiNotEnabled" proves the installer reads apiEnabled, not !apiDisabled.
+	// aws_apiNotEnabled uses the non-parity fixture (apiEnabled=false).
+	// The guard feature.ApiEnabled.Value() = false → ApiNotEnabled.
+	// Recording "ApiNotEnabled" proves the installer reads apiEnabled.
 	//
 	// Every feature-tagged AWS CRD records ApiNotEnabled; iprange (FeatureFoundation)
 	// stays Creating via the always-on carve-out (isAlwaysEnabledApi). Asserting the full

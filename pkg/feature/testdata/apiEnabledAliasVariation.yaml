@@ -1,0 +1,13 @@
+# Blanket enable rule using an alias variation name ("grant") that resolves to true.
+# The lint must resolve the variation value, not match the literal name "enabled",
+# so this provider-unconstrained rule must be flagged.
+apiEnabled:
+  variations:
+    grant: true
+    disabled: false
+  targeting:
+    - name: Enable Blanket via alias
+      query: feature in ["nfs"]
+      variation: grant
+  defaultRule:
+    variation: disabled

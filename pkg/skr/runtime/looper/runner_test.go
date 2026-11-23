@@ -102,13 +102,11 @@ func newTestIndexerOnlyRegistry() registry.SkrRegistry {
 // TestRunnerGuardReadsApiEnabled loads the non-parity fixture:
 //
 //	apiEnabled.defaultRule = disabled  → ApiEnabled.Value() = false
-//	apiDisabled.defaultRule = enabled  → ApiDisabled.Value() = false
 //
-// The legacy guard !apiDisabled would equal !false=true (Starting).
-// The new guard  apiEnabled  equals false (ApiNotEnabled).
+// The guard apiEnabled equals false (ApiNotEnabled).
 //
 // Recording "ApiNotEnabled" for both the indexer and the controller proves the runner
-// reads the positive apiEnabled flag, not the legacy !apiDisabled expression.
+// reads the positive apiEnabled flag.
 func TestRunnerGuardReadsApiEnabled(t *testing.T) {
 	require.NoError(t, feature.Initialize(context.Background(), logr.Discard(),
 		feature.WithFile("testdata/apiEnabledNonParity.yaml")))

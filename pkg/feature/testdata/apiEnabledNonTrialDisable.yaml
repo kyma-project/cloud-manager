@@ -1,0 +1,10 @@
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Custom disable rule
+      query: feature in ["nfs"]
+      variation: disabled
+  defaultRule:
+    variation: disabled

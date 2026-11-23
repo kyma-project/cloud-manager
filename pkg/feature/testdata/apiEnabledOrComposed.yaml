@@ -1,0 +1,12 @@
+# Enable rule that names a provider but ORs in a feature-only branch, enabling every provider
+# via that branch. The provider token must not make it pass the anti-blanket check.
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Enable GCP or any nfs
+      query: provider == "gcp" or feature in ["nfs"]
+      variation: enabled
+  defaultRule:
+    variation: disabled

@@ -11,11 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestApiEnabled asserts ApiEnabled.Value == !ApiDisabled.Value for every case
-// in the parity matrix. Both flags are loaded from testdata/apiEnabled.yaml
-// which carries mirrored blocks (same rule order, inverted variations).
-// Bootstrap cloudresources cases also carry an absolute assert.True anchor so
-// that the isBootstrapKindGroup short-circuit is verified independently of parity.
+// TestApiEnabled asserts the absolute wantEnabled values for every case when
+// loaded from testdata/apiEnabled.yaml. Bootstrap cloudresources cases also
+// carry an absolute assert.True anchor so that the isBootstrapKindGroup
+// short-circuit is verified independently of config.
 func TestApiEnabled(t *testing.T) {
 	ctx := t.Context()
 	restoreProvider(t)
@@ -172,8 +171,6 @@ func TestApiEnabled(t *testing.T) {
 		t.Run(cs.t, func(t *testing.T) {
 			assert.Equal(t, cs.wantEnabled, ApiEnabled.Value(cs.c),
 				"ApiEnabled must be %v for case: %s", cs.wantEnabled, cs.t)
-			assert.Equal(t, !ApiDisabled.Value(cs.c), ApiEnabled.Value(cs.c),
-				"ApiEnabled must equal !ApiDisabled for case: %s", cs.t)
 			if cs.mustBeEnabled {
 				assert.True(t, ApiEnabled.Value(cs.c),
 					"bootstrap cloudresources must always be ApiEnabled for case: %s", cs.t)
@@ -182,12 +179,10 @@ func TestApiEnabled(t *testing.T) {
 	}
 }
 
-// TestApiEnabledEmbeddedGAParity asserts ApiEnabled.Value == !ApiDisabled.Value for every
-// GA feature case when both flags are loaded from the embedded ff_ga.yaml (WithEmbeddedRetriever).
-// This is the oracle that verifies the apiEnabled allowlist in ff_ga.yaml reproduces
-// the same enabled-set as the existing apiDisabled disable-by-exception list.
+// TestApiEnabledEmbeddedGAParity asserts the authoritative enabled-set for the embedded
+// ff_ga.yaml GA allowlist. Each case declares the expected ApiEnabled.Value directly.
 // foundation and unknown cases are discriminating for the always-on hardcode: they must be
-// absolutely true regardless of config and both flags must agree.
+// absolutely true regardless of config.
 func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 	ctx := t.Context()
 	restoreProvider(t)
@@ -198,105 +193,123 @@ func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 	cases := []struct {
 		name          string
 		c             context.Context
+		wantEnabled   bool
 		mustBeEnabled bool
 	}{
-		// GA-enabled features
+		// GA-enabled features (provider-scoped: test on gcp which lists all three)
 		{
-			name: "peering is enabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeaturePeering).Build(ctx),
+			name:        "peering is enabled on gcp",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeaturePeering).Provider("gcp").Build(ctx),
+			wantEnabled: true,
 		},
 		{
-			name: "nfs is enabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureNfs).Build(ctx),
+			name:        "nfs is enabled on gcp",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureNfs).Provider("gcp").Build(ctx),
+			wantEnabled: true,
 		},
 		{
-			name: "redis is enabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedis).Build(ctx),
+			name:        "redis is enabled on gcp",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureRedis).Provider("gcp").Build(ctx),
+			wantEnabled: true,
 		},
 		// Disable exceptions within enabled set
 		{
-			name: "nfs on openstack is disabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureNfs).Provider("openstack").Build(ctx),
+			name:        "nfs on openstack is disabled",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureNfs).Provider("openstack").Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "redis on alicloud is disabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedis).Provider("alicloud").Build(ctx),
+			name:        "redis on alicloud is disabled",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureRedis).Provider("alicloud").Build(ctx),
+			wantEnabled: false,
 		},
 		// Features fully disabled in GA
 		{
-			name: "nfsBackup is disabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureNfsBackup).Build(ctx),
+			name:        "nfsBackup is disabled",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureNfsBackup).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "rediscluster is disabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedisCluster).Build(ctx),
+			name:        "rediscluster is disabled",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureRedisCluster).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "rediscluster on alicloud is disabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureRedisCluster).Provider("alicloud").Build(ctx),
+			name:        "rediscluster on alicloud is disabled",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureRedisCluster).Provider("alicloud").Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "vpcdnslink is disabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureVpcDnsLink).Build(ctx),
+			name:        "vpcdnslink is disabled",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureVpcDnsLink).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "waf is disabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureWAF).Build(ctx),
+			name:        "waf is disabled",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureWAF).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "certificate is disabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureCertificate).Build(ctx),
+			name:        "certificate is disabled",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureCertificate).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "azureManagedRedis is disabled",
-			c:    ContextBuilderFromCtx(ctx).Feature(types.FeatureAzureManagedRedis).Build(ctx),
+			name:        "azureManagedRedis is disabled",
+			c:           ContextBuilderFromCtx(ctx).Feature(types.FeatureAzureManagedRedis).Build(ctx),
+			wantEnabled: false,
 		},
 		// Trial disables everything configurable
 		{
-			name: "trial disables all (no feature)",
-			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Build(ctx),
+			name:        "trial disables all (no feature)",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "trial disables nfs",
-			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureNfs).Build(ctx),
+			name:        "trial disables nfs",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureNfs).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "trial disables peering",
-			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeaturePeering).Build(ctx),
+			name:        "trial disables peering",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeaturePeering).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "trial disables redis",
-			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureRedis).Build(ctx),
+			name:        "trial disables redis",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureRedis).Build(ctx),
+			wantEnabled: false,
 		},
 		// Foundation and unknown features are always-on (hardcoded, independent of config).
-		// mustBeEnabled anchors the absolute assertion; parity still holds because both flags short-circuit.
 		{
 			name:          "foundation feature (infrastructure) is always enabled",
 			c:             ContextBuilderFromCtx(ctx).Feature(types.FeatureFoundation).Build(ctx),
+			wantEnabled:   true,
 			mustBeEnabled: true,
 		},
 		{
 			name:          "unknown feature is always enabled",
 			c:             ContextBuilderFromCtx(ctx).Feature(types.FeatureUnknown).Build(ctx),
+			wantEnabled:   true,
 			mustBeEnabled: true,
 		},
-		// Trial restores the legacy "disable all on trial" stance for foundation/unknown:
-		// they fall through to the flag on trial (parity still holds, both not-enabled).
-		// The bootstrap kind-group stays exempt — covered in TestApiEnabledTrialGatesFoundation.
+		// Trial restores "disable all on trial" for foundation/unknown (they fall through to the flag).
 		{
-			name: "foundation falls through to the flag on trial",
-			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureFoundation).Build(ctx),
+			name:        "foundation falls through to the flag on trial",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureFoundation).Build(ctx),
+			wantEnabled: false,
 		},
 		{
-			name: "unknown falls through to the flag on trial",
-			c:    ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureUnknown).Build(ctx),
+			name:        "unknown falls through to the flag on trial",
+			c:           ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureUnknown).Build(ctx),
+			wantEnabled: false,
 		},
 	}
 
 	for _, cs := range cases {
 		t.Run(cs.name, func(t *testing.T) {
-			assert.Equal(t, !ApiDisabled.Value(cs.c), ApiEnabled.Value(cs.c),
-				"ApiEnabled must equal !ApiDisabled for case: %s", cs.name)
+			assert.Equal(t, cs.wantEnabled, ApiEnabled.Value(cs.c),
+				"ApiEnabled must be %v for case: %s", cs.wantEnabled, cs.name)
 			if cs.mustBeEnabled {
 				assert.True(t, ApiEnabled.Value(cs.c),
 					"foundation/unknown must be absolutely enabled for case: %s", cs.name)
@@ -305,11 +318,9 @@ func TestApiEnabledEmbeddedGAParity(t *testing.T) {
 	}
 }
 
-// TestApiEnabledEdgeParity asserts ApiEnabled.Value == !ApiDisabled.Value for a
-// representative matrix when both flags are loaded from ff_edge.yaml. On edge
-// the apiDisabled flag is default-enabled with no targeting, so everything resolves
-// to not-disabled; apiEnabled mirrors this with default-enabled. All cases produce
-// ApiEnabled=true, ApiDisabled=false, parity holds throughout.
+// TestApiEnabledEdgeParity asserts that every feature resolves to ApiEnabled=true when
+// loaded from ff_edge.yaml. On edge the apiEnabled flag has no targeting rules and a
+// default-enabled rule, so all feature/provider combinations are open.
 func TestApiEnabledEdgeParity(t *testing.T) {
 	ctx := t.Context()
 	restoreProvider(t)
@@ -381,8 +392,6 @@ func TestApiEnabledEdgeParity(t *testing.T) {
 
 	for _, cs := range cases {
 		t.Run(cs.name, func(t *testing.T) {
-			assert.Equal(t, !ApiDisabled.Value(cs.c), ApiEnabled.Value(cs.c),
-				"ApiEnabled must equal !ApiDisabled for case: %s", cs.name)
 			assert.True(t, ApiEnabled.Value(cs.c),
 				"every edge case must be ApiEnabled=true for case: %s", cs.name)
 		})
@@ -425,14 +434,10 @@ func TestApiEnabledAlwaysOnIndependentOfConfig(t *testing.T) {
 	foundationCtx := ContextBuilderFromCtx(ctx).Feature(types.FeatureFoundation).Build(ctx)
 	assert.True(t, ApiEnabled.Value(foundationCtx),
 		"FeatureFoundation must be enabled even with no apiEnabled block in config")
-	assert.False(t, ApiDisabled.Value(foundationCtx),
-		"ApiDisabled must be false for FeatureFoundation even with no apiEnabled block in config")
 
 	unknownCtx := ContextBuilderFromCtx(ctx).Feature(types.FeatureUnknown).Build(ctx)
 	assert.True(t, ApiEnabled.Value(unknownCtx),
 		"FeatureUnknown must be enabled even with no apiEnabled block in config")
-	assert.False(t, ApiDisabled.Value(unknownCtx),
-		"ApiDisabled must be false for FeatureUnknown even with no apiEnabled block in config")
 }
 
 // TestApiEnabledTrialGatesFoundation proves the trial exception to the always-on carve-out:

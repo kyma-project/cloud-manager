@@ -1,0 +1,8 @@
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Enable GCP features
+      query: provider == "gcp" and feature in ["nfs"]
+      variation: enabled

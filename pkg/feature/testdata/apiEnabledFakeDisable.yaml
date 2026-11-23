@@ -1,0 +1,10 @@
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: disable-audit
+      query: feature in ["audit"]
+      variation: enabled
+  defaultRule:
+    variation: disabled

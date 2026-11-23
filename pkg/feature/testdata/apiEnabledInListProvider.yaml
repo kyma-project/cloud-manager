@@ -1,0 +1,13 @@
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Exclude trial
+      query: brokerPlan == "trial"
+      variation: disabled
+    - name: Enable GCP features
+      query: provider in ["gcp"] and feature in ["nfs"]
+      variation: enabled
+  defaultRule:
+    variation: disabled

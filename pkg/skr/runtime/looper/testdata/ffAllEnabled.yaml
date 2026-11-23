@@ -4,10 +4,3 @@ apiEnabled:
     disabled: false
   defaultRule:
     variation: enabled
-
-apiDisabled:
-  variations:
-    enabled: false
-    disabled: true
-  defaultRule:
-    variation: enabled

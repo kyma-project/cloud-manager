@@ -1,0 +1,16 @@
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Exclude trial
+      query: brokerPlan == "trial"
+      variation: disabled
+    - name: Enable Blanket 1
+      query: feature in ["nfs", "redis"]
+      variation: enabled
+    - name: Enable Blanket 2
+      query: feature in ["peering"]
+      variation: enabled
+  defaultRule:
+    variation: disabled

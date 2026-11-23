@@ -1,0 +1,50 @@
+package feature
+
+import "regexp"
+
+// providerEqPattern, providerRevPattern, providerInListPattern, and providerQuotedLiteral
+// are distinct copies of the query-matching regexes in apiParity.go (which is deleted in the
+// next slice). These survive that deletion and are scoped to provider-key matching only.
+// Equality accepts both GoFF operator spellings (== and eq); in-list accepts in and IN.
+var providerEqPattern = regexp.MustCompile(`(?i)(\w+)\s*(?:==|\beq\b)\s*["']([^"']+)["']`)
+var providerRevPattern = regexp.MustCompile(`(?i)["']([^"']+)["']\s*(?:==|\beq\b)\s*(\w+)`)
+var providerInListPattern = regexp.MustCompile(`(?i)(\w+)\s+in\s+\[([^\]]*)\]`)
+var providerQuotedLiteral = regexp.MustCompile(`["']([^"']+)["']`)
+
+// quotedLiteralPattern strips quoted values before operator detection so a value such as
+// "restore" cannot trip the disjunction/negation scan.
+var quotedLiteralPattern = regexp.MustCompile(`["'][^"']*["']`)
+
+// disjunctionOrNegation matches a disjunction (or) or any negation (not, ne, !=, !). A rule
+// composed with one can enable providers its provider clause does not bound.
+var disjunctionOrNegation = regexp.MustCompile(`(?i)\bor\b|\bnot\b|\bne\b|!=|!`)
+
+const keyProvider = "provider"
+
+// queryConstrainsProvider reports whether query bounds the whole rule to explicit providers:
+// it names the provider key through an equality (provider == "x" / "x" == provider, spelled
+// == or eq) or a non-empty in-list (provider in ["x", ...]), AND carries no disjunction or
+// negation that could widen the rule past that clause. A feature-only constraint, an empty
+// in-list, or any or/not/!=-composed query does not satisfy it — an unbounded rule is treated
+// as a blanket enable (fail-safe) rather than passed.
+func queryConstrainsProvider(query string) bool {
+	if disjunctionOrNegation.MatchString(quotedLiteralPattern.ReplaceAllString(query, "")) {
+		return false
+	}
+	for _, m := range providerEqPattern.FindAllStringSubmatch(query, -1) {
+		if m[1] == keyProvider {
+			return true
+		}
+	}
+	for _, m := range providerRevPattern.FindAllStringSubmatch(query, -1) {
+		if m[2] == keyProvider {
+			return true
+		}
+	}
+	for _, m := range providerInListPattern.FindAllStringSubmatch(query, -1) {
+		if m[1] == keyProvider && providerQuotedLiteral.MatchString(m[2]) {
+			return true
+		}
+	}
+	return false
+}

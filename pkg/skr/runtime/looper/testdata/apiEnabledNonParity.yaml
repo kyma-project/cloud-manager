@@ -1,22 +1,12 @@
-# Non-parity fixture: apiEnabled=FALSE for the nfsBackup feature (defaultRule: disabled),
-# while apiDisabled=FALSE too (defaultRule: enabled, meaning "not disabled").
+# Non-parity fixture: apiEnabled=FALSE for the nfsBackup feature (defaultRule: disabled).
 #
 # Discriminating property:
 #   new guard:  feature.ApiEnabled.Value()  = false  → ApiNotEnabled (skips)
-#   old guard: !feature.ApiDisabled.Value() = !false  = true  → Starting (would have run)
 #
-# Any test that records "ApiNotEnabled" with this fixture proves the guard reads apiEnabled,
-# not the legacy !apiDisabled.
+# Any test that records "ApiNotEnabled" with this fixture proves the guard reads apiEnabled.
 apiEnabled:
   variations:
     enabled: true
     disabled: false
   defaultRule:
     variation: disabled
-
-apiDisabled:
-  variations:
-    enabled: false
-    disabled: true
-  defaultRule:
-    variation: enabled

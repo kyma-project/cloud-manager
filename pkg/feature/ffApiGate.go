@@ -16,7 +16,7 @@ const BootstrapKindGroup = "cloudresources.cloud-resources.kyma-project.io"
 // isBootstrapKindGroup returns true when the context carries the
 // cloudresources.cloud-resources.kyma-project.io kind-group. The bootstrap
 // CloudResources object must always be accessible regardless of per-feature
-// flag state, so both ApiDisabled and ApiEnabled short-circuit on it.
+// flag state, so the ApiEnabled guard short-circuits on it.
 func isBootstrapKindGroup(ctx context.Context) bool {
 	ffCtx := MustContextFromCtx(ctx)
 	return strings.Contains(
@@ -41,10 +41,6 @@ func isTrialBrokerPlan(ctx context.Context) bool {
 // the one exception to the feature buckets: there the "disable all on trial"
 // config rule still applies, so foundation/unknown fall through to the flag. The
 // bootstrap kind-group remains always-on even on trial.
-//
-// This gates apiEnabled only. The legacy apiDisabled flag is frozen to its
-// bootstrap-only short-circuit (see ffApiDisabled.go) so it stays the parity
-// oracle; it deliberately does not share this always-on policy.
 func isAlwaysEnabledApi(ctx context.Context) bool {
 	if isBootstrapKindGroup(ctx) {
 		return true

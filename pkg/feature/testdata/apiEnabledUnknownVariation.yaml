@@ -1,0 +1,13 @@
+# Enable rule naming a variation ("mystery") absent from the variations map: resolveVariation
+# returns ok=false, so the fail-safe checks the provider-unconstrained query anyway and flags
+# it rather than granting an exemption.
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Enable via unknown variation
+      query: feature in ["nfs"]
+      variation: mystery
+  defaultRule:
+    variation: disabled

@@ -95,7 +95,7 @@ type FeatureAwareObject interface {
 	// SpecificToFeature returns the FeatureName this resource belongs to. If not specific to a
 	// certain feature (foundational/non-feature-specific resources) it MUST return FeatureFoundation.
 	// It must never return "" or FeatureUnknown — those are untagged sentinels and would break
-	// apiEnabled/apiDisabled parity (enforced by TestEverySkrCrdIsTagged).
+	// apiEnabled gate correctness (enforced by TestEverySkrCrdIsTagged).
 	SpecificToFeature() FeatureName
 }
 

@@ -90,7 +90,7 @@ func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption)
 	// keeps running on the embedded default (non-bootstrap APIs disabled). The provider's
 	// own cache-refresh date is zero exactly when the initial load failed, so it — not a
 	// re-read — is the authoritative fallback signal. The re-read only classifies the
-	// cause and detects an apiDisabled-only config.
+	// cause and detects when the apiEnabled block is absent or empty.
 	providerLoaded := ff != nil && !ff.GetCacheRefreshDate().IsZero()
 	configBytes, retrieveErr := rtvr.Retrieve(ctx)
 	reportApiConfigFallback(logger, providerLoaded, configBytes, retrieveErr)

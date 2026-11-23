@@ -1,14 +1,6 @@
-apiDisabled:
-  variations:
-    enabled: false
-    disabled: true
-  defaultRule:
-    variation: enabled
-
 apiEnabled:
   # Edge enables everything for e2e; no targeting rules, open default.
-  # ff_ga.yaml is the secure-by-default allowlist (source of truth for production);
-  # this block mirrors the edge apiDisabled stance with inverted variations.
+  # ff_ga.yaml is the secure-by-default allowlist (source of truth for production).
   variations:
     enabled: true
     disabled: false

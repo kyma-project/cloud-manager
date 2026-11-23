@@ -11,12 +11,12 @@ import (
 const (
 	SignalConfigLoadFailure  = "feature-flag config load failed; falling back to secure default (non-bootstrap APIs disabled)"
 	SignalConfigParseFailure = "feature-flag config present but unparseable; falling back to secure default (non-bootstrap APIs disabled)"
-	SignalApiEnabledMissing  = "feature-flag config carries apiDisabled rules but no apiEnabled block; secure-by-default disables every API lacking an apiEnabled rule"
+	SignalApiEnabledMissing  = "feature-flag config apiEnabled block absent or empty; all non-bootstrap APIs disabled as fail-safe"
 )
 
-// ErrApiConfigInconsistent is the cause attached to the apiEnabled-missing signal so
+// ErrApiEnabledAbsent is the cause attached to the apiEnabled-missing signal so
 // the error-level log carries a non-nil error even though there is no underlying failure.
-var ErrApiConfigInconsistent = errors.New("feature-flag config inconsistent")
+var ErrApiEnabledAbsent = errors.New("feature-flag config: apiEnabled block absent or empty")
 
 // parseConfigBytes unmarshals raw YAML config bytes into a root map.
 // It returns an error on parse failure so callers can distinguish malformed
@@ -34,18 +34,19 @@ func parseConfigBytes(b []byte) (map[string]any, error) {
 // providerLoaded — taken from the provider's own load state, not from configBytes — so a
 // transient re-read cannot raise a false alarm (provider loaded) or hide a real fallback
 // (provider did not load). configBytes/retrieveErr are a best-effort re-read used only to
-// classify why a fallback happened (retriever vs parse) and to detect an apiDisabled-only
-// config. It never aborts startup — the caller keeps the secure-default provider either way.
+// classify why a fallback happened (retriever vs parse) and to detect when the apiEnabled
+// block is absent or empty. It never aborts startup — the caller keeps the secure-default
+// provider either way.
 func reportApiConfigFallback(logger logr.Logger, providerLoaded bool, configBytes []byte, retrieveErr error) {
 	if providerLoaded {
-		// Provider is serving the loaded config. Only flag an apiDisabled-only config;
+		// Provider is serving the loaded config. Only flag an absent apiEnabled block;
 		// a best-effort re-read failure here is not a fallback and must stay silent.
 		if retrieveErr != nil {
 			return
 		}
 		root, err := parseConfigBytes(configBytes)
-		if err == nil && isApiDisabledOnly(root) {
-			logger.Error(ErrApiConfigInconsistent, SignalApiEnabledMissing)
+		if err == nil && !blockHasContent(root["apiEnabled"]) {
+			logger.Error(ErrApiEnabledAbsent, SignalApiEnabledMissing)
 		}
 		return
 	}
@@ -61,19 +62,7 @@ func reportApiConfigFallback(logger logr.Logger, providerLoaded bool, configByte
 	}
 	// Config is fetchable and parseable to us, yet the provider rejected it (e.g. GoFF
 	// schema validation) — still a fallback to the secure default.
-	logger.Error(ErrApiConfigInconsistent, SignalConfigLoadFailure)
-}
-
-// apiDisabledOnly reports whether the parsed config carries an apiDisabled block with
-// content while the apiEnabled block is absent or empty — the secure-by-default divergent
-// case where every untagged API silently goes dark. A present-but-empty apiEnabled key
-// (e.g. a partially-written config) counts as absent: it carries no rule, so untagged
-// APIs still go dark and the operator should be warned.
-func isApiDisabledOnly(root map[string]any) bool {
-	if blockHasContent(root["apiEnabled"]) {
-		return false
-	}
-	return blockHasContent(root["apiDisabled"])
+	logger.Error(ErrApiEnabledAbsent, SignalConfigLoadFailure)
 }
 
 // blockHasContent reports whether a flag block carries targeting rules or a defaultRule.

@@ -1,0 +1,20 @@
+# Standalone copy of ff_ga.yaml's apiEnabled block; consumed as the PASS fixture by the Slice 2 allowlist lint test.
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Exclude trial from GA rollout
+      query: brokerPlan == "trial"
+      variation: disabled
+    - name: Enable GCP GA
+      query: provider == "gcp" and feature in ["nfs", "peering", "redis"]
+      variation: enabled
+    - name: Enable AWS GA
+      query: provider == "aws" and feature in ["nfs", "peering", "redis"]
+      variation: enabled
+    - name: Enable Azure GA
+      query: provider == "azure" and feature in ["peering", "redis"]
+      variation: enabled
+  defaultRule:
+    variation: disabled
