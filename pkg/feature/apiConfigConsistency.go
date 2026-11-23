@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/go-logr/logr"
-	"gopkg.in/yaml.v3"
 )
 
 // Fail-closed signal messages. Kept stable and greppable — ops alerting keys on them.
@@ -18,40 +17,25 @@ const (
 // the error-level log carries a non-nil error even though there is no underlying failure.
 var ErrApiEnabledAbsent = errors.New("feature-flag config: apiEnabled block absent or empty")
 
-// parseConfigBytes unmarshals raw YAML config bytes into a root map.
-// It returns an error on parse failure so callers can distinguish malformed
-// from empty configs.
-func parseConfigBytes(b []byte) (map[string]any, error) {
-	var root map[string]any
-	if err := yaml.Unmarshal(b, &root); err != nil {
-		return nil, err
-	}
-	return root, nil
-}
-
-// reportApiConfigFallback emits an error-level signal for each fail-closed condition at
-// startup. The authoritative "did we fall back to the secure default" decision is
-// providerLoaded — taken from the provider's own load state, not from configBytes — so a
-// transient re-read cannot raise a false alarm (provider loaded) or hide a real fallback
-// (provider did not load). configBytes/retrieveErr are a best-effort re-read used only to
-// classify why a fallback happened (retriever vs parse) and to detect when the apiEnabled
-// block is absent or empty. It never aborts startup — the caller keeps the secure-default
-// provider either way.
-func reportApiConfigFallback(logger logr.Logger, providerLoaded bool, configBytes []byte, retrieveErr error) {
-	if providerLoaded {
-		// Provider is serving the loaded config. Only flag an absent apiEnabled block;
-		// a best-effort re-read failure here is not a fallback and must stay silent.
-		if retrieveErr != nil {
-			return
-		}
-		root, err := parseConfigBytes(configBytes)
-		if err == nil && !blockHasContent(root["apiEnabled"]) {
-			logger.Error(ErrApiEnabledAbsent, SignalApiEnabledMissing)
-		}
+// reportApiEnabledAbsent flags an absent or empty apiEnabled block in a config the provider
+// loaded successfully. configBytes/retrieveErr are a best-effort re-read used only to inspect
+// the live config; a re-read failure is not a fallback and must stay silent (the provider is
+// serving the loaded config either way). It never aborts startup.
+func reportApiEnabledAbsent(logger logr.Logger, configBytes []byte, retrieveErr error) {
+	if retrieveErr != nil {
 		return
 	}
+	root, err := parseConfigBytes(configBytes)
+	if err == nil && !blockHasContent(root[apiEnabledFlagName]) {
+		logger.Error(ErrApiEnabledAbsent, SignalApiEnabledMissing)
+	}
+}
 
-	// Provider did NOT load — it fell back to the secure default. Classify why.
+// reportLoadFailure classifies why the provider fell back to the secure default (retriever
+// error vs. parse error vs. provider-side rejection of a config we can parse) and emits the
+// matching error-level signal. It never aborts startup — the caller keeps the secure-default
+// provider either way.
+func reportLoadFailure(logger logr.Logger, configBytes []byte, retrieveErr error) {
 	if retrieveErr != nil {
 		logger.Error(retrieveErr, SignalConfigLoadFailure)
 		return
@@ -63,18 +47,4 @@ func reportApiConfigFallback(logger logr.Logger, providerLoaded bool, configByte
 	// Config is fetchable and parseable to us, yet the provider rejected it (e.g. GoFF
 	// schema validation) — still a fallback to the secure default.
 	logger.Error(ErrApiEnabledAbsent, SignalConfigLoadFailure)
-}
-
-// blockHasContent reports whether a flag block carries targeting rules or a defaultRule.
-// An empty block is not treated as an inconsistency.
-func blockHasContent(block any) bool {
-	m, ok := block.(map[string]any)
-	if !ok {
-		return false
-	}
-	if t, ok := m["targeting"].([]any); ok && len(t) > 0 {
-		return true
-	}
-	_, hasDefault := m["defaultRule"]
-	return hasDefault
 }

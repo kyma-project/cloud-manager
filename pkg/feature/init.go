@@ -93,7 +93,11 @@ func Initialize(ctx context.Context, logger logr.Logger, opts ...ProviderOption)
 	// cause and detects when the apiEnabled block is absent or empty.
 	providerLoaded := ff != nil && !ff.GetCacheRefreshDate().IsZero()
 	configBytes, retrieveErr := rtvr.Retrieve(ctx)
-	reportApiConfigFallback(logger, providerLoaded, configBytes, retrieveErr)
+	if providerLoaded {
+		reportApiEnabledAbsent(logger, configBytes, retrieveErr)
+	} else {
+		reportLoadFailure(logger, configBytes, retrieveErr)
+	}
 
 	go func() {
 		<-ctx.Done()

@@ -49,7 +49,7 @@ func TestApiAllowlistLint_DefaultEnabled_Fail(t *testing.T) {
 	b := readTestdata(t, "apiEnabledDefaultEnabled.yaml")
 	violations := LintApiEnabled(b)
 	require.Len(t, violations, 1)
-	assert.Equal(t, violationDefaultNotDisabled, violations[0].Type)
+	assert.Equal(t, ViolationDefaultNotDisabled, violations[0].Type)
 	assert.Equal(t, variationEnabled, violations[0].DefaultVariation)
 	result := RenderLintResult(violations)
 	assert.Contains(t, result, `defaultRule.variation is "enabled"`)
@@ -59,7 +59,7 @@ func TestApiAllowlistLint_MissingDefaultRule_Fail(t *testing.T) {
 	b := readTestdata(t, "apiEnabledMissingDefaultRule.yaml")
 	violations := LintApiEnabled(b)
 	require.Len(t, violations, 1)
-	assert.Equal(t, violationDefaultNotDisabled, violations[0].Type)
+	assert.Equal(t, ViolationDefaultNotDisabled, violations[0].Type)
 	assert.Equal(t, "", violations[0].DefaultVariation, "a missing defaultRule renders an empty actual value")
 }
 
@@ -67,7 +67,7 @@ func TestApiAllowlistLint_AbsentBlock_Fail(t *testing.T) {
 	b := readTestdata(t, "apiEnabledNoBlock.yaml")
 	violations := LintApiEnabled(b)
 	require.Len(t, violations, 1)
-	assert.Equal(t, violationAbsent, violations[0].Type)
+	assert.Equal(t, ViolationAbsent, violations[0].Type)
 	result := RenderLintResult(violations)
 	assert.Contains(t, result, "FAIL:")
 	assert.Contains(t, result, "absent")
@@ -77,7 +77,7 @@ func TestApiAllowlistLint_EmptyBlock_Fail(t *testing.T) {
 	b := readTestdata(t, "apiEnabledEmptyBlock.yaml")
 	violations := LintApiEnabled(b)
 	assert.Len(t, violations, 1)
-	assert.Equal(t, violationEmpty, violations[0].Type)
+	assert.Equal(t, ViolationEmpty, violations[0].Type)
 	assert.Contains(t, RenderLintResult(violations), "empty")
 }
 
@@ -93,7 +93,7 @@ func TestApiAllowlistLint_FakeDisable_Fail(t *testing.T) {
 	b := readTestdata(t, "apiEnabledFakeDisable.yaml")
 	violations := LintApiEnabled(b)
 	require.Len(t, violations, 1)
-	assert.Equal(t, violationBlanketEnable, violations[0].Type)
+	assert.Equal(t, ViolationBlanketEnable, violations[0].Type)
 	result := RenderLintResult(violations)
 	assert.Contains(t, result, `"disable-audit"`)
 	assert.Contains(t, result, "(index 0)")
@@ -106,7 +106,7 @@ func TestApiAllowlistLint_AliasVariation_Fail(t *testing.T) {
 	b := readTestdata(t, "apiEnabledAliasVariation.yaml")
 	violations := LintApiEnabled(b)
 	require.Len(t, violations, 1)
-	assert.Equal(t, violationBlanketEnable, violations[0].Type)
+	assert.Equal(t, ViolationBlanketEnable, violations[0].Type)
 	assert.Contains(t, RenderLintResult(violations), `"Enable Blanket via alias"`)
 }
 
@@ -128,7 +128,7 @@ func TestApiAllowlistLint_Malformed_ParseError(t *testing.T) {
 	b := readTestdata(t, "apiMalformed.yaml")
 	violations := LintApiEnabled(b)
 	require.Len(t, violations, 1)
-	assert.Equal(t, violationParseError, violations[0].Type)
+	assert.Equal(t, ViolationParseError, violations[0].Type)
 	assert.Contains(t, RenderLintResult(violations), "unparseable")
 }
 
@@ -139,7 +139,7 @@ func TestApiAllowlistLint_UnknownVariation_Fail(t *testing.T) {
 	b := readTestdata(t, "apiEnabledUnknownVariation.yaml")
 	violations := LintApiEnabled(b)
 	require.Len(t, violations, 1)
-	assert.Equal(t, violationBlanketEnable, violations[0].Type)
+	assert.Equal(t, ViolationBlanketEnable, violations[0].Type)
 }
 
 func TestApiAllowlistLint_OrComposedEnable_Fail(t *testing.T) {
@@ -148,5 +148,5 @@ func TestApiAllowlistLint_OrComposedEnable_Fail(t *testing.T) {
 	b := readTestdata(t, "apiEnabledOrComposed.yaml")
 	violations := LintApiEnabled(b)
 	require.Len(t, violations, 1)
-	assert.Equal(t, violationBlanketEnable, violations[0].Type)
+	assert.Equal(t, ViolationBlanketEnable, violations[0].Type)
 }

@@ -22,16 +22,16 @@ var validProvidersHint = func() string {
 type LintViolationType int
 
 const (
-	// violationAbsent: apiEnabled block absent from the config file.
-	violationAbsent LintViolationType = iota
-	// violationEmpty: apiEnabled block is present but carries no rules or defaultRule.
-	violationEmpty
-	// violationBlanketEnable: an "enabled" targeting rule does not constrain the provider key.
-	violationBlanketEnable
-	// violationDefaultNotDisabled: defaultRule.variation is not "disabled".
-	violationDefaultNotDisabled
-	// violationParseError: the config bytes are not valid YAML.
-	violationParseError
+	// ViolationAbsent: apiEnabled block absent from the config file.
+	ViolationAbsent LintViolationType = iota
+	// ViolationEmpty: apiEnabled block is present but carries no rules or defaultRule.
+	ViolationEmpty
+	// ViolationBlanketEnable: an "enabled" targeting rule does not constrain the provider key.
+	ViolationBlanketEnable
+	// ViolationDefaultNotDisabled: defaultRule.variation is not "disabled".
+	ViolationDefaultNotDisabled
+	// ViolationParseError: the config bytes are not valid YAML.
+	ViolationParseError
 )
 
 const (
@@ -68,18 +68,18 @@ type LintViolation struct {
 func LintApiEnabled(configBytes []byte) []LintViolation {
 	root, err := parseConfigBytes(configBytes)
 	if err != nil {
-		return []LintViolation{{Type: violationParseError, RuleIndex: -1, Detail: err.Error()}}
+		return []LintViolation{{Type: ViolationParseError, RuleIndex: -1, Detail: err.Error()}}
 	}
 	if root == nil {
-		return []LintViolation{{Type: violationAbsent, RuleIndex: -1}}
+		return []LintViolation{{Type: ViolationAbsent, RuleIndex: -1}}
 	}
 
 	rawBlock, exists := root[apiEnabledFlagName]
 	if !exists || rawBlock == nil {
-		return []LintViolation{{Type: violationAbsent, RuleIndex: -1}}
+		return []LintViolation{{Type: ViolationAbsent, RuleIndex: -1}}
 	}
 	if !blockHasContent(rawBlock) {
-		return []LintViolation{{Type: violationEmpty, RuleIndex: -1}}
+		return []LintViolation{{Type: ViolationEmpty, RuleIndex: -1}}
 	}
 
 	block, _ := rawBlock.(map[string]any)
@@ -104,7 +104,7 @@ func LintApiEnabled(configBytes []byte) []LintViolation {
 			if !queryConstrainsProvider(query) {
 				name, _ := rule["name"].(string)
 				violations = append(violations, LintViolation{
-					Type:      violationBlanketEnable,
+					Type:      ViolationBlanketEnable,
 					RuleName:  name,
 					RuleIndex: i,
 					Query:     query,
@@ -118,7 +118,7 @@ func LintApiEnabled(configBytes []byte) []LintViolation {
 		variation, _ := defaultRule["variation"].(string)
 		if variation != variationDisabled {
 			violations = append(violations, LintViolation{
-				Type:             violationDefaultNotDisabled,
+				Type:             ViolationDefaultNotDisabled,
 				RuleIndex:        -1,
 				DefaultVariation: variation,
 			})
@@ -126,7 +126,7 @@ func LintApiEnabled(configBytes []byte) []LintViolation {
 	} else {
 		// defaultRule missing entirely — also a violation.
 		violations = append(violations, LintViolation{
-			Type:      violationDefaultNotDisabled,
+			Type:      ViolationDefaultNotDisabled,
 			RuleIndex: -1,
 		})
 	}
@@ -179,18 +179,18 @@ func RenderLintResult(violations []LintViolation) string {
 
 func renderViolation(v LintViolation) string {
 	switch v.Type {
-	case violationAbsent:
+	case ViolationAbsent:
 		return "apiEnabled block absent"
-	case violationEmpty:
+	case ViolationEmpty:
 		return "apiEnabled block present but empty"
-	case violationBlanketEnable:
+	case ViolationBlanketEnable:
 		return fmt.Sprintf(
 			"rule %q (index %d): no provider constraint in query '%s' — add e.g. 'provider == \"gcp\" and ...' (valid providers: %s)",
 			v.RuleName, v.RuleIndex, v.Query, validProvidersHint,
 		)
-	case violationDefaultNotDisabled:
+	case ViolationDefaultNotDisabled:
 		return fmt.Sprintf("defaultRule.variation is %q — must be %q", v.DefaultVariation, variationDisabled)
-	case violationParseError:
+	case ViolationParseError:
 		return fmt.Sprintf("config unparseable: %s", v.Detail)
 	default:
 		return fmt.Sprintf("unknown violation type %d", v.Type)
