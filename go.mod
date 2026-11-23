@@ -56,7 +56,7 @@ require (
 	github.com/gardener/gardener-extension-provider-alicloud v1.75.0
 	github.com/gardener/gardener-extension-provider-aws v1.76.2
 	github.com/gardener/gardener-extension-provider-azure v1.66.0
-	github.com/gardener/gardener-extension-provider-gcp v1.58.1
+	github.com/gardener/gardener-extension-provider-gcp v1.58.2
 	github.com/gardener/gardener-extension-provider-openstack v1.59.1
 	github.com/gardener/gardener/pkg/apis v1.155.1
 	github.com/go-logr/logr v1.4.4
