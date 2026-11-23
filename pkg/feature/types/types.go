@@ -42,8 +42,8 @@ const (
 	FeatureWAF               FeatureName = "waf"
 )
 
-// AllFeatureNames returns every defined FeatureName constant in the canonical order
-// used by the parity corpus. Callers use this to stay in sync when new features are added.
+// AllFeatureNames returns every defined FeatureName constant in the canonical order.
+// Callers (e.g. the allowlist matrix test) use this to stay in sync when new features are added.
 func AllFeatureNames() []FeatureName {
 	return []FeatureName{
 		FeatureFoundation,

@@ -1,18 +1,6 @@
-# Provider-scoped GA allowlist — one rule per GA provider.
-#   - name: Exclude trial from GA rollout
-#     query: brokerPlan == "trial"
-#     variation: disabled
-#   - name: Enable <Provider1> GA
-#     query: provider == "<p1>" and feature in [...]
-#     variation: enabled
-#   - name: Enable <Provider2> GA
-#     query: provider == "<p2>" and feature in [...]
-#     variation: enabled
-#   defaultRule: { variation: disabled }
-# Unlisted providers (openstack, alicloud) are off by default: no rule, no access.
-# defaultRule disabled is the fail-safe; removing it voids the shape lint.
-# foundation/unknown are always-on via isAlwaysEnabledApi (ffApiGate.go), not this block
-# (except on trial, where the trial rule below still applies).
+# Provider-scoped GA allowlist. Unlisted providers (openstack, alicloud) are off by default.
+# defaultRule disabled is the fail-safe; the shape lint requires it.
+# foundation/unknown are always-on via isAlwaysEnabledApi (ffApiGate.go), except on trial.
 apiEnabled:
   variations:
     enabled: true

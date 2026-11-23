@@ -1,10 +1,13 @@
 package feature
 
-import "regexp"
+import (
+	"regexp"
+
+	"github.com/kyma-project/cloud-manager/pkg/feature/types"
+)
 
 // providerEqPattern, providerRevPattern, providerInListPattern, and providerQuotedLiteral
-// are distinct copies of the query-matching regexes in apiParity.go (which is deleted in the
-// next slice). These survive that deletion and are scoped to provider-key matching only.
+// match provider-key constraints in GoFF targeting queries, scoped to the provider key only.
 // Equality accepts both GoFF operator spellings (== and eq); in-list accepts in and IN.
 var providerEqPattern = regexp.MustCompile(`(?i)(\w+)\s*(?:==|\beq\b)\s*["']([^"']+)["']`)
 var providerRevPattern = regexp.MustCompile(`(?i)["']([^"']+)["']\s*(?:==|\beq\b)\s*(\w+)`)
@@ -19,8 +22,6 @@ var quotedLiteralPattern = regexp.MustCompile(`["'][^"']*["']`)
 // composed with one can enable providers its provider clause does not bound.
 var disjunctionOrNegation = regexp.MustCompile(`(?i)\bor\b|\bnot\b|\bne\b|!=|!`)
 
-const keyProvider = "provider"
-
 // queryConstrainsProvider reports whether query bounds the whole rule to explicit providers:
 // it names the provider key through an equality (provider == "x" / "x" == provider, spelled
 // == or eq) or a non-empty in-list (provider in ["x", ...]), AND carries no disjunction or
@@ -32,17 +33,17 @@ func queryConstrainsProvider(query string) bool {
 		return false
 	}
 	for _, m := range providerEqPattern.FindAllStringSubmatch(query, -1) {
-		if m[1] == keyProvider {
+		if m[1] == types.KeyProvider {
 			return true
 		}
 	}
 	for _, m := range providerRevPattern.FindAllStringSubmatch(query, -1) {
-		if m[2] == keyProvider {
+		if m[2] == types.KeyProvider {
 			return true
 		}
 	}
 	for _, m := range providerInListPattern.FindAllStringSubmatch(query, -1) {
-		if m[1] == keyProvider && providerQuotedLiteral.MatchString(m[2]) {
+		if m[1] == types.KeyProvider && providerQuotedLiteral.MatchString(m[2]) {
 			return true
 		}
 	}

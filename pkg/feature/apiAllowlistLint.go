@@ -3,7 +3,20 @@ package feature
 import (
 	"fmt"
 	"strings"
+
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
 )
+
+// validProvidersHint lists the provider keys accepted in an apiEnabled targeting query,
+// derived from the canonical provider set so the lint diagnostic cannot drift from it.
+var validProvidersHint = func() string {
+	providers := cloudcontrolv1beta1.AllProviders()
+	names := make([]string, len(providers))
+	for i, p := range providers {
+		names[i] = string(p)
+	}
+	return strings.Join(names, ", ")
+}()
 
 // LintViolationType identifies the category of an apiEnabled allowlist violation.
 type LintViolationType int
@@ -169,8 +182,8 @@ func renderViolation(v LintViolation) string {
 		return "apiEnabled block present but empty"
 	case violationBlanketEnable:
 		return fmt.Sprintf(
-			"rule %q (index %d): no provider constraint in query '%s' — add e.g. 'provider == \"gcp\" and ...' (valid providers: gcp, aws, azure, openstack, alicloud)",
-			v.RuleName, v.RuleIndex, v.Query,
+			"rule %q (index %d): no provider constraint in query '%s' — add e.g. 'provider == \"gcp\" and ...' (valid providers: %s)",
+			v.RuleName, v.RuleIndex, v.Query, validProvidersHint,
 		)
 	case violationDefaultNotDisabled:
 		return fmt.Sprintf("defaultRule.variation is %q — must be %q", v.DefaultVariation, variationDisabled)

@@ -3,7 +3,6 @@ package feature
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -69,22 +68,15 @@ func TestRemovedFlagAbsent(t *testing.T) {
 		"found YAML files with an apiDisabled: block — remove or convert them")
 }
 
-// findModuleRoot walks up from this test file's own directory (via runtime.Caller)
-// until it finds go.mod, so the scan covers the whole module regardless of the
-// working directory the test runs from.
+// findModuleRoot resolves the module root from the package directory. `go test` sets the
+// working directory to the package under test (pkg/feature), so two levels up is the module
+// root. This avoids runtime.Caller, whose embedded path is module-relative under -trimpath.
 func findModuleRoot(t *testing.T) string {
 	t.Helper()
-	_, thisFile, _, ok := runtime.Caller(0)
-	require.True(t, ok, "runtime.Caller(0) must resolve the test file path")
-	dir := filepath.Dir(thisFile)
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return dir
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			t.Fatal("could not find go.mod walking up from test file directory")
-		}
-		dir = parent
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	require.NoError(t, err, "resolving module root from package directory")
+	if _, err := os.Stat(filepath.Join(root, "go.mod")); err != nil {
+		t.Fatalf("findModuleRoot: no go.mod at resolved root %s — test cwd assumption broke", root)
 	}
+	return root
 }
