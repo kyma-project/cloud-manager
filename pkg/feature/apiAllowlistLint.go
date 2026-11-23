@@ -62,6 +62,9 @@ type LintViolation struct {
 //
 // A nil or empty slice return means the config is clean. On a block-level violation
 // (absent or empty) it returns early with a single violation and skips rule-level checks.
+//
+// Provider-only by design; the management-plane-config landscape check is scope-key and
+// negation-tolerant. The two are deliberately different — do not unify them.
 func LintApiEnabled(configBytes []byte) []LintViolation {
 	root, err := parseConfigBytes(configBytes)
 	if err != nil {
