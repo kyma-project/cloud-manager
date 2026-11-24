@@ -13,7 +13,6 @@ Ensure two AWS accounts:
 ## AWS Azure SSO
 
 Ensure you are using AWS Azure SSO 
-https://wiki.one.int.sap/wiki/pages/viewpage.action?pageId=3398468150
 https://github.com/aws-azure-login/aws-azure-login
 
 ### The aws-azure-login Installation
