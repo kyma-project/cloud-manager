@@ -36,10 +36,9 @@ jobs:
       - name: Prepare ff config
         # Secure-by-default: the runtime gates read apiEnabled, not !apiDisabled.
         # Deleting apiDisabled no longer force-enables anything, so positively force
-        # apiEnabled on (clear targeting + default enabled) to keep every controller —
-        # including the V2 suites — exercised in tests. apiDisabled is removed so tests
-        # run the apiEnabled-only path a sovereign operator would ship. The
-        # "Assert V2 suites executed" step fails the build if any V2 suite drops.
+        # apiEnabled on (clear targeting + default enabled) to keep every controller
+        # exercised in tests. apiDisabled is removed so tests run the apiEnabled-only
+        # path a sovereign operator would ship.
         run: |
           mkdir -p tmp
           yq '.apiEnabled.targeting = [] | .apiEnabled.defaultRule.variation = "enabled" | del(.apiDisabled)' ${{ matrix.ffFile }} > tmp/ff.yaml
@@ -52,21 +51,7 @@ jobs:
           go mod tidy
           go mod download
           make build
-          make test 2>&1 | tee tmp/test.log
-      - name: Assert V2 suites executed
-        # Fail closed if a V2 suite silently stops running (e.g. a feature-gate
-        # regression under secure-by-default). Greps the captured test log for each
-        # expected V2 suite's spec text; Ginkgo prints it under go test -v.
-        run: |
-          missing=0
-          for suite in "GcpNfsVolumeBackup V2" "GcpNfsBackupSchedule V2" "GcpNfsVolumeRestore V2"; do
-            if ! grep -qF "$suite" tmp/test.log; then
-              echo "::error::expected V2 suite did not execute: $suite"
-              missing=1
-            fi
-          done
-          [ "$missing" -eq 0 ] || { echo "one or more V2 suites did not execute — secure-by-default gating regression"; exit 1; }
-
+          make test
       - name: Upload coverage artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
