@@ -36,6 +36,11 @@ func (p nonReasonAwareProvider) JSONVariation(_ context.Context, _ string, d map
 	return d
 }
 
+// double-waiver: B1 — providerGoFF holds an out-of-process file/HTTP retriever handle; a fake is
+// required because the real type always implements ReasonAwareProvider, so the else-branch is
+// unreachable with it.
+var _ types.Provider = nonReasonAwareProvider{}
+
 func TestApiEnabledNonReasonAwareProviderFallback(t *testing.T) {
 	ctx := t.Context()
 	restoreProvider(t)
