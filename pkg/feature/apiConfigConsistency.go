@@ -10,10 +10,10 @@ import (
 const (
 	SignalConfigLoadFailure  = "feature-flag config load failed; falling back to secure default (non-bootstrap APIs disabled)"
 	SignalConfigParseFailure = "feature-flag config present but unparseable; falling back to secure default (non-bootstrap APIs disabled)"
-	SignalApiEnabledMissing  = "feature-flag config apiEnabled block absent or empty; all non-bootstrap APIs disabled as fail-safe"
+	SignalApiEnabledAbsent   = "feature-flag config apiEnabled block absent or empty; all non-bootstrap APIs disabled as fail-safe"
 )
 
-// ErrApiEnabledAbsent is the cause attached to the apiEnabled-missing signal so
+// ErrApiEnabledAbsent is the cause attached to the apiEnabled-absent signal so
 // the error-level log carries a non-nil error even though there is no underlying failure.
 var ErrApiEnabledAbsent = errors.New("feature-flag config: apiEnabled block absent or empty")
 
@@ -27,7 +27,7 @@ func reportApiEnabledAbsent(logger logr.Logger, configBytes []byte, retrieveErr 
 	}
 	root, err := parseConfigBytes(configBytes)
 	if err == nil && !blockHasContent(root[apiEnabledFlagName]) {
-		logger.Error(ErrApiEnabledAbsent, SignalApiEnabledMissing)
+		logger.Error(ErrApiEnabledAbsent, SignalApiEnabledAbsent)
 	}
 }
 

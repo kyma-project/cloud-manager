@@ -86,7 +86,7 @@ func TestReportApiEnabledAbsent_NoBlock(t *testing.T) {
 	reportApiEnabledAbsent(capturingLogger(&logs), cfg, nil)
 
 	require.Len(t, logs, 1)
-	assert.Equal(t, SignalApiEnabledMissing, logs[0]["msg"])
+	assert.Equal(t, SignalApiEnabledAbsent, logs[0]["msg"])
 	assert.Contains(t, logs[0]["error"], ErrApiEnabledAbsent.Error())
 }
 
@@ -130,7 +130,7 @@ func TestReportApiEnabledAbsent_EmptyConfig(t *testing.T) {
 	var logs []map[string]any
 	reportApiEnabledAbsent(capturingLogger(&logs), []byte("{}"), nil)
 	require.Len(t, logs, 1)
-	assert.Equal(t, SignalApiEnabledMissing, logs[0]["msg"])
+	assert.Equal(t, SignalApiEnabledAbsent, logs[0]["msg"])
 	assert.Contains(t, logs[0]["error"], ErrApiEnabledAbsent.Error())
 }
 
@@ -144,7 +144,7 @@ func TestReportApiEnabledAbsent_EmptyBlock(t *testing.T) {
 	reportApiEnabledAbsent(capturingLogger(&logs), cfg, nil)
 
 	require.Len(t, logs, 1)
-	assert.Equal(t, SignalApiEnabledMissing, logs[0]["msg"],
+	assert.Equal(t, SignalApiEnabledAbsent, logs[0]["msg"],
 		"a present-but-empty apiEnabled block must still be flagged")
 	assert.Contains(t, logs[0]["error"], ErrApiEnabledAbsent.Error(),
 		"a present-but-empty apiEnabled block must attach ErrApiEnabledAbsent")
@@ -152,7 +152,7 @@ func TestReportApiEnabledAbsent_EmptyBlock(t *testing.T) {
 
 // TestApiEnabledEmptyConfigFailsClosed: loading an empty {} config disables non-bootstrap
 // APIs while the cloudresources bootstrap kind-group, FeatureFoundation, and FeatureUnknown
-// stay enabled (always-on hardcode). The SignalApiEnabledMissing signal is emitted.
+// stay enabled (always-on hardcode). The SignalApiEnabledAbsent signal is emitted.
 func TestApiEnabledEmptyConfigFailsClosed(t *testing.T) {
 	ctx := t.Context()
 	restoreProvider(t)
@@ -170,7 +170,7 @@ func TestApiEnabledEmptyConfigFailsClosed(t *testing.T) {
 	assert.True(t, ApiEnabled.Value(bootstrap), "the cloudresources bootstrap kind-group must stay enabled")
 	assert.True(t, ApiEnabled.Value(foundation), "FeatureFoundation must stay always-on even with no apiEnabled block")
 	assert.True(t, ApiEnabled.Value(unknown), "FeatureUnknown must stay always-on even with no apiEnabled block")
-	require.NotNil(t, findLog(logs, SignalApiEnabledMissing),
+	require.NotNil(t, findLog(logs, SignalApiEnabledAbsent),
 		"an empty config must emit the missing signal; got %v", logMessages(logs))
 }
 
@@ -230,7 +230,7 @@ func TestApiEnabledValidConfigEmitsNoFallbackSignal(t *testing.T) {
 
 	assert.Nil(t, findLog(logs, SignalConfigLoadFailure), "a valid config must not signal load failure: %v", logMessages(logs))
 	assert.Nil(t, findLog(logs, SignalConfigParseFailure), "a valid config must not signal parse failure: %v", logMessages(logs))
-	assert.Nil(t, findLog(logs, SignalApiEnabledMissing), "a valid config with apiEnabled block must not signal missing: %v", logMessages(logs))
+	assert.Nil(t, findLog(logs, SignalApiEnabledAbsent), "a valid config with apiEnabled block must not signal missing: %v", logMessages(logs))
 }
 
 // TestSignalConstantsPairwiseDistinct verifies that the three fail-closed signal message
@@ -243,10 +243,10 @@ func TestApiEnabledValidConfigEmitsNoFallbackSignal(t *testing.T) {
 func TestSignalConstantsPairwiseDistinct(t *testing.T) {
 	assert.NotEqual(t, SignalConfigLoadFailure, SignalConfigParseFailure,
 		"SignalConfigLoadFailure and SignalConfigParseFailure must be distinct")
-	assert.NotEqual(t, SignalConfigLoadFailure, SignalApiEnabledMissing,
-		"SignalConfigLoadFailure and SignalApiEnabledMissing must be distinct")
-	assert.NotEqual(t, SignalConfigParseFailure, SignalApiEnabledMissing,
-		"SignalConfigParseFailure and SignalApiEnabledMissing must be distinct")
+	assert.NotEqual(t, SignalConfigLoadFailure, SignalApiEnabledAbsent,
+		"SignalConfigLoadFailure and SignalApiEnabledAbsent must be distinct")
+	assert.NotEqual(t, SignalConfigParseFailure, SignalApiEnabledAbsent,
+		"SignalConfigParseFailure and SignalApiEnabledAbsent must be distinct")
 }
 
 // findLog returns the first captured entry whose "msg" equals msg, or nil.

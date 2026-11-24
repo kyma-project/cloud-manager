@@ -45,11 +45,15 @@ var exemptFiles = map[string]struct{}{
 	"ff_edge.yaml": {}, // e2e: open default is intentional for integration-test clusters
 }
 
+// blockLevelRuleIndex is the RuleIndex sentinel for violations not tied to a single
+// targeting rule (absent/empty block, non-disabled default, parse error).
+const blockLevelRuleIndex = -1
+
 // LintViolation describes one invariant failure in the apiEnabled block.
 type LintViolation struct {
 	Type             LintViolationType
 	RuleName         string
-	RuleIndex        int    // 0-based index in targeting; -1 for block-level violations
+	RuleIndex        int    // 0-based index in targeting; blockLevelRuleIndex for block-level violations
 	Query            string // populated for violationBlanketEnable
 	DefaultVariation string // populated for violationDefaultNotDisabled
 	Detail           string // populated for violationParseError
@@ -68,18 +72,18 @@ type LintViolation struct {
 func LintApiEnabled(configBytes []byte) []LintViolation {
 	root, err := parseConfigBytes(configBytes)
 	if err != nil {
-		return []LintViolation{{Type: ViolationParseError, RuleIndex: -1, Detail: err.Error()}}
+		return []LintViolation{{Type: ViolationParseError, RuleIndex: blockLevelRuleIndex, Detail: err.Error()}}
 	}
 	if root == nil {
-		return []LintViolation{{Type: ViolationAbsent, RuleIndex: -1}}
+		return []LintViolation{{Type: ViolationAbsent, RuleIndex: blockLevelRuleIndex}}
 	}
 
 	rawBlock, exists := root[apiEnabledFlagName]
 	if !exists || rawBlock == nil {
-		return []LintViolation{{Type: ViolationAbsent, RuleIndex: -1}}
+		return []LintViolation{{Type: ViolationAbsent, RuleIndex: blockLevelRuleIndex}}
 	}
 	if !blockHasContent(rawBlock) {
-		return []LintViolation{{Type: ViolationEmpty, RuleIndex: -1}}
+		return []LintViolation{{Type: ViolationEmpty, RuleIndex: blockLevelRuleIndex}}
 	}
 
 	block, _ := rawBlock.(map[string]any)
@@ -119,7 +123,7 @@ func LintApiEnabled(configBytes []byte) []LintViolation {
 		if variation != variationDisabled {
 			violations = append(violations, LintViolation{
 				Type:             ViolationDefaultNotDisabled,
-				RuleIndex:        -1,
+				RuleIndex:        blockLevelRuleIndex,
 				DefaultVariation: variation,
 			})
 		}
@@ -127,7 +131,7 @@ func LintApiEnabled(configBytes []byte) []LintViolation {
 		// defaultRule missing entirely — also a violation.
 		violations = append(violations, LintViolation{
 			Type:      ViolationDefaultNotDisabled,
-			RuleIndex: -1,
+			RuleIndex: blockLevelRuleIndex,
 		})
 	}
 
