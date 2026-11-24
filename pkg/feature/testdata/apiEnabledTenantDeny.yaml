@@ -1,0 +1,13 @@
+apiEnabled:
+  variations:
+    enabled: true
+    disabled: false
+  targeting:
+    - name: Disable trial broker plan
+      query: brokerPlan == "trial"
+      variation: disabled
+    - name: Disable specific global account
+      query: globalAccount == "tenant-denied-ga-id"
+      variation: disabled
+  defaultRule:
+    variation: enabled

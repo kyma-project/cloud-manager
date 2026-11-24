@@ -2,6 +2,8 @@ package feature
 
 import (
 	"context"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -9,6 +11,7 @@ import (
 	commonscheme "github.com/kyma-project/cloud-manager/pkg/common/scheme"
 	"github.com/kyma-project/cloud-manager/pkg/feature/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestApiEnabled asserts the absolute wantEnabled values for every case when
@@ -463,4 +466,74 @@ func TestApiEnabledTrialGatesFoundation(t *testing.T) {
 	assert.False(t, ApiEnabled.Value(unknownTrial), "unknown must be disabled on trial")
 	assert.True(t, ApiEnabled.Value(foundationNonTrial), "foundation must stay always-on off trial")
 	assert.True(t, ApiEnabled.Value(bootstrapTrial), "the bootstrap kind-group must stay enabled even on trial")
+}
+
+// TestApiEnabledTenantDenyBeatsFloor verifies that an explicit config deny rule overrides
+// the foundation/unknown floor, while the bootstrap kind-group remains unaffected.
+// Both deny shapes (brokerPlan trial and a globalAccount scope key) are exercised so an
+// implementation that honors one but ignores the other is caught.
+func TestApiEnabledTenantDenyBeatsFloor(t *testing.T) {
+	ctx := t.Context()
+	restoreProvider(t)
+
+	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiEnabledTenantDeny.yaml"))
+	assert.NoError(t, err)
+
+	sch := commonscheme.SkrScheme
+
+	// Deny shape 1: brokerPlan == "trial"
+	trialFoundation := ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureFoundation).Build(ctx)
+	trialBootstrap := ContextBuilderFromCtx(ctx).BrokerPlan("trial").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx)
+
+	assert.False(t, ApiEnabled.Value(trialFoundation),
+		"trial deny rule must override foundation/unknown floor")
+	assert.True(t, ApiEnabled.Value(trialBootstrap),
+		"bootstrap kind-group must stay enabled even when trial deny rule fires")
+
+	// Deny shape 2: globalAccount scope key
+	gaDeniedFoundation := ContextBuilderFromCtx(ctx).GlobalAccount("tenant-denied-ga-id").Feature(types.FeatureFoundation).Build(ctx)
+	gaDeniedBootstrap := ContextBuilderFromCtx(ctx).GlobalAccount("tenant-denied-ga-id").KindsFromObject(&cloudresourcesv1beta1.CloudResources{}, sch).Build(ctx)
+
+	assert.False(t, ApiEnabled.Value(gaDeniedFoundation),
+		"globalAccount deny rule must override foundation/unknown floor")
+	assert.True(t, ApiEnabled.Value(gaDeniedBootstrap),
+		"bootstrap kind-group must stay enabled even when globalAccount deny rule fires")
+}
+
+// TestApiEnabledEmptyConfigTrialFoundationEnabled verifies the empty-config corner case:
+// when no apiEnabled block exists, no rule can fire (byRule=false), so foundation/unknown
+// contexts reach the floor even with brokerPlan="trial". A regular provider feature is
+// still not-enabled because isFoundationOrUnknown returns false for it.
+func TestApiEnabledEmptyConfigTrialFoundationEnabled(t *testing.T) {
+	ctx := t.Context()
+	restoreProvider(t)
+
+	err := Initialize(ctx, logr.Discard(), WithFile("testdata/apiEmpty.yaml"))
+	assert.NoError(t, err)
+
+	trialFoundation := ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureFoundation).Build(ctx)
+	trialProvider := ContextBuilderFromCtx(ctx).BrokerPlan("trial").Feature(types.FeatureNfs).Build(ctx)
+
+	assert.True(t, ApiEnabled.Value(trialFoundation),
+		"empty config: no rule fires for trial+foundation, floor makes it enabled")
+	assert.False(t, ApiEnabled.Value(trialProvider),
+		"empty config: no rule fires for trial+provider feature, floor does not apply")
+}
+
+// TestNoBrokerPlanTrialHardcodeInProductionSource asserts that no production (non-test)
+// Go source in pkg/feature compares broker plan against the literal "trial" string.
+// Trial gating is config-driven; any Go equality against "trial" is a regression.
+func TestNoBrokerPlanTrialHardcodeInProductionSource(t *testing.T) {
+	entries, err := os.ReadDir(".")
+	require.NoError(t, err)
+	for _, e := range entries {
+		name := e.Name()
+		if e.IsDir() || strings.HasSuffix(name, "_test.go") || !strings.HasSuffix(name, ".go") {
+			continue
+		}
+		b, err := os.ReadFile(name)
+		require.NoError(t, err, "reading %s", name)
+		assert.NotContains(t, string(b), `"trial"`,
+			"production source %s must not hardcode the trial broker plan string", name)
+	}
 }

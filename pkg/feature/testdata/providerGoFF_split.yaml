@@ -1,0 +1,19 @@
+
+splitFlag:
+  variations:
+    on: true
+    off: false
+  targeting:
+    - name: progressive rollout on nfs feature
+      query: feature == "nfs"
+      progressiveRollout:
+        initial:
+          variation: "off"
+          percentage: 0
+          date: 2020-01-01T00:00:00.00Z
+        end:
+          variation: "on"
+          percentage: 100
+          date: 2021-01-01T00:00:00.00Z
+  defaultRule:
+    variation: off

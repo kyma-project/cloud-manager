@@ -1,6 +1,7 @@
 # Provider-scoped GA allowlist. Unlisted providers (openstack, alicloud) are off by default.
+# Bootstrap kind-group is unconditionally on. foundation/unknown are always-on in Go unless
+# an explicit tenant deny rule (e.g. brokerPlan == "trial") matches; tenant denies live here.
 # defaultRule disabled is the fail-safe; the shape lint requires it.
-# foundation/unknown are always-on via isAlwaysEnabledApi (ffApiGate.go), except on trial.
 apiEnabled:
   variations:
     enabled: true

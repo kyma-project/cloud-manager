@@ -15,6 +15,13 @@ type Provider interface {
 	JSONVariation(ctx context.Context, flagKey string, defaultValue map[string]any) map[string]any
 }
 
+// ReasonAwareProvider extends Provider with reason-aware boolean evaluation.
+// byRule is true iff an explicit targeting rule decided the value, rather than the flag default.
+type ReasonAwareProvider interface {
+	Provider
+	BoolVariationReason(ctx context.Context, flagKey string, defaultValue bool) (value bool, byRule bool)
+}
+
 type LandscapeName = string
 
 const (

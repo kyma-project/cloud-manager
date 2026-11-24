@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const trialPlan = "trial"
+
 // expectedApiEnabledMatrix returns the authoritative expected value for ApiEnabled.Value
 // under the provider-scoped GA allowlist loaded from the embedded ff_ga.yaml.
 //
@@ -22,7 +24,7 @@ import (
 //   - non-trial, redis:        gcp, aws, azure
 //   - everything else → false
 func expectedApiEnabledMatrix(feature, provider, brokerPlan string) bool {
-	if brokerPlan == brokerPlanTrial {
+	if brokerPlan == trialPlan {
 		return false
 	}
 	switch feature {
@@ -54,7 +56,7 @@ func TestApiEnabledMatrix(t *testing.T) {
 
 	features := types.AllFeatureNames()
 	providers := cloudcontrolv1beta1.AllProviders()
-	plans := []string{"", brokerPlanTrial} // non-trial first, then trial
+	plans := []string{"", trialPlan} // non-trial first, then trial
 
 	var corpusCount int
 	for _, f := range features {
@@ -69,7 +71,7 @@ func TestApiEnabledMatrix(t *testing.T) {
 				}
 				t.Run(fmt.Sprintf("%s/%s/%s", f, p, label), func(t *testing.T) {
 					b := ContextBuilderFromCtx(ctx).Feature(f).Provider(p)
-					if bp == brokerPlanTrial {
+					if bp == trialPlan {
 						b = b.BrokerPlan(bp)
 					}
 					c := b.Build(ctx)
