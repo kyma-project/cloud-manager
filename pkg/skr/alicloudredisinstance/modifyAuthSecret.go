@@ -17,6 +17,7 @@ func modifyAuthSecret(ctx context.Context, st composed.State) (error, context.Co
 		// The secret was just created but the cache hasn't caught up yet. Requeue
 		// so modifyAuthSecret runs again with a fresh load rather than skipping and
 		// letting updateStatus mark the SKR Ready with an incomplete secret.
+		logger.V(1).Info("AlicloudRedisInstance auth secret not yet in cache, requeueing")
 		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
 	}
 
