@@ -6,6 +6,7 @@ import (
 	alicloudredisclusterclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/rediscluster/client"
 	alicloudredisinstanceclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/redisinstance/client"
 	alicloudvpcnetworkclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcnetwork/client"
+	alicloudvpcpeeringclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/alicloud/vpcpeering/client"
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	scopeclient "github.com/kyma-project/cloud-manager/pkg/kcp/scope/client"
 	subscriptionclient "github.com/kyma-project/cloud-manager/pkg/kcp/subscription/client"
@@ -94,6 +95,7 @@ type Providers interface {
 	NfsInstanceClientProvider() alicloudnfsinstanceclient.ClientProvider
 	RedisInstanceClientProvider() alicloudredisinstanceclient.ClientProvider
 	RedisClusterClientProvider() alicloudredisclusterclient.ClientProvider
+	VpcPeeringClientProvider() alicloudvpcpeeringclient.ClientProvider
 	// ScopeGardenProvider yields the STS client the scope reconciler uses to
 	// resolve the account id via GetCallerIdentity.
 	ScopeGardenProvider() awsclient.GardenClientProvider[scopeclient.AlicloudStsClient]
