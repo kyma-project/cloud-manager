@@ -1,0 +1,11 @@
+resource:
+    kind: AlicloudRedisInstance
+    group: cloud-resources.kyma-project.io
+    version: v1beta1
+urlPath: alicloudredisinstances
+name: AliCloud Redis Instance
+scope: namespace
+category: Storage
+icon: shelf
+description: >-
+    Provisions an Alibaba Cloud AliCloud Redis (single-node or master-replica) instance and injects connection credentials into a Kubernetes secret.
