@@ -67,8 +67,10 @@ type LintViolation struct {
 // A nil or empty slice return means the config is clean. On a block-level violation
 // (absent or empty) it returns early with a single violation and skips rule-level checks.
 //
-// Provider-only by design; the management-plane-config landscape check is scope-key and
-// negation-tolerant. The two are deliberately different — do not unify them.
+// Scope: guards only the embedded ff_ga.yaml GA baseline; it is reached only from tests and
+// never at runtime, and validates no externally supplied config. It is provider-only by
+// design — intentionally stricter than a general allowlist validator, and correct only for
+// the embedded GA matrix, which uses provider-scoped rules exclusively.
 func LintApiEnabled(configBytes []byte) []LintViolation {
 	root, err := parseConfigBytes(configBytes)
 	if err != nil {
