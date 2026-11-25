@@ -50,7 +50,7 @@ func TestRemovedFlagAbsent(t *testing.T) {
 			if readErr != nil {
 				return readErr
 			}
-			for _, line := range strings.Split(string(data), "\n") {
+			for line := range strings.SplitSeq(string(data), "\n") {
 				trimmed := strings.TrimSpace(line)
 				if strings.HasPrefix(trimmed, yamlKey) {
 					rel, _ := filepath.Rel(moduleRoot, path)

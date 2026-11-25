@@ -23,7 +23,7 @@ import (
 // It is used to populate registries without registering any real CRD types.
 type testNfsBackupObj struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata"`
 }
 
 func (t *testNfsBackupObj) DeepCopyObject() k8sruntime.Object { c := *t; return &c }
