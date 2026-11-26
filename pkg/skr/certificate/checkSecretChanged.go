@@ -35,7 +35,6 @@ func checkSecretChanged(ctx context.Context, st composed.State) (error, context.
 	state.secretHash = hash
 
 	if cert.Status.SecretHash == hash && cert.Status.ProviderId != "" {
-		composed.LoggerFromCtx(ctx).Info("Secret content unchanged, skipping AWS API calls")
 		return composed.StopAndForget, ctx
 	}
 

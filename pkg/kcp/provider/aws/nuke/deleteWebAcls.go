@@ -28,7 +28,8 @@ func deleteWebAcls(ctx context.Context, st composed.State) (error, context.Conte
 				err := state.awsClient.DeleteLoggingConfiguration(ctx, arn)
 				if err != nil && !awsmeta.IsNotFound(err) {
 					logger.Error(err, "Error deleting logging configuration for WebACL", "id", resource.GetId())
-					continue // non-fatal, but skip deletion to avoid WAFAssociatedItemException
+					state.hadErrors = true
+					continue
 				}
 
 				// Note: types.ScopeRegional is the WAFv2 scope type (ALB/API Gateway), not related to state.Scope()
@@ -39,7 +40,8 @@ func deleteWebAcls(ctx context.Context, st composed.State) (error, context.Conte
 						continue
 					}
 					logger.Error(err, "Error getting WebACL for deletion", "id", resource.GetId())
-					continue // non-fatal
+					state.hadErrors = true
+					continue
 				}
 
 				// Delete WebACL with lock token
@@ -50,7 +52,7 @@ func deleteWebAcls(ctx context.Context, st composed.State) (error, context.Conte
 						continue
 					}
 					logger.Error(err, "Error requesting WAF Policy deletion", "id", resource.GetId())
-					// Continue anyway (non-fatal error pattern)
+					state.hadErrors = true
 				} else {
 					logger.Info("Requested WAF Policy deletion", "id", resource.GetId(), "name", name)
 				}
@@ -58,5 +60,5 @@ func deleteWebAcls(ctx context.Context, st composed.State) (error, context.Conte
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }

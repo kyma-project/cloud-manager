@@ -222,5 +222,6 @@ func (s *server) NukeProvider() awsclient.SkrClientProvider[awsnukeclient.NukeCl
 		awsnfsvolumebackupclient.NewMockClient(),
 		s.WebAclProvider(),
 		s.CertificateProvider(),
+		s.CloudResourcesProvider(),
 	)
 }

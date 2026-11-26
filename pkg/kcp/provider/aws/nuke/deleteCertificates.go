@@ -31,7 +31,7 @@ func deleteCertificates(ctx context.Context, st composed.State) (error, context.
 						continue // Expected - ALB/CloudFront may be using it
 					}
 					logger.Error(err, "Error requesting AWS Certificate deletion", "arn", arn)
-					// Continue anyway (non-fatal error pattern)
+					state.hadErrors = true
 				} else {
 					logger.Info("Requested AWS Certificate deletion", "arn", arn)
 				}
@@ -39,7 +39,7 @@ func deleteCertificates(ctx context.Context, st composed.State) (error, context.
 		}
 	}
 
-	return nil, nil
+	return nil, ctx
 }
 
 func isResourceInUseException(err error) bool {

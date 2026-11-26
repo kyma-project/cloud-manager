@@ -45,6 +45,7 @@ func (f stateFactory) NewState(ctx context.Context, nukeState nuketypes.State) (
 type State struct {
 	nuketypes.State
 	ProviderResources []*nuketypes.ProviderResourceKindState
+	hadErrors         bool
 
 	vault             *types.BackupVaultListMember
 	awsClientProvider awsclient.SkrClientProvider[awsnukeclient.NukeClient]
