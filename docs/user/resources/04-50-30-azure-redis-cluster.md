@@ -33,7 +33,7 @@ This table lists the parameters of AzureRedisCluster, together with their descri
 | **shardCount**                                         | int    | Optional. The number of shards to be created on a Premium Cluster Cache.                                                                                                                                                                                                                                   |
 | **replicasPerPrimary**                                 | int    | Optional. 	The number of replicas to be created per primary.                                                                                                                                                                                                                                               |
 | **redisConfiguration**                                 | object | Optional. Object containing Redis configuration options.                                                                                                                                                                                                                                                   |
-| **redisConfiguration.maxclients**                      | int    | Optional. Max number of Redis clients. Limited to [7,500 to 40,000.](https://azure.microsoft.com/en-us/pricing/details/cache/)                                                                                                                                                                             |
+| **redisConfiguration.maxclients**                      | int    | The maximum number of connected clients is determined by the selected `redisTier` and is not user-configurable. Any value set here has no effect. See the [Azure Cache for Redis pricing tiers](https://azure.microsoft.com/en-us/pricing/details/cache/) for the per-tier limits.                        |
 | **redisConfiguration.maxmemory-reserved**              | int    | Optional. [Configure your maxmemory-reserved setting to improve system responsiveness.](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-memory-management#configure-your-maxmemory-reserved-setting)                                                                    |
 | **redisConfiguration.maxmemory-delta**                 | int    | Optional. Gets or sets value in megabytes reserved for non-cache usage per shard e.g. failover.                                                                                                                                                                                                            | 
 | **redisConfiguration.maxmemory-policy**                | int    | Optional. The setting for how Redis will select what to remove when **maxmemory** (the size of the cache offering you selected when you created the cache) is reached. Defaults to `volatile-lru`.                                                                                                         | 
@@ -78,8 +78,6 @@ kind: AzureRedisCluster
 metadata:
   name: azure-redis-cluster-example
 spec:
-  redisConfiguration:
-    maxclients: "8"
   redisVersion: "6.0"
   redisTier: "C3"
   shardCount: "2"

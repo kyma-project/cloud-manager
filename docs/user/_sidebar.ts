@@ -36,6 +36,7 @@ export default [
     ] },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Using NFS in Amazon Web Services', link: './tutorials/01-20-10-aws-nfs-volume' },
+    { text: 'Initializing AwsNfsVolume for Non-Privileged Workloads', link: './tutorials/01-20-14-aws-nfs-volume-init' },
     { text: 'Using NFS in Google Cloud', link: './tutorials/01-20-20-gcp-nfs-volume' },
     { text: 'Creating VPC Peering in Amazon Web Services', link: './tutorials/01-30-10-aws-vpc-peering' },
     { text: 'Creating VPC Peering in Google Cloud', link: './tutorials/01-30-20-gcp-vpc-peering' },

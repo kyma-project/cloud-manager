@@ -8,6 +8,8 @@
         "kvstore:AddShardingNode",
         "r-kvstore:CreateInstance",
         "kvstore:CreateInstance",
+        "r-kvstore:CreateTairInstance",
+        "kvstore:CreateTairInstance",
         "r-kvstore:DeleteInstance",
         "kvstore:DeleteInstance",
         "r-kvstore:DeleteShardingNode",
