@@ -7,7 +7,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )
 
@@ -15,14 +14,14 @@ func loadCertificates(ctx context.Context, st composed.State) (error, context.Co
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	// Get Cloud Manager Scope (Kyma cluster metadata)
-	scopeName := state.Scope().Name
+	scopeName := state.ObjAsNuke().Spec.Scope.Name
 
 	// List all certificates
 	summaries, err := state.awsClient.ListCertificates(ctx)
 	if err != nil {
 		logger.Error(err, "Error listing AWS Certificates")
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), ctx
+		state.hadErrors = true
+		return nil, ctx
 	}
 
 	// Create resource kind state
@@ -43,7 +42,8 @@ func loadCertificates(ctx context.Context, st composed.State) (error, context.Co
 		tags, err := state.awsClient.ListCertificateTags(ctx, arn)
 		if err != nil {
 			logger.Error(err, "Error getting tags for Certificate", "arn", arn)
-			continue // Skip this Certificate but continue processing others
+			state.hadErrors = true
+			continue
 		}
 
 		// Check if this Certificate belongs to our scope

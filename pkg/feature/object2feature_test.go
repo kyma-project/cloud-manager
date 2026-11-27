@@ -34,6 +34,8 @@ func TestManifestResourceToFeature(t *testing.T) {
 			{"GcpRedisInstance", &cloudresourcesv1beta1.AwsRedisInstance{}, types.FeatureRedis},
 			{"GcpVpcPeering", &cloudresourcesv1beta1.GcpVpcPeering{}, types.FeaturePeering},
 			{"IpRange", &cloudresourcesv1beta1.IpRange{}, ""},
+			{"WafPolicy", &cloudresourcesv1beta1.WafPolicy{}, types.FeatureWAF},
+			{"Certificate", &cloudresourcesv1beta1.Certificate{}, types.FeatureCertificate},
 		}
 
 		for _, info := range objList {
@@ -65,6 +67,8 @@ func TestManifestResourceToFeature(t *testing.T) {
 			{"GcpRedisInstance", objkind.NewUnstructuredWithGVK(g, v, "AwsRedisInstance"), types.FeatureRedis},
 			{"GcpVpcPeering", objkind.NewUnstructuredWithGVK(g, v, "GcpVpcPeering"), types.FeaturePeering},
 			{"IpRange", objkind.NewUnstructuredWithGVK(g, v, "IpRange"), ""},
+			{"WafPolicy", objkind.NewUnstructuredWithGVK(g, v, "WafPolicy"), types.FeatureWAF},
+			{"Certificate", objkind.NewUnstructuredWithGVK(g, v, "Certificate"), types.FeatureCertificate},
 		}
 
 		for _, info := range objList {
@@ -99,6 +103,8 @@ func TestManifestResourceToFeature(t *testing.T) {
 			{"GcpRedisInstance", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "AwsRedisInstance", g), types.FeatureRedis},
 			{"GcpVpcPeering", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "GcpVpcPeering", g), types.FeaturePeering},
 			{"IpRange", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "IpRange", g), ""},
+			{"WafPolicy", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "WafPolicy", g), types.FeatureWAF},
+			{"Certificate", objkind.NewCrdUnstructuredWithKindGroup(t, baseCrdUnstructured, "Certificate", g), types.FeatureCertificate},
 		}
 
 		for _, info := range objList {
@@ -131,6 +137,8 @@ func TestManifestResourceToFeature(t *testing.T) {
 			{"GcpRedisInstance", objkind.NewBusolaCmUnstructuredKindGroup(t, "AwsRedisInstance"), types.FeatureRedis},
 			{"GcpVpcPeering", objkind.NewBusolaCmUnstructuredKindGroup(t, "GcpVpcPeering"), types.FeaturePeering},
 			{"IpRange", objkind.NewBusolaCmUnstructuredKindGroup(t, "IpRange"), ""},
+			{"WafPolicy", objkind.NewBusolaCmUnstructuredKindGroup(t, "WafPolicy"), types.FeatureWAF},
+			{"Certificate", objkind.NewBusolaCmUnstructuredKindGroup(t, "Certificate"), types.FeatureCertificate},
 		}
 
 		for _, info := range objList {

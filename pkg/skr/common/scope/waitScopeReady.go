@@ -2,51 +2,45 @@ package scope
 
 import (
 	"context"
-	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	"fmt"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/rate"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func waitScopeReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(State)
 
-	hasReady := meta.FindStatusCondition(state.Scope().Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
-	if hasReady != nil {
-		// scope is ready
-		// * set status.State back to empty
-		// * remove ConditionTypeWaitScopeReady
-		// * continue (return nil error)
-
-		if state.ObjWithConditionsAndState().State() != cloudresourcesv1beta1.StateWaitingScopeReady {
-			return nil, ctx
-		}
-
-		state.ObjWithConditionsAndState().SetState("")
-		return composed.UpdateStatus(state.ObjWithConditionsAndState()).
-			RemoveConditions(cloudresourcesv1beta1.ConditionTypeWaitScopeReady).
-			SuccessError(composed.StopWithRequeue).
-			ErrorLogMessage("Error updating object status after removing ").
-			Run(ctx, state)
+	if state.ObjWithStatus() == nil {
+		// unsupported type, likely older API style with object
+		// implementing composed.ObjWithConditionsAndState
+		return nil, ctx
 	}
 
-	// scope is not ready
-	// * set status.State to WaitingScopeReady
-	// * set condition WaitScopeReady
-	// * requeue and delay
+	readyCond := meta.FindStatusCondition(state.Scope().Status.Conditions, cloudresourcesv1beta1.ConditionTypeReady)
+	if readyCond != nil && readyCond.Status == metav1.ConditionTrue {
+		// scope is ready
+		return nil, ctx
+	}
 
-	state.ObjWithConditionsAndState().SetState(cloudresourcesv1beta1.StateWaitingScopeReady)
-
-	return composed.UpdateStatus(state.ObjWithConditionsAndState()).
-		SetCondition(metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeWaitScopeReady,
-			Status:  metav1.ConditionTrue,
-			Reason:  cloudresourcesv1beta1.ConditionTypeWaitScopeReady,
-			Message: "Wait Scope to be Ready",
+	return composed.NewStatusPatcherComposed(state.ObjWithStatus()).
+		MutateStatus(func(obj composed.ObjWithStatus) {
+			meta.SetStatusCondition(obj.Conditions(), metav1.Condition{
+				Type:               cloudresourcesv1beta1.ConditionTypeReady,
+				Status:             metav1.ConditionUnknown,
+				ObservedGeneration: obj.GetGeneration(),
+				Reason:             cloudresourcesv1beta1.ReasonWaitingForDependency,
+				Message:            "Waiting Scope to become ready",
+			})
 		}).
-		SuccessError(composed.StopWithRequeueDelay(200*time.Millisecond)).
-		ErrorLogMessage("Error updating object status after removing ").
-		Run(ctx, state)
+		OnStatusChanged(composed.Log("Waiting Scope to become ready")).
+		OnSuccess(composed.RequeueAfter(rate.Default.Quick.When(state.Obj()))).
+		OnFailure(
+			composed.Log(fmt.Sprintf("Error patching status of %T to set condition WaitingForDependency for Scope", state.Obj())),
+			composed.RequeueAfter(rate.Default.Quick.When(state.Obj())),
+		).
+		Run(ctx, state.Cluster().K8sClient())
 }

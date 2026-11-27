@@ -1,0 +1,64 @@
+package scope
+
+import (
+	"context"
+	"time"
+
+	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/composed"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+func waitScopeReadyLegacy(ctx context.Context, st composed.State) (error, context.Context) {
+	state := st.(State)
+
+	if state.ObjWithConditionsAndState() == nil {
+		// unsupported type, likely newer API style with object
+		// implementing composed.ObjWithStatus
+		return nil, ctx
+	}
+	if state.ObjWithStatus() != nil {
+		// object implements both old composed.ObjWithConditionsAndState and new composed.ObjWithStatus
+		// then use preferred new composed.ObjWithStatus, skip this action
+		return nil, ctx
+	}
+
+	hasReady := meta.FindStatusCondition(state.Scope().Status.Conditions, cloudcontrolv1beta1.ConditionTypeReady)
+	if hasReady != nil {
+		// scope is ready
+		// * set status.State back to empty
+		// * remove ConditionTypeWaitScopeReady
+		// * continue (return nil error)
+
+		if state.ObjWithConditionsAndState().State() != cloudresourcesv1beta1.StateWaitingScopeReady {
+			return nil, ctx
+		}
+
+		state.ObjWithConditionsAndState().SetState("")
+		return composed.UpdateStatus(state.ObjWithConditionsAndState()).
+			RemoveConditions(cloudresourcesv1beta1.ConditionTypeWaitScopeReady).
+			SuccessError(composed.StopWithRequeue).
+			ErrorLogMessage("Error updating object status after removing ").
+			Run(ctx, state)
+	}
+
+	// scope is not ready
+	// * set status.State to WaitingScopeReady
+	// * set condition WaitScopeReady
+	// * requeue and delay
+
+	state.ObjWithConditionsAndState().SetState(cloudresourcesv1beta1.StateWaitingScopeReady)
+
+	return composed.UpdateStatus(state.ObjWithConditionsAndState()).
+		SetCondition(metav1.Condition{
+			Type:    cloudresourcesv1beta1.ConditionTypeWaitScopeReady,
+			Status:  metav1.ConditionTrue,
+			Reason:  cloudresourcesv1beta1.ConditionTypeWaitScopeReady,
+			Message: "Wait Scope to be Ready",
+		}).
+		SuccessError(composed.StopWithRequeueDelay(200*time.Millisecond)).
+		ErrorLogMessage("Error updating object status after removing ").
+		Run(ctx, state)
+}

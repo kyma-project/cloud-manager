@@ -90,7 +90,20 @@ func (c *acmClient) ListTagsForCertificate(ctx context.Context, arn string) ([]a
 }
 
 func (c *acmClient) ListCertificates(ctx context.Context) ([]acmtypes.CertificateSummary, error) {
-	out, err := c.svc.ListCertificates(ctx, &acm.ListCertificatesInput{})
+	// AWS ListCertificates defaults to ISSUED status and RSA_2048 key type only.
+	// We explicitly pass all known statuses and key types so nuke can find certificates
+	// regardless of their state (e.g. EXPIRED, INACTIVE) or algorithm (e.g. EC_prime256v1).
+	// .Values() is called on a zero-value instance — the SDK exposes the full enum list
+	// as a method on the type rather than a package-level function.
+	// https://docs.aws.amazon.com/acm/latest/APIReference/API_ListCertificates.html
+	// https://docs.aws.amazon.com/acm/latest/APIReference/API_Filters.html
+	params := &acm.ListCertificatesInput{
+		CertificateStatuses: acmtypes.CertificateStatus("").Values(),
+		Includes: &acmtypes.Filters{
+			KeyTypes: acmtypes.KeyAlgorithm("").Values(),
+		},
+	}
+	out, err := c.svc.ListCertificates(ctx, params)
 	if err != nil {
 		return nil, err
 	}

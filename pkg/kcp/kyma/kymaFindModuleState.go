@@ -24,6 +24,8 @@ func kymaFindModuleState(ctx context.Context, st composed.State) (error, context
 		state.moduleInSpec = util.IsKymaModuleListedInSpec(state.ObjAsKyma(), moduleName)
 	}
 
+	state.desiredEnabled = state.scope != nil && state.moduleState != util.KymaModuleStateNotPresent
+
 	logger := composed.LoggerFromCtx(ctx)
 	logger = logger.WithValues(
 		"kymaLoaded", fmt.Sprintf("%v", isKymaLoaded),

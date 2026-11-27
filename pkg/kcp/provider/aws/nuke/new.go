@@ -31,26 +31,31 @@ func New(stateFactory StateFactory) composed.Action {
 		}
 		return composed.ComposeActions(
 			"awsNuke",
+			shortCircuitIfScopeAbsent,
 			createAwsClient,
+			// load
 			composed.If(
 				feature.FFNukeBackupsAws.Predicate(),
-				// NFS Backups
 				loadVault,
 				loadNfsBackups,
-				providerResourceStatusDiscovered,
+			),
+			loadWebAcls,
+			loadCertificates,
+			wafLogGroupLoad,
+			// status discovered
+			providerResourceStatusDiscovered,
+			// delete
+			composed.If(
+				feature.FFNukeBackupsAws.Predicate(),
 				deleteNfsBackup,
 			),
-			// WebACLs (always runs when AWS nuke is enabled)
-			loadWebAcls,
-			providerResourceStatusDiscovered,
 			deleteWebAcls,
-			// Certificates (always runs when AWS nuke is enabled)
-			loadCertificates,
-			providerResourceStatusDiscovered,
 			deleteCertificates,
-			// Status tracking (applies to all resource types)
+			wafLogGroupDelete,
+			// status deleting/deleted + requeue
 			providerResourceStatusDeleting,
 			providerResourceStatusDeleted,
+			requeueIfNeeded,
 			checkIfAllProviderResourcesDeleted,
 			// continue to parent action
 			func(ctx context.Context, state composed.State) (error, context.Context) {

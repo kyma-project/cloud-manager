@@ -14,6 +14,7 @@ func updateStatus(ctx context.Context, st composed.State) (error, context.Contex
 	return composed.NewStatusPatcherComposed(cert).
 		MutateStatus(func(c *cloudresourcesv1beta1.Certificate) {
 			c.Status.ProviderId = state.certificateArn
+			c.Status.SecretHash = state.State.GetSecretHash()
 			c.SetStatusReady()
 		}).
 		OnStatusChanged(composed.Log("Certificate status updated")).

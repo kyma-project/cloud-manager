@@ -1,9 +1,12 @@
 package sim
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
+	gardeneraws "github.com/gardener/gardener-extension-provider-aws/pkg/apis/aws/v1alpha1"
 	gardenertypes "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/kyma-project/cloud-manager/api"
 	cloudcontrolv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-control/v1beta1"
@@ -17,6 +20,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -25,6 +31,50 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 	// These two scenarios indirectly depend on each other. If first fails it will properly delete instance
 	// and second will most probably fail also. In that just solve the error from the first test, and ignore
 	// all others since they were induced with the first failure.
+
+	buildScope := func(id e2ekeb.InstanceDetails, rt *infrastructuremanagerv1.Runtime, shoot *gardenertypes.Shoot) (*cloudcontrolv1beta1.Scope, error) {
+		scope := &cloudcontrolv1beta1.Scope{}
+		scope.Name = rt.Name
+		scope.Namespace = rt.Namespace
+		scope.Spec = cloudcontrolv1beta1.ScopeSpec{
+			KymaName:  id.RuntimeID,
+			ShootName: id.ShootName,
+			Region:    id.Region,
+			Provider:  id.Provider,
+		}
+		switch id.Provider {
+		case cloudcontrolv1beta1.ProviderAws:
+			ic := &gardeneraws.InfrastructureConfig{}
+			if err := json.Unmarshal(shoot.Spec.Provider.InfrastructureConfig.Raw, ic); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal AWS InfrastructureConfig: %v", err)
+			}
+			scope.Spec.Scope.Aws = &cloudcontrolv1beta1.AwsScope{
+				AccountId:  fmt.Sprintf("unknown-%s", id.RuntimeID),
+				VpcNetwork: fmt.Sprintf("shoot--%s--%s", strings.TrimPrefix(scope.Namespace, "garden-"), scope.Name),
+				Network: cloudcontrolv1beta1.AwsNetwork{
+					Nodes:    ptr.Deref(shoot.Spec.Networking.Nodes, ""),
+					Pods:     ptr.Deref(shoot.Spec.Networking.Pods, ""),
+					Services: ptr.Deref(shoot.Spec.Networking.Services, ""),
+					VPC: cloudcontrolv1beta1.AwsVPC{
+						CIDR: ptr.Deref(shoot.Spec.Networking.Nodes, ""),
+					},
+					Zones: []cloudcontrolv1beta1.AwsZone{},
+				},
+			}
+			for _, gZone := range ic.Networks.Zones {
+				z := cloudcontrolv1beta1.AwsZone{
+					Name:     gZone.Name,
+					Internal: ptr.Deref(gZone.Internal, ""),
+					Public:   ptr.Deref(gZone.Public, ""),
+					Workers:  ptr.Deref(gZone.Workers, ""),
+				}
+				scope.Spec.Scope.Aws.Network.Zones = append(scope.Spec.Scope.Aws.Network.Zones, z)
+			}
+		default:
+			return nil, fmt.Errorf("unsupported provider %s", id.Provider)
+		}
+		return scope, nil
+	}
 
 	It("Scenario: Instance is created, module added and removed, and instance deleted", Serial, func() {
 		const (
@@ -133,6 +183,26 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 				Should(Succeed())
 
 			Expect(skrKyma.Status.State).To(Equal(operatorshared.StateReady))
+		})
+
+		var scope *cloudcontrolv1beta1.Scope
+
+		By("Given Scope exists", func() {
+			s, err := buildScope(instanceDetails, rt, shoot)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), s)).To(Succeed())
+			scope = s
+		})
+
+		By("Given Scope is Ready", func() {
+			meta.SetStatusCondition(&scope.Status.Conditions, metav1.Condition{
+				Type:               cloudcontrolv1beta1.ConditionTypeReady,
+				Status:             metav1.ConditionTrue,
+				ObservedGeneration: scope.Generation,
+				Reason:             cloudcontrolv1beta1.ReasonReady,
+				Message:            cloudcontrolv1beta1.ReasonReady,
+			})
+			Expect(UpdateStatus(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
 		})
 
 		By("When module cloud-manager is enabled", func() {
@@ -256,6 +326,13 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 				Should(Succeed())
 		})
 
+		By("// cleanup: Delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
+		})
+
 	})
 
 	It("Scenario: Instance is deleted with existing resources", Serial, func() {
@@ -337,6 +414,26 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 				Should(Succeed())
 
 			Expect(skrKyma.Status.State).To(Equal(operatorshared.StateReady))
+		})
+
+		var scope *cloudcontrolv1beta1.Scope
+
+		By("Given Scope exists", func() {
+			s, err := buildScope(instanceDetails, rt, shoot)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(CreateObj(infra.Ctx(), infra.KCP().Client(), s)).To(Succeed())
+			scope = s
+		})
+
+		By("Given Scope is Ready", func() {
+			meta.SetStatusCondition(&scope.Status.Conditions, metav1.Condition{
+				Type:               cloudcontrolv1beta1.ConditionTypeReady,
+				Status:             metav1.ConditionTrue,
+				ObservedGeneration: scope.Generation,
+				Reason:             cloudcontrolv1beta1.ReasonReady,
+				Message:            cloudcontrolv1beta1.ReasonReady,
+			})
+			Expect(UpdateStatus(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
 		})
 
 		By("# User activates cloud-manager module by adding to SKR Kyma spec")
@@ -501,7 +598,6 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 				Should(Succeed())
 		})
 
-		// TODO: fix this works
 		By("And Then instance does not exist", func() {
 			Eventually(func() error {
 				id, err := kebInstance.GetInstance(infra.Ctx(), instanceDetails.RuntimeID)
@@ -513,6 +609,13 @@ var _ = Describe("Feature: KCP SIM", Serial, func() {
 				}
 				return nil
 			}).Should(Succeed())
+		})
+
+		By("// cleanup: Delete Scope", func() {
+			Expect(Delete(infra.Ctx(), infra.KCP().Client(), scope)).To(Succeed())
+			Eventually(IsDeleted).
+				WithArguments(infra.Ctx(), infra.KCP().Client(), scope).
+				Should(Succeed())
 		})
 	})
 

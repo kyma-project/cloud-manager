@@ -2,12 +2,12 @@ package certificate
 
 import (
 	"context"
-	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
+	certificatetypes "github.com/kyma-project/cloud-manager/pkg/skr/certificate/types"
 )
 
 func parseCertificateData(ctx context.Context, st composed.State) (error, context.Context) {
@@ -50,22 +50,10 @@ func parseCertificateData(ctx context.Context, st composed.State) (error, contex
 			Run(ctx, state.Cluster().K8sClient())
 	}
 
-	x509Cert, err := x509.ParseCertificate(leafBlock.Bytes)
-	if err != nil {
-		logger.Error(err, "Failed to parse X.509 certificate")
-		return composed.NewStatusPatcherComposed(cert).
-			MutateStatus(func(c *cloudresourcesv1beta1.Certificate) {
-				c.SetStatusProviderError(fmt.Sprintf("Failed to parse certificate: %v", err))
-			}).
-			OnSuccess(composed.Requeue).
-			Run(ctx, state.Cluster().K8sClient())
-	}
-
-	state.certificateData = &CertificateData{
+	state.data = &certificatetypes.CertificateData{
 		Certificate:      pem.EncodeToMemory(leafBlock),
 		PrivateKey:       privateKey,
 		CertificateChain: state.secret.Data["ca.crt"],
-		X509:             x509Cert,
 	}
 
 	return nil, ctx

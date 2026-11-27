@@ -2,6 +2,7 @@ package cloudresources
 
 import (
 	"context"
+
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -10,28 +11,27 @@ import (
 
 func statusReady(ctx context.Context, st composed.State) (error, context.Context) {
 	state := st.(*State)
-	logger := composed.LoggerFromCtx(ctx)
 
 	if composed.MarkedForDeletionPredicate(ctx, state) {
-		return nil, nil
+		return nil, ctx
 	}
 
-	condReady := meta.FindStatusCondition(*state.ObjAsCloudResources().Conditions(), cloudresourcesv1beta1.ConditionTypeReady)
-	if condReady != nil && state.ObjAsCloudResources().Status.State == cloudresourcesv1beta1.ModuleStateReady {
-		return nil, nil
-	}
-
-	logger.Info("Setting Ready state and condition to CloudResources CR")
-	state.ObjAsCloudResources().Status.State = cloudresourcesv1beta1.ModuleStateReady
-
-	return composed.UpdateStatus(state.ObjAsCloudResources()).
-		SetExclusiveConditions(metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeReady,
-			Status:  metav1.ConditionTrue,
-			Reason:  cloudresourcesv1beta1.ConditionTypeReady,
-			Message: "Ready",
+	return composed.NewStatusPatcherComposed(state.ObjAsCloudResources()).
+		MutateStatus(func(cr *cloudresourcesv1beta1.CloudResources) {
+			cr.Status.State = cloudresourcesv1beta1.ModuleStateReady
+			meta.SetStatusCondition(&cr.Status.Conditions, metav1.Condition{
+				Type:               cloudresourcesv1beta1.ConditionTypeReady,
+				Status:             metav1.ConditionTrue,
+				ObservedGeneration: cr.Generation,
+				Reason:             cloudresourcesv1beta1.ConditionTypeReady,
+				Message:            cloudresourcesv1beta1.ConditionTypeReady,
+			})
 		}).
-		ErrorLogMessage("Error updating CloudResources CR with Ready condition").
-		SuccessError(composed.StopAndForget). // do not continue further with the flow
-		Run(ctx, state)
+		OnFailure(
+			composed.Log("Error patching CloudResources with Ready condition true"),
+			composed.Requeue,
+		).
+		OnSuccess(composed.Forget).
+		OnStatusChanged(composed.Log("CloudResources patched to Ready true")).
+		Run(ctx, state.Cluster().K8sClient())
 }

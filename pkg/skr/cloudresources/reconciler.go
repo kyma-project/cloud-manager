@@ -5,35 +5,46 @@ import (
 	"fmt"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/kyma-project/cloud-manager/pkg/common/statewithscope"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/feature"
+	commonscope "github.com/kyma-project/cloud-manager/pkg/skr/common/scope"
+	awscloudresources "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/cloudresources"
 	skrruntime "github.com/kyma-project/cloud-manager/pkg/skr/runtime"
 	"github.com/kyma-project/cloud-manager/pkg/util"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func NewReconcilerFactory() skrruntime.ReconcilerFactory {
-	return &reconcilerFactory{}
+func NewReconcilerFactory(awsStateFactory awscloudresources.StateFactory) skrruntime.ReconcilerFactory {
+	return &reconcilerFactory{
+		awsStateFactory: awsStateFactory,
+	}
 }
 
 type reconcilerFactory struct {
+	awsStateFactory awscloudresources.StateFactory
 }
 
 func (f *reconcilerFactory) New(args skrruntime.ReconcilerArguments) reconcile.Reconciler {
 	return &reconciler{
 		factory: newStateFactory(
 			composed.NewStateFactory(composed.NewStateClusterFromCluster(args.SkrCluster)),
-			args.ScopeProvider,
-			composed.NewStateClusterFromCluster(args.KcpCluster),
+			commonscope.NewStateFactory(
+				composed.NewStateClusterFromCluster(args.KcpCluster),
+				args.ScopeProvider,
+			),
 			args.Provider,
 			args.IgnoreWatchErrors,
 		),
+		awsStateFactory: f.awsStateFactory,
 	}
 }
 
 type reconciler struct {
 	factory *stateFactory
+
+	awsStateFactory awscloudresources.StateFactory
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
@@ -53,28 +64,34 @@ func (r *reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 // Then module CR will get deletionTimestamp
 
 func (r *reconciler) newAction() composed.Action {
-	return composed.ComposeActions(
-		"cloudResources-main",
+	return composed.ComposeActionsNoName(
 		feature.LoadFeatureContextFromObj(&cloudresourcesv1beta1.CloudResources{}),
-		composed.LoadObj,
+		commonscope.New(),
 
-		composed.BuildBranchingAction(
-			"cloudResources-if-delete",
+		composed.If(
 			composed.MarkedForDeletionPredicate,
-			composed.ComposeActions(
-				"cloudResources-delete",
-
-				checkIfResourcesExist,
-				deleteCrds,
-				removeFinalizer,
-
-				composed.StopAndForgetAction,
+			statusDeleting,
+			checkIfResourcesExist,
+			composed.Switch(
+				nil,
+				composed.NewCase(statewithscope.AwsProviderPredicate, awscloudresources.New(r.awsStateFactory)),
 			),
-			nil,
+			deleteCrds,
+			removeFinalizer,
+			composed.StopAndForgetAction,
 		),
-		handleServed,
-		addFinalizer,
-		statusReady,
+
+		composed.If(
+			composed.NotMarkedForDeletionPredicate,
+			handleServed,
+			addFinalizer,
+			composed.Switch(
+				nil,
+				composed.NewCase(statewithscope.AwsProviderPredicate, awscloudresources.New(r.awsStateFactory)),
+			),
+			statusReady,
+			composed.StopAndForgetAction,
+		),
 
 		composed.StopAndForgetAction,
 	)

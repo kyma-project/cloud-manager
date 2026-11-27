@@ -213,6 +213,13 @@ func (in *WafPolicy) SpecificToProviders() []string {
 	return []string{"aws"}
 }
 
+func (in *WafPolicy) IsAvailable() bool {
+	readyCondition := meta.FindStatusCondition(in.Status.Conditions, ConditionTypeReady)
+	return readyCondition != nil &&
+		readyCondition.Status == metav1.ConditionTrue &&
+		readyCondition.Reason == ReasonAvailable
+}
+
 func (in *WafPolicy) State() string {
 	readyCondition := meta.FindStatusCondition(in.Status.Conditions, ConditionTypeReady)
 	if readyCondition == nil {

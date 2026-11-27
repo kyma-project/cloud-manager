@@ -29,7 +29,7 @@ func vpcNetworkLoad(ctx context.Context, st composed.State) (error, context.Cont
 		Name:      vpcNetworkName,
 	}, vpcNetwork)
 	if client.IgnoreNotFound(err) != nil {
-		return composed.LogErrorAndReturn(err, "Failed to load Runtime's VpcNetwork", composed.StopWithRequeueDelay(rate.Slow1s.When(state.ObjAsRuntime())), ctx)
+		return composed.LogErrorAndReturn(err, "Failed to load Runtime's VpcNetwork", composed.StopWithRequeueDelay(rate.Default.Slow1s.When(state.ObjAsRuntime())), ctx)
 	}
 	if err == nil {
 		state.vpcNetwork = vpcNetwork

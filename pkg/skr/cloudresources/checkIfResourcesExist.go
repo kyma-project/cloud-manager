@@ -2,12 +2,14 @@ package cloudresources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	"github.com/kyma-project/cloud-manager/pkg/util"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -62,13 +64,19 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 			continue
 		}
 		if err != nil {
-			logger.
+			logger = logger.
 				WithValues(
 					"errorType", fmt.Sprintf("%T", err),
 					"gvk", gvk.String(),
 					"listGvk", listGvk.String(),
-				).
-				Error(err, "Error listing GVK")
+				)
+			if status, ok := err.(apierrors.APIStatus); ok || errors.As(err, &status) {
+				logger = logger.WithValues(
+					"errorReason", status.Status().Reason,
+					"errorCode", status.Status().Code,
+				)
+			}
+			logger.Error(err, "Error listing GVK")
 			continue
 		}
 
@@ -83,20 +91,32 @@ func checkIfResourcesExist(ctx context.Context, st composed.State) (error, conte
 		return nil, nil
 	}
 
-	logger.
-		WithValues("existingResourceKinds", foundKinds).
-		Info("Can not deactivate module due to found resources")
+	logger = logger.WithValues("existingResourceKinds", foundKinds)
+	ctx = composed.LoggerIntoCtx(ctx, logger)
 
-	state.ObjAsCloudResources().Status.State = cloudresourcesv1beta1.ModuleState(util.KymaModuleStateWarning)
-
-	return composed.UpdateStatus(state.ObjAsCloudResources()).
-		RemoveConditions(cloudresourcesv1beta1.ConditionTypeReady).
-		SetExclusiveConditions(metav1.Condition{
-			Type:    cloudresourcesv1beta1.ConditionTypeWarning,
-			Status:  metav1.ConditionTrue,
-			Reason:  cloudresourcesv1beta1.ConditionReasonResourcesExist,
-			Message: fmt.Sprintf("Can not deactivate module while cloud resources exist: %v", foundKinds),
+	return composed.NewStatusPatcherComposed(state.ObjAsCloudResources()).
+		MutateStatus(func(cr *cloudresourcesv1beta1.CloudResources) {
+			cr.Status.State = cloudresourcesv1beta1.ModuleState(util.KymaModuleStateWarning)
+			meta.SetStatusCondition(&cr.Status.Conditions, metav1.Condition{
+				Type:               cloudresourcesv1beta1.ConditionTypeReady,
+				Status:             metav1.ConditionUnknown,
+				ObservedGeneration: cr.Generation,
+				Reason:             string(cloudresourcesv1beta1.ModuleStateDeleting),
+				Message:            string(cloudresourcesv1beta1.ModuleStateDeleting),
+			})
+			meta.SetStatusCondition(&cr.Status.Conditions, metav1.Condition{
+				Type:               cloudresourcesv1beta1.ConditionTypeWarning,
+				Status:             metav1.ConditionTrue,
+				ObservedGeneration: cr.Generation,
+				Reason:             cloudresourcesv1beta1.ConditionReasonResourcesExist,
+				Message:            fmt.Sprintf("Can not deactivate module while cloud resources exist: %v", foundKinds),
+			})
 		}).
-		SuccessError(composed.StopWithRequeueDelay(util.Timing.T10000ms())).
-		Run(ctx, state)
+		OnSuccess(composed.RequeueAfter(util.Timing.T10000ms())).
+		OnFailure(
+			composed.Log("Error patching	CloudResources with warning condition due to existing resources"),
+			composed.Requeue,
+		).
+		OnStatusChanged(composed.Log("Can not deactivate module due to found resources")).
+		Run(ctx, state.Cluster().K8sClient())
 }

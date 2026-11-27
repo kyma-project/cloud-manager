@@ -10,6 +10,7 @@ import (
 	awsclient "github.com/kyma-project/cloud-manager/pkg/kcp/provider/aws/client"
 	awsnfsvolumebackupclient "github.com/kyma-project/cloud-manager/pkg/skr/awsnfsvolumebackup/client"
 	certificateclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/certificate/client"
+	awscloudresourcesclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/cloudresources/client"
 	wafpolicyclient "github.com/kyma-project/cloud-manager/pkg/skr/provider/aws/wafpolicy/client"
 )
 
@@ -32,6 +33,7 @@ type NukeWafPolicyClient interface {
 	GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error)
 	DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error
 	ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error)
+	DeleteLoggingConfiguration(ctx context.Context, webAclArn string) error
 }
 
 var _ NukeCertificateClient = (certificateclient.Client)(nil)
@@ -43,10 +45,15 @@ type NukeCertificateClient interface {
 	DeleteCertificate(ctx context.Context, arn string) error
 }
 
+type NukeWafLogGroup interface {
+	awsclient.CloudWatchLogsClient
+}
+
 type NukeClient interface {
 	NukeNfsBackupClient
 	NukeWafPolicyClient
 	NukeCertificateClient
+	NukeWafLogGroup
 }
 
 func NewClientProvider() awsclient.SkrClientProvider[NukeClient] {
@@ -54,6 +61,7 @@ func NewClientProvider() awsclient.SkrClientProvider[NukeClient] {
 		awsnfsvolumebackupclient.NewClientProvider(),
 		wafpolicyclient.NewClientProvider(),
 		certificateclient.NewClientProvider(),
+		awscloudresourcesclient.NewClientProvider(),
 	)
 }
 
@@ -61,84 +69,57 @@ func NukeProvider(
 	backupProvider awsclient.SkrClientProvider[awsnfsvolumebackupclient.Client],
 	webAclProvider awsclient.SkrClientProvider[wafpolicyclient.Client],
 	certProvider awsclient.SkrClientProvider[certificateclient.Client],
+	wafLogGroupProvider awsclient.SkrClientProvider[awscloudresourcesclient.Client],
 ) awsclient.SkrClientProvider[NukeClient] {
 	return func(ctx context.Context, account, region, key, secret, role string) (NukeClient, error) {
-		backupClient, err := backupProvider(ctx, account, region, key, secret, role)
+		_backupClient, err := backupProvider(ctx, account, region, key, secret, role)
 		if err != nil {
 			return nil, err
 		}
 
-		webAclClient, err := webAclProvider(ctx, account, region, key, secret, role)
+		_webAclClient, err := webAclProvider(ctx, account, region, key, secret, role)
 		if err != nil {
 			return nil, err
 		}
 
-		certClient, err := certProvider(ctx, account, region, key, secret, role)
+		_certClient, err := certProvider(ctx, account, region, key, secret, role)
+		if err != nil {
+			return nil, err
+		}
+
+		_wafLogGroupClient, err := wafLogGroupProvider(ctx, account, region, key, secret, role)
 		if err != nil {
 			return nil, err
 		}
 
 		return &client{
-			backupClient: backupClient,
-			webAclClient: webAclClient,
-			certClient:   certClient,
+			backupClient:      &backupClient{Client: _backupClient},
+			webAclClient:      &webAclClient{Client: _webAclClient},
+			certClient:        &certClient{Client: _certClient},
+			wafLogGroupClient: &wafLogGroupClient{Client: _wafLogGroupClient},
 		}, nil
 	}
 }
 
+type backupClient struct {
+	awsnfsvolumebackupclient.Client
+}
+
+type webAclClient struct {
+	wafpolicyclient.Client
+}
+
+type certClient struct {
+	certificateclient.Client
+}
+
+type wafLogGroupClient struct {
+	awscloudresourcesclient.Client
+}
+
 type client struct {
-	backupClient awsnfsvolumebackupclient.Client
-	webAclClient wafpolicyclient.Client
-	certClient   certificateclient.Client
-}
-
-// Backup client methods
-func (c *client) CreateBackupVault(ctx context.Context, name string, tags map[string]string) (string, error) {
-	return c.backupClient.CreateBackupVault(ctx, name, tags)
-}
-
-func (c *client) StartBackupJob(ctx context.Context, params *awsnfsvolumebackupclient.StartBackupJobInput) (*backup.StartBackupJobOutput, error) {
-	return c.backupClient.StartBackupJob(ctx, params)
-}
-
-func (c *client) ListBackupVaults(ctx context.Context) ([]backuptypes.BackupVaultListMember, error) {
-	return c.backupClient.ListBackupVaults(ctx)
-}
-
-func (c *client) ListRecoveryPointsForVault(ctx context.Context, accountId, backupVaultName string) ([]backuptypes.RecoveryPointByBackupVault, error) {
-	return c.backupClient.ListRecoveryPointsForVault(ctx, accountId, backupVaultName)
-}
-
-func (c *client) DeleteRecoveryPoint(ctx context.Context, backupVaultName, recoveryPointArn string) (*backup.DeleteRecoveryPointOutput, error) {
-	return c.backupClient.DeleteRecoveryPoint(ctx, backupVaultName, recoveryPointArn)
-}
-
-// WebACL methods
-func (c *client) ListWebACLs(ctx context.Context, scope wafv2types.Scope) ([]wafv2types.WebACLSummary, error) {
-	return c.webAclClient.ListWebACLs(ctx, scope)
-}
-
-func (c *client) GetWebACL(ctx context.Context, name, id string, scope wafv2types.Scope) (*wafv2types.WebACL, string, error) {
-	return c.webAclClient.GetWebACL(ctx, name, id, scope)
-}
-
-func (c *client) DeleteWebACL(ctx context.Context, name, id string, scope wafv2types.Scope, lockToken string) error {
-	return c.webAclClient.DeleteWebACL(ctx, name, id, scope, lockToken)
-}
-
-func (c *client) ListTagsForWebACL(ctx context.Context, resourceArn string) ([]wafv2types.Tag, error) {
-	return c.webAclClient.ListTagsForWebACL(ctx, resourceArn)
-}
-
-// Certificate methods
-func (c *client) ListCertificates(ctx context.Context) ([]acmtypes.CertificateSummary, error) {
-	return c.certClient.ListCertificates(ctx)
-}
-
-func (c *client) ListCertificateTags(ctx context.Context, arn string) ([]acmtypes.Tag, error) {
-	return c.certClient.ListCertificateTags(ctx, arn)
-}
-
-func (c *client) DeleteCertificate(ctx context.Context, arn string) error {
-	return c.certClient.DeleteCertificate(ctx, arn)
+	*backupClient
+	*webAclClient
+	*certClient
+	*wafLogGroupClient
 }

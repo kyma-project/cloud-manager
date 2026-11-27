@@ -10,8 +10,15 @@ type StateWithObjAsScope interface {
 	ObjAsScope() *cloudcontrolv1beta1.Scope
 }
 
+type StateWithScope interface {
+	Scope() *cloudcontrolv1beta1.Scope
+}
+
 func ScopeFromState(st composed.State) (*cloudcontrolv1beta1.Scope, bool) {
 	if state, ok := st.(focal.State); ok {
+		return state.Scope(), true
+	}
+	if state, ok := st.(StateWithScope); ok {
 		return state.Scope(), true
 	}
 	if state, ok := st.(StateWithObjAsScope); ok {

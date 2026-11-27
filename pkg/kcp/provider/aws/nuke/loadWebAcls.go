@@ -8,7 +8,6 @@ import (
 	"github.com/kyma-project/cloud-manager/pkg/common"
 	"github.com/kyma-project/cloud-manager/pkg/composed"
 	nuketypes "github.com/kyma-project/cloud-manager/pkg/kcp/nuke/types"
-	"github.com/kyma-project/cloud-manager/pkg/util"
 	"k8s.io/utils/ptr"
 )
 
@@ -16,15 +15,15 @@ func loadWebAcls(ctx context.Context, st composed.State) (error, context.Context
 	state := st.(*State)
 	logger := composed.LoggerFromCtx(ctx)
 
-	// Get Cloud Manager Scope (Kyma cluster metadata)
-	scopeName := state.Scope().Name
+	scopeName := state.ObjAsNuke().Spec.Scope.Name
 
 	// List WebACLs with REGIONAL scope type (AWS WAFv2 API parameter - means ALB/API Gateway, not CloudFront)
 	// Note: types.ScopeRegional is the WAFv2 scope type, NOT related to state.Scope()
 	summaries, err := state.awsClient.ListWebACLs(ctx, types.ScopeRegional)
 	if err != nil {
 		logger.Error(err, "Error listing AWS WebACLs")
-		return composed.StopWithRequeueDelay(util.Timing.T10000ms()), nil
+		state.hadErrors = true
+		return nil, ctx
 	}
 
 	// Create resource kind state
@@ -45,7 +44,8 @@ func loadWebAcls(ctx context.Context, st composed.State) (error, context.Context
 		tags, err := state.awsClient.ListTagsForWebACL(ctx, arn)
 		if err != nil {
 			logger.Error(err, "Error getting tags for WebACL", "arn", arn)
-			continue // Skip this WebACL but continue processing others
+			state.hadErrors = true
+			continue
 		}
 
 		// Check if this WebACL belongs to our scope
@@ -58,5 +58,5 @@ func loadWebAcls(ctx context.Context, st composed.State) (error, context.Context
 	state.ProviderResources = append(state.ProviderResources, rks)
 
 	logger.Info("Loaded WAF Policies for nuke", "count", len(rks.Objects), "scope", scopeName)
-	return nil, nil
+	return nil, ctx
 }
